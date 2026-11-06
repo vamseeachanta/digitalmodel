@@ -290,7 +290,7 @@ def sloshing_curve_rows(doc: dict | None = None) -> list[dict]:
     return [
         {
             "shape": shape["key"],
-            "characteristic_length": shape["lc"],
+            "characteristic_length_definition": shape["lc"],
             "depth_over_characteristic_length": ratio,
             "dimensionless_frequency": omega,
         }
@@ -422,7 +422,7 @@ def main() -> None:
                 if fn is wall_thickness_3d_rows else fn()
             )
             (d / f"{name}.json").write_text(
-                json.dumps(rows, indent=1) + "\n", encoding="utf-8")
+                json.dumps(rows, indent=1) + "\n", encoding="utf-8", newline="\n")
             cols = len(rows[0]) if rows else 0
             print(f"{dataset}/{name}.json: {len(rows)} rows x {cols} cols")
 

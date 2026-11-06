@@ -1,6 +1,7 @@
 """Hand projections of synthetic fixtures test export fidelity, not model physics."""
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -124,13 +125,13 @@ def test_sloshing_keeps_ratio_definitions_and_size_basis_separate():
     assert builder.sloshing_curve_rows(source) == [
         {
             "shape": "elliptical",
-            "characteristic_length": "W (width)",
+            "characteristic_length_definition": "W (width)",
             "depth_over_characteristic_length": 2,
             "dimensionless_frequency": 3,
         },
         {
             "shape": "elliptical",
-            "characteristic_length": "W (width)",
+            "characteristic_length_definition": "W (width)",
             "depth_over_characteristic_length": 5,
             "dimensionless_frequency": 11,
         },
@@ -145,6 +146,12 @@ def test_sloshing_keeps_ratio_definitions_and_size_basis_separate():
             "period_s": 13,
         }
     ]
+    files = bundles.bundle_files("digitalmodel-hydro", license_id="mit")
+    manifest = json.loads(files["manifest.json"])
+    columns = manifest["tables"]["sloshing_curves"]["columns"]
+    assert "characteristic_length_definition" in columns
+    assert "characteristic_length" not in columns
+    assert "characteristic_length_definition" in files["README.md"].decode("utf-8")
 
 
 def test_dynacard_preserves_diagnosis_metrics_and_ordered_differential():
@@ -234,6 +241,56 @@ def test_sloshing_retained_sources_exclude_solver_sections():
         assert metadata["retained_source_sections"] == ["meta", "shapes"]
 
 
+@pytest.mark.parametrize("name", ["dynacard_cases", "dynacard_differential"])
+def test_dynacard_retained_sources_contain_only_projected_inputs(name):
+    """Retained inputs reproduce rows without settings, library data or advice."""
+    import hashlib
+
+    files = bundles.bundle_files("digitalmodel-artificial-lift", license_id="mit")
+    manifest = json.loads(files["manifest.json"])
+    retained_bytes = files[f"sources/{name}.json"]
+    retained = json.loads(retained_bytes)
+    assert set(retained) == {"cases"}
+    fields = (
+        {
+            "mode",
+            "seed",
+            "classification",
+            "confidence",
+            "severity",
+            "model_version",
+            "n_points",
+            "metrics",
+        }
+        if name == "dynacard_cases"
+        else {"mode", "differential"}
+    )
+    for case in retained["cases"]:
+        assert set(case) == fields
+        if name == "dynacard_cases":
+            assert set(case["metrics"]) == {
+                "fluid_load_lbs",
+                "peak_load_lbs",
+                "min_load_lbs",
+                "card_area_inlb",
+                "area_vs_healthy_pct",
+            }
+        else:
+            assert all(
+                set(item) == {"mode", "probability"} for item in case["differential"]
+            )
+    table = manifest["tables"][name]
+    source_bytes = (bundles.REPO / table["source"]).read_bytes()
+    source_bytes = source_bytes.replace(b"\r\n", b"\n")
+    original = json.loads(source_bytes)
+    project = builder.DATASETS["digitalmodel-artificial-lift"][name]
+    rows = [json.loads(line) for line in files[f"{name}/train.jsonl"].splitlines()]
+    assert rows == project(original) == project(retained)
+    assert table["source_sha256"] == hashlib.sha256(source_bytes).hexdigest()
+    assert table["retained_source_sha256"] == hashlib.sha256(retained_bytes).hexdigest()
+    assert table["retained_source_sections"] == ["cases"]
+
+
 def test_unselected_sloshing_metadata_is_never_retained_or_projected(monkeypatch):
     """An excluded section may contain private locators; it never enters a bundle."""
     read = bundles._text_bytes
@@ -253,6 +310,83 @@ def test_unselected_sloshing_metadata_is_never_retained_or_projected(monkeypatch
         assert actual[f"sources/{name}.json"] == expected[f"sources/{name}.json"]
         assert actual[f"{name}/train.jsonl"] == expected[f"{name}/train.jsonl"]
     assert actual["manifest.json"] != expected["manifest.json"]
+
+
+def test_dynacard_excluded_nested_content_never_enters_the_bundle(
+    tmp_path, monkeypatch
+):
+    """Extra keys at every selected nesting level are excluded before locator checks."""
+    read = bundles._text_bytes
+    restricted = (Path("/") / "home" / tmp_path.name / "data").as_posix()
+
+    def with_excluded_content(path):
+        data = read(path)
+        if path.name == "dynacard-troubleshooting.json":
+            doc = json.loads(data)
+            doc["well"] = doc["library_summary"] = {"locator": restricted}
+            for case in doc["cases"]:
+                case["actions"] = case["card_coordinates"] = [restricted]
+                case["metrics"]["extra"] = restricted
+                for candidate in case["differential"]:
+                    candidate["actions"] = [restricted]
+            return json.dumps(doc).encode("utf-8")
+        return data
+
+    expected = bundles.bundle_files("digitalmodel-artificial-lift", license_id="mit")
+    monkeypatch.setattr(bundles, "_text_bytes", with_excluded_content)
+    actual = bundles.bundle_files("digitalmodel-artificial-lift", license_id="mit")
+    for name in ("dynacard_cases", "dynacard_differential"):
+        for path in (f"sources/{name}.json", f"{name}/train.jsonl"):
+            assert actual[path] == expected[path]
+    assert actual["manifest.json"] != expected["manifest.json"]
+
+
+@pytest.mark.parametrize("missing", ["confidence", "metric", "probability"])
+def test_missing_dynacard_inputs_fail_before_creating_output(
+    tmp_path, monkeypatch, missing
+):
+    """Required selected values cannot be silently dropped or filled with defaults."""
+    read = bundles._text_bytes
+
+    def with_missing_input(path):
+        data = read(path)
+        if path.name == "dynacard-troubleshooting.json":
+            doc = json.loads(data)
+            case = doc["cases"][0]
+            if missing == "metric":
+                del case["metrics"]["peak_load_lbs"]
+            elif missing == "probability":
+                del case["differential"][0]["probability"]
+            else:
+                del case[missing]
+            return json.dumps(doc).encode("utf-8")
+        return data
+
+    monkeypatch.setattr(bundles, "_text_bytes", with_missing_input)
+    target = tmp_path / "bundle"
+    with pytest.raises(KeyError):
+        bundles.write_bundle("digitalmodel-artificial-lift", target, license_id="mit")
+    assert not target.exists()
+
+
+def test_exporter_uses_explicit_utf8_and_lf(tmp_path, monkeypatch):
+    """Output bytes retain UTF-8 and LF when platform text defaults differ."""
+    write = Path.write_text
+
+    def alternate_defaults(path, text, *, encoding=None, newline=None):
+        return write(
+            path, text, encoding=encoding or "ascii", newline=newline or "\r\n"
+        )
+
+    monkeypatch.setattr(Path, "write_text", alternate_defaults)
+    monkeypatch.setattr(
+        builder, "DATASETS", {"synthetic": {"table": lambda: [{"label": "µ"}]}}
+    )
+    monkeypatch.setattr("sys.argv", ["exporter", "--out", str(tmp_path)])
+    builder.main()
+    data = (tmp_path / "synthetic/table.json").read_bytes()
+    assert b"\r" not in data
+    assert json.loads(data.decode("utf-8")) == [{"label": "µ"}]
 
 
 @pytest.mark.parametrize(
@@ -295,13 +429,15 @@ def test_extended_bundles_declare_and_verify_every_new_table(tmp_path, dataset):
     target = tmp_path / "bundle"
     bundles.write_bundle(dataset, target, license_id="mit")
     bundles.verify_bundle(dataset, target, license_id="mit")
-    manifest = json.loads((target / "manifest.json").read_text())
+    manifest = json.loads((target / "manifest.json").read_text(encoding="utf-8"))
     assert set(manifest["tables"]) == set(builder.DATASETS[dataset])
     for name, table in manifest["tables"].items():
         assert table["data_limits"]
         rows = [
             json.loads(line)
-            for line in (target / name / "train.jsonl").read_text().splitlines()
+            for line in (target / name / "train.jsonl")
+            .read_text(encoding="utf-8")
+            .splitlines()
         ]
         assert all(set(row) == set(table["columns"]) for row in rows)
         assert table["row_count"] == len(rows)

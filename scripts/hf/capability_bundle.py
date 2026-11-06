@@ -95,6 +95,7 @@ SOURCES = {
         "structural/sloshing-explorer.json",
         "scripts/capabilities/build_sloshing_explorer.py",
         "Rounded analytical curves only; shape-specific ratio definitions differ. "
+        "characteristic_length_definition labels the ratio basis, not a length. "
         "Equivalent-rectangle approximations apply to horizontal and oval tanks. "
         "CFD, forced response, damping and SDOF results are excluded.",
     ),
@@ -121,13 +122,53 @@ SOURCES = {
     ),
 }
 
-# Only analytical inputs are retained from the mixed analytical/CFD sidecar.
+# Only projected inputs are retained from mixed-content sidecars.
 # Selection precedes locator checking and projection; excluded results are never
 # staged. The original source digest and retained-source digest have distinct scopes.
 SOURCE_SECTIONS = {
     "sloshing_curves": ("meta", "shapes"),
     "sloshing_lookup": ("meta", "shapes"),
+    "dynacard_cases": ("cases",),
+    "dynacard_differential": ("cases",),
 }
+
+# A null leaf retains that value; mappings select keys in objects and list items.
+SOURCE_FIELDS = {
+    "dynacard_cases": {
+        "cases": {
+            "mode": None,
+            "seed": None,
+            "classification": None,
+            "confidence": None,
+            "severity": None,
+            "model_version": None,
+            "n_points": None,
+            "metrics": {
+                "fluid_load_lbs": None,
+                "peak_load_lbs": None,
+                "min_load_lbs": None,
+                "card_area_inlb": None,
+                "area_vs_healthy_pct": None,
+            },
+        },
+    },
+    "dynacard_differential": {
+        "cases": {
+            "mode": None,
+            "differential": {"mode": None, "probability": None},
+        },
+    },
+}
+
+
+def _select_fields(value, fields):
+    """Retain declared inputs only; missing required keys fail before writing."""
+    if isinstance(value, list):
+        return [_select_fields(item, fields) for item in value]
+    return {
+        key: value[key] if nested is None else _select_fields(value[key], nested)
+        for key, nested in fields.items()
+    }
 
 
 def _json_bytes(value: object) -> bytes:
@@ -184,6 +225,9 @@ def _table_files(name, project, source_bytes):
     sections = SOURCE_SECTIONS.get(name)
     if sections is not None:
         document = {key: document[key] for key in sections}
+    fields = SOURCE_FIELDS.get(name)
+    if fields is not None:
+        document = _select_fields(document, fields)
     retained_bytes = _json_bytes(document) if sections is not None else source_bytes
     _check_locators(document)
     rows, columns = _rows(project(document))
@@ -195,6 +239,7 @@ def _table_files(name, project, source_bytes):
         "source_sha256": _sha(source_bytes),
         "retained_source_sha256": _sha(retained_bytes),
         "retained_source_sections": list(sections) if sections is not None else None,
+        "retained_source_fields": fields,
         "generator": generator,
         "generator_sha256": _sha(_text_bytes(REPO / generator)),
         "row_count": len(rows),
@@ -256,7 +301,8 @@ def _card(dataset, tables, configs, license_id):
         "Engineering readiness: NOT_EVALUATED. Dataset export does not establish "
         "engineering qualification. Source and output digests are in manifest.json; "
         "source sidecars are retained under sources/. Selected sections, where declared, "
-        "are the only retained payload; source_sha256 identifies the complete input, "
+        "are the only retained payload; retained_source_fields declares nested key "
+        "selection where applied. source_sha256 identifies the complete input, "
         "retained_source_sha256 identifies the retained bytes. Text hashes and sources "
         "use LF newlines. The manifest records the build system and architecture; "
         "byte verification also compares this platform metadata.\n",

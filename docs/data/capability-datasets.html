@@ -16,8 +16,10 @@
 <body>
 <h1>Reproducible capability dataset exports</h1>
 <p>The exporter projects committed explorer sidecars into grouped Hugging Face configs.
-Seven further configs cover 251 observations across casing design, analytical sloshing
-and synthetic dynacard troubleshooting. Export fidelity is checked independently
+Six additional configs cover 658 observations across inflow, anchoring, resistance,
+vibration, pore pressure and field economics. Seven further configs cover 251 observations
+across casing design, analytical sloshing and synthetic dynacard troubleshooting.
+Export fidelity is checked independently
 of engineering qualification, which remains <code>NOT_EVALUATED</code>.
 No dataset is uploaded and no explorer is switched to an unverified remote endpoint.</p>
 
@@ -26,7 +28,8 @@ No dataset is uploaded and no explorer is switched to an unverified remote endpo
   <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
   <tbody><tr><td>1</td><td>2026-10-19</td><td>Explicit projections, offline bundles, and readback checks are added to extend reproducible dataset coverage.</td></tr>
   <tr><td>2</td><td>2026-10-19</td><td>Portable locator fixtures, LF-normalized provenance, build-platform metadata, and explicit knots column names remove checkout and unit ambiguity.</td></tr>
-  <tr><td>3</td><td>2026-10-22</td><td>Seven casing, analytical sloshing and synthetic dynacard projections extend coverage; explicit load units, ratio definitions and selected source sections prevent ambiguous interpretation.</td></tr></tbody>
+  <tr><td>3</td><td>2026-10-22</td><td>Seven casing, analytical sloshing and synthetic dynacard projections extend coverage; explicit load units, ratio definitions and selected source sections prevent ambiguous interpretation.</td></tr>
+  <tr><td>4</td><td>2026-11-06</td><td>Nested dynacard source selection makes declared exclusions apply to retained inputs; the sloshing definition column is named explicitly and both coverage additions are stated.</td></tr></tbody>
 </table>
 <p class="caption">Table 1. Revision record.</p>
 
@@ -46,11 +49,16 @@ forced-response, SDOF and research sections are never staged. The manifest's
 <code>source_sha256</code> identifies the complete original LF-normalized input;
 <code>retained_source_sha256</code> identifies the retained bytes, and
 <code>retained_source_sections</code> declares the selection (null means the complete
-source is retained). Selecting sections does not alter any observation value.</p>
+source is retained). Dynacard sources retain only <code>cases</code>, filtered to
+each config's projected inputs, including only the required metric or candidate keys.
+Settings, library metadata, intervention advice and card coordinates are never staged.
+<code>retained_source_fields</code> declares nested key selection: mappings select
+keys in objects or list items, null leaves retain values, and a null selection means
+no nested filtering. Selecting inputs does not alter any observation value.</p>
 <p>The bundle contains a dataset card, <code>manifest.json</code>,
 <code>&lt;config&gt;/train.jsonl</code>, and <code>sources/&lt;config&gt;.json</code>.
 Config names and column names form the website registry contract. Source metadata is
-retained, null cells remain null, and missing columns are padded with null across rows.
+retained where selected, null cells remain null, and missing columns are padded with null across rows.
 Empty tables, nested cells, non-finite observations, and private filesystem/contact
 locators are rejected before a destination is created. Existing destinations are preserved.</p>
 <p>The layout follows the public
@@ -102,7 +110,7 @@ sidecars; they do not establish independent engineering qualification.</p>
 <tr><td>casing_profiles</td><td>depth_ft, tubing_leak_internal_psi, frac_internal_psi, external_psi, tubing_leak_net_psi, frac_net_psi</td></tr>
 <tr><td>casing_products</td><td>label, grade, od_in, weight_ppf, wall_in, id_in, d_over_t, burst_psi, collapse_psi, body_yield_lbf, collapse_regime, passes_all, max_frac_surface_pressure_psi</td></tr>
 <tr><td>casing_checks</td><td>product, mode, load_case, rating, max_load, load_unit, min_design_factor, governing_depth_ft, required_design_factor, passes</td></tr>
-<tr><td>sloshing_curves</td><td>shape, characteristic_length, depth_over_characteristic_length, dimensionless_frequency</td></tr>
+<tr><td>sloshing_curves</td><td>shape, characteristic_length_definition, depth_over_characteristic_length, dimensionless_frequency</td></tr>
 <tr><td>sloshing_lookup</td><td>shape, span_m, span_definition, depth_ratio, depth_ratio_definition, period_s</td></tr>
 <tr><td>dynacard_cases</td><td>mode, seed, classification, confidence, severity, model_version, n_points, fluid_load_lbf, peak_load_lbf, min_load_lbf, card_area_in_lbf, area_vs_healthy_pct</td></tr>
 <tr><td>dynacard_differential</td><td>case_mode, candidate_rank, candidate_mode, probability</td></tr>
@@ -118,7 +126,9 @@ follow the four check functions in <code>src/digitalmodel/well/tubulars/casing_d
 Design factors are dimensionless. Unequal profile lengths and unknown check units fail
 before bundle creation; failed source checks remain false.</p>
 <p>The sloshing master curve always uses depth divided by characteristic length:
-length for rectangles, diameter for cylinders and width for ovals. The dimensional
+length for rectangles, diameter for cylinders and width for ovals.
+<code>characteristic_length_definition</code> contains that basis label, not a length.
+The dimensional
 lookup instead uses depth/height for ovals. This distinction follows
 <code>build_sloshing_explorer.py::_norm_curve</code> and <code>_lookup_table</code>;
 the source oval curve label alone does not describe its coordinate. Each lookup row
