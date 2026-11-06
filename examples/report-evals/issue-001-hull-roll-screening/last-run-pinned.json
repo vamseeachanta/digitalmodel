@@ -1,0 +1,180 @@
+{
+ "schema_version": "1.0",
+ "report_id": "issue-001-hull-roll-screening",
+ "mode": "rebuild",
+ "started_utc": "2026-11-06T17:51:07Z",
+ "finished_utc": "2026-11-06T17:51:10Z",
+ "grade": "PASS",
+ "pinned_commit": "8d08ea24198dcb99217df82325688a331f8aefce",
+ "artifacts": {
+  "results.json": "5dc4cfa727f1894c168a9603223d5552789ab419971861fba9f4227d1e16202f",
+  "eval.py": "5cb0633cfa1f7004b5b479ef4a8f4be941a5e1a6ecf0388bb2d6897fc8dda024",
+  "../evalkit.py": "789f47d4db0316b02cf262fcfc82333b0929bcec91e1537868ab43762845c0a2"
+ },
+ "python": "3.12.10",
+ "platform": "Windows",
+ "context": {
+  "revision": "pinned",
+  "repo_root": "dm-evals",
+  "repo_head": "2417416f7d8e70e2173605ca48ab416cdda3d413",
+  "sha256": {
+   "scripts/capabilities/build_generic_hull_screening.py": "ae325a7f24b2aac91ca81d1729023e38f575f0cba95f6f476cc785e0f46b293c",
+   "src/digitalmodel/hydrodynamics/utube_tank.py": "17e535267435fde2573da70042c9d53f5980da5b0bcefcebb1c26792148987cf",
+   "docs/api/cfd/data/generic_hull_roll_screening.json": "209cfe10038c3233b071d8e9b5ceb47c16eeb52beaed83ec804df99bf97d864b"
+  },
+  "code_mode": "historical"
+ },
+ "errors": [],
+ "results": [
+  {
+   "id": "reduction_18s_2pct_alpha002",
+   "expected": 24.3,
+   "got": 24.3,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_5pct_alpha002",
+   "expected": 10.5,
+   "got": 10.5,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_2pct_alpha005",
+   "expected": 46.1,
+   "got": 46.1,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_5pct_alpha005",
+   "expected": 23.3,
+   "got": 23.3,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_2pct_alpha010",
+   "expected": 61.4,
+   "got": 61.4,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_5pct_alpha010",
+   "expected": 37.9,
+   "got": 37.9,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_2pct_alpha015",
+   "expected": 66.0,
+   "got": 66.0,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_5pct_alpha015",
+   "expected": 45.6,
+   "got": 45.6,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_2pct_alpha020",
+   "expected": 67.2,
+   "got": 67.2,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_5pct_alpha020",
+   "expected": 48.7,
+   "got": 48.7,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "tank_peak_period_18s_2pct_alpha005",
+   "expected": 18.5,
+   "got": 18.5,
+   "unit": "s",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "long_period_penalty_60s_alpha005",
+   "expected": 6.0,
+   "got": 6.0,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "long_period_penalty_60s_alpha020",
+   "expected": 29.5,
+   "got": 29.5,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "slow_forcing_limit_alpha020",
+   "expected": 25.0,
+   "got": 25.0,
+   "unit": "%",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "archive_cases_reproduced",
+   "expected": 20,
+   "got": 20,
+   "unit": "cases",
+   "basis": "fixed",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": "20 of 20 declared cases, fields reduction_percent, bare_peak_rao, tank_peak_rao, long_period_penalty_percent, bare_peak_period_s, tank_peak_period_s"
+  }
+ ]
+}
