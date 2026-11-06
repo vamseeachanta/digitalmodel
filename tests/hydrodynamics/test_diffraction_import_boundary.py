@@ -272,6 +272,28 @@ def test_cli_help_and_collection_never_request_interfaces(tmp_path):
     )
 
 
+@pytest.mark.parametrize("option", ["--tolerance", "-t"])
+def test_compare_retired_tolerance_never_requests_interface(option, tmp_path):
+    _run_guarded(
+        f"""
+        from pathlib import Path
+        from click.testing import CliRunner
+        from digitalmodel.hydrodynamics.diffraction.cli import cli
+
+        model = Path({str(tmp_path / "model.sim")!r})
+        model.write_text("test input")
+        result = CliRunner().invoke(cli, [
+            "compare", str(model.parent), str(model), "test",
+            "--water-depth", "100", {option!r}, "0.1",
+        ])
+        assert result.exit_code == 2, result.output
+        assert "tolerance requires an explicit comparison policy" in result.output
+        assert attempts == []
+    """,
+        tmp_path,
+    )
+
+
 def test_cli_missing_interface_fails_at_command_time(tmp_path):
     _run_guarded(
         f"""
@@ -291,7 +313,8 @@ def test_cli_missing_interface_fails_at_command_time(tmp_path):
         ):
             result = runner.invoke(cli, command + ["--water-depth", "100"])
             assert result.exit_code == 1, result.output
-            assert "OrcFxAPI not available" in result.output
+            assert "OrcaWave converter unavailable" in result.output
+            assert "OrcFxAPI or a converter dependency failed to import" in result.output
             assert attempts and set(attempts) == {{"OrcFxAPI"}}
             if resolved_attempts is None:
                 resolved_attempts = attempts.copy()
@@ -343,6 +366,9 @@ def test_cli_resolves_converter_when_commands_run(tmp_path):
                 assert result.exit_code == 1, result.output
                 assert "converter reached" in result.output
                 converter.assert_called_once()
+                if command[0] == "compare":
+                    assert "Comparison mode: diagnostic; no acceptance policy supplied" in result.output
+                    assert "Tolerance:" not in result.output
         assert attempts and set(attempts) == {{"OrcFxAPI"}}
     """,
         tmp_path,
@@ -413,16 +439,46 @@ def test_flags_reflect_resolved_exports(
             ):
                 result = runner.invoke(cli, command + ["--water-depth", "100"])
                 assert result.exit_code == 1, result.output
-                assert "OrcFxAPI not available" in result.output
+                assert "OrcaWave converter unavailable" in result.output
+                assert "OrcFxAPI or a converter dependency failed to import" in result.output
                 assert "NoneType" not in result.output
             try:
                 BatchProcessor([])._process_orcawave(None)
             except ImportError as exc:
-                assert "OrcFxAPI required" in str(exc)
+                assert "OrcaWave converter unavailable" in str(exc)
+                assert "OrcFxAPI or a converter dependency failed to import" in str(exc)
             else:
                 raise AssertionError("batch conversion accepted an unavailable converter")
     """,
         tmp_path,
+    )
+
+
+def test_flags_reject_exports_after_interface_fixture_teardown(tmp_path):
+    """Cached converter classes must not make a missing interface available."""
+    _run_guarded(
+        """
+        import importlib
+        from types import ModuleType
+        from digitalmodel.hydrodynamics import diffraction as package
+        from digitalmodel.hydrodynamics.diffraction import solver
+
+        # Model the converter tests' temporary interface and module imports.
+        sys.modules["OrcFxAPI"] = ModuleType("OrcFxAPI")
+        converter = importlib.import_module(solver.__name__ + ".orcawave_converter")
+        extractor = importlib.import_module(solver.__name__ + ".orcawave_data_extraction")
+        assert solver.OrcaWaveConverter is converter.OrcaWaveConverter
+        assert solver.OrcaWaveDataExtractor is extractor.OrcaWaveDataExtractor
+        del sys.modules["OrcFxAPI"]
+
+        assert solver.OrcFxAPI is None
+        for _ in range(2):
+            assert package.ORCAWAVE_AVAILABLE is False
+            assert package.TEST_UTILITIES_AVAILABLE is False
+        assert attempts and set(attempts) == {"OrcFxAPI"}
+    """,
+        tmp_path,
+        guard=_MISSING_INTERFACE,
     )
 
 

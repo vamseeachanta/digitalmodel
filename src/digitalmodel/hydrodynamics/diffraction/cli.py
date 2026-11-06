@@ -221,7 +221,11 @@ def convert_orcawave(model_file, vessel_name, water_depth, output, validate, for
     from digitalmodel.hydrodynamics.diffraction import ORCAWAVE_AVAILABLE
 
     if not ORCAWAVE_AVAILABLE:
-        click.echo(click.style("[ERROR] OrcFxAPI not available. Install OrcaFlex with Python API.", fg='red', bold=True))
+        click.echo(click.style(
+            "[ERROR] OrcaWave converter unavailable "
+            "(OrcFxAPI or a converter dependency failed to import)",
+            fg='red', bold=True,
+        ))
         sys.exit(1)
 
     from digitalmodel.hydrodynamics.diffraction import OrcaWaveConverter
@@ -315,8 +319,8 @@ def convert_orcawave(model_file, vessel_name, water_depth, output, validate, for
               help='Water depth in meters')
 @click.option('--output', '-o', type=click.Path(), default='comparison',
               help='Output directory (default: comparison)')
-@click.option('--tolerance', '-t', type=float, default=0.05,
-              help='Comparison tolerance (default: 0.05 = 5%)')
+@click.option('--tolerance', '-t', type=float, default=None,
+              help='Retired scalar option; use the Python comparison policy API.')
 def compare(aqwa_folder, orcawave_file, vessel_name, water_depth, output, tolerance):
     """
     Compare AQWA and OrcaWave diffraction results.
@@ -330,10 +334,17 @@ def compare(aqwa_folder, orcawave_file, vessel_name, water_depth, output, tolera
     Example:
         diffraction compare ./aqwa_analysis model.sim FPSO_A -d 1200
     """
+    if tolerance is not None:
+        raise click.UsageError("tolerance requires an explicit comparison policy; use the Python API")
+
     from digitalmodel.hydrodynamics.diffraction import ORCAWAVE_AVAILABLE
 
     if not ORCAWAVE_AVAILABLE:
-        click.echo(click.style("[ERROR] OrcFxAPI not available for OrcaWave comparison.", fg='red', bold=True))
+        click.echo(click.style(
+            "[ERROR] OrcaWave converter unavailable "
+            "(OrcFxAPI or a converter dependency failed to import)",
+            fg='red', bold=True,
+        ))
         sys.exit(1)
 
     from digitalmodel.hydrodynamics.diffraction import OrcaWaveConverter
@@ -345,7 +356,7 @@ def compare(aqwa_folder, orcawave_file, vessel_name, water_depth, output, tolera
     click.echo(f"OrcaWave file: {orcawave_file}")
     click.echo(f"Vessel: {vessel_name}")
     click.echo(f"Water depth: {water_depth} m")
-    click.echo(f"Tolerance: {tolerance * 100}%")
+    click.echo("Comparison mode: diagnostic; no acceptance policy supplied")
     click.echo()
 
     try:
@@ -1253,7 +1264,8 @@ def plot_raos_cmd(model_file, water_depth, vessel_name, output, x_axis, headings
 
     if not ORCAWAVE_AVAILABLE:
         click.echo(click.style(
-            "[ERROR] OrcFxAPI not available. Install OrcaFlex with Python API.",
+            "[ERROR] OrcaWave converter unavailable "
+            "(OrcFxAPI or a converter dependency failed to import)",
             fg="red", bold=True,
         ))
         sys.exit(1)

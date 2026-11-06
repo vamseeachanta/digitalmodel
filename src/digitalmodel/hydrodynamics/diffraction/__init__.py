@@ -212,9 +212,9 @@ def __getattr__(name):
         from digitalmodel.hydrodynamics.diffraction import solver
 
         if name == "ORCAWAVE_AVAILABLE":
-            return solver.OrcaWaveConverter is not None
+            return solver.OrcFxAPI is not None and solver.OrcaWaveConverter is not None
         if name == "TEST_UTILITIES_AVAILABLE":
-            return solver.OrcaWaveDataExtractor is not None
+            return solver.OrcFxAPI is not None and solver.OrcaWaveDataExtractor is not None
         return getattr(solver, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 

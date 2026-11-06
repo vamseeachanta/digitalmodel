@@ -206,7 +206,10 @@ class BatchProcessor:
         from digitalmodel.hydrodynamics.diffraction import ORCAWAVE_AVAILABLE
 
         if not ORCAWAVE_AVAILABLE:
-            raise ImportError("OrcFxAPI required for OrcaWave processing")
+            raise ImportError(
+                "OrcaWave converter unavailable "
+                "(OrcFxAPI or a converter dependency failed to import)"
+            )
 
         from digitalmodel.hydrodynamics.diffraction.solver import OrcaWaveConverter
 

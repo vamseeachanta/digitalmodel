@@ -12,6 +12,7 @@ it changes no hydrodynamic equations, coefficients or acceptance limits.
 | Initial | 2026-10-20 | Defer interface imports so offline test collection can run without licensed software. |
 | 1 | 2026-10-24 | Document missing-interface flags and defer CLI detection until command execution so help and collection stay offline. |
 | 2 | 2026-11-06 | Derive flags from usable exports, cache optional resolutions and preserve command converter mocks. |
+| 3 | 2026-11-06 | Require the interface as well as cached exports, clarify dependency errors and reject retired comparison options before interface detection. |
 
 ## Import contract
 
@@ -39,8 +40,10 @@ read. Without `OrcFxAPI`, all three flags now return `False` rather than the
 previous `True`, so `convert-orcawave`, `compare` and `plot-raos` report the
 missing dependency before conversion. Optional solver exports retain a `None`
 fallback if importing the dependency raises `ImportError`. `ORCAWAVE_AVAILABLE`
-requires the converter export, and `TEST_UTILITIES_AVAILABLE` requires the data
-extractor export; an importable interface alone does not make either flag true.
+requires both the interface and converter exports, and
+`TEST_UTILITIES_AVAILABLE` requires both the interface and data extractor exports;
+an importable interface alone does not make either flag true. Cached converter
+classes left by temporary test interfaces do not bypass the interface check.
 Solver export resolutions, including `None`, are cached on first access for the
 process lifetime. Restart the process after changing installed dependencies.
 Direct converter submodule imports retain their normal missing-dependency
@@ -52,7 +55,11 @@ the interface.
 Importing `digitalmodel.hydrodynamics.diffraction.cli`, displaying command help
 and collecting the diffraction CLI test modules do not request an interface.
 The three commands above read the availability flag and resolve the converter
-only when executed. Tests that explicitly request an interface, including the
+only when executed. An explicit `compare --tolerance` or `compare -t` value is
+rejected with a usage error before any interface request, preserving the retired
+scalar-option policy. CLI and batch dependency errors report an unavailable
+converter, which can mean either the interface or another converter dependency
+failed to import. Tests that explicitly request an interface, including the
 specialized CLI suite's `pytest.importorskip("OrcFxAPI")`, remain outside this
 zero-request collection contract.
 
@@ -101,6 +108,8 @@ module; a separate command-resolution test exercises the specialized CLI test's
 converter patch target. Explicit-resolution fixtures cover an importable
 interface with an unavailable converter or data extractor, dependency messages
 for conversion commands and batch processing, and cached optional exports.
+Regressions also cover temporary interface teardown and the retired tolerance
+guard under rejecting interface imports.
 These fixtures are separate from the rejecting numerical checks.
 Run it with:
 
