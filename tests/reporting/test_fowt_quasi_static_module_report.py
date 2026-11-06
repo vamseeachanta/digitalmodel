@@ -8,6 +8,7 @@ from html.parser import HTMLParser
 import importlib.util
 import json
 import math
+import os
 import re
 import subprocess
 import sys
@@ -242,13 +243,22 @@ def test_report_does_not_depend_on_another_generated_page(tmp_path, monkeypatch)
 
 def test_retention_allows_only_the_named_report_files():
     build = builder()
-    retained = [str((REPORT / name).relative_to(ROOT)) for name in build.DELIVERABLES]
-    retained.append(str(SCRIPT.relative_to(ROOT)))
-    unwanted = str((REPORT / "unretained-output.json").relative_to(ROOT))
+    retained = [(REPORT / name).relative_to(ROOT).as_posix() for name in build.DELIVERABLES]
+    retained.append(SCRIPT.relative_to(ROOT).as_posix())
+    unwanted = (REPORT / "unretained-output.json").relative_to(ROOT).as_posix()
+    env = {key: value for key, value in os.environ.items()
+           if key not in {"GIT_DIR", "GIT_WORK_TREE"}}
     result = subprocess.run(
         ["git", "check-ignore", "--no-index", "--stdin"],
         input="\n".join([*retained, unwanted]) + "\n", cwd=ROOT,
-        text=True, capture_output=True, check=False,
+        text=True, capture_output=True, check=False, env=env,
     )
     assert result.returncode == 0, result.stderr
     assert result.stdout.splitlines() == [unwanted]
+
+
+def test_retention_ignores_inherited_git_environment(monkeypatch, tmp_path):
+    """An enclosing Git operation must not redirect the checkout retention check."""
+    monkeypatch.setenv("GIT_DIR", str(tmp_path / "unrelated-git-dir"))
+    monkeypatch.setenv("GIT_WORK_TREE", str(tmp_path / "unrelated-work-tree"))
+    test_retention_allows_only_the_named_report_files()

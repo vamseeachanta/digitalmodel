@@ -55,7 +55,9 @@ CHANGES = [{"revision": "A", "date": "2026-10-28", "change":
            {"revision": "B", "date": "2026-10-28", "change":
             "Calculated report values are rounded to 12 decimal places before serialization to remove final-bit numerical differences within the test tolerances."},
            {"revision": "C", "date": "2026-11-06", "change":
-            "Scale bracket accuracy with frequency, bound qualification to diagonal controls, derive revision labels from history and remove ambient encoding and generated-page dependencies."}]
+            "Scale bracket accuracy with frequency, bound qualification to diagonal controls, derive revision labels from history and remove ambient encoding and generated-page dependencies."},
+           {"revision": "D", "date": "2026-11-06", "change":
+            "Use bracket endpoint magnitudes to keep the root tolerance positive across negative frequencies and zero; isolate retention checks from inherited Git checkout variables and use portable paths."}]
 # Contracts are based on the bounded source review, not execution of a campaign.
 CONTRACTS = {
     "basis": ("Rigid mass and inertia assembly", "Supply attributed component masses, tensors and reference origins; tower density is piecewise linear."),
@@ -226,7 +228,7 @@ def render(data):
         escape(json_text(INPUTS)) + '</pre></details>')
     methods = [row([r["module"] + '.' + r["function"], ', '.join(r["arguments"]),
                     r["purpose"], r["contract"], r["status"]]) for r in inventory()]
-    section(4, "Analysis Methodology", """<p>Natural roots solve det[K−ω²(M+A(ω))]=0. The implementation linearly interpolates added mass, sorts eigenbranches, retains the lowest positive root on each branch, and assigns modes by dominant mass-weighted participation. Sampled residuals within 32 binary64 epsilons of the eigenvalue/frequency-squared scale are treated as roots; adjacent intervals are excluded to prevent duplicate candidates. Strict brackets use an absolute tolerance of four binary64 epsilons times the upper bracket frequency, plus the solver relative tolerance [C1].</p>
+    section(4, "Analysis Methodology", """<p>Natural roots solve det[K−ω²(M+A(ω))]=0. The implementation linearly interpolates added mass, sorts eigenbranches, retains the lowest positive root on each branch, and assigns modes by dominant mass-weighted participation. Sampled residuals within 32 binary64 epsilons of the eigenvalue/frequency-squared scale are treated as roots; adjacent intervals are excluded to prevent duplicate candidates. Strict brackets use an absolute tolerance of four binary64 epsilons times the largest absolute bracket endpoint, plus the solver relative tolerance [C1].</p>
 <p>Modal crossings, multiple roots on a frequency-dependent branch and nearly degenerate mode labels remain unresolved. The search does not establish roots beyond the sampled band. Coupled-system coverage is retained in the existing analytical eigenvalue test [C3].</p>
 <p>The response convention is Z=K−ω²(M+A)−iω(B+Bextra), Zq=F. Extra damping is applied only to the implementation-selected components. This example sets it to zero and does not qualify that damping model [C1].</p>
 <p>The inventory status ARITHMETIC_CONTROL: diagonal synthetic identifies these specific controls. It does not qualify a whole function, added-mass interpolation, coupled branch ordering or modal labelling; every other method remains NOT_EVALUATED. Function arguments are listed in source order; defaults and return contracts remain in the source [C2].</p>""" + table(

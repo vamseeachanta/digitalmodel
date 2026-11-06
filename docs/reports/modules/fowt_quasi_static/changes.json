@@ -13,5 +13,10 @@
     "change": "Scale bracket accuracy with frequency, bound qualification to diagonal controls, derive revision labels from history and remove ambient encoding and generated-page dependencies.",
     "date": "2026-11-06",
     "revision": "C"
+  },
+  {
+    "change": "Use bracket endpoint magnitudes to keep the root tolerance positive across negative frequencies and zero; isolate retention checks from inherited Git checkout variables and use portable paths.",
+    "date": "2026-11-06",
+    "revision": "D"
   }
 ]

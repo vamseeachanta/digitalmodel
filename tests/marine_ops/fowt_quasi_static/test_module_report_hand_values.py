@@ -70,6 +70,26 @@ def test_between_grid_root_tolerance_scales_with_the_bracket(scale):
     np.testing.assert_allclose(actual, expected, rtol=1e-11, atol=0.)
 
 
+@pytest.mark.parametrize("scale", [1e-8, 1., 1e8])
+@pytest.mark.parametrize("zero_endpoint", [False, True])
+def test_negative_frequency_brackets_retain_positive_roots(scale, zero_endpoint):
+    """Negative roots are discarded even when a bracket ends at zero.
+
+    The diagonal determinant has roots ±j*scale/4. The returned periods must
+    use the positive roots and preserve the same relative accuracy at each scale.
+    """
+    omega = np.arange(-1.625, 1.75, 0.25)
+    if zero_endpoint:
+        omega = np.concatenate(([-0.5, 0.], np.arange(0.125, 1.75, 0.25)))
+    omega *= scale
+    frequencies = np.arange(1., 7.) * scale / 4
+    actual = natural_periods(
+        omega, np.zeros((len(omega), 6, 6)), np.eye(6),
+        np.diag(frequencies ** 2),
+    )
+    np.testing.assert_allclose(actual, 2 * math.pi / frequencies, rtol=1e-11, atol=0.)
+
+
 def test_scalar_impedance_full_complex_vector():
     """Z=5-1²(2+1)-i*1*1=2-i; 2/Z=(4+2i)/5.
 
