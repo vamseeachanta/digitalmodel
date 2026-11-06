@@ -242,10 +242,17 @@ def test_sloshing_retained_sources_exclude_solver_sections():
 
 
 @pytest.mark.parametrize("name", ["dynacard_cases", "dynacard_differential"])
-def test_dynacard_retained_sources_contain_only_projected_inputs(name):
+@pytest.mark.parametrize(
+    "fields_only", [False, True], ids=["sections-and-fields", "fields-only"]
+)
+def test_dynacard_retained_sources_contain_only_projected_inputs(
+    name, fields_only, monkeypatch
+):
     """Retained inputs reproduce rows without settings, library data or advice."""
     import hashlib
 
+    if fields_only:
+        monkeypatch.delitem(bundles.SOURCE_SECTIONS, name)
     files = bundles.bundle_files("digitalmodel-artificial-lift", license_id="mit")
     manifest = json.loads(files["manifest.json"])
     retained_bytes = files[f"sources/{name}.json"]
@@ -288,7 +295,8 @@ def test_dynacard_retained_sources_contain_only_projected_inputs(name):
     assert rows == project(original) == project(retained)
     assert table["source_sha256"] == hashlib.sha256(source_bytes).hexdigest()
     assert table["retained_source_sha256"] == hashlib.sha256(retained_bytes).hexdigest()
-    assert table["retained_source_sections"] == ["cases"]
+    assert table["retained_source_sections"] == (None if fields_only else ["cases"])
+    assert table["retained_source_fields"] == bundles.SOURCE_FIELDS[name]
 
 
 def test_unselected_sloshing_metadata_is_never_retained_or_projected(monkeypatch):
@@ -312,8 +320,11 @@ def test_unselected_sloshing_metadata_is_never_retained_or_projected(monkeypatch
     assert actual["manifest.json"] != expected["manifest.json"]
 
 
+@pytest.mark.parametrize(
+    "fields_only", [False, True], ids=["sections-and-fields", "fields-only"]
+)
 def test_dynacard_excluded_nested_content_never_enters_the_bundle(
-    tmp_path, monkeypatch
+    tmp_path, monkeypatch, fields_only
 ):
     """Extra keys at every selected nesting level are excluded before locator checks."""
     read = bundles._text_bytes
@@ -333,6 +344,9 @@ def test_dynacard_excluded_nested_content_never_enters_the_bundle(
         return data
 
     expected = bundles.bundle_files("digitalmodel-artificial-lift", license_id="mit")
+    if fields_only:
+        for name in ("dynacard_cases", "dynacard_differential"):
+            monkeypatch.delitem(bundles.SOURCE_SECTIONS, name)
     monkeypatch.setattr(bundles, "_text_bytes", with_excluded_content)
     actual = bundles.bundle_files("digitalmodel-artificial-lift", license_id="mit")
     for name in ("dynacard_cases", "dynacard_differential"):

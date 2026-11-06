@@ -228,7 +228,11 @@ def _table_files(name, project, source_bytes):
     fields = SOURCE_FIELDS.get(name)
     if fields is not None:
         document = _select_fields(document, fields)
-    retained_bytes = _json_bytes(document) if sections is not None else source_bytes
+    retained_bytes = (
+        _json_bytes(document)
+        if sections is not None or fields is not None
+        else source_bytes
+    )
     _check_locators(document)
     rows, columns = _rows(project(document))
     table_path = f"{name}/train.jsonl"
