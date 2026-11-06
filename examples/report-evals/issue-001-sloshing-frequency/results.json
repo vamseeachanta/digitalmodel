@@ -1,0 +1,428 @@
+{
+ "$schema": "https://www.aceengineer.com/assets/data/report-evals/results.schema.json",
+ "schema_version": "1.0",
+ "report": {
+  "id": "issue-001-sloshing-frequency",
+  "title": "Tank sloshing CFD study with OpenFOAM: first-mode frequency against linear theory",
+  "url": "https://www.aceengineer.com/newsletter/issue-001-energy-street/",
+  "published": "2026-10-27",
+  "family": "newsletter",
+  "related_urls": [
+   "https://vamseeachanta.github.io/digitalmodel/cfd/sloshing-cfd-study.html"
+  ]
+ },
+ "code": {
+  "repo": "https://github.com/vamseeachanta/digitalmodel",
+  "commit": "705857af62385a4567c96be99a129cdff3051a52",
+  "paths": [
+   "docs/api/structural/sloshing-cfd-benchmark.json",
+   "docs/api/cfd/sloshing-convergence.json",
+   "scripts/cfd/run_sloshing_benchmark.py",
+   "scripts/cfd/run_sloshing_convergence.py",
+   "examples/report-evals/issue-001-sloshing-frequency/eval.py"
+  ],
+  "python": "3.10 or later, standard library only",
+  "install": "none for the eval; OpenFOAM ESI v2312 (Linux) only to rerun the CFD"
+ },
+ "inputs": [
+  {
+   "id": "cfd_outputs",
+   "description": "Archived free-decay frequencies at h/L 0.15, 0.30, 0.50, 0.70 and the five-mesh, three-timestep study at h/L 0.30",
+   "source": "digitalmodel repository",
+   "url": "https://github.com/vamseeachanta/digitalmodel/tree/705857af62385a4567c96be99a129cdff3051a52/docs/api",
+   "licence": "MIT",
+   "version_or_date": "705857af62385a4567c96be99a129cdff3051a52",
+   "updates": "never",
+   "supplied_by": "repository",
+   "required": true
+  },
+  {
+   "id": "openfoam",
+   "description": "OpenFOAM ESI v2312 with interFoam, to rerun the CFD cases (optional)",
+   "source": "OpenCFD Ltd, GPL v3",
+   "url": "https://www.openfoam.com/",
+   "version_or_date": "v2312",
+   "updates": "never",
+   "supplied_by": "reader",
+   "required": false
+  }
+ ],
+ "missing_data": [
+  {
+   "id": "openfoam_rerun",
+   "what": "A Linux machine with OpenFOAM ESI v2312, to rerun the free-decay cases",
+   "why": "The eval reads the archived CFD outputs; it does not run a CFD solver.",
+   "how_to_supply": "Say whether you have OpenFOAM v2312; each case took 520 to 660 s on our workstation.",
+   "effect": "Without it the CFD side of the comparison is taken from the archive."
+  }
+ ],
+ "cannot_do": [
+  "Rerun the CFD inside an AI chat: it needs OpenFOAM on Linux and about 10 minutes per case.",
+  "Say anything about 3D or violent sloshing: the study covers the planar first mode of a 2D tank at small amplitude.",
+  "Give impact pressures: frequency, phase and run-up are the quantities checked."
+ ],
+ "eval": {
+  "command": "python examples/report-evals/issue-001-sloshing-frequency/eval.py",
+  "prompt": "examples/report-evals/issue-001-sloshing-frequency/PROMPT.md",
+  "cadence": "weekly",
+  "runtime_s": 1,
+  "network": false
+ },
+ "results": [
+  {
+   "id": "omega1_linear_hl15",
+   "label": "Linear-theory first-mode frequency, h/L = 0.15, sqrt(pi tanh(pi h/L))",
+   "page_ref": "Study page section 1 table",
+   "value": 1.1746,
+   "unit": "-",
+   "period": "single fill level",
+   "source": "Closed form, linear potential theory",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute()",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 0.0001
+   },
+   "basis": "fixed",
+   "limits": [
+    "2D rectangular tank, breadth 1 m, small-amplitude free decay (0.02 m perturbation), planar first mode only."
+   ]
+  },
+  {
+   "id": "omega1_cfd_hl15",
+   "label": "CFD first-mode frequency, h/L = 0.15, omega1 sqrt(L/g)",
+   "page_ref": "Study page section 1 table",
+   "value": 1.1779,
+   "unit": "-",
+   "period": "single free-decay run",
+   "source": "Archived OpenFOAM ESI v2312 interFoam free-decay runs, docs/api/structural/sloshing-cfd-benchmark.json",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute()",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 0.0001
+   },
+   "basis": "fixed",
+   "limits": [
+    "CFD frequencies are read from archived run outputs; the eval does not rerun OpenFOAM.",
+    "2D rectangular tank, breadth 1 m, small-amplitude free decay (0.02 m perturbation), planar first mode only."
+   ]
+  },
+  {
+   "id": "error_pct_hl15",
+   "label": "CFD against linear theory, h/L = 0.15",
+   "page_ref": "Study page section 1 table",
+   "value": 0.28,
+   "unit": "%",
+   "period": "single free-decay run",
+   "source": "Archived OpenFOAM ESI v2312 interFoam free-decay runs, docs/api/structural/sloshing-cfd-benchmark.json",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute()",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 0.005
+   },
+   "basis": "fixed",
+   "limits": [
+    "CFD frequencies are read from archived run outputs; the eval does not rerun OpenFOAM.",
+    "2D rectangular tank, breadth 1 m, small-amplitude free decay (0.02 m perturbation), planar first mode only."
+   ]
+  },
+  {
+   "id": "omega1_linear_hl30",
+   "label": "Linear-theory first-mode frequency, h/L = 0.30, sqrt(pi tanh(pi h/L))",
+   "page_ref": "Study page section 1 table",
+   "value": 1.521,
+   "unit": "-",
+   "period": "single fill level",
+   "source": "Closed form, linear potential theory",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute()",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 0.0001
+   },
+   "basis": "fixed",
+   "limits": [
+    "2D rectangular tank, breadth 1 m, small-amplitude free decay (0.02 m perturbation), planar first mode only."
+   ]
+  },
+  {
+   "id": "omega1_cfd_hl30",
+   "label": "CFD first-mode frequency, h/L = 0.30, omega1 sqrt(L/g)",
+   "page_ref": "Study page section 1 table",
+   "value": 1.5164,
+   "unit": "-",
+   "period": "single free-decay run",
+   "source": "Archived OpenFOAM ESI v2312 interFoam free-decay runs, docs/api/structural/sloshing-cfd-benchmark.json",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute()",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 0.0001
+   },
+   "basis": "fixed",
+   "limits": [
+    "CFD frequencies are read from archived run outputs; the eval does not rerun OpenFOAM.",
+    "2D rectangular tank, breadth 1 m, small-amplitude free decay (0.02 m perturbation), planar first mode only."
+   ]
+  },
+  {
+   "id": "error_pct_hl30",
+   "label": "CFD against linear theory, h/L = 0.30",
+   "page_ref": "Study page section 1 table",
+   "value": 0.3,
+   "unit": "%",
+   "period": "single free-decay run",
+   "source": "Archived OpenFOAM ESI v2312 interFoam free-decay runs, docs/api/structural/sloshing-cfd-benchmark.json",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute()",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 0.005
+   },
+   "basis": "fixed",
+   "limits": [
+    "CFD frequencies are read from archived run outputs; the eval does not rerun OpenFOAM.",
+    "2D rectangular tank, breadth 1 m, small-amplitude free decay (0.02 m perturbation), planar first mode only."
+   ]
+  },
+  {
+   "id": "omega1_linear_hl50",
+   "label": "Linear-theory first-mode frequency, h/L = 0.50, sqrt(pi tanh(pi h/L))",
+   "page_ref": "Study page section 1 table",
+   "value": 1.6974,
+   "unit": "-",
+   "period": "single fill level",
+   "source": "Closed form, linear potential theory",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute()",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 0.0001
+   },
+   "basis": "fixed",
+   "limits": [
+    "2D rectangular tank, breadth 1 m, small-amplitude free decay (0.02 m perturbation), planar first mode only."
+   ]
+  },
+  {
+   "id": "omega1_cfd_hl50",
+   "label": "CFD first-mode frequency, h/L = 0.50, omega1 sqrt(L/g)",
+   "page_ref": "Study page section 1 table",
+   "value": 1.6974,
+   "unit": "-",
+   "period": "single free-decay run",
+   "source": "Archived OpenFOAM ESI v2312 interFoam free-decay runs, docs/api/structural/sloshing-cfd-benchmark.json",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute()",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 0.0001
+   },
+   "basis": "fixed",
+   "limits": [
+    "CFD frequencies are read from archived run outputs; the eval does not rerun OpenFOAM.",
+    "2D rectangular tank, breadth 1 m, small-amplitude free decay (0.02 m perturbation), planar first mode only."
+   ]
+  },
+  {
+   "id": "error_pct_hl50",
+   "label": "CFD against linear theory, h/L = 0.50",
+   "page_ref": "Study page section 1 table",
+   "value": 0.0,
+   "unit": "%",
+   "period": "single free-decay run",
+   "source": "Archived OpenFOAM ESI v2312 interFoam free-decay runs, docs/api/structural/sloshing-cfd-benchmark.json",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute()",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 0.005
+   },
+   "basis": "fixed",
+   "limits": [
+    "CFD frequencies are read from archived run outputs; the eval does not rerun OpenFOAM.",
+    "2D rectangular tank, breadth 1 m, small-amplitude free decay (0.02 m perturbation), planar first mode only."
+   ]
+  },
+  {
+   "id": "omega1_linear_hl70",
+   "label": "Linear-theory first-mode frequency, h/L = 0.70, sqrt(pi tanh(pi h/L))",
+   "page_ref": "Study page section 1 table",
+   "value": 1.7508,
+   "unit": "-",
+   "period": "single fill level",
+   "source": "Closed form, linear potential theory",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute()",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 0.0001
+   },
+   "basis": "fixed",
+   "limits": [
+    "2D rectangular tank, breadth 1 m, small-amplitude free decay (0.02 m perturbation), planar first mode only."
+   ]
+  },
+  {
+   "id": "omega1_cfd_hl70",
+   "label": "CFD first-mode frequency, h/L = 0.70, omega1 sqrt(L/g)",
+   "page_ref": "Study page section 1 table",
+   "value": 1.7508,
+   "unit": "-",
+   "period": "single free-decay run",
+   "source": "Archived OpenFOAM ESI v2312 interFoam free-decay runs, docs/api/structural/sloshing-cfd-benchmark.json",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute()",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 0.0001
+   },
+   "basis": "fixed",
+   "limits": [
+    "CFD frequencies are read from archived run outputs; the eval does not rerun OpenFOAM.",
+    "2D rectangular tank, breadth 1 m, small-amplitude free decay (0.02 m perturbation), planar first mode only."
+   ]
+  },
+  {
+   "id": "error_pct_hl70",
+   "label": "CFD against linear theory, h/L = 0.70",
+   "page_ref": "Study page section 1 table",
+   "value": 0.0,
+   "unit": "%",
+   "period": "single free-decay run",
+   "source": "Archived OpenFOAM ESI v2312 interFoam free-decay runs, docs/api/structural/sloshing-cfd-benchmark.json",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute()",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 0.005
+   },
+   "basis": "fixed",
+   "limits": [
+    "CFD frequencies are read from archived run outputs; the eval does not rerun OpenFOAM.",
+    "2D rectangular tank, breadth 1 m, small-amplitude free decay (0.02 m perturbation), planar first mode only."
+   ]
+  },
+  {
+   "id": "max_error_pct_all_fills",
+   "label": "Largest CFD error against linear theory over the four fills (issue 1: within about 0.30 %)",
+   "page_ref": "Issue 1 page; study page section 1",
+   "value": 0.3,
+   "unit": "%",
+   "period": "four fills, h/L 0.15 to 0.70",
+   "source": "Archived OpenFOAM ESI v2312 interFoam free-decay runs, docs/api/structural/sloshing-cfd-benchmark.json",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute()",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 0.005
+   },
+   "basis": "fixed",
+   "limits": [
+    "CFD frequencies are read from archived run outputs; the eval does not rerun OpenFOAM.",
+    "2D rectangular tank, breadth 1 m, small-amplitude free decay (0.02 m perturbation), planar first mode only.",
+    "Four fill levels only."
+   ]
+  },
+  {
+   "id": "freq_linear_hz_l1_hl30",
+   "label": "Linear-theory first-mode frequency, L = 1 m, h/L = 0.30",
+   "page_ref": "Study page, convergence section",
+   "value": 0.758054,
+   "unit": "Hz",
+   "period": "single fill level",
+   "source": "Closed form, linear potential theory, g = 9.80665 m/s2",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute()",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 5e-07
+   },
+   "basis": "fixed",
+   "limits": [
+    "2D rectangular tank, breadth 1 m, small-amplitude free decay (0.02 m perturbation), planar first mode only."
+   ]
+  },
+  {
+   "id": "finest_mesh_error_pct",
+   "label": "CFD error on the finest mesh (160 x 160 cells), h/L = 0.30",
+   "page_ref": "Study page, mesh table",
+   "value": 0.296,
+   "unit": "%",
+   "period": "single free-decay run",
+   "source": "Archived OpenFOAM ESI v2312 mesh and timestep study, docs/api/cfd/sloshing-convergence.json",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute()",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "CFD frequencies are read from archived run outputs; the eval does not rerun OpenFOAM.",
+    "2D rectangular tank, breadth 1 m, small-amplitude free decay (0.02 m perturbation), planar first mode only."
+   ]
+  },
+  {
+   "id": "richardson_order",
+   "label": "Observed order of accuracy, meshes 40, 80 and 160 cells per breadth",
+   "page_ref": "Study page, Richardson line",
+   "value": 0.191,
+   "unit": "-",
+   "period": "mesh study, h/L = 0.30",
+   "source": "Archived OpenFOAM ESI v2312 mesh and timestep study, docs/api/cfd/sloshing-convergence.json",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute(); Richardson extrapolation (Roache 1998)",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "CFD frequencies are read from archived run outputs; the eval does not rerun OpenFOAM.",
+    "Order far below the formal 2: a non-mesh term dominates, so the GCI is indicative only."
+   ]
+  },
+  {
+   "id": "richardson_freq_hz",
+   "label": "Grid-converged (extrapolated) frequency, h/L = 0.30",
+   "page_ref": "Study page, Richardson line",
+   "value": 0.756556,
+   "unit": "Hz",
+   "period": "mesh study, h/L = 0.30",
+   "source": "Archived OpenFOAM ESI v2312 mesh and timestep study, docs/api/cfd/sloshing-convergence.json",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute(); Richardson extrapolation (Roache 1998)",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 5e-07
+   },
+   "basis": "fixed",
+   "limits": [
+    "CFD frequencies are read from archived run outputs; the eval does not rerun OpenFOAM."
+   ]
+  },
+  {
+   "id": "gci_fine_pct",
+   "label": "Grid convergence index, fine mesh (safety factor 1.25)",
+   "page_ref": "Study page, Richardson line",
+   "value": 0.1239,
+   "unit": "%",
+   "period": "mesh study, h/L = 0.30",
+   "source": "Archived OpenFOAM ESI v2312 mesh and timestep study, docs/api/cfd/sloshing-convergence.json",
+   "method": "examples/report-evals/issue-001-sloshing-frequency/eval.py compute(); GCI per ASME V&V 20-2009",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "705857af62385a4567c96be99a129cdff3051a52",
+   "tolerance": {
+    "abs": 5e-05
+   },
+   "basis": "fixed",
+   "limits": [
+    "CFD frequencies are read from archived run outputs; the eval does not rerun OpenFOAM.",
+    "Indicative only (low observed order)."
+   ]
+  }
+ ]
+}

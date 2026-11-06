@@ -1,0 +1,156 @@
+{
+ "schema_version": "1.0",
+ "report_id": "issue-001-hull-roll-screening",
+ "mode": "rebuild",
+ "started_utc": "2026-11-06T15:23:04Z",
+ "finished_utc": "2026-11-06T15:23:06Z",
+ "grade": "PASS",
+ "python": "3.12.10",
+ "platform": "Windows",
+ "context": {
+  "repo_root": "dm-evals",
+  "repo_head": "60cd9733d30340608c3538e559a5e04494dcb619",
+  "sha256": {
+   "scripts/capabilities/build_generic_hull_screening.py": "ae325a7f24b2aac91ca81d1729023e38f575f0cba95f6f476cc785e0f46b293c",
+   "src/digitalmodel/hydrodynamics/utube_tank.py": "17e535267435fde2573da70042c9d53f5980da5b0bcefcebb1c26792148987cf",
+   "docs/api/cfd/data/generic_hull_roll_screening.json": "209cfe10038c3233b071d8e9b5ceb47c16eeb52beaed83ec804df99bf97d864b"
+  }
+ },
+ "results": [
+  {
+   "id": "reduction_18s_2pct_alpha002",
+   "expected": 24.3,
+   "got": 24.3,
+   "unit": "%",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_5pct_alpha002",
+   "expected": 10.5,
+   "got": 10.5,
+   "unit": "%",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_2pct_alpha005",
+   "expected": 46.1,
+   "got": 46.1,
+   "unit": "%",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_5pct_alpha005",
+   "expected": 23.3,
+   "got": 23.3,
+   "unit": "%",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_2pct_alpha010",
+   "expected": 61.4,
+   "got": 61.4,
+   "unit": "%",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_5pct_alpha010",
+   "expected": 37.9,
+   "got": 37.9,
+   "unit": "%",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_2pct_alpha015",
+   "expected": 66.0,
+   "got": 66.0,
+   "unit": "%",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_5pct_alpha015",
+   "expected": 45.6,
+   "got": 45.6,
+   "unit": "%",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_2pct_alpha020",
+   "expected": 67.2,
+   "got": 67.2,
+   "unit": "%",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "reduction_18s_5pct_alpha020",
+   "expected": 48.7,
+   "got": 48.7,
+   "unit": "%",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "tank_peak_period_18s_2pct_alpha005",
+   "expected": 18.5,
+   "got": 18.5,
+   "unit": "s",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "long_period_penalty_60s_alpha005",
+   "expected": 6.0,
+   "got": 6.0,
+   "unit": "%",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "long_period_penalty_60s_alpha020",
+   "expected": 29.5,
+   "got": 29.5,
+   "unit": "%",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "slow_forcing_limit_alpha020",
+   "expected": 25.0,
+   "got": 25.0,
+   "unit": "%",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "archive_cases_reproduced",
+   "expected": 20,
+   "got": 20,
+   "unit": "cases",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": "20 of 20 cases in docs/api/cfd/data/generic_hull_roll_screening.json"
+  }
+ ]
+}

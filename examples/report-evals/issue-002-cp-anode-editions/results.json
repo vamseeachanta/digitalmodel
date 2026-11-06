@@ -1,0 +1,1752 @@
+{
+ "$schema": "https://www.aceengineer.com/assets/data/report-evals/results.schema.json",
+ "schema_version": "1.0",
+ "report": {
+  "id": "issue-002-cp-anode-editions",
+  "title": "Sacrificial anodes needed for six offshore structures on each edition of DNV-RP-B401 and DNV-RP-F103",
+  "url": "https://www.aceengineer.com/newsletter/issue-002-energy-street/",
+  "published": "2026-11-03",
+  "family": "newsletter"
+ },
+ "code": {
+  "repo": "https://github.com/vamseeachanta/digitalmodel",
+  "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+  "paths": [
+   "src/digitalmodel/cathodic_protection",
+   "tests/fixtures/cathodic_protection/workflow_inputs",
+   "examples/report-evals/issue-002-cp-anode-editions/eval.py"
+  ],
+  "python": "3.11",
+  "install": "git clone --filter=blob:none https://github.com/vamseeachanta/digitalmodel && cd digitalmodel && git checkout 09089a121a16069c4b657d1a320a630a23ab1dd5 && uv venv --python 3.11 && uv pip install --no-sources -e ."
+ },
+ "inputs": [
+  {
+   "id": "structure_files",
+   "description": "The six structure input files: pipeline, multi_component_riser, published_jacket_84m, reference_jacket_60m_members, monopile, manifold",
+   "source": "digitalmodel repository",
+   "url": "https://github.com/vamseeachanta/digitalmodel/tree/09089a121a16069c4b657d1a320a630a23ab1dd5/tests/fixtures/cathodic_protection/workflow_inputs",
+   "licence": "MIT",
+   "version_or_date": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "updates": "never",
+   "supplied_by": "repository",
+   "required": true
+  },
+  {
+   "id": "edition_tables",
+   "description": "Design values of each DNV edition (coating breakdown factors, current densities, anode capacities), as coded in the library",
+   "source": "digitalmodel cathodic protection module",
+   "url": "https://github.com/vamseeachanta/digitalmodel/tree/09089a121a16069c4b657d1a320a630a23ab1dd5/src/digitalmodel/cathodic_protection",
+   "licence": "MIT",
+   "version_or_date": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "updates": "never",
+   "supplied_by": "repository",
+   "required": true
+  },
+  {
+   "id": "fig4_csv",
+   "description": "Published Figure 4 data: one row per standing structure in the counted copy",
+   "source": "aceengineer.com",
+   "url": "https://www.aceengineer.com/assets/data/newsletter/issue-002/energy-fig4-platforms-standing.csv",
+   "version_or_date": "2026-10-29",
+   "sha256_published": "a4990f5575243391497d49cd427d0ed3412d28844eb094d6358e39601d3f6ffd",
+   "updates": "never",
+   "supplied_by": "public",
+   "required": true
+  },
+  {
+   "id": "bsee_platform_structures",
+   "description": "BSEE Platform Structures raw data, US Gulf of Mexico federal waters",
+   "source": "US Bureau of Safety and Environmental Enforcement, BSEE Data Center",
+   "url": "https://www.data.bsee.gov/Platform/Files/PlatStrucRawData.zip",
+   "licence": "US federal government data",
+   "version_or_date": "counted copy retrieved 2026-10-29 10:17Z; eval uses the file of the run date",
+   "updates": "daily",
+   "supplied_by": "public",
+   "required": false
+  }
+ ],
+ "missing_data": [
+  {
+   "id": "bsee_counted_copy",
+   "what": "The BSEE Platform Structures file counted on 29 October 2026 (SHA-256 bde13c85...)",
+   "why": "BSEE replaces the file daily and does not keep old copies; we did not archive it.",
+   "how_to_supply": "Not needed: the published Figure 4 CSV holds the standing structures of that copy.",
+   "effect": "Today's counts differ from Figure 4 by a few structures (6 November 2026: 1,294 standing against 1,301)."
+  },
+  {
+   "id": "dnv_documents",
+   "what": "The DNV-RP-B401 and DNV-RP-F103 documents of each edition",
+   "why": "They are paid documents.",
+   "how_to_supply": "A reader with copies can check the library's edition values clause by clause.",
+   "effect": "The eval checks the library's results, not the library's tables against DNV text."
+  },
+  {
+   "id": "reader_structure",
+   "what": "For the reader's own structure: geometry, coating, design life, fluid temperature, anode type and alloy",
+   "why": "Only needed to adapt the study; the published result uses the library's case files.",
+   "how_to_supply": "Copy pipeline.yml, change the inputs, run the same edition loop.",
+   "effect": "None on the published result."
+  }
+ ],
+ "cannot_do": [
+  "Check the edition values against the DNV documents (paid).",
+  "Rebuild the exact Figure 4 counts from today's BSEE file: the file changes daily.",
+  "Judge an installed CP system: status.result in the library output judges the installed count of the input file, not the recommended count.",
+  "Give a design for a real structure: each structure is one modelled case."
+ ],
+ "eval": {
+  "command": "python examples/report-evals/issue-002-cp-anode-editions/eval.py",
+  "prompt": "examples/report-evals/issue-002-cp-anode-editions/PROMPT.md",
+  "cadence": "weekly",
+  "runtime_s": 60,
+  "network": true
+ },
+ "results": [
+  {
+   "id": "pipeline_f103_2010_anodes",
+   "label": "Export pipeline, bracelet anodes required, DNV-RP-F103 2010",
+   "page_ref": "Table 1",
+   "value": 9,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "pipeline_f103_2019_anodes",
+   "label": "Export pipeline, bracelet anodes required, DNV-RP-F103 2019",
+   "page_ref": "Table 1",
+   "value": 34,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "pipeline_change_pct",
+   "label": "Export pipeline, change in anode count, 2019 against 2010",
+   "page_ref": "Table 1",
+   "value": 277.8,
+   "unit": "%",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "riser_b401_2005_2010_2017_anodes",
+   "label": "Hybrid riser, anodes required on DNV-RP-B401 2005, 2010 and 2017",
+   "page_ref": "Table 1",
+   "value": 26,
+   "unit": "anodes",
+   "period": "library design life of the case file",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); B401 recommended_anode_count, summed over anode families",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One modelled case per structure: the library's input file, with every input except the edition held fixed.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "riser_b401_2021_anodes",
+   "label": "Hybrid riser, anodes required on DNV-RP-B401 2021",
+   "page_ref": "Table 1",
+   "value": 25,
+   "unit": "anodes",
+   "period": "library design life of the case file",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); B401 recommended_anode_count, summed over anode families",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One modelled case per structure: the library's input file, with every input except the edition held fixed.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "jacket_84m_b401_all_editions_anodes",
+   "label": "Jacket, 84.1 m water depth, anodes required, same on all four DNV-RP-B401 editions",
+   "page_ref": "Table 1",
+   "value": 575,
+   "unit": "anodes",
+   "period": "library design life of the case file",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); B401 recommended_anode_count, summed over anode families",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One modelled case per structure: the library's input file, with every input except the edition held fixed.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "wind_jacket_60m_b401_all_editions_anodes",
+   "label": "Wind jacket, 60 m water depth, anodes required, same on all four DNV-RP-B401 editions",
+   "page_ref": "Table 1",
+   "value": 424,
+   "unit": "anodes",
+   "period": "library design life of the case file",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); B401 recommended_anode_count, summed over anode families",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One modelled case per structure: the library's input file, with every input except the edition held fixed.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "monopile_b401_all_editions_anodes",
+   "label": "Monopile, anodes required, same on all four DNV-RP-B401 editions",
+   "page_ref": "Table 1",
+   "value": 48,
+   "unit": "anodes",
+   "period": "library design life of the case file",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); B401 recommended_anode_count, summed over anode families",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One modelled case per structure: the library's input file, with every input except the edition held fixed.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "manifold_b401_all_editions_anodes",
+   "label": "Subsea manifold, anodes required, same on all four DNV-RP-B401 editions",
+   "page_ref": "Table 1",
+   "value": 64,
+   "unit": "anodes",
+   "period": "library design life of the case file",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); B401 recommended_anode_count, summed over anode families",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One modelled case per structure: the library's input file, with every input except the edition held fixed.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "t3_life10_2010_anodes",
+   "label": "Pipeline sweep, 10-year life, bracelets on F103 2010",
+   "page_ref": "Table 3",
+   "value": 3,
+   "unit": "anodes",
+   "period": "10-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life10_2010_mass_kg",
+   "label": "Pipeline sweep, 10-year life, net anode mass on F103 2010",
+   "page_ref": "Table 3",
+   "value": 57.7,
+   "unit": "kg",
+   "period": "10-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life10_2019_anodes",
+   "label": "Pipeline sweep, 10-year life, bracelets on F103 2019",
+   "page_ref": "Table 3",
+   "value": 9,
+   "unit": "anodes",
+   "period": "10-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life10_2019_mass_kg",
+   "label": "Pipeline sweep, 10-year life, net anode mass on F103 2019",
+   "page_ref": "Table 3",
+   "value": 219.4,
+   "unit": "kg",
+   "period": "10-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life15_2010_anodes",
+   "label": "Pipeline sweep, 15-year life, bracelets on F103 2010",
+   "page_ref": "Table 3",
+   "value": 4,
+   "unit": "anodes",
+   "period": "15-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life15_2010_mass_kg",
+   "label": "Pipeline sweep, 15-year life, net anode mass on F103 2010",
+   "page_ref": "Table 3",
+   "value": 92.1,
+   "unit": "kg",
+   "period": "15-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life15_2019_anodes",
+   "label": "Pipeline sweep, 15-year life, bracelets on F103 2019",
+   "page_ref": "Table 3",
+   "value": 15,
+   "unit": "anodes",
+   "period": "15-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life15_2019_mass_kg",
+   "label": "Pipeline sweep, 15-year life, net anode mass on F103 2019",
+   "page_ref": "Table 3",
+   "value": 352.5,
+   "unit": "kg",
+   "period": "15-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life20_2010_anodes",
+   "label": "Pipeline sweep, 20-year life, bracelets on F103 2010",
+   "page_ref": "Table 3",
+   "value": 6,
+   "unit": "anodes",
+   "period": "20-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life20_2010_mass_kg",
+   "label": "Pipeline sweep, 20-year life, net anode mass on F103 2010",
+   "page_ref": "Table 3",
+   "value": 130.4,
+   "unit": "kg",
+   "period": "20-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life20_2019_anodes",
+   "label": "Pipeline sweep, 20-year life, bracelets on F103 2019",
+   "page_ref": "Table 3",
+   "value": 21,
+   "unit": "anodes",
+   "period": "20-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life20_2019_mass_kg",
+   "label": "Pipeline sweep, 20-year life, net anode mass on F103 2019",
+   "page_ref": "Table 3",
+   "value": 501.4,
+   "unit": "kg",
+   "period": "20-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life25_2010_anodes",
+   "label": "Pipeline sweep, 25-year life, bracelets on F103 2010",
+   "page_ref": "Table 3",
+   "value": 7,
+   "unit": "anodes",
+   "period": "25-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life25_2010_mass_kg",
+   "label": "Pipeline sweep, 25-year life, net anode mass on F103 2010",
+   "page_ref": "Table 3",
+   "value": 172.4,
+   "unit": "kg",
+   "period": "25-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life25_2019_anodes",
+   "label": "Pipeline sweep, 25-year life, bracelets on F103 2019",
+   "page_ref": "Table 3",
+   "value": 27,
+   "unit": "anodes",
+   "period": "25-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life25_2019_mass_kg",
+   "label": "Pipeline sweep, 25-year life, net anode mass on F103 2019",
+   "page_ref": "Table 3",
+   "value": 665.9,
+   "unit": "kg",
+   "period": "25-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life30_2010_anodes",
+   "label": "Pipeline sweep, 30-year life, bracelets on F103 2010",
+   "page_ref": "Table 3",
+   "value": 9,
+   "unit": "anodes",
+   "period": "30-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life30_2010_mass_kg",
+   "label": "Pipeline sweep, 30-year life, net anode mass on F103 2010",
+   "page_ref": "Table 3",
+   "value": 218.1,
+   "unit": "kg",
+   "period": "30-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life30_2019_anodes",
+   "label": "Pipeline sweep, 30-year life, bracelets on F103 2019",
+   "page_ref": "Table 3",
+   "value": 34,
+   "unit": "anodes",
+   "period": "30-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life30_2019_mass_kg",
+   "label": "Pipeline sweep, 30-year life, net anode mass on F103 2019",
+   "page_ref": "Table 3",
+   "value": 846.1,
+   "unit": "kg",
+   "period": "30-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life35_2010_anodes",
+   "label": "Pipeline sweep, 35-year life, bracelets on F103 2010",
+   "page_ref": "Table 3",
+   "value": 11,
+   "unit": "anodes",
+   "period": "35-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life35_2010_mass_kg",
+   "label": "Pipeline sweep, 35-year life, net anode mass on F103 2010",
+   "page_ref": "Table 3",
+   "value": 267.6,
+   "unit": "kg",
+   "period": "35-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life35_2019_anodes",
+   "label": "Pipeline sweep, 35-year life, bracelets on F103 2019",
+   "page_ref": "Table 3",
+   "value": 42,
+   "unit": "anodes",
+   "period": "35-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life35_2019_mass_kg",
+   "label": "Pipeline sweep, 35-year life, net anode mass on F103 2019",
+   "page_ref": "Table 3",
+   "value": 1042.0,
+   "unit": "kg",
+   "period": "35-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life40_2010_anodes",
+   "label": "Pipeline sweep, 40-year life, bracelets on F103 2010",
+   "page_ref": "Table 3",
+   "value": 13,
+   "unit": "anodes",
+   "period": "40-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life40_2010_mass_kg",
+   "label": "Pipeline sweep, 40-year life, net anode mass on F103 2010",
+   "page_ref": "Table 3",
+   "value": 320.9,
+   "unit": "kg",
+   "period": "40-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life40_2019_anodes",
+   "label": "Pipeline sweep, 40-year life, bracelets on F103 2019",
+   "page_ref": "Table 3",
+   "value": 51,
+   "unit": "anodes",
+   "period": "40-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t3_life40_2019_mass_kg",
+   "label": "Pipeline sweep, 40-year life, net anode mass on F103 2019",
+   "page_ref": "Table 3",
+   "value": 1253.5,
+   "unit": "kg",
+   "period": "40-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); total_anode_mass_kg",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t4_temp5_2010_anodes",
+   "label": "Pipeline sweep, fluid 5 C, bracelets on F103 2010",
+   "page_ref": "Table 4",
+   "value": 8,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t4_temp5_2010_current_density",
+   "label": "Pipeline sweep, fluid 5 C, mean current density on F103 2010",
+   "page_ref": "Table 4",
+   "value": 0.05,
+   "unit": "A/m2",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "t4_temp5_2019_anodes",
+   "label": "Pipeline sweep, fluid 5 C, bracelets on F103 2019",
+   "page_ref": "Table 4",
+   "value": 23,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t4_temp5_2019_current_density",
+   "label": "Pipeline sweep, fluid 5 C, mean current density on F103 2019",
+   "page_ref": "Table 4",
+   "value": 0.05,
+   "unit": "A/m2",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "t4_temp20_2010_anodes",
+   "label": "Pipeline sweep, fluid 20 C, bracelets on F103 2010",
+   "page_ref": "Table 4",
+   "value": 8,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t4_temp20_2010_current_density",
+   "label": "Pipeline sweep, fluid 20 C, mean current density on F103 2010",
+   "page_ref": "Table 4",
+   "value": 0.05,
+   "unit": "A/m2",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "t4_temp20_2019_anodes",
+   "label": "Pipeline sweep, fluid 20 C, bracelets on F103 2019",
+   "page_ref": "Table 4",
+   "value": 23,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t4_temp20_2019_current_density",
+   "label": "Pipeline sweep, fluid 20 C, mean current density on F103 2019",
+   "page_ref": "Table 4",
+   "value": 0.05,
+   "unit": "A/m2",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "t4_temp30_2010_anodes",
+   "label": "Pipeline sweep, fluid 30 C, bracelets on F103 2010",
+   "page_ref": "Table 4",
+   "value": 8,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t4_temp30_2010_current_density",
+   "label": "Pipeline sweep, fluid 30 C, mean current density on F103 2010",
+   "page_ref": "Table 4",
+   "value": 0.05,
+   "unit": "A/m2",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "t4_temp30_2019_anodes",
+   "label": "Pipeline sweep, fluid 30 C, bracelets on F103 2019",
+   "page_ref": "Table 4",
+   "value": 28,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t4_temp30_2019_current_density",
+   "label": "Pipeline sweep, fluid 30 C, mean current density on F103 2019",
+   "page_ref": "Table 4",
+   "value": 0.06,
+   "unit": "A/m2",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "t4_temp40_2010_anodes",
+   "label": "Pipeline sweep, fluid 40 C, bracelets on F103 2010",
+   "page_ref": "Table 4",
+   "value": 8,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t4_temp40_2010_current_density",
+   "label": "Pipeline sweep, fluid 40 C, mean current density on F103 2010",
+   "page_ref": "Table 4",
+   "value": 0.05,
+   "unit": "A/m2",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "t4_temp40_2019_anodes",
+   "label": "Pipeline sweep, fluid 40 C, bracelets on F103 2019",
+   "page_ref": "Table 4",
+   "value": 28,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t4_temp40_2019_current_density",
+   "label": "Pipeline sweep, fluid 40 C, mean current density on F103 2019",
+   "page_ref": "Table 4",
+   "value": 0.06,
+   "unit": "A/m2",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "t4_temp50_2010_anodes",
+   "label": "Pipeline sweep, fluid 50 C, bracelets on F103 2010",
+   "page_ref": "Table 4",
+   "value": 8,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t4_temp50_2010_current_density",
+   "label": "Pipeline sweep, fluid 50 C, mean current density on F103 2010",
+   "page_ref": "Table 4",
+   "value": 0.05,
+   "unit": "A/m2",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "t4_temp50_2019_anodes",
+   "label": "Pipeline sweep, fluid 50 C, bracelets on F103 2019",
+   "page_ref": "Table 4",
+   "value": 28,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t4_temp50_2019_current_density",
+   "label": "Pipeline sweep, fluid 50 C, mean current density on F103 2019",
+   "page_ref": "Table 4",
+   "value": 0.06,
+   "unit": "A/m2",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "t4_temp60_2010_anodes",
+   "label": "Pipeline sweep, fluid 60 C, bracelets on F103 2010",
+   "page_ref": "Table 4",
+   "value": 9,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t4_temp60_2010_current_density",
+   "label": "Pipeline sweep, fluid 60 C, mean current density on F103 2010",
+   "page_ref": "Table 4",
+   "value": 0.06,
+   "unit": "A/m2",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "t4_temp60_2019_anodes",
+   "label": "Pipeline sweep, fluid 60 C, bracelets on F103 2019",
+   "page_ref": "Table 4",
+   "value": 34,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t4_temp60_2019_current_density",
+   "label": "Pipeline sweep, fluid 60 C, mean current density on F103 2019",
+   "page_ref": "Table 4",
+   "value": 0.075,
+   "unit": "A/m2",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "t4_temp70_2010_anodes",
+   "label": "Pipeline sweep, fluid 70 C, bracelets on F103 2010",
+   "page_ref": "Table 4",
+   "value": 9,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t4_temp70_2010_current_density",
+   "label": "Pipeline sweep, fluid 70 C, mean current density on F103 2010",
+   "page_ref": "Table 4",
+   "value": 0.06,
+   "unit": "A/m2",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "t4_temp70_2019_anodes",
+   "label": "Pipeline sweep, fluid 70 C, bracelets on F103 2019",
+   "page_ref": "Table 4",
+   "value": 34,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t4_temp70_2019_current_density",
+   "label": "Pipeline sweep, fluid 70 C, mean current density on F103 2019",
+   "page_ref": "Table 4",
+   "value": 0.075,
+   "unit": "A/m2",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "t4_temp80_2010_anodes",
+   "label": "Pipeline sweep, fluid 80 C, bracelets on F103 2010",
+   "page_ref": "Table 4",
+   "value": 9,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t4_temp80_2010_current_density",
+   "label": "Pipeline sweep, fluid 80 C, mean current density on F103 2010",
+   "page_ref": "Table 4",
+   "value": 0.06,
+   "unit": "A/m2",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "t4_temp80_2019_anodes",
+   "label": "Pipeline sweep, fluid 80 C, bracelets on F103 2019",
+   "page_ref": "Table 4",
+   "value": 34,
+   "unit": "anodes",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); F103 results.anode_requirements.anode_count",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "t4_temp80_2019_current_density",
+   "label": "Pipeline sweep, fluid 80 C, mean current density on F103 2019",
+   "page_ref": "Table 4",
+   "value": 0.075,
+   "unit": "A/m2",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mean_current_density_A_m2",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.0005
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "fcm_mean_2010_30yr",
+   "label": "Mean coating breakdown factor, FBE, 30 years, 2010 edition",
+   "page_ref": "Table 5",
+   "value": 0.0145,
+   "unit": "-",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); coating_breakdown_factors.mean_factor",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 5e-05
+   },
+   "basis": "fixed",
+   "limits": [
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "fcm_mean_2019_30yr",
+   "label": "Mean coating breakdown factor, FBE, 30 years, 2019 edition",
+   "page_ref": "Table 5",
+   "value": 0.045,
+   "unit": "-",
+   "period": "30-year design life",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); coating_breakdown_factors.mean_factor",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 5e-05
+   },
+   "basis": "fixed",
+   "limits": [
+    "Edition values come from the library's edition tables; the DNV documents are paid and are not read by the eval."
+   ]
+  },
+  {
+   "id": "buildup_breakdown_only_pct",
+   "label": "Anode mass change from the 2019 breakdown factor alone",
+   "page_ref": "Figure 2, Table 5",
+   "value": 210.3,
+   "unit": "%",
+   "period": "30-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mass proportional to mean breakdown factor x mean current density (Figure 2 caption)",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Derived from two runs, not a separate run."
+   ]
+  },
+  {
+   "id": "buildup_current_density_only_pct",
+   "label": "Anode mass change from the 2019 current density alone",
+   "page_ref": "Figure 2, Table 5",
+   "value": 25.0,
+   "unit": "%",
+   "period": "30-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mass proportional to mean breakdown factor x mean current density (Figure 2 caption)",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried.",
+    "Derived from two runs, not a separate run."
+   ]
+  },
+  {
+   "id": "buildup_both_pct",
+   "label": "Anode mass change, 2019 against 2010 (both factors)",
+   "page_ref": "Figure 2, Table 5",
+   "value": 287.9,
+   "unit": "%",
+   "period": "30-year design life, fluid 60 C",
+   "source": "digitalmodel cathodic protection module, runs of 29 October 2026",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py anode_results(); mass proportional to mean breakdown factor x mean current density (Figure 2 caption)",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "One 1.5 km export pipeline case, 25 kg aluminium bracelets, FBE coating, not buried."
+   ]
+  },
+  {
+   "id": "fig4_published_standing",
+   "label": "Platform structures still standing, US Gulf of Mexico federal waters (published counted copy)",
+   "page_ref": "Figure 4, data note",
+   "value": 1301,
+   "unit": "structures",
+   "period": "BSEE file of 29 October 2026",
+   "source": "Published Figure 4 CSV (energy-fig4-platforms-standing.csv), from the BSEE file retrieved 29 October 2026 10:17Z",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "repo": "https://github.com/vamseeachanta/aceengineer-website",
+   "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "Counts of a register, not an inspection; a recorded removal date is taken as removed."
+   ]
+  },
+  {
+   "id": "fig4_published_fixed",
+   "label": "Of those, fixed jackets (published counted copy)",
+   "page_ref": "Figure 4, data note",
+   "value": 980,
+   "unit": "structures",
+   "period": "BSEE file of 29 October 2026",
+   "source": "Published Figure 4 CSV (energy-fig4-platforms-standing.csv), from the BSEE file retrieved 29 October 2026 10:17Z",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "repo": "https://github.com/vamseeachanta/aceengineer-website",
+   "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "Counts of a register, not an inspection; a recorded removal date is taken as removed."
+   ]
+  },
+  {
+   "id": "fig4_published_before_1993",
+   "label": "Of those, installed before 1993 (published counted copy)",
+   "page_ref": "Figure 4, data note",
+   "value": 849,
+   "unit": "structures",
+   "period": "BSEE file of 29 October 2026",
+   "source": "Published Figure 4 CSV (energy-fig4-platforms-standing.csv), from the BSEE file retrieved 29 October 2026 10:17Z",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "repo": "https://github.com/vamseeachanta/aceengineer-website",
+   "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "Counts of a register, not an inspection; a recorded removal date is taken as removed."
+   ]
+  },
+  {
+   "id": "fig4_published_before_2005",
+   "label": "Of those, installed before 2005 (published counted copy)",
+   "page_ref": "Figure 4, data note",
+   "value": 1124,
+   "unit": "structures",
+   "period": "BSEE file of 29 October 2026",
+   "source": "Published Figure 4 CSV (energy-fig4-platforms-standing.csv), from the BSEE file retrieved 29 October 2026 10:17Z",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "repo": "https://github.com/vamseeachanta/aceengineer-website",
+   "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "Counts of a register, not an inspection; a recorded removal date is taken as removed."
+   ]
+  },
+  {
+   "id": "fig4_published_median_year",
+   "label": "Median installation year of those standing (published counted copy)",
+   "page_ref": "Figure 4, data note",
+   "value": 1983,
+   "unit": "year",
+   "period": "BSEE file of 29 October 2026",
+   "source": "Published Figure 4 CSV (energy-fig4-platforms-standing.csv), from the BSEE file retrieved 29 October 2026 10:17Z",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "repo": "https://github.com/vamseeachanta/aceengineer-website",
+   "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "Counts of a register, not an inspection; a recorded removal date is taken as removed."
+   ]
+  },
+  {
+   "id": "fig4_today_standing",
+   "label": "Platform structures still standing, today's BSEE file",
+   "page_ref": "Figure 4, data note",
+   "value": 1301,
+   "unit": "structures",
+   "period": "BSEE file of the run date",
+   "source": "BSEE Platform Structures raw data, PlatStrucRawData.zip, file of the run date",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "repo": "https://github.com/vamseeachanta/aceengineer-website",
+   "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
+   "tolerance": {
+    "rel_pct": 1.0
+   },
+   "basis": "live",
+   "limits": [
+    "Counts of a register, not an inspection; a recorded removal date is taken as removed.",
+    "The BSEE file is updated daily; today's count is expected to differ a little from the counted copy, which is not archived."
+   ]
+  },
+  {
+   "id": "fig4_today_fixed",
+   "label": "Of those, fixed jackets, today's BSEE file",
+   "page_ref": "Figure 4, data note",
+   "value": 980,
+   "unit": "structures",
+   "period": "BSEE file of the run date",
+   "source": "BSEE Platform Structures raw data, PlatStrucRawData.zip, file of the run date",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "repo": "https://github.com/vamseeachanta/aceengineer-website",
+   "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
+   "tolerance": {
+    "rel_pct": 1.0
+   },
+   "basis": "live",
+   "limits": [
+    "Counts of a register, not an inspection; a recorded removal date is taken as removed.",
+    "The BSEE file is updated daily; today's count is expected to differ a little from the counted copy, which is not archived."
+   ]
+  },
+  {
+   "id": "fig4_today_before_1993",
+   "label": "Of those, installed before 1993, today's BSEE file",
+   "page_ref": "Figure 4, data note",
+   "value": 849,
+   "unit": "structures",
+   "period": "BSEE file of the run date",
+   "source": "BSEE Platform Structures raw data, PlatStrucRawData.zip, file of the run date",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "repo": "https://github.com/vamseeachanta/aceengineer-website",
+   "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
+   "tolerance": {
+    "rel_pct": 1.0
+   },
+   "basis": "live",
+   "limits": [
+    "Counts of a register, not an inspection; a recorded removal date is taken as removed.",
+    "The BSEE file is updated daily; today's count is expected to differ a little from the counted copy, which is not archived."
+   ]
+  },
+  {
+   "id": "fig4_today_before_2005",
+   "label": "Of those, installed before 2005, today's BSEE file",
+   "page_ref": "Figure 4, data note",
+   "value": 1124,
+   "unit": "structures",
+   "period": "BSEE file of the run date",
+   "source": "BSEE Platform Structures raw data, PlatStrucRawData.zip, file of the run date",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "repo": "https://github.com/vamseeachanta/aceengineer-website",
+   "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
+   "tolerance": {
+    "rel_pct": 1.0
+   },
+   "basis": "live",
+   "limits": [
+    "Counts of a register, not an inspection; a recorded removal date is taken as removed.",
+    "The BSEE file is updated daily; today's count is expected to differ a little from the counted copy, which is not archived."
+   ]
+  },
+  {
+   "id": "fig4_today_median_year",
+   "label": "Median installation year, today's BSEE file",
+   "page_ref": "Figure 4, data note",
+   "value": 1983,
+   "unit": "year",
+   "period": "BSEE file of the run date",
+   "source": "BSEE Platform Structures raw data, PlatStrucRawData.zip, file of the run date",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rule: no REMOVAL_DATE = still standing; fixed jacket = STRUC_TYPE_CODE FIXED",
+   "repo": "https://github.com/vamseeachanta/aceengineer-website",
+   "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
+   "tolerance": {
+    "abs": 1
+   },
+   "basis": "live",
+   "limits": [
+    "Counts of a register, not an inspection; a recorded removal date is taken as removed.",
+    "The BSEE file is updated daily; today's count is expected to differ a little from the counted copy, which is not archived."
+   ]
+  },
+  {
+   "id": "bsee_structures_today",
+   "label": "Platform structures in the BSEE register, all",
+   "page_ref": "Data note",
+   "value": 7091,
+   "unit": "structures",
+   "period": "BSEE file of the run date",
+   "source": "BSEE Platform Structures raw data, PlatStrucRawData.zip, file of the run date",
+   "method": "examples/report-evals/issue-002-cp-anode-editions/eval.py platform_results(); rows of mv_platstruc_structures.txt",
+   "repo": "https://github.com/vamseeachanta/aceengineer-website",
+   "commit": "8168e1018173be9379a02d5c1aa519056c68d09e",
+   "tolerance": {
+    "rel_pct": 1.0
+   },
+   "basis": "live",
+   "limits": [
+    "The BSEE file is updated daily; today's count is expected to differ a little from the counted copy, which is not archived."
+   ]
+  }
+ ]
+}

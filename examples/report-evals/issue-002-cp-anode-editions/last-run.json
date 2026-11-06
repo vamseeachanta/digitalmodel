@@ -1,0 +1,798 @@
+{
+ "schema_version": "1.0",
+ "report_id": "issue-002-cp-anode-editions",
+ "mode": "rebuild",
+ "started_utc": "2026-11-06T15:23:07Z",
+ "finished_utc": "2026-11-06T15:23:09Z",
+ "grade": "PASS",
+ "python": "3.11.15",
+ "platform": "Windows",
+ "context": {
+  "repo_root": "dm-evals",
+  "repo_head": "60cd9733d30340608c3538e559a5e04494dcb619",
+  "digitalmodel_file": "src/digitalmodel/__init__.py",
+  "pipeline_mass_kg": {
+   "2010": 218.111,
+   "2019": 846.119
+  },
+  "fig4_csv": {
+   "url": "https://www.aceengineer.com/assets/data/newsletter/issue-002/energy-fig4-platforms-standing.csv",
+   "path": "<tmp>\\report-evals-cache\\2026-11-06\\energy-fig4-platforms-standing.csv",
+   "sha256": "a4990f5575243391497d49cd427d0ed3412d28844eb094d6358e39601d3f6ffd",
+   "retrieved_utc": "cached"
+  },
+  "bsee_platform_file": {
+   "url": "https://www.data.bsee.gov/Platform/Files/PlatStrucRawData.zip",
+   "path": "<tmp>\\report-evals-cache\\2026-11-06\\PlatStrucRawData.zip",
+   "sha256": "2c5b1a269c693b00468225cfcffb7cce5c49ccc1cc1d330a2c953b3f2914652e",
+   "retrieved_utc": "cached"
+  }
+ },
+ "results": [
+  {
+   "id": "pipeline_f103_2010_anodes",
+   "expected": 9,
+   "got": 9,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "pipeline_f103_2019_anodes",
+   "expected": 34,
+   "got": 34,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "pipeline_change_pct",
+   "expected": 277.8,
+   "got": 277.8,
+   "unit": "%",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "riser_b401_2005_2010_2017_anodes",
+   "expected": 26,
+   "got": 26,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "riser_b401_2021_anodes",
+   "expected": 25,
+   "got": 25,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "jacket_84m_b401_all_editions_anodes",
+   "expected": 575,
+   "got": 575,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "wind_jacket_60m_b401_all_editions_anodes",
+   "expected": 424,
+   "got": 424,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "monopile_b401_all_editions_anodes",
+   "expected": 48,
+   "got": 48,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "manifold_b401_all_editions_anodes",
+   "expected": 64,
+   "got": 64,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life10_2010_anodes",
+   "expected": 3,
+   "got": 3,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life10_2010_mass_kg",
+   "expected": 57.7,
+   "got": 57.7,
+   "unit": "kg",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life10_2019_anodes",
+   "expected": 9,
+   "got": 9,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life10_2019_mass_kg",
+   "expected": 219.4,
+   "got": 219.4,
+   "unit": "kg",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life15_2010_anodes",
+   "expected": 4,
+   "got": 4,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life15_2010_mass_kg",
+   "expected": 92.1,
+   "got": 92.1,
+   "unit": "kg",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life15_2019_anodes",
+   "expected": 15,
+   "got": 15,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life15_2019_mass_kg",
+   "expected": 352.5,
+   "got": 352.5,
+   "unit": "kg",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life20_2010_anodes",
+   "expected": 6,
+   "got": 6,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life20_2010_mass_kg",
+   "expected": 130.4,
+   "got": 130.4,
+   "unit": "kg",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life20_2019_anodes",
+   "expected": 21,
+   "got": 21,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life20_2019_mass_kg",
+   "expected": 501.4,
+   "got": 501.4,
+   "unit": "kg",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life25_2010_anodes",
+   "expected": 7,
+   "got": 7,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life25_2010_mass_kg",
+   "expected": 172.4,
+   "got": 172.4,
+   "unit": "kg",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life25_2019_anodes",
+   "expected": 27,
+   "got": 27,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life25_2019_mass_kg",
+   "expected": 665.9,
+   "got": 665.9,
+   "unit": "kg",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life30_2010_anodes",
+   "expected": 9,
+   "got": 9,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life30_2010_mass_kg",
+   "expected": 218.1,
+   "got": 218.1,
+   "unit": "kg",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life30_2019_anodes",
+   "expected": 34,
+   "got": 34,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life30_2019_mass_kg",
+   "expected": 846.1,
+   "got": 846.1,
+   "unit": "kg",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life35_2010_anodes",
+   "expected": 11,
+   "got": 11,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life35_2010_mass_kg",
+   "expected": 267.6,
+   "got": 267.6,
+   "unit": "kg",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life35_2019_anodes",
+   "expected": 42,
+   "got": 42,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life35_2019_mass_kg",
+   "expected": 1042.0,
+   "got": 1042.0,
+   "unit": "kg",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life40_2010_anodes",
+   "expected": 13,
+   "got": 13,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life40_2010_mass_kg",
+   "expected": 320.9,
+   "got": 320.9,
+   "unit": "kg",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life40_2019_anodes",
+   "expected": 51,
+   "got": 51,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t3_life40_2019_mass_kg",
+   "expected": 1253.5,
+   "got": 1253.5,
+   "unit": "kg",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp5_2010_anodes",
+   "expected": 8,
+   "got": 8,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp5_2010_current_density",
+   "expected": 0.05,
+   "got": 0.05,
+   "unit": "A/m2",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp5_2019_anodes",
+   "expected": 23,
+   "got": 23,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp5_2019_current_density",
+   "expected": 0.05,
+   "got": 0.05,
+   "unit": "A/m2",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp20_2010_anodes",
+   "expected": 8,
+   "got": 8,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp20_2010_current_density",
+   "expected": 0.05,
+   "got": 0.05,
+   "unit": "A/m2",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp20_2019_anodes",
+   "expected": 23,
+   "got": 23,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp20_2019_current_density",
+   "expected": 0.05,
+   "got": 0.05,
+   "unit": "A/m2",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp30_2010_anodes",
+   "expected": 8,
+   "got": 8,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp30_2010_current_density",
+   "expected": 0.05,
+   "got": 0.05,
+   "unit": "A/m2",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp30_2019_anodes",
+   "expected": 28,
+   "got": 28,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp30_2019_current_density",
+   "expected": 0.06,
+   "got": 0.06,
+   "unit": "A/m2",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp40_2010_anodes",
+   "expected": 8,
+   "got": 8,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp40_2010_current_density",
+   "expected": 0.05,
+   "got": 0.05,
+   "unit": "A/m2",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp40_2019_anodes",
+   "expected": 28,
+   "got": 28,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp40_2019_current_density",
+   "expected": 0.06,
+   "got": 0.06,
+   "unit": "A/m2",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp50_2010_anodes",
+   "expected": 8,
+   "got": 8,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp50_2010_current_density",
+   "expected": 0.05,
+   "got": 0.05,
+   "unit": "A/m2",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp50_2019_anodes",
+   "expected": 28,
+   "got": 28,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp50_2019_current_density",
+   "expected": 0.06,
+   "got": 0.06,
+   "unit": "A/m2",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp60_2010_anodes",
+   "expected": 9,
+   "got": 9,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp60_2010_current_density",
+   "expected": 0.06,
+   "got": 0.06,
+   "unit": "A/m2",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp60_2019_anodes",
+   "expected": 34,
+   "got": 34,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp60_2019_current_density",
+   "expected": 0.075,
+   "got": 0.075,
+   "unit": "A/m2",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp70_2010_anodes",
+   "expected": 9,
+   "got": 9,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp70_2010_current_density",
+   "expected": 0.06,
+   "got": 0.06,
+   "unit": "A/m2",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp70_2019_anodes",
+   "expected": 34,
+   "got": 34,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp70_2019_current_density",
+   "expected": 0.075,
+   "got": 0.075,
+   "unit": "A/m2",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp80_2010_anodes",
+   "expected": 9,
+   "got": 9,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp80_2010_current_density",
+   "expected": 0.06,
+   "got": 0.06,
+   "unit": "A/m2",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp80_2019_anodes",
+   "expected": 34,
+   "got": 34,
+   "unit": "anodes",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "t4_temp80_2019_current_density",
+   "expected": 0.075,
+   "got": 0.075,
+   "unit": "A/m2",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "fcm_mean_2010_30yr",
+   "expected": 0.0145,
+   "got": 0.0145,
+   "unit": "-",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "fcm_mean_2019_30yr",
+   "expected": 0.045,
+   "got": 0.045,
+   "unit": "-",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "buildup_breakdown_only_pct",
+   "expected": 210.3,
+   "got": 210.3,
+   "unit": "%",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "buildup_current_density_only_pct",
+   "expected": 25.0,
+   "got": 25.0,
+   "unit": "%",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "buildup_both_pct",
+   "expected": 287.9,
+   "got": 287.9,
+   "unit": "%",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "fig4_published_standing",
+   "expected": 1301,
+   "got": 1301,
+   "unit": "structures",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "fig4_published_fixed",
+   "expected": 980,
+   "got": 980,
+   "unit": "structures",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "fig4_published_before_1993",
+   "expected": 849,
+   "got": 849,
+   "unit": "structures",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "fig4_published_before_2005",
+   "expected": 1124,
+   "got": 1124,
+   "unit": "structures",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "fig4_published_median_year",
+   "expected": 1983,
+   "got": 1983,
+   "unit": "year",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "fig4_today_standing",
+   "expected": 1301,
+   "got": 1294,
+   "unit": "structures",
+   "status": "MATCH",
+   "difference": "-7 (-0.538 %)",
+   "note": "BSEE file sha256 2c5b1a269c69..., retrieved cached"
+  },
+  {
+   "id": "fig4_today_fixed",
+   "expected": 980,
+   "got": 975,
+   "unit": "structures",
+   "status": "MATCH",
+   "difference": "-5 (-0.51 %)",
+   "note": ""
+  },
+  {
+   "id": "fig4_today_before_1993",
+   "expected": 849,
+   "got": 844,
+   "unit": "structures",
+   "status": "MATCH",
+   "difference": "-5 (-0.589 %)",
+   "note": ""
+  },
+  {
+   "id": "fig4_today_before_2005",
+   "expected": 1124,
+   "got": 1118,
+   "unit": "structures",
+   "status": "MATCH",
+   "difference": "-6 (-0.534 %)",
+   "note": ""
+  },
+  {
+   "id": "fig4_today_median_year",
+   "expected": 1983,
+   "got": 1983.0,
+   "unit": "year",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  },
+  {
+   "id": "bsee_structures_today",
+   "expected": 7091,
+   "got": 7091,
+   "unit": "structures",
+   "status": "MATCH",
+   "difference": "+0 (+0 %)",
+   "note": ""
+  }
+ ]
+}
