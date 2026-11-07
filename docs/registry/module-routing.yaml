@@ -185,6 +185,9 @@ modules:
     key_tests: [tests/hydrodynamics/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#hydrodynamics
     submodules:
+      wave_spectrum:
+        agent_pack: src/digitalmodel/hydrodynamics/wave_spectrum/docs/agent-pack.md
+        qa_family: EC
       capytaine:
         agent_pack: src/digitalmodel/hydrodynamics/capytaine/docs/agent-pack.md
         qa_family: DF
