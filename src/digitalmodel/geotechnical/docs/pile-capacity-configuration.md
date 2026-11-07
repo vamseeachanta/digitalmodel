@@ -12,6 +12,7 @@ compared with the layer total. Single-layer input requires a finite, positive
 | --- | --- | --- |
 | 1 | 2026-11-06 | State which input defines embedment so layered configurations have an explicit length basis. |
 | 2 | 2026-11-06 | Omit ignored embedment from layered summaries and reject nonfinite JSON values to keep output unambiguous and readable by strict parsers. |
+| 3 | 2026-11-06 | Keep strict JSON local to pile summaries, omit ignored soil, and validate pile design inputs before calculation. |
 
 ## Configuration schema
 
@@ -37,11 +38,22 @@ router. Omitting `pile.embedded_length_m`, supplying a nonfinite value there,
 or supplying 30 m produces the same layered capacity. Omit that ignored field
 in layered configurations to keep the stated geometry unambiguous.
 
-`PileCapacityWorkflow` omits `pile.embedded_length_m` from the returned and
-written layered summary without changing the supplied input dictionary.
-Its summary writer rejects nonfinite JSON values before creating the output
-file. `GeotechnicalWorkflow` reports capacity results without echoing the
-pile input fields.
+`PileCapacityWorkflow` omits `pile.embedded_length_m` and the ignored `soil`
+block from the returned and written layered summary without changing the
+supplied input dictionary. Contradictory or nonfinite values in either ignored
+field do not affect the layered calculation.
+
+`PileCapacityWorkflow` requires a finite, positive `design.factor_of_safety`
+(default 2.0) and, when supplied, finite `design.applied_load_kn`. Numeric
+strings are converted before validation. Invalid values raise `ValueError`
+naming the field before capacity calculation or output creation. Finite zero
+and negative applied loads remain accepted; no load-sign criterion is added.
+
+Strict JSON serialization is requested only by `PileCapacityWorkflow`, before
+creating its output file. The shared writer retains its existing nonfinite
+serialization for other workflows, including mudmat screening results with
+infinite utilization. `GeotechnicalWorkflow` writes capacity summaries without
+echoing pile input fields; its returned configuration retains those fields.
 
 ## Regression evidence and limits
 
@@ -51,8 +63,10 @@ length cases through both routers and checks the returned capacity and JSON
 summary against synthetic hand calculations. Existing geometry regressions
 cover invalid diameter and layer thickness. Layered summary checks use strict
 JSON decoding and confirm that ignored lengths are absent from the echoed
-pile fields. Additional cases reject nonfinite design factors before a summary
-is written.
+pile fields and that ignored soil is absent. Additional cases reject nonfinite
+design inputs and nonpositive design factors before calculation or output.
+The shared-writer regression checks that zero mudmat bearing resistance still
+writes a failure result with infinite utilization.
 
 This schema records existing routing behavior. It introduces no length
 consistency check, soil-validation rule, empirical range or change to capacity

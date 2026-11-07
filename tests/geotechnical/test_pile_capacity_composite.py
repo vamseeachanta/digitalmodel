@@ -313,20 +313,141 @@ class TestLayeredConfigurationSchema:
             assert "embedded_length_m" not in summary["pile"]
         assert params["pile"] == original_pile
 
-    @pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])
-    def test_cfg_summary_rejects_nonfinite_design(
-        self, pile_capacity_cfg, tmp_path, value
+    @pytest.mark.parametrize("route", ["pile_capacity", "geotechnical"])
+    @pytest.mark.parametrize("strength", [100.0, math.nan], ids=["contradictory", "nan"])
+    def test_layered_summary_omits_ignored_soil(
+        self, pile_capacity_cfg, tmp_path, route, strength
+    ):
+        import json
+
+        from digitalmodel.geotechnical.cfg_workflows import PileCapacityWorkflow
+        from digitalmodel.geotechnical.workflow import GeotechnicalWorkflow
+
+        params = pile_capacity_cfg["pile_capacity"]
+        params["soil"]["Su_kpa"] = strength
+        params["soil_layers"] = [
+            {"thickness_m": 3.0, "Su_kpa": 40.0, "sigma_v_kpa": 40.0}
+        ]
+        original_soil = params["soil"].copy()
+        if route == "pile_capacity":
+            payload = PileCapacityWorkflow().router(pile_capacity_cfg)["pile_capacity"]
+        else:
+            cfg = {"geotechnical": {
+                "calculation": "pile_axial_capacity", "pile_axial_capacity": params,
+            }}
+            payload = GeotechnicalWorkflow().router(cfg)["geotechnical"][
+                "pile_axial_capacity"
+            ]
+        summary = json.loads(
+            (tmp_path / payload["summary_json"]).read_text(encoding="utf-8"),
+            parse_constant=lambda value: pytest.fail(f"Nonfinite JSON value: {value}"),
+        )
+        # The active layer gives Qt=(120+280)*pi kN; the soil block is ignored.
+        assert payload["result"]["total_capacity_kn"] == pytest.approx(400.0 * math.pi)
+        assert summary["result"] == payload["result"]
+        if route == "pile_capacity":
+            assert "soil" not in payload
+        assert "soil" not in summary
+        assert params["soil"] == original_soil
+
+    @pytest.mark.parametrize("layered", [False, True], ids=["single", "layered"])
+    @pytest.mark.parametrize("as_text", [False, True], ids=["numeric", "text"])
+    @pytest.mark.parametrize(
+        "field,value,message",
+        [
+            ("factor_of_safety", math.nan, "must be a finite number"),
+            ("factor_of_safety", math.inf, "must be a finite number"),
+            ("factor_of_safety", -math.inf, "must be a finite number"),
+            ("factor_of_safety", 0.0, "must be positive"),
+            ("factor_of_safety", -2.0, "must be positive"),
+            ("applied_load_kn", math.nan, "must be a finite number"),
+            ("applied_load_kn", math.inf, "must be a finite number"),
+            ("applied_load_kn", -math.inf, "must be a finite number"),
+        ],
+    )
+    def test_cfg_rejects_invalid_design_before_calculation(
+        self, pile_capacity_cfg, tmp_path, monkeypatch, layered, as_text,
+        field, value, message,
     ):
         from copy import deepcopy
 
+        from digitalmodel.geotechnical import pile_capacity
         from digitalmodel.geotechnical.cfg_workflows import PileCapacityWorkflow
 
-        pile_capacity_cfg["pile_capacity"]["design"] = {"factor_of_safety": value}
+        params = pile_capacity_cfg["pile_capacity"]
+        params["design"] = {field: str(value) if as_text else value}
+        if layered:
+            params["soil_layers"] = [
+                {"thickness_m": 3.0, "Su_kpa": 40.0, "sigma_v_kpa": 40.0}
+            ]
         before = deepcopy(pile_capacity_cfg)
-        with pytest.raises(ValueError, match="Out of range float values"):
-            PileCapacityWorkflow().router(pile_capacity_cfg)
 
+        def unexpected_calculation(*args, **kwargs):
+            pytest.fail("Invalid design reached capacity arithmetic")
+
+        with pytest.raises(ValueError, match=rf"^{field} {message}$"):
+            PileCapacityWorkflow().router(pile_capacity_cfg)
+        # Invalid inputs must fail before either capacity entry point is called.
+        monkeypatch.setattr(pile_capacity, "alpha_method_capacity", unexpected_calculation)
+        monkeypatch.setattr(
+            pile_capacity, "alpha_method_capacity_multilayer", unexpected_calculation
+        )
+        with pytest.raises(ValueError, match=rf"^{field} {message}$"):
+            PileCapacityWorkflow().router(pile_capacity_cfg)
         assert pile_capacity_cfg == before
+        assert list(tmp_path.iterdir()) == []
+
+    @pytest.mark.parametrize("applied", [None, 0.0, -100.0, 100.0, "100.0"])
+    def test_valid_design_preserves_allowable_capacity(self, pile_capacity_cfg, applied):
+        from digitalmodel.geotechnical.cfg_workflows import PileCapacityWorkflow
+
+        pile_capacity_cfg["pile_capacity"]["design"] = {
+            "factor_of_safety": "2.0", "applied_load_kn": applied,
+        }
+        design = PileCapacityWorkflow().router(pile_capacity_cfg)["pile_capacity"]["design"]
+        # Synthetic total capacity=400*pi; allowable=400*pi/2 kN.
+        assert design["allowable_capacity_kn"] == pytest.approx(200.0 * math.pi)
+        assert design["factor_of_safety"] == 2.0
+        if applied is None:
+            assert "required_capacity_kn" not in design
+        else:
+            assert design["required_capacity_kn"] == float(applied)
+            assert design["utilization"] == pytest.approx(float(applied) / (200.0 * math.pi))
+            assert design["status"] == "PASS"
+
+
+class TestSummarySerializationCompatibility:
+    """Keep non-pile screening sentinels compatible with the shared writer."""
+
+    def test_mudmat_infinite_bearing_utilization_is_written(self, tmp_path):
+        import json
+        from pathlib import Path
+
+        from digitalmodel.geotechnical.cfg_workflows import MudmatBearingCapacityWorkflow
+
+        cfg = {"mudmat_bearing_capacity": {
+            "foundation": {"width_B_m": 3.0, "length_L_m": 4.0},
+            "soil": {
+                "condition": "drained", "submerged_unit_weight_kN_m3": 0.0,
+                "friction_angle_deg": 0.0,
+            },
+            "loads": {"vertical_kN": 100.0},
+            "outputs": {"directory": str(tmp_path)},
+        }}
+        payload = MudmatBearingCapacityWorkflow().router(cfg)["mudmat_bearing_capacity"]
+        summary = json.loads(Path(payload["summary_json"]).read_text(encoding="utf-8"))
+        # Zero bearing resistance with positive load has infinite utilization.
+        assert payload["result"]["vertical_capacity_kn"] == 0.0
+        assert payload["design"]["bearing_utilization"] == math.inf
+        assert payload["design"]["screening_status"] == "fail"
+        assert summary["design"] == payload["design"]
+
+    def test_pile_summary_remains_strict(self, pile_capacity_cfg, tmp_path):
+        from digitalmodel.geotechnical.cfg_workflows import PileCapacityWorkflow
+
+        pile_capacity_cfg["pile_capacity"]["metadata"] = {"value": math.nan}
+        with pytest.raises(ValueError):
+            PileCapacityWorkflow().router(pile_capacity_cfg)
         assert list(tmp_path.iterdir()) == []
 
 

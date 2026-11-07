@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import asdict
+from math import isfinite
 from pathlib import Path
 from typing import Any
 
@@ -23,8 +24,10 @@ def _write_summary(
     default_directory: str,
     default_filename: str,
     payload: dict[str, Any],
+    *,
+    strict: bool = False,
 ) -> Path:
-    summary_text = json.dumps(payload, indent=2, allow_nan=False)
+    summary_text = json.dumps(payload, indent=2, allow_nan=not strict)
     directory = _resolve_dir(cfg, output_cfg.get("directory", default_directory))
     directory.mkdir(parents=True, exist_ok=True)
     summary_path = directory / output_cfg.get("summary_json", default_filename)
@@ -123,6 +126,18 @@ class PileCapacityWorkflow:
         )
 
         workflow_cfg = cfg.get("pile_capacity", {})
+        design_cfg = workflow_cfg.get("design", {})
+        fos = float(design_cfg.get("factor_of_safety", 2.0))
+        if not isfinite(fos):
+            raise ValueError("factor_of_safety must be a finite number")
+        if fos <= 0:
+            raise ValueError("factor_of_safety must be positive")
+        applied = design_cfg.get("applied_load_kn")
+        if applied is not None:
+            applied = float(applied)
+            if not isfinite(applied):
+                raise ValueError("applied_load_kn must be a finite number")
+
         pile = workflow_cfg["pile"]
         nc = float(pile.get("Nc", 9.0))
         if workflow_cfg.get("soil_layers"):
@@ -147,13 +162,7 @@ class PileCapacityWorkflow:
                 Nc=nc,
             )
 
-        design_cfg = workflow_cfg.get("design", {})
-        fos = float(design_cfg.get("factor_of_safety", 2.0))
-        applied = design_cfg.get("applied_load_kn")
-        design = _design_status(
-            None if applied is None else float(applied),
-            result.total_capacity_kn / fos,
-        )
+        design = _design_status(applied, result.total_capacity_kn / fos)
         design["factor_of_safety"] = fos
         payload = {
             **workflow_cfg,
@@ -161,6 +170,7 @@ class PileCapacityWorkflow:
             "result": asdict(result),
         }
         if workflow_cfg.get("soil_layers"):
+            payload.pop("soil", None)
             payload["pile"] = {
                 key: value for key, value in pile.items()
                 if key != "embedded_length_m"
@@ -173,6 +183,7 @@ class PileCapacityWorkflow:
                 "results/pile_capacity",
                 "pile_capacity_summary.json",
                 payload,
+                strict=True,
             )
         )
         cfg["pile_capacity"] = payload
