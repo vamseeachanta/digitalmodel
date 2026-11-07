@@ -1,6 +1,6 @@
 {
   "document": "cross-section-module-analysis",
-  "revision": 4,
+  "revision": 5,
   "date": "2026-11-06",
   "changes": [
     "Document per-layer mass, explicit bore buoyancy and bonded elastic stiffness.",
@@ -12,6 +12,7 @@
     "Preserve four significant figures, validate fixture units and write LF artifacts.",
     "Separate reference and assumed modulus records and retain readable numerical precision.",
     "Classify public table lookups as references and preserve entered environmental values.",
-    "Require reference locators and align steel density provenance with the material basis."
+    "Require reference locators and align steel density provenance with the material basis.",
+    "Show density and modulus bases separately so mixed provenance remains explicit."
   ]
 }

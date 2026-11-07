@@ -63,7 +63,7 @@ class DocumentChanges(TypedDict):
 
 
 CHANGES: DocumentChanges = {
-    "document": "cross-section-module-analysis", "revision": 4, "date": DATE,
+    "document": "cross-section-module-analysis", "revision": 5, "date": DATE,
     "changes": [
         "Document per-layer mass, explicit bore buoyancy and bonded elastic stiffness.",
         "Separate assumed example inputs from public material reference values.",
@@ -75,6 +75,7 @@ CHANGES: DocumentChanges = {
         "Separate reference and assumed modulus records and retain readable numerical precision.",
         "Classify public table lookups as references and preserve entered environmental values.",
         "Require reference locators and align steel density provenance with the material basis.",
+        "Show density and modulus bases separately so mixed provenance remains explicit.",
     ],
 }
 
@@ -152,7 +153,7 @@ def calculate() -> dict:
             "material_data": "NOT_EVALUATED: complete densities and moduli absent",
         })
     return {
-        "definition": definition, "moduli": moduli, "environment": environment,
+        "definition": definition, "moduli": moduli, "bonded": bonded, "environment": environment,
         "layers": sealed.layers, "results": results, "fixtures": inventory,
     }
 
@@ -206,18 +207,22 @@ def render(data: dict) -> str:
         label, url = SOURCES[key]
         return f'<a href="{escape(url)}">{escape(label)}</a>'
 
-    input_rows, layer_rows = [], []
-    for layer, modulus, properties in zip(data["definition"].radial_layers, data["moduli"], data["layers"], strict=True):
-        source_type = layer.provenance.source_type
-        material_basis = {
+    def material_basis(provenance: Provenance) -> str:
+        source_type = provenance.source_type
+        return escape({
             "reference": "public reference",
             "project_assumption": "assumed, based on previous experience",
-        }.get(source_type, source_type.replace("_", " "))
+        }.get(source_type, source_type.replace("_", " ")))
+
+    input_rows, layer_rows = [], []
+    for item, modulus, properties in zip(data["bonded"], data["moduli"], data["layers"], strict=True):
+        layer = item.layer
         # BIPM SI Brochure (2019), Table 7: milli=10^-3, so m -> mm multiplies by 1000.
         input_rows.append([
             escape(layer.name), f"{layer.derived_inner_diameter.value * 1000:,}",
             f"{layer.derived_outer_diameter.value * 1000:,}", f"{layer.density.value:,}",
-            f"{modulus:,}", escape(material_basis),
+            f"{modulus:,}", material_basis(layer.provenance),
+            material_basis(item.modulus_provenance),
         ])
         layer_rows.append([escape(layer.name), format_number(properties.area_m2), format_number(properties.mass_per_length_kg_m)])
     fixture_rows = [[escape(row["id"]), str(row["layers"]), str(row["components"]),
@@ -256,6 +261,7 @@ results under declared assumptions; no design acceptance is established.</p></se
     ['2', DATE, 'Distinguish referenced and assumed moduli and make computed values readable without losing precision.'],
     ['3', DATE, 'Classify public table lookups as references and retain entered environmental precision.'],
     ['4', DATE, 'Require reference locators and align steel density provenance with the material basis.'],
+    ['5', DATE, 'Separate density and modulus bases to describe mixed provenance accurately.'],
 ])}
 </section>
 <section id="inputs"><h2>Inputs</h2>
@@ -267,7 +273,7 @@ The source fixtures retain their native units for IO and schematic reporting.</p
 and chosen for transparent hand arithmetic; they are not a proposed pipe design.
 Steel density is from {source('steel')}; steel E is from {source('elasticity')}.
 Neither value qualifies a specific grade, temperature or product. Geometry is assumed for all layers.</p>
-{table(['Layer', 'ID (mm)', 'OD (mm)', 'Density (kg/m³)', 'E (Pa)', 'Material basis'], input_rows)}
+{table(['Layer', 'ID (mm)', 'OD (mm)', 'Density (kg/m³)', 'E (Pa)', 'Density basis', 'E basis'], input_rows)}
 <p>Water density is {data['environment']['water_density_kg_m3']:,} kg/m³,
 using fresh water from {source('mass')}. Gravity is {data['environment']['gravity_m_s2']:,} m/s²,
 assumed, based on previous experience, rounded for arithmetic. Neither is a seawater-site default.

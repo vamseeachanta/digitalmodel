@@ -188,19 +188,38 @@ def test_worked_density_provenance_distinguishes_reference_and_assumptions():
         assert record.citation is None and record.url_or_path is None
 
 
-def test_report_material_basis_follows_provenance_instead_of_role():
+@pytest.mark.parametrize("property_name", ["density", "modulus"])
+def test_report_material_bases_follow_independent_provenance(monkeypatch, property_name):
     module = builder()
+    original = module["calculate"].__globals__["calculate_elastic_section"]
+
+    def swap_basis(items):
+        steel, coating, _ = items
+        assumed = Provenance(source_id="assumed-property", source_type="project_assumption")
+        referenced = Provenance(
+            source_id="referenced-property", source_type="reference", citation="Illustrative reference",
+        )
+        if property_name == "density":
+            steel.layer.provenance = assumed
+            coating.layer.provenance = referenced
+        else:
+            steel.modulus_provenance = assumed
+            coating.modulus_provenance = referenced
+        return original(items)
+
+    monkeypatch.setitem(module["calculate"].__globals__, "calculate_elastic_section", swap_basis)
     data = module["calculate"]()
-    steel, coating, _ = data["definition"].radial_layers
-    steel.provenance = Provenance(source_id="assumed-density", source_type="project_assumption")
-    coating.provenance = Provenance(
-        source_id="referenced-density", source_type="reference", citation="Illustrative reference",
-    )
     html = module["render"](data)
+    assert '<th scope="col">Density basis</th>' in html
+    assert '<th scope="col">E basis</th>' in html
     rows = re.findall(r"<tr><td>(steel|coating)</td>(.*?)</tr>", html)
-    input_rows = [cells for _, cells in rows if cells.count("<td>") == 5]
-    assert input_rows[0].endswith("<td>assumed, based on previous experience</td>")
-    assert input_rows[1].endswith("<td>public reference</td>")
+    input_rows = [re.findall(r"<td>(.*?)</td>", cells) for _, cells in rows if cells.count("<td>") == 6]
+    assumed_basis = "assumed, based on previous experience"
+    reference_basis = "public reference"
+    expected = [[assumed_basis, reference_basis], [reference_basis, assumed_basis]]
+    if property_name == "modulus":
+        expected = [list(reversed(pair)) for pair in expected]
+    assert [cells[-2:] for cells in input_rows] == expected
 
 
 def test_report_writes_explicit_lf_newlines(tmp_path, monkeypatch):
@@ -331,7 +350,7 @@ def test_rebuild_matches_committed_artifacts_and_is_repeatable(tmp_path):
         relative = str((REPORT / name).relative_to(ROOT))
         assert subprocess.run(["git", "check-ignore", "-q", relative], cwd=ROOT).returncode == 1
     changes = json.loads(first["changes.json"])
-    assert changes["revision"] == 4
+    assert changes["revision"] == 5
     assert changes["changes"]
 
 

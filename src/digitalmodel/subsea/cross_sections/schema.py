@@ -100,7 +100,6 @@ class Provenance(BaseModel):
             raise ValueError("calculation provenance requires derived_from")
         return self
 
-
     @model_validator(mode="after")
     def reference_requires_citation_or_locator(self) -> "Provenance":
         if self.source_type == "reference" and not any(
