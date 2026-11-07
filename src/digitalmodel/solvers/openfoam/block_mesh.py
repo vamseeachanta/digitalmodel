@@ -121,8 +121,9 @@ def render_block_mesh_dict_body(
     caller-requested domain reaches the mesh rather than a builder default.
     """
     nx, ny, nz = domain.cell_counts()
+    # Round-trip coordinates so emitted capacity matches the inventory gate.
     vertices = "\n    ".join(
-        f"( {v[0]:>10.4f}  {v[1]:>10.4f}  {v[2]:>10.4f} )"
+        f"( {v[0]:>10.17g}  {v[1]:>10.17g}  {v[2]:>10.17g} )"
         for v in domain.block_mesh_vertices()
     )
     patch_types = {

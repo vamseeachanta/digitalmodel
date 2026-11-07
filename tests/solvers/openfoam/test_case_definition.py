@@ -10,6 +10,7 @@ that parsing succeeded.
 from __future__ import annotations
 
 from pathlib import Path
+import re
 from typing import Any, Dict
 
 import pytest
@@ -133,9 +134,24 @@ def test_requested_cell_counts_reach_block_mesh_dict(tmp_path: Path) -> None:
 
 
 def test_requested_domain_extent_reaches_block_mesh_dict(tmp_path: Path) -> None:
-    case_dir = _build(_authored_request(), tmp_path)
+    request = _authored_request()
+    case_dir = _build(request, tmp_path)
     block_mesh = (case_dir / "system" / "blockMeshDict").read_text()
-    assert "(     2.0000      1.0000      1.0000 )" in block_mesh
+    vertex_section = re.search(r"vertices\s*\((.*?)\);", block_mesh, re.DOTALL)
+    assert vertex_section is not None
+    vertices = [
+        tuple(float(coord) for coord in vertex.split())
+        for vertex in re.findall(r"\(([^()]*)\)", vertex_section.group(1))
+    ]
+    assert len(vertices) == 8
+    assert all(len(vertex) == 3 for vertex in vertices)
+    domain = request["case_definition"]["authored"]["domain"]
+    assert [min(vertex[axis] for vertex in vertices) for axis in range(3)] == (
+        domain["min_coords_m"]
+    )
+    assert [max(vertex[axis] for vertex in vertices) for axis in range(3)] == (
+        domain["max_coords_m"]
+    )
 
 
 def test_requested_end_time_reaches_control_dict(tmp_path: Path) -> None:
