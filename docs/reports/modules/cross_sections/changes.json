@@ -1,7 +1,7 @@
 {
   "document": "cross-section-module-analysis",
-  "revision": 5,
-  "date": "2026-11-06",
+  "revision": 6,
+  "date": "2026-11-07",
   "changes": [
     "Document per-layer mass, explicit bore buoyancy and bonded elastic stiffness.",
     "Separate assumed example inputs from public material reference values.",
@@ -13,6 +13,7 @@
     "Separate reference and assumed modulus records and retain readable numerical precision.",
     "Classify public table lookups as references and preserve entered environmental values.",
     "Require reference locators and align steel density provenance with the material basis.",
-    "Show density and modulus bases separately so mixed provenance remains explicit."
+    "Show density and modulus bases separately so mixed provenance remains explicit.",
+    "Read each displayed modulus and its basis from the same bonded-layer record."
   ]
 }

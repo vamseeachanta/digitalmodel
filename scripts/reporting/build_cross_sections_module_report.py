@@ -63,7 +63,7 @@ class DocumentChanges(TypedDict):
 
 
 CHANGES: DocumentChanges = {
-    "document": "cross-section-module-analysis", "revision": 5, "date": DATE,
+    "document": "cross-section-module-analysis", "revision": 6, "date": "2026-11-07",
     "changes": [
         "Document per-layer mass, explicit bore buoyancy and bonded elastic stiffness.",
         "Separate assumed example inputs from public material reference values.",
@@ -76,6 +76,7 @@ CHANGES: DocumentChanges = {
         "Classify public table lookups as references and preserve entered environmental values.",
         "Require reference locators and align steel density provenance with the material basis.",
         "Show density and modulus bases separately so mixed provenance remains explicit.",
+        "Read each displayed modulus and its basis from the same bonded-layer record.",
     ],
 }
 
@@ -153,7 +154,7 @@ def calculate() -> dict:
             "material_data": "NOT_EVALUATED: complete densities and moduli absent",
         })
     return {
-        "definition": definition, "moduli": moduli, "bonded": bonded, "environment": environment,
+        "definition": definition, "bonded": bonded, "environment": environment,
         "layers": sealed.layers, "results": results, "fixtures": inventory,
     }
 
@@ -215,13 +216,13 @@ def render(data: dict) -> str:
         }.get(source_type, source_type.replace("_", " ")))
 
     input_rows, layer_rows = [], []
-    for item, modulus, properties in zip(data["bonded"], data["moduli"], data["layers"], strict=True):
+    for item, properties in zip(data["bonded"], data["layers"], strict=True):
         layer = item.layer
         # BIPM SI Brochure (2019), Table 7: milli=10^-3, so m -> mm multiplies by 1000.
         input_rows.append([
             escape(layer.name), f"{layer.derived_inner_diameter.value * 1000:,}",
             f"{layer.derived_outer_diameter.value * 1000:,}", f"{layer.density.value:,}",
-            f"{modulus:,}", material_basis(layer.provenance),
+            f"{item.youngs_modulus_pa:,}".removesuffix(".0"), material_basis(layer.provenance),
             material_basis(item.modulus_provenance),
         ])
         layer_rows.append([escape(layer.name), format_number(properties.area_m2), format_number(properties.mass_per_length_kg_m)])
@@ -262,6 +263,7 @@ results under declared assumptions; no design acceptance is established.</p></se
     ['3', DATE, 'Classify public table lookups as references and retain entered environmental precision.'],
     ['4', DATE, 'Require reference locators and align steel density provenance with the material basis.'],
     ['5', DATE, 'Separate density and modulus bases to describe mixed provenance accurately.'],
+    ['6', CHANGES['date'], 'Keep the displayed modulus paired with its own provenance record.'],
 ])}
 </section>
 <section id="inputs"><h2>Inputs</h2>

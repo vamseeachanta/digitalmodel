@@ -136,6 +136,32 @@ def test_report_inputs_preserve_entered_moduli():
         assert f"<td>{value}</td>" in html
 
 
+@pytest.mark.parametrize("index,modulus,source_type,expected_value,expected_basis", [
+    (0, 175_000_000_000, "project_assumption", "175,000,000,000",
+     "assumed, based on previous experience"),
+    (1, 1_234_567.25, "reference", "1,234,567.25", "public reference"),
+])
+def test_report_modulus_value_and_basis_follow_same_bonded_record(
+    index, modulus, source_type, expected_value, expected_basis,
+):
+    module = builder()
+    data = module["calculate"]()
+    original = data["bonded"][index]
+    data["bonded"][index] = module["BondedAxialLayer"](
+        layer=original.layer, youngs_modulus_pa=modulus, modulus_unit="Pa",
+        modulus_provenance=Provenance(
+            source_id="replacement-modulus", source_type=source_type,
+            citation="Illustrative modulus reference" if source_type == "reference" else None,
+        ),
+    )
+    html = module["render"](data)
+    inputs = html.split('<section id="inputs">', 1)[1].split("</section>", 1)[0]
+    cells = re.search(rf"<tr><td>{original.layer.name}</td>(.*?)</tr>", inputs)[1]
+    values = re.findall(r"<td>(.*?)</td>", cells)
+    assert values[3] == expected_value
+    assert values[5] == expected_basis
+
+
 @pytest.mark.parametrize("water_density,gravity", [(1000, 10), (1025.5, 9.81)])
 def test_report_environment_inputs_preserve_entered_values(water_density, gravity):
     module = builder()
@@ -350,7 +376,7 @@ def test_rebuild_matches_committed_artifacts_and_is_repeatable(tmp_path):
         relative = str((REPORT / name).relative_to(ROOT))
         assert subprocess.run(["git", "check-ignore", "-q", relative], cwd=ROOT).returncode == 1
     changes = json.loads(first["changes.json"])
-    assert changes["revision"] == 5
+    assert changes["revision"] == 6
     assert changes["changes"]
 
 
