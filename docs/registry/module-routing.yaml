@@ -431,6 +431,9 @@ modules:
       readers:
         agent_pack: src/digitalmodel/seismic/readers/docs/agent-pack.md
         qa_family: EC
+      response_spectrum:
+        agent_pack: src/digitalmodel/seismic/response_spectrum/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/README.md
     key_tests: [tests/seismic/]
