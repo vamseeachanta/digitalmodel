@@ -300,17 +300,18 @@ def test_report_preserves_dimensionless_inputs_and_near_unity_verdicts():
     assert "| under | 0.960 | 0.000 | lateral | ARITHMETIC_PASS |" in report
 
 
-@pytest.mark.parametrize("weight,lift", [(100, 50), (7, 3)])
-def test_pure_lift_report_uses_the_canonical_governor(weight, lift):
+@pytest.mark.parametrize("weight,lift,factor", [(100, 50, 1), (7, 3, 1), (100, 99.999, 0.98)])
+def test_pure_lift_report_uses_the_canonical_governor(weight, lift, factor):
     c = case(label="pure lift", weight_n_m=weight, horizontal_n_m=0,
-             lift_n_m=lift, safety_factor=1)
+             lift_n_m=lift, safety_factor=factor)
     result = assess_static(c, method="absolute")
-    assert result.governing_check == "uplift"
+    assert result.governing_check == "contact"
+    assert result.utilisation == pytest.approx(lift / weight)
     report = render_report(
         [c], method="absolute", report_date="2026-11-06", revision="1", revision_description="Update synthetic calculation inputs"
     )
     ratio = lift / weight
-    assert f"| pure lift | {ratio:.3f} | {ratio:.3f} | uplift | ARITHMETIC_PASS |" in report
+    assert f"| pure lift | {factor * ratio:.3f} | {factor * ratio:.3f} | contact | ARITHMETIC_PASS |" in report
 
 
 def test_report_appends_the_supplied_revision_description():

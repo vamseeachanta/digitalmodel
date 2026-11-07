@@ -16,6 +16,7 @@ establish neither a site design nor a qualified standard implementation.
 | 2 | 2026-10-27 | Aligned the absolute checks and shared inputs with the supplied clause map, added independent uplift and initial-state resistance, and distinguished peak loads from instantaneous arithmetic. |
 | 3 | 2026-10-28 | Removed the unverified concept-page comparison, clarified the source basis and linked the synthetic example to independent expected-value arithmetic. |
 | 4 | 2026-11-07 | Added the strict bed-contact screen, its weight boundary and governor precedence so ratios and acceptance agree. |
+| 5 | 2026-11-07 | Included the contact ratio above the strict boundary so near-contact utilisation reports the available reserve. |
 
 ## Evidence and scope
 
@@ -116,7 +117,9 @@ interpolation domains and provenance for Tables 3-9 and 3-10.
 
 ## Outputs and compatibility changes
 
-`StabilityResult.utilisation` is `max(eta_h, eta_z)` when `w > z`.
+`StabilityResult.utilisation` is `max(eta_h, eta_z, z/w)` when `w > z`.
+The contact ratio `z/w` is a supplied screen, not a clause criterion. A positive
+contact ratio wins ties with either equation ratio and uses `contact`.
 Nonpositive weight is labelled `unsupported`; positive weight at or below lift
 is labelled `contact`. Both failures return infinite governing utilisation.
 Its `details` retain both equation utilisations, the lateral, vertical and

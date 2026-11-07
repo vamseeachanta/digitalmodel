@@ -109,7 +109,7 @@ def assess_static(case: StaticCase, *, method: str) -> StaticResult:
     lateral = check.details["lateral_utilisation"]
     vertical = check.details["vertical_utilisation"]
     contact = case.weight_n_m > case.lift_n_m
-    utilisation = max(lateral, vertical) if contact else math.inf
+    utilisation = check.utilisation
     canonical_governor = check.details["governing_check"]
     governing = "contact" if not contact else (
         "lateral" if canonical_governor == "absolute_lateral" else canonical_governor

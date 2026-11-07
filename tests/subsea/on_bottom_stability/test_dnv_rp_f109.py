@@ -162,7 +162,7 @@ class TestSubmergedWeight:
             rho_steel_kg_m3=7850.0,
             rho_coat_kg_m3=0.0,
             t_coat_m=0.0,
-            rho_contents_kg_m3=0.0,  # empty (gas or air)
+            rho_contents_kg_m3=0.0,  # synthetic empty bore
             rho_w_kg_m3=1025.0,
         )
         # Large empty pipe displaces more water than its steel weight
@@ -191,6 +191,39 @@ class TestAbsoluteStability:
 
     gamma_SC * (F_H + mu * F_L) / (mu * W_s) <= 1.0
     """
+
+    @pytest.mark.parametrize("passive", [0.0, 10.0])
+    @pytest.mark.parametrize("factor,governor", [
+        (0.98, "contact"), (1.0, "contact"), (1.02, "uplift"),
+    ])
+    def test_near_contact_reserve_controls_utilisation(self, passive, factor, governor):
+        """Synthetic W=100, L=99.999: contact ratio is L/W, independent of gamma."""
+        result = absolute_stability_check(
+            100.0, 0.0, 99.999, 0.5, factor, F_R_N_m=passive,
+            passive_resistance_basis="initial_penetration" if passive else None,
+        )
+        assert result.utilisation == pytest.approx(max(1, factor) * 99.999 / 100)
+        assert result.details["governing_check"] == governor
+        assert result.is_stable is (factor <= 1)
+        assert result.details["lateral_utilisation"] == pytest.approx(
+            factor * 0.5 * 99.999 / (50 + passive)
+        )
+        assert result.details["vertical_utilisation"] == pytest.approx(factor * 99.999 / 100)
+
+    def test_near_contact_wrappers_preserve_canonical_reserve(self):
+        from digitalmodel.subsea.on_bottom_stability.simplified import (
+            check_lateral_stability,
+            check_vertical_stability,
+            lateral_stability_check,
+        )
+
+        for wrapped in (
+            lateral_stability_check(100.0, 0, 99.999, 0.5, 0.98),
+            check_lateral_stability(0.1, 0, 0.099999, 0.5, 0.98),
+            check_vertical_stability(0.1, 0.099999, 0.98),
+        ):
+            assert wrapped.utilization == pytest.approx(99.999 / 100)
+            assert wrapped.is_stable
 
     @pytest.mark.parametrize("weight,lift,factor", [
         (100.0, 101.0, 0.98),
@@ -451,7 +484,7 @@ class TestAbsoluteStabilityMargin:
 # Generalized stability check (static compatibility alias, clause 3.6.2)
 # ---------------------------------------------------------------------------
 class TestGeneralizedStability:
-    """Verify generalized lateral stability per static compatibility alias, clause 3.6.2.
+    """Verify the static compatibility alias under clause 3.6.2.
 
     Both clause 3.6.2 criteria are enforced; no displacement model is claimed.
     """
@@ -464,10 +497,10 @@ class TestGeneralizedStability:
             F_L_N_m=100.0,
             mu_soil=0.6,
             F_R_N_m=300.0,
-            passive_resistance_basis="prior_loading",
+            passive_resistance_basis="initial_penetration",
             gamma_SC=1.1,
         )
-        # Factored demand = 1.1*(200+0.6*100) = 286; capacity = 900 N/m.
+        # Eq. (3.38): 1.1*(200 + 0.6*100)/(0.6*1000 + 300).
         expected_util = 1.1 * (200.0 + 0.6 * 100.0) / (0.6 * 1000.0 + 300.0)
         assert result.utilisation == pytest.approx(expected_util, rel=1e-6)
         assert result.is_stable is True
@@ -482,11 +515,11 @@ class TestGeneralizedStability:
             F_R_N_m=0.0,
             gamma_SC=1.1,
         )
-        # Factored demand = 1.1*(500+0.6*200) = 682; capacity = 300 N/m.
+        # Both lateral and uplift checks use the explicit synthetic factor.
         assert result.utilisation > 1.0
         assert result.is_stable is False
 
-    def test_lift_equal_to_weight_fails_factored_peak_check(self):
+    def test_lift_at_weight_is_unstable_with_factor(self):
         """Factored lift and horizontal demand fail even at the contact boundary."""
         result = generalized_stability_check(
             W_s_N_m=100.0,

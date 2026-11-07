@@ -284,7 +284,10 @@ def absolute_stability_check(
     extreme cycle only; no travel, structural or flotation claim follows.
     Nonpositive weight returns an unsupported failure. Positive weight at or
     below lift returns a contact failure with infinite governing utilisation;
-    the separate equation ratios remain available in details. Invalid inputs raise.
+    above lift, the governing utilisation also includes the contact ratio z/w.
+    Positive contact ratios win ties with the equation ratios. The strict
+    contact bound is a supplied screen, not a clause criterion. The separate
+    equation ratios remain available in details. Invalid inputs raise.
     """
     _finite("W_s_N_m", W_s_N_m)
     for name, value in (("F_H_N_m", F_H_N_m), ("F_L_N_m", F_L_N_m), ("F_R_N_m", F_R_N_m)):
@@ -302,13 +305,15 @@ def absolute_stability_check(
     _finite("vertical_demand", vertical_demand, minimum=0)
     lateral = demand / capacity if W_s_N_m > 0 and capacity > 0 else math.inf
     vertical = vertical_demand / W_s_N_m if W_s_N_m > 0 else math.inf
+    contact = F_L_N_m / W_s_N_m if W_s_N_m > 0 else math.inf
     required_h = max(0.0, (demand - F_R_N_m) / mu_soil)
     required_z = vertical_demand
     governing = ("unsupported" if W_s_N_m <= 0 else
                  "contact" if W_s_N_m <= F_L_N_m else
                  "no_load" if F_H_N_m == F_L_N_m == 0 else
+                 "contact" if F_L_N_m > 0 and contact >= max(lateral, vertical) else
                  "uplift" if vertical >= lateral else "absolute_lateral")
-    utilisation = max(lateral, vertical) if W_s_N_m > F_L_N_m else math.inf
+    utilisation = max(lateral, vertical, contact) if W_s_N_m > F_L_N_m else math.inf
     stable = utilisation <= 1 and W_s_N_m > F_L_N_m
     return StabilityResult(utilisation, stable, {
         "W_s_N_m": W_s_N_m, "F_H_N_m": F_H_N_m, "F_L_N_m": F_L_N_m,
@@ -338,7 +343,8 @@ def absolute_stability_margin(
     and zero weight margin does not establish acceptance. Use is_stable.
     The margin governor identifies the larger required weight; the check's
     governor identifies the larger utilisation at the supplied weight.
-    These may differ with nonzero passive resistance.
+    Both include the supplied contact screen; positive contact boundaries win
+    ties. The governors may still differ with nonzero passive resistance.
     Inputs and no-slip qualification follow :func:`absolute_stability_check`.
     Passive resistance is held fixed: if it depends on changing weight,
     penetration or soil contact, requalify it for the proposed weight.
