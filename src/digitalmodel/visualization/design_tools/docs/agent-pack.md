@@ -1,0 +1,364 @@
+# Design tools knowledge pack
+
+| Header | Value |
+| --- | --- |
+| Module | visualization/design_tools |
+| Repository | digitalmodel |
+| Package | `src/digitalmodel/visualization/design_tools` |
+| Pack revision | 0 |
+| Code revision | `21942e8cfc7dfb985c5bfa693245df7d197cf76c` |
+| Analysis family | Engineering calculations (EC); AQG r0, Python calculations |
+| Quality role | Engineering calculations quality manager; independent provider |
+| Status | DRAFT |
+
+Citations resolve at the code revision above; the implementation-map revision is recorded separately in section 9.
+
+## 1. Purpose and scope
+
+The package exposes `DesignTable`, `HullHydrostatics`, `ManifoldChecker` and the optional FreeCAD hull generator; the registry classifies the containing visualization domain as beta. [src/digitalmodel/visualization/design_tools/__init__.py:L1-L25] [docs/registry/module-routing.yaml:L592-L597]
+
+The main offline path integrates station offsets into hydrostatic quantities, rescales hull profiles for parameter studies, and checks structured surface grids; the CAD path constructs equipment primitives and generates Blender scripts. [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L15-L27] [src/digitalmodel/visualization/design_tools/design_table.py:L107-L157] [src/digitalmodel/visualization/design_tools/manifold_check.py:L12-L23] [src/digitalmodel/visualization/design_tools/freecad_integration.py:L61-L121] [src/digitalmodel/visualization/design_tools/blender_integration.py:L80-L131]
+
+This pack covers the package and its nested demonstration scripts; it treats their claimed equipment compliance, savings and optimization outputs as demonstrations requiring evidence, because analysis returns fixed strings and demonstration code prints success without testing the command result. [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L453-L468] [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L504-L519] [src/digitalmodel/visualization/design_tools/case_studies/02_chemical_plant.py:L117-L121]
+
+The hull grid is a starboard point surface; the fallback labelled `scipy` returns a NumPy grid, and the FreeCAD route interpolates a B-spline surface and mirrors its face to form a shell. [src/digitalmodel/visualization/design_tools/freecad_hull.py:L44-L70] [src/digitalmodel/visualization/design_tools/freecad_hull.py:L130-L176]
+
+Treat `gm_transverse` as the code's keel-based value, not a stability assessment with a supplied centre of gravity: `compute_all()` returns KB + BM and explicitly assumes KG at the keel. [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L151-L163]
+
+UNVERIFIED: The implementation guide's deployment and full-workflow claims have no reproduced native CAD/render evidence in this pack; section 10 tracks the evidence gap as issue pending (7). [src/digitalmodel/visualization/design_tools/IMPLEMENTATION_GUIDE.md:L3-L16]
+
+## 2. Inputs and outputs
+
+Inputs:
+
+| Name and route | Unit / convention | Range and default | Source |
+| --- | --- | --- | --- |
+| `HullProfile` principal dimensions | m; x from aft perpendicular, z upward from keel, y nonnegative half-breadth | Dimensions > 0; at least two stations; nonempty nonnegative offsets; required dimensions have no default | [src/digitalmodel/hydrodynamics/hull_library/profile_schema.py:L52-L98] [src/digitalmodel/hydrodynamics/hull_library/profile_schema.py:L108-L166] |
+| Hydrostatic station integration | Symmetric port/starboard sections; draft truncates z offsets | Stations and offsets sorted; interpolate at draft; fewer than two submerged samples contribute zero area | [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L21-L59] |
+| `compute_displacement(seawater_density)` | t/m³ multiplying m³ to give tonnes | Default 1.025; function has no density range validation | [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L68-L72] |
+| `DesignTable` YAML `parameters` | Dimensions inherit m; block coefficient dimensionless | Positive axis values; recognized names are length, beam, draft, depth and block coefficient; absent axes give one copied profile | [src/digitalmodel/visualization/design_tools/design_table.py:L31-L37] [src/digitalmodel/visualization/design_tools/design_table.py:L62-L128] |
+| `ManifoldChecker(surface_points)` | Array `(stations, waterlines, 3)`; coordinates inherit the hull units | Constructor checks rank and final dimension only | [src/digitalmodel/visualization/design_tools/manifold_check.py:L12-L23] |
+| `create_pressure_vessel` | Diameter, cylindrical length and thickness in mm per docstring | Defaults 1000, 3000 and 10 respectively; diameter is described as internal but used for the outer cylinder | [src/digitalmodel/visualization/design_tools/freecad_integration.py:L61-L86] |
+| `create_piping_system` | Outer diameter and length in mm | Defaults 100 and 5000; creates cylinder, riser and torus primitives | [src/digitalmodel/visualization/design_tools/freecad_integration.py:L123-L163] |
+| Integrated vessel / piping specifications | Geometry mm; declared pressure bar and temperature °C | Geometry defaults are applied with `dict.get`; pressure, temperature and layout are stored but are not arguments to geometry creation | [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L129-L154] [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L181-L189] [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L204-L242] |
+| Natural-language dimensions / pressure / temperature | Dimensions converted to mm; pressure and temperature magnitudes lose their unit labels | Unrecognized length units use factor 1; unsigned decimal regexes; no locale normalization | [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L65-L71] [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L189-L224] [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L262-L266] |
+| FEM variation axes and applied stress | Consistent caller units; test describes geometry in mm | Six recognized axes, positive values; defaults and applied stress are embedded in `run_batch_fem`; no solver run is evidence here | [src/digitalmodel/visualization/design_tools/design_table.py:L277-L324] [tests/visualization/design_tools/test_design_table_fem.py:L60-L69] |
+| Spool parameters | mm, density kg/m³; axial unfilleted equally bored family | Typed upstream `SpoolParameters`; geometry revolves about positive z from the left end | [src/digitalmodel/visualization/design_tools/flanged_spool.py:L9-L57] [src/digitalmodel/visualization/design_tools/flanged_spool.py:L60-L64] [src/digitalmodel/solvers/gmsh_meshing/spool_pilot.py:L23-L57] |
+
+Outputs:
+
+| Name / format | Unit / meaning | Limit or consumer | Source |
+| --- | --- | --- | --- |
+| Hydrostatic dictionary | Volume m³; displacement tonnes; waterplane area m²; KB, BM and keel-based GM m | Six dictionary fields; default density used by `compute_all()` | [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L61-L89] [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L95-L163] |
+| Hydrostatic comparison YAML / list of dicts | Profile dimensions m, numeric hydrostatic fields as above | Zips variations and results; no serialized unit metadata | [src/digitalmodel/visualization/design_tools/design_table.py:L169-L213] |
+| Hull surface metadata / STEP | Grid coordinates inherit m; optional native surface and solid | STEP export warns and returns `None` without FreeCAD | [src/digitalmodel/visualization/design_tools/freecad_hull.py:L76-L120] |
+| Manifold summary | Four Boolean fields, dimensionless | Finite-point, continuity and adjacent-normal heuristics, not a closed-volume topology proof | [src/digitalmodel/visualization/design_tools/manifold_check.py:L29-L67] [src/digitalmodel/visualization/design_tools/manifold_check.py:L69-L153] |
+| Equipment STL / STEP / OBJ | CAD coordinates mm; OBJ tessellation uses linear deflection in CAD coordinates | Visible objects only; individual exceptions are printed and omitted | [src/digitalmodel/visualization/design_tools/freecad_integration.py:L165-L202] |
+| Blender scene / PNG, JPEG, OpenEXR / MP4 / GLTF or FBX | Scene metric metres; STL coordinates scaled by 0.001; animation duration in frames | Script execution returns status tuple; render lists include only successful subprocess calls | [src/digitalmodel/visualization/design_tools/blender_integration.py:L41-L78] [src/digitalmodel/visualization/design_tools/blender_integration.py:L111-L131] [src/digitalmodel/visualization/design_tools/blender_integration.py:L262-L328] [src/digitalmodel/visualization/design_tools/blender_integration.py:L330-L473] |
+| FEM YAML | Kt dimensionless; stress in caller's consistent system | Error rows retain parameters and error text; export omits an explicit success field | [src/digitalmodel/visualization/design_tools/design_table.py:L374-L421] |
+| Spool metrology | Volume mm³; dimensions mm and hole counts dimensionless | Measures analytic B-rep surfaces rather than input feature properties | [src/digitalmodel/visualization/design_tools/flanged_spool.py:L60-L138] |
+| Workflow metadata JSON / documentation Markdown | Geometry and declared specifications retained; fabrication hours and days | Local timestamps; no UTC offset or phase convention is assigned | [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L57-L87] [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L321-L400] [src/digitalmodel/visualization/design_tools/freecad_integration.py:L362-L392] |
+
+No phase-dependent calculation is defined on the hydrostatic path; its inputs are station geometry and draft. [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L21-L27] [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L33-L89]
+
+## 3. Method and governing standards
+
+| Method | Implementation and reference basis | Qualification |
+| --- | --- | --- |
+| Section area and volume | `compute_sectional_areas`: twice the trapezoidal integral of half-breadth over submerged z; `compute_displaced_volume`: trapezoidal integration along x | Closed-form test references in section 4; short sections contribute zero. [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L33-L66] |
+| Displacement and waterplane | Density × volume; twice the integral of interpolated half-breadth at draft | Caller must establish density and submerged geometry coverage. [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L68-L89] |
+| KB, BM and reported GM | Vertical section moment / volume; waterplane second moment / volume; KB + BM | Zero volume returns zero KB/BM; KG is absent from the reported GM. [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L95-L163] |
+| Hull variation | Cartesian product; x scaled with length, y with beam, z with depth; draft changes integration cutoff; block coefficient changes metadata | `draft_scale` is computed but unused; block coefficient alone does not reshape offsets. [src/digitalmodel/visualization/design_tools/design_table.py:L107-L128] [src/digitalmodel/visualization/design_tools/design_table.py:L219-L255] |
+| Surface and manifold | Uniform waterline interpolation; optional B-spline surface; continuity and normal tests | Missing native CAD is not a completed solid/export route. [src/digitalmodel/visualization/design_tools/freecad_hull.py:L44-L120] [src/digitalmodel/visualization/design_tools/freecad_hull.py:L125-L176] [src/digitalmodel/visualization/design_tools/manifold_check.py:L29-L138] |
+| FEM study | Quarter-plate geometry through `FEMChain`, equivalent nodal forces, solve then hole stress / applied stress | Dependency only; execution prohibited for this evidence set. [src/digitalmodel/visualization/design_tools/design_table.py:L302-L393] |
+| Spool geometry and metrology | Revolved radial section minus bolt-hole cylinders; classify cylinder/cone faces and measure axial extents | Limited to the documented axial unfilleted geometry family. [src/digitalmodel/visualization/design_tools/flanged_spool.py:L18-L138] |
+| Fabrication and design assistance | Volume-rate time estimate; material dictionary; fixed analysis and optimization output | No engineering compliance conclusion follows from these heuristics. [src/digitalmodel/visualization/design_tools/freecad_integration.py:L320-L392] [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L436-L519] |
+
+Standards leads, with no tabulated standard values reproduced:
+
+| Lead | Located use | Provenance disposition |
+| --- | --- | --- |
+| API 12J | Fixed `compliance` output; separator demonstration names “Specification for Oil and Gas Separators” | UNVERIFIED: edition and clause are absent from these uses; compliance is not calculated; clause text not checked against the licensed copy; issue pending (1). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L504-L519] [tests/visualization/design_tools/pilot_program/test_case_1_separator.py:L121-L139] |
+| API 5L | Pipe material label and a portfolio command | UNVERIFIED: title, edition, clause and numeric material provenance are not supplied by these uses; clause text not checked against the licensed copy; issue pending (1). [src/digitalmodel/visualization/design_tools/freecad_integration.py:L335-L359] [src/digitalmodel/visualization/design_tools/case_studies/CASE_STUDIES_PORTFOLIO.md:L35-L40] |
+| API 650 | Storage-tank prompt | UNVERIFIED: title, edition and clause are not supplied; prompt text is not a design check; clause text not checked against the licensed copy; issue pending (1). [src/digitalmodel/visualization/design_tools/case_studies/02_chemical_plant.py:L163-L185] |
+| API 617 | Compressor prompt | UNVERIFIED: title, edition and clause are not supplied; the returned command result is unused; clause text not checked against the licensed copy; issue pending (1). [src/digitalmodel/visualization/design_tools/case_studies/03_lng_facility.py:L68-L95] |
+
+No conflicting editions can be established from references without editions; resolving the missing provenance is required before an edition comparison or compliance claim. [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L512-L512] [src/digitalmodel/visualization/design_tools/freecad_integration.py:L343-L345] [src/digitalmodel/visualization/design_tools/case_studies/02_chemical_plant.py:L168-L175] [src/digitalmodel/visualization/design_tools/case_studies/03_lng_facility.py:L69-L77]
+
+The standards-related output dictionaries shown here carry no `Citation` sidecar; their missing citation metadata is tracked by issue pending (1). [src/digitalmodel/visualization/design_tools/freecad_integration.py:L335-L359] [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L504-L519]
+
+## 4. Validated worked examples
+
+These six analytical cases use independent closed-form geometry rather than stored module outputs; each expected quantity is evaluated by its existing test, with relative error strictly below 2.0% as defined by the test's tolerance. [tests/visualization/design_tools/test_hull_hydrostatics_validation.py:L18-L18] [tests/visualization/design_tools/test_hull_hydrostatics_validation.py:L100-L104] [tests/visualization/design_tools/test_hull_hydrostatics_validation.py:L123-L200]
+
+| Case | Independent source / input | Expected quantity; tolerance basis | Existing test node ID | Offline record: BASE / after |
+| --- | --- | --- | --- | --- |
+| Box volume | Closed form LBT; inline 100 m × 20 m × 8 m box fixture | 16000 m³; test criterion < 2.0% relative error | `tests/visualization/design_tools/test_hull_hydrostatics_validation.py::TestBoxBargeHydrostatics::test_displaced_volume` | PASS / PASS. [tests/visualization/design_tools/test_hull_hydrostatics_validation.py:L21-L55] [tests/visualization/design_tools/test_hull_hydrostatics_validation.py:L123-L131] |
+| Box waterplane | Closed form LB; same inline box fixture | 2000 m²; < 2.0% | `tests/visualization/design_tools/test_hull_hydrostatics_validation.py::TestBoxBargeHydrostatics::test_waterplane_area` | PASS / PASS. [tests/visualization/design_tools/test_hull_hydrostatics_validation.py:L133-L141] |
+| Box buoyancy centre | Closed form T/2; same inline box fixture | 4.0 m above keel; < 2.0% | `tests/visualization/design_tools/test_hull_hydrostatics_validation.py::TestBoxBargeHydrostatics::test_kb` | PASS / PASS. [tests/visualization/design_tools/test_hull_hydrostatics_validation.py:L143-L151] |
+| Box metacentric radius | Closed form B²/(12T); same inline box fixture | B²/(12T), approximately 4.2 m; comparison uses the unrounded expression; < 2.0% | `tests/visualization/design_tools/test_hull_hydrostatics_validation.py::TestBoxBargeHydrostatics::test_bm_transverse` | PASS / PASS. [tests/visualization/design_tools/test_hull_hydrostatics_validation.py:L153-L161] |
+| Shaped volume | Piecewise-linear wall-sided geometry, inline station offsets; closed form LBT × 0.7 | 11200 m³; < 2.0% | `tests/visualization/design_tools/test_hull_hydrostatics_validation.py::TestCb07HullDisplacement::test_volume_cb07` | PASS / PASS. [tests/visualization/design_tools/test_hull_hydrostatics_validation.py:L58-L97] [tests/visualization/design_tools/test_hull_hydrostatics_validation.py:L192-L200] |
+| Shaped displacement | Same inline fixture; volume × density 1.025 t/m³ | 11480 tonnes; < 2.0% | `tests/visualization/design_tools/test_hull_hydrostatics_validation.py::TestCb07HullDisplacement::test_displacement_cb07` | PASS / PASS. [tests/visualization/design_tools/test_hull_hydrostatics_validation.py:L180-L190] |
+
+Regression examples, without an independent engineering result:
+
+| Case | Input / expected invariant | Existing test node ID | Offline record: BASE / after |
+| --- | --- | --- | --- |
+| Batch/direct agreement | Inline profile, one length; differences < 0.000001 in m³, tonnes and m² respectively; both paths use `HullHydrostatics` | `tests/visualization/design_tools/test_design_table.py::TestRoundTrip::test_round_trip_hull_to_hydrostatics` | PASS / PASS. [tests/visualization/design_tools/test_design_table.py:L266-L285] |
+| YAML comparison | Inline lengths; exported YAML contains exactly two variation rows with parameter and hydrostatic mappings | `tests/visualization/design_tools/test_design_table.py::TestDesignTable::test_design_table_results_comparison_yaml` | PASS / PASS. [tests/visualization/design_tools/test_design_table.py:L146-L162] |
+| Point-grid route | Inline box; rank 3 array, 11 stations, 3 coordinate components | `tests/integration/test_freecad_roundtrip.py::TestHullNURBSRoundtrip::test_surface_points_shape` | PASS / PASS. [tests/integration/test_freecad_roundtrip.py:L110-L118] |
+| Mock spool metrology | Synthetic B-rep surfaces; nominal hole spacing equals 70√2 mm using pytest's comparison | `tests/solvers/gmsh_meshing/test_spool_pilot.py::test_metrology_checks_angular_hole_displacement[0]` | PASS / PASS; synthetic geometry, not native CAD evidence. [tests/solvers/gmsh_meshing/test_spool_pilot.py:L575-L592] |
+| Mock spool cutters | Default specification; 8 cutters extend past both flange faces | `tests/solvers/gmsh_meshing/test_spool_pilot.py::test_bolt_cutters_extend_past_both_flange_faces` | PASS / PASS; native boundary mocked by the existing test. [tests/solvers/gmsh_meshing/test_spool_pilot.py:L584-L618] |
+
+Offline execution record, code pin `21942e8cfc7dfb985c5bfa693245df7d197cf76c`, before and after documentation edits; results below are execution observations, with source citations identifying the exercised definitions:
+
+| Command group | Collected | Exercised / passed / failed | Pytest skipped | NOT_RUN classification within skips | BASE / after |
+| --- | --- | --- | --- | --- | --- |
+| `python -m pytest tests/visualization/design_tools tests/integration/test_freecad_roundtrip.py` | 49 | 46 / 46 / 0 | 3 | 3 FEM cases require gmsh and CalculiX; no solver was launched | Identical. [tests/visualization/design_tools/test_design_table_fem.py:L20-L24] [tests/visualization/design_tools/test_design_table_fem.py:L47-L90] |
+| `python -m pytest tests/solvers/gmsh_meshing/test_spool_pilot.py` | 93 | 85 / 85 / 0 | 8 | 0 solver cases; skips require FreeCAD/Part or gmsh | Identical. [tests/solvers/gmsh_meshing/test_spool_pilot.py:L284-L297] [tests/solvers/gmsh_meshing/test_spool_pilot.py:L379-L384] |
+
+Execution form: `PYTHONPATH=src uv run --no-sources python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch-case>`; no extra `addopts` override, no test workers, and no test changes.
+
+The declared `cfd` extra was attempted separately with the same pytest form plus `--extra cfd`; execution could not start: `error: Distribution gmsh==4.15.1 @ registry+https://pypi.org/simple can't be installed because it doesn't have a source distribution or wheel for the current platform`. The resolver reported no compatible Linux aarch64 distribution; no native gmsh case ran. The source declares this exact optional dependency. [pyproject.toml:L263-L263]
+
+The three `workflow_test.py` nodes report pytest PASS even when returning failure values; that record is not native workflow validation, and the separator demonstration is excluded by the existing collection configuration. [tests/visualization/design_tools/workflow_test.py:L64-L66] [tests/visualization/design_tools/workflow_test.py:L159-L171] [tests/visualization/design_tools/workflow_test.py:L190-L207] [tests/conftest.py:L51-L63]
+
+## 5. QA gates
+
+Gate applicability follows AQG r0, section 10, “Python calculations”; G5 follows AQG r0, section 9, “QA appendix”. Checks below are executable criteria for this module; an unexecuted native route remains unproved.
+
+| Gate | Applicability and module-specific route |
+| --- | --- |
+| G0 | Applicable: hull units, input validation and geometry finiteness; `g0-axis`, `g0-grid` |
+| G1 | Applicable: Python imports/tests plus native CAD/render loading where those products are requested; `g1-offline`, `g1-cad`, `g1-blender` |
+| G2 | Applicable: independent analytical hydrostatics; `g2-box`, `g2-shaped` |
+| G3 | NOT_APPLICABLE: this calculation path has no time-domain simulation; animation frames are rendering, not a dynamics solution. [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L151-L163] [src/digitalmodel/visualization/design_tools/blender_integration.py:L330-L350] |
+| G4 | NOT_APPLICABLE to this EC pack: no diffraction solution is produced by these calculation methods; a downstream diffraction analysis requires its own gate record. [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L151-L163] [src/digitalmodel/visualization/design_tools/freecad_hull.py:L101-L120] |
+| G5 | Applicable: evidence inventory and traceability; `g5-evidence` |
+
+| Check ID | Executable check and numeric pass criterion / unit | Evidence and current disposition | Gate / supporting definition |
+| --- | --- | --- | --- |
+| `g0-axis` | Run `tests/visualization/design_tools/test_design_table.py::TestDesignTable::test_design_table_parameter_validation` and the three solver-free `TestDesignTableFEMMode` nodes in the module test files: 0 missed expected exceptions (count) for negative or unknown axes | PASS in both runs; does not cover NaN or empty axes | G0. [tests/visualization/design_tools/test_design_table.py:L164-L170] [tests/visualization/design_tools/test_design_table_fem.py:L27-L45] |
+| `g0-grid` | Run `tests/visualization/design_tools/test_design_table.py::TestManifoldCheck::test_manifold_check_detects_open_surface`: NaN grid must return `False`, 0 accepted NaN grids (count) | PASS in both runs; no claim of general topological closure | G0. [tests/visualization/design_tools/test_design_table.py:L218-L228] |
+| `g1-offline` | Run the two command groups in section 4: 0 failed tests (count); all 131 exercised nodes pass; enumerate all 11 skips | PASS in both runs; three return-only nodes have limited evidential value | G1. [tests/visualization/design_tools/workflow_test.py:L64-L66] [tests/visualization/design_tools/test_design_table_fem.py:L20-L24] [tests/solvers/gmsh_meshing/test_spool_pilot.py:L284-L297] |
+| `g1-cad` | In a FreeCAD-capable environment, run `tests/solvers/gmsh_meshing/test_spool_pilot.py::test_real_solid_regenerates_with_changed_parameters`: `build_spool` → `measure_spool` → `judge_solid`, exactly 1 closed valid solid (count), volume error ≤ 0.5%, every dimension error ≤ 10 μm | NOT_RUN: FreeCAD and Part unavailable; hull STEP loading needs separate native evidence | G1. [tests/solvers/gmsh_meshing/test_spool_pilot.py:L349-L356] [src/digitalmodel/solvers/gmsh_meshing/spool_pilot.py:L9-L17] [src/digitalmodel/solvers/gmsh_meshing/spool_pilot.py:L153-L180] |
+| `g1-blender` | With Blender installed, call `BlenderWorkflow.create_engineering_scene` on one known STL, then load the resulting scene through `bpy.ops.wm.open_mainfile`; require subprocess status 0 (code), exactly 1 imported mesh (count), and its 1000 mm reference span to measure 1 m with absolute error ≤ 0.001 m | NOT_RUN: Blender executable unavailable; no existing assertion-based test covers this route; issue pending (5) | G1. [src/digitalmodel/visualization/design_tools/blender_integration.py:L111-L142] [src/digitalmodel/visualization/design_tools/blender_integration.py:L254-L260] [src/digitalmodel/visualization/design_tools/blender_integration.py:L284-L288] |
+| `g1-fem` | On an authorized solver-capable environment, execute the three existing guarded FEM nodes: `DesignTable.run_batch_fem` creates plate geometry, sets loads, calls `FEMChain.solve` and extracts Kt; batch criterion ≥ 3 result rows (count) and Kt > 0 (dimensionless), with YAML export assertions | NOT_RUN: requires gmsh and CalculiX; input loading and target solver version remain unproved here | G1. [src/digitalmodel/visualization/design_tools/design_table.py:L340-L390] [tests/visualization/design_tools/test_design_table_fem.py:L47-L90] |
+| `g2-box` | Run all four `TestBoxBargeHydrostatics` nodes of section 4; each volume/area/KB/BM relative error < 2.0% | PASS in both runs; closed-form geometry | G2. [tests/visualization/design_tools/test_hull_hydrostatics_validation.py:L123-L161] |
+| `g2-shaped` | Run both `TestCb07HullDisplacement` nodes of section 4; volume and displacement error < 2.0% | PASS in both runs; piecewise-linear closed form | G2. [tests/visualization/design_tools/test_hull_hydrostatics_validation.py:L180-L200] |
+| `g5-evidence` | Resolve every pack citation at its declared pin, match every section-4 node to the test record, compare BASE/after results and fingerprint the two deliverables; criterion 0 unresolved citations, 0 unmatched nodes, 0 unexplained result differences (counts) | Execution evidence retained outside the repository; run records above; native gaps stay explicit | G5; evidence check specified by this pack, AQG r0 section 9, “QA appendix” |
+
+The G1 Blender criterion is a proposed hand-check procedure, not an assertion that the module's present tests establish its unit conversion; the existing script applies the fixed scaling without checking a measured span. [src/digitalmodel/visualization/design_tools/blender_integration.py:L128-L131]
+
+## 6. Known failure modes and pitfalls
+
+sweep: 108 found
+
+The count is reviewed candidate sites, including intentional initialization and control flow; each row classifies its result rather than treating every grep match as a defect. No `1970` default or empty-result cache write was found in the Python package; workflow metadata can persist empty export lists as recorded below.
+
+The exact discovery commands were:
+
+```sh
+rg -n 'except|continue|return None|return \[\]|return \{\}|return ""|= 0(\.0)?\b|1970|\.get\([^\n]*,\s*(0|0\.0)|\b(int|float)\(' src/digitalmodel/visualization/design_tools -g '*.py'
+rg -n -i 'unit|density|mm|metre|meter|tonne|scale|pressure|temperature|0\.05|5%|cache|json.dump|yaml.dump' src/digitalmodel/visualization/design_tools -g '*.py'
+```
+
+All rows below refer to the header's code pin; “no detection check exists” means the existing module tests do not assert the described error-path outcome. Inspection observations were recorded on 2026-11-06.
+
+| Site | Symptom or reviewed classification | Detection check in section 5 | Tracking / pinned evidence |
+| --- | --- | --- | --- |
+| 1: `__init__.py:16` | ImportError sets only the availability flag; the public export list still names the generator. | no detection check exists | #1900. [src/digitalmodel/visualization/design_tools/__init__.py:L16-L17] |
+| 2: `freecad_hull.py:18` | Optional imports select the grid fallback; native output cannot be inferred from metadata. | g1-offline (fallback grid only) | issue pending (5). [src/digitalmodel/visualization/design_tools/freecad_hull.py:L18-L25] |
+| 3: `freecad_hull.py:108` | Absent FreeCAD warns and returns None for STEP export. | g1-offline (existing fallback-export node) | issue pending (5). [src/digitalmodel/visualization/design_tools/freecad_hull.py:L108-L114] |
+| 4: `freecad_hull.py:130` | Grid inherits geometry units and clamps/interpolates at uniform keel-to-draft coordinates. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/freecad_hull.py:L130-L146] |
+| 5: `freecad_hull.py:151` | float casts convert internal numeric array elements, not external text; reviewed non-text conversion. | g1-offline | issue pending (2). [src/digitalmodel/visualization/design_tools/freecad_hull.py:L151-L160] |
+| 6: `hull_hydrostatics.py:44` | Sparse submerged offsets append zero section area and continue instead of rejecting insufficient coverage. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L44-L56] |
+| 7: `hull_hydrostatics.py:48` | Draft interpolation can extend the terminal breadth when offsets do not bracket draft. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L48-L53] |
+| 8: `hull_hydrostatics.py:68` | Default density assumes tonnes per cubic metre; no finite-positive check in this function. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L68-L72] |
+| 9: `hull_hydrostatics.py:83` | Waterplane interpolation inherits the same endpoint extension and unit assumption. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L83-L89] |
+| 10: `hull_hydrostatics.py:100` | Zero volume returns zero KB. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L100-L102] |
+| 11: `hull_hydrostatics.py:113` | KB interpolates at draft; insufficient submerged samples contribute zero moment. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L113-L120] |
+| 12: `hull_hydrostatics.py:132` | Zero volume returns zero BM. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L132-L134] |
+| 13: `hull_hydrostatics.py:138` | BM uses interpolated breadth cubed and coordinates in inherited units. | g2-box (valid geometry only) | issue pending (2). [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L138-L145] |
+| 14: `hull_hydrostatics.py:151` | GM key assumes KG zero; density is fixed by the compute_all call. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L151-L163] |
+| 15: `design_table.py:73` | Missing parameter mapping defaults to empty and yields the base profile; empty YAML is not normalized. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/design_table.py:L73-L78] |
+| 16: `design_table.py:95` | Positivity check lacks explicit finite-value and nonempty-axis validation. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/design_table.py:L95-L105] |
+| 17: `design_table.py:113` | No axes returns one copied base profile; deliberate default, not an exception. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/design_table.py:L113-L115] |
+| 18: `design_table.py:140` | An empty variation list regenerates; serial batch resets results before calculation; parallel default opens an uncapped pool. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/design_table.py:L140-L155] |
+| 19: `design_table.py:169` | Export zip truncates unequal result/variation lists; numeric floats serialize internal values without unit metadata. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/design_table.py:L169-L198] |
+| 20: `design_table.py:201` | Dataframe-named method returns a list; zip truncates unequal lists. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/design_table.py:L201-L213] |
+| 21: `design_table.py:224` | Dimension defaults preserve base values; draft_scale is unused, block coefficient only changes metadata. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/design_table.py:L224-L255] |
+| 22: `design_table.py:288` | FEM axes also lack explicit finite/nonempty validation; missing axis dictionary is initialized empty. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/design_table.py:L288-L300] |
+| 23: `design_table.py:305` | FEM stress/material/geometry defaults have no unit metadata or source sidecar. | no detection check exists | issue pending (1). [src/digitalmodel/visualization/design_tools/design_table.py:L305-L324] |
+| 24: `design_table.py:330` | FEM resets prior results; absent load-set key defaults to one node when distributing force. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/design_table.py:L330-L354] |
+| 25: `design_table.py:374` | Failed solve appends error row and continues, leaving a partially successful batch. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/design_table.py:L374-L381] |
+| 26: `design_table.py:395` | FEM export casts numeric values, uses unknown-error fallback and omits success flag. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/design_table.py:L395-L421] |
+| 27: `manifold_check.py:29` | Nonfinite, undersized or zero-span grids return False for continuity. | g0-grid (nonfinite branch only) | issue pending (2). [src/digitalmodel/visualization/design_tools/manifold_check.py:L29-L46] |
+| 28: `manifold_check.py:47` | Continuity distance threshold is half maximum coordinate span, not closed-edge topology. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/manifold_check.py:L47-L67] |
+| 29: `manifold_check.py:76` | Undersized grid returns True from self-intersection check alone. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/manifold_check.py:L76-L78] |
+| 30: `manifold_check.py:80` | Adjacent-normal dot products test folds; distant intersecting faces are not compared. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/manifold_check.py:L80-L107] |
+| 31: `manifold_check.py:119` | Tiny normals are filtered; remaining directions use a fixed dot-product cutoff. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/manifold_check.py:L119-L138] |
+| 32: `manifold_check.py:166` | Normal computation returns None for undersized grids. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/manifold_check.py:L166-L168] |
+| 33: `manifold_check.py:170` | Normal computation returns None for nonfinite grids. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/manifold_check.py:L170-L171] |
+| 34: `manifold_check.py:175` | Normals array starts at zero; near-degenerate faces remain zero rather than being rejected individually. | no detection check exists | issue pending (2). [src/digitalmodel/visualization/design_tools/manifold_check.py:L175-L189] |
+| 35: `freecad_integration.py:26` | ImportError prints a warning and sets availability false. | no detection check exists | #1900. [src/digitalmodel/visualization/design_tools/freecad_integration.py:L26-L33] |
+| 36: `freecad_integration.py:61` | mm geometry defaults; diameter docstring disagrees with outer-radius implementation; angle zeros are geometry settings, not failure defaults. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/freecad_integration.py:L61-L111] |
+| 37: `freecad_integration.py:123` | mm piping defaults and fixed riser/elbow dimensions; zero angle is a geometric start angle. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/freecad_integration.py:L123-L159] |
+| 38: `freecad_integration.py:180` | Per-object export exception only prints; failed outputs disappear from list; unknown format still appends a path. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/freecad_integration.py:L180-L202] |
+| 39: `freecad_integration.py:234` | Weight branch indexes a top-level savings key although the percentage is nested, causing KeyError. | no detection check exists | issue pending (4). [src/digitalmodel/visualization/design_tools/freecad_integration.py:L234-L240] |
+| 40: `freecad_integration.py:252` | Sharp-edge selection uses fixed length and ratio thresholds without a stress solution. | no detection check exists | issue pending (4). [src/digitalmodel/visualization/design_tools/freecad_integration.py:L252-L264] |
+| 41: `freecad_integration.py:294` | Drawing uses a fixed scale and returns diagnostic strings on missing imports or any exception. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/freecad_integration.py:L294-L311] |
+| 42: `freecad_integration.py:335` | Unknown material/environment silently returns a generic material with uncited properties. | no detection check exists | issue pending (1). [src/digitalmodel/visualization/design_tools/freecad_integration.py:L335-L359] |
+| 43: `freecad_integration.py:362` | Fabrication uses fixed volume rates and an eight-hour day; zero total is an accumulator, not measured productivity. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/freecad_integration.py:L362-L392] |
+| 44: `freecad_integration.py:435` | Demonstration main prints an exception and returns False. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/freecad_integration.py:L435-L437] |
+| 45: `blender_integration.py:24` | Executable starts as None; only fixed candidate paths are searched. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/blender_integration.py:L24-L28] |
+| 46: `blender_integration.py:73` | Bare except suppresses temporary-script deletion errors. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/blender_integration.py:L73-L78] |
+| 47: `blender_integration.py:120` | Generated scene silently ignores missing input files; scales all imported STL coordinates from assumed mm to m. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/blender_integration.py:L120-L142] |
+| 48: `blender_integration.py:145` | Fixed material appearance defaults and name-based selection are rendering choices, not engineering properties. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/blender_integration.py:L145-L187] |
+| 49: `blender_integration.py:225` | Camera bounds use infinity sentinels; script references Vector without importing it. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/blender_integration.py:L225-L245] |
+| 50: `blender_integration.py:272` | Fixed view angles/resolution; failed render subprocesses are omitted from output list. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/blender_integration.py:L272-L328] |
+| 51: `blender_integration.py:330` | Fixed animation defaults; nonzero subprocess returns None. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/blender_integration.py:L330-L407] |
+| 52: `blender_integration.py:409` | VR failure returns None; unsupported formats can return an FBX path without executing an export branch. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/blender_integration.py:L409-L473] |
+| 53: `blender_integration.py:491` | Unknown subject falls back to equipment camera suggestions. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/blender_integration.py:L491-L512] |
+| 54: `blender_integration.py:526` | Unknown lighting environment uses industrial defaults. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/blender_integration.py:L526-L541] |
+| 55: `blender_integration.py:575` | Demonstration main prints an exception and returns False. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/blender_integration.py:L575-L577] |
+| 56: `integrated_workflow.py:16` | Bare sibling imports fail as a package; exception sets availability flags and allows import to finish. | no detection check exists | #1900. [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L16-L22] |
+| 57: `integrated_workflow.py:78` | Absent step details serialize as empty dictionary. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L78-L87] |
+| 58: `integrated_workflow.py:89` | Initialization changes cwd and catches errors as False; cwd is not restored. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L89-L106] |
+| 59: `integrated_workflow.py:108` | Blender initialization also changes cwd and catches errors as False. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L108-L127] |
+| 60: `integrated_workflow.py:148` | Vessel default dimensions are passed without pressure/temperature; empty export list may be recorded with success. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L148-L198] |
+| 61: `integrated_workflow.py:200` | Vessel exceptions become logged False results. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L200-L202] |
+| 62: `integrated_workflow.py:222` | Piping default dimensions omit pressure and layout; export count may be zero on a success entry. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L222-L251] |
+| 63: `integrated_workflow.py:253` | Piping exceptions become logged False results. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L253-L255] |
+| 64: `integrated_workflow.py:271` | Missing Blender returns an empty dictionary. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L271-L272] |
+| 65: `integrated_workflow.py:274` | Default visualization types; empty imports or output lists can still produce a success history entry. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L274-L315] |
+| 66: `integrated_workflow.py:317` | Visualization exceptions become logged empty dictionaries. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L317-L319] |
+| 67: `integrated_workflow.py:398` | Documentation exceptions become an empty string after a failed log entry. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L398-L400] |
+| 68: `integrated_workflow.py:415` | No history returns None for last_activity; intentional metadata absence. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L415-L415] |
+| 69: `integrated_workflow.py:510` | Demonstration main prints an exception and returns False. | no detection check exists | issue pending (5). [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L510-L512] |
+| 70: `ai_cad_agent.py:25` | Bare sibling import failure sets workflows unavailable rather than failing package import. | no detection check exists | #1900. [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L25-L32] |
+| 71: `ai_cad_agent.py:65` | Length conversion table assumes parsed dimensions should end in mm. | no detection check exists | issue pending (3). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L65-L71] |
+| 72: `ai_cad_agent.py:194` | diameter external text float conversion accepts unsigned dot decimals; missing unit defaults to mm, separators and signs are not normalized. | no detection check exists | issue pending (3). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L194-L198] |
+| 73: `ai_cad_agent.py:201` | length external text float conversion accepts unsigned dot decimals; missing unit defaults to mm, separators and signs are not normalized. | no detection check exists | issue pending (3). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L201-L205] |
+| 74: `ai_cad_agent.py:208` | thickness external text float conversion accepts unsigned dot decimals; missing unit defaults to mm, separators and signs are not normalized. | no detection check exists | issue pending (3). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L208-L212] |
+| 75: `ai_cad_agent.py:215` | Pressure external text float conversion drops bar/psi/kPa unit identity. | no detection check exists | issue pending (3). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L215-L217] |
+| 76: `ai_cad_agent.py:220` | Temperature external text float conversion drops scale; regex excludes a minus sign. | no detection check exists | issue pending (3). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L220-L222] |
+| 77: `ai_cad_agent.py:245` | Output defaults to STL; unknown length unit uses factor one. | no detection check exists | issue pending (3). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L245-L266] |
+| 78: `ai_cad_agent.py:268` | Unknown intent returns zero confidence; other intents use a fixed base and per-parameter increment, not a calibrated probability. | no detection check exists | issue pending (3). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L268-L280] |
+| 79: `ai_cad_agent.py:359` | All execution exceptions become error dictionaries. | no detection check exists | issue pending (4). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L359-L364] |
+| 80: `ai_cad_agent.py:369` | Missing vessel fields use fixed geometry/operating defaults and hard-coded material overrides. | no detection check exists | issue pending (3). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L369-L383] |
+| 81: `ai_cad_agent.py:414` | Missing piping fields use fixed dimensions, pressure and fluid label. | no detection check exists | issue pending (3). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L414-L419] |
+| 82: `ai_cad_agent.py:436` | Optimization defaults to weight and reports fixed savings; no method sets current_design after creating equipment. | no detection check exists | issue pending (4). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L436-L468] |
+| 83: `ai_cad_agent.py:470` | Rendering defaults to technical and returns success regardless of empty render result. | no detection check exists | issue pending (4). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L470-L486] |
+| 84: `ai_cad_agent.py:488` | Export reports success with an empty file list and no export call. | no detection check exists | issue pending (4). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L488-L502] |
+| 85: `ai_cad_agent.py:504` | Analysis reports success with fixed quantities and compliance labels. | no detection check exists | issue pending (4). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L504-L519] |
+| 86: `ai_cad_agent.py:686` | Help display continues the interactive loop; reviewed normal control flow, not a skipped data record. | no detection check exists | issue pending (3). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L686-L688] |
+| 87: `ai_cad_agent.py:689` | Screen clearing continues the interactive loop; reviewed normal control flow, not a skipped data record. | no detection check exists | issue pending (3). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L689-L691] |
+| 88: `ai_cad_agent.py:692` | Empty command continues the interactive loop; reviewed normal control flow, not a skipped data record. | no detection check exists | issue pending (3). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L692-L693] |
+| 89: `ai_cad_agent.py:727` | KeyboardInterrupt ends the interactive loop; reviewed deliberate termination. | no detection check exists | issue pending (3). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L727-L729] |
+| 90: `ai_cad_agent.py:730` | Other CLI exceptions print and continue the loop. | no detection check exists | issue pending (3). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L730-L732] |
+| 91: `case_studies/02_chemical_plant.py:21` | Savings zero is accumulator initialization, not observed savings. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/case_studies/02_chemical_plant.py:L21-L25] |
+| 92: `case_studies/02_chemical_plant.py:117` | Command result is unused while success is printed and equipment is counted. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/case_studies/02_chemical_plant.py:L117-L121] |
+| 93: `case_studies/03_lng_facility.py:23` | Equipment count starts at zero; later increments are not conditioned on command success. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/case_studies/03_lng_facility.py:L23-L27] |
+| 94: `case_studies/03_lng_facility.py:216` | Savings accumulator starts at zero; configured savings are summed regardless of command result. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/case_studies/03_lng_facility.py:L216-L224] |
+| 95: `case_studies/03_lng_facility.py:341` | execute_project has no value return but its caller formats the result as numeric total. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/case_studies/03_lng_facility.py:L341-L353] |
+| 96: `pilot_program/live_test_scenario.py:51` | Time totals start at zero; ordinary accumulators. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/pilot_program/live_test_scenario.py:L51-L52] |
+| 97: `pilot_program/live_test_scenario.py:70` | Simulation sleeps and records success with configured minutes, without creating CAD. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/pilot_program/live_test_scenario.py:L70-L80] |
+| 98: `pilot_program/pilot_dashboard.py:30` | New metrics initialize counts and time saved to zero; not measured output. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/pilot_program/pilot_dashboard.py:L30-L39] |
+| 99: `pilot_program/pilot_dashboard.py:49` | New timing record initializes elapsed estimates to zero. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/pilot_program/pilot_dashboard.py:L49-L59] |
+| 100: `pilot_program/pilot_dashboard.py:66` | Command logged only if current timing record exists; otherwise it disappears. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/pilot_program/pilot_dashboard.py:L66-L76] |
+| 101: `pilot_program/pilot_dashboard.py:78` | Design count increments even without active timing; baseline time assumes a fixed multiplier. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/pilot_program/pilot_dashboard.py:L78-L97] |
+| 102: `pilot_program/pilot_dashboard.py:156` | Missing duration key defaults to zero in report/dashboard aggregate. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/pilot_program/pilot_dashboard.py:L156-L156] |
+| 103: `pilot_program/pilot_dashboard.py:157` | Missing duration key defaults to zero in report/dashboard aggregate. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/pilot_program/pilot_dashboard.py:L157-L157] |
+| 104: `pilot_program/pilot_dashboard.py:210` | Missing duration key defaults to zero in report/dashboard aggregate. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/pilot_program/pilot_dashboard.py:L210-L210] |
+| 105: `pilot_program/pilot_dashboard.py:211` | Missing duration key defaults to zero in report/dashboard aggregate. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/pilot_program/pilot_dashboard.py:L211-L211] |
+| 106: `pilot_program/pilot_dashboard.py:116` | Ratings are silently omitted without an active timing record; ranges are not checked. | no detection check exists | issue pending (7). [src/digitalmodel/visualization/design_tools/pilot_program/pilot_dashboard.py:L116-L130] |
+| 107: `flanged_spool.py:15` | Cutter overlap assumes mm; axis starts at zero and advances along z; geometry settings, not failure defaults. | g1-offline (mock cutter test) | issue pending (5). [src/digitalmodel/visualization/design_tools/flanged_spool.py:L15-L57] |
+| 108: `flanged_spool.py:68` | Analytic-face classification uses fixed axis/position tolerances in geometry units and raises for unexpected topology. | g1-offline (synthetic metrology only) | issue pending (5). [src/digitalmodel/visualization/design_tools/flanged_spool.py:L68-L101] |
+
+Additional test-evidence pitfalls:
+
+| Symptom | Cause / detection | Tracking and evidence |
+| --- | --- | --- |
+| Pytest green despite unavailable CAD/rendering | The three return-only workflow nodes do not assert their result; `g1-offline` records test execution, not native success; no detection check exists for the false-positive test outcome | issue pending (6). [tests/visualization/design_tools/workflow_test.py:L64-L66] [tests/visualization/design_tools/workflow_test.py:L157-L171] [tests/visualization/design_tools/workflow_test.py:L190-L207] |
+| Separator demonstration omitted from recursive collection | Existing `collect_ignore`; imports use bare sibling names; no assertion-based test node implements its advertised validation; no detection check exists | #1900; issue pending (6). [tests/conftest.py:L51-L63] [tests/visualization/design_tools/pilot_program/test_case_1_separator.py:L9-L13] [tests/visualization/design_tools/pilot_program/test_case_1_separator.py:L121-L139] |
+| Native FEM acceptance not established by green offline results | Existing three guarded nodes skip when native tools are absent; `g1-offline` enumerates them rather than treating them as validation | #277 and #1650; source guard evidence. [tests/visualization/design_tools/test_design_table_fem.py:L20-L24] [tests/visualization/design_tools/test_design_table_fem.py:L47-L90] |
+
+## 7. Lessons log
+
+Append later findings without rewriting an earlier row; this draft has no cleared review or shared-log receipt.
+
+| Date | Change | Lesson | Evidence | Shared-log entry |
+| --- | --- | --- | --- | --- |
+| 2026-11-06 | Initial pack | Distinguish point-grid fallback, return-only workflow tests and native CAD evidence before claiming validation | [src/digitalmodel/visualization/design_tools/freecad_hull.py:L44-L70] [tests/visualization/design_tools/workflow_test.py:L64-L66] | Not created; issue pending (9) |
+| 2026-11-06 | Initial pack | Treat fixed analysis/compliance dictionaries as demonstration output | [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L504-L519] | Not created; issue pending (9) |
+
+## 8. Ownership
+
+Review roles for this draft: engineering calculations quality manager and engineering calculations deputy quality manager; producing role: engineering calculations contributor. This is a role allocation for review, not a record of an appointment or clearance (AQG r0, section 11, “Sign-off and independence”).
+
+Route ambiguous method classification and calculation criteria to the family quality manager; route cross-family decisions to the maintainers. Independent-provider review is required before clearance (AQG r0, section 11, “Sign-off and independence”).
+
+## 9. Dependencies and implementation inventory
+
+| Route | Upstream / downstream dependency | Evidence and execution boundary |
+| --- | --- | --- |
+| Hull calculations | `hydrodynamics/hull_library.profile_schema.HullProfile`; NumPy integration | Geometry and density units are caller inputs; no external solver used. [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L7-L12] [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L33-L72] |
+| Batch hull studies | YAML, profile serialization, multiprocessing, `HullHydrostatics` | Worker delegates to the listed integrator; offline tests use serial execution. [src/digitalmodel/visualization/design_tools/design_table.py:L40-L44] [src/digitalmodel/visualization/design_tools/design_table.py:L130-L157] [tests/visualization/design_tools/test_design_table.py:L132-L143] |
+| CAD hulls | Optional FreeCAD and Part; NumPy grid fallback | Native program version not established by these offline tests; export unavailable without native modules. [src/digitalmodel/visualization/design_tools/freecad_hull.py:L18-L25] [src/digitalmodel/visualization/design_tools/freecad_hull.py:L101-L120] |
+| Equipment CAD | FreeCAD, Part, Draft; optional MeshPart and TechDraw | Imports and per-object export errors are handled locally; no native-version evidence here. [src/digitalmodel/visualization/design_tools/freecad_integration.py:L26-L33] [src/digitalmodel/visualization/design_tools/freecad_integration.py:L185-L202] [src/digitalmodel/visualization/design_tools/freecad_integration.py:L276-L311] |
+| Spool | `solvers/gmsh_meshing.spool_pilot` parameter and measurement models; FreeCAD and Part | Local imports defer native CAD requirement; metrology supports its specific analytic topology. [src/digitalmodel/visualization/design_tools/flanged_spool.py:L9-L21] [src/digitalmodel/visualization/design_tools/flanged_spool.py:L60-L101] |
+| Rendering | Blender executable, generated `bpy` scripts; STL input | Version-specific operators and fixed executable candidates need native confirmation. [src/digitalmodel/visualization/design_tools/blender_integration.py:L16-L28] [src/digitalmodel/visualization/design_tools/blender_integration.py:L41-L71] [src/digitalmodel/visualization/design_tools/blender_integration.py:L120-L139] |
+| FEM / CalculiX reference | The only case-insensitive `calculix`/`ccx` occurrence in package Python text is the import of `digitalmodel.solvers.calculix.fem_chain.FEMChain` in `DesignTable.run_batch_fem` | Read as text only; calls geometry, setup, solve and extraction; no solver version or result asserted. [src/digitalmodel/visualization/design_tools/design_table.py:L302-L393] |
+| Native-test dependency | Three FEM tests require both gmsh and CalculiX | Guarded cases are NOT_RUN here; no solver or licensed interface was started. [tests/visualization/design_tools/test_design_table_fem.py:L13-L24] [tests/visualization/design_tools/test_design_table_fem.py:L47-L90] |
+| Other hull consumers | Parametric hull, public hull registry and DXF-reader tests also consume `HullHydrostatics` | Consumer-domain suites are discovery references; broader execution remains section 10 coverage work. [tests/hydrodynamics/hull_library/test_parametric_form.py:L34-L39] [tests/hydrodynamics/hull_library/test_public_hull_registry.py:L17-L23] [tests/hydrodynamics/hull_library/line_generator/test_dxf_lines_reader.py:L23-L27] |
+
+Implementation-map record used for this inventory: ref `origin/codex/implmap-work`, commit `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`, data revision `270c8759c374b67a7f032953e7fcdb14e0224461`; the code-pin map declares the same data revision. [docs/registry/implementation-map.yaml:L1-L4]
+
+The parsed map audit found **0 implementation rows inside this package**, hence **0 module map families**, an empty implementation inventory and **0 counted families**. A8 inventory passes; its counted-family grep is **NOT_APPLICABLE**, because no family has an implementation row inside the header package. This is an inventory audit result, not a statement that the package has no engineering methods.
+
+Map follow-up, issue pending (8): add the section-3 families—station hydrostatics; Cartesian hull variation; structured-grid manifold checks; hull surface generation; equipment and spool geometry/metrology; fabrication/material heuristics; and FEM launch/force assembly—before counting them in a later map revision. The map's rejected candidates are not implementation rows; `DesignTable.run_batch_fem` needs inspection as a launch route, while `run_batch_hydrostatics` delegates to the listed integrator. [src/digitalmodel/visualization/design_tools/design_table.py:L40-L44] [src/digitalmodel/visualization/design_tools/design_table.py:L130-L157] [src/digitalmodel/visualization/design_tools/design_table.py:L302-L393]
+
+Whole-repository discovery included `scripts/` with these exact searches; these are map-follow-up findings, not changes to the counted-family result:
+
+```sh
+rg -n 'class HullHydrostatics|class ManifoldChecker|def (compute_displaced_volume|compute_waterplane_area|compute_kb|compute_bm_transverse|run_batch_fem|create_pressure_vessel|estimate_fabrication_time|build_spool|measure_spool)|class NaturalLanguageParser' --glob '*.py' .
+rg -n 'def .*hydrostatic|def .*displac|def .*waterplane|def .*metacent' src scripts -g '*.py'
+rg -n -i 'calculix|ccx' src/digitalmodel/visualization/design_tools -g '*.py'
+```
+
+| Outside-package route | Classification and map follow-up |
+| --- | --- |
+| `orcawave/panel_mesh` waterplane and displaced volume | Delegates to mesh summary rather than station integration; handles signed volume / waterline requirements; map gap for hydrostatic route coverage, issue pending (8). [src/digitalmodel/orcawave/panel_mesh.py:L370-L399] |
+| `naval_architecture/mesh_hydrostatics.compute_hydrostatics` | Distinct clipped-mesh route with integration, sections and input hashing; no equivalence to station integration assumed; issue pending (8). [src/digitalmodel/naval_architecture/mesh_hydrostatics.py:L94-L125] |
+| `naval_architecture/trim_hydrostatics.hydrostatics_at` | Attitude-dependent mesh route with waterplane, wetted area and enclosed volume; issue pending (8). [src/digitalmodel/naval_architecture/trim_hydrostatics.py:L306-L355] |
+| `naval_architecture/hull_form.displacement_from_cb` | Separate closed-form block-coefficient displacement formula, with its own density conversion; issue pending (8). [src/digitalmodel/naval_architecture/hull_form.py:L312-L323] |
+| `scripts/integrations/pint_benchmark` and `pint_poc` | Hydrostatic-pressure demonstration/benchmark, a different result from hull buoyancy integration; not a duplicate of the station method. [scripts/integrations/pint_benchmark.py:L98-L117] [scripts/integrations/pint_poc.py:L102-L117] |
+
+## 10. Coverage and open items
+
+Coverage record: all 14 Python files in the package were inspected as text, including both active case-study scripts and both pilot scripts; the disabled demonstration, two pilot JSON files and binary scene were discovery-only inputs, not engineering evidence. The compact documentation audit covered headings and module/standard mentions for the nested narrative documents and repository-wide discoveries; full narrative verification remains below.
+
+Module Python inventory (paths relative to the header package):
+
+- `__init__.py`, `ai_cad_agent.py`, `blender_integration.py`, `design_table.py`, `flanged_spool.py`, `freecad_hull.py`, `freecad_integration.py`, `hull_hydrostatics.py`, `integrated_workflow.py`, `manifold_check.py`.
+- `case_studies/02_chemical_plant.py`, `case_studies/03_lng_facility.py`, `pilot_program/live_test_scenario.py`, `pilot_program/pilot_dashboard.py`.
+
+Tests read and executed: `tests/visualization/design_tools/test_design_table.py`, `test_design_table_fem.py`, `test_freecad_hull.py`, `test_hull_hydrostatics_validation.py`, `workflow_test.py`; `tests/integration/test_freecad_roundtrip.py`; `tests/solvers/gmsh_meshing/test_spool_pilot.py`. The separator demonstration was read but is excluded by the existing collection rule; three other hull-library consumer suites were discovered, with execution deferred under the coverage item below. [tests/conftest.py:L51-L63] [tests/visualization/design_tools/pilot_program/test_case_1_separator.py:L9-L13] [tests/hydrodynamics/hull_library/test_parametric_form.py:L34-L39] [tests/hydrodynamics/hull_library/test_public_hull_registry.py:L17-L23] [tests/hydrodynamics/hull_library/line_generator/test_dxf_lines_reader.py:L23-L27]
+
+Narrative discovery inventory, relative to the package unless beginning `docs/`: `IMPLEMENTATION_GUIDE.md`, `PILOT_ACHIEVEMENTS.md`, `PILOT_PROGRAM_STATUS.md`, `PILOT_QUICK_REFERENCE.md`, `workflow_implementation_report.md`, `case_studies/CASE_STUDIES_PORTFOLIO.md`, `deployment/TEAM_DEPLOYMENT_GUIDE.md`, `migration/CAD_MIGRATION_PLAN.md`, `pilot_program/pilot_report.md`, `pilot_program/user_onboarding.md`, `presentation/ROI_EXECUTIVE_PRESENTATION.md`, `specifications/ADVANCED_AI_FEATURES.md`, `training/TRAINING_CURRICULUM.md`; `docs/domains/visualization/design_tools/README.md`, `docs/cad-inventory/ecosystem-and-automation-surface.md`, `docs/cad-inventory/automation-opportunity-report.md`, `docs/maps/digitalmodel-operator-map.md`, `docs/domains/mooring/CALM_BUOY_PROJECT_WORKFLOW.md`, `docs/domains/ship-design/mesh-resistance-research.md`, `docs/domains/marine-engineering/marine-engineering-spec-creation-summary.md`, `docs/domains/project-docs/MODULE_RECOMMENDATIONS_PHASE2.md`, `docs/domains/project-docs/PROJECT_YAML_SYSTEM_SUMMARY.md`, `docs/domains/blender/BLENDER_AUTOMATION_MODULE.md`, `docs/domains/hull_library/hullprod-curvature-screening-evaluation.md`, `docs/research/mooring-academic-references.md`, `docs/research/subsea-pipelines-industry-practice.md`, `docs/plans/2026-09-27-issue-2239-analytical-resistance-methods.md` and `docs/plans/2026-05-20-issue-616-ocimf-polar-vessel-force-overlay.md`, discovered by the module-name search. This is a discovery list, not acceptance of the figures those documents report; detailed audit remains issue pending (9).
+
+| Open item | Evidence / bounded claim | Responsible role / tracking |
+| --- | --- | --- |
+| Unverified guide readiness claim | The section-1 UNVERIFIED claim is not established by the return-only tests | Engineering calculations maintainer; issue pending (7). [src/digitalmodel/visualization/design_tools/IMPLEMENTATION_GUIDE.md:L3-L16] [tests/visualization/design_tools/workflow_test.py:L64-L66] |
+| Four unverified standard bases | The section-3 UNVERIFIED entries cover API 12J, API 5L, API 650 and API 617 title/edition/clause provenance and uncited compliance/material output | Engineering calculations maintainer; issue pending (1). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L504-L519] [src/digitalmodel/visualization/design_tools/freecad_integration.py:L335-L359] [src/digitalmodel/visualization/design_tools/case_studies/02_chemical_plant.py:L168-L175] [src/digitalmodel/visualization/design_tools/case_studies/03_lng_facility.py:L69-L77] |
+| Degenerate geometry / unit validation and variation semantics | Zero and sparse-section fallbacks, manifold heuristics and metadata-only coefficient variation need error-path tests | Engineering calculations maintainer; issue pending (2). [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L44-L72] [src/digitalmodel/visualization/design_tools/manifold_check.py:L29-L138] [src/digitalmodel/visualization/design_tools/design_table.py:L219-L255] |
+| Natural-language unit integrity | Preserve signs, separators and physical units; reject unknown units rather than using factor one | Engineering calculations maintainer; issue pending (3). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L189-L224] [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L262-L280] |
+| Placeholder analysis and optimization | Fixed results, empty export success and nested-key error need assertion-based tests | Engineering calculations maintainer; issue pending (4). [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L436-L519] [src/digitalmodel/visualization/design_tools/freecad_integration.py:L234-L240] |
+| CAD/render export failures and native load evidence | Suppressed failures, cwd effects, unit metrology and program-version compatibility remain unproved | Engineering calculations maintainer; issue pending (5); native FEM evidence also tracked by #277 and #1650. [src/digitalmodel/visualization/design_tools/integrated_workflow.py:L89-L127] [src/digitalmodel/visualization/design_tools/blender_integration.py:L120-L142] [tests/visualization/design_tools/test_design_table_fem.py:L20-L24] |
+| False-positive workflow test outcomes and excluded demonstration | Replace return-only success evidence with assertions; no test changes included here | Test maintainer; issue pending (6); import debt #1900. [tests/visualization/design_tools/workflow_test.py:L64-L66] [tests/visualization/design_tools/workflow_test.py:L159-L171] [tests/conftest.py:L51-L63] |
+| Demonstration metrics and privacy audit | Configured timing, savings and success output are not measured productivity; identifying content stays out of this pack | Documentation maintainer; issue pending (7). [src/digitalmodel/visualization/design_tools/pilot_program/live_test_scenario.py:L70-L80] [src/digitalmodel/visualization/design_tools/pilot_program/pilot_dashboard.py:L78-L97] |
+| Implementation-map gaps | Add every section-3 method family and classify broader search candidates before later counted-family reviews | Map maintainer; issue pending (8). [src/digitalmodel/visualization/design_tools/hull_hydrostatics.py:L33-L145] [src/digitalmodel/visualization/design_tools/design_table.py:L302-L393] |
+| Extended documentation, consumer tests and review registration | Complete narrative audit beyond the main path, run consumer-domain suites, publish shared-log/index records and replace draft markers with issue numbers; no clearance or G5 report appendix generator is demonstrated here | Documentation and test maintainers; issue pending (9). [docs/domains/visualization/design_tools/README.md:L1-L17] [tests/hydrodynamics/hull_library/test_parametric_form.py:L34-L39] |
+
+Standards-derived outputs need citation sidecars before use as referenced calculations; this draft records the missing metadata in the inspected output dictionaries. No private data repository or licensed standard copy was read; no client-derived values or private sidecar entry were used. [src/digitalmodel/visualization/design_tools/freecad_integration.py:L335-L359] [src/digitalmodel/visualization/design_tools/ai_cad_agent.py:L504-L519]
