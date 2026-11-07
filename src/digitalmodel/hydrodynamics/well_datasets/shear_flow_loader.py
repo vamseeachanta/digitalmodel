@@ -108,13 +108,16 @@ class ShearFlowLoader:
         vector components last. The shipped ``_build_dataset`` returns the
         upstream dataset unchanged. ``stream_sample`` cannot be used on live
         data until ``_build_dataset`` or a subclass override of it yields
-        snapshots with both fields converted to the local convention. Each raw
-        (x, y, component) field requires ``transpose(2, 1, 0)``;
-        ``moveaxis(-1, 0)`` leaves x and y reversed.
+        snapshots with both fields converted to the local convention. Raw
+        velocity (x, y, 2) requires ``transpose(2, 1, 0)``. Scalar vorticity
+        stored as (x, y) requires ``field.T[np.newaxis]``; if stored as
+        (x, y, 1), it requires ``transpose(2, 1, 0)`` instead.
+        For fields with a trailing component axis, ``moveaxis(-1, 0)`` leaves
+        x and y reversed.
         Unadapted arrays outside the local shapes raise ``ValueError``.
         Shapes alone cannot identify swapped axes or coincident dimensions.
-        Synthetic adapter tests establish this local contract only; live
-        WellDataset layout is not validated.
+        Tests that inject converted samples establish this local contract only;
+        live WellDataset layout is not validated.
 
         The method does not trigger a full dataset download; it iterates
         only the requested number of steps using the dataset's streaming

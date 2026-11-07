@@ -14,6 +14,7 @@ and data-interface behavior; they do not qualify a measured dataset or a design.
 | 2 | 2026-11-06 | Renamed the annulus model, required named diameters, normalized real scalar inputs and documented the local spatial-axis convention to prevent ambiguous geometry or array interpretation. |
 | 3 | 2026-11-06 | Enforced matching snapshot shapes at extraction and specified the upstream axis permutation to prevent silent acceptance of incompatible layouts. |
 | 4 | 2026-11-06 | Clarified that live data requires conversion in the dataset builder because the shipped iterator returns upstream data unchanged. |
+| 5 | 2026-11-06 | Distinguished scalar vorticity conversion from vector conversion so that a field without a component axis uses a valid permutation. |
 
 ## Slice 1: pressure CSV retrieval
 
@@ -81,14 +82,20 @@ lists spatial axes in `dimensions/@spatial_dims` order (the 2-D example uses
 `x, y`), with vector components last. The shipped `_build_dataset` returns
 the upstream dataset unchanged. `stream_sample` cannot be used on live data
 until `_build_dataset` or a subclass override of it yields snapshots with both
-fields converted to local `(component, y, x)` order. Each raw
-`(x, y, component)` field requires `transpose(2, 1, 0)`.
-Applying only `moveaxis(-1, 0)` leaves the spatial axes reversed.
+fields converted to local `(component, y, x)` order. Raw velocity `(x, y, 2)`
+requires `transpose(2, 1, 0)`. Scalar vorticity stored as `(x, y)` requires
+`field.T[np.newaxis]`; if stored as `(x, y, 1)`, it requires
+`transpose(2, 1, 0)` instead. The specification's `t0_fields` example has no
+trailing component axis, whereas its `t1_fields` example has one.
+For fields with a trailing component axis, applying only `moveaxis(-1, 0)`
+leaves the spatial axes reversed.
 Tests reject a synthetic raw `(4, 3, 2)` velocity and verify the
 explicit permutation on a non-square grid with unequal spacings. Shape checks
 cannot identify swapped axes or coincident dimensions. Comparing a synthetic
 snapshot with its injected vorticity tests transport and arithmetic, not
 real-dataset axis order; live upstream compatibility remains unverified.
+These are tests that inject converted samples; no production conversion is
+implemented.
 
 Interior derivatives use centred difference quotients; boundary derivatives
 use one-sided quotients, without periodic wrapping. For an affine field,
