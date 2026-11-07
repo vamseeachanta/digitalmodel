@@ -68,6 +68,7 @@ engines:
     hull-girder: {status: engine, module: hull_girder_screening}
     sn-fatigue: {status: engine, module: structural.fatigue}
     scour: {status: engine, module: geotechnical.scour}
+    air-gap: {status: engine, module: asset_integrity.air_gap, issue: 3443}
     structural-health: {status: engine, module: structural.offshore_resilience.structural_health}
     tank-settlement-screen: {status: planned, issue: 2172}
     tank-level3: {status: planned, issue: 2174}
