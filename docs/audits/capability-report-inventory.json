@@ -279,9 +279,14 @@
         "revision": "0"
       },
       {
-        "change": "Refresh four stale source digests after edition citation and benchmark source updates; retain evidence classifications and qualification limits.",
-        "date": "2026-11-07",
+        "change": "Refresh the pipeline manifest observation after calculation sources changed; retain synthetic scope and qualification limits.",
+        "date": "2026-11-05",
         "revision": "1"
+      },
+      {
+        "change": "Record the edition-citation manifest and FFS assessment-test digests separately from the earlier calculation-source refresh; retain evidence classifications and qualification limits.",
+        "date": "2026-11-07",
+        "revision": "2"
       }
     ],
     "scope_roots": [
