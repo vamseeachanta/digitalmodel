@@ -11,6 +11,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
 from datetime import date
+import math
 
 from ._validation import _number, _stability
 from .dnv_rp_f109 import absolute_stability_check, absolute_stability_margin
@@ -238,7 +239,15 @@ def render_report(
     if not cases or len({case.label for case in cases}) != len(cases):
         raise ValueError("nonempty cases with distinct labels are required")
     results = [assess_static(case, method=method) for case in cases]
-    governing = max(results, key=lambda result: result.utilisation)
+    governing = max(
+        results,
+        key=lambda result: (
+            result.utilisation,
+            result.case.lift_n_m / result.case.weight_n_m
+            if result.case.weight_n_m > 0 else math.inf,
+            result.lateral_utilisation,
+        ),
+    )
     lines = [
         "# On-bottom stability analysis",
         "",
@@ -285,6 +294,7 @@ def render_report(
         "",
         "Ratios display three decimal places; verdicts use unrounded demand <= capacity and strict bed contact.",
         "Displayed unity does not establish acceptance; rounded inputs and ratios cannot resolve the strict contact boundary.",
+        "Equal governing utilisations are ranked by lift/weight, then by the lateral equation ratio; nonpositive weight uses infinite lift/weight for ranking.",
         "",
         "| Case | Lateral | Uplift | Governing utilisation | Governing | Arithmetic | Standard |",
         "|---|---:|---:|---:|---|---|---|",
@@ -304,7 +314,8 @@ def render_report(
         "Absolute uses gamma*(H+mu*L)/(mu*W+FR) for nonnegative peak demands.",
         "Nonzero passive resistance requires initial_penetration or prior_loading provenance.",
         "Uplift uses gamma*L/W and bed contact requires W>L.",
-        "For W>L, governing utilisation is max(eta_h, eta_z, z/w), with eta_h the lateral ratio, eta_z the uplift ratio and z/w=L/W the supplied contact screen.",
+        "For W>L, governing utilisation is max(gamma*(H+mu*L)/(mu*W+FR), gamma*L/W, L/W), where L/W is the supplied contact screen.",
+        "For W<=L, bed contact is lost and the governing utilisation is infinite (displayed inf).",
         "Standard editions, clauses, safety-class factors and calibrated soil resistance are not qualified.",
         "No generalised displacement envelope or dynamic time history is calculated.",
         "Use reviewed factors and an applicable soil/dynamic assessment before design acceptance.",

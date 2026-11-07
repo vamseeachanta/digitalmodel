@@ -18,6 +18,7 @@ establish neither a site design nor a qualified standard implementation.
 | 4 | 2026-11-07 | Added the strict bed-contact screen, its weight boundary and governor precedence so ratios and acceptance agree. |
 | 5 | 2026-11-07 | Included the contact ratio above the strict boundary so near-contact utilisation reports the available reserve. |
 | 6 | 2026-11-07 | Documented unit-factor contact labels as a compatibility change and exposed the governing ratio in reports. |
+| 7 | 2026-11-07 | Ranked report contact-loss ties by lift/weight and lateral ratio, explained infinite utilisation and aligned report symbols. |
 
 ## Evidence and scope
 
@@ -152,7 +153,6 @@ These contracts intentionally change previous behaviour:
 - Report tables display the canonical governing utilisation, including the
   contact ratio, alongside the lateral and uplift equation ratios. Rounded
   unity does not establish acceptance at the strict contact boundary.
-
 - All static checks and wrappers require an explicit factor; generic load
   coefficients are explicit as well.
 - Signed horizontal samples are rejected by static interfaces. Resolve the

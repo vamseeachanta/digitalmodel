@@ -14,6 +14,7 @@ Results are static arithmetic screens. Standard qualification and dynamic displa
 | 1 | 2026-11-06 | Align peak checks and report precision with supplied inputs |
 | 2 | 2026-11-06 | Record strict bed contact and canonical report governors |
 | 3 | 2026-11-07 | Show governing utilisation and clarify rounded contact displays |
+| 4 | 2026-11-07 | Rank contact-loss cases by severity and explain infinite utilisation with consistent symbols |
 
 ## Sea-state inputs and sampled phase
 
@@ -46,6 +47,7 @@ Dimensional inputs display one decimal place; arithmetic uses the unrounded supp
 
 Ratios display three decimal places; verdicts use unrounded demand <= capacity and strict bed contact.
 Displayed unity does not establish acceptance; rounded inputs and ratios cannot resolve the strict contact boundary.
+Equal governing utilisations are ranked by lift/weight, then by the lateral equation ratio; nonpositive weight uses infinite lift/weight for ranking.
 
 | Case | Lateral | Uplift | Governing utilisation | Governing | Arithmetic | Standard |
 |---|---:|---:|---:|---|---|---|
@@ -62,7 +64,8 @@ Equations A1/A4/A5: module on-bottom-stability-analysis.md, independent force ba
 Absolute uses gamma*(H+mu*L)/(mu*W+FR) for nonnegative peak demands.
 Nonzero passive resistance requires initial_penetration or prior_loading provenance.
 Uplift uses gamma*L/W and bed contact requires W>L.
-For W>L, governing utilisation is max(eta_h, eta_z, z/w), with eta_h the lateral ratio, eta_z the uplift ratio and z/w=L/W the supplied contact screen.
+For W>L, governing utilisation is max(gamma*(H+mu*L)/(mu*W+FR), gamma*L/W, L/W), where L/W is the supplied contact screen.
+For W<=L, bed contact is lost and the governing utilisation is infinite (displayed inf).
 Standard editions, clauses, safety-class factors and calibrated soil resistance are not qualified.
 No generalised displacement envelope or dynamic time history is calculated.
 Use reviewed factors and an applicable soil/dynamic assessment before design acceptance.

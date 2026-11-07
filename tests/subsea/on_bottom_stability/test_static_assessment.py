@@ -371,6 +371,40 @@ def test_report_displays_the_contact_governed_case_as_the_largest_utilisation():
     assert displayed == {"A": 0.990, "B": 1.000}
     assert displayed["B"] == max(displayed.values())
     assert "| B | 0.980 | 0.980 | 1.000 | contact | ARITHMETIC_PASS |" in table
-    assert "max(eta_h, eta_z, z/w)" in report
+    assert "max(gamma*(H+mu*L)/(mu*W+FR), gamma*L/W, L/W)" in report
     assert "Dimensional inputs display one decimal place" in report
     assert "Displayed unity does not establish acceptance" in report
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+@pytest.mark.parametrize("lift,lateral,vertical", [(120, 1.4, 1.2), (100, 1.2, 1.0)])
+def test_report_ranks_contact_loss_by_severity_in_both_orders(reverse, lift, lateral, vertical):
+    rows = [
+        case(label="A", weight_n_m=100, horizontal_n_m=49.5,
+             lift_n_m=0, safety_factor=1),
+        case(label="L", weight_n_m=100, horizontal_n_m=0,
+             lift_n_m=100, safety_factor=1),
+        case(label="M", weight_n_m=100, horizontal_n_m=10,
+             lift_n_m=lift, safety_factor=1),
+    ]
+    report = render_report(
+        rows[::-1] if reverse else rows, method="absolute",
+        report_date="2026-11-07", revision="4",
+        revision_description="Rank contact loss by the supplied lift ratio",
+    )
+    # Both contact failures have infinite utilisation. M has greater L/W,
+    # or greater lateral demand at equal L/W, regardless of input order.
+    assert "Governing case: M." in report
+    assert "| L | 1.000 | 1.000 | inf | contact | ARITHMETIC_FAIL |" in report
+    assert f"| M | {lateral:.3f} | {vertical:.3f} | inf | contact | ARITHMETIC_FAIL |" in report
+
+
+def test_report_explains_infinite_utilisation_at_the_contact_boundary():
+    report = render_report(
+        [case(label="L", weight_n_m=100, horizontal_n_m=0,
+              lift_n_m=100, safety_factor=1)],
+        method="absolute", report_date="2026-11-07", revision="4",
+        revision_description="Explain the contact-loss verdict",
+    )
+    assert "| L | 1.000 | 1.000 | inf | contact | ARITHMETIC_FAIL |" in report
+    assert "For W<=L, bed contact is lost and the governing utilisation is infinite (displayed inf)." in report
