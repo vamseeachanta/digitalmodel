@@ -247,6 +247,7 @@ class AnnulusTable(HTMLParser):
 
 def test_report_uses_shared_style_and_discloses_candidate_defects(tmp_path):
     page = builder().render(tmp_path / "scratch")
+    assert '<html lang="en" data-theme="light">' in page
     assert '<body class="hs-doc">' in page
     canonical = (ROOT / "docs/api/_assets/brand.css").read_text(encoding="utf-8")
     embedded = re.search(r'<style id="shared-brand">(.*?)</style>', page, re.S)

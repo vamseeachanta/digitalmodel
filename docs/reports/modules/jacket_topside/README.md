@@ -16,6 +16,7 @@ and can be opened outside the repository tree without a separate stylesheet.
 | B | 2026-10-28 | Expose escaped calculation JSON and format wall thicknesses to three decimals while retaining finer input precision. |
 | C | 2026-11-06 | Disclose candidate defects with strict expected-failure regressions, bind displayed annulus values to table rows and use the shared stylesheet. |
 | D | 2026-11-06 | Embed the canonical shared stylesheet so the report retains its presentation when opened outside the repository tree. |
+| E | 2026-11-06 | Pin the light theme so shared palette variables and browser controls remain consistent under a dark system preference. |
 
 ## Rebuild
 
