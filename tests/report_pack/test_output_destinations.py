@@ -7,7 +7,7 @@ bytes retained on rejection; there are no engineering acceptance limits.
 
 from hashlib import sha256
 import json
-from pathlib import PureWindowsPath
+from pathlib import Path, PureWindowsPath
 import re
 from types import SimpleNamespace
 from urllib.parse import unquote
@@ -56,9 +56,12 @@ def test_display_paths_use_forward_slashes(monkeypatch, artifact, expected):
 
 
 @pytest.mark.parametrize("suffix", [".svg", ".png"])
-def test_incompatible_figure_roots_use_file_uri_and_keep_pack(tmp_path, monkeypatch, suffix):
-
-    cfg = _cfg(tmp_path)
+@pytest.mark.parametrize("figure_location", ["absolute", "relative", "symlink"])
+def test_incompatible_figure_roots_use_file_uri_and_keep_pack(
+    tmp_path, monkeypatch, suffix, figure_location,
+):
+    monkeypatch.chdir(tmp_path)
+    cfg = _cfg(tmp_path if figure_location == "absolute" else Path("."))
     figure = tmp_path / f"figure #50% ü{suffix}"
     if suffix == ".svg":
         figure.write_text(
@@ -72,13 +75,17 @@ def test_incompatible_figure_roots_use_file_uri_and_keep_pack(tmp_path, monkeypa
             "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aM1cAAAAASUVORK5CYII="
         ))
     before = sha256(figure.read_bytes()).digest()
+    configured_figure = figure if figure_location == "absolute" else Path(figure.name)
+    if figure_location == "symlink":
+        configured_figure = Path(f"linked{suffix}")
+        configured_figure.symlink_to(figure)
     cfg["report_pack"]["results"] = {
-        "figures": [{"title": "Fixture", "path": str(figure)}],
+        "figures": [{"title": "Fixture", "path": str(configured_figure)}],
     }
     original = workflow.relative_artifact_path
 
     def incompatible_figure(artifact, document):
-        if artifact == figure.resolve():
+        if artifact.resolve() == figure.resolve():
             raise ValueError("Synthetic incompatible roots")
         return original(artifact, document)
 
@@ -103,8 +110,10 @@ def test_cross_drive_figure_uri_preserves_drive_and_encoding(monkeypatch):
         raise ValueError("Synthetic incompatible roots")
 
     monkeypatch.setattr(workflow, "relative_artifact_path", incompatible_roots)
+    windows_path = PureWindowsPath("D:/figures/figure #50% ü.svg")
+    figure = SimpleNamespace(resolve=lambda: windows_path, as_uri=windows_path.as_uri)
     results = {"tables": [], "figures": [{
-        "title": "Fixture", "path": PureWindowsPath("D:/figures/figure #50% ü.svg"),
+        "title": "Fixture", "path": figure,
     }]}
     assert workflow._markdown_results(results, PureWindowsPath("C:/reports/analysis.md")) == [
         "![Fixture](file:///D:/figures/figure%20%2350%25%20%C3%BC.svg)", "",

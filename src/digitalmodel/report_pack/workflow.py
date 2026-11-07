@@ -915,7 +915,7 @@ def _markdown_results(results: dict[str, Any], output_path: Path | None = None) 
             )
         except ValueError:
             # as_uri already encodes reserved characters and retains the scheme.
-            link = path.as_uri()
+            link = path.resolve().as_uri()
         lines.append(f"![{figure['title']}]({link})")
         lines.append("")
     return lines
