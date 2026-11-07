@@ -101,6 +101,15 @@ class Provenance(BaseModel):
         return self
 
 
+    @model_validator(mode="after")
+    def reference_requires_citation_or_locator(self) -> "Provenance":
+        if self.source_type == "reference" and not any(
+            value and value.strip() for value in (self.citation, self.url_or_path)
+        ):
+            raise ValueError("reference provenance requires a citation or url_or_path")
+        return self
+
+
 class RadialLayer(BaseModel):
     """Ordered radial layer in a cable or pipeline stack."""
 

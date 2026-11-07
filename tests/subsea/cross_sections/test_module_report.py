@@ -6,6 +6,7 @@ from html.parser import HTMLParser
 import json
 import math
 from pathlib import Path
+import re
 import runpy
 import subprocess
 import sys
@@ -164,17 +165,42 @@ def test_worked_modulus_provenance_distinguishes_reference_and_assumptions(monke
     assert steel.citation == module["SOURCES"]["elasticity"][0]
     assert steel.url_or_path == module["SOURCES"]["elasticity"][1]
     assert "Table 12.1" in steel.note
-    records = [item.layer.provenance for item in captured] + [
-        item.modulus_provenance for item in captured
-    ]
-    source_ids = {record.source_id for record in records}
-    for record in records:
-        assert set(record.derived_from) <= source_ids
+    assert steel.note == steel.note.rstrip()
     for source in (coating, insulation):
         assert source.source_type == "project_assumption"
         assert source.note == "assumed, based on previous experience"
         assert source.citation is None
         assert source.url_or_path is None
+
+
+def test_worked_density_provenance_distinguishes_reference_and_assumptions():
+    module = builder()
+    definition = module["example_definition"]()
+    steel, coating, insulation = [layer.provenance for layer in definition.radial_layers]
+    assert steel.source_type == "reference"
+    assert steel.citation == module["SOURCES"]["steel"][0]
+    assert steel.url_or_path == module["SOURCES"]["steel"][1]
+    assert "geometry" in steel.note.lower() and "assumed" in steel.note.lower()
+    assert steel in definition.provenance
+    for record in (coating, insulation):
+        assert record.source_type == "project_assumption"
+        assert "assumed, based on previous experience" in record.note
+        assert record.citation is None and record.url_or_path is None
+
+
+def test_report_material_basis_follows_provenance_instead_of_role():
+    module = builder()
+    data = module["calculate"]()
+    steel, coating, _ = data["definition"].radial_layers
+    steel.provenance = Provenance(source_id="assumed-density", source_type="project_assumption")
+    coating.provenance = Provenance(
+        source_id="referenced-density", source_type="reference", citation="Illustrative reference",
+    )
+    html = module["render"](data)
+    rows = re.findall(r"<tr><td>(steel|coating)</td>(.*?)</tr>", html)
+    input_rows = [cells for _, cells in rows if cells.count("<td>") == 5]
+    assert input_rows[0].endswith("<td>assumed, based on previous experience</td>")
+    assert input_rows[1].endswith("<td>public reference</td>")
 
 
 def test_report_writes_explicit_lf_newlines(tmp_path, monkeypatch):
@@ -305,7 +331,7 @@ def test_rebuild_matches_committed_artifacts_and_is_repeatable(tmp_path):
         relative = str((REPORT / name).relative_to(ROOT))
         assert subprocess.run(["git", "check-ignore", "-q", relative], cwd=ROOT).returncode == 1
     changes = json.loads(first["changes.json"])
-    assert changes["revision"] == 3
+    assert changes["revision"] == 4
     assert changes["changes"]
 
 

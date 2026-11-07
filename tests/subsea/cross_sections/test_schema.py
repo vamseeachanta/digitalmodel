@@ -58,6 +58,25 @@ def test_calculation_provenance_requires_derived_from():
         Provenance(source_id="calc-1", source_type="calculation", derived_from=[])
 
 
+@pytest.mark.parametrize("details", [
+    {}, {"note": "Public reference"}, {"citation": ""},
+    {"citation": " \t", "url_or_path": "\n"},
+])
+def test_reference_provenance_requires_nonblank_citation_or_locator(details):
+    with pytest.raises(ValidationError, match="reference provenance requires"):
+        Provenance(source_id="reference-1", source_type="reference", **details)
+
+
+@pytest.mark.parametrize("details", [
+    {"citation": "Public textbook, Table 1"},
+    {"url_or_path": "https://example.org/reference"},
+    {"citation": " ", "url_or_path": "https://example.org/reference"},
+])
+def test_reference_provenance_accepts_citation_or_locator(details):
+    record = Provenance(source_id="reference-1", source_type="reference", **details)
+    assert Provenance.model_validate_json(record.model_dump_json()) == record
+
+
 def test_density_requires_density_units():
     with pytest.raises(ValidationError):
         RadialLayer(

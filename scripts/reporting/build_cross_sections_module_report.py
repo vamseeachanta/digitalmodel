@@ -63,7 +63,7 @@ class DocumentChanges(TypedDict):
 
 
 CHANGES: DocumentChanges = {
-    "document": "cross-section-module-analysis", "revision": 3, "date": DATE,
+    "document": "cross-section-module-analysis", "revision": 4, "date": DATE,
     "changes": [
         "Document per-layer mass, explicit bore buoyancy and bonded elastic stiffness.",
         "Separate assumed example inputs from public material reference values.",
@@ -74,6 +74,7 @@ CHANGES: DocumentChanges = {
         "Preserve four significant figures, validate fixture units and write LF artifacts.",
         "Separate reference and assumed modulus records and retain readable numerical precision.",
         "Classify public table lookups as references and preserve entered environmental values.",
+        "Require reference locators and align steel density provenance with the material basis.",
     ],
 }
 
@@ -84,6 +85,11 @@ def example_definition() -> CrossSectionDefinition:
         source_id="worked-example", source_type="project_assumption",
         note="Geometry and non-steel properties assumed, based on previous experience; see input register.",
     )
+    steel_provenance = Provenance(
+        source_id="worked-steel-density", source_type="reference",
+        citation=SOURCES["steel"][0], url_or_path=SOURCES["steel"][1],
+        note="Steel density from the cited steel row; geometry assumed, based on previous experience.",
+    )
     layers = []
     # Steel rho: SOURCES['steel'], steel row, 7850 kg/m³. Other densities and
     # geometry are declared illustrative assumptions, not inferred properties.
@@ -91,7 +97,8 @@ def example_definition() -> CrossSectionDefinition:
         ("steel", 0.2, 0.3, 7850), ("coating", 0.3, 0.4, 1000), ("insulation", 0.4, 0.5, 100),
     ]:
         layers.append(RadialLayer(
-            name=name, role=name, material=name, provenance=provenance,
+            name=name, role=name, material=name,
+            provenance=steel_provenance if name == "steel" else provenance,
             inner_diameter=UnitValue(value=inner, unit="m"),
             outer_diameter=UnitValue(value=outer, unit="m"),
             density=UnitValue(value=density, unit="kg/m^3"),
@@ -99,7 +106,7 @@ def example_definition() -> CrossSectionDefinition:
     return CrossSectionDefinition(
         id="worked-section", name="Illustrative concentric pipe section",
         family="rigid_pipeline_flowline", duty="static", radial_layers=layers,
-        provenance=[provenance],
+        provenance=[provenance, steel_provenance],
     )
 
 
@@ -121,7 +128,7 @@ def calculate() -> dict:
             citation=SOURCES["elasticity"][0] if layer.role == "steel" else None,
             url_or_path=SOURCES["elasticity"][1] if layer.role == "steel" else None,
             note=(
-                "Public textbook reference: OpenStax Table 12.1, steel E = 20 × 10¹⁰ Pa. "
+                "Public textbook reference: OpenStax Table 12.1, steel E = 20 × 10¹⁰ Pa."
                 if layer.role == "steel" else "assumed, based on previous experience"
             ),
         ),
@@ -201,11 +208,16 @@ def render(data: dict) -> str:
 
     input_rows, layer_rows = [], []
     for layer, modulus, properties in zip(data["definition"].radial_layers, data["moduli"], data["layers"], strict=True):
+        source_type = layer.provenance.source_type
+        material_basis = {
+            "reference": "public reference",
+            "project_assumption": "assumed, based on previous experience",
+        }.get(source_type, source_type.replace("_", " "))
         # BIPM SI Brochure (2019), Table 7: milli=10^-3, so m -> mm multiplies by 1000.
         input_rows.append([
             escape(layer.name), f"{layer.derived_inner_diameter.value * 1000:,}",
             f"{layer.derived_outer_diameter.value * 1000:,}", f"{layer.density.value:,}",
-            f"{modulus:,}", "public reference" if layer.role == "steel" else "assumed, based on previous experience",
+            f"{modulus:,}", escape(material_basis),
         ])
         layer_rows.append([escape(layer.name), format_number(properties.area_m2), format_number(properties.mass_per_length_kg_m)])
     fixture_rows = [[escape(row["id"]), str(row["layers"]), str(row["components"]),
@@ -243,6 +255,7 @@ results under declared assumptions; no design acceptance is established.</p></se
     ['1', '2026-11-06', 'Require documented moduli, check inventory units and preserve numerical and file precision.'],
     ['2', DATE, 'Distinguish referenced and assumed moduli and make computed values readable without losing precision.'],
     ['3', DATE, 'Classify public table lookups as references and retain entered environmental precision.'],
+    ['4', DATE, 'Require reference locators and align steel density provenance with the material basis.'],
 ])}
 </section>
 <section id="inputs"><h2>Inputs</h2>

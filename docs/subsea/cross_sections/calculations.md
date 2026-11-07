@@ -91,7 +91,7 @@ when the input is an already constructed, mutable model.
 | Rule group | Rejected input | Regression evidence |
 |---|---|---|
 | Scalars and units | Non-finite values, unknown units, missing units, semantic unit mismatches | `test_schema.py`, `test_section_values.py`, `test_fixture_contracts.py` |
-| Provenance | Blank source identifier, calculation without dependencies, undeclared layer or component source, empty definition sources | `test_schema.py`, `test_fixture_contracts.py` |
+| Provenance | Blank source identifier, reference without a nonblank citation or url_or_path, calculation without dependencies, undeclared layer or component source, empty definition sources | `test_schema.py`, `test_fixture_contracts.py` |
 | Radial geometry | Missing geometry terms, non-positive outer diameter or thickness, negative bore, inconsistent triplet, mixed units, gap or overlap | `test_validation.py`, `test_fixture_contracts.py`, `test_section_values.py` |
 | Packed components | Missing provenance, count below its schema minimum, blank required text, invalid dimensions or ratings | `test_validation.py`, `test_schema.py`, `test_fixture_contracts.py` |
 | Metadata | Negative depth, non-positive pressure or voltage, incompatible units | `test_schema.py`, `test_fixture_contracts.py` |

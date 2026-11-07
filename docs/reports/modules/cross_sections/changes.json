@@ -1,6 +1,6 @@
 {
   "document": "cross-section-module-analysis",
-  "revision": 3,
+  "revision": 4,
   "date": "2026-11-06",
   "changes": [
     "Document per-layer mass, explicit bore buoyancy and bonded elastic stiffness.",
@@ -11,6 +11,7 @@
     "Require explicit Pa units and separate provenance for each bonded modulus.",
     "Preserve four significant figures, validate fixture units and write LF artifacts.",
     "Separate reference and assumed modulus records and retain readable numerical precision.",
-    "Classify public table lookups as references and preserve entered environmental values."
+    "Classify public table lookups as references and preserve entered environmental values.",
+    "Require reference locators and align steel density provenance with the material basis."
   ]
 }
