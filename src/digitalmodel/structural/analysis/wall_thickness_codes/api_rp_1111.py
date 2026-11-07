@@ -7,6 +7,10 @@ import math
 import logging
 from typing import Dict, List, Optional, Tuple
 
+from digitalmodel.subsea.pipeline.pipeline_pressure import (
+    PipeMaterial as PipelineMaterial,
+    api_combined_loading_check,
+)
 from digitalmodel.structural.analysis.wall_thickness import (
     CodeEdition,
     DesignCode,
@@ -49,7 +53,7 @@ class ApiRp1111Strategy:
     """
 
     code_name = "API-RP-1111"
-    check_names = ["burst", "collapse", "propagation"]
+    check_names = ["burst", "collapse", "propagation", "combined_loading"]
 
     def __init__(self, edition: Optional[int] = None):
         if edition is None:
@@ -82,6 +86,7 @@ class ApiRp1111Strategy:
         results["burst"] = self._check_burst(geometry, material, loads)
         results["collapse"] = self._check_collapse(geometry, material, loads)
         results["propagation"] = self._check_propagation(geometry, material, loads)
+        results["combined_loading"] = self._check_combined_loading(geometry, material, loads)
         return results
 
     def compute_plastic_moment(self, geometry: PipeGeometry, material: PipeMaterial) -> float:
@@ -96,6 +101,35 @@ class ApiRp1111Strategy:
         d_i = D - 2 * t
         A = math.pi / 4 * (D**2 - d_i**2)
         return A * material.smys
+
+    def _check_combined_loading(self, geometry, material, loads):
+        """Adapt the existing combined-loading implementation to strategy units.
+
+        Strengths and pressures are converted from Pa to MPa; dimensions,
+        bending moment and effective tension already use the same SI units.
+        Nominal wall and the function's fixed default factor are retained.
+        This delegation does not establish independent standards validation.
+        """
+        result = api_combined_loading_check(
+            D=geometry.outer_diameter,
+            t=geometry.wall_thickness,
+            mat=PipelineMaterial(
+                name=material.grade,
+                SMYS=material.smys / 1.0e6,
+                SMTS=material.smts / 1.0e6,
+            ),
+            M_Sd=loads.bending_moment,
+            S_Sd=loads.effective_tension,
+            p_i=loads.internal_pressure / 1.0e6,
+            p_e=loads.external_pressure / 1.0e6,
+        )
+        utilisation = result["utilization"]
+        details = {
+            "M_p": result["M_p"],
+            "S_p": result["S_p"],
+            "utilisation": utilisation,
+        }
+        return utilisation, details
 
     def _check_burst(self, geometry, material, loads):
         D = geometry.outer_diameter

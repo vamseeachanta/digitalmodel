@@ -494,7 +494,7 @@ class TestPerformAnalysisDNV:
 
 
 class TestPerformAnalysisAPI:
-    def test_perform_analysis_api_returns_three_checks(self):
+    def test_perform_analysis_api_returns_four_checks(self):
         geom = make_10inch_geometry()
         mat = make_x65_material()
         loads = DesignLoads(internal_pressure=20e6, external_pressure=5e6)
@@ -502,8 +502,10 @@ class TestPerformAnalysisAPI:
         analyzer = WallThicknessAnalyzer(geom, mat, loads, factors, DesignCode.API_RP_1111)
 
         result = analyzer.perform_analysis()
-        assert len(result.checks) == 3
-        assert set(result.checks.keys()) == {"burst", "collapse", "propagation"}
+        assert len(result.checks) == 4
+        assert set(result.checks.keys()) == {
+            "burst", "collapse", "propagation", "combined_loading"
+        }
 
     def test_perform_analysis_api_is_safe_for_moderate_loads(self):
         geom = make_10inch_geometry()

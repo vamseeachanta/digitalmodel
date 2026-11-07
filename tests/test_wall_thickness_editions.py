@@ -174,7 +174,7 @@ class TestEditionBackwardCompatibility:
         analyzer = WallThicknessAnalyzer(geom, mat, loads, factors, DesignCode.API_RP_1111)
         result = analyzer.perform_analysis()
 
-        assert len(result.checks) == 3
+        assert len(result.checks) == 4
         assert result.governing_check is not None
 
     def test_analyzer_with_edition_produces_result(self):
@@ -188,7 +188,7 @@ class TestEditionBackwardCompatibility:
         )
         result = analyzer.perform_analysis()
 
-        assert len(result.checks) == 3
+        assert len(result.checks) == 4
         assert result.governing_check is not None
 
     def test_analyzer_edition_stored(self):
