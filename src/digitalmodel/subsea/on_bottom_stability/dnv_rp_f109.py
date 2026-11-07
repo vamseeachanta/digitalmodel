@@ -21,7 +21,11 @@ from ._validation import _number
 
 
 class StabilityResult(NamedTuple):
-    """Governing utilisation, combined acceptance and intermediate evidence."""
+    """Governing utilisation, combined acceptance and intermediate evidence.
+
+    Unsupported weight or lost bed contact returns infinite utilisation.
+    The separate lateral and vertical equation ratios remain in details.
+    """
 
     utilisation: float
     is_stable: bool
@@ -278,7 +282,9 @@ def absolute_stability_check(
     rock passive resistance must be zero. Phase and soil evidence remain
     caller responsibilities. Passing means no lateral slip for the supplied
     extreme cycle only; no travel, structural or flotation claim follows.
-    Nonpositive weight returns an unsupported failure. Invalid inputs raise.
+    Nonpositive weight returns an unsupported failure. Positive weight at or
+    below lift returns a contact failure with infinite governing utilisation;
+    the separate equation ratios remain available in details. Invalid inputs raise.
     """
     _finite("W_s_N_m", W_s_N_m)
     for name, value in (("F_H_N_m", F_H_N_m), ("F_L_N_m", F_L_N_m), ("F_R_N_m", F_R_N_m)):
@@ -299,9 +305,10 @@ def absolute_stability_check(
     required_h = max(0.0, (demand - F_R_N_m) / mu_soil)
     required_z = vertical_demand
     governing = ("unsupported" if W_s_N_m <= 0 else
+                 "contact" if W_s_N_m <= F_L_N_m else
                  "no_load" if F_H_N_m == F_L_N_m == 0 else
                  "uplift" if vertical >= lateral else "absolute_lateral")
-    utilisation = max(lateral, vertical)
+    utilisation = max(lateral, vertical) if W_s_N_m > F_L_N_m else math.inf
     stable = utilisation <= 1 and W_s_N_m > F_L_N_m
     return StabilityResult(utilisation, stable, {
         "W_s_N_m": W_s_N_m, "F_H_N_m": F_H_N_m, "F_L_N_m": F_L_N_m,

@@ -338,8 +338,10 @@ def check_vertical_stability(
     """Clause 3.6.2 Eq. (3.39): upward peak acceptance with kN/m inputs.
 
     The explicit factor follows clause 3.6.3 Tables 3-5 through 3-8.
-    Weight must be positive; lift is a nonnegative peak. This is distinct
-    from the flotation check under clause 3.2 Eq. (3.1).
+    Weight must be positive; lift is a nonnegative peak. The additional
+    supplied contact screen requires weight greater than lift and returns
+    infinite utilisation on contact failure. This is distinct from the
+    flotation check under clause 3.2 Eq. (3.1).
     """
     _number("submerged_weight_per_meter_kn", submerged_weight_per_meter_kn, positive=True)
     _number("lift_load_per_meter_kn", lift_load_per_meter_kn)
@@ -349,5 +351,6 @@ def check_vertical_stability(
         submerged_weight_per_meter_kn * 1000, 0,
         lift_load_per_meter_kn * 1000, 1.0, safety_factor,
     )
-    utilization = canonical.details["vertical_utilisation"]
-    return VerticalStabilityResult(is_stable=utilization <= 1.0, utilization=utilization)
+    return VerticalStabilityResult(
+        is_stable=canonical.is_stable, utilization=canonical.utilisation,
+    )

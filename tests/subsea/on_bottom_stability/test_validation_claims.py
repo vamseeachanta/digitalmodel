@@ -15,7 +15,7 @@ def public_functions():
     """Include locally defined public methods and property accessors, too."""
     names = set()
     for path in PACKAGE.glob("*.py"):
-        tree = ast.parse(path.read_text())
+        tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in tree.body:
             if isinstance(node, ast.FunctionDef) and not node.name.startswith("_"):
                 names.add(f"{path.stem}.{node.name}")
@@ -42,8 +42,26 @@ def read_rows(text):
 
 
 def test_every_public_function_has_equation_edition_clause_and_status():
-    rows = read_rows(REGISTER.read_text())
+    rows = read_rows(REGISTER.read_text(encoding="utf-8"))
     assert set(rows) == public_functions()
+
+
+@pytest.mark.parametrize("target", ["source", "register"])
+def test_repository_text_uses_explicit_utf8(monkeypatch, target):
+    """Source and register reads must not depend on the platform locale."""
+    original = Path.read_text
+    reads = []
+
+    def read_text(path, *args, **kwargs):
+        selected = path == REGISTER if target == "register" else path.parent == PACKAGE
+        if selected:
+            assert kwargs.get("encoding") == "utf-8"
+            reads.append(path)
+        return original(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", read_text)
+    test_every_public_function_has_equation_edition_clause_and_status()
+    assert reads
 
 
 def test_missing_clause_is_a_failing_negative_control():

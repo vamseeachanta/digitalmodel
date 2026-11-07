@@ -1,7 +1,10 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Tests for DNV-RP-F109 on-bottom stability module.
 
-All expected values are independently calculated from the published equations
-with documented assumptions and tolerances.
+Expected values check the implemented expressions with documented assumptions
+and tolerances; synthetic cases do not establish standard qualification.
 """
 from __future__ import annotations
 
@@ -10,10 +13,6 @@ import math
 import pytest
 
 from digitalmodel.subsea.on_bottom_stability.dnv_rp_f109 import (
-    C_D_SMOOTH,
-    C_L_SMOOTH,
-    C_M_SMOOTH,
-    GAMMA_SC_NORMAL,
     StabilityResult,
     absolute_stability_check,
     absolute_stability_margin,
@@ -25,10 +24,10 @@ from digitalmodel.subsea.on_bottom_stability.dnv_rp_f109 import (
 
 
 # ---------------------------------------------------------------------------
-# Hydrodynamic force (DNV-RP-F109 S3.2.1, Eq 3.1)
+# Hydrodynamic force (generic instantaneous Morison model)
 # ---------------------------------------------------------------------------
 class TestHydrodynamicForce:
-    """Verify hydrodynamic force per DNV-RP-F109 S3.2.1, Eq 3.1.
+    """Verify hydrodynamic force per generic instantaneous Morison model.
 
     F_H = 0.5 * rho * C_D * D * |U| * U  +  rho * C_M * (pi/4) * D^2 * a
     """
@@ -37,8 +36,8 @@ class TestHydrodynamicForce:
         """No flow and no acceleration means no hydrodynamic force."""
         result = hydrodynamic_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=0.0, a_m_s2=0.0,
-            C_D=C_D_SMOOTH,
-            C_M=C_M_SMOOTH,
+            C_D=0.9,
+            C_M=3.29,
         )
         assert result == pytest.approx(0.0, abs=1e-6)
 
@@ -49,10 +48,10 @@ class TestHydrodynamicForce:
         """
         result = hydrodynamic_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=1.0, a_m_s2=0.0,
-            C_D=C_D_SMOOTH,
-            C_M=C_M_SMOOTH,
+            C_D=0.9,
+            C_M=3.29,
         )
-        expected = 0.5 * 1025.0 * C_D_SMOOTH * 0.5 * 1.0 * 1.0
+        expected = 0.5 * 1025.0 * 0.9 * 0.5 * 1.0 * 1.0
         assert expected == pytest.approx(230.625, abs=0.001)
         assert result == pytest.approx(expected, rel=1e-6)
 
@@ -63,10 +62,10 @@ class TestHydrodynamicForce:
         """
         result = hydrodynamic_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=0.0, a_m_s2=1.0,
-            C_D=C_D_SMOOTH,
-            C_M=C_M_SMOOTH,
+            C_D=0.9,
+            C_M=3.29,
         )
-        expected = 1025.0 * C_M_SMOOTH * (math.pi / 4) * 0.5**2 * 1.0
+        expected = 1025.0 * 3.29 * (math.pi / 4) * 0.5**2 * 1.0
         assert result == pytest.approx(expected, rel=1e-6)
         assert result == pytest.approx(662.18, abs=0.5)
 
@@ -74,34 +73,34 @@ class TestHydrodynamicForce:
         """Negative velocity reverses drag direction via |U|*U term."""
         result_pos = hydrodynamic_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=1.0, a_m_s2=0.0,
-            C_D=C_D_SMOOTH,
-            C_M=C_M_SMOOTH,
+            C_D=0.9,
+            C_M=3.29,
         )
         result_neg = hydrodynamic_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=-1.0, a_m_s2=0.0,
-            C_D=C_D_SMOOTH,
-            C_M=C_M_SMOOTH,
+            C_D=0.9,
+            C_M=3.29,
         )
         assert result_neg == pytest.approx(-result_pos, rel=1e-6)
 
     def test_combined_drag_and_inertia(self):
         """Combined drag + inertia gives sum of both terms."""
-        drag = 0.5 * 1025.0 * C_D_SMOOTH * 0.5 * 1.0 * 1.0
-        inertia = 1025.0 * C_M_SMOOTH * (math.pi / 4) * 0.5**2 * 0.5
+        drag = 0.5 * 1025.0 * 0.9 * 0.5 * 1.0 * 1.0
+        inertia = 1025.0 * 3.29 * (math.pi / 4) * 0.5**2 * 0.5
         expected = drag + inertia
         result = hydrodynamic_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=1.0, a_m_s2=0.5,
-            C_D=C_D_SMOOTH,
-            C_M=C_M_SMOOTH,
+            C_D=0.9,
+            C_M=3.29,
         )
         assert result == pytest.approx(expected, rel=1e-6)
 
 
 # ---------------------------------------------------------------------------
-# Lift force (DNV-RP-F109 S3.2.1, Eq 3.2)
+# Lift force (generic instantaneous lift model)
 # ---------------------------------------------------------------------------
 class TestLiftForce:
-    """Verify lift force per DNV-RP-F109 S3.2.1, Eq 3.2.
+    """Verify lift force per generic instantaneous lift model.
 
     F_L = 0.5 * rho * C_L * D * U^2
     """
@@ -110,7 +109,7 @@ class TestLiftForce:
         """No flow means no lift."""
         result = lift_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=0.0,
-            C_L=C_L_SMOOTH,
+            C_L=0.9,
         )
         assert result == pytest.approx(0.0, abs=1e-6)
 
@@ -118,9 +117,9 @@ class TestLiftForce:
         """F_L = 0.5 * 1025 * 0.9 * 0.5 * 1.0^2 = 230.625 N/m."""
         result = lift_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=1.0,
-            C_L=C_L_SMOOTH,
+            C_L=0.9,
         )
-        expected = 0.5 * 1025.0 * C_L_SMOOTH * 0.5 * 1.0**2
+        expected = 0.5 * 1025.0 * 0.9 * 0.5 * 1.0**2
         assert expected == pytest.approx(230.625, abs=0.001)
         assert result == pytest.approx(expected, rel=1e-6)
 
@@ -128,16 +127,16 @@ class TestLiftForce:
         """Lift is always positive regardless of velocity sign (U^2 term)."""
         result = lift_force_per_meter(
             rho_w_kg_m3=1025.0, D_outer_m=0.5, U_m_s=-2.0,
-            C_L=C_L_SMOOTH,
+            C_L=0.9,
         )
         assert result > 0.0
 
 
 # ---------------------------------------------------------------------------
-# Submerged weight (DNV-RP-F109 S2.2)
+# Submerged weight (DNV-RP-F109 clauses 1.5 and 2.3)
 # ---------------------------------------------------------------------------
 class TestSubmergedWeight:
-    """Verify submerged weight per DNV-RP-F109 S2.2.
+    """Verify submerged weight per DNV-RP-F109 clauses 1.5 and 2.3.
 
     W_s = (W_steel + W_coat + W_contents - W_displaced) * g
     """
@@ -185,13 +184,41 @@ class TestSubmergedWeight:
 
 
 # ---------------------------------------------------------------------------
-# Absolute stability check (DNV-RP-F109 S4.3.1, Eq 4.1)
+# Absolute stability check (DNV-RP-F109 clause 3.6.2, Eqs. (3.38)-(3.39))
 # ---------------------------------------------------------------------------
 class TestAbsoluteStability:
-    """Verify absolute lateral stability per DNV-RP-F109 S4.3.1, Eq 4.1.
+    """Verify absolute lateral stability per DNV-RP-F109 clause 3.6.2, Eqs. (3.38)-(3.39).
 
     gamma_SC * (F_H + mu * F_L) / (mu * W_s) <= 1.0
     """
+
+    @pytest.mark.parametrize("weight,lift,factor", [
+        (100.0, 101.0, 0.98),
+        (101.0, 101.0, 0.98),
+        (50.0, 50.0, 1.0),
+    ])
+    def test_contact_failure_controls_public_results(self, weight, lift, factor):
+        """Lost contact must fail ratio-based callers even below unity factor."""
+        from digitalmodel.subsea.on_bottom_stability.simplified import (
+            check_lateral_stability,
+            check_vertical_stability,
+            lateral_stability_check,
+        )
+
+        result = absolute_stability_check(weight, 0, lift, 0.5, factor)
+        assert result.details["governing_check"] == "contact"
+        assert result.utilisation == math.inf
+        assert not result.is_stable
+        assert result.details["lateral_utilisation"] == pytest.approx(factor * lift / weight)
+        assert result.details["vertical_utilisation"] == pytest.approx(factor * lift / weight)
+        wrappers = (
+            lateral_stability_check(weight, 0, lift, 0.5, factor),
+            check_lateral_stability(weight / 1000, 0, lift / 1000, 0.5, factor),
+            check_vertical_stability(weight / 1000, lift / 1000, factor),
+        )
+        for wrapped in wrappers:
+            assert wrapped.utilization == math.inf
+            assert not wrapped.is_stable
 
     def test_stable_pipe(self):
         """Heavy pipe with low loading is stable (utilisation < 1)."""
@@ -200,11 +227,11 @@ class TestAbsoluteStability:
             F_H_N_m=100.0,
             F_L_N_m=50.0,
             mu_soil=0.6,
-            gamma_SC=GAMMA_SC_NORMAL,
+            gamma_SC=1.1,
         )
         assert isinstance(result, StabilityResult)
         # gamma_SC * (100 + 0.6*50) / (0.6*1000) = 1.1 * 130 / 600 = 0.2383
-        expected_util = GAMMA_SC_NORMAL * (100.0 + 0.6 * 50.0) / (0.6 * 1000.0)
+        expected_util = 1.1 * (100.0 + 0.6 * 50.0) / (0.6 * 1000.0)
         assert result.utilisation == pytest.approx(expected_util, rel=1e-6)
         assert result.is_stable is True
 
@@ -215,7 +242,7 @@ class TestAbsoluteStability:
             F_H_N_m=500.0,
             F_L_N_m=200.0,
             mu_soil=0.6,
-            gamma_SC=GAMMA_SC_NORMAL,
+            gamma_SC=1.1,
         )
         # gamma_SC * (500 + 0.6*200) / (0.6*100) = 1.1 * 620 / 60 = 11.37
         assert result.utilisation > 1.0
@@ -228,7 +255,7 @@ class TestAbsoluteStability:
             F_H_N_m=100.0,
             F_L_N_m=50.0,
             mu_soil=0.6,
-            gamma_SC=GAMMA_SC_NORMAL,
+            gamma_SC=1.1,
         )
         assert result.utilisation == float("inf")
         assert result.is_stable is False
@@ -240,7 +267,7 @@ class TestAbsoluteStability:
             F_H_N_m=100.0,
             F_L_N_m=50.0,
             mu_soil=0.6,
-            gamma_SC=GAMMA_SC_NORMAL,
+            gamma_SC=1.1,
         )
         assert result.is_stable is False
 
@@ -421,12 +448,12 @@ class TestAbsoluteStabilityMargin:
 
 
 # ---------------------------------------------------------------------------
-# Generalized stability check (DNV-RP-F109 S4.3.2, Eq 4.5)
+# Generalized stability check (static compatibility alias, clause 3.6.2)
 # ---------------------------------------------------------------------------
 class TestGeneralizedStability:
-    """Verify generalized lateral stability per DNV-RP-F109 S4.3.2, Eq 4.5.
+    """Verify generalized lateral stability per static compatibility alias, clause 3.6.2.
 
-    gamma_SC * (F_H + mu*F_L) / (mu*W_s + F_R) <= 1.0
+    Both clause 3.6.2 criteria are enforced; no displacement model is claimed.
     """
 
     def test_stable_with_soil_resistance(self):
@@ -438,10 +465,10 @@ class TestGeneralizedStability:
             mu_soil=0.6,
             F_R_N_m=300.0,
             passive_resistance_basis="prior_loading",
-            gamma_SC=GAMMA_SC_NORMAL,
+            gamma_SC=1.1,
         )
         # Factored demand = 1.1*(200+0.6*100) = 286; capacity = 900 N/m.
-        expected_util = GAMMA_SC_NORMAL * (200.0 + 0.6 * 100.0) / (0.6 * 1000.0 + 300.0)
+        expected_util = 1.1 * (200.0 + 0.6 * 100.0) / (0.6 * 1000.0 + 300.0)
         assert result.utilisation == pytest.approx(expected_util, rel=1e-6)
         assert result.is_stable is True
 
@@ -453,7 +480,7 @@ class TestGeneralizedStability:
             F_L_N_m=200.0,
             mu_soil=0.6,
             F_R_N_m=0.0,
-            gamma_SC=GAMMA_SC_NORMAL,
+            gamma_SC=1.1,
         )
         # Factored demand = 1.1*(500+0.6*200) = 682; capacity = 300 N/m.
         assert result.utilisation > 1.0
@@ -467,10 +494,11 @@ class TestGeneralizedStability:
             F_L_N_m=100.0,    # F_L == W_s
             mu_soil=0.6,
             F_R_N_m=0.0,      # No passive resistance
-            gamma_SC=GAMMA_SC_NORMAL,
+            gamma_SC=1.1,
         )
-        # Lateral demand=176; capacity=60 N/m; uplift also exceeds unity.
-        assert result.utilisation == pytest.approx(1.1 * (100 + .6 * 100) / (.6 * 100))
+        # Contact fails; retain the equation ratio as separate evidence.
+        assert result.utilisation == math.inf
+        assert result.details["lateral_utilisation"] == pytest.approx(176 / 60)
         assert result.is_stable is False
 
     def test_lift_exceeding_weight_is_unstable(self):
@@ -481,6 +509,6 @@ class TestGeneralizedStability:
             F_L_N_m=200.0,    # F_L > W_s
             mu_soil=0.6,
             F_R_N_m=0.0,
-            gamma_SC=GAMMA_SC_NORMAL,
+            gamma_SC=1.1,
         )
         assert result.is_stable is False
