@@ -109,6 +109,8 @@ def test_structured_source_accepts(criteria):
     "(TBD)", "[TBA]", '"TBD"', "<pending>", "T.B.D.", "N.A.",
     "To be determined", "TBC", "tbc.", "N_A", "to-be-confirmed",
     "not-applicable", "Not-Available", "null", "nil", "N / A", "?",
+    "TBD/TBC", "N/A (pending)", "tbd tbd", "N/A N/A", "tbd_tbd",
+    "ＴＢＤ", "Ｎ/Ａ",
 ])
 def test_source_fields_refuse_placeholders(criteria, field, value):
     matrix, resolver = criteria
@@ -194,7 +196,10 @@ def test_demand_only_retains_explicit_unobserved_strength(criteria):
     assert result["strength"]["status"] == "NOT_EVALUATED"
 
 
-@pytest.mark.parametrize("value", ["TBD appendix", "Pending methods", "X-ray method"])
+@pytest.mark.parametrize("value", [
+    "TBD appendix", "Pending methods", "X-ray method", "Unknown edition",
+    "ISO 19901-2", "Rev 1", "AC-07",
+])
 def test_source_placeholder_prefix_with_substantive_text_is_not_rejected(criteria, value):
     """Lexical validation does not determine source adequacy."""
     matrix, resolver = criteria
