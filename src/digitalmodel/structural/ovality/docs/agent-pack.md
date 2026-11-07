@@ -5,11 +5,20 @@
 | Module | structural/ovality |
 | Repository | digitalmodel |
 | Package | src/digitalmodel/structural/ovality |
-| Pack revision | 0 |
+| Pack revision | 1 |
 | Code revision | aebd7e4bc5c3dda5f7433e20e021dd58ac17d0b3 |
 | Analysis family | Engineering calculations (EC); AQG r0 Python calculations |
 | Quality role | Engineering calculations quality manager |
 | Status | DRAFT |
+
+The pack records geometry regression evidence and unresolved acceptance limits. All unqualified source locators, including `docs/registry/module-routing.yaml:L525-L530`, refer to the header code revision; the implementation map has its separate explicit pin in section 9.
+
+## Revision history
+
+| Revision | Date | What changed and why |
+| --- | --- | --- |
+| 0 | 2026-11-07 | Initial geometry, test and provenance inventory |
+| 1 | 2026-11-07 | State false-pass consequences, extend alternate-method discovery and add the public-symbol inventory so limitations and scope are explicit |
 
 ## 1. Purpose and scope
 
@@ -22,6 +31,10 @@ The workflow performs a geometry comparison; its result has no pressure, materia
 The registry calls the parent structural domain `stable`; it does not assign separate ovality maturity, and that label is not evidence of standards validation. [docs/registry/module-routing.yaml:L525-L530]
 
 ## 2. Inputs and outputs
+
+| Public symbol | Contract | Evidence |
+| --- | --- | --- |
+| `router` | Mutates the configuration with the geometry comparison and writes one CSV row | [src/digitalmodel/structural/ovality/workflow.py:L18-L50] |
 
 | Input | Unit and range implemented | Default and route | Evidence |
 | --- | --- | --- | --- |
@@ -54,7 +67,7 @@ Coordinate frame, origin, sign and phase are not inputs to the scalar geometry c
 | Reconstructed diameters | `router` uses nominal diameter times `1 + fraction / 2` and `1 - fraction / 2` | [src/digitalmodel/structural/ovality/workflow.py:L29-L32] |
 | Acceptance comparison | `router` applies the user/code allowable inclusively | [src/digitalmodel/structural/ovality/workflow.py:L21-L21] [src/digitalmodel/structural/ovality/workflow.py:L41-L41] |
 
-UNVERIFIED: U2 — DNV-OS-F101 is named without edition, clause, table or equation identifier in the module docstring and durable-workflow title; no edition conflict can be resolved from those references, and clause text not checked against the licensed copy. [src/digitalmodel/structural/ovality/workflow.py:L1-L6] [docs/registry/workflows.yaml:L338-L345]
+UNVERIFIED: U2 — DNV-OS-F101 is named without edition, clause, table or equation identifier in the module docstring and durable-workflow title; no edition conflict can be resolved from those references, and clause text not checked against the licensed copy. The pipe-capacity implementation also explicitly leaves the reference for its 3.0 % default unresolved; that comment corroborates missing provenance, without establishing that this workflow inherited the default. [src/digitalmodel/structural/ovality/workflow.py:L1-L6] [docs/registry/workflows.yaml:L338-L345] [src/digitalmodel/structural/pipe_capacity/custom/DNV_OS_F101/RigidPipe.py:L74-L74]
 
 The emitted row and returned mapping contain no `Citation` sidecar; standards attribution and the allowable's engineering basis need resolution before treating `passes` as a code-compliance conclusion (issue pending (2)). [src/digitalmodel/structural/ovality/workflow.py:L34-L50]
 
@@ -79,14 +92,14 @@ The following checks specify review procedures, not new acceptance limits from a
 
 | Gate | Applicability | Checks and numeric pass criteria | Evidence / limitation |
 | --- | --- | --- | --- |
-| G0 | Applicable | C0: `_required_positive_float` rejects zero and negative nominal diameter, `_out_of_roundness` rejects non-positive extremes and reversed extremes: 5 exceptions / 5 invalid cases, count. C6: reject non-finite values through each float-conversion helper: 4 rejected routes / 4 routes, count. C8: diameter-unit declaration, governing edition/clause and citation sidecar present: 3 / 3 provenance items, count. | C0 uses the explicit validation branches; C6 and C8 expose open defects, issue pending (1) and issue pending (2). [src/digitalmodel/structural/ovality/workflow.py:L53-L70] [src/digitalmodel/structural/ovality/workflow.py:L103-L131] [src/digitalmodel/structural/ovality/workflow.py:L34-L50] |
+| G0 | Applicable | C0: `_required_positive_float` rejects zero and negative nominal diameter, `_out_of_roundness` rejects non-positive extremes and reversed extremes: 5 exceptions / 5 invalid cases, count. C6: reject non-finite values: 4 / 4 text-`nan` helper routes and 3 / 3 text-`inf` router cases, count. C7: reject inconsistent nominal/extreme diameters and mixed-unit inputs: 2 / 2 cases, count. C8: diameter-unit declaration, governing edition/clause and citation sidecar present: 3 / 3 provenance items, count. | C0 uses the explicit validation branches; C6–C8 expose open defects, issue pending (1) and issue pending (2). [src/digitalmodel/structural/ovality/workflow.py:L53-L70] [src/digitalmodel/structural/ovality/workflow.py:L103-L131] [src/digitalmodel/structural/ovality/workflow.py:L34-L50] |
 | G1 | Applicable; Python import and pytest route | C1: run both section-4 nodes: 2 passed / 2 cases and 0 failures, count. C3: reload CSV and require 1 data row and 7 numeric/Boolean fields matching the returned row, count. C5: call `_required_ovality_fraction` for each of its 3 aliases, then exercise the fraction route; 3 / 3 aliases selected and diameter residual at most `1e-12` input-length units, with 0 import errors. | The dedicated test already asserts the output row count and ratio; fraction and full-row probes supplement the committed test. [tests/structural/ovality/test_ovality_workflow.py:L25-L41] [src/digitalmodel/structural/ovality/workflow.py:L29-L42] [src/digitalmodel/structural/ovality/workflow.py:L63-L70] |
 | G2 | Applicable; geometry arithmetic only | C2: compare `_out_of_roundness` using the section-4 inputs with an exact decimal/rational evaluation of the same diameter difference; absolute residual at most `1e-12` dimensionless. C4: set allowable equal to the computed ratio; require `passes == True` for 1 / 1 equality case, count. | Arithmetic agreement does not verify the DNV attribution or allowable; a published reference remains issue pending (2). [tests/structural/ovality/test_ovality_workflow.py:L14-L17] [tests/structural/ovality/test_ovality_workflow.py:L31-L39] [src/digitalmodel/structural/ovality/workflow.py:L41-L41] |
 | G3 | NOT_APPLICABLE | No time-stepping or dynamics quantity in the scalar row. | [src/digitalmodel/structural/ovality/workflow.py:L34-L42] |
 | G4 | NOT_APPLICABLE | No diffraction body, mesh or hydrodynamic quantity in the scalar row. | [src/digitalmodel/structural/ovality/workflow.py:L34-L42] |
 | G5 | Applicable | C9: require 2 / 2 section-4 cases to carry node ID, code pin, input, tolerance basis and before/after outcome; unresolved provenance items require 1 disposition each, count. | This pack's example table is the evidence index; the runtime CSV has no QA appendix or citation fields. [src/digitalmodel/structural/ovality/workflow.py:L34-L50] |
 
-Check inventory: G0 has 3 checks; G1 has 3; G2 has 2; G3 and G4 have 0; G5 has 1; total 9.
+Check inventory: G0 has 4 checks; G1 has 3; G2 has 2; G3 and G4 have 0; G5 has 1; total 10, numbered C0–C9. C7 covers the consistency gap.
 
 Offline record at the header code pin on 2026-11-07: each section-4 node passed once before and once after the documentation change; each invocation ran 1 case with 1 passed, 0 failed, 0 skipped and 0 NOT_RUN, using the command form below without overriding addopts.
 
@@ -94,44 +107,57 @@ Direct arithmetic and output probes passed C0 (5 exceptions / 5 invalid cases), 
 
 C6 failed: all 4 float-conversion routes accepted text `nan` rather than rejecting it (0 / 4 required rejections); the excessive-fraction probe also produced a negative synthetic minimum diameter, confirming issue pending (1). [src/digitalmodel/structural/ovality/workflow.py:L29-L32] [src/digitalmodel/structural/ovality/workflow.py:L63-L70] [src/digitalmodel/structural/ovality/workflow.py:L103-L131]
 
+The `nan` nominal-diameter probe yields `passes == False`, but the following C6/C7 probes at the code pin all yield `passes == True` despite invalid geometry or an unbounded allowable. Unless overridden, nominal diameter is `323.85`, extremes are `325.0` and `322.7`, and allowable is `0.03`; these are synthetic regression inputs, with no standards acceptance claim. Displayed percentages are rounded to one decimal place from the unrounded probe results. [src/digitalmodel/structural/ovality/workflow.py:L18-L42]
+
+| Check / probe | Input override | Observed result and consequence |
+| --- | --- | --- |
+| C6 infinite nominal | `nominal_OD: "inf"` | Out-of-roundness 0.0 %, `passes == True`: an infinite denominator masks the diameter difference |
+| C6 infinite allowable | `allowable: "inf"`, extremes `400` / `200` | Out-of-roundness 61.8 %, `passes == True`: an unbounded allowable accepts geometry exceeding the finite default |
+| C6 infinite fraction and allowable | `ovality_fraction: "inf"`, `allowable: "inf"`; omit extremes | Minimum diameter `-inf`, out-of-roundness `inf`, `passes == True`: invalid reconstructed geometry passes |
+| C7 inconsistent nominal | `nominal_OD: 1e9`, extremes `400` / `200` | Out-of-roundness 0.0 % at display precision, `passes == True`: a nominal far outside the measured range suppresses the ratio |
+| C7 mixed units | Extremes `13.5` / `12.0` supplied in inches while nominal remains in millimetres | Out-of-roundness 0.5 %, `passes == True`; using the consistent nominal `12.75` inches gives 11.8 %, exceeding the 3.0 % configured allowable |
+
+C6 therefore also fails 0 / 3 required infinity rejections; C7 fails 0 / 2 required consistency rejections. These are documented defects under issue pending (1)/(2), not passing acceptance checks. Nominal/extreme consistency requires a declared tolerance or unit contract; no such policy is implemented. [src/digitalmodel/structural/ovality/workflow.py:L20-L41] [src/digitalmodel/structural/ovality/workflow.py:L53-L60]
+
 C8 failed: 0 / 3 required provenance items (declared example unit, identified standard edition/clause, emitted sidecar) were present; G0 remains incomplete, with issue pending (2), even though the arithmetic checks pass. [examples/workflows/pipe-ovality/input.yml:L3-L8] [src/digitalmodel/structural/ovality/workflow.py:L1-L6] [src/digitalmodel/structural/ovality/workflow.py:L34-L50]
 
 For repeatability, run `PYTHONPATH=src uv run --no-sources python -m pytest <node-id> -q -rA -p no:cacheprovider --basetemp=<scratch-directory>` for C1, preserving repository addopts; use the unchanged durable test in a temporary tree because its default root is the repository. [tests/workflows/test_durable_workflows.py:L21-L27] [tests/workflows/test_durable_workflows.py:L56-L64]
 
 ## 6. Known failure modes and silent-failure sweep
 
-sweep: 19 found
+sweep: 20 found
 
 The following inventory classifies candidate sites, including intentional defaults and returns; counts refer to rows, not regex match lines.
 
 Exact discovery commands:
 
 ```sh
-rg -n -i 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|0\.05|float\(|int\(|unit|cache|default|0\.03' src/digitalmodel/structural/ovality
+rg -n -i 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|0\.05|float\(|int\(|unit|cache|default|0\.03' src/digitalmodel/structural/ovality --glob '*.py'
 rg -n 'get\(|open\(|return|if |100\.0|1\.0|2\.0' src/digitalmodel/structural/ovality --glob '*.py'
 ```
 
 | Site | Symptom and classification | Detection and disposition |
 | --- | --- | --- |
 | S01 settings fallback | False-valued `pipe_ovality` becomes an empty mapping; missing nominal diameter subsequently raises. [src/digitalmodel/structural/ovality/workflow.py:L19-L20] [src/digitalmodel/structural/ovality/workflow.py:L103-L110] | No detection check exists for false-valued settings; issue pending (3). |
-| S02 allowable fallback | Omitted or None allowable selects a code constant without recorded standards provenance. [src/digitalmodel/structural/ovality/workflow.py:L21-L21] [src/digitalmodel/structural/ovality/workflow.py:L118-L120] | C8; issue pending (2). |
+| S02 allowable fallback | Omitted or None allowable selects a code constant without recorded standards provenance; the separate pipe-capacity comment also leaves its default reference unresolved. [src/digitalmodel/structural/ovality/workflow.py:L21-L21] [src/digitalmodel/structural/ovality/workflow.py:L118-L120] [src/digitalmodel/structural/pipe_capacity/custom/DNV_OS_F101/RigidPipe.py:L74-L74] | C8; issue pending (2). |
 | S03 diameter precedence | When both extremes are present the fraction route is ignored. [src/digitalmodel/structural/ovality/workflow.py:L25-L30] | No detection check exists for conflicting routes; issue pending (1). |
 | S04 alias precedence | First present fraction alias wins, with no consistency comparison between aliases. [src/digitalmodel/structural/ovality/workflow.py:L64-L69] | C5 covers individual aliases; no detection check exists for conflicts; issue pending (1). |
 | S05 fraction text conversion | `float(settings[key])` has no locale normalization or finite-number check; malformed text raises, but non-finite text can escape the negative check. [src/digitalmodel/structural/ovality/workflow.py:L66-L69] | C6 finite-fraction probe; locale-specific coverage absent; issue pending (1). |
-| S06 nominal text conversion | `float(value)` plus a non-positive comparison does not establish finiteness. [src/digitalmodel/structural/ovality/workflow.py:L103-L110] | C6 nominal probe; issue pending (1). |
-| S07 allowable text conversion | Same finite-number gap in `_optional_positive_float`; external text is passed directly to `float`. [src/digitalmodel/structural/ovality/workflow.py:L118-L124] | C6 allowable probe; issue pending (1). |
+| S06 nominal text conversion | `float(value)` plus a non-positive comparison accepts `inf`: the ratio becomes zero and `passes` can be True despite the measured diameter difference; non-conservative because the infinite denominator masks it. [src/digitalmodel/structural/ovality/workflow.py:L103-L110] [src/digitalmodel/structural/ovality/workflow.py:L53-L60] | C6 nominal probe; issue pending (1). |
+| S07 allowable text conversion | `_optional_positive_float` accepts text `inf`, so `passes` can be True for geometry exceeding the finite allowable; non-conservative because comparison with an unbounded limit accepts it. [src/digitalmodel/structural/ovality/workflow.py:L118-L124] [src/digitalmodel/structural/ovality/workflow.py:L41-L41] | C6 allowable probe; issue pending (1). |
 | S08 extreme-diameter conversion | `_optional_float` passes supplied text directly to `float`, with no finiteness or locale check. [src/digitalmodel/structural/ovality/workflow.py:L127-L131] | C6 extreme-diameter probe; issue pending (1). |
 | S09 None return | Missing optional diameter returns None intentionally; a single missing extreme raises, while two missing extremes select the fraction route. [src/digitalmodel/structural/ovality/workflow.py:L22-L30] [src/digitalmodel/structural/ovality/workflow.py:L127-L131] | No detection check exists for the missing-pair branches; issue pending (4). |
 | S10 output-directory default | Omitted `output_dir` selects `results`. [src/digitalmodel/structural/ovality/workflow.py:L73-L78] | No detection check exists for omitted output directory; issue pending (3). |
 | S11 configuration-location fallback | Missing configuration-directory metadata selects file parent, then current directory. [src/digitalmodel/structural/ovality/workflow.py:L81-L86] | No detection check exists for current-directory fallback; issue pending (3). |
 | S12 filename fallback | Missing input-file metadata selects basename, then `pipe_ovality`. [src/digitalmodel/structural/ovality/workflow.py:L89-L92] | No detection check exists for both fallback branches; issue pending (3). |
 | S13 swallowed path exception | `_display_path` catches `ValueError` and returns an absolute path; its root constant resolves to the repository directory. [src/digitalmodel/structural/ovality/workflow.py:L15-L15] [src/digitalmodel/structural/ovality/workflow.py:L134-L139] | No detection check exists for repository-relative display or external-root fallback; issue pending (3). |
-| S14 implicit unit consistency | Mixed length units can produce an unqualified numerical ratio because no unit conversion or declaration is checked. [src/digitalmodel/structural/ovality/workflow.py:L53-L60] | C8; issue pending (2). |
+| S14 implicit unit consistency | Mixed length units can produce `passes == True` although the consistently expressed geometry exceeds the allowable; non-conservative because no unit conversion or declaration is checked. [src/digitalmodel/structural/ovality/workflow.py:L53-L60] [src/digitalmodel/structural/ovality/workflow.py:L41-L41] | C7 mixed-unit probe and C8 provenance inspection; issue pending (2). |
 | S15 reconstructed geometry | An unrestricted supplied fraction can construct a non-positive minimum diameter without invoking `_out_of_roundness`. [src/digitalmodel/structural/ovality/workflow.py:L29-L32] [src/digitalmodel/structural/ovality/workflow.py:L63-L70] | No committed detection check exists; issue pending (1). |
 | S16 overwrite | CSV is opened in write mode, replacing any existing file; this is result output, not an empty-result cache. [src/digitalmodel/structural/ovality/workflow.py:L95-L100] | C3 checks a new output; no detection check exists for overwrite policy; issue pending (3). |
 | S17 zero thresholds and arithmetic constants | Zero is a rejection threshold rather than an error fallback; 1 and 2 construct symmetric diameters and 100 converts fraction to percent. [src/digitalmodel/structural/ovality/workflow.py:L31-L39] [src/digitalmodel/structural/ovality/workflow.py:L53-L68] [src/digitalmodel/structural/ovality/workflow.py:L103-L124] | C0, C2, C5; intentional conventions. |
 | S18 text encoding | CSV writing does not specify an encoding. [src/digitalmodel/structural/ovality/workflow.py:L95-L100] | No detection check exists for encoding portability; issue pending (3). |
 | S19 settings replacement | Returned `pipe_ovality` replaces the original settings, retaining the computed row and display path only. [src/digitalmodel/structural/ovality/workflow.py:L46-L50] | C3 covers the row; no detection check exists for preserving input-only keys; issue pending (3). |
+| S20 nominal/extreme consistency | No check requires nominal diameter to lie within the measured extremes or a declared tolerance. An arbitrarily large finite nominal suppresses the ratio and produces `passes == True`; non-conservative because inconsistent geometry can pass the allowable comparison. [src/digitalmodel/structural/ovality/workflow.py:L20-L28] [src/digitalmodel/structural/ovality/workflow.py:L53-L60] | C7 inconsistent-nominal probe; issue pending (1). |
 
 The complete module has no `continue`, empty-list/dict error return, integer conversion, epoch fallback or cache write; the None return and caught path exception are the explicit branches above. [src/digitalmodel/structural/ovality/workflow.py:L18-L139] [src/digitalmodel/structural/ovality/__init__.py:L1-L2]
 
@@ -142,6 +168,7 @@ This table is append-only; identifiers for an external shared log remain unassig
 | Date | Change reference | Lesson | Evidence | Pack change | Shared-log reference |
 | --- | --- | --- | --- | --- | --- |
 | 2026-11-07 | Initial pack revision 0 | Keep geometry regression evidence separate from standards qualification | [tests/structural/ovality/test_ovality_workflow.py:L31-L41] [src/digitalmodel/structural/ovality/workflow.py:L1-L6] | Sections 3–5 distinguish the arithmetic check from a governing acceptance basis | Unassigned; issue pending (4) |
+| 2026-11-07 | Pack revision 1 | Probe infinity and inconsistent geometry as well as NaN: a failed comparison for NaN does not exclude false passes | [src/digitalmodel/structural/ovality/workflow.py:L20-L41] [src/digitalmodel/structural/ovality/workflow.py:L53-L60] | Sections 5, 6 and 10 record the false-pass outcomes and missing input checks | Unassigned; issue pending (4) |
 
 ## 8. Review responsibilities
 
@@ -188,13 +215,20 @@ for count, order, family_id, rows in ranked:
 
 Map follow-up: add measured-diameter out-of-roundness, supplied-fraction diameter reconstruction and allowable comparison from section 3 before counting those families in a later map revision (issue pending (4)). [src/digitalmodel/structural/ovality/workflow.py:L25-L41] [src/digitalmodel/structural/ovality/workflow.py:L53-L70]
 
-Repository-wide discovery includes the following additional implementation sites; these are outside the package and are map gaps, not counted misses. [src/digitalmodel/structural/pipe_capacity/custom/DNV_OS_F101/RigidPipe.py:L75-L82] [scripts/python/digitalmodel/analysis/RigidPipe.py:L60-L67] [scripts/python/digitalmodel/analysis/collapse.py:L26-L30]
+Repository-wide discovery identifies five alternate or related method sites and three excluded data/presentation hits below. They are outside the package and do not change the empty counted-family inventory. Geometry-map follow-up remains necessary; the code-checks file already has a map row for `local_buckling_lcc`, which does not inventory its collapse consumer or this router's geometry method. [docs/registry/implementation-map.yaml@3256bab95f84da3d9fadce8d5dcf8458d66d1eb4:L2606-L2615]
 
 | Site | Classification / relationship | Follow-up |
 | --- | --- | --- |
 | `RigidPipe.updateOvality` in the pipe-capacity package | Computes the diameter-difference ratio itself and applies its own lower bound; do not use it as an independent standard check | [src/digitalmodel/structural/pipe_capacity/custom/DNV_OS_F101/RigidPipe.py:L74-L82]; issue pending (4) |
 | `RigidPipe.updateOvality` in the analysis script | Computes the same ratio itself with a lower bound | [scripts/python/digitalmodel/analysis/RigidPipe.py:L59-L67]; issue pending (4) |
 | Module-level collapse script expression | Uses the sum of extreme diameters as denominator, so its parameter cannot be substituted directly for this module's nominal-diameter ratio | [scripts/python/digitalmodel/analysis/collapse.py:L26-L30]; issue pending (4) |
+| `assess_piping_ovality` in the shell-distortion screen | Computes `(maximum_od_mm - minimum_od_mm) / specified_od_mm` itself, rejects non-finite inputs and results, and emits a citation sidecar; closest repository comparator for these gaps, under a different applicability contract | [src/digitalmodel/asset_integrity/shell_distortion_screen.py:L99-L123] [src/digitalmodel/asset_integrity/shell_distortion_screen.py:L126-L161]; issue pending (4) |
+| `collapse_pressure` in the DNV code checks | Related downstream method: documents the same initial-ovality definition, accepts the fraction as an input and applies a floor before solving collapse resistance; it does not calculate the diameter ratio from measured extremes | [src/digitalmodel/code_checks/dnv_os_f101.py:L186-L187] [src/digitalmodel/code_checks/dnv_os_f101.py:L213-L248]; issue pending (4) |
+| Module-level `Ovality.py` analysis script | Excluded data holder: diameter dictionaries and lookups, with an incomplete dictionary entry; no geometry-ratio computation | [scripts/python/digitalmodel/analysis/Ovality.py:L5-L80] |
+| Module-level `Ovality_01.py` analysis script | Excluded data holder: diameter dictionaries in two units and lookups; no geometry-ratio computation | [scripts/python/digitalmodel/analysis/Ovality_01.py:L5-L81] |
+| Multicode wall-thickness demo text | Excluded presentation hit: a literal annotation states an assumed ovality; that statement does not compute the ratio | [examples/demos/gtm/demo_02_wall_thickness_multicode.py:L1478-L1484] |
+
+The shell-distortion source declares code constants `WELDED_PIPE_OVALITY_LIMIT = 0.01` and `THIN_PIPE_OVALITY_LIMIT = 0.015` with its own API 579-1/ASME FFS-1, Fitness-For-Service, 2016 citation sidecar and applicability context. These are observations of repository code, not a check of the licensed table or evidence that either fabrication limit applies to this workflow; they do not establish provenance for the `0.03` default. [src/digitalmodel/asset_integrity/shell_distortion_screen.py:L19-L35] [src/digitalmodel/asset_integrity/shell_distortion_screen.py:L126-L161]
 
 ## 10. Coverage and open items
 
@@ -207,6 +241,8 @@ git ls-tree -r --name-only aebd7e4bc5c3dda5f7433e20e021dd58ac17d0b3 -- src/digit
 rg -l 'pipe_ovality|pipe-ovality|structural/ovality|structural\.ovality' docs
 rg -l 'pipe_ovality|pipe-ovality|structural/ovality|structural\.ovality' docs --glob '*.md'
 git grep -n -E 'Dmax|Dmin|out_of_roundness|updateOvality' aebd7e4bc5c3dda5f7433e20e021dd58ac17d0b3 -- '*.py'
+git grep -n -E 'assess_piping_ovality|maximum_od_mm|minimum_od_mm' aebd7e4bc5c3dda5f7433e20e021dd58ac17d0b3 -- '*.py'
+git ls-tree -r --name-only aebd7e4bc5c3dda5f7433e20e021dd58ac17d0b3 -- 'scripts/python/digitalmodel/analysis/Ovality*.py'
 ```
 
 The pinned documentation discoveries are `docs/registry/workflows.yaml` and `docs/audits/workflow-failure-evidence-coverage.html`; the latter labels pipe-ovality coverage as implicit and offline and bounds its evidence to synthetic failure injection rather than engineering qualification. [docs/registry/workflows.yaml:L338-L345] [docs/audits/workflow-failure-evidence-coverage.html:L7-L10] [docs/audits/workflow-failure-evidence-coverage.html:L85-L85]
@@ -215,9 +251,9 @@ The audit's coverage statement does not establish this router's standard edition
 
 | Item | Disposition | Responsible role / issue |
 | --- | --- | --- |
-| U1 diameter units; U2 standard edition, clause and allowable provenance; citation-sidecar gap | Establish an explicit unit contract and authoritative standard reference without reproducing licensed text or tabulated values | Maintainer; issue pending (2) |
+| U1 diameter units; U2 standard edition, clause and allowable provenance; citation-sidecar gap | Establish an explicit unit contract and authoritative standard reference without reproducing licensed text or tabulated values; mixed-unit inputs can falsely pass the configured allowable (S14, C7) | Maintainer; issue pending (2) |
 | U3 independently sourced worked example and tolerance | Current two cases remain regression examples; add independent expected values with declared units | Maintainer; issue pending (2) |
-| Non-finite inputs, incompatible routes/aliases and excessive supplied fraction | Add rejection checks and tests before treating arbitrary external inputs as finite numerical evidence | Maintainer; issue pending (1) |
+| Non-finite inputs, inconsistent nominal/extreme geometry, incompatible routes/aliases and excessive supplied fraction | Add finiteness, consistency and reconstructed-diameter checks: infinite nominal/allowable/fraction and an inconsistent finite nominal can produce `passes == True` for invalid geometry (C6/C7, S06/S07/S15/S20) | Maintainer; issue pending (1) |
 | Output path, overwrite, encoding and configuration fallback branches | Define expected behavior and add detection coverage for section-6 sites | Maintainer; issue pending (3) |
 | Missing boundary, invalid-input and supplied-fraction regression coverage | Extend solver-free tests; keep the present two-node evidence distinct | Maintainer; issue pending (4) |
 | Map families and repository-wide alternate formulas | Add the section-3 methods to the map, then review the alternate implementations listed in section 9 | Maintainer; issue pending (4) |
