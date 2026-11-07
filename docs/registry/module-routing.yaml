@@ -215,6 +215,9 @@ modules:
       rao_analysis:
         agent_pack: src/digitalmodel/hydrodynamics/rao_analysis/docs/agent-pack.md
         qa_family: DF
+      rao_tabulation:
+        agent_pack: src/digitalmodel/hydrodynamics/rao_tabulation/docs/agent-pack.md
+        qa_family: DF
   - module: infrastructure
     entry_point: src/digitalmodel/infrastructure/
     maturity: beta
