@@ -4,6 +4,8 @@
 """Test watch-circle citation resolution using synthetic wiki metadata."""
 
 from pathlib import Path
+import errno
+import traceback
 import warnings
 
 import pytest
@@ -119,3 +121,85 @@ def test_invalid_frontmatter_fails_at_calc_time(
     with pytest.raises(CitationResolutionError) as caught:
         check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
     assert caught.value.reason.startswith("frontmatter_")
+
+
+@pytest.mark.parametrize("layout", ["", "knowledge"])
+@pytest.mark.parametrize("failure", ["permission", "encoding"])
+def test_unreadable_page_fails_with_citation_identity(
+    tmp_path: Path, monkeypatch, layout: str, failure: str
+) -> None:
+    """Apply calc-output-citation.md section 4.1 to read failures.
+
+    Independent oracle: a page that cannot be read cannot establish provenance;
+    The contract requires CitationResolutionError carrying the code identifier.
+    Geometry is the existing synthetic cable input, with no numerical assertion.
+    The invalid byte is a text-decoding fault, not a standards-derived value.
+    """
+    page = tmp_path / layout / WIKI_PATH
+    page.parent.mkdir(parents=True)
+    page.write_bytes(b"\xff")
+    read_text = Path.read_text
+
+    def denied_read(path, *args, **kwargs):
+        if path == page:
+            raise PermissionError("synthetic private read diagnostic")
+        return read_text(path, *args, **kwargs)
+
+    if failure == "permission":
+        monkeypatch.setattr(Path, "read_text", denied_read)
+        error_type = "PermissionError"
+    else:
+        error_type = "UnicodeDecodeError"
+
+    with pytest.raises(CitationResolutionError) as caught:
+        check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
+    assert caught.value.code_id == "DNV-RP-0360"
+    assert caught.value.wiki_path == WIKI_PATH
+    assert caught.value.reason == f"page_unreadable:{error_type}"
+    assert caught.value.__suppress_context__
+    assert "synthetic private read diagnostic" not in str(caught.value)
+    assert str(page) not in str(caught.value)
+
+
+@pytest.mark.parametrize("layout", ["", "knowledge"])
+@pytest.mark.parametrize("failure_at", ["lookup", "stat"])
+def test_directory_permission_failure_has_citation_identity(
+    tmp_path: Path, monkeypatch, layout: str, failure_at: str
+) -> None:
+    """Translate directory traversal denial during lookup and final page stat.
+
+    Calculation Output Citation Contract section 4.1 requires the citation
+    identity even when the page cannot be reached. Inject the filesystem stat
+    error so this regression also works with elevated permissions and on systems
+    where directory mode bits do not control traversal.
+    """
+    page = tmp_path / layout / WIKI_PATH
+    page.parent.mkdir(parents=True)
+    page.write_text(
+        "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
+        encoding="utf-8",
+    )
+    original_stat = Path.stat
+    page_stats = 0
+
+    def denied_stat(path, *args, **kwargs):
+        nonlocal page_stats
+        if path == page:
+            page_stats += 1
+            if failure_at == "lookup" or page_stats == 2:
+                raise PermissionError(
+                    errno.EACCES, "synthetic directory traversal denial", str(page)
+                )
+        return original_stat(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "stat", denied_stat)
+    with pytest.raises(CitationResolutionError) as caught:
+        check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
+    assert page_stats == (1 if failure_at == "lookup" else 2)
+    assert caught.value.code_id == "DNV-RP-0360"
+    assert caught.value.wiki_path == WIKI_PATH
+    assert caught.value.reason == "page_unreadable:PermissionError"
+    assert caught.value.__suppress_context__
+    displayed = "".join(traceback.format_exception(caught.value))
+    assert "synthetic directory traversal denial" not in displayed
+    assert str(page) not in displayed

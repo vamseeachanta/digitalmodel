@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """VIV screening per DNV-RP-C205 for risers and pipelines.
 
 Calculates reduced velocity, checks lock-in conditions, estimates
@@ -17,7 +20,7 @@ from enum import Enum
 from typing import Dict, List, Optional, Tuple
 
 import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 # ---------------------------------------------------------------------------
@@ -36,6 +39,12 @@ class BoundaryCondition(str, Enum):
     FIXED_FIXED = "fixed_fixed"
     FIXED_FREE = "fixed_free"
     FIXED_PINNED = "fixed_pinned"
+
+
+def _validate_n_modes(n_modes: int) -> None:
+    """Require a positive integer count, excluding booleans and coercion."""
+    if isinstance(n_modes, bool) or not isinstance(n_modes, int) or n_modes < 1:
+        raise ValueError("n_modes must be a positive integer")
 
 
 # ---------------------------------------------------------------------------
@@ -83,6 +92,19 @@ class VIVScreeningInput(BaseModel):
         (4.0, 8.0),
         description="Reduced velocity range for cross-flow lock-in",
     )
+
+    @field_validator("lock_in_vr_range")
+    @classmethod
+    def _validate_lock_in_vr_range(
+        cls, value: Tuple[float, float]
+    ) -> Tuple[float, float]:
+        """Require finite interval bounds with zero <= lower < upper."""
+        lower, upper = value
+        if not (math.isfinite(lower) and math.isfinite(upper) and 0 <= lower < upper):
+            raise ValueError(
+                "lock_in_vr_range must have finite nonnegative strictly increasing bounds"
+            )
+        return value
 
     @property
     def reynolds_number(self) -> float:
@@ -225,7 +247,11 @@ class BeamProperties(BaseModel):
 
         Returns:
             List of dicts with mode number and frequency.
+
+        Raises:
+            ValueError: If n_modes is not a positive integer.
         """
+        _validate_n_modes(n_modes)
         return [
             {"mode": n, "frequency_Hz": round(self.natural_frequency(n), 4)}
             for n in range(1, n_modes + 1)
@@ -262,8 +288,12 @@ def viv_screening(
     Returns:
         VIVScreeningResult with pass/fail and details.
 
+    Raises:
+        ValueError: If n_modes is not a positive integer.
+
     Reference: DNV-RP-C205 Section 9, DNV-RP-F105 Section 5.
     """
+    _validate_n_modes(n_modes)
     details = []
     critical_mode = None
     critical_vr = None

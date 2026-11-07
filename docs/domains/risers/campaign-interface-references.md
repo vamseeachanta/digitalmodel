@@ -10,11 +10,12 @@ repository was accessed and no private sidecar entry has been assigned.
 
 | Revision | Date | What changed and why |
 | --- | --- | --- |
+| Nested interfaces | 2026-10-21 | Add source-only modal and fatigue field inventories and a symbolic field-lookup example. |
 | Initial | 2026-10-19 | Record the public extraction surface and the evidence required to resolve the private consumer gap in issue #2531. |
 
 ## Scope and public source basis
 
-This inventory describes public source revision
+The original top-level inventory describes public source revision
 `6476218e8f5af3fa7d16c3dafc60b6a9084c6e6c`. Source paths and symbol names in
 the inventory locate the implementation; they are not private evidence locators.
 
@@ -24,7 +25,7 @@ the inventory locate the implementation; they are not private evidence locators.
 | Open-water extraction | [RiserCampaignAdapter._extract_open_water](../../../src/digitalmodel/drilling_riser/campaign.py) | Static end tensions, base moment, stress, frame elevation and optional modes; dynamic extremes, series statistics, sample count and W5 delegation |
 | Hang-off extraction | [hang_off_summary and extract_hang_off](../../../src/digitalmodel/drilling_riser/global_model/w5_channels.py) | Separate static and dynamic summary maps plus W5 delegation; the adapter returns before its drilling modes, series and fatigue additions |
 | Response maps and units | [static_responses, governing_responses, end_effective_tensions, open_water_end_tensions, open_water_static_responses and open_water_governing_responses](../../../src/digitalmodel/drilling_riser/global_model/orcaflex_run.py) | Explicit producer keys, dictionary expansions and units as implemented |
-| Nested W5 output | [extract, extract_open_water, extract_hang_off and UNITS](../../../src/digitalmodel/drilling_riser/global_model/w5_channels.py) | The top-level `w5` field is recorded; nested points, range graphs, events and fatigue channels require a later field inventory |
+| Nested W5 output | [extract, extract_open_water, extract_hang_off and UNITS](../../../src/digitalmodel/drilling_riser/global_model/w5_channels.py) | The top-level `w5` field is recorded; nested fatigue fields are recorded below; points, range graphs and events require a later field inventory |
 | External calculation contracts | [load_calc_contracts](../../../src/digitalmodel/drilling_riser/calc_contracts.py) | Existing loader scans registry and source pages, selects mappings with both `rsu_id` and `calc`, rejects duplicate pairs and adds `source_page`; this is not a campaign consumer inventory |
 
 Issue #2531 defines the private reference gap. The inventory introduces no engineering
@@ -115,6 +116,49 @@ evidence and access authorization have not been supplied for this change. Until
 the required readback is established, `external_consumer_completeness`,
 `private_readback` and `campaign_qualification` remain `NOT_EVALUATED`.
 
-Later slices cover nested W5 and modal field inventories, authorized sidecar
-creation and readback, actual consumer coverage, and intended-use qualification.
+Later slices cover remaining W5 point, range-graph and event field inventories,
+authorized sidecar creation and readback, actual consumer coverage, and intended-use
+qualification.
 No engineering acceptance result is asserted by this documentation.
+
+## Nested modal and fatigue interfaces
+
+The JSON `nested_interfaces` section extends the inventory at public revision
+`84628b8cc2854af6883bfa6610b2133df7537803`. Its `source`, `symbols` and
+`source_revision` fields identify the basis for each field set and unit.
+The original top-level revision remains unchanged.
+
+- `modes[]` contains required modal row fields and a conditional
+  `paired_mode_number`. The source is `riser_modal_periods` and `_dof_shares` in
+  [orcaflex_run.py](../../../src/digitalmodel/drilling_riser/global_model/orcaflex_run.py).
+  Displacement shares refer to global translational axes on the selected line;
+  they are not modal mass participation. An empty result does not establish that
+  the system has no modes. Selection limits are not engineering acceptance limits.
+- `w5.fatigue` contains document metadata and diagnostic counts; each station
+  contains point records formed from histogram fields plus point additions.
+  The source is `extract` and `half_cycle_histogram` in
+  [fatigue_channels.py](../../../src/digitalmodel/drilling_riser/global_model/fatigue_channels.py).
+  Document `counts` is descriptive text, while point `counts` is an array of
+  half-cycle counts. Stress units follow the producer's declaration, not an
+  independent verification of solver settings. Counting invariants do not
+  establish fatigue damage, life or acceptance.
+
+Both surfaces retain null consumer references and `NOT_EVALUATED` status. The
+adapter conditions in the JSON determine availability; neither surface is
+promised on hang-off returns. Runtime station labels and object identifiers
+must not be copied into public private-evidence references.
+
+### Worked example: field lookup without private data
+
+Inputs are the symbolic field paths `modes[].period_s` and
+`w5.fatigue.stations[].points[].mean_stress`. No simulation values are supplied.
+The method is to resolve the modal required-field map, then combine the fatigue
+histogram and point-addition maps to resolve the station point. The answers are
+seconds (`s`) and kilopascals (`kPa`), respectively, as declared by the cited
+producers. Consumer completeness and qualification remain `NOT_EVALUATED`.
+This is an interface lookup example, not a calculated engineering result.
+
+The nested tests parse source text without importing or executing either
+producer. They compare modal base and conditional keys, fatigue document and
+station keys, and the merged point fields against the transcribed inventory.
+The existing symbolic adapter tests continue to cover availability conditions.

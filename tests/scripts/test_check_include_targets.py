@@ -49,7 +49,7 @@ def repo(tmp_path):
 def write(repo, name, content):
     path = repo / name
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(content, encoding="utf-8")
+    path.write_text(content, encoding="utf-8", newline="\n")
     return path
 
 
@@ -77,22 +77,26 @@ def run_check(repo, baseline=None, *args):
     return subprocess.CompletedProcess(command, code, stdout.getvalue(), stderr.getvalue())
 
 
+@pytest.mark.parametrize("ignorecase", [False, True], ids=["case-sensitive", "case-insensitive"])
 @pytest.mark.parametrize(
     ("path", "ignored"),
     [
         pytest.param("docs/a/env/case.yml", False, id="docs-yaml-pin"),
         pytest.param("a/b/env/case.yml", False, id="nested-engineering"),
+        pytest.param("a/b/ENV/case.yml", False, id="uppercase-nested-engineering"),
         pytest.param("env/pyvenv.cfg", True, id="root-venv-pin"),
+        pytest.param("ENV/pyvenv.cfg", True, id="uppercase-root-venv-pin"),
         pytest.param("docs/a/env/pyvenv.cfg", True, id="docs-venv-pin"),
     ],
 )
-def test_env_ignore_patterns(repo, path, ignored):
+def test_env_ignore_patterns(repo, path, ignored, ignorecase):
     """Nested YAML will be visible; root and docs virtual environments stay ignored.
 
     The docs YAML and both virtual-environment cases are regression pins.
     """
     write(repo, path, "")
-    result = git(repo, "check-ignore", "-q", path, check=False)
+    result = git(repo, "-c", f"core.ignorecase={str(ignorecase).lower()}",
+                 "check-ignore", "-q", path, check=False)
     assert result.returncode == (0 if ignored else 1), path
 
 
@@ -120,7 +124,8 @@ def test_absent_target_fails(repo, key):
 def test_ignored_target_reports_rule(repo):
     """An ignored on-disk target will fail with the ignore rule and its line."""
     ignore = repo / ".gitignore"
-    ignore.write_text("# Fixture line offset.\n" + ignore.read_text(encoding="utf-8"), encoding="utf-8")
+    ignore.write_text("# Fixture line offset.\n" + ignore.read_text(encoding="utf-8"),
+                      encoding="utf-8", newline="\n")
     write(repo, "models/run.yml", "includefile: ../env/case.yml\n")
     write(repo, "env/case.yml", "General: {}\n")
     git(repo, "add", "models/run.yml")
@@ -232,6 +237,7 @@ def test_real_tree_matches_baseline():
     assert result.returncode == 0, result.stdout + result.stderr
 
 
+@pytest.mark.parametrize("ignorecase", [False, True], ids=["case-sensitive", "case-insensitive"])
 @pytest.mark.parametrize(
     ("path", "ignored"),
     [
@@ -256,18 +262,19 @@ def test_real_tree_matches_baseline():
         ("a/b/env/Scripts/case.yml", False),
     ],
 )
-def test_nested_env_structure(repo, path, ignored):
+def test_nested_env_structure(repo, path, ignored, ignorecase):
     """Environment paths will be ignored while engineering inputs stay visible."""
     write(repo, "a/b/env/pyvenv.cfg", "")
     write(repo, path, "")
-    result = git(repo, "check-ignore", "-q", path, check=False)
+    result = git(repo, "-c", f"core.ignorecase={str(ignorecase).lower()}",
+                 "check-ignore", "-q", path, check=False)
     assert result.returncode == (0 if ignored else 1), path
 
 
 def test_global_git_configuration_is_isolated(repo, monkeypatch):
     """A global ignore file will not alter fixture ignore decisions."""
-    ignores = write(repo, "global-ignore", "*.yml\n")
-    config = write(repo, "global-config", f"[core]\n    excludesFile = {ignores.as_posix()}\n")
+    write(repo, "global-ignore", "*.yml\n")
+    config = write(repo, "global-config", "[core]\n    excludesFile = global-ignore\n")
     monkeypatch.setenv("GIT_CONFIG_GLOBAL", str(config))
     write(repo, "models/case.yml", "")
     result = git(repo, "check-ignore", "-q", "models/case.yml", check=False)
@@ -280,3 +287,47 @@ def test_baseline_can_only_shrink():
     entries = load_checker().read_baseline(BASELINE)
     # This ceiling may be lowered, never raised without a visible test edit.
     assert len(entries) <= 198
+
+
+@pytest.mark.parametrize("key", ["includefile", "BaseFile"])
+def test_tracked_target_missing_from_worktree_fails(repo, key):
+    """A tracked name alone cannot supply the bytes needed by an include chain.
+
+    Independent fixture: the index contains models/case.dat, but its working
+    file is renamed away. Thus run.yml has one unresolved target, case.dat.
+    Git ls-files documents that cached paths remain listed after local removal:
+    https://git-scm.com/docs/git-ls-files (cached and deleted options).
+    """
+    write(repo, "models/run.yml", f"{key}: case.dat\n")
+    target = write(repo, "models/case.dat", "General: {}\n")
+    git(repo, "add", "models/run.yml", "models/case.dat")
+    target.rename(repo / "retained-case.dat")
+    result = run_check(repo)
+    assert result.returncode == 1
+    assert "models/run.yml" in result.stdout
+    assert "case.dat" in result.stdout
+    assert "missing from working tree" in result.stdout
+
+
+def test_missing_tracked_target_can_be_baselined_and_repaired(repo):
+    """One missing target is baselined; restoring its bytes makes that row stale.
+
+    Expected sets are calculated directly: {('models/run.yml', 'case.dat')}
+    before restoration, and the empty set after restoration. The baseline
+    must equal the broken-reference set, rather than hide a repaired defect.
+    """
+    write(repo, "models/run.yml", "BaseFile: case.dat\n")
+    target = write(repo, "models/case.dat", "General: {}\n")
+    git(repo, "add", "models/run.yml", "models/case.dat")
+    retained = repo / "retained-case.dat"
+    target.rename(retained)
+    baseline = repo / "baseline.txt"
+    generated = run_check(repo, baseline, "--write-baseline")
+    assert generated.returncode == 0, generated.stdout + generated.stderr
+    assert load_checker().read_baseline(baseline) == {("models/run.yml", "case.dat")}
+    assert run_check(repo, baseline).returncode == 0
+    retained.rename(target)
+    git(repo, "add", "models/case.dat")
+    result = run_check(repo, baseline)
+    assert result.returncode == 1
+    assert "stale baseline entry" in result.stdout

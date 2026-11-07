@@ -44,6 +44,31 @@ def test_committed_cards_are_fresh():
     assert json.loads(builder._OUT.read_text(encoding="utf-8")) == builder.build_cards()
 
 
+def test_pressure_explorer_card_keeps_its_identity_and_reference_figures():
+    cards = {card["id"]: card for card in builder.build_cards()}
+    card = cards["wall-thickness-explorer"]
+    assert card["title"] == "Wall-thickness multi-code explorer"
+    assert card["link"] == "docs/api/structural/wall-thickness-explorer.html"
+    spec = next(spec for spec in builder.SPECS if spec["id"] == card["id"])
+    assert spec["figures"] == [
+        ("9", "design codes"), ("369", "engine evaluations"),
+        ("~19.5 mm", "min wall, pipeline codes"),
+    ]
+
+
+def test_load_explorer_card_has_its_own_grid_figures_and_limits():
+    cards = {card["id"]: card for card in builder.build_cards()}
+    card = cards["wall-thickness-load-explorer"]
+    assert card["link"] == "docs/api/structural/wall-thickness-3d-explorer.html"
+    assert "design qualification is not evaluated" in card["summary"]
+    spec = next(spec for spec in builder.SPECS if spec["id"] == card["id"])
+    assert spec["figures"] == [
+        ("9", "design codes"), ("354,609", "study rows"),
+        ("22,869", "display points"),
+    ]
+    assert all("369" not in bullet and "19.5" not in bullet for bullet in spec["bullets"])
+
+
 def test_section_cards_link_to_the_published_capabilities_page():
     cards = {card["id"]: card for card in builder.build_cards()}
     for spec in builder.SPECS:

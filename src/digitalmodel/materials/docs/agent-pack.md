@@ -4,7 +4,7 @@
 | --- | --- |
 | Module / repository | materials / digitalmodel |
 | Package | `src/digitalmodel/materials` |
-| Pack revision / date | 3 / 2026-10-18 |
+| Pack revision / date | 4 / 2026-10-21 |
 | Code revision | `b4c10284fa7d28398e6fa02c262c219c0fec8fef`; reachable from main |
 | Normalized grades.py SHA-256 | `4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90` |
 | Analysis family | Engineering calculations (EC), AQG r0 Python calculations |
@@ -28,6 +28,7 @@ traceability; original-standard qualification remains pending.
 | 1 | 2026-10-18 | Grade and curve corrections separated regression evidence from source qualification. |
 | 2 | 2026-10-18 | Normalized digest recorded the inspected source while a reachable revision was pending. |
 | 3 | 2026-10-18 | Assigned reachable source history, re-anchored locators and removed stale inventory claims. |
+| 4 | 2026-10-21 | Linked the executable PSL1 lookup example and expanded the product-level regression coverage; the inspected grade source is unchanged. |
 
 ## 1. Purpose and scope
 
@@ -85,6 +86,13 @@ All licensed references below mean **clause text not checked against the license
 
 The package carries source strings and repository provenance, but no `Citation` sidecar is constructed by these APIs; sidecar adoption and edition qualification remain open under #1204 and issue pending (3). [src/digitalmodel/materials/grades.py:L59-L80] [src/digitalmodel/materials/database.py:L95-L114] [src/digitalmodel/materials/ffs_material_library.py:L299-L368]
 
+The [current PSL1 worked example](../../../../docs/domains/materials/grade-matrix-validation-2026-06-28.md#worked-example-explicit-psl1-lookup)
+shows grade and product-level inputs, direct/indexed answers, table provenance
+and an unsupported request. `tests/materials/test_psl1_example.py` executes the
+example. This supplementary regression coverage does not change the pinned
+source above; original-standard qualification remains **NOT_EVALUATED** pending
+the maintainer's licensed-text check.
+
 ## 4. Hand checks and regression examples
 
 V1 checks a prescribed true-stress plateau and is an input-echo regression, not G2 evidence. V2 exercises the hardening branch against a hand calculation. V3–V6 exercise the existing closed-form toughness anchors; original-source qualification remains U2. [tests/materials/test_ffs_material_library.py:L269-L274]
@@ -134,7 +142,7 @@ Gate applicability follows AQG r0, section 10, Python calculations, with G5 requ
 | C12 | G0 | `lower_bound_toughness` auto method route and tagged-unit equivalence: 0 method mismatches; relative toughness difference ≤ 1e-6, dimensionless | `tests/materials/test_ffs_material_library.py::test_toughness_auto_method_selection`, `tests/materials/test_ffs_material_library.py::test_toughness_tagged_quantities_are_converted`. [tests/materials/test_ffs_material_library.py:L192-L227] |
 | C13 | G1 | `LinePipe.weight_kg_m` and `weight_lb_ft` fixed-density conversion consistency: relative differences ≤ 1e-12 and ≤ 1e-6, dimensionless; kg/m and lb/ft quantities | R1. [tests/materials/test_line_pipe.py:L56-L61] |
 | C14 | G1 | `legacy_smys_psi_dict` and `legacy_smts_psi_dict` equal their live consumer views: 0 differing entries, count | `tests/materials/test_grade_matrix.py::test_legacy_smys_psi_matches_corroded_pipe`, `tests/materials/test_grade_matrix.py::test_legacy_smts_psi_matches_dnv_rp_f101`. [tests/materials/test_grade_matrix.py:L98-L107] |
-| C15 | G1 | `grades.smts_mpa` and `MaterialDatabase.lookup` agree with Table 6 SI minima and explicit product levels; absent PSL1/unknown API levels raise; `load_database` emits no X80 PSL1 record | `tests/materials/test_database.py::test_psl_selection_matches_existing_reconciliation`; `tests/materials/test_audit_regressions.py::test_psl1_si_minima_and_table_provenance`, `test_psl1_unlisted_grades_raise`, `test_unknown_api_product_level_raises`. [#2726](https://github.com/vamseeachanta/digitalmodel/issues/2726); maintainer licensed-text check pending |
+| C15 | G1 | `grades.smts_mpa` and `MaterialDatabase.lookup` agree with the repository's cited Table 6 SI entries and explicit product levels; absent PSL1/unknown API levels raise across public strength views; `load_database` emits no X80 PSL1 record | `tests/materials/test_database.py::test_psl_selection_matches_existing_reconciliation`; `tests/materials/test_audit_regressions.py::test_psl1_si_minima_and_table_provenance`, `test_psl1_unlisted_grades_raise`, `test_unknown_api_product_level_raises`; executable worked example: `tests/materials/test_psl1_example.py::test_psl1_worked_example`. [#2726](https://github.com/vamseeachanta/digitalmodel/issues/2726); maintainer licensed-text check pending |
 
 Checks defined: G0 = 7, G1 = 5, G2 = 1, G5 = 2; total = 15, with G3/G4 inapplicable under the cited family mapping. (AQG r0, section 10.)
 

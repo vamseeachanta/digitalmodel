@@ -12,6 +12,7 @@ from digitalmodel.naval_architecture.hull_girder_strength import (
     hull_girder_ultimate_moment,
     material_factor_k,
     permissible_stress,
+    required_section_modulus_m3,
     rule_block_coefficient,
     section_modulus_check,
     shear_distribution_factor_f1,
@@ -158,6 +159,55 @@ def test_bending_stress_and_yield_check():
     assert math.isclose(chk.permissible_mpa, 175.0 / 0.72, rel_tol=1e-9)
     assert math.isclose(chk.utilization, 40.0 / (175.0 / 0.72), rel_tol=1e-9)
     assert chk.passes is True
+
+
+@pytest.mark.parametrize(
+    "moment_kn_m, allowable_stress_mpa, expected_m3",
+    [
+        (2.0e6, 40.0, 50.0),
+        (-2.0e6, 40.0, 50.0),
+        (0.0, 40.0, 0.0),
+        (750_000.0, 125.0, 6.0),
+        (-750_000.0, 125.0, 6.0),
+    ],
+)
+def test_required_section_modulus_matches_hand_equilibrium(
+    moment_kn_m, allowable_stress_mpa, expected_m3,
+):
+    # Independent M = sigma * Z examples: 40 MPa * 50 m^3 = 2e6 kN*m;
+    # 125 MPa * 6 m^3 = 750000 kN*m. Zero moment requires zero elastic Z.
+    # SI prefixes: 1 MPa = 1e6 N/m^2, 1 kN = 1e3 N, hence factor 1e3.
+    assert abs(moment_kn_m) == allowable_stress_mpa * expected_m3 * 1.0e3
+    sized_m3 = required_section_modulus_m3(moment_kn_m, allowable_stress_mpa)
+    assert sized_m3 == pytest.approx(expected_m3)
+    if moment_kn_m:
+        assert bending_stress_mpa(moment_kn_m, sized_m3) == pytest.approx(
+            allowable_stress_mpa
+        )
+    else:
+        assert sized_m3 == 0.0
+
+
+@pytest.mark.parametrize(
+    "moment_kn_m, allowable_stress_mpa, parameter",
+    [
+        # A moment must be finite and numeric; booleans are not load values.
+        *[(value, 40.0, "moment_kn_m") for value in
+          (float("nan"), float("inf"), -float("inf"), True, False)],
+        # A stress must also be positive, even when the moment is zero.
+        # The finite load/stress are the hand example above; -1 and 0 probe
+        # the positive-domain boundary rather than engineering constants.
+        *[(moment, value, "allowable_stress_mpa")
+          for moment in (0.0, 2.0e6)
+          for value in (float("nan"), float("inf"), -float("inf"),
+                        True, False, 0.0, -1.0)],
+    ],
+)
+def test_required_section_modulus_rejects_invalid_inputs(
+    moment_kn_m, allowable_stress_mpa, parameter,
+):
+    with pytest.raises(ValueError, match=parameter):
+        required_section_modulus_m3(moment_kn_m, allowable_stress_mpa)
 
 
 def test_yield_check_fails_when_overstressed():

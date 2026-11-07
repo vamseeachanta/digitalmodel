@@ -6,6 +6,7 @@ import re
 
 from digitalmodel.workflows.installation_event_audit import audit_binding_errors
 from digitalmodel.workflows.installation_partial_report import STYLE, _table, _grid, _envelope_table, _case_details
+from digitalmodel.workflows.installation_report_paths import display_cases
 from digitalmodel.workflows.installation_report_layout import report_cover, appendix_labels
 
 
@@ -527,7 +528,7 @@ def _appendices(summary,base,config):
     text=_section(8,'References and revision history',_metadata(config,'references')+revision+
         '<p class="caption">Table 8-1. Current issue; no external approval history is inferred.</p>')
     details=[]
-    for case in summary['cases']:
+    for case in display_cases(summary, config, base):
         if case['status']!='VERIFIED':continue
         detail=_case_details([case],base)
         if detail.count('</table>')!=1:raise ValueError('One detailed channel table required per verified case')

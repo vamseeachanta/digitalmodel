@@ -9,6 +9,8 @@ import numpy as np
 
 from digitalmodel.hydrodynamics.hull_library.profile_schema import HullProfile
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 class HullHydrostatics:
     """Compute hydrostatic properties from a HullProfile via numerical
@@ -52,7 +54,7 @@ class HullHydrostatics:
             if len(z_vals) < 2:
                 results.append((station.x_position, 0.0))
                 continue
-            area = 2.0 * float(np.trapz(y_vals, z_vals))
+            area = 2.0 * float(_trapezoid(y_vals, z_vals))
             results.append((station.x_position, area))
         return results
 
@@ -61,7 +63,7 @@ class HullHydrostatics:
         areas = self.compute_sectional_areas()
         x_arr = np.array([a[0] for a in areas])
         a_arr = np.array([a[1] for a in areas])
-        return float(np.trapz(a_arr, x_arr))
+        return float(_trapezoid(a_arr, x_arr))
 
     def compute_displacement(
         self, seawater_density: float = 1.025
@@ -84,7 +86,7 @@ class HullHydrostatics:
             y_at_draft = float(np.interp(self._draft, z_arr, y_arr))
             x_vals.append(station.x_position)
             y_vals.append(y_at_draft)
-        return 2.0 * float(np.trapz(y_vals, x_vals))
+        return 2.0 * float(_trapezoid(y_vals, x_vals))
 
     # ------------------------------------------------------------------
     # Stability parameters
@@ -117,9 +119,9 @@ class HullHydrostatics:
             if len(z_vals) < 2:
                 moment_x.append(0.0)
             else:
-                moment_x.append(2.0 * float(np.trapz(zy_vals, z_vals)))
+                moment_x.append(2.0 * float(_trapezoid(zy_vals, z_vals)))
             x_vals.append(station.x_position)
-        total_moment = float(np.trapz(moment_x, x_vals))
+        total_moment = float(_trapezoid(moment_x, x_vals))
         return total_moment / volume
 
     def compute_bm_transverse(self) -> float:
@@ -139,7 +141,7 @@ class HullHydrostatics:
             y_at_draft = float(np.interp(self._draft, z_arr, y_arr))
             x_vals.append(station.x_position)
             y3_vals.append(y_at_draft ** 3)
-        ixx = (2.0 / 3.0) * float(np.trapz(y3_vals, x_vals))
+        ixx = (2.0 / 3.0) * float(_trapezoid(y3_vals, x_vals))
         return ixx / volume
 
     # ------------------------------------------------------------------

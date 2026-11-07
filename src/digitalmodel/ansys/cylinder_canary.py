@@ -321,5 +321,13 @@ def run_canary(bundle, output, approval, *, verify_authority, preflight, launch,
     except Exception as error:
         receipt['status'] = 'INCOMPLETE'
         receipt['reason'] = str(error)
-    _save(output / 'outcome.json', receipt)
+    try:
+        _save(output / 'outcome.json', receipt)
+    except Exception as error:
+        # Issue 2128: retention failure cannot erase a consumed disposition.
+        # Keep existing/partial evidence and the original execution reason;
+        # callers can retain this return value independently without a retry.
+        receipt['status'] = 'INCOMPLETE'
+        receipt['outcome_record_error'] = f'{type(error).__name__}: {error}'
+        receipt.setdefault('reason', 'outcome retention incomplete')
     return receipt

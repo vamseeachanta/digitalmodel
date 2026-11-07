@@ -88,30 +88,72 @@ def compute_rao_manual(
     (DNV-RP-C205 §7.2.5, Eq 7.2.1, written in Capytaine's exp(-j*omega*t)
     convention, which its excitation force is expressed in -- hence -j*omega*B.)
 
+    All supplied numeric arrays must contain finite values and have the exact
+    shapes below. Frequency, heading, and DOF axes must be nonempty. Complex
+    excitation is supported; angular frequencies retain their supplied signs.
+
     Args:
-        bem_result: BEM results with added_mass, radiation_damping, excitation_force.
-        mass_matrix: 6x6 (or n_dof x n_dof) mass/inertia matrix [kg, kg.m, kg.m^2].
-        stiffness_matrix: 6x6 hydrostatic restoring stiffness [N/m, N.m/rad].
-        damping_extra: Optional additional damping (viscous, mooring) [N.s/m].
+        bem_result: BEM results with omegas shaped (n_omega,), added_mass and
+            radiation_damping shaped (n_omega, n_dof, n_dof), and complex
+            excitation_force shaped (n_omega, n_heading, n_dof).
+        mass_matrix: Mass/inertia shaped (n_dof, n_dof) [kg, kg.m, kg.m^2].
+        stiffness_matrix: Restoring stiffness shaped (n_dof, n_dof) [N/m, N.m/rad].
+        damping_extra: Optional additional damping shaped (n_dof, n_dof)
+            [N.s/m]. Defaults to zero additional damping.
 
     Returns:
         RAOResult with complex RAO per frequency, heading, and DOF.
+
+    Raises:
+        ValueError: If a required numeric array is missing, has incompatible
+            dimensions, or contains nonfinite values. The message identifies
+            the input field; validation completes before any linear solve.
     """
-    A = bem_result.added_mass  # (n_omega, n_dof, n_dof)
-    B = bem_result.radiation_damping  # (n_omega, n_dof, n_dof)
-    F_exc = bem_result.excitation_force  # (n_omega, n_heading, n_dof)
-    omegas = bem_result.omegas
+    def finite_array(name, value):
+        try:
+            array = np.asarray(value)
+            finite = np.isfinite(array).all()
+        except (TypeError, ValueError):
+            raise ValueError(f"{name} must be a finite numeric array") from None
+        if not finite:
+            raise ValueError(f"{name} must contain only finite values")
+        return array
 
-    if A is None or B is None or F_exc is None:
-        raise ValueError("BEM result must contain added_mass, radiation_damping, and excitation_force")
+    omegas = finite_array("omegas", bem_result.omegas)
+    if omegas.ndim != 1 or omegas.size == 0:
+        raise ValueError("omegas must have shape (n_omega,) with n_omega > 0")
+    n_omega = omegas.size
 
-    n_omega = len(omegas)
-    n_heading = F_exc.shape[1]
+    A = finite_array("added_mass", bem_result.added_mass)
+    if (A.ndim != 3 or A.shape[0] != n_omega or A.shape[1] == 0
+            or A.shape[1] != A.shape[2]):
+        raise ValueError("added_mass must have shape (n_omega, n_dof, n_dof) with n_dof > 0")
     n_dof = A.shape[1]
 
-    M = np.asarray(mass_matrix, dtype=float)
-    K = np.asarray(stiffness_matrix, dtype=float)
-    B_ext = np.zeros_like(M) if damping_extra is None else np.asarray(damping_extra, dtype=float)
+    B = finite_array("radiation_damping", bem_result.radiation_damping)
+    if B.shape != A.shape:
+        raise ValueError("radiation_damping must have shape (n_omega, n_dof, n_dof)")
+
+    F_exc = finite_array("excitation_force", bem_result.excitation_force)
+    if (F_exc.ndim != 3 or F_exc.shape[0] != n_omega or F_exc.shape[1] == 0
+            or F_exc.shape[2] != n_dof):
+        raise ValueError("excitation_force must have shape (n_omega, n_heading, n_dof) with n_heading > 0")
+    n_heading = F_exc.shape[1]
+
+    structural = {}
+    for name, value in (("mass_matrix", mass_matrix),
+                        ("stiffness_matrix", stiffness_matrix),
+                        ("damping_extra", damping_extra)):
+        if name == "damping_extra" and value is None:
+            continue
+        array = finite_array(name, value)
+        if array.shape != (n_dof, n_dof):
+            raise ValueError(f"{name} must have shape (n_dof, n_dof)")
+        structural[name] = np.asarray(array, dtype=float)
+
+    M = structural["mass_matrix"]
+    K = structural["stiffness_matrix"]
+    B_ext = structural.get("damping_extra", np.zeros_like(M))
 
     rao_complex = np.zeros((n_omega, n_heading, n_dof), dtype=complex)
 

@@ -327,7 +327,8 @@ def _report(result):
         "Revision history": {
             "1, 2026-10-20": "Initial preparation and explicit missing evidence",
             "2, 2026-10-22": "Input load basis, harmonics and evidence tabulated for traceability",
-            "3, 2026-11-06": "Fixed decimal places retain derived dimensions and load detail"},
+            "3, 2026-11-06": "Fixed decimal places retain derived dimensions and load detail",
+            "4, 2026-11-07": "Failed-run files are removed where possible; cleanup errors are retained"},
         "Input basis": {"basis": result["input"]["basis"],
                         "input_sha256": result["input_sha256"]},
         "Component inventory (SI)": inventory,
@@ -386,12 +387,24 @@ def main(argv=None):
     if any(path.exists() or path.is_symlink() for path in outputs):
         parser.error(existing_message)
     args.output_dir.mkdir(parents=True, exist_ok=True)
-    for path, contents in outputs.items():
-        try:
+    created = []
+    try:
+        for path, contents in outputs.items():
             with path.open("x", encoding="utf-8", newline="\n") as stream:
+                created.append(path)
                 stream.write(contents)
-        except FileExistsError:
-            parser.error(existing_message)
+    except BaseException as error:
+        # Close each stream before rollback, including on interrupted writes.
+        # Output directories require a single writer; this is not a transaction.
+        for path in reversed(created):
+            try:
+                path.unlink(missing_ok=True)
+            except OSError as cleanup_error:
+                error.add_note(f"Could not remove {path.name}: {type(cleanup_error).__name__}")
+        if isinstance(error, FileExistsError):
+            notes = "; ".join(getattr(error, "__notes__", []))
+            parser.error(f"{existing_message}; {notes}" if notes else existing_message)
+        raise
     print(result["status"])
     return 0
 

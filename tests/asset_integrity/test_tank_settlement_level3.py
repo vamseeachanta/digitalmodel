@@ -2,6 +2,7 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Independent preparation anchors; no published settlement FEA qualification."""
 import copy
+import errno
 import json
 import math
 import os
@@ -183,6 +184,105 @@ def test_cli_refuses_existing_outputs(tmp_path, capsys, existing_name):
     assert "Output files already exist" in capsys.readouterr().err
     assert existing.read_bytes() == before
     assert {path.name for path in tmp_path.iterdir()} == {existing_name}
+
+
+@pytest.mark.parametrize("failure", ["open", "exists", "write", "close", "interrupt"])
+def test_cli_removes_partial_outputs(tmp_path, monkeypatch, capsys, failure):
+    """A failed second output leaves no files created by this invocation."""
+    original_open = Path.open
+    report = tmp_path / "report.html"
+    competing_bytes = b"Concurrent calculation evidence\n"
+
+    class FailingStream:
+        def __init__(self, stream):
+            self.stream = stream
+
+        def __enter__(self):
+            return self
+
+        def write(self, contents):
+            if failure == "write":
+                self.stream.write(contents[:10])
+                raise OSError(errno.ENOSPC, "Injected write failure")
+            return self.stream.write(contents)
+
+        def __exit__(self, exc_type, exc_value, traceback):
+            self.stream.close()
+            if failure == "close" and exc_type is None:
+                raise OSError(errno.ENOSPC, "Injected close failure")
+
+    def failing_open(path, mode="r", *args, **kwargs):
+        if path == report and mode == "x":
+            if failure == "exists":
+                with original_open(path, "wb") as stream:
+                    stream.write(competing_bytes)
+                raise FileExistsError(errno.EEXIST, "Injected competing output")
+            if failure == "open":
+                raise PermissionError(errno.EACCES, "Injected open failure")
+            if failure == "interrupt":
+                raise KeyboardInterrupt
+            return FailingStream(original_open(path, mode, *args, **kwargs))
+        return original_open(path, mode, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", failing_open)
+    expected_error = (SystemExit if failure == "exists" else
+                      KeyboardInterrupt if failure == "interrupt" else OSError)
+    with pytest.raises(expected_error) as exc_info:
+        main([EXAMPLE.as_posix(), "--output-dir", tmp_path.as_posix()])
+    assert not (tmp_path / "handoff.json").exists()
+    if failure == "exists":
+        assert exc_info.value.code == 2
+        assert "Output files already exist" in capsys.readouterr().err
+        assert report.read_bytes() == competing_bytes
+    else:
+        assert not report.exists()
+        assert list(tmp_path.iterdir()) == []
+
+
+@pytest.mark.parametrize("failure", ["open", "exists"])
+def test_cli_cleanup_failure_keeps_original_error(tmp_path, monkeypatch, capsys, failure):
+    original_open = Path.open
+    original_unlink = Path.unlink
+
+    def failing_open(path, mode="r", *args, **kwargs):
+        if path.name == "report.html" and mode == "x":
+            if failure == "exists":
+                with original_open(path, "w", encoding="utf-8", newline="\n") as stream:
+                    stream.write("Concurrent evidence\n")
+                raise FileExistsError(errno.EEXIST, "Injected competing output")
+            raise OSError(errno.ENOSPC, "Injected original failure")
+        return original_open(path, mode, *args, **kwargs)
+
+    def failing_unlink(path, *args, **kwargs):
+        if path.name == "handoff.json":
+            raise PermissionError(errno.EACCES, "Injected cleanup failure")
+        return original_unlink(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "open", failing_open)
+    monkeypatch.setattr(Path, "unlink", failing_unlink)
+    with pytest.raises(SystemExit if failure == "exists" else OSError) as exc_info:
+        main([EXAMPLE.as_posix(), "--output-dir", tmp_path.as_posix()])
+    if failure == "exists":
+        assert exc_info.value.code == 2
+        message = capsys.readouterr().err
+        assert "Output files already exist" in message
+        assert "handoff.json: PermissionError" in message
+        assert (tmp_path / "report.html").read_text(encoding="utf-8") == "Concurrent evidence\n"
+    else:
+        assert "Injected original failure" in str(exc_info.value)
+        assert any("handoff.json" in note and "PermissionError" in note
+                   for note in getattr(exc_info.value, "__notes__", []))
+    assert (tmp_path / "handoff.json").is_file()
+
+
+def test_guide_explains_screening_harmonic_conversion():
+    guide = (ROOT / "docs/domains/asset-integrity/tank-settlement-level3.html").read_text(
+        encoding="utf-8")
+    assert "api653-tank-settlement-screen" in guide
+    assert "positive-up millimetres" in guide
+    assert "positive-up metres" in guide
+    assert "cannot be passed directly" in guide
+    assert "remain later work in issue 2174" in guide
 
 
 def test_digest_changes_without_mutating_inputs(settings):

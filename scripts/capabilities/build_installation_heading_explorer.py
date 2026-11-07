@@ -43,15 +43,23 @@ def load_data(path: Path) -> dict:
 
 
 def validate_data(data: dict) -> None:
-    """Reject incomplete heading grids and nonpositive or imprecise Hs values."""
+    """Validate explicit signed samples without inventing missing limits.
+
+    Issue #2696 (2026), Deliverable and acceptance criteria, supplies the
+    15-degree grid, inclusive ±15-degree band and one-decimal Hs display.
+    Null denotes no data; zero is a supplied limit, not a missing sample.
+    """
     def require(condition: bool, message: str) -> None:
         if not condition:
             raise ValueError(message)
 
-    require(data.get("headings_deg") == list(range(0, 181, 15)), "Expected 15-degree headings")
+    headings = data.get("headings_deg")
+    require(isinstance(headings, list) and all(type(h) is int for h in headings)
+            and headings == list(range(-180, 181, 15)), "Expected signed 15-degree headings")
     require(data.get("head_seas_band_deg") == [-15, 15], "Expected head-seas sector plus or minus 15 degrees")
     require(type(data.get("illustrative")) is bool, "Expected illustrative flag")
-    for key in ("source", "revision"):
+    require(data["illustrative"], "Only illustrative data are supported pending reviewed results ingestion")
+    for key in ("source", "revision", "condition_basis"):
         require(isinstance(data.get(key), str) and bool(data[key].strip()), f"Missing {key}")
     if data["illustrative"]:
         require("invented" in data["source"].lower(), "Illustrative source must identify invented values")
@@ -69,10 +77,13 @@ def validate_data(data: dict) -> None:
         limits = stage.get("limits_m")
         require(isinstance(limits, dict) and set(limits) == set(sizes), "Incomplete stage sizes")
         for values in limits.values():
-            require(isinstance(values, list) and len(values) == 13, "Incomplete heading grid")
-            require(all(type(value) is float and math.isfinite(value) and value > 0
-                        and abs(value * 10 - round(value * 10)) < 1e-9
-                        for value in values), "Expected positive Hs numbers with one decimal")
+            require(isinstance(values, list) and len(values) == len(headings), "Incomplete heading grid")
+            require(any(value is not None for value in values), "Missing all heading samples")
+            require(all(value is None or (
+                type(value) is float and math.isfinite(value) and value >= 0
+                and value == round(value, 1)) for value in values),
+                "Expected nonnegative Hs numbers with one decimal or null")
+            require(values[0] == values[-1], "Endpoint mismatch at minus/plus 180 degrees")
     require(len(set(names)) == len(names), "Duplicate stages")
 
 
@@ -98,11 +109,11 @@ def build(data_path: Path = DATA, output_dir: Path | None = None,
         "@@DATA@@": embedded,
         "@@REVISION_ROWS@@": "\n".join(rows),
         "@@REVISION@@": escape(data["revision"]),
-        "@@STATUS@@": "illustrative" if data["illustrative"] else "results",
-        "@@BADGE@@": "ILLUSTRATIVE" if data["illustrative"] else "SUPPLIED RESULTS",
+        "@@STATUS@@": "illustrative",
+        "@@BADGE@@": "ILLUSTRATIVE",
         "@@SOURCE@@": escape(data["source"]),
-        "@@NOTICE@@": ("Invented numbers for interaction demonstration; no operational limit is established."
-                       if data["illustrative"] else "Supplied discrete results; confirm applicability before use."),
+        "@@CONDITION_BASIS@@": escape(data["condition_basis"]),
+        "@@NOTICE@@": "Invented numbers for interaction demonstration; no operational limit is established.",
     }
     text = TEMPLATE.read_text(encoding="utf-8")
     # A single substitution pass prevents data text from being treated as a placeholder.
@@ -119,7 +130,8 @@ def build(data_path: Path = DATA, output_dir: Path | None = None,
         key = path.relative_to(ROOT).as_posix() if path.is_relative_to(ROOT) else path.name
         digests[key] = hashlib.sha256(path.read_bytes()).hexdigest()
     manifest = {"revision": data["revision"], "illustrative": data["illustrative"],
-                "records": len(data["stages"]) * len(data["sizes"]) * len(data["headings_deg"]),
+                "records": sum(value is not None for stage in data["stages"]
+                               for values in stage["limits_m"].values() for value in values),
                 "sha256": digests}
     (output_dir / MANIFEST_NAME).write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")

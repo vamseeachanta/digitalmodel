@@ -39,7 +39,7 @@ def test_csv_capture_requires_current_run_evidence(tmp_path, monkeypatch, mode):
         return SimpleNamespace(returncode=0, stdout="", stderr="")
 
     monkeypatch.setattr(ANSYSRunner, "_detect_executable", lambda self: Path("fake"))
-    monkeypatch.setattr("digitalmodel.ansys.runner.subprocess.run", simulate)
+    monkeypatch.setattr("digitalmodel.ansys.runner._run_solver_process", simulate)
     result = run_ansys(script, output_dir=output)
     assert (digest in result.result_files) == (mode != "unchanged")
     assert stale_result not in result.result_files

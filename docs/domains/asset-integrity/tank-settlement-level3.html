@@ -15,8 +15,10 @@ No tank fitness conclusion, mesh, nonlinear result, buckling margin or code acce
 unavailable code factors and solver results are kept out of acceptance decisions.</td></tr>
 <tr><td>2</td><td>2026-10-22</td><td>Strict JSON loading, explicit applicability gaps and tabulated input evidence;
 output placeholders align the command, registry and readback tests.</td></tr>
-<tr><td>4</td><td>2026-11-06</td><td>Derived dimensions and loads use fixed decimal places for readable results;
-existing output files are protected against replacement.</td></tr></table>
+<tr><td>3</td><td>2026-11-06</td><td>Derived dimensions and loads use fixed decimal places for readable results;
+existing output files are protected against replacement.</td></tr>
+<tr><td>4</td><td>2026-11-07</td><td>Screening units and conversion gaps are stated explicitly;
+partial-output cleanup removes failed-run files when removal succeeds.</td></tr></table>
 <p>Table 1. Document revisions.</p>
 <h2>Implemented scope</h2>
 <p>Scope is tracked by issue 2174.
@@ -33,6 +35,11 @@ Later work will generate a connected mesh, run a qualified nonlinear solver and 
 counterclockwise from a caller-selected common reference. Radius is the shell mid-surface radius;
 z = 0 is the bottom; displacement is positive upward. Material references identify required evidence;
 they do not supply constitutive properties or qualification. All steel components use the explicitly supplied density.</p>
+<p>The <code>api653-tank-settlement-screen</code> workflow reduces a survey into
+plane coefficients and residuals in positive-up millimetres; this workflow requires full harmonics
+in positive-up metres, retaining mean and planar tilt. Screening outputs cannot be passed directly
+as harmonic inputs: conversion and harmonic fitting, with a verified common datum and angle convention,
+remain later work in issue 2174.</p>
 <p>Each course supplies height, thickness and material reference. The bottom is an inner disk of radius R − w;
 the annular ring occupies radii R − w to R, so plate weight is counted once.
 No overhang, stepped plate elevation, sloped roof, overlapping plates, foundation contact or weld topology is modelled.
@@ -68,7 +75,7 @@ before running the command. Quote the substituted input and output paths when th
 The registry uses the same placeholder in its invocation and both output entries;
 output paths are resolved from that supplied directory, independently of the working directory.
 The command writes <code>handoff.json</code> and <code>report.html</code>.
-If either output file already exists, the command stops before writing; choose a new output directory.
+If either output file is detected before writing, the command stops; choose a new output directory.
 Exit zero means the handoff was written; the engineering result remains ESCALATE.
 The workflow registry identifier is <code>api579-tank-settlement-level3</code>.
 This standalone invocation does not use the engine or the in-process workflow API.</p>
@@ -114,6 +121,12 @@ These checks cover only the arithmetic and handoff behaviour exercised by those 
 optional roof, girder and wind intent; JSON serialization; missing-check escalation;
 and CLI output readback plus registry linkage. The input digest binds the handoff to its supplied configuration,
 not to source authenticity, material qualification or solver results.</p>
+<p>Use one writer per output directory. Existing outputs are refused. If creating either output fails,
+the command attempts to remove files created by that invocation; a cleanup failure is reported with the original
+error; an empty output directory can remain. Publication of both files is not atomic.
+Any output remaining after a non-zero exit is incomplete evidence and shall not be consumed as a completed handoff.
+Concurrent replacement of output paths and abrupt process
+termination, including interruption between file creation and tracking, are outside this cleanup guarantee.</p>
 <p>Repeated JSON keys are rejected at every object depth before any output is written, even when
 their values agree or their spelling uses Unicode escapes. Reports and handoffs use UTF-8 with LF newlines.
 The report tables include load densities, gravity, fill height, harmonic coefficients, individual course fields

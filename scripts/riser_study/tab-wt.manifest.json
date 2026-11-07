@@ -1,0 +1,3405 @@
+{
+  "artifact": "TAB-WT-01",
+  "basis": {
+    "basis": "Repository sizing projection; study conventions and engineering inputs are assumed, based on previous experience; no independent external input source is available",
+    "gravity_m_s2": {
+      "classification": "engineering input",
+      "reference": "previous_basis",
+      "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+      "value": 9.80665
+    },
+    "grid_mm": {
+      "classification": "study convention",
+      "reference": "grid",
+      "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+      "value": 0.1
+    },
+    "load_conventions": {
+      "conditions": [
+        "20 MPa internal gauge pressure with zero external pressure",
+        "zero internal gauge pressure with full-depth seawater external pressure"
+      ],
+      "factors": "Use repository implementation defaults and explicit RP 1111 (2015) and F101 (2021) editions; not independently qualified against licensed standards",
+      "mechanical": "Zero bending moment and effective tension; ambient temperature; seamless fabrication with alpha_fab = 1",
+      "reference": "selection",
+      "selection": "All returned checks must pass; no buckle arrestors are credited; propagation as a wall selection constraint is a study convention",
+      "source": "assumed, based on previous experience"
+    },
+    "matrix_provenance": {
+      "columns": {
+        "case_id": "study convention: twelve-case identifiers; SCR and SLWR share pressure screening inputs",
+        "checked_wall_mm": "derived regression evidence: nominal wall times (1 - mill minus tolerance), then corrosion deduction",
+        "corrosion_allowance_mm": "engineering input: assumed, based on previous experience; common deduction for all strategies",
+        "design_pressure_MPa_g": "engineering input: assumed, based on previous experience; internal gauge pressure without external support",
+        "governing_check": "derived regression evidence: maximum returned utilisation under study conventions; not a prescribed standard rule",
+        "material_grade": "engineering input: assumed, based on previous experience; X65 from material reference, SMYS 450 MPa and SMTS 535 MPa",
+        "nps_in": "engineering input: assumed, based on previous experience; nominal size label",
+        "outside_diameter_mm": "engineering input: assumed, based on previous experience; no dimensional standard qualification",
+        "wall_thickness_mm": "derived regression evidence: first passing W1 grid wall or W2 checked-wall uplift; selection reference",
+        "water_depth_m": "engineering input: assumed, based on previous experience; full-depth empty-pipe hydrostatic screen"
+      },
+      "engineering_inputs": "assumed, based on previous experience; no independently sourced matrix or measured fabrication inputs are available",
+      "reference": "matrix"
+    },
+    "mill_minus_tolerance": {
+      "classification": "study convention",
+      "reference": "previous_basis",
+      "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+      "value": 0.125
+    },
+    "poissons_ratio": {
+      "classification": "engineering input",
+      "reference": "defaults",
+      "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+      "value": 0.3
+    },
+    "references": {
+      "api_rp_1111": {
+        "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+        "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+        "sha256": "c7a4bb27f8795db98d5f71b8dc13fc6b4ac0c29126b572c7a62c077f6c4ef544"
+      },
+      "api_rp_2rd": {
+        "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+        "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+        "sha256": "a6fbddd502b5fdc04978e7bf1356f1079c2a37e15f37c87cd99cddba8ec668ef"
+      },
+      "api_std_2rd": {
+        "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py",
+        "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+        "sha256": "a9882b2be352da7cc873d5e4a9d0edfcec914205572842067696d8395325121f"
+      },
+      "defaults": {
+        "path": "src/digitalmodel/structural/analysis/wall_thickness.py",
+        "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+        "sha256": "2b2684136b209dcb63888f6924282991e281b89143f1d90e03ae676d5d2ae053"
+      },
+      "dnv_st_f101": {
+        "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py",
+        "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+        "sha256": "1ecb39c1bf52a2b64bc3a71933324cdaf48c63c13b142d5e155f702cc1eb506e"
+      },
+      "grid": {
+        "path": "scripts/reporting/build_riser_pipe_comparison.py",
+        "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+        "sha256": "be93e077171ad1ab6663e42da21993bf2da26b2d6b6351469783c3c9c58579d0"
+      },
+      "material": {
+        "path": "src/digitalmodel/materials/grades.py",
+        "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+        "sha256": "4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90"
+      },
+      "matrix": {
+        "path": "scripts/riser_study/wall_basis_matrix.csv",
+        "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+        "sha256": "919c1e2e83f2c28f5cee2465a9e18f322831723eb78ea7f332be5f8a6c3ced44"
+      },
+      "previous_basis": {
+        "path": "scripts/riser_study/wall_basis.json",
+        "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+        "sha256": "721de82503263d161eb2c8ecb93f8227bdd11b85ed8a6b1ee13214838ccb8667"
+      },
+      "selection": {
+        "path": "scripts/riser_study/wall_basis_table.py",
+        "revision": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+        "sha256": "82d804cda78049b6be97797639db9f5fb9ef299437c9a47c7cd9ccc1972894a7"
+      }
+    },
+    "riser_pressure_factor": {
+      "classification": "study convention",
+      "reference": "previous_basis",
+      "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+      "value": 0.6
+    },
+    "schema_version": 2,
+    "seawater_density_kg_m3": {
+      "classification": "engineering input",
+      "reference": "previous_basis",
+      "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+      "value": 1025.0
+    },
+    "temperature_c": {
+      "classification": "engineering input",
+      "reference": "previous_basis",
+      "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+      "value": 20.0
+    },
+    "w2_checked_wall_multiplier": {
+      "classification": "study convention",
+      "reference": "previous_basis",
+      "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+      "value": 1.25
+    },
+    "youngs_modulus_pa": {
+      "classification": "engineering input",
+      "reference": "defaults",
+      "source": "assumed, based on previous experience; adopted for this study, not a standard requirement",
+      "value": 207000000000.0
+    }
+  },
+  "checks_table": {
+    "file": "tab-wt-checks.csv",
+    "rows": 324,
+    "sha256": "d2719d4f117d8826beb35756a8a00620f00f66a311ffc03d1119ec5560e995ad"
+  },
+  "commit": "3e6db58adf07aef1e7b9516833c4dd8f171030f1",
+  "commit_scope": "HEAD source revision; sources digests bind the actual calculation bytes",
+  "limits": [
+    "Pressure-only module screens; not standard certification, procurement or dynamic resistance.",
+    "Zero moment and effective tension; ambient temperature with no derating; seamless material.",
+    "Common checked wall = (1 - mill minus tolerance) * nominal wall - corrosion allowance.",
+    "All returned checks retained; empty-pipe internal-pressure ratios can be negative.",
+    "No internal-pressure support for burst; full-depth empty pressure without buckle arrestors.",
+    "W1 is the first passing grid wall; W2 is a checked-wall uplift, not a second pressure minimum.",
+    "RP 1111 and F101 are pipeline cross-checks; F101 uses implemented medium-class factors.",
+    "RP 1111 propagation is imposed as a wall criterion by the study's no-arrestor assumption.",
+    "STD 2RD standalone burst output is unmodified; the separate 0.60 Pb guard also applies.",
+    "ISO 13623 and PD 8010-2 collapse solvers are excluded.",
+    "Ovality, fabrication and resistance factors are the implemented values, not measured inputs."
+  ],
+  "matrix": [
+    {
+      "case_id": "R08-W1-SCR",
+      "checked_wall_mm": 15.55,
+      "corrosion_allowance_mm": 3.0,
+      "design_pressure_MPa_g": 20.0,
+      "governing_check": "API_RP1111_propagation_empty_1500m",
+      "material_grade": "X65/L450_PSL2",
+      "nps_in": 8,
+      "outside_diameter_mm": 219.1,
+      "wall_thickness_mm": 21.2,
+      "water_depth_m": 1500.0
+    },
+    {
+      "case_id": "R08-W1-SLWR",
+      "checked_wall_mm": 15.55,
+      "corrosion_allowance_mm": 3.0,
+      "design_pressure_MPa_g": 20.0,
+      "governing_check": "API_RP1111_propagation_empty_1500m",
+      "material_grade": "X65/L450_PSL2",
+      "nps_in": 8,
+      "outside_diameter_mm": 219.1,
+      "wall_thickness_mm": 21.2,
+      "water_depth_m": 1500.0
+    },
+    {
+      "case_id": "R08-W2-SCR",
+      "checked_wall_mm": 19.4875,
+      "corrosion_allowance_mm": 3.0,
+      "design_pressure_MPa_g": 20.0,
+      "governing_check": "API_RP1111_propagation_empty_1500m",
+      "material_grade": "X65/L450_PSL2",
+      "nps_in": 8,
+      "outside_diameter_mm": 219.1,
+      "wall_thickness_mm": 25.7,
+      "water_depth_m": 1500.0
+    },
+    {
+      "case_id": "R08-W2-SLWR",
+      "checked_wall_mm": 19.4875,
+      "corrosion_allowance_mm": 3.0,
+      "design_pressure_MPa_g": 20.0,
+      "governing_check": "API_RP1111_propagation_empty_1500m",
+      "material_grade": "X65/L450_PSL2",
+      "nps_in": 8,
+      "outside_diameter_mm": 219.1,
+      "wall_thickness_mm": 25.7,
+      "water_depth_m": 1500.0
+    },
+    {
+      "case_id": "R10-W1-SCR",
+      "checked_wall_mm": 19.4,
+      "corrosion_allowance_mm": 3.0,
+      "design_pressure_MPa_g": 20.0,
+      "governing_check": "API_RP1111_propagation_empty_1500m",
+      "material_grade": "X65/L450_PSL2",
+      "nps_in": 10,
+      "outside_diameter_mm": 273.1,
+      "wall_thickness_mm": 25.6,
+      "water_depth_m": 1500.0
+    },
+    {
+      "case_id": "R10-W1-SLWR",
+      "checked_wall_mm": 19.4,
+      "corrosion_allowance_mm": 3.0,
+      "design_pressure_MPa_g": 20.0,
+      "governing_check": "API_RP1111_propagation_empty_1500m",
+      "material_grade": "X65/L450_PSL2",
+      "nps_in": 10,
+      "outside_diameter_mm": 273.1,
+      "wall_thickness_mm": 25.6,
+      "water_depth_m": 1500.0
+    },
+    {
+      "case_id": "R10-W2-SCR",
+      "checked_wall_mm": 24.3,
+      "corrosion_allowance_mm": 3.0,
+      "design_pressure_MPa_g": 20.0,
+      "governing_check": "API_RP1111_propagation_empty_1500m",
+      "material_grade": "X65/L450_PSL2",
+      "nps_in": 10,
+      "outside_diameter_mm": 273.1,
+      "wall_thickness_mm": 31.2,
+      "water_depth_m": 1500.0
+    },
+    {
+      "case_id": "R10-W2-SLWR",
+      "checked_wall_mm": 24.3,
+      "corrosion_allowance_mm": 3.0,
+      "design_pressure_MPa_g": 20.0,
+      "governing_check": "API_RP1111_propagation_empty_1500m",
+      "material_grade": "X65/L450_PSL2",
+      "nps_in": 10,
+      "outside_diameter_mm": 273.1,
+      "wall_thickness_mm": 31.2,
+      "water_depth_m": 1500.0
+    },
+    {
+      "case_id": "R12-W1-SCR",
+      "checked_wall_mm": 22.9875,
+      "corrosion_allowance_mm": 3.0,
+      "design_pressure_MPa_g": 20.0,
+      "governing_check": "API_RP1111_propagation_empty_1500m",
+      "material_grade": "X65/L450_PSL2",
+      "nps_in": 12,
+      "outside_diameter_mm": 323.9,
+      "wall_thickness_mm": 29.7,
+      "water_depth_m": 1500.0
+    },
+    {
+      "case_id": "R12-W1-SLWR",
+      "checked_wall_mm": 22.9875,
+      "corrosion_allowance_mm": 3.0,
+      "design_pressure_MPa_g": 20.0,
+      "governing_check": "API_RP1111_propagation_empty_1500m",
+      "material_grade": "X65/L450_PSL2",
+      "nps_in": 12,
+      "outside_diameter_mm": 323.9,
+      "wall_thickness_mm": 29.7,
+      "water_depth_m": 1500.0
+    },
+    {
+      "case_id": "R12-W2-SCR",
+      "checked_wall_mm": 28.7625,
+      "corrosion_allowance_mm": 3.0,
+      "design_pressure_MPa_g": 20.0,
+      "governing_check": "API_RP1111_propagation_empty_1500m",
+      "material_grade": "X65/L450_PSL2",
+      "nps_in": 12,
+      "outside_diameter_mm": 323.9,
+      "wall_thickness_mm": 36.3,
+      "water_depth_m": 1500.0
+    },
+    {
+      "case_id": "R12-W2-SLWR",
+      "checked_wall_mm": 28.7625,
+      "corrosion_allowance_mm": 3.0,
+      "design_pressure_MPa_g": 20.0,
+      "governing_check": "API_RP1111_propagation_empty_1500m",
+      "material_grade": "X65/L450_PSL2",
+      "nps_in": 12,
+      "outside_diameter_mm": 323.9,
+      "wall_thickness_mm": 36.3,
+      "water_depth_m": 1500.0
+    }
+  ],
+  "matrix_scope": "Sizing columns only; all twelve case IDs retained",
+  "selections": {
+    "10": [
+      {
+        "checked_wall_mm": 19.4,
+        "checks": [
+          {
+            "check": "burst",
+            "check_id": "API_RP2RD_burst_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.6666666666666666,
+              "p_b": 67921716.47463936,
+              "p_b_design": 45281144.31642623,
+              "p_net": 20000000.0,
+              "utilisation": 0.44168495080953113
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.44168495080953113
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP2RD_collapse_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.6666666666666666,
+              "p_c": 59522050.28479457,
+              "p_c_design": 39681366.85652971,
+              "p_e": 0.0,
+              "p_el": 163079374.93129656,
+              "p_y": 63932625.411937006,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "hoop",
+            "check_id": "API_RP2RD_hoop_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "sigma_allow": 270000000.0,
+              "sigma_h": 120773195.87628868,
+              "utilisation": 0.44730813287514326
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.44730813287514326
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP2RD_burst_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.6666666666666666,
+              "p_b": 67921716.47463936,
+              "p_b_design": 45281144.31642623,
+              "p_net": -15077724.375,
+              "utilisation": -0.3329801974445772
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.3329801974445772
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP2RD_collapse_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.6666666666666666,
+              "p_c": 59522050.28479457,
+              "p_c_design": 39681366.85652971,
+              "p_e": 15077724.375,
+              "p_el": 163079374.93129656,
+              "p_y": 63932625.411937006,
+              "utilisation": 0.3799698843417967
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.3799698843417967
+          },
+          {
+            "check": "hoop",
+            "check_id": "API_RP2RD_hoop_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "sigma_allow": 270000000.0,
+              "sigma_h": -91049247.96552837,
+              "utilisation": 0.33721943690936435
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.33721943690936435
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP1111_burst_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "d_over_t": 14.07731958762887,
+              "f_d": 0.72,
+              "p_b": 67921716.47463936,
+              "p_b_design": 48903635.861740336,
+              "p_net": 20000000.0,
+              "utilisation": 0.4089675470458621
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.4089675470458621
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP1111_collapse_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.8,
+              "p_c": 59522050.28479457,
+              "p_c_design": 47617640.227835655,
+              "p_e": 0.0,
+              "p_el": 163079374.93129656,
+              "p_y": 63932625.411937006,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "propagation",
+            "check_id": "API_RP1111_propagation_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "f_p": 0.8,
+              "p_e": 0.0,
+              "p_pr": 18922382.929243065,
+              "p_pr_design": 15137906.343394453,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP1111_burst_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "d_over_t": 14.07731958762887,
+              "f_d": 0.72,
+              "p_b": 67921716.47463936,
+              "p_b_design": 48903635.861740336,
+              "p_net": -15077724.375,
+              "utilisation": -0.3083149976338677
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.3083149976338677
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP1111_collapse_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.8,
+              "p_c": 59522050.28479457,
+              "p_c_design": 47617640.227835655,
+              "p_e": 15077724.375,
+              "p_el": 163079374.93129656,
+              "p_y": 63932625.411937006,
+              "utilisation": 0.3166415702848306
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.3166415702848306
+          },
+          {
+            "check": "propagation",
+            "check_id": "API_RP1111_propagation_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_p": 0.8,
+              "p_e": 15077724.375,
+              "p_pr": 18922382.929243065,
+              "p_pr_design": 15137906.343394453,
+              "utilisation": 0.996024419293576
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.996024419293576
+          },
+          {
+            "check": "burst",
+            "check_id": "API_STD2RD_burst_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.8,
+              "p_b": 67921716.47463936,
+              "p_b_design": 54337373.17971149,
+              "p_net": 20000000.0,
+              "utilisation": 0.3680707923412759
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.3680707923412759
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_STD2RD_collapse_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.6,
+              "p_c": 59522050.28479457,
+              "p_c_design": 35713230.17087674,
+              "p_e": 0.0,
+              "p_el": 163079374.93129656,
+              "p_y": 63932625.411937006,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "combined",
+            "check_id": "API_STD2RD_combined_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.8,
+              "f_d_corrected": 0.7438382154529102,
+              "moment_term": 0.0,
+              "p_b": 67921716.47463936,
+              "p_net": 20000000.0,
+              "pressure_ratio": 0.29445663387302073,
+              "tension_term": 0.0,
+              "utilisation": 0.0,
+              "yield_moment": 441311.31178216415,
+              "yield_tension": 6958002.550763329
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "burst",
+            "check_id": "API_STD2RD_burst_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.8,
+              "p_b": 67921716.47463936,
+              "p_b_design": 54337373.17971149,
+              "p_net": -15077724.375,
+              "utilisation": -0.27748349787048093
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.27748349787048093
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_STD2RD_collapse_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.6,
+              "p_c": 59522050.28479457,
+              "p_c_design": 35713230.17087674,
+              "p_e": 15077724.375,
+              "p_el": 163079374.93129656,
+              "p_y": 63932625.411937006,
+              "utilisation": 0.4221887603797741
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.4221887603797741
+          },
+          {
+            "check": "combined",
+            "check_id": "API_STD2RD_combined_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.8,
+              "f_d_corrected": 0.7685843228833908,
+              "moment_term": 0.0,
+              "p_b": 67921716.47463936,
+              "p_net": -15077724.375,
+              "pressure_ratio": -0.22198679829638476,
+              "tension_term": 0.0,
+              "utilisation": 0.0,
+              "yield_moment": 441311.31178216415,
+              "yield_tension": 6958002.550763329
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "pressure_containment",
+            "check_id": "F101_pressure_containment_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "f_cb": 432000000.0,
+              "gamma_inc": 1.0,
+              "gamma_m": 1.15,
+              "gamma_sc": 1.138,
+              "p_b": 76289430.60345945,
+              "p_b_design": 58294055.6303656,
+              "p_net": 20000000.0,
+              "t1": 0.019399999999999997,
+              "utilisation": 0.34308815510825297
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.34308815510825297
+          },
+          {
+            "check": "collapse",
+            "check_id": "F101_collapse_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "f_0": 0.005,
+              "p_c": 60457008.15222891,
+              "p_c_design": 46196231.49096731,
+              "p_e": 0.0,
+              "p_el": 163079374.93129656,
+              "p_p": 63932625.411937006,
+              "t2": 0.019399999999999997,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "propagation_buckling",
+            "check_id": "F101_propagation_buckling_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "p_e": 0.0,
+              "p_pr": 21182666.688657854,
+              "p_pr_design": 16186037.051010817,
+              "t2": 0.019399999999999997,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "combined_loading",
+            "check_id": "F101_combined_loading_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "M_Sd": 0.0,
+              "M_p": 561895.0137,
+              "S_Sd": 0.0,
+              "S_p": 6958002.550763328,
+              "p_c": 60457008.15222891,
+              "pressure_ratio": 0.3308135915300441,
+              "utilisation": 0.3308135915300441
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.3308135915300441
+          },
+          {
+            "check": "pressure_containment",
+            "check_id": "F101_pressure_containment_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_cb": 432000000.0,
+              "gamma_inc": 1.0,
+              "gamma_m": 1.15,
+              "gamma_sc": 1.138,
+              "p_b": 76289430.60345945,
+              "p_b_design": 58294055.6303656,
+              "p_net": -15077724.375,
+              "t1": 0.019399999999999997,
+              "utilisation": -0.2586494319524743
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.2586494319524743
+          },
+          {
+            "check": "collapse",
+            "check_id": "F101_collapse_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_0": 0.005,
+              "p_c": 60457008.15222891,
+              "p_c_design": 46196231.49096731,
+              "p_e": 15077724.375,
+              "p_el": 163079374.93129656,
+              "p_p": 63932625.411937006,
+              "t2": 0.019399999999999997,
+              "utilisation": 0.3263842934449778
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.3263842934449778
+          },
+          {
+            "check": "propagation_buckling",
+            "check_id": "F101_propagation_buckling_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "p_e": 15077724.375,
+              "p_pr": 21182666.688657854,
+              "p_pr_design": 16186037.051010817,
+              "t2": 0.019399999999999997,
+              "utilisation": 0.9315266193622358
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.9315266193622358
+          },
+          {
+            "check": "combined_loading",
+            "check_id": "F101_combined_loading_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "M_Sd": 0.0,
+              "M_p": 561895.0137,
+              "S_Sd": 0.0,
+              "S_p": 6958002.550763328,
+              "p_c": 60457008.15222891,
+              "pressure_ratio": -0.249395807629692,
+              "utilisation": 0.249395807629692
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.249395807629692
+          },
+          {
+            "check": "riser_pressure_guard",
+            "check_id": "riser_pressure_guard_pressure_only",
+            "code": "pressure guard",
+            "code_label": "Study guard: 0.60 Pb (API RP 2RD capacity)",
+            "condition": "pressure_only",
+            "details": {
+              "factor": 0.6,
+              "p_b": 67921716.47463936
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.49076105645503454
+          }
+        ],
+        "outside_diameter_mm": 273.1,
+        "wall_mm": 25.6,
+        "wall_option": "W1"
+      },
+      {
+        "checked_wall_mm": 24.3,
+        "checks": [
+          {
+            "check": "burst",
+            "check_id": "API_RP2RD_burst_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.6666666666666666,
+              "p_b": 86860298.91505052,
+              "p_b_design": 57906865.94336701,
+              "p_net": 20000000.0,
+              "utilisation": 0.34538218696829537
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.34538218696829537
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP2RD_collapse_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.6666666666666666,
+              "p_c": 77691924.12241964,
+              "p_c_design": 51794616.08161309,
+              "p_e": 0.0,
+              "p_el": 320488661.3972513,
+              "p_y": 80080556.572684,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "hoop",
+            "check_id": "API_RP2RD_hoop_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "sigma_allow": 270000000.0,
+              "sigma_h": 92386831.27572015,
+              "utilisation": 0.3421734491693339
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.3421734491693339
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP2RD_burst_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.6666666666666666,
+              "p_b": 86860298.91505052,
+              "p_b_design": 57906865.94336701,
+              "p_net": -15077724.375,
+              "utilisation": -0.2603788709571337
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.2603788709571337
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP2RD_collapse_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.6666666666666666,
+              "p_c": 77691924.12241964,
+              "p_c_design": 51794616.08161309,
+              "p_e": 15077724.375,
+              "p_el": 320488661.3972513,
+              "p_y": 80080556.572684,
+              "utilisation": 0.2911060167188408
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.2911060167188408
+          },
+          {
+            "check": "hoop",
+            "check_id": "API_RP2RD_hoop_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "sigma_allow": 270000000.0,
+              "sigma_h": -69649158.89274691,
+              "utilisation": 0.25795984775091446
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.25795984775091446
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP1111_burst_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "d_over_t": 11.238683127572015,
+              "f_d": 0.72,
+              "p_b": 86860298.91505052,
+              "p_b_design": 62539415.218836375,
+              "p_net": 20000000.0,
+              "utilisation": 0.31979832126694013
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.31979832126694013
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP1111_collapse_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.8,
+              "p_c": 77691924.12241964,
+              "p_c_design": 62153539.29793572,
+              "p_e": 0.0,
+              "p_el": 320488661.3972513,
+              "p_y": 80080556.572684,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "propagation",
+            "check_id": "API_RP1111_propagation_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "f_p": 0.8,
+              "p_e": 0.0,
+              "p_pr": 32486784.81586851,
+              "p_pr_design": 25989427.85269481,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP1111_burst_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "d_over_t": 11.238683127572015,
+              "f_d": 0.72,
+              "p_b": 86860298.91505052,
+              "p_b_design": 62539415.218836375,
+              "p_net": -15077724.375,
+              "utilisation": -0.2410915471825312
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.2410915471825312
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP1111_collapse_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.8,
+              "p_c": 77691924.12241964,
+              "p_c_design": 62153539.29793572,
+              "p_e": 15077724.375,
+              "p_el": 320488661.3972513,
+              "p_y": 80080556.572684,
+              "utilisation": 0.2425883472657006
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.2425883472657006
+          },
+          {
+            "check": "propagation",
+            "check_id": "API_RP1111_propagation_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_p": 0.8,
+              "p_e": 15077724.375,
+              "p_pr": 32486784.81586851,
+              "p_pr_design": 25989427.85269481,
+              "utilisation": 0.580148376503664
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.580148376503664
+          },
+          {
+            "check": "burst",
+            "check_id": "API_STD2RD_burst_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.8,
+              "p_b": 86860298.91505052,
+              "p_b_design": 69488239.13204043,
+              "p_net": 20000000.0,
+              "utilisation": 0.2878184891402461
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.2878184891402461
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_STD2RD_collapse_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.6,
+              "p_c": 77691924.12241964,
+              "p_c_design": 46615154.473451786,
+              "p_e": 0.0,
+              "p_el": 320488661.3972513,
+              "p_y": 80080556.572684,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "combined",
+            "check_id": "API_STD2RD_combined_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.8,
+              "f_d_corrected": 0.7661479824927928,
+              "moment_term": 0.0,
+              "p_b": 86860298.91505052,
+              "p_net": 20000000.0,
+              "pressure_ratio": 0.2302547913121969,
+              "tension_term": 0.0,
+              "utilisation": 0.0,
+              "yield_moment": 531629.9271405332,
+              "yield_tension": 8547104.937950695
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "burst",
+            "check_id": "API_STD2RD_burst_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.8,
+              "p_b": 86860298.91505052,
+              "p_b_design": 69488239.13204043,
+              "p_net": -15077724.375,
+              "utilisation": -0.21698239246427806
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.21698239246427806
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_STD2RD_collapse_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.6,
+              "p_c": 77691924.12241964,
+              "p_c_design": 46615154.473451786,
+              "p_e": 15077724.375,
+              "p_el": 320488661.3972513,
+              "p_y": 80080556.572684,
+              "utilisation": 0.3234511296876008
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.3234511296876008
+          },
+          {
+            "check": "combined",
+            "check_id": "API_STD2RD_combined_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.8,
+              "f_d_corrected": 0.7809404141614814,
+              "moment_term": 0.0,
+              "p_b": 86860298.91505052,
+              "p_net": -15077724.375,
+              "pressure_ratio": -0.17358591397142248,
+              "tension_term": 0.0,
+              "utilisation": 0.0,
+              "yield_moment": 531629.9271405332,
+              "yield_tension": 8547104.937950695
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "pressure_containment",
+            "check_id": "F101_pressure_containment_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "f_cb": 432000000.0,
+              "gamma_inc": 1.0,
+              "gamma_m": 1.15,
+              "gamma_sc": 1.138,
+              "p_b": 97440388.83995202,
+              "p_b_design": 74455863.71204405,
+              "p_net": 20000000.0,
+              "t1": 0.024300000000000002,
+              "utilisation": 0.26861551263913125
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.26861551263913125
+          },
+          {
+            "check": "collapse",
+            "check_id": "F101_collapse_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "f_0": 0.005,
+              "p_c": 77171754.1412212,
+              "p_c_design": 58968254.10042119,
+              "p_e": 0.0,
+              "p_el": 320488661.3972513,
+              "p_p": 80080556.572684,
+              "t2": 0.024300000000000002,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "propagation_buckling",
+            "check_id": "F101_propagation_buckling_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "p_e": 0.0,
+              "p_pr": 37195636.23624119,
+              "p_pr_design": 28421820.307359364,
+              "t2": 0.024300000000000002,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "combined_loading",
+            "check_id": "F101_combined_loading_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "M_Sd": 0.0,
+              "M_p": 676892.2464000002,
+              "S_Sd": 0.0,
+              "S_p": 8547104.937950693,
+              "p_c": 77171754.1412212,
+              "pressure_ratio": 0.25916217951195986,
+              "utilisation": 0.25916217951195986
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.25916217951195986
+          },
+          {
+            "check": "pressure_containment",
+            "check_id": "F101_pressure_containment_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_cb": 432000000.0,
+              "gamma_inc": 1.0,
+              "gamma_m": 1.15,
+              "gamma_sc": 1.138,
+              "p_b": 97440388.83995202,
+              "p_b_design": 74455863.71204405,
+              "p_net": -15077724.375,
+              "t1": 0.024300000000000002,
+              "utilisation": -0.20250553312110747
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.20250553312110747
+          },
+          {
+            "check": "collapse",
+            "check_id": "F101_collapse_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_0": 0.005,
+              "p_c": 77171754.1412212,
+              "p_c_design": 58968254.10042119,
+              "p_e": 15077724.375,
+              "p_el": 320488661.3972513,
+              "p_p": 80080556.572684,
+              "t2": 0.024300000000000002,
+              "utilisation": 0.25569222974319505
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.25569222974319505
+          },
+          {
+            "check": "propagation_buckling",
+            "check_id": "F101_propagation_buckling_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "p_e": 15077724.375,
+              "p_pr": 37195636.23624119,
+              "p_pr_design": 28421820.307359364,
+              "t2": 0.024300000000000002,
+              "utilisation": 0.5304981951172167
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.5304981951172167
+          },
+          {
+            "check": "combined_loading",
+            "check_id": "F101_combined_loading_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "M_Sd": 0.0,
+              "M_p": 676892.2464000002,
+              "S_Sd": 0.0,
+              "S_p": 8547104.937950693,
+              "p_c": 77171754.1412212,
+              "pressure_ratio": -0.19537879555528015,
+              "utilisation": 0.19537879555528015
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.19537879555528015
+          },
+          {
+            "check": "riser_pressure_guard",
+            "check_id": "riser_pressure_guard_pressure_only",
+            "code": "pressure guard",
+            "code_label": "Study guard: 0.60 Pb (API RP 2RD capacity)",
+            "condition": "pressure_only",
+            "details": {
+              "factor": 0.6,
+              "p_b": 86860298.91505052
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.3837579855203282
+          }
+        ],
+        "outside_diameter_mm": 273.1,
+        "wall_mm": 31.2,
+        "wall_option": "W2"
+      }
+    ],
+    "12": [
+      {
+        "checked_wall_mm": 22.9875,
+        "checks": [
+          {
+            "check": "burst",
+            "check_id": "API_RP2RD_burst_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.6666666666666666,
+              "p_b": 67854276.02778341,
+              "p_b_design": 45236184.01852227,
+              "p_net": 20000000.0,
+              "utilisation": 0.4421239420153314
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.4421239420153314
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP2RD_collapse_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.6666666666666666,
+              "p_c": 59452771.89585213,
+              "p_c_design": 39635181.26390142,
+              "p_e": 0.0,
+              "p_el": 162630250.7102441,
+              "p_y": 63873880.827415876,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "hoop",
+            "check_id": "API_RP2RD_hoop_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "sigma_allow": 270000000.0,
+              "sigma_h": 120902664.4915715,
+              "utilisation": 0.4477876462650796
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.4477876462650796
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP2RD_burst_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.6666666666666666,
+              "p_b": 67854276.02778341,
+              "p_b_design": 45236184.01852227,
+              "p_net": -15077724.375,
+              "utilisation": -0.3333111468647824
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.3333111468647824
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP2RD_collapse_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.6666666666666666,
+              "p_c": 59452771.89585213,
+              "p_c_design": 39635181.26390142,
+              "p_e": 15077724.375,
+              "p_el": 162630250.7102441,
+              "p_y": 63873880.827415876,
+              "utilisation": 0.38041265093777576
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.38041265093777576
+          },
+          {
+            "check": "hoop",
+            "check_id": "API_RP2RD_hoop_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "sigma_allow": 270000000.0,
+              "sigma_h": -91146852.57035072,
+              "utilisation": 0.3375809354457434
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.3375809354457434
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP1111_burst_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "d_over_t": 14.090266449157149,
+              "f_d": 0.72,
+              "p_b": 67854276.02778341,
+              "p_b_design": 48855078.740004055,
+              "p_net": 20000000.0,
+              "utilisation": 0.40937402038456605
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.40937402038456605
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP1111_collapse_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.8,
+              "p_c": 59452771.89585213,
+              "p_c_design": 47562217.51668171,
+              "p_e": 0.0,
+              "p_el": 162630250.7102441,
+              "p_y": 63873880.827415876,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "propagation",
+            "check_id": "API_RP1111_propagation_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "f_p": 0.8,
+              "p_e": 0.0,
+              "p_pr": 18880681.304692283,
+              "p_pr_design": 15104545.043753827,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP1111_burst_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "d_over_t": 14.090266449157149,
+              "f_d": 0.72,
+              "p_b": 67854276.02778341,
+              "p_b_design": 48855078.740004055,
+              "p_net": -15077724.375,
+              "utilisation": -0.30862143228220595
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.30862143228220595
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP1111_collapse_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.8,
+              "p_c": 59452771.89585213,
+              "p_c_design": 47562217.51668171,
+              "p_e": 15077724.375,
+              "p_el": 162630250.7102441,
+              "p_y": 63873880.827415876,
+              "utilisation": 0.3170105424481464
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.3170105424481464
+          },
+          {
+            "check": "propagation",
+            "check_id": "API_RP1111_propagation_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_p": 0.8,
+              "p_e": 15077724.375,
+              "p_pr": 18880681.304692283,
+              "p_pr_design": 15104545.043753827,
+              "utilisation": 0.998224331240952
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.998224331240952
+          },
+          {
+            "check": "burst",
+            "check_id": "API_STD2RD_burst_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.8,
+              "p_b": 67854276.02778341,
+              "p_b_design": 54283420.82222673,
+              "p_net": 20000000.0,
+              "utilisation": 0.3684366183461094
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.3684366183461094
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_STD2RD_collapse_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.6,
+              "p_c": 59452771.89585213,
+              "p_c_design": 35671663.137511276,
+              "p_e": 0.0,
+              "p_el": 162630250.7102441,
+              "p_y": 63873880.827415876,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "combined",
+            "check_id": "API_STD2RD_combined_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.8,
+              "f_d_corrected": 0.7437222958117348,
+              "moment_term": 0.0,
+              "p_b": 67854276.02778341,
+              "p_net": 20000000.0,
+              "pressure_ratio": 0.29474929467688754,
+              "tension_term": 0.0,
+              "utilisation": 0.0,
+              "yield_moment": 735655.6843479323,
+              "yield_tension": 9778998.005705073
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "burst",
+            "check_id": "API_STD2RD_burst_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.8,
+              "p_b": 67854276.02778341,
+              "p_b_design": 54283420.82222673,
+              "p_net": -15077724.375,
+              "utilisation": -0.27775928905398534
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.27775928905398534
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_STD2RD_collapse_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.6,
+              "p_c": 59452771.89585213,
+              "p_c_design": 35671663.137511276,
+              "p_e": 15077724.375,
+              "p_el": 162630250.7102441,
+              "p_y": 63873880.827415876,
+              "utilisation": 0.4226807232641953
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.4226807232641953
+          },
+          {
+            "check": "combined",
+            "check_id": "API_STD2RD_combined_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.8,
+              "f_d_corrected": 0.7685205641362526,
+              "moment_term": 0.0,
+              "p_b": 67854276.02778341,
+              "p_net": -15077724.375,
+              "pressure_ratio": -0.22220743124318826,
+              "tension_term": 0.0,
+              "utilisation": 0.0,
+              "yield_moment": 735655.6843479323,
+              "yield_tension": 9778998.005705073
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "pressure_containment",
+            "check_id": "F101_pressure_containment_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "f_cb": 432000000.0,
+              "gamma_inc": 1.0,
+              "gamma_m": 1.15,
+              "gamma_sc": 1.138,
+              "p_b": 76213976.92969882,
+              "p_b_design": 58236400.19079915,
+              "p_net": 20000000.0,
+              "t1": 0.0229875,
+              "utilisation": 0.3434278206495296
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.3434278206495296
+          },
+          {
+            "check": "collapse",
+            "check_id": "F101_collapse_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "f_0": 0.005,
+              "p_c": 60394907.842254244,
+              "p_c_design": 46148779.584514596,
+              "p_e": 0.0,
+              "p_el": 162630250.7102441,
+              "p_p": 63873880.827415876,
+              "t2": 0.0229875,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "propagation_buckling",
+            "check_id": "F101_propagation_buckling_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "p_e": 0.0,
+              "p_pr": 21134040.907386806,
+              "p_pr_design": 16148881.261852838,
+              "t2": 0.0229875,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "combined_loading",
+            "check_id": "F101_combined_loading_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "M_Sd": 0.0,
+              "M_p": 936665.9086209959,
+              "S_Sd": 0.0,
+              "S_p": 9778998.00570508,
+              "p_c": 60394907.842254244,
+              "pressure_ratio": 0.3311537464754164,
+              "utilisation": 0.3311537464754164
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.3311537464754164
+          },
+          {
+            "check": "pressure_containment",
+            "check_id": "F101_pressure_containment_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_cb": 432000000.0,
+              "gamma_inc": 1.0,
+              "gamma_m": 1.15,
+              "gamma_sc": 1.138,
+              "p_b": 76213976.92969882,
+              "p_b_design": 58236400.19079915,
+              "p_net": -15077724.375,
+              "t1": 0.0229875,
+              "utilisation": -0.258905501123027
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.258905501123027
+          },
+          {
+            "check": "collapse",
+            "check_id": "F101_collapse_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_0": 0.005,
+              "p_c": 60394907.842254244,
+              "p_c_design": 46148779.584514596,
+              "p_e": 15077724.375,
+              "p_el": 162630250.7102441,
+              "p_p": 63873880.827415876,
+              "t2": 0.0229875,
+              "utilisation": 0.32671989401989276
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.32671989401989276
+          },
+          {
+            "check": "propagation_buckling",
+            "check_id": "F101_propagation_buckling_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "p_e": 15077724.375,
+              "p_pr": 21134040.907386806,
+              "p_pr_design": 16148881.261852838,
+              "t2": 0.0229875,
+              "utilisation": 0.9336699013706204
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.9336699013706204
+          },
+          {
+            "check": "combined_loading",
+            "check_id": "F101_combined_loading_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "M_Sd": 0.0,
+              "M_p": 936665.9086209959,
+              "S_Sd": 0.0,
+              "S_p": 9778998.00570508,
+              "p_c": 60394907.842254244,
+              "pressure_ratio": -0.2496522457552478,
+              "utilisation": 0.2496522457552478
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.2496522457552478
+          },
+          {
+            "check": "riser_pressure_guard",
+            "check_id": "riser_pressure_guard_pressure_only",
+            "code": "pressure guard",
+            "code_label": "Study guard: 0.60 Pb (API RP 2RD capacity)",
+            "condition": "pressure_only",
+            "details": {
+              "factor": 0.6,
+              "p_b": 67854276.02778341
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.4912488244614793
+          }
+        ],
+        "outside_diameter_mm": 323.9,
+        "wall_mm": 29.7,
+        "wall_option": "W1"
+      },
+      {
+        "checked_wall_mm": 28.7625,
+        "checks": [
+          {
+            "check": "burst",
+            "check_id": "API_RP2RD_burst_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.6666666666666666,
+              "p_b": 86668555.37495624,
+              "p_b_design": 57779036.91663749,
+              "p_net": 20000000.0,
+              "utilisation": 0.3461463026608703
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.3461463026608703
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP2RD_collapse_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.6666666666666666,
+              "p_c": 77518342.778777,
+              "p_c_design": 51678895.185851336,
+              "p_e": 0.0,
+              "p_el": 318570824.69833654,
+              "p_y": 79920500.15436864,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "hoop",
+            "check_id": "API_RP2RD_hoop_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "sigma_allow": 270000000.0,
+              "sigma_h": 92611907.86614513,
+              "utilisation": 0.3430070661709079
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.3430070661709079
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP2RD_burst_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.6666666666666666,
+              "p_b": 86668555.37495624,
+              "p_b_design": 57779036.91663749,
+              "p_net": -15077724.375,
+              "utilisation": -0.2609549272472966
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.2609549272472966
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP2RD_collapse_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.6666666666666666,
+              "p_c": 77518342.778777,
+              "p_c_design": 51678895.185851336,
+              "p_e": 15077724.375,
+              "p_el": 318570824.69833654,
+              "p_y": 79920500.15436864,
+              "utilisation": 0.29175786983789825
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.29175786983789825
+          },
+          {
+            "check": "hoop",
+            "check_id": "API_RP2RD_hoop_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "sigma_allow": 270000000.0,
+              "sigma_h": -69818841.03243154,
+              "utilisation": 0.2585883001201168
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.2585883001201168
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP1111_burst_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "d_over_t": 11.261190786614515,
+              "f_d": 0.72,
+              "p_b": 86668555.37495624,
+              "p_b_design": 62401359.86996849,
+              "p_net": 20000000.0,
+              "utilisation": 0.3205058357971021
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.3205058357971021
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP1111_collapse_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.8,
+              "p_c": 77518342.778777,
+              "p_c_design": 62014674.223021604,
+              "p_e": 0.0,
+              "p_el": 318570824.69833654,
+              "p_y": 79920500.15436864,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "propagation",
+            "check_id": "API_RP1111_propagation_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "f_p": 0.8,
+              "p_e": 0.0,
+              "p_pr": 32331168.149816595,
+              "p_pr_design": 25864934.51985328,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP1111_burst_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "d_over_t": 11.261190786614515,
+              "f_d": 0.72,
+              "p_b": 86668555.37495624,
+              "p_b_design": 62401359.86996849,
+              "p_net": -15077724.375,
+              "utilisation": -0.24162493263638574
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.24162493263638574
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP1111_collapse_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.8,
+              "p_c": 77518342.778777,
+              "p_c_design": 62014674.223021604,
+              "p_e": 15077724.375,
+              "p_el": 318570824.69833654,
+              "p_y": 79920500.15436864,
+              "utilisation": 0.24313155819824853
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.24313155819824853
+          },
+          {
+            "check": "propagation",
+            "check_id": "API_RP1111_propagation_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_p": 0.8,
+              "p_e": 15077724.375,
+              "p_pr": 32331168.149816595,
+              "p_pr_design": 25864934.51985328,
+              "utilisation": 0.5829407518285699
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.5829407518285699
+          },
+          {
+            "check": "burst",
+            "check_id": "API_STD2RD_burst_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.8,
+              "p_b": 86668555.37495624,
+              "p_b_design": 69334844.299965,
+              "p_net": 20000000.0,
+              "utilisation": 0.28845525221739193
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.28845525221739193
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_STD2RD_collapse_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.6,
+              "p_c": 77518342.778777,
+              "p_c_design": 46511005.6672662,
+              "p_e": 0.0,
+              "p_el": 318570824.69833654,
+              "p_y": 79920500.15436864,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "combined",
+            "check_id": "API_STD2RD_combined_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.8,
+              "f_d_corrected": 0.765994701796069,
+              "moment_term": 0.0,
+              "p_b": 86668555.37495624,
+              "p_net": 20000000.0,
+              "pressure_ratio": 0.23076420177391355,
+              "tension_term": 0.0,
+              "utilisation": 0.0,
+              "yield_moment": 885478.0810951714,
+              "yield_tension": 12000888.820907835
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "burst",
+            "check_id": "API_STD2RD_burst_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.8,
+              "p_b": 86668555.37495624,
+              "p_b_design": 69334844.299965,
+              "p_net": -15077724.375,
+              "utilisation": -0.21746243937274715
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.21746243937274715
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_STD2RD_collapse_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.6,
+              "p_c": 77518342.778777,
+              "p_c_design": 46511005.6672662,
+              "p_e": 15077724.375,
+              "p_el": 318570824.69833654,
+              "p_y": 79920500.15436864,
+              "utilisation": 0.32417541093099805
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.32417541093099805
+          },
+          {
+            "check": "combined",
+            "check_id": "API_STD2RD_combined_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.8,
+              "f_d_corrected": 0.780854951944159,
+              "moment_term": 0.0,
+              "p_b": 86668555.37495624,
+              "p_net": -15077724.375,
+              "pressure_ratio": -0.17396995149819772,
+              "tension_term": 0.0,
+              "utilisation": 0.0,
+              "yield_moment": 885478.0810951714,
+              "yield_tension": 12000888.820907835
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "pressure_containment",
+            "check_id": "F101_pressure_containment_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "f_cb": 432000000.0,
+              "gamma_inc": 1.0,
+              "gamma_m": 1.15,
+              "gamma_sc": 1.138,
+              "p_b": 97226655.84398836,
+              "p_b_design": 74292546.68295895,
+              "p_net": 20000000.0,
+              "t1": 0.0287625,
+              "utilisation": 0.2692060091216062
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.2692060091216062
+          },
+          {
+            "check": "collapse",
+            "check_id": "F101_collapse_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "f_0": 0.005,
+              "p_c": 77008283.17681907,
+              "p_c_design": 58843343.14725994,
+              "p_e": 0.0,
+              "p_el": 318570824.69833654,
+              "p_p": 79920500.15436864,
+              "t2": 0.0287625,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "propagation_buckling",
+            "check_id": "F101_propagation_buckling_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "p_e": 0.0,
+              "p_pr": 37010058.13595383,
+              "p_pr_design": 28280016.914460026,
+              "t2": 0.0287625,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "combined_loading",
+            "check_id": "F101_combined_loading_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "M_Sd": 0.0,
+              "M_p": 1127425.7088465816,
+              "S_Sd": 0.0,
+              "S_p": 12000888.820907837,
+              "p_c": 77008283.17681907,
+              "pressure_ratio": 0.2597123215184256,
+              "utilisation": 0.2597123215184256
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.2597123215184256
+          },
+          {
+            "check": "pressure_containment",
+            "check_id": "F101_pressure_containment_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_cb": 432000000.0,
+              "gamma_inc": 1.0,
+              "gamma_m": 1.15,
+              "gamma_sc": 1.138,
+              "p_b": 97226655.84398836,
+              "p_b_design": 74292546.68295895,
+              "p_net": -15077724.375,
+              "t1": 0.0287625,
+              "utilisation": -0.2029507002814657
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.2029507002814657
+          },
+          {
+            "check": "collapse",
+            "check_id": "F101_collapse_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_0": 0.005,
+              "p_c": 77008283.17681907,
+              "p_c_design": 58843343.14725994,
+              "p_e": 15077724.375,
+              "p_el": 318570824.69833654,
+              "p_p": 79920500.15436864,
+              "t2": 0.0287625,
+              "utilisation": 0.25623500584028425
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.25623500584028425
+          },
+          {
+            "check": "propagation_buckling",
+            "check_id": "F101_propagation_buckling_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "p_e": 15077724.375,
+              "p_pr": 37010058.13595383,
+              "p_pr_design": 28280016.914460026,
+              "t2": 0.0287625,
+              "utilisation": 0.5331582516589839
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.5331582516589839
+          },
+          {
+            "check": "combined_loading",
+            "check_id": "F101_combined_loading_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "M_Sd": 0.0,
+              "M_p": 1127425.7088465816,
+              "S_Sd": 0.0,
+              "S_p": 12000888.820907837,
+              "p_c": 77008283.17681907,
+              "pressure_ratio": -0.19579354003231014,
+              "utilisation": 0.19579354003231014
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.19579354003231014
+          },
+          {
+            "check": "riser_pressure_guard",
+            "check_id": "riser_pressure_guard_pressure_only",
+            "code": "pressure guard",
+            "code_label": "Study guard: 0.60 Pb (API RP 2RD capacity)",
+            "condition": "pressure_only",
+            "details": {
+              "factor": 0.6,
+              "p_b": 86668555.37495624
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.3846070029565226
+          }
+        ],
+        "outside_diameter_mm": 323.9,
+        "wall_mm": 36.3,
+        "wall_option": "W2"
+      }
+    ],
+    "8": [
+      {
+        "checked_wall_mm": 15.55,
+        "checks": [
+          {
+            "check": "burst",
+            "check_id": "API_RP2RD_burst_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.6666666666666666,
+              "p_b": 67855495.2817048,
+              "p_b_design": 45236996.854469866,
+              "p_net": 20000000.0,
+              "utilisation": 0.44211599776044375
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.44211599776044375
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP2RD_collapse_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.6666666666666666,
+              "p_c": 59454024.73346456,
+              "p_c_design": 39636016.488976374,
+              "p_e": 0.0,
+              "p_el": 162638363.6920819,
+              "p_y": 63874942.94842539,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "hoop",
+            "check_id": "API_RP2RD_hoop_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "sigma_allow": 270000000.0,
+              "sigma_h": 120900321.54340835,
+              "utilisation": 0.4477789686792902
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.4477789686792902
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP2RD_burst_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.6666666666666666,
+              "p_b": 67855495.2817048,
+              "p_b_design": 45236996.854469866,
+              "p_net": -15077724.375,
+              "utilisation": -0.3333051578005044
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.3333051578005044
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP2RD_collapse_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.6666666666666666,
+              "p_c": 59454024.73346456,
+              "p_c_design": 39636016.488976374,
+              "p_e": 15077724.375,
+              "p_el": 162638363.6920819,
+              "p_y": 63874942.94842539,
+              "utilisation": 0.38040463473904945
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.38040463473904945
+          },
+          {
+            "check": "hoop",
+            "check_id": "API_RP2RD_hoop_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "sigma_allow": 270000000.0,
+              "sigma_h": -91145086.25401929,
+              "utilisation": 0.3375743935334048
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.3375743935334048
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP1111_burst_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "d_over_t": 14.090032154340834,
+              "f_d": 0.72,
+              "p_b": 67855495.2817048,
+              "p_b_design": 48855956.60282745,
+              "p_net": 20000000.0,
+              "utilisation": 0.40936666459300347
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.40936666459300347
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP1111_collapse_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.8,
+              "p_c": 59454024.73346456,
+              "p_c_design": 47563219.786771655,
+              "p_e": 0.0,
+              "p_el": 162638363.6920819,
+              "p_y": 63874942.94842539,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "propagation",
+            "check_id": "API_RP1111_propagation_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "f_p": 0.8,
+              "p_e": 0.0,
+              "p_pr": 18881434.80711737,
+              "p_pr_design": 15105147.845693896,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP1111_burst_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "d_over_t": 14.090032154340834,
+              "f_d": 0.72,
+              "p_b": 67855495.2817048,
+              "p_b_design": 48855956.60282745,
+              "p_net": -15077724.375,
+              "utilisation": -0.3086158868523189
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.3086158868523189
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP1111_collapse_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.8,
+              "p_c": 59454024.73346456,
+              "p_c_design": 47563219.786771655,
+              "p_e": 15077724.375,
+              "p_el": 162638363.6920819,
+              "p_y": 63874942.94842539,
+              "utilisation": 0.3170038622825412
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.3170038622825412
+          },
+          {
+            "check": "propagation",
+            "check_id": "API_RP1111_propagation_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_p": 0.8,
+              "p_e": 15077724.375,
+              "p_pr": 18881434.80711737,
+              "p_pr_design": 15105147.845693896,
+              "utilisation": 0.9981844950493673
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.9981844950493673
+          },
+          {
+            "check": "burst",
+            "check_id": "API_STD2RD_burst_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.8,
+              "p_b": 67855495.2817048,
+              "p_b_design": 54284396.22536384,
+              "p_net": 20000000.0,
+              "utilisation": 0.3684299981337031
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.3684299981337031
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_STD2RD_collapse_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.6,
+              "p_c": 59454024.73346456,
+              "p_c_design": 35672414.840078734,
+              "p_e": 0.0,
+              "p_el": 162638363.6920819,
+              "p_y": 63874942.94842539,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "combined",
+            "check_id": "API_STD2RD_combined_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.8,
+              "f_d_corrected": 0.7437243947485707,
+              "moment_term": 0.0,
+              "p_b": 67855495.2817048,
+              "p_net": 20000000.0,
+              "pressure_ratio": 0.2947439985069625,
+              "tension_term": 0.0,
+              "utilisation": 0.0,
+              "yield_moment": 227706.27663316496,
+              "yield_tension": 4474699.614505819
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "burst",
+            "check_id": "API_STD2RD_burst_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.8,
+              "p_b": 67855495.2817048,
+              "p_b_design": 54284396.22536384,
+              "p_net": -15077724.375,
+              "utilisation": -0.27775429816708697
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.27775429816708697
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_STD2RD_collapse_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.6,
+              "p_c": 59454024.73346456,
+              "p_c_design": 35672414.840078734,
+              "p_e": 15077724.375,
+              "p_el": 162638363.6920819,
+              "p_y": 63874942.94842539,
+              "utilisation": 0.4226718163767217
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.4226718163767217
+          },
+          {
+            "check": "combined",
+            "check_id": "API_STD2RD_combined_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.8,
+              "f_d_corrected": 0.7685217185635119,
+              "moment_term": 0.0,
+              "p_b": 67855495.2817048,
+              "p_net": -15077724.375,
+              "pressure_ratio": -0.2222034385336696,
+              "tension_term": 0.0,
+              "utilisation": 0.0,
+              "yield_moment": 227706.27663316496,
+              "yield_tension": 4474699.614505819
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "pressure_containment",
+            "check_id": "F101_pressure_containment_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "f_cb": 432000000.0,
+              "gamma_inc": 1.0,
+              "gamma_m": 1.15,
+              "gamma_sc": 1.138,
+              "p_b": 76215341.06230864,
+              "p_b_design": 58237442.547802135,
+              "p_net": 20000000.0,
+              "t1": 0.015550000000000001,
+              "utilisation": 0.3434216738412527
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.3434216738412527
+          },
+          {
+            "check": "collapse",
+            "check_id": "F101_collapse_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "f_0": 0.005,
+              "p_c": 60396031.08983099,
+              "p_c_design": 46149637.877153665,
+              "p_e": 0.0,
+              "p_el": 162638363.6920819,
+              "p_p": 63874942.94842539,
+              "t2": 0.015550000000000001,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "propagation_buckling",
+            "check_id": "F101_propagation_buckling_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "p_e": 0.0,
+              "p_pr": 21134919.48202937,
+              "p_pr_design": 16149552.595728109,
+              "t2": 0.015550000000000001,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "combined_loading",
+            "check_id": "F101_combined_loading_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "M_Sd": 0.0,
+              "M_p": 289924.63599374995,
+              "S_Sd": 0.0,
+              "S_p": 4474699.614505821,
+              "p_c": 60396031.08983099,
+              "pressure_ratio": 0.3311475876660287,
+              "utilisation": 0.3311475876660287
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.3311475876660287
+          },
+          {
+            "check": "pressure_containment",
+            "check_id": "F101_pressure_containment_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_cb": 432000000.0,
+              "gamma_inc": 1.0,
+              "gamma_m": 1.15,
+              "gamma_sc": 1.138,
+              "p_b": 76215341.06230864,
+              "p_b_design": 58237442.547802135,
+              "p_net": -15077724.375,
+              "t1": 0.015550000000000001,
+              "utilisation": -0.2589008671289778
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.2589008671289778
+          },
+          {
+            "check": "collapse",
+            "check_id": "F101_collapse_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_0": 0.005,
+              "p_c": 60396031.08983099,
+              "p_c_design": 46149637.877153665,
+              "p_e": 15077724.375,
+              "p_el": 162638363.6920819,
+              "p_p": 63874942.94842539,
+              "t2": 0.015550000000000001,
+              "utilisation": 0.3267138176714538
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.3267138176714538
+          },
+          {
+            "check": "propagation_buckling",
+            "check_id": "F101_propagation_buckling_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "p_e": 15077724.375,
+              "p_pr": 21134919.48202937,
+              "p_pr_design": 16149552.595728109,
+              "t2": 0.015550000000000001,
+              "utilisation": 0.9336310888877734
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.9336310888877734
+          },
+          {
+            "check": "combined_loading",
+            "check_id": "F101_combined_loading_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "M_Sd": 0.0,
+              "M_p": 289924.63599374995,
+              "S_Sd": 0.0,
+              "S_p": 4474699.614505821,
+              "p_c": 60396031.08983099,
+              "pressure_ratio": -0.2496476027137265,
+              "utilisation": 0.2496476027137265
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.2496476027137265
+          },
+          {
+            "check": "riser_pressure_guard",
+            "check_id": "riser_pressure_guard_pressure_only",
+            "code": "pressure guard",
+            "code_label": "Study guard: 0.60 Pb (API RP 2RD capacity)",
+            "condition": "pressure_only",
+            "details": {
+              "factor": 0.6,
+              "p_b": 67855495.2817048
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.49123999751160413
+          }
+        ],
+        "outside_diameter_mm": 219.1,
+        "wall_mm": 21.2,
+        "wall_option": "W1"
+      },
+      {
+        "checked_wall_mm": 19.4875,
+        "checks": [
+          {
+            "check": "burst",
+            "check_id": "API_RP2RD_burst_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.6666666666666666,
+              "p_b": 86822565.47887895,
+              "p_b_design": 57881710.319252625,
+              "p_net": 20000000.0,
+              "utilisation": 0.345532291455935
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.345532291455935
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP2RD_collapse_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.6666666666666666,
+              "p_c": 77657778.43682544,
+              "p_c_design": 51771852.291216955,
+              "p_e": 0.0,
+              "p_el": 320110707.09202826,
+              "p_y": 80049064.35417618,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "hoop",
+            "check_id": "API_RP2RD_hoop_pressure_only",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "sigma_allow": 270000000.0,
+              "sigma_h": 92431045.54201409,
+              "utilisation": 0.34233720571116333
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.34233720571116333
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP2RD_burst_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.6666666666666666,
+              "p_b": 86822565.47887895,
+              "p_b_design": 57881710.319252625,
+              "p_net": -15077724.375,
+              "utilisation": -0.2604920326617378
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.2604920326617378
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP2RD_collapse_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.6666666666666666,
+              "p_c": 77657778.43682544,
+              "p_c_design": 51771852.291216955,
+              "p_e": 15077724.375,
+              "p_el": 320110707.09202826,
+              "p_y": 80049064.35417618,
+              "utilisation": 0.29123401438657665
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.29123401438657665
+          },
+          {
+            "check": "hoop",
+            "check_id": "API_RP2RD_hoop_empty_1500m",
+            "code": "API RP 2RD",
+            "code_label": "API RP 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "sigma_allow": 270000000.0,
+              "sigma_h": -69682491.41877805,
+              "utilisation": 0.2580833015510298
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.2580833015510298
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP1111_burst_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "d_over_t": 11.243104554201409,
+              "f_d": 0.72,
+              "p_b": 86822565.47887895,
+              "p_b_design": 62512247.14479284,
+              "p_net": 20000000.0,
+              "utilisation": 0.3199373069036435
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.3199373069036435
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP1111_collapse_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.8,
+              "p_c": 77657778.43682544,
+              "p_c_design": 62126222.749460354,
+              "p_e": 0.0,
+              "p_el": 320110707.09202826,
+              "p_y": 80049064.35417618,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "propagation",
+            "check_id": "API_RP1111_propagation_pressure_only",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "pressure_only",
+            "details": {
+              "f_p": 0.8,
+              "p_e": 0.0,
+              "p_pr": 32456131.703018587,
+              "p_pr_design": 25964905.36241487,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "burst",
+            "check_id": "API_RP1111_burst_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "d_over_t": 11.243104554201409,
+              "f_d": 0.72,
+              "p_b": 86822565.47887895,
+              "p_b_design": 62512247.14479284,
+              "p_net": -15077724.375,
+              "utilisation": -0.2411963265386461
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.2411963265386461
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_RP1111_collapse_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.8,
+              "p_c": 77657778.43682544,
+              "p_c_design": 62126222.749460354,
+              "p_e": 15077724.375,
+              "p_el": 320110707.09202826,
+              "p_y": 80049064.35417618,
+              "utilisation": 0.24269501198881385
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.24269501198881385
+          },
+          {
+            "check": "propagation",
+            "check_id": "API_RP1111_propagation_empty_1500m",
+            "code": "API RP 1111",
+            "code_label": "API-RP-1111, 4th Edition (2015)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_p": 0.8,
+              "p_e": 15077724.375,
+              "p_pr": 32456131.703018587,
+              "p_pr_design": 25964905.36241487,
+              "utilisation": 0.5806962961946915
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.5806962961946915
+          },
+          {
+            "check": "burst",
+            "check_id": "API_STD2RD_burst_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.8,
+              "p_b": 86822565.47887895,
+              "p_b_design": 69458052.38310316,
+              "p_net": 20000000.0,
+              "utilisation": 0.28794357621327915
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.28794357621327915
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_STD2RD_collapse_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_c": 0.6,
+              "p_c": 77657778.43682544,
+              "p_c_design": 46594667.06209526,
+              "p_e": 0.0,
+              "p_el": 320110707.09202826,
+              "p_y": 80049064.35417618,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "combined",
+            "check_id": "API_STD2RD_combined_pressure_only",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "pressure_only",
+            "details": {
+              "f_d": 0.8,
+              "f_d_corrected": 0.7661179008659209,
+              "moment_term": 0.0,
+              "p_b": 86822565.47887895,
+              "p_net": 20000000.0,
+              "pressure_ratio": 0.23035486097062333,
+              "tension_term": 0.0,
+              "utilisation": 0.0,
+              "yield_moment": 274431.5200515898,
+              "yield_tension": 5499285.266235127
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "burst",
+            "check_id": "API_STD2RD_burst_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.8,
+              "p_b": 86822565.47887895,
+              "p_b_design": 69458052.38310316,
+              "p_net": -15077724.375,
+              "utilisation": -0.21707669388478146
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.21707669388478146
+          },
+          {
+            "check": "collapse",
+            "check_id": "API_STD2RD_collapse_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_c": 0.6,
+              "p_c": 77657778.43682544,
+              "p_c_design": 46594667.06209526,
+              "p_e": 15077724.375,
+              "p_el": 320110707.09202826,
+              "p_y": 80049064.35417618,
+              "utilisation": 0.3235933493184185
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.3235933493184185
+          },
+          {
+            "check": "combined",
+            "check_id": "API_STD2RD_combined_empty_1500m",
+            "code": "API STD 2RD",
+            "code_label": "API STD 2RD (2013)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_d": 0.8,
+              "f_d_corrected": 0.7809236414286059,
+              "moment_term": 0.0,
+              "p_b": 86822565.47887895,
+              "p_net": -15077724.375,
+              "pressure_ratio": -0.17366135510782518,
+              "tension_term": 0.0,
+              "utilisation": 0.0,
+              "yield_moment": 274431.5200515898,
+              "yield_tension": 5499285.266235127
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "pressure_containment",
+            "check_id": "F101_pressure_containment_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "f_cb": 432000000.0,
+              "gamma_inc": 1.0,
+              "gamma_m": 1.15,
+              "gamma_sc": 1.138,
+              "p_b": 97398328.7860186,
+              "p_b_design": 74423724.907174,
+              "p_net": 20000000.0,
+              "t1": 0.0194875,
+              "utilisation": 0.26873151034761117
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.26873151034761117
+          },
+          {
+            "check": "collapse",
+            "check_id": "F101_collapse_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "f_0": 0.005,
+              "p_c": 77139592.13996172,
+              "p_c_design": 58943678.56648715,
+              "p_e": 0.0,
+              "p_el": 320110707.09202826,
+              "p_p": 80049064.35417618,
+              "t2": 0.0194875,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "propagation_buckling",
+            "check_id": "F101_propagation_buckling_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "p_e": 0.0,
+              "p_pr": 37159078.43466996,
+              "p_pr_design": 28393885.86740274,
+              "t2": 0.0194875,
+              "utilisation": 0.0
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.0
+          },
+          {
+            "check": "combined_loading",
+            "check_id": "F101_combined_loading_pressure_only",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "pressure_only",
+            "details": {
+              "M_Sd": 0.0,
+              "M_p": 349417.0636514649,
+              "S_Sd": 0.0,
+              "S_p": 5499285.266235126,
+              "p_c": 77139592.13996172,
+              "pressure_ratio": 0.25927023264152205,
+              "utilisation": 0.25927023264152205
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.25927023264152205
+          },
+          {
+            "check": "pressure_containment",
+            "check_id": "F101_pressure_containment_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_cb": 432000000.0,
+              "gamma_inc": 1.0,
+              "gamma_m": 1.15,
+              "gamma_sc": 1.138,
+              "p_b": 97398328.7860186,
+              "p_b_design": 74423724.907174,
+              "p_net": -15077724.375,
+              "t1": 0.0194875,
+              "utilisation": -0.2025929821949371
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": -0.2025929821949371
+          },
+          {
+            "check": "collapse",
+            "check_id": "F101_collapse_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "f_0": 0.005,
+              "p_c": 77139592.13996172,
+              "p_c_design": 58943678.56648715,
+              "p_e": 15077724.375,
+              "p_el": 320110707.09202826,
+              "p_p": 80049064.35417618,
+              "t2": 0.0194875,
+              "utilisation": 0.2557988361380036
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.2557988361380036
+          },
+          {
+            "check": "propagation_buckling",
+            "check_id": "F101_propagation_buckling_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "p_e": 15077724.375,
+              "p_pr": 37159078.43466996,
+              "p_pr_design": 28393885.86740274,
+              "t2": 0.0194875,
+              "utilisation": 0.5310201092380173
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.5310201092380173
+          },
+          {
+            "check": "combined_loading",
+            "check_id": "F101_combined_loading_empty_1500m",
+            "code": "DNV-ST-F101",
+            "code_label": "DNV-ST-F101, DNV-ST-F101 (2021)",
+            "condition": "empty_1500m",
+            "details": {
+              "M_Sd": 0.0,
+              "M_p": 349417.0636514649,
+              "S_Sd": 0.0,
+              "S_p": 5499285.266235126,
+              "p_c": 77139592.13996172,
+              "pressure_ratio": -0.19546025532054986,
+              "utilisation": 0.19546025532054986
+            },
+            "external_pressure_pa": 15077724.375,
+            "internal_pressure_pa": 0.0,
+            "utilisation": 0.19546025532054986
+          },
+          {
+            "check": "riser_pressure_guard",
+            "check_id": "riser_pressure_guard_pressure_only",
+            "code": "pressure guard",
+            "code_label": "Study guard: 0.60 Pb (API RP 2RD capacity)",
+            "condition": "pressure_only",
+            "details": {
+              "factor": 0.6,
+              "p_b": 86822565.47887895
+            },
+            "external_pressure_pa": 0.0,
+            "internal_pressure_pa": 20000000.0,
+            "utilisation": 0.3839247682843722
+          }
+        ],
+        "outside_diameter_mm": 219.1,
+        "wall_mm": 25.7,
+        "wall_option": "W2"
+      }
+    ]
+  },
+  "source_tree_dirty": true,
+  "sources": [
+    {
+      "path": "scripts/reporting/build_riser_pipe_comparison.py",
+      "sha256": "be93e077171ad1ab6663e42da21993bf2da26b2d6b6351469783c3c9c58579d0"
+    },
+    {
+      "path": "scripts/riser_study/wall_basis.json",
+      "sha256": "845b9061e6e11229a9892fa32db33c136b83a878e8c137ac05d4a3df61e4838f"
+    },
+    {
+      "path": "scripts/riser_study/wall_basis_derivation.md",
+      "sha256": "de4033f6af91d3b92c3da6a13b6cab92fdbc23b1504823d22457e1ebe1693db2"
+    },
+    {
+      "path": "scripts/riser_study/wall_basis_matrix.csv",
+      "sha256": "919c1e2e83f2c28f5cee2465a9e18f322831723eb78ea7f332be5f8a6c3ced44"
+    },
+    {
+      "path": "scripts/riser_study/wall_basis_table.py",
+      "sha256": "baa78faa757af39b7a65c9da45b6ad31190a45ae0ed371d3a6e7c102bf890a21"
+    },
+    {
+      "path": "src/digitalmodel/codes.py",
+      "sha256": "339657665d6afa81bbde24243914f5146696f7e10e980e69d7af853cbec2cc54"
+    },
+    {
+      "path": "src/digitalmodel/materials/grades.py",
+      "sha256": "4be7b32cf536e519d9dd716a124b5ef5f222f5c32d90bd20604793602206df90"
+    },
+    {
+      "path": "src/digitalmodel/structural/analysis/wall_thickness.py",
+      "sha256": "2b2684136b209dcb63888f6924282991e281b89143f1d90e03ae676d5d2ae053"
+    },
+    {
+      "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+      "sha256": "c7a4bb27f8795db98d5f71b8dc13fc6b4ac0c29126b572c7a62c077f6c4ef544"
+    },
+    {
+      "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+      "sha256": "a6fbddd502b5fdc04978e7bf1356f1079c2a37e15f37c87cd99cddba8ec668ef"
+    },
+    {
+      "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py",
+      "sha256": "a9882b2be352da7cc873d5e4a9d0edfcec914205572842067696d8395325121f"
+    },
+    {
+      "path": "src/digitalmodel/structural/analysis/wall_thickness_codes/dnv_st_f101.py",
+      "sha256": "1ecb39c1bf52a2b64bc3a71933324cdaf48c63c13b142d5e155f702cc1eb506e"
+    },
+    {
+      "path": "src/digitalmodel/structural/analysis/wall_thickness_mt_report.py",
+      "sha256": "05919662e4dc887f64a1f211d866c1971407a4419c638b1aa949044888558227"
+    },
+    {
+      "path": "tests/riser_study/test_wall_basis_table.py",
+      "sha256": "52aa57f702943be93e9bad25757f78c5c2ea25f8326fd21a0301f926a088155a"
+    }
+  ],
+  "table": {
+    "columns": [
+      "case_id",
+      "size_nps_in",
+      "wall_option",
+      "wall_mm",
+      "checked_wall_mm",
+      "rp1111_utilisation",
+      "rp2rd_utilisation",
+      "std2rd_utilisation",
+      "f101_utilisation",
+      "pressure_guard_utilisation",
+      "governing_check"
+    ],
+    "file": "tab-wt.csv",
+    "rows": 12,
+    "sha256": "1158f83ba9202b47f2b45dd5c7c5d3d1d68be0c8fe48097853f9fb2de11b5a43",
+    "utilisation_basis": "Maximum returned check per strategy over both load conditions; dimensionless ratios"
+  }
+}

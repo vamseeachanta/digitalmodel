@@ -92,15 +92,13 @@ python examples/workflows/01_spread_mooring_8point.py
 
 ### 7. Wave Energy Converter Mooring
 **File:** `07_wave_energy_converter.py`
-- **Application:** Point absorber wave energy converter mooring
-- **Features:**
-  - High wave loading scenarios
-  - Slack line prevention
-  - Fatigue considerations
-  - Extreme response analysis
-  - Station-keeping requirements
-- **Standards:** DNV-RP-C205, EMEC guidelines
-- **Output:** Tension time histories, fatigue spectra, extreme statistics
+- **Application:** Illustrative point absorber mooring calculation
+- **Features:** Importable device and analysis function; executable wave-height sweep
+- **Output:** `wec_analysis.xlsx` with wave height, wave force, maximum tension,
+  safety factor, fatigue damage and status columns
+- **Limits:** Existing loads, coefficients and acceptance criteria are unqualified;
+  this example does not establish compliance with a mooring design standard.
+- **Usage:** [Worked example and smoke checks](../../../docs/domains/examples/wave_energy_converter.md)
 
 ### 8. Aquaculture Mooring Design
 **File:** `08_aquaculture_mooring.py`

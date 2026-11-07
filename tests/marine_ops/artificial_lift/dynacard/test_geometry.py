@@ -1,7 +1,6 @@
 # ABOUTME: Unit tests for card geometry analysis module.
 # ABOUTME: Validates area, perimeter, centroid, and zoned area calculations.
 
-import math
 import pytest
 import numpy as np
 from pathlib import Path
@@ -81,7 +80,7 @@ class TestCardGeometryCalculator:
         result = calculator.calculate()
 
         # Perimeter = 2*(100 + 10000) = 20200
-        assert abs(result.perimeter - 20200.0) < 1.0
+        assert result.perimeter is None
 
     def test_calculate_perimeter_square(self):
         """Test perimeter calculation for unit square."""
@@ -95,7 +94,7 @@ class TestCardGeometryCalculator:
         result = calculator.calculate()
 
         # Perimeter = 4 * 100 = 400
-        assert abs(result.perimeter - 400.0) < 0.1
+        assert result.perimeter is None
 
     def test_calculate_position_range(self):
         """Test position range calculation."""
@@ -368,8 +367,8 @@ class TestCardGeometryCalculator:
 
         assert abs(squat_result.normalized_perimeter - 4.0) < 1e-9
         assert abs(tall_result.normalized_perimeter - 4.0) < 1e-9
-        # The deprecated mixed-unit perimeter is NOT scale free
-        assert squat_result.perimeter != tall_result.perimeter
+        # Neither shape has a physical mixed-axis perimeter.
+        assert squat_result.perimeter is tall_result.perimeter is None
 
     def test_path_lengths_are_dimensionally_meaningful(self):
         """position/load path lengths stay in their own units."""
@@ -432,7 +431,7 @@ class TestCardGeometryCalculator:
         result = calculate_card_geometry(context, raise_on_error=False)
 
         assert result.area == 0.0
-        assert result.perimeter == 0.0
+        assert result.perimeter is None
 
     def test_custom_surface_card(self):
         """Test calculation with custom surface card override."""
@@ -506,7 +505,7 @@ class TestConvenienceFunction:
 
 
 class TestDirectCalculationFunctions:
-    """Tests for calculate_card_perimeter function."""
+    """The compatibility perimeter entry point never reports a mixed-unit value."""
 
     def test_perimeter_rectangle(self):
         """Test perimeter calculation for rectangle."""
@@ -514,8 +513,7 @@ class TestDirectCalculationFunctions:
         load = [0, 0, 100, 100]
         result = calculate_card_perimeter(position, load)
 
-        # Perimeter = 4 * 100 = 400
-        assert abs(result - 400.0) < 0.1
+        assert result is None
 
     def test_perimeter_tall_rectangle(self):
         """Test perimeter for tall rectangle."""
@@ -523,31 +521,25 @@ class TestDirectCalculationFunctions:
         load = [0, 0, 10000, 10000]
         result = calculate_card_perimeter(position, load)
 
-        # Perimeter = 2 * (100 + 10000) = 20200
-        assert abs(result - 20200.0) < 0.1
+        assert result is None
 
     def test_perimeter_triangle(self):
         """Test perimeter for equilateral triangle."""
-        # Equilateral triangle with side 100
         position = [0, 100, 50]
         load = [0, 0, 86.6]  # height = 100 * sqrt(3)/2 ≈ 86.6
         result = calculate_card_perimeter(position, load)
 
-        # Each side has different length
-        # Side 1: sqrt((100-0)^2 + 0) = 100
-        # Side 2: sqrt((50-100)^2 + 86.6^2) = sqrt(2500 + 7499.56) ≈ 100
-        # Side 3: sqrt((0-50)^2 + 86.6^2) ≈ 100
-        assert result > 290 and result < 310
+        assert result is None
 
     def test_perimeter_empty_arrays(self):
         """Test perimeter with empty arrays."""
         result = calculate_card_perimeter([], [])
-        assert result == 0.0
+        assert result is None
 
     def test_perimeter_single_point(self):
         """Test perimeter with single point."""
         result = calculate_card_perimeter([50], [5000])
-        assert result == 0.0
+        assert result is None
 
     def test_perimeter_two_points(self):
         """Test perimeter with two points (line segment)."""
@@ -555,13 +547,12 @@ class TestDirectCalculationFunctions:
         load = [0, 0]
         result = calculate_card_perimeter(position, load)
 
-        # Should be 2 * 100 = 200 (back and forth)
-        assert abs(result - 200.0) < 0.1
+        assert result is None
 
     def test_perimeter_mismatched_arrays(self):
         """Test perimeter with mismatched array lengths."""
         result = calculate_card_perimeter([0, 100, 100], [0, 0])
-        assert result == 0.0
+        assert result is None
 
 
 class TestCardGeometryAnalysisModel:
@@ -571,7 +562,7 @@ class TestCardGeometryAnalysisModel:
         """Test CardGeometryAnalysis default values."""
         analysis = CardGeometryAnalysis()
         assert analysis.area == 0.0
-        assert analysis.perimeter == 0.0
+        assert analysis.perimeter is None
         assert analysis.position_range == 0.0
         assert analysis.load_range == 0.0
         # None (not 0.0) so a caller can tell "not computed" from "computed zero"
@@ -587,7 +578,7 @@ class TestCardGeometryAnalysisModel:
         """Test CardGeometryAnalysis with actual values."""
         analysis = CardGeometryAnalysis(
             area=500000.0,
-            perimeter=20200.0,
+            perimeter=None,
             position_range=100.0,
             load_range=10000.0,
             centroid_position=50.0,
@@ -596,19 +587,19 @@ class TestCardGeometryAnalysisModel:
             zone_area_fractions=[0.25, 0.25, 0.25, 0.25],
         )
         assert analysis.area == 500000.0
-        assert analysis.perimeter == 20200.0
+        assert analysis.perimeter is None
         assert analysis.centroid_position == 50.0
 
     def test_analysis_serialization(self):
         """Test that CardGeometryAnalysis can be serialized."""
         analysis = CardGeometryAnalysis(
             area=500000.0,
-            perimeter=20200.0,
+            perimeter=None,
         )
 
         data = analysis.model_dump()
         assert data["area"] == 500000.0
-        assert data["perimeter"] == 20200.0
+        assert data["perimeter"] is None
 
 
 class TestCardGeometryWithRealData:
@@ -628,7 +619,7 @@ class TestCardGeometryWithRealData:
 
         # Should have valid geometry metrics
         assert result.area > 0
-        assert result.perimeter > 0
+        assert result.perimeter is None
         assert result.position_range > 0
         assert result.load_range > 0
 

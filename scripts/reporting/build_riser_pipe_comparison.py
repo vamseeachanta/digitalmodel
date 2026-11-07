@@ -404,6 +404,61 @@ def _discussion(model):
     return '\n'.join(lines)
 
 
+def source_coverage(criteria):
+    """Separate recorded module coverage from unevaluated standard conformity.
+
+    Source: riser_pipe_comparison.criteria.json, criteria revision 2, code
+    checks and qualification metadata. Its module digests are checked by
+    _records before building. Repository locators are not standard-text
+    evidence; none of these cells can establish a design acceptance limit.
+    """
+    coverage = {}
+    for code, reference in criteria["codes"].items():
+        cells = {}
+        for state in ("burst", "collapse", "propagation", "hoop", "combined"):
+            implemented = state in reference["checks"]
+            cells[state] = {
+                "module_status": "IMPLEMENTED" if implemented else "NOT_IMPLEMENTED",
+                "standard_status": "NOT_EVALUATED",
+                "title": reference["title"],
+                "edition": reference["revision"],
+                "module": reference["module"],
+                "module_sha256": reference["module_sha256"],
+                "section": (reference["checks"][state]["section"] if implemented
+                            else "Not established: no module check"),
+                "reason": ("Repository metadata not checked against standard text."
+                           if implemented else
+                           "No check returned by this module; standard applicability unresolved."),
+                "required_evidence": (
+                    "Confirm applicability and edition; establish clause, equation and coefficient sources."
+                    if implemented else
+                    "Establish standard applicability and a sourced implementation if required."
+                ),
+            }
+        coverage[code] = cells
+    return coverage
+
+
+def _coverage_table(criteria):
+    """Render every comparison cell with its source gap and next evidence step."""
+    lines = ['<h2 id="source-coverage">Source qualification by limit state</h2>',
+             '<p>Module coverage does not establish standard conformity. '
+             'An absent module check does not establish that the standard omits it. '
+             'Recorded editions and clauses below are unqualified repository metadata.</p>',
+             '<table><tr><th>Code / limit state</th><th>Module coverage</th>'
+             '<th>Standard qualification</th><th>Recorded edition / clause</th>'
+             '<th>Reason / required evidence</th></tr>']
+    for code, cells in source_coverage(criteria).items():
+        for state, cell in cells.items():
+            marker = html.escape(f'{_code_key(code)}-{state}', quote=True)
+            lines.append(f'<tr data-coverage="{marker}"><td>{html.escape(code)} / {state}</td>'
+                         f'<td>{cell["module_status"]}</td><td>{cell["standard_status"]}</td>'
+                         f'<td>{html.escape(cell["edition"])}; {html.escape(cell["section"])}</td>'
+                         f'<td>{html.escape(cell["reason"])} '
+                         f'{html.escape(cell["required_evidence"])}</td></tr>')
+    return '\n'.join([*lines, '</table>'])
+
+
 def _citations(criteria):
     """Inventory inherited coefficients without reproducing licensed values."""
     entries = []
@@ -416,7 +471,7 @@ def _citations(criteria):
                                                                "module_sha256")},
                             "section": reference["checks"][state]["section"],
                             "qualification": "unqualified module metadata; clause mapping not established"})
-    return {"citations": entries,
+    return {"citations": entries, "check_coverage": source_coverage(criteria),
             "qualification": "partial; standard conformity not established",
             "note": "No new standards-derived coefficient is introduced. Existing module coefficients are inventoried by symbol; numeric factors are not reproduced."}
 
@@ -425,6 +480,7 @@ def _page(model, criteria, record):
     """Render one standalone page with local styling and inline graphics."""
     values = numeric_values(model)
     body = [_summary(model, values), _history(record), _input_table(model, values), _factor_basis(model)]
+    body.append(_coverage_table(criteria))
     body.append(_minimum_table(model, values))
     for state in ("burst", "collapse", "propagation", "hoop", "combined"):
         body.append(_state_table(state, model, values, criteria))
@@ -497,6 +553,7 @@ def _manifest(model, criteria, record, input_path, criteria_path, revisions_path
     return {"revision": record["revision"], "criteria_revision": criteria["criteria_revision"],
             "criteria_recorded_at": record["criteria_recorded_at"], "basis_commit": model["config"]["basis_commit"],
             "qualification": "partial; standard conformity not established", "results": results,
+            "check_coverage": source_coverage(criteria),
             "minimum_wall": model["minimum_wall"],
             "wall_search": "0.1 mm grid; positive wall strictly below half the outside diameter; all returned checks and supplied cases",
             "precision": "0.1 percent; dispositions use unrounded module results",

@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 Passing Ship Forces Calculation Module.
 
@@ -57,6 +60,9 @@ from .input_schemas import (
     PassingShipDimensions,
     AnalysisCase,
     OutputSpec,
+    FenderSpec,
+    ResponseSettings,
+    WindLoadSpec,
 )
 
 from .force_time_history import (
@@ -64,7 +70,13 @@ from .force_time_history import (
     generate_time_history,
 )
 
+from .mooring_response import MooringResponse, solve_response
+from .analysis import AnalysisResult, run_analysis_cases, wind_force
+
 __all__ = [
+    "FenderSpec", "ResponseSettings", "WindLoadSpec",
+    "MooringResponse", "solve_response",
+    "AnalysisResult", "run_analysis_cases", "wind_force",
     # Formulations
     's1_function',
     's2_function',

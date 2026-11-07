@@ -18,6 +18,7 @@ from digitalmodel.reporting.thickness import (
     ThicknessRow,
     input_provenance,
     limit_figure,
+    nominal_limit_hover,
     revision_section,
     thickness_table,
     validate_number,
@@ -32,7 +33,7 @@ def _courses(result: ShellResult) -> TableBlock:
             f"Course {c.course}",
             c.design_mm,
             c.test_mm,
-            result.inputs.basis.minimum_nominal_mm,
+            result.inputs.basis.nominal_floor_mm(c.course),
             c.required_mm,
             c.selected_mm,
             result.inputs.corrosion_allowance_mm,
@@ -100,9 +101,10 @@ def _thickness(result: ShellResult) -> FigureBlock:
         )
     }
     if result.inputs.basis.minimum_nominal_mm is not None:
-        series["Nominal floor"] = [result.inputs.basis.minimum_nominal_mm] * len(
-            heights
-        )
+        series["Nominal floor"] = [
+            result.inputs.basis.nominal_floor_mm(row.course)
+            for row in result.courses for _ in range(2)
+        ]
     figure = limit_figure(
         heights,
         series,
@@ -111,6 +113,11 @@ def _thickness(result: ShellResult) -> FigureBlock:
         y_label="Nominal thickness [mm]",
         limit=0,
         limit_label="Physical lower bound",
+    )
+    selected = [row.selected_mm for row in result.courses for _ in range(2)]
+    nominal_limit_hover(
+        figure,
+        {name: selected for name in series if name != "Selected plate"},
     )
     return FigureBlock(
         title="Thickness against height",
@@ -175,6 +182,12 @@ def _basis(result: ShellResult, unit_weight: float, pressure_source: str) -> Sec
             "Supplied plate catalogue",
         ],
     ]
+    bottom_floor = inputs.basis.nominal_floor_mm(1)
+    if bottom_floor != inputs.basis.minimum_nominal_mm:
+        entries.append([
+            "Lowest-course nominal floor", f"{bottom_floor:.3f}", "mm",
+            inputs.basis.source,
+        ])
     return Section(
         key="design-basis",
         title="Design basis",
@@ -194,6 +207,32 @@ def _basis(result: ShellResult, unit_weight: float, pressure_source: str) -> Sec
                         f"{inputs.material.test_mpa:.1f}",
                         inputs.material.source,
                     ]
+                ],
+            ),
+            TableBlock(
+                title="Source qualification",
+                columns=["Basis", "Clause / locator", "Edition", "Evidence state"],
+                rows=[
+                    [
+                        label,
+                        locator if citation is None else citation.section,
+                        "Unresolved" if citation is None else citation.revision,
+                        "NOT_EVALUATED" if citation is None else "Source metadata resolved",
+                    ]
+                    for label, locator, citation in (
+                        ("Method coefficients", "API 650 5.6.3.2", inputs.basis.citation),
+                        ("Material allowables", "Applicable material table", inputs.material.citation),
+                        (
+                            "Diameter limit", "API 650 5.6.3.1",
+                            inputs.basis.diameter_limit_citation
+                            if inputs.basis.diameter_limit_m is not None else None,
+                        ),
+                        (
+                            "Nominal floor", "API 650 5.6.1.1",
+                            inputs.basis.minimum_nominal_citation
+                            if inputs.basis.minimum_nominal_mm is not None else None,
+                        ),
+                    )
                 ],
             ),
         ],

@@ -1,0 +1,351 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.aceengineer.com/assets/data/report-evals/results.schema.json",
+  "title": "Key results of a public AceEngineer report (results.json), version 1.0",
+  "description": "One file per public report. It lists the key results a reader can rebuild from public repositories and public data, with the tolerance an eval uses to compare them, the inputs, the data a reader must supply and what the run cannot do. Comparison: abs tolerance t passes when |got - value| <= t; rel_pct r passes when |got - value| <= r/100 * |value|; both inclusive. When got and value are both integers the test is exact integer arithmetic; otherwise an allowance of 1e-9 * |value| is added for binary representation, which is zero when value is 0. A numeric value needs a finite non-boolean number, a boolean value a boolean. Outside tolerance is DRIFT on a live basis and MISMATCH on a fixed basis. Grade: FAIL on any MISMATCH or ERROR, else PARTIAL on any DRIFT or NOT_EVALUATED, else PASS. Changes: scope pinned added on 7 November 2026; additive, so schema_version stays 1.0.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "report",
+    "code",
+    "inputs",
+    "missing_data",
+    "cannot_do",
+    "eval",
+    "results"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "schema_version": {
+      "const": "1.0"
+    },
+    "report": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "url",
+        "published",
+        "family"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9-]*$"
+        },
+        "title": {
+          "type": "string"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "published": {
+          "type": "string",
+          "format": "date"
+        },
+        "family": {
+          "enum": [
+            "newsletter",
+            "website-page",
+            "engineering-report",
+            "calculation-note",
+            "case-study"
+          ]
+        },
+        "related_urls": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    },
+    "code": {
+      "type": "object",
+      "required": [
+        "repo",
+        "commit",
+        "paths"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "repo": {
+          "type": "string",
+          "format": "uri"
+        },
+        "commit": {
+          "$ref": "#/$defs/sha",
+          "description": "Commit of code.repo that produced the published values (historical reproduction)."
+        },
+        "paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "Paths that exist at code.commit and produced the published values."
+        },
+        "python": {
+          "type": "string"
+        },
+        "install": {
+          "type": "string"
+        }
+      }
+    },
+    "inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "description",
+          "source",
+          "supplied_by",
+          "required"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "licence": {
+            "type": "string"
+          },
+          "version_or_date": {
+            "type": "string"
+          },
+          "sha256_published": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "updates": {
+            "enum": [
+              "never",
+              "daily",
+              "irregular"
+            ]
+          },
+          "supplied_by": {
+            "enum": [
+              "public",
+              "repository",
+              "reader"
+            ]
+          },
+          "required": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "missing_data": {
+      "description": "Data the report or its prompt needs that is not public or not archived. The prompt asks the reader for each item by name.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "what",
+          "why",
+          "effect"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "what": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          },
+          "how_to_supply": {
+            "type": "string"
+          },
+          "effect": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "cannot_do": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "eval": {
+      "type": "object",
+      "required": [
+        "command",
+        "prompt",
+        "cadence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "type": "string",
+          "description": "Rebuild command, run from a clone of the repository at eval.ref."
+        },
+        "prompt": {
+          "type": "string"
+        },
+        "cadence": {
+          "enum": [
+            "daily",
+            "weekly",
+            "on-change"
+          ]
+        },
+        "runtime_s": {
+          "type": "number"
+        },
+        "network": {
+          "type": "boolean"
+        },
+        "ref": {
+          "type": "string",
+          "description": "Branch of the repository that holds the eval files (results.json, eval.py, PROMPT.md)."
+        }
+      }
+    },
+    "results": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "label",
+          "value",
+          "unit",
+          "period",
+          "source",
+          "method",
+          "repo",
+          "commit",
+          "tolerance",
+          "basis",
+          "limits"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9_]+$"
+          },
+          "label": {
+            "type": "string"
+          },
+          "page_ref": {
+            "type": "string"
+          },
+          "value": {
+            "type": [
+              "number",
+              "string",
+              "boolean"
+            ]
+          },
+          "unit": {
+            "type": "string"
+          },
+          "period": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "method": {
+            "type": "string",
+            "description": "The rule or calculation, and where it is implemented (a path at commit, or the eval on eval.ref)."
+          },
+          "repo": {
+            "type": "string",
+            "format": "uri"
+          },
+          "commit": {
+            "$ref": "#/$defs/sha"
+          },
+          "tolerance": {
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "abs"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "abs": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "rel_pct"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "rel_pct": {
+                    "type": "number",
+                    "minimum": 0
+                  }
+                }
+              }
+            ]
+          },
+          "basis": {
+            "enum": [
+              "fixed",
+              "live"
+            ],
+            "description": "fixed: inputs are pinned, any difference outside tolerance is a mismatch. live: the source file changes (for example daily), a difference outside tolerance is drift."
+          },
+          "limits": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
+            }
+          },
+          "scope": {
+            "enum": [
+              "both",
+              "rebuild",
+              "pinned"
+            ],
+            "default": "both",
+            "description": "both: graded in rebuild and prompt-level evals. rebuild: graded only when the eval rebuilds the result. pinned: graded only in a rebuild with --revision pinned (for example code identity with code.commit)."
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "sha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$"
+    }
+  }
+}

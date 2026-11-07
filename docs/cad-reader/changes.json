@@ -1,0 +1,16 @@
+{
+  "revision": "1",
+  "date": "2026-10-25",
+  "changes": [
+    {
+      "section": "STL connectivity",
+      "change": "Disclose exact-coordinate corner deduplication into shared point indices.",
+      "reason": "Describe the decoder behavior without implying independent facet corners."
+    },
+    {
+      "section": "Validation",
+      "change": "Add two-facet ASCII and binary STL regressions for shared connectivity and retained face order.",
+      "reason": "Check five unique points from six corners with one repeated position."
+    }
+  ]
+}

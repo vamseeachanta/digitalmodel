@@ -13,6 +13,8 @@ from pathlib import Path
 
 from . import __version__, RainflowCounter, SpectralAnalyzer, TimeSeriesProcessor
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 @click.group()
 @click.version_option(version=__version__, prog_name="signal-analysis")
@@ -179,7 +181,7 @@ def psd_cmd(input_file, column, sampling_rate, output):
         psd = analyzer.compute_psd(signal)
 
         # Calculate statistics
-        total_power = np.trapz(psd['psd'], psd['frequencies'])
+        total_power = _trapezoid(psd['psd'], psd['frequencies'])
         peak_freq = psd['frequencies'][np.argmax(psd['psd'])]
         peak_psd = np.max(psd['psd'])
 

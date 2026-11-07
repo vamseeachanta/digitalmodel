@@ -14,6 +14,8 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 GTM = ROOT / "examples/demos/gtm"
 TOKENS = (b"VC" + b"-funded", b"funding" + b"-badge")
+# Issue #2688 retires both the funding block and its sales/contact action.
+DEMO_PROMOTIONAL_TOKENS = TOKENS + (b"Schedule a " + b"Technical Demo", b"mail" + b"to:")
 
 
 def test_no_promotional_block_anywhere_under_demo_tree():
@@ -21,24 +23,62 @@ def test_no_promotional_block_anywhere_under_demo_tree():
     for path in GTM.rglob("*"):
         if path.is_file():
             content = path.read_bytes().lower()
-            if any(token.lower() in content for token in TOKENS):
+            if any(token.lower() in content for token in DEMO_PROMOTIONAL_TOKENS):
                 offenders.append(path.relative_to(GTM).as_posix())
     assert not offenders, offenders
 
 
-def test_teaser_method_keeps_callers_and_emits_only_internal_notice(tmp_path):
+@pytest.mark.parametrize("analysis_type", [None, "installation"])
+def test_teaser_method_keeps_callers_and_emits_only_internal_notice(tmp_path, analysis_type):
     spec = importlib.util.spec_from_file_location("gtm_report", GTM / "report_template.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     builder = module.GTMReportBuilder("Screening", "Parametric cases", "demo_test", 1)
-    builder.add_live_mode_teaser("installation")
+    builder.add_methodology("<p>Calculation method retained.</p>")
+    builder.add_section("Results", "<p>Screening results retained.</p>")
+    if analysis_type is None:
+        builder.add_live_mode_teaser()
+    else:
+        builder.add_live_mode_teaser(analysis_type)
     target = tmp_path / "report.html"
     builder.build(target)
     text = target.read_text(encoding="utf-8")
     assert "internal screening, not for clients" in text.lower()
+    assert "Calculation method retained." in text
+    assert "Screening results retained." in text
     assert "Schedule a Technical Demo" not in text
     assert "mailto:" not in text
     assert not any(token.lower() in text.lower().encode() for token in TOKENS)
+
+
+@pytest.mark.parametrize("relative", [
+    "output/nested/report.html",
+    "media/nested/template.css",
+    "fixtures/opaque.bin",
+])
+@pytest.mark.parametrize("payload", [
+    b"VC" + b"-funded",
+    b"funding" + b"-badge",
+    b"Schedule a " + b"Technical Demo",
+    b"mail" + b"to:",
+])
+def test_demo_tree_scan_rejects_nested_promotional_remnants(
+    tmp_path, monkeypatch, relative, payload
+):
+    """Issue #2688 requires the complete demo tree to remain free of promotion.
+
+    Independent expectation: an ordinary method note contains no marker and
+    passes. Appending an uppercase retired marker surrounded by non-text bytes
+    must produce an assertion naming that same nested file, for every suffix.
+    """
+    monkeypatch.setattr(sys.modules[__name__], "GTM", tmp_path)
+    target = tmp_path / relative
+    target.parent.mkdir(parents=True)
+    target.write_bytes(b"Internal screening method note.")
+    test_no_promotional_block_anywhere_under_demo_tree()
+    target.write_bytes(b"\x00\xff" + payload.upper() + b"\x00")
+    with pytest.raises(AssertionError, match=re.escape(relative)):
+        test_no_promotional_block_anywhere_under_demo_tree()
 
 
 def test_ten_stored_reports_have_no_sales_call_to_action():

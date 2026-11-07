@@ -1,0 +1,456 @@
+{
+  "arrangements": {
+    "rechecked": {
+      "anode_count": 50,
+      "checks": [
+        {
+          "margin_percent": 329.99327299412926,
+          "passes": true,
+          "provided": 2430.0,
+          "quantity": "Mean-current lifetime mass",
+          "required": 565.1251199999999,
+          "unit": "kg"
+        },
+        {
+          "margin_percent": 46.28732849071837,
+          "passes": true,
+          "provided": 69.60000000000001,
+          "quantity": "Initial current output",
+          "required": 47.57759999999999,
+          "unit": "A"
+        },
+        {
+          "margin_percent": 129.39914577677064,
+          "passes": true,
+          "provided": 62.89574019249186,
+          "quantity": "Mean current output",
+          "required": 27.417599999999997,
+          "unit": "A"
+        },
+        {
+          "margin_percent": 1.293129304028584,
+          "passes": true,
+          "provided": 62.89574019249186,
+          "quantity": "Final current output",
+          "required": 62.0928,
+          "unit": "A"
+        }
+      ],
+      "count_by_check": {
+        "final_current_output": 50,
+        "initial_current_output": 35,
+        "layout_distribution": 25,
+        "mass": 12,
+        "mean_current_output": 22
+      },
+      "governing_case": "final_current_output",
+      "layout": {
+        "actual_max_spacing_m": 6.0,
+        "anodes_per_location": 2,
+        "assessment_scope": "Section 3/5.2 general distribution and bilge spacing",
+        "checks": {
+          "bilge_damage_avoided": true,
+          "bilge_keel_alternation": true,
+          "project_location_minimum": true,
+          "spacing": true,
+          "uniform_distribution": true
+        },
+        "citation": "ABS GN Ships 2017 Section 3/5.2",
+        "minimum_anodes_per_location": 1,
+        "minimum_layout_count": 25,
+        "selected_anode_count": 50,
+        "selected_locations": 25,
+        "spacing_limit_m": 8.0,
+        "special_geometry_checks": {
+          "stern_propeller_openings": "NOT_EVALUATED: applicability and geometry not supplied"
+        },
+        "status": "PASS"
+      },
+      "layout_input_class": "ASSUMED",
+      "net_mass_per_anode_kg": 48.6,
+      "recommended_anode_count": 50,
+      "status": "PASS"
+    },
+    "stated": {
+      "anode_count": 48,
+      "checks": [
+        {
+          "margin_percent": 312.7935420743641,
+          "passes": true,
+          "provided": 2332.8,
+          "quantity": "Mean-current lifetime mass",
+          "required": 565.1251199999999,
+          "unit": "kg"
+        },
+        {
+          "margin_percent": 40.435835351089636,
+          "passes": true,
+          "provided": 66.816,
+          "quantity": "Initial current output",
+          "required": 47.57759999999999,
+          "unit": "A"
+        },
+        {
+          "margin_percent": 120.22317994569983,
+          "passes": true,
+          "provided": 60.379910584792185,
+          "quantity": "Mean current output",
+          "required": 27.417599999999997,
+          "unit": "A"
+        },
+        {
+          "margin_percent": -2.7585958681325518,
+          "passes": false,
+          "provided": 60.379910584792185,
+          "quantity": "Final current output",
+          "required": 62.0928,
+          "unit": "A"
+        }
+      ],
+      "count_by_check": {
+        "final_current_output": 50,
+        "initial_current_output": 35,
+        "layout_distribution": 24,
+        "mass": 12,
+        "mean_current_output": 22
+      },
+      "governing_case": "final_current_output",
+      "layout": {
+        "actual_max_spacing_m": 6.0,
+        "anodes_per_location": 2,
+        "assessment_scope": "Section 3/5.2 general distribution and bilge spacing",
+        "checks": {
+          "bilge_damage_avoided": true,
+          "bilge_keel_alternation": true,
+          "project_location_minimum": true,
+          "spacing": true,
+          "uniform_distribution": true
+        },
+        "citation": "ABS GN Ships 2017 Section 3/5.2",
+        "minimum_anodes_per_location": 1,
+        "minimum_layout_count": 24,
+        "selected_anode_count": 48,
+        "selected_locations": 24,
+        "spacing_limit_m": 8.0,
+        "special_geometry_checks": {
+          "stern_propeller_openings": "NOT_EVALUATED: applicability and geometry not supplied"
+        },
+        "status": "PASS"
+      },
+      "layout_input_class": "ASSUMED",
+      "net_mass_per_anode_kg": 48.6,
+      "recommended_anode_count": 50,
+      "status": "FAIL"
+    }
+  },
+  "case_kind": "synthetic",
+  "citations": [
+    {
+      "code_id": "abs-gn-ships",
+      "note": "Existing route locator; applicability remains assumed.",
+      "publisher": "ABS",
+      "revision": "2017-12",
+      "section": "abs-gn-ships 2017-12 Section 3, Table 4",
+      "source_path": "src/digitalmodel/cathodic_protection/abs_ships.py"
+    },
+    {
+      "code_id": "abs-gn-ships",
+      "note": "Existing route locator; applicability remains assumed.",
+      "publisher": "ABS",
+      "revision": "2017-12",
+      "section": "abs-gn-ships 2017-12 Section 2, Table 1",
+      "source_path": "src/digitalmodel/cathodic_protection/abs_ships.py"
+    },
+    {
+      "code_id": "abs-gn-ships",
+      "note": "Existing route locator; applicability remains assumed.",
+      "publisher": "ABS",
+      "revision": "2017-12",
+      "section": "abs-gn-ships 2017-12 Section 2, Table 3",
+      "source_path": "src/digitalmodel/cathodic_protection/abs_ships.py"
+    },
+    {
+      "code_id": "abs-gn-ships",
+      "note": "Existing route locator; applicability remains assumed.",
+      "publisher": "ABS",
+      "revision": "2017-12",
+      "section": "abs-gn-ships 2017-12 Section 2/4.4 and Table 4",
+      "source_path": "src/digitalmodel/cathodic_protection/abs_ships.py"
+    },
+    {
+      "code_id": "abs-gn-ships",
+      "note": "Existing route locator; applicability remains assumed.",
+      "publisher": "ABS",
+      "revision": "2017-12",
+      "section": "abs-gn-ships 2017-12 Section 2/4.5",
+      "source_path": "src/digitalmodel/cathodic_protection/abs_ships.py"
+    },
+    {
+      "code_id": "abs-gn-ships",
+      "note": "Existing route locator; applicability remains assumed.",
+      "publisher": "ABS",
+      "revision": "2017-12",
+      "section": "abs-gn-ships 2017-12 Section 2/5",
+      "source_path": "src/digitalmodel/cathodic_protection/abs_ships.py"
+    },
+    {
+      "code_id": "abs-gn-ships",
+      "note": "Existing route locator; applicability remains assumed.",
+      "publisher": "ABS",
+      "revision": "2017-12",
+      "section": "abs-gn-ships 2017-12 Sections 2/6.1-2/6.3",
+      "source_path": "src/digitalmodel/cathodic_protection/abs_ships.py"
+    },
+    {
+      "code_id": "abs-gn-ships",
+      "note": "Existing route locator; applicability remains assumed.",
+      "publisher": "ABS",
+      "revision": "2017-12",
+      "section": "abs-gn-ships 2017-12 Section 2/7.3",
+      "source_path": "src/digitalmodel/cathodic_protection/abs_ships.py"
+    },
+    {
+      "code_id": "abs-gn-ships",
+      "note": "Existing route locator; applicability remains assumed.",
+      "publisher": "ABS",
+      "revision": "2017-12",
+      "section": "abs-gn-ships 2017-12 Sections 2/7.5.1-2/7.5.2",
+      "source_path": "src/digitalmodel/cathodic_protection/abs_ships.py"
+    },
+    {
+      "code_id": "abs-gn-ships",
+      "note": "Existing route locator; applicability remains assumed.",
+      "publisher": "ABS",
+      "revision": "2017-12",
+      "section": "abs-gn-ships 2017-12 Section 3/5.2",
+      "source_path": "src/digitalmodel/cathodic_protection/abs_ships.py"
+    }
+  ],
+  "geometry_sources": [
+    {
+      "basis": "Assumed external rectangular hull; no actual asset represented.",
+      "input_class": "ASSUMED",
+      "path": "tests/fixtures/cathodic_protection/workflow_inputs/synthetic_hull.json"
+    }
+  ],
+  "input_basis": [
+    {
+      "basis": "Assumed, based on previous experience: select the rebuilt external-hull galvanic route; its historical key refers to ABS Guidance Notes on Cathodic Protection of Ships, December 2017.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.calculation_type"
+      ],
+      "unit": "route"
+    },
+    {
+      "basis": "Assumed, based on previous experience: round dimensions for a rectangular submerged shell; no actual hull or site is represented.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "hull_geometry.length_m",
+        "hull_geometry.beam_m",
+        "hull_geometry.draught_m"
+      ],
+      "unit": "m"
+    },
+    {
+      "basis": "Assumed, based on previous experience: bottom plus both sides and ends from the assumed rectangular dimensions; excludes the waterplane and appendages.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.structure.steel_total_area"
+      ],
+      "unit": "m2"
+    },
+    {
+      "basis": "Assumed, based on previous experience: illustrative service interval without a maintenance record.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.design_data.design_life"
+      ],
+      "unit": "yr"
+    },
+    {
+      "basis": "Assumed, based on previous experience: illustrative seawater temperature; no measurement exists.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.design_data.seawater_max_temperature"
+      ],
+      "unit": "degC"
+    },
+    {
+      "basis": "Assumed, based on previous experience: aerobic external seawater without sediment contact.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.design_data.biofouling.type"
+      ],
+      "unit": "condition"
+    },
+    {
+      "basis": "Assumed, based on previous experience: illustrative seawater resistivity without measurements.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.environment.seawater.resistivity.input"
+      ],
+      "unit": "ohm m"
+    },
+    {
+      "basis": "Assumed, based on previous experience: partial coating coverage and initial/final exposed fractions of coated steel; these are not a standard coating category or a product qualification.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.structure.area_coverage",
+        "inputs.structure.coating_initial_breakdown_factor",
+        "inputs.structure.coating_breakdown_factor_max"
+      ],
+      "unit": "%"
+    },
+    {
+      "basis": "Assumed, based on previous experience: illustrative bare-steel densities; not a transcription of a standard range or a measured service condition.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.design_current.dynamic_bare_steel_mA_m2",
+        "inputs.design_current.static_bare_steel_mA_m2"
+      ],
+      "unit": "mA/m2"
+    },
+    {
+      "basis": "Assumed, based on previous experience: illustrative dynamic exposure fraction, with the remainder static.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.design_current.dynamic_time_fraction"
+      ],
+      "unit": "fraction"
+    },
+    {
+      "basis": "Assumed, based on previous experience: aluminium alloy identifier supported by the existing route, without a selected supplier or qualified product.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.anode.material",
+        "inputs.anode.alloy"
+      ],
+      "unit": "selection"
+    },
+    {
+      "basis": "Assumed, based on previous experience: illustrative protection and closed-circuit potentials, constrained by the existing ABS route lookup; independently sourced applicability is not established.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.anode.protection_potential",
+        "inputs.anode.closed_circuit_anode_potential"
+      ],
+      "unit": "V vs Ag/AgCl seawater"
+    },
+    {
+      "basis": "Assumed, based on previous experience: illustrative usable alloy fraction, without product evidence.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.anode.anode_Utilisation_factor"
+      ],
+      "unit": "fraction"
+    },
+    {
+      "basis": "Assumed, based on previous experience: illustrative aluminium density for an ideal rectangular anode.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.anode.anode_density"
+      ],
+      "unit": "kg/m3"
+    },
+    {
+      "basis": "Assumed, based on previous experience: net alloy volume equals length times width times height minus length times core cross-section; multiplied by assumed density.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.anode.physical_properties.net_weight"
+      ],
+      "unit": "kg"
+    },
+    {
+      "basis": "Assumed, based on previous experience: ideal rectangular long-flush anode dimensions; no supplier drawing exists.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.anode.physical_properties.height",
+        "inputs.anode.geometry.length_m",
+        "inputs.anode.geometry.width_m"
+      ],
+      "unit": "m"
+    },
+    {
+      "basis": "Assumed, based on previous experience: ideal through-core cross-section used in both net mass and depletion arithmetic.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.anode.physical_properties.core_cross_section_m2"
+      ],
+      "unit": "m2"
+    },
+    {
+      "basis": "Assumed, based on previous experience: long flush mounting selected for the ideal rectangular anode.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.anode.geometry.type"
+      ],
+      "unit": "shape"
+    },
+    {
+      "basis": "Assumed, based on previous experience: trial maximum spacing declaration only; no coordinate schedule or local potential calculation supports it.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.layout.actual_max_spacing_m"
+      ],
+      "unit": "m"
+    },
+    {
+      "basis": "Assumed, based on previous experience: paired port/starboard trial locations and a location minimum; re-sizing retains pairs and increases locations to fit the calculated count.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.layout.selected_locations",
+        "inputs.layout.anodes_per_location",
+        "inputs.layout.minimum_anodes_per_location"
+      ],
+      "unit": "count"
+    },
+    {
+      "basis": "Assumed, based on previous experience: illustrative general-layout declarations only; these flags do not establish spatial adequacy or special-geometry applicability.",
+      "input_class": "ASSUMED",
+      "paths": [
+        "inputs.layout.high_current_or_low_resistivity",
+        "inputs.layout.mechanical_damage_risk",
+        "inputs.layout.uniform_distribution_confirmed",
+        "inputs.layout.bilge_damage_avoided",
+        "inputs.layout.bilge_keel_fitted",
+        "inputs.layout.bilge_keel_alternation_confirmed"
+      ],
+      "unit": "boolean"
+    }
+  ],
+  "input_sha256": "7accb0058707c4313555d6e8341f899d0015f00145194027d64d3cdb67a2a6bf",
+  "local_potential_assessment": "NOT_EVALUATED",
+  "marketing_cleared": false,
+  "monitoring": {
+    "frequency": "NOT_EVALUATED",
+    "intervention_date": "NOT_EVALUATED",
+    "positions": "deepest bottom, remote bow and stern, appendages and shielded positions",
+    "required_inputs": "qualified criterion and electrode, layout, baseline survey, operating exposure, depletion and access dates",
+    "retrofit_quantity": "NOT_EVALUATED",
+    "status": "NOT_EVALUATED",
+    "trigger_potential": "NOT_EVALUATED"
+  },
+  "recommendations": {
+    "basis": "Retain the declared anodes per location; resolve failed layout checks and confirm placement before acceptance.",
+    "design_additional_anodes": 2,
+    "design_additional_mass_kg": 97.2
+  },
+  "report_sha256": "382f3bdab69dc8b2aa818d7f8a0c591f10778cf6cc54988ea4a90dbabd72b3a2",
+  "reporting_standard_revision": null,
+  "route_lookup_basis": {
+    "basis": "Assumed, based on previous experience: electrochemical capacity and potential applicability are unqualified. Existing ABS lookup values are used without opening a standards document or private material.",
+    "capacity_Ah_kg": 2500,
+    "input_class": "ASSUMED",
+    "source": "src/digitalmodel/cathodic_protection/abs_ships_tables.py; ABS Guidance Notes on Cathodic Protection of Ships, December 2017, Aluminium alloy anodes and Protection potential."
+  },
+  "sensitivity": [],
+  "status": "Issued for information; synthetic assumed basis",
+  "zone_demand_A": {
+    "external_hull": {
+      "I_final_A": 62.0928,
+      "I_initial_A": 47.57759999999999,
+      "I_mean_A": 27.417599999999997
+    }
+  }
+}

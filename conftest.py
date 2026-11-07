@@ -34,13 +34,14 @@ files under both, since it does not traverse the symlink; ``find -L`` reports
 seven each.  A survey that does not follow symlinks will conclude, wrongly,
 that there is nothing there.
 
-``examples`` is deliberately NOT excluded.  It holds 27 tracked files matching
-``python_files``, and they collect to 315 real tests.  Excluding it would
-silently remove them from every recursive run -- precisely the #1977 defect
-this file was created to fix, at a larger scale than the original 177.  They
-are, separately, owned by no row in ``tests/DOMAINS.md`` and therefore run in
-no CI shard; that gap is real but it is a different problem, and hiding the
-tests is not a fix for it.
+``examples`` is deliberately NOT excluded: it contains real tests that must
+remain reachable by explicit and recursive collection. Its CI dispatch policy
+is recorded in ``NO_DOMAIN_PATHS`` in ``scripts/ci/detect_touched_domains.py``
+(issue #1992, option 2). These demonstrations are explicitly non-gating until
+the external intake resources and stale golden results are repaired; this is
+separate from collection visibility. See
+``docs/development/example-test-policy.md`` for the measured baseline and the
+conditions for adding a gating domain.
 
 Keep this file declarative.  A root conftest is imported by every pytest
 invocation in the repository, so anything executable here is executed

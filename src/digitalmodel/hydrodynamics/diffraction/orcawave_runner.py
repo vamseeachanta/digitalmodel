@@ -63,6 +63,7 @@ from digitalmodel.hydrodynamics.diffraction.mesh_packaging import (
     iter_mesh_references,
     package_spec_meshes,
 )
+from digitalmodel.hydrodynamics.diffraction.mesh_preflight import write_preflight_reports
 from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     ADDED_MASS_UNITS,
@@ -220,6 +221,7 @@ class RunResult:
     modular_files: list[Path] = field(default_factory=list)
     output_dir: Path | None = None
     mesh_files: list[Path] = field(default_factory=list)
+    preflight_reports: list[dict] = field(default_factory=list)
     log_file: Path | None = None
     stdout: str = ""
     stderr: str = ""
@@ -411,6 +413,10 @@ class OrcaWaveRunner:
             spec_to_generate, output_dir
         )
         self._result.input_file = input_file
+        self._result.preflight_reports = [
+            dict(report) for report in self._backend.preflight_reports
+        ]
+        write_preflight_reports(self._result.preflight_reports, output_dir)
         self._result.modular_files = modular_files
 
         # Validate mesh references
@@ -826,11 +832,17 @@ class OrcaWaveRunner:
         """Best-effort hydrostatics extraction; None if unavailable."""
         try:
             hs = diffraction.hydrostaticResults[0]
-            restoring = np.asarray(hs["restoringMatrix"], dtype=float)
+            # OrcaWave WebHelp, Data: Model, Units and Results: Hydrostatics
+            # (online edition accessed 2026-10-25): native SI uses tonnes/kN;
+            # the shared schema uses kg/N. All restoring blocks contain one
+            # force factor (F/L, F/rad, FL/L, FL/rad), so kN -> N scales the
+            # entire matrix by 1000; metre and radian factors stay unchanged.
+            # Multiply out of place to preserve the native result array.
+            restoring = np.asarray(hs["restoringMatrix"], dtype=float) * 1000.0
             return HydrostaticResults(
                 vessel_name=vessel_name,
                 displacement_volume=float(hs["volume"]),
-                mass=float(hs["mass"]),
+                mass=tonnes_to_kg(float(hs["mass"])),
                 centre_of_gravity=list(np.asarray(hs["centreOfMass"], dtype=float)),
                 centre_of_buoyancy=list(
                     np.asarray(hs["centreOfBuoyancy"], dtype=float)

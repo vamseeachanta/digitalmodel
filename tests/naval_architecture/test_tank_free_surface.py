@@ -157,6 +157,8 @@ def test_published_example_executes_and_matches_hand_values(capsys):
         359 / 375,
     ]
     assert results == pytest.approx(expected)
+    assert namespace["table_corrected_volume"] == pytest.approx(58.6035948057426)
+    assert namespace["ullage_corrected_volume"] == pytest.approx(58.6035948057426)
     # The final table has quantity/hand/code columns; both numeric columns
     # must reproduce the three-significant-figure results, not stale prose.
     result_cells = parser.cells[-30:]

@@ -580,14 +580,18 @@ class TestSymlinks:
         assert "mapped-drive-path" in out.stdout
 
 
-class TestCiRunsTheGate:
-    def test_the_quality_workflow_scans_the_whole_tree(self):
-        wf = (REPO / ".github" / "workflows" / "quality-gates.yml").read_text(
-            encoding="utf-8"
+class TestCiRetirementContract:
+    def test_quality_workflow_keeps_identifier_audits_manual(self):
+        # docs/legal-scanning.md: automatic identifier gates retired 2026-10-03.
+        workflow = yaml.safe_load(
+            (REPO / ".github" / "workflows" / "quality-gates.yml").read_text(
+                encoding="utf-8"
+            )
         )
-        assert "scripts/legal/check_identifiers.py --all" in wf
-        assert "--baseline .legal-uninspectable-baseline.txt" in wf
-        assert "--max-uninspectable" not in wf
+        assert "identifier-gate" not in workflow["jobs"]
+        for job in workflow["jobs"].values():
+            for step in job.get("steps", []):
+                assert "scripts/legal/check_identifiers.py" not in step.get("run", "")
 
 
 # --------------------------------------------------------------------------- #

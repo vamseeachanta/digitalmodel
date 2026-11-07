@@ -131,6 +131,7 @@ sections:
     title: "Installation"
     hrefs:
       - "../installation/installation-heading-explorer.html"
+      - "../installation/installation-forecast.html"
       - "https://github.com/vamseeachanta/digitalmodel/tree/main/src/digitalmodel/installation/installation_pamphlet"
       - "https://github.com/vamseeachanta/digitalmodel/tree/main/data/vessels"
       - "https://github.com/vamseeachanta/digitalmodel/tree/main/examples/structural/offshore_container_utilization"

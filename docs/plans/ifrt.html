@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Internal floating roof tank implementation plan</title>
+<style>body{max-width:900px;margin:3rem auto;font:17px/1.6 system-ui;padding:0 1rem}code{font-size:.9em}</style>
+<h1>Internal floating roof tank implementation plan</h1>
+<p>The change will address <a href="https://github.com/vamseeachanta/digitalmodel/issues/3812">the floating roof tank calculation issue</a>
+within the existing storage-tank package. It will use public sources and will preserve unrelated work.</p>
+<ol>
+<li>The calculation will implement EPA AP-42 Chapter 7.1, June 2026, section 7.1.3.2:
+rim, fitting, seam and withdrawal losses. SI inputs will be converted to the equation units through the existing unit registry.</li>
+<li>A small selection of zero-wind seal and fitting factors will carry existing Citation/CitedValue sidecars.
+Bundled source metadata will resolve at calculation time, including from an installed wheel.
+Other factors will require explicit values, units and resolvable citations.</li>
+<li>The calculation will reject landed roofs, tanks without open vents, boiling stocks,
+deteriorated seals, invalid units and invalid numerical inputs. Tight-fit factors will require an explicit gap-verification attestation.</li>
+<li>A separate normal vent comparison will combine caller-supplied liquid-transfer factors and thermal duties,
+check both flow capacity and rated relieving pressure plus losses against tank limits, and expose the basis.
+It will require API edition-specific inputs rather than embed paid tables. The example will label all vent duties illustrative.</li>
+<li>Tests will precede implementation and will include independent arithmetic for a synthetic 30 m by 15 m gasoline tank,
+unit conversions, seal and deck comparisons, column clingage, missing citations, exclusions and pressure/vacuum failures.</li>
+<li>The module and the complete existing code-check test folder will be run with uv and pytest.
+A runnable example and an HTML guide will document support legs, landed roofs and the limits of the vent check.</li>
+<li>Local adversarial review will inspect equations, units, scope restrictions, source integrity and packaging.</li>
+</ol>
+<p>Acceptance will require matching the independently calculated component masses, separate standing and withdrawal totals,
+passing related tests, a clean focused diff, and source metadata available without another repository.
+The FFS catalog and explorer/website entries outside this repository will remain follow-ups.</p>
+<p>The review will specifically hunt the missing square in the vapor-pressure denominator, an extra π/4 in the seam equation,
+US gallon versus litre confusion, gross versus net throughput, column versus leg confusion, and an unsupported API compliance verdict.</p>
+</html>

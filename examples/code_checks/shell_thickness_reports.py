@@ -41,14 +41,14 @@ ASSUMED = (
 )
 
 
-def _document(title: str, sequence: str, *, revision: str = "00") -> DocumentMeta:
+def _document(title: str, sequence: str, *, revision: str) -> DocumentMeta:
     return DocumentMeta(
         number=f"T0000-RPT-{sequence}-{revision}",
         revision=revision,
         title=title,
         project="Generic shell sizing",
         client="Public illustration",
-        date="2026-10-19",
+        date="2026-10-21",
         revision_history=[
             RevisionRow(
                 rev="00",
@@ -59,14 +59,31 @@ def _document(title: str, sequence: str, *, revision: str = "00") -> DocumentMet
             ),
             *(
                 [RevisionRow(
-                    rev=revision,
+                    rev="01",
                     date="2026-10-19",
                     description=(
                         "Use design liquid level in both sizing cases and distinguish "
                         "pressure-governed utilisation from the nominal floor."
                     ),
                 )]
-                if revision != "00" else []
+                if sequence == "001" else []
+            ),
+            RevisionRow(
+                rev="02" if sequence == "001" else "01",
+                date="2026-10-21",
+                description=(
+                    "Show separate applicability evidence and selected plate margins in chart hover data."
+                    if sequence == "001" else
+                    "Show shell and head nominal limits and margins in chart hover data."
+                ),
+            ),
+            RevisionRow(
+                rev=revision,
+                date="2026-10-21",
+                description=(
+                    "Show nominal walls and margins to three decimal places so small shortfalls remain visible."
+                    + (" Align hand-calculation thickness precision." if sequence == "001" else "")
+                ),
             ),
         ],
     )
@@ -96,7 +113,7 @@ def example_specs():
     result = design_shell(inputs)
     tank = tank_report(
         result,
-        _document("Atmospheric tank shell analysis", "001", revision="01"),
+        _document("Atmospheric tank shell analysis", "001", revision="03"),
         water_unit_weight_kn_m3=9.8,
         pressure_source=ASSUMED,
     )
@@ -118,8 +135,8 @@ def example_specs():
                         "Course 7 starts at 6 * 2.25 = 13.5 m, so H = 4.5 m. Design wall = "
                         "4.9 * 30 * (4.5 - 0.3) / 150 + 1.500 = 5.616 mm. Test wall = "
                         "4.9 * 30 * (4.5 - 0.3) / 160 = 3.859 mm. The 6.000 mm floor governs.\n\n"
-                        "At 3 significant figures, the hand and program design values are 18.8 mm "
-                        "and 5.62 mm respectively; the unrounded arithmetic is checked in the tests. "
+                        "The hand and program design values agree to three decimal places: 18.846 mm "
+                        "for the bottom course and 5.616 mm for course 7; the unrounded arithmetic is checked in the tests. "
                         "The selected course plates sum to 100.000 mm. Nominal shell mass = "
                         "pi * 30 * 2.25 * (100 / 1000) * 7800 kg; this is a thin-shell estimate.\n\n"
                         "Way forward: obtain an applicable API 650 edition, its diameter limit, "
@@ -145,7 +162,7 @@ def example_specs():
             joint_efficiency=1,
             material_name="Illustrative steel",
         ),
-        document=_document("Pressure vessel shell analysis", "002"),
+        document=_document("Pressure vessel shell analysis", "002", revision="02"),
         test_factor=1.5,
         test_allowable_mpa=120,
         pressure_points_mpa=(0, 2, 4, 6, 8, 10),
@@ -208,6 +225,7 @@ def generate(output: Path, *, compact: bool = False) -> list[Path]:
         "courses": [asdict(row) for row in result.courses],
         "shell_mass_kg": result.shell_mass_kg,
         "citations": result.citation_sidecar()["citations"],
+        "not_evaluated": list(result.not_evaluated),
         "sha256": digests,
     }
     path = output / "shell-thickness-examples.json"

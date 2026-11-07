@@ -1,12 +1,13 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Legacy calculation methods for catenary riser analysis."""
 
 import math
 import pandas as pd
 import warnings
 
-import matplotlib.pyplot as plt
-from digitalmodel.units import Q_
-from digitalmodel.subsea.catenary_riser.legacy.pipeProperties import pipeProperties
+from ..models import _range
 
 
 def catenaryEquation(data):
@@ -29,7 +30,7 @@ def catenaryEquation(data):
         stacklevel=2
     )
 
-    if data["F"] != None:
+    if data.get("F") is not None:
         # Share the corrected E1-E2 force route, with w already in N/m.
         from .catenary_equation import CatenaryCalculator
         CatenaryCalculator().calculate(data)
@@ -37,24 +38,15 @@ def catenaryEquation(data):
 
         return data
 
-    elif data["q"] != None:
-        tanq = math.tan(math.radians(90 - data["q"]))
-        BendRadius = (
-            data["d"]
-            * (math.cos(math.radians(90 - data["q"])))
-            / (1 - math.cos(math.radians(90 - data["q"])))
-        )
-        S = BendRadius * tanq
-        X = BendRadius * math.asinh(tanq)
-
-        data.update({"S": S, "X": X, "BendRadius": BendRadius})
-
-        return data
+    elif data.get("q") is not None:
+        from .catenary_equation import CatenaryCalculator
+        return CatenaryCalculator().calculate(data)
 
     # The X-driven branch is unimplemented; keep it LAST so a re-invocation on a
     # dict whose "X" was populated by the q-branch above still resolves via q.
-    elif data["X"] != None:
+    elif data.get("X") is not None:
         raise NotImplementedError("Not implemented yet")
+    raise ValueError("provide force, weight and depth, or q and depth")
 
 
 def catenaryForces(data):
@@ -296,6 +288,7 @@ def lazyWavePlot(data, spacing=10):
 
 
 def simple_catenary_plot(data, spacing=10):
+    """Plot angle-route geometry with BendRadius relative to mean sea level."""
     # HangoffToTouchDown Section
     X = []
     Y = []
@@ -320,6 +313,7 @@ def simple_catenary_plot(data, spacing=10):
         "X": X,
         "Y": Y,
         "label": "Catenary",
+        "ylabel": "Elevation relative to mean sea level [m]",
         "SaveAndShow": True,
         "fileName": data["Analysis"]["result_folder"]
         + "SCR_"
@@ -331,7 +325,8 @@ def simple_catenary_plot(data, spacing=10):
 
 
 def genericPlot(data):
-    if data["label"] == None:
+    import matplotlib.pyplot as plt
+    if data["label"] is None:
         plt.plot(data["X"], data["Y"])
     else:
         plt.plot(data["X"], data["Y"], label=data["label"])
@@ -339,7 +334,8 @@ def genericPlot(data):
     plt.xlabel("Horizontal distance[m]", fontsize=12, fontweight="bold", color="black")
     # it creates plot Y-axis name, fontsize and colour
     plt.ylabel(
-        "Distance from seabed [m]", fontsize=12, fontweight="bold", color="black"
+        data.get("ylabel", "Distance from seabed [m]"),
+        fontsize=12, fontweight="bold", color="black"
     )
     # it creates plot tittle, color and size
     plt.title(
@@ -347,7 +343,7 @@ def genericPlot(data):
     )
     # Gridlines
     plt.grid()
-    if data["SaveAndShow"] == True:
+    if data["SaveAndShow"]:
         # plt.savefig(data["fileName"].replace(".", ""), dpi=800)
         plt.savefig(data["fileName"], dpi=800)
         plt.legend(
@@ -360,67 +356,82 @@ def genericPlot(data):
 
 
 def buoyancyProperties(cfg, WeightPerUnitLengthWithOutBuoyancy):
+    """Size a concentric annulus with configured gravity, not an empirical factor.
 
-    if cfg["commonDefinition"]["UniformBuoyancy"]["Thickness"] != None:
-        cfg = pipeProperties(
-            cfg, FluidDensity=cfg["Material"]["Reference_Fluid"]["Rho"], Buoyancy=True
-        )
-        WeightPerUnitLengthWithBuoyancy = cfg["equivalentPipe"]["weightPerUnitLength"]
-        cfg["commonDefinition"]["UniformBuoyancy"]["BuoyancyFactor"] = 1 - (
-            WeightPerUnitLengthWithBuoyancy / WeightPerUnitLengthWithOutBuoyancy
-        )
-        # Add buoyancy Ratio and also buoyancy module detailed properties
-    elif cfg["commonDefinition"]["UniformBuoyancy"]["BuoyancyFactor"] != None:
-        BuoyancyOD = (
-            math.sqrt(
-                2
-                * cfg["catenaryResult"]["Reference_FluidFilled"]["weightPerUnitLength"]
-                / 9.81
-                * 4
-                / math.pi
-                / (
-                    cfg["Material"]["SeaWater"]["Rho"]
-                    - cfg["Material"]["Buoyancy"]["Rho"]
-                )
-                + Q_(cfg["InsulationSection"]["OD"], 'inch').to('m').magnitude ** 2
-            )
-            / Q_(1, 'inch').to('m').magnitude
-        )
-        cfg["commonDefinition"]["UniformBuoyancy"]["Thickness"] = (
-            BuoyancyOD - cfg["InsulationSection"]["OD"]
-        ) / 2
-        WeightPerUnitLengthWithBuoyancy = (
-            1 - cfg["commonDefinition"]["UniformBuoyancy"]["BuoyancyFactor"]
-        ) * cfg["catenaryResult"]["FluidFilled"]["weightPerUnitLength"]
+    Basis: OpenStax University Physics Vol. 1 (2016), section 14.4,
+    Archimedes principle F_B = weight of displaced fluid; engineering-basis.md E4.
+    https://openstax.org/books/university-physics-volume-1/pages/14-4-archimedes-principle-and-buoyancy
+    Uplift per length = (rho_water-rho_foam)*g*pi/4*(D_o**2-D_i**2).
+    Inch conversion: NIST SP 811 (2008), Appendix B.8, length table.
 
-    cfg["commonDefinition"]["UniformBuoyancy"]["BuoyancyOD"] = (
-        cfg["InsulationSection"]["OD"]
-        + 2 * cfg["commonDefinition"]["UniformBuoyancy"]["Thickness"]
-    )
+    Geometry is in inches; densities kg/m3, weights N/m and acceleration m/s2.
+    Supply exactly one of thickness >= 0 or buoyancy factor >= 0. The factor
+    specifies uplift divided by the positive reference-fluid bare weight.
+    WeightPerUnitLengthWithOutBuoyancy is that reference weight, as supplied by
+    the legacy caller; cfg['catenaryResult']['FluidFilled'] supplies actual weight.
+    Actual-fluid bare weight may differ; the same uplift is subtracted from it.
+    Discrete coverage is percent in (0,100], preserving mean annular volume.
+    Strake effects, end caps and module attachments are outside this annular model.
+    """
+    from .pipeProperties import INCH_TO_METRE
 
-    cfg["commonDefinition"]["DiscreteBuoyancy"]["BuoyancyOD"] = math.sqrt(
-        100
-        / cfg["commonDefinition"]["DiscreteBuoyancy"]["BuoyancyCoverage"]
-        * (BuoyancyOD**2 - cfg["InsulationSection"]["OD"] ** 2)
-        + cfg["InsulationSection"]["OD"] ** 2
-    )
-    cfg["commonDefinition"]["DiscreteBuoyancy"]["Thickness"] = (
-        cfg["commonDefinition"]["DiscreteBuoyancy"]["BuoyancyOD"]
-        - cfg["InsulationSection"]["OD"]
-    ) / 2
+    uniform = cfg["commonDefinition"]["UniformBuoyancy"]
+    discrete = cfg["commonDefinition"]["DiscreteBuoyancy"]
+    thickness, factor = uniform["Thickness"], uniform["BuoyancyFactor"]
+    if (thickness is None) == (factor is None):
+        raise ValueError("supply exactly one Thickness or BuoyancyFactor")
+    gravity = cfg["default"]["Constants"]["g"]
+    _range("g", gravity, positive=True)
+    inner = cfg["InsulationSection"]["OD"]
+    _range("OD", inner, positive=True)
+    water = cfg["Material"]["SeaWater"]["Rho"]
+    foam = cfg["Material"]["Buoyancy"]["Rho"]
+    _range("SeaWater Rho", water, positive=True)
+    _range("Buoyancy Rho", foam)
+    if water <= foam:
+        raise ValueError("buoyancy material density must be less than seawater density")
+    coverage = discrete["BuoyancyCoverage"]
+    _range("BuoyancyCoverage", coverage, positive=True)
+    if coverage > 100:
+        raise ValueError("BuoyancyCoverage must not exceed 100 percent")
+    reference_weight = WeightPerUnitLengthWithOutBuoyancy
+    _range("reference weightPerUnitLength", reference_weight, positive=True)
+    actual_weight = cfg["catenaryResult"]["FluidFilled"]["weightPerUnitLength"]
+    _range("actual weightPerUnitLength", actual_weight)
+    force_per_inch_area = (water - foam) * gravity * INCH_TO_METRE**2
+    if thickness is not None:
+        _range("Thickness", thickness)
+        outer = inner + 2 * thickness
+        uplift = force_per_inch_area * math.pi / 4 * (outer**2 - inner**2)
+        factor = uplift / reference_weight
+    else:
+        _range("BuoyancyFactor", factor)
+        uplift = factor * reference_weight
+        outer = math.sqrt(inner**2 + 4 * uplift / (math.pi * force_per_inch_area))
+        thickness = (outer - inner) / 2
+    discrete_outer = math.sqrt(inner**2 + 100 / coverage * (outer**2 - inner**2))
+    for name, value in (("BuoyancyOD", outer), ("discrete BuoyancyOD", discrete_outer),
+                        ("uplift", uplift)):
+        _range(name, value)
 
-    cfg["lazyWaveCatenaryResult"] = {}
-    cfg["lazyWaveCatenaryResult"]["WeightPerUnitLengthWithOutBuoyancy"] = cfg[
-        "catenaryResult"
-    ]["FluidFilled"]["weightPerUnitLength"]
-    cfg["lazyWaveCatenaryResult"][
-        "WeightPerUnitLengthWithBuoyancy"
-    ] = WeightPerUnitLengthWithBuoyancy
-
+    # All checks precede updates; invalid inputs leave the caller unchanged.
+    uniform.update(Thickness=thickness, BuoyancyFactor=factor, BuoyancyOD=outer)
+    discrete.update(BuoyancyOD=discrete_outer, Thickness=(discrete_outer-inner)/2)
+    cfg["lazyWaveCatenaryResult"] = {
+        "WeightPerUnitLengthWithOutBuoyancy": actual_weight,
+        "WeightPerUnitLengthWithBuoyancy": actual_weight-uplift,
+    }
     return cfg
 
 
 def gethorizontalDistanceHangofftoTDPrange(cfg):
+    """Sample positive declinations at 0.01 degree spacing; preserve fractions.
+
+    The integer conversion selects an exclusive upper grid bound, not a
+    rounded input angle. E1/E3 in engineering-basis.md govern each sample.
+    Returned coordinates retain the legacy three-decimal reporting precision;
+    the generated mesh remains unqualified for native execution.
+    """
     layback_df = pd.DataFrame(
         columns=["q", "X", "S", "BendRadius", "TotalLength", "MeshSections"]
     )
@@ -442,7 +453,7 @@ def gethorizontalDistanceHangofftoTDPrange(cfg):
         else:
             q_max = 45
 
-        for q_index in range(0, q_max * steps_in_degrees):
+        for q_index in range(1, q_max * steps_in_degrees):
             q = q_index / steps_in_degrees
             catenaryEquation_cfg = {
                 "d": cfg["simpleCatenaryDefinition"]["verticalDistance"],
@@ -492,6 +503,6 @@ def gethorizontalDistanceHangofftoTDPrange(cfg):
             result_index_range.append(layback_df["X"].sub(layback_value).abs().idxmin())
 
         layback_df = layback_df.round(3)
-        rangeresult = layback_df.iloc[result_index_range].to_dict("records")
+        rangeresult = layback_df.loc[result_index_range].to_dict("records")
 
         return rangeresult

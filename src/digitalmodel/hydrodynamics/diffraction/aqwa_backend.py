@@ -17,6 +17,12 @@ from GDF mesh files and emitted in AQWA's fixed-column format.
 
 from __future__ import annotations
 
+from digitalmodel.hydrodynamics.diffraction.external_matrix_contract import (
+    native_matrix,
+    validate_aqwa_matrix_axes,
+    write_matrix_provenance,
+)
+
 import math
 from dataclasses import dataclass
 from pathlib import Path
@@ -32,6 +38,10 @@ from digitalmodel.hydrodynamics.diffraction.input_schemas import (
     VesselInertia,
 )
 
+from digitalmodel.hydrodynamics.diffraction.mesh_preflight import (
+    buoyancy_preflight, expand_sector, read_gdf_mesh, validate_symmetry,
+)
+
 
 # ---------------------------------------------------------------------------
 # Mesh data container
@@ -45,6 +55,7 @@ class ParsedMesh:
     vertices: np.ndarray  # (N, 3) array of node coordinates
     panels: np.ndarray  # (M, 4) array of panel vertex indices
     name: str = ""
+    symmetry_flags: tuple[int, int] = (0, 0)  # WAMIT v7.4, section 6.1.
 
     @property
     def n_vertices(self) -> int:
@@ -169,6 +180,7 @@ class AQWABackend:
         """Initialize the mesh cache and relative-path context."""
         self._spec_dir: Optional[Path] = None
         self._mesh_cache: dict[str, ParsedMesh] = {}
+        self.preflight_reports: list[dict] = []
 
     # -----------------------------------------------------------------
     # Public entry points
@@ -200,18 +212,20 @@ class AQWABackend:
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        self._spec_dir = Path(spec_dir) if spec_dir else None
+        self._spec_dir = Path(spec_dir) if spec_dir is not None else spec._source_dir
         self._mesh_cache.clear()
+        self.preflight_reports = buoyancy_preflight(spec, self._spec_dir)
 
         all_cards = self._assemble_all_decks(spec)
         file_name = self._make_filename(spec)
         output_path = output_dir / file_name
 
         # AQWA on Windows expects CRLF line endings
-        # Use newline='' to prevent Python from adding extra line conversion
+        # Use newline='\n' to preserve the explicit native CRLF content.
         content = "\r\n".join(all_cards) + "\r\n"
-        with open(output_path, "w", newline="") as f:
+        with open(output_path, "w", encoding="utf-8", newline="\n") as f:
             f.write(content)
+        write_matrix_provenance(spec, output_dir, "aqwa")
         return output_path
 
     def generate_modular(
@@ -240,8 +254,9 @@ class AQWABackend:
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        self._spec_dir = Path(spec_dir) if spec_dir else None
+        self._spec_dir = Path(spec_dir) if spec_dir is not None else spec._source_dir
         self._mesh_cache.clear()
+        self.preflight_reports = buoyancy_preflight(spec, self._spec_dir)
 
         deck_builders = self._ordered_deck_builders(spec)
         header = self._workbench_header()
@@ -252,8 +267,9 @@ class AQWABackend:
             # deck file so concatenating modular outputs reproduces the
             # single-file output byte-for-byte (after whitespace strip).
             file_cards = header + cards if idx == 0 else cards
-            file_path.write_text("\n".join(file_cards) + "\n")
+            file_path.write_text("\r\n".join(file_cards) + "\r\n", encoding="utf-8", newline="\n")
 
+        write_matrix_provenance(spec, output_dir, "aqwa")
         return output_dir
 
     # -----------------------------------------------------------------
@@ -338,13 +354,45 @@ class AQWABackend:
         return mesh
 
     def _load_body_mesh(self, geometry: VesselGeometry) -> Optional[ParsedMesh]:
-        """Verify a full xz body before emitting its compact nonnegative half.
+        """Validate the declared sector and prepare AQWA body panels.
+
+        Xz cuts emit the nonnegative-y half with SYMX. Other declared cuts
+        are reflected to a full body before emission.
 
         Classification, mirror matching and centreline snapping use the same
         tolerance: max(1e-8 m, 2e-6 times the longitudinal mesh extent).
         The cached source coordinates remain unchanged.
         """
         mesh = self._load_mesh(geometry.mesh_file)
+        if mesh is None and (
+            geometry.mesh_format == "gdf"
+            or Path(geometry.mesh_file).suffix.lower() == ".gdf"
+            or geometry.symmetry != "none"
+        ):
+            mesh_path = self._resolve_mesh_path(geometry.mesh_file)
+            if (
+                geometry.mesh_format == "gdf"
+                and mesh_path.is_file()
+                and mesh_path.suffix.lower() != ".gdf"
+            ):
+                found_suffix = repr(mesh_path.suffix) if mesh_path.suffix else "no suffix"
+                raise ValueError(
+                    "AQWA requires a '.gdf' suffix for declared GDF mesh "
+                    f"{mesh_path.name!r}; found {found_suffix}"
+                )
+            raise ValueError(
+                f"GDF symmetry for spec symmetry {geometry.symmetry!r} "
+                "requires a loaded and verified GDF mesh"
+            )
+        if mesh is not None:
+            mesh = ParsedMesh(
+                mesh.vertices.copy(), mesh.panels, mesh.name, mesh.symmetry_flags
+            )
+            validate_symmetry(
+                mesh.symmetry_flags, geometry.symmetry, mesh.vertices, mesh.panels
+            )
+            expanded = expand_sector(mesh)
+            mesh = ParsedMesh(expanded.vertices, expanded.panels, name=mesh.name)
         if geometry.symmetry != "xz":
             return mesh
         if mesh is None:
@@ -426,108 +474,8 @@ class AQWABackend:
         - Line 4: NPAN (number of panels)
         - Lines 5+: 4 vertices per panel (X Y Z for each vertex)
         """
-        with open(file_path, "r") as f:
-            lines = [
-                line.strip()
-                for line in f.readlines()
-                if line.strip() and not line.strip().startswith("#")
-            ]
-
-        def _starts_numeric(line: str) -> bool:
-            try:
-                float(line.split()[0])
-            except (ValueError, IndexError):
-                return False
-            return True
-
-        line_idx = 0
-
-        # Optional non-comment title line.
-        if line_idx < len(lines) and not _starts_numeric(lines[line_idx]):
-            line_idx += 1
-
-        # Read ULEN/GRAV and symmetry lines.
-        if line_idx + 2 >= len(lines):
-            raise ValueError(f"{file_path}: incomplete GDF header")
-        line_idx += 2
-
-        # Read number of panels (NPAN).
-        try:
-            npan = int(lines[line_idx].split()[0])
-        except (ValueError, IndexError) as exc:
-            raise ValueError(f"{file_path}: invalid panel count") from exc
-        if npan <= 0:
-            raise ValueError(
-                f"{file_path}: panel count must be greater than zero; got {npan}"
-            )
-        line_idx += 1
-
-        # Read panel vertices (4 vertices per panel)
-        vertices: list[tuple[float, float, float]] = []
-        panels: list[list[int]] = []
-        vertex_map: dict[tuple[float, float, float], int] = {}
-
-        for panel_number in range(1, npan + 1):
-            panel_vertices: list[int] = []
-            for vertex_slot in range(1, 5):
-                if line_idx >= len(lines):
-                    raise ValueError(
-                        f"{file_path}: panel {panel_number}, vertex {vertex_slot}: "
-                        "missing coordinate record"
-                    )
-                line = lines[line_idx].strip()
-                parts = line.split()
-                if len(parts) < 3:
-                    raise ValueError(
-                        f"{file_path}: panel {panel_number}, vertex {vertex_slot}: "
-                        "expected three coordinates"
-                    )
-                try:
-                    vertex = (
-                        float(parts[0]),
-                        float(parts[1]),
-                        float(parts[2]),
-                    )
-                except ValueError as exc:
-                    raise ValueError(
-                        f"{file_path}: panel {panel_number}, vertex {vertex_slot}: "
-                        "coordinates must be numeric"
-                    ) from exc
-                if not all(np.isfinite(value) for value in vertex):
-                    raise ValueError(
-                        f"{file_path}: panel {panel_number}, vertex {vertex_slot}: "
-                        "coordinates must be finite"
-                    )
-                if vertex not in vertex_map:
-                    vertex_map[vertex] = len(vertices)
-                    vertices.append(vertex)
-                panel_vertices.append(vertex_map[vertex])
-                line_idx += 1
-
-            unique_count = len(set(panel_vertices))
-            repeated_positions = [
-                index
-                for index, node in enumerate(panel_vertices)
-                if panel_vertices.count(node) == 2
-            ]
-            is_triangle = unique_count == 3 and repeated_positions in (
-                [0, 1],
-                [1, 2],
-                [2, 3],
-                [0, 3],
-            )
-            if unique_count != 4 and not is_triangle:
-                raise ValueError(
-                    f"{file_path}: panel {panel_number}: expected four unique "
-                    "vertices or a triangle with a cyclic-adjacent repeated vertex"
-                )
-            panels.append(panel_vertices)
-
-        return ParsedMesh(
-            vertices=np.array(vertices, dtype=np.float64),
-            panels=np.array(panels, dtype=np.int32),
-            name=file_path.stem,
-        )
+        mesh = read_gdf_mesh(file_path)
+        return ParsedMesh(mesh.vertices, mesh.panels, mesh.name, mesh.symmetry_flags)
 
     # -----------------------------------------------------------------
     # Deck 0 — JOB control
@@ -833,40 +781,27 @@ class AQWABackend:
     # -----------------------------------------------------------------
 
     def build_deck7(self, spec: DiffractionSpec) -> list[str]:
-        """Build Deck 7: wave force spectrum with optional FIDP/FISK cards.
+        """Build Deck 7: wave force spectrum with optional FIDP/SSTF cards.
 
-        Emits FIDP (Frequency Independent DamPing) cards when a body has
-        ``external_damping`` defined, and FISK (Frequency Independent
-        StifFness/sKiffness) cards when ``external_stiffness`` is defined.
+        Emit FIDP damping and SSTF additional structural stiffness.
+        Source: AQWA Reference Manual 2025 R1 sections 11.6.1 and 11.7.1.
         All-zero matrices are skipped.
         """
         cards: list[str] = []
         cards.extend(_deck_banner(7))
-        cards.append(f"{_WS:>10s}WFS1")
-
         bodies = spec.get_bodies()
-        for body in bodies:
+        for index, body in enumerate(bodies, start=1):
+            # AQWA Reference Manual 2025 R1 chapter 11: one WFS* per body.
+            header = f"WFS{index}" if index < 10 else f"WF{index}"
+            cards.append(f"{_WS:>10s}{header}")
+            validate_aqwa_matrix_axes(body)
             vessel = body.vessel
-            if vessel.external_damping is not None and self._matrix_has_nonzero(
-                vessel.external_damping
-            ):
-                cards.extend(
-                    self._build_matrix_cards(
-                        vessel.external_damping,
-                        keyword="FIDP",
-                    )
-                )
-            if vessel.external_stiffness is not None and self._matrix_has_nonzero(
-                vessel.external_stiffness
-            ):
-                cards.extend(
-                    self._build_matrix_cards(
-                        vessel.external_stiffness,
-                        keyword="FISK",
-                    )
-                )
+            for kind, keyword in (("damping", "FIDP"), ("stiffness", "SSTF")):
+                matrix = native_matrix(vessel, kind, "aqwa")
+                if matrix is not None and self._matrix_has_nonzero(matrix):
+                    cards.extend(self._build_matrix_cards(matrix, keyword=keyword))
+            cards.append(" END")
 
-        cards.append(" END")
         return cards
 
     @staticmethod
@@ -879,7 +814,7 @@ class AQWABackend:
         matrix: list[list[float]],
         keyword: str = "FIDP",
     ) -> list[str]:
-        """Build AQWA 6x6 matrix cards (FIDP or FISK format).
+        """Build AQWA 6x6 matrix cards (FIDP or SSTF format).
 
         Each row of the 6x6 matrix becomes one card line with the format::
 

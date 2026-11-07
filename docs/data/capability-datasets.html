@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Reproducible capability dataset exports</title>
+  <style>
+    body { font: 1rem/1.6 system-ui, sans-serif; max-width: 76rem; margin: 2rem auto; padding: 0 1rem; color: #172b3a; }
+    table { border-collapse: collapse; width: 100%; }
+    td, th { border: 1px solid #bccbd5; padding: .5rem; text-align: left; vertical-align: top; }
+    code, pre { background: #edf2f6; overflow-wrap: anywhere; }
+    pre { padding: 1rem; white-space: pre-wrap; }
+    .caption { font-size: .9rem; }
+  </style>
+</head>
+<body>
+<h1>Reproducible capability dataset exports</h1>
+<p>The exporter projects committed explorer sidecars into grouped Hugging Face configs.
+Six additional configs cover 658 observations. Export fidelity is checked independently
+of engineering qualification, which remains <code>NOT_EVALUATED</code>.
+No dataset is uploaded and no explorer is switched to an unverified remote endpoint.</p>
+
+<h2>Revision history</h2>
+<table>
+  <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+  <tbody><tr><td>1</td><td>2026-10-19</td><td>Explicit projections, offline bundles, and readback checks are added to extend reproducible dataset coverage.</td></tr>
+  <tr><td>2</td><td>2026-10-19</td><td>Portable locator fixtures, LF-normalized provenance, build-platform metadata, and explicit knots column names remove checkout and unit ambiguity.</td></tr></tbody>
+</table>
+<p class="caption">Table 1. Revision record.</p>
+
+<h2>Method and source basis</h2>
+<p><code>scripts/hf/build_capability_datasets.py</code> renames leaf fields and retains
+every facet as a column. Values are copied without recalculation or additional rounding.
+The bundle command reads each source once and normalizes CRLF line endings to LF:
+the retained JSON, recorded source digest, and projected rows share that snapshot.
+Generator, projection, and packager digests also use LF-normalized text, so text
+checkout conversion does not change their identities. SHA-256 digests identify the
+retained source and output bytes. The manifest records the build system and architecture;
+full byte verification includes that platform metadata.</p>
+<p>The bundle contains a dataset card, <code>manifest.json</code>,
+<code>&lt;config&gt;/train.jsonl</code>, and <code>sources/&lt;config&gt;.json</code>.
+Config names and column names form the website registry contract. Source metadata is
+retained, null cells remain null, and missing columns are padded with null across rows.
+Empty tables, nested cells, non-finite observations, and private filesystem/contact
+locators are rejected before a destination is created. Existing destinations are preserved.</p>
+<p>The layout follows the public
+<a href="https://huggingface.co/docs/hub/datasets-manual-configuration">Hugging Face manual configuration guide</a>
+(<code>configs</code>, <code>config_name</code>, <code>data_files</code>, <code>split</code>, <code>path</code>)
+and <a href="https://huggingface.co/docs/datasets/loading#json">JSON loading guide</a>
+(one observation per line). JSON front matter uses the compatibility described by
+<a href="https://yaml.org/spec/1.2.2/">YAML 1.2.2 (2021), section 1.2, YAML History</a>.
+The website's <code>docs/capabilities-registry.md</code> defines downstream config and
+highlight-column validation. No new engineering equation, coefficient, or acceptance
+limit is introduced by this export.</p>
+
+<h2>Config contract and coverage</h2>
+<table>
+<thead><tr><th>Dataset suffix</th><th>Config</th><th>Rows</th><th>Source generator under scripts/</th></tr></thead>
+<tbody>
+<tr><td>artificial-lift</td><td>ipr</td><td>330</td><td>capabilities/build_ipr_explorer.py</td></tr>
+<tr><td>mooring</td><td>anchor_holding</td><td>114</td><td>capabilities/build_anchor_holding_explorer.py</td></tr>
+<tr><td>hydro</td><td>ship_resistance</td><td>75</td><td>capabilities/build_ship_resistance_explorer.py</td></tr>
+<tr><td>hydro</td><td>viv</td><td>75</td><td>capabilities/build_viv_explorer.py</td></tr>
+<tr><td>well</td><td>pore_pressure</td><td>19</td><td>capabilities/build_pore_pressure_explorer.py</td></tr>
+<tr><td>field-development</td><td>field_economics</td><td>45</td><td>capabilities/build_field_economics_explorer.py</td></tr>
+<tr><td>corrosion (existing)</td><td>cathodic_protection</td><td>112</td><td>capabilities/build_cathodic_protection_explorer.py</td></tr>
+<tr><td>corrosion (existing)</td><td>galvanic_compatibility</td><td>768</td><td>corrosion/build_galvanic_explorer.py</td></tr>
+<tr><td>integrity (existing)</td><td>wall_thickness</td><td>369</td><td>capabilities/build_wall_thickness_explorer.py</td></tr>
+<tr><td>integrity (existing)</td><td>wall_thickness_tension_moment</td><td>Not exported</td><td>capabilities/build_wall_thickness_3d.py; generated input is absent</td></tr>
+</tbody>
+</table>
+<p class="caption">Table 2. Dataset names start with <code>digitalmodel-</code>.
+Row counts are derived independently from generator grids and checked against committed
+sidecars; they do not establish independent engineering qualification.</p>
+
+<table>
+<thead><tr><th>New config</th><th>Stable columns; units are encoded in field names</th></tr></thead>
+<tbody>
+<tr><td>ipr</td><td>reservoir_pressure_psi, productivity_index_bopd_psi, flowing_pressure_psi, flow_rate_bopd, qmax_bopd</td></tr>
+<tr><td>anchor_holding</td><td>soil, anchor, weight_kn, holding_capacity_kn</td></tr>
+<tr><td>ship_resistance</td><td>hull, speed_knots, resistance_kn, effective_power_kw, froude_number</td></tr>
+<tr><td>viv</td><td>member, current_speed_m_s, reduced_velocity, status, safety_factor</td></tr>
+<tr><td>pore_pressure</td><td>depth_ft, overburden_ppg, eaton_ppg, bowers_ppg, pore_pressure_ppg, mud_weight_ppg</td></tr>
+<tr><td>field_economics</td><td>capex_musd, oil_price_usd_bbl, npv_musd, payback_years</td></tr>
+</tbody>
+</table>
+<p class="caption">Table 3. Units follow the generators' input DTOs and output fields.
+The suffix <code>knots</code> denotes speed in knots; <code>kn</code> denotes force in kN.
+MUSD denotes millions of USD; bopd denotes oil barrels per day; ppg denotes pounds
+per gallon (US). Froude number, reduced velocity, and safety factor are dimensionless.</p>
+
+<h2>Worked example: IPR export</h2>
+<p>Input: <a href="../api/structural/ipr-explorer.json">the committed IPR sidecar</a>.
+Its generator declares three reservoir pressures, ten productivity indices, and eleven
+flowing-pressure points. Hand count: <code>3 × 10 × 11 = 330</code> observations.
+The first source point has reservoir pressure 2000 psi, productivity index
+0.5 bopd/psi, flowing pressure 2000 psi, flow rate 0 bopd, and maximum flow
+555.6 bopd. These are demonstration-source values, not a published validation example.</p>
+<p>The example uses the repository's MIT license as an explicit input. A publication
+operator will confirm the license for the selected payload. Set <code>OUTPUT_DIR</code>
+to a new external scratch directory before running:</p>
+<pre>python -m scripts.hf.capability_bundle \
+  --dataset digitalmodel-artificial-lift --license mit --out "$OUTPUT_DIR"
+python -m scripts.hf.capability_bundle \
+  --dataset digitalmodel-artificial-lift --license mit --out "$OUTPUT_DIR" --verify</pre>
+<p>Answer: <code>ipr/train.jsonl</code> contains 330 rows. The first row retains those
+five source values. The dataset card declares config <code>ipr</code>, split
+<code>train</code>, and path <code>ipr/train.jsonl</code>. Verification reconstructs the
+expected bundle and compares every file and byte; changed source, changed rows,
+missing files, and extra files cause failure without modifying the bundle.</p>
+
+<h2>Limits and remaining work</h2>
+<p>All new configs contain synthetic screening observations. Original source rounding
+and statuses are retained; model assumptions are not independently requalified.
+The field-economics sidecar summary and generator reservoir input differ, so that
+config carries an explicit source-consistency limitation. Missing engineering evidence
+does not become valid input merely because export succeeds.</p>
+<p>The integrity dataset requires its full generated tension/moment input and fails
+before output if it is unavailable. No existing config is silently dropped.
+Riser release publication remains separately owned. Remaining capabilities require
+explicit projections or generators; generic nested-JSON discovery is not used.</p>
+<p>Under the capability dataset issue, the remaining
+steps are public publication with a confirmed license and suppressed deploy hooks,
+readback of live configs and revisions, website registry validation, and conversion
+of explorer generators to fetch those verified revisions. The capability landing page
+and API stubs are not converted here. Independent review remains pending before merge.</p>
+</body>
+</html>

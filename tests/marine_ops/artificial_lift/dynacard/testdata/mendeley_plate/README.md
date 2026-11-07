@@ -51,3 +51,11 @@ use normalised, arc-length-resampled loops and phase/direction-invariant mean
 point distance, with a separate sand jaggedness test. Their existing fluid-pound
 and sand-abrasion crosswalks are calibration assumptions, not newly established
 fault equivalences from this ingest. Their metrics and tolerances are unchanged.
+
+## Reproduce the per-class comparison
+
+The [offline worked example](../../../../../../docs/domains/artificial_lift/diagnostic-plate-comparison.md)
+compares synthetic generator samples directly with this original workbook. It
+measures the eight literal load mappings, retains every excluded curve with a
+reason, and names modes without a literal exemplar. Acceptance limits and
+field accuracy remain `NOT_EVALUATED`.

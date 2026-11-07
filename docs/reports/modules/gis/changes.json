@@ -1,0 +1,9 @@
+{
+  "report": "gis-coordinate-transformation",
+  "revision": "00",
+  "date": "2026-10-21",
+  "changes": [
+    "Established the geographic-to-map coordinate example and its inverse so that axis order and units are explicit.",
+    "Added analytic controls, published reference coordinates and the polar singularity to separate numerical agreement from suitability for engineering measurement."
+  ]
+}

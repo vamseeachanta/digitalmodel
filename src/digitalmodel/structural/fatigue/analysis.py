@@ -36,7 +36,6 @@ from datetime import datetime
 import warnings
 
 # np.trapezoid was added in NumPy 2.0; fall back to np.trapz for 1.x
-_trapz = getattr(np, 'trapezoid', np.trapz)
 
 from .sn_curves import (
     SNCurveBase, PowerLawSNCurve, BilinearSNCurve, StandardSNCurves,
@@ -52,6 +51,8 @@ from .frequency_domain import (
     FrequencyDomainBase, DirlikMethod, TovoBenasciuttiMethod,
     NarrowBandMethod, ResponsePSDCalculator
 )
+
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
 logger = logging.getLogger(__name__)
 
@@ -499,7 +500,7 @@ class FatigueAnalysisEngine:
                 'frequency_range': (float(frequency[0]), float(frequency[-1])),
                 'n_frequency_points': len(frequency),
                 'peak_frequency': float(frequency[np.argmax(stress_psd)]),
-                'rms_stress': float(np.sqrt(_trapz(stress_psd, frequency))),
+                'rms_stress': float(np.sqrt(_trapezoid(stress_psd, frequency))),
                 'duration': duration
             },
             'frequency_results': freq_result_dict,
@@ -791,7 +792,7 @@ class FatigueAnalysisEngine:
         validation = FatigueValidationResults()
 
         # Check PSD characteristics
-        rms_stress = np.sqrt(_trapz(psd, frequency))
+        rms_stress = np.sqrt(_trapezoid(psd, frequency))
         peak_freq = frequency[np.argmax(psd)]
 
         if rms_stress > 100:
