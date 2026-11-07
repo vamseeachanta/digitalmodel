@@ -397,3 +397,90 @@ def test_git_calls_ignore_caller_bindings(tmp_path, monkeypatch):
     assert head is not None
     assert kit.git_blob(fixture, head, "a.txt", fetch=False) == b"a\n"
     assert snapshot() == before
+
+
+@pytest.fixture(autouse=True)
+def _private_temp(tmp_path, monkeypatch):
+    """Runs without --out, pinned blobs and caches go under this test's directory."""
+    temp = tmp_path / "system-temp"
+    temp.mkdir()
+    for name in ("TMPDIR", "TEMP", "TMP"):
+        monkeypatch.setenv(name, str(temp))
+    monkeypatch.setattr(tempfile, "tempdir", str(temp))
+    # git must not find a repository above the test directory
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
+
+
+def _commit_all(repo):
+    _git("-C", str(repo), "add", "-A", check=True)
+    _git(
+        "-C",
+        str(repo),
+        "-c",
+        "user.name=fixture",
+        "-c",
+        "user.email=fixture@example.invalid",
+        "-c",
+        "commit.gpgsign=false",
+        "commit",
+        "-q",
+        "-m",
+        "fixture",
+        check=True,
+    )
+
+
+def _record_context(work, tmp_path):
+    out = tmp_path / "record.json"
+    _kit().main(work / "results.json", lambda *args: None, argv=["--out", str(out)])
+    return json.loads(out.read_text(encoding="utf-8"))["context"]
+
+
+@pytest.mark.parametrize("state", ["clean", "ignored", "no-repository"])
+def test_record_dirty_flag_states(tmp_path, state):
+    """Clean committed files: false. Files in an ignored folder: true. No repository: null."""
+    work = _demo_folder(tmp_path)
+    if state != "no-repository":
+        _git("init", "-q", str(tmp_path), check=True)
+        if state == "ignored":
+            (tmp_path / ".gitignore").write_text("evals/\n", encoding="utf-8")
+        _commit_all(tmp_path)
+    context = _record_context(work, tmp_path)
+    expected = {"clean": False, "ignored": True, "no-repository": None}[state]
+    assert context["artifacts_dirty"] is expected
+    assert (context["artifacts_repo_head"] is None) == (state == "no-repository")
+
+
+def test_record_ignores_caller_git_bindings(tmp_path, monkeypatch):
+    """main() reports the repository that holds the eval files, not one named by GIT_DIR."""
+    work = _demo_folder(tmp_path)
+    _git("init", "-q", str(tmp_path), check=True)
+    _commit_all(tmp_path)
+    head = _git(
+        "-C", str(tmp_path), "rev-parse", "HEAD", capture_output=True, text=True
+    ).stdout.strip()
+    caller = tmp_path.parent / (tmp_path.name + "-caller")
+    _git("init", "-q", str(caller), check=True)
+    monkeypatch.setenv("GIT_DIR", str(caller / ".git"))
+    monkeypatch.setenv("GIT_WORK_TREE", str(caller))
+    context = _record_context(work, tmp_path)
+    assert context["artifacts_repo_head"] == head
+    assert context["artifacts_dirty"] is False
+
+
+def test_scratch_directory_is_removed(tmp_path, monkeypatch):
+    """Pinned blobs written during compute() are removed when the run ends."""
+    kit = _kit()
+    work = _demo_folder(tmp_path)
+    monkeypatch.setattr(kit, "git_blob", lambda *args, **kwargs: b"# fixture\n")
+    seen = []
+
+    def compute(args, values, notes, context):
+        args.repo_root = tmp_path
+        seen.append(kit.repo_file(args, "code/script.py"))
+
+    out = tmp_path / "record.json"
+    kit.main(
+        work / "results.json", compute, argv=["--revision", "pinned", "--out", str(out)]
+    )
+    assert seen and not seen[0].exists() and not seen[0].parent.parent.exists()

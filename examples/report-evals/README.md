@@ -38,7 +38,7 @@ python <folder>/eval.py --validate-only          # schema and grading rules; no 
 python <folder>/eval.py --check-record <folder>/last-run.json
 ```
 
-Exit code 0 is PASS, 2 is PARTIAL and 1 is FAIL. Every run writes a record: to `--out`, or else to a new, uniquely named file under `<temp>/report-evals-runs/` that is never replaced. A record names the head of the repository holding the eval files (`artifacts_repo_head`) and whether those files had uncommitted changes (`artifacts_dirty`). `--check-record` fails when a file the record is bound to has changed or is missing.
+Exit code 0 is PASS, 2 is PARTIAL and 1 is FAIL. Every run writes a record: to `--out`, or else to a new, uniquely named file under `<temp>/report-evals-runs/` that is never replaced. A record names the head of the repository holding the eval files (`artifacts_repo_head`) and whether any of them is missing from that head or differs from it, including untracked and ignored files (`artifacts_dirty`; null outside a repository). The head of a committed record can be a branch commit that a squash merge leaves off main; the binding is the artifact digests that `--check-record` checks. `--check-record` fails when a file the record is bound to has changed or is missing.
 
 `--revision candidate` (the default, except where a folder states otherwise) uses the code and repository inputs of the checkout. `--revision pinned` reads them from `code.commit` through git. Code that is an installed package (digitalmodel) must be installed from a checkout of `code.commit` for a pinned run. A folder may also commit `last-run-pinned.json`, the record of a pinned run.
 

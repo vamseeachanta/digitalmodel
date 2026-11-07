@@ -54,6 +54,7 @@ import json
 import math
 import os
 import platform
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -112,7 +113,7 @@ def fetch(url: str, dest: Path, headers: dict[str, str] | None = None,
         tmp.write_bytes(data)
         tmp.replace(dest)
         retrieved = utc_now()
-    return {"url": url, "path": str(dest), "sha256": sha256_file(dest),
+    return {"url": url, "path": dest.as_posix(), "sha256": sha256_file(dest),
             "retrieved_utc": retrieved}
 
 
@@ -155,6 +156,40 @@ def git_blob(repo: Path, commit: str, path: str, fetch: bool = True) -> bytes | 
         return None
 
 
+def scratch_dir(args: argparse.Namespace) -> Path:
+    """A private temporary directory for this invocation; main() removes it when compute() ends."""
+    if getattr(args, "_scratch", None) is None:
+        args._scratch = Path(tempfile.mkdtemp(prefix="report-evals-pinned-"))
+    return args._scratch
+
+
+def artifacts_dirty(folder: Path, names: tuple[str, ...]) -> bool | None:
+    """Whether the bound files differ from the HEAD of the repository holding them.
+
+    True when any file is missing, not in HEAD (untracked, ignored or only
+    staged; also when the repository has no commit yet) or has bytes other
+    than its HEAD blob, which also covers skip-worktree and assume-unchanged
+    entries. None outside a repository.
+    """
+    def git(*cmd: str) -> subprocess.CompletedProcess:
+        return subprocess.run(["git", "-C", str(folder), *cmd], capture_output=True, text=True,
+                              timeout=30, env=git_env())
+    try:
+        if git("rev-parse", "--is-inside-work-tree").stdout.strip() != "true":
+            return None
+        for name in names:
+            if not (folder / name).is_file():
+                return True
+            at_head = git("rev-parse", "--verify", "-q", f"HEAD:./{name}")
+            on_disk = git("hash-object", "--", name)
+            if (at_head.returncode != 0 or on_disk.returncode != 0
+                    or at_head.stdout.strip() != on_disk.stdout.strip()):
+                return True
+        return False
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
 def repo_file(args: argparse.Namespace, rel: str) -> Path:
     """Path of a repository file at the selected revision.
 
@@ -168,9 +203,7 @@ def repo_file(args: argparse.Namespace, rel: str) -> Path:
                     fetch=not getattr(args, "offline", False))
     if blob is None:
         raise FileNotFoundError(f"{rel} at {args.pinned_commit[:12]} is not readable from {args.repo_root}")
-    if not hasattr(args, "_pinned_root"):
-        args._pinned_root = Path(tempfile.mkdtemp(prefix="report-evals-pinned-"))
-    dest = args._pinned_root / rel
+    dest = scratch_dir(args) / rel
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(blob)
     return dest
@@ -531,15 +564,14 @@ def main(results_path: Path,
             for r in graded:
                 if r["id"] not in values and r["id"] not in notes:
                     values[r["id"]] = exc
+        finally:
+            if getattr(args, "_scratch", None) is not None:
+                shutil.rmtree(args._scratch, ignore_errors=True)
+                args._scratch = None
     if "repo_root" in context:  # keep the folder name only, not the local path
         context["repo_root"] = Path(context["repo_root"]).name
     context["artifacts_repo_head"] = git_head(folder)
-    try:
-        status = subprocess.run(["git", "-C", str(folder), "status", "--porcelain", "--", *names],
-                                capture_output=True, text=True, timeout=30, env=git_env())
-        context["artifacts_dirty"] = bool(status.stdout.strip()) if status.returncode == 0 else None
-    except (OSError, subprocess.SubprocessError):
-        context["artifacts_dirty"] = None
+    context["artifacts_dirty"] = artifacts_dirty(folder, names)
     head = context.get("repo_head")
     if mode == "rebuild" and "code_mode" not in context:
         # historical: code and repository inputs at the pinned commit; candidate: another revision.
