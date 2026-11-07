@@ -25,6 +25,7 @@ or operational risk calibration is established by this demonstration.</p>
 <tr><td>2</td><td>2026-10-20</td><td>Limit sources, forecast settings and empirical window counts are clarified without changing the retained series.</td></tr>
 <tr><td>3</td><td>2026-10-21</td><td>Unsupported basis claims are removed, the conversion source is cited, and calibration arithmetic and alert explanations are derived from their inputs.</td></tr>
 <tr><td>4</td><td>2026-11-06</td><td>Published revision history is preserved; input and written-page integrity checks remain active under optimized Python.</td></tr>
+<tr><td>5</td><td>2026-11-06</td><td>Calibration disclosures are derived from settings and origins; alerts with peaks at the limit are retained, and both outputs are verified before publication.</td></tr>
 </tbody></table><p>Table 1. Page revisions.</p></section>
 <section><h2>Numerical basis and assumptions</h2>
 <p>The source of each load limit is stated below. These are provisional demonstration
@@ -49,6 +50,8 @@ sample 119 (three orders of training minus one); its 120 s horizon contains 240 
 Thus 359 = 119 + 240, and the complete-window count for the displayed origins is
 <code>N = floor((NOW / 0.5 - 359) / 10) + 1</code>, with NOW in seconds.
 At NOW 240, 300, 360, 420 and 480 s, N is 13, 25, 37, 49 and 61 respectively.</p>
+<p>Displayed exceeding-window counts are reconstructed as k = round(p * N) from the retained unrounded probabilities;
+the unpublished error trajectories are required to reproduce which windows exceed.</p>
 <h3>Independently worked arithmetic example</h3>
 <p>A hypothetical two-sample forecast is 100 and 110 kN, with a 110 kN load limit.
 Adding the following five error trajectories gives the maxima shown.</p>

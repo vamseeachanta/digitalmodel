@@ -1,12 +1,12 @@
 {
-  "sha256": "053e45a6a2090092969c232eb022dc8c0cfc1d3a3aae2f6bd163c97ee689995f",
-  "size_bytes": 322304,
+  "sha256": "53e6b2cc3d7e4ea3ed596d7dee3b5dd39733f558c11c25bebff679e11f031c1a",
+  "size_bytes": 322714,
   "source_sha256": {
     "reviewed_payload": "9f9b135b93c274d4f8c8c2b8451e3ae9e7dece077b51b4fce4756d3e3f600e1c",
     "reviewed_config": "9581aa9fcf6c1930aa3fafb749c1ed10f249e0e693fd44c2702a1a683df3bd9a"
   },
   "numerical_basis": {
-    "revision": 4,
+    "revision": 5,
     "status": "provisional; no basis recorded",
     "kN_per_Te": 9.81,
     "conversion_convention": "9.81 kN/Te is a rounded demonstration convention. The exact reference conversion is 9.806 65 kN/Te, derived from standard gravity: BIPM, 3rd CGPM (1901), Declaration 2, Declaration on the unit of mass and on the definition of weight; conventional value of standard gravity. The rounded conversion increases the load limits by less than 0.1 %. The published demonstration limits and series are retained.",
@@ -19,15 +19,13 @@
       "Sling2 End B tension": "Retained reviewed demonstration input for the sling; original derivation is unverified."
     },
     "forecast_settings": {
-      "method": "History-only ridge autoregression; fixed order 40, ridge 0.001",
       "order": 40,
       "ridge": 0.001,
       "sample_interval_s": 0.5,
       "stride_samples": 10,
       "min_calibration_windows": 10,
       "horizon_s": 120,
-      "time_origin_s": 0,
-      "window_count_rule": "N = floor((NOW / 0.5 - 359) / 10) + 1"
+      "time_origin_s": 0
     },
     "alert_probability": 0.2,
     "load_limit_rule": "limit_kN = assumed_limit_Te * kN_per_Te",

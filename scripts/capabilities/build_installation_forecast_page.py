@@ -12,12 +12,13 @@ from html import escape
 import json
 import math
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 LABEL = 'SIMULATED DEMO, not connected offshore'
 CRITERIA = ('Acceptance criteria are provisional demonstration assumptions; '
             'engineering applicability is unresolved.')
 NUMERICAL_BASIS: dict = {
-    'revision': 4,
+    'revision': 5,
     'status': 'provisional; no basis recorded',
     'kN_per_Te': 9.81,
     'conversion_convention': (
@@ -37,11 +38,9 @@ NUMERICAL_BASIS: dict = {
             'Retained reviewed demonstration input for the sling; original derivation is unverified.',
     },
     'forecast_settings': {
-        'method': 'History-only ridge autoregression; fixed order 40, ridge 0.001',
         'order': 40, 'ridge': 0.001, 'sample_interval_s': 0.5,
         'stride_samples': 10, 'min_calibration_windows': 10, 'horizon_s': 120,
         'time_origin_s': 0,
-        'window_count_rule': 'N = floor((NOW / 0.5 - 359) / 10) + 1',
     },
     'alert_probability': 0.2,
     'load_limit_rule': 'limit_kN = assumed_limit_Te * kN_per_Te',
@@ -67,6 +66,37 @@ NUMERICAL_BASIS: dict = {
 }
 
 
+def forecast_method(settings: dict) -> str:
+    """Describe the configured autoregression without duplicating its values."""
+    return (f'History-only ridge autoregression; fixed order {settings["order"]}, '
+            f'ridge {settings["ridge"]:g}')
+
+
+def calibration_geometry(settings: dict) -> tuple[int, int, int, str]:
+    """Derive calibration bounds and the displayed rule from the settings."""
+    first = 3 * settings['order'] - 1
+    steps = round(settings['horizon_s'] / settings['sample_interval_s'])
+    last = first + steps
+    origin = settings['time_origin_s']
+    clock = 'NOW' if origin == 0 else f'(NOW - {origin:g})'
+    rule = (f'N = floor(({clock} / {settings["sample_interval_s"]:g} - {last}) / '
+            f'{settings["stride_samples"]}) + 1')
+    return first, steps, last, rule
+
+
+def calibration_count(now: float, settings: dict) -> int:
+    """Count complete windows at the supplied origin using the disclosed rule."""
+    _, _, last, _ = calibration_geometry(settings)
+    sample = (now - settings['time_origin_s']) / settings['sample_interval_s']
+    return max(0, math.floor((sample - last) / settings['stride_samples']) + 1)
+
+
+def joined_values(values: list) -> str:
+    """Format displayed origins and counts consistently, including empty lists."""
+    text = [f'{value:g}' for value in values]
+    return ' and '.join([', '.join(text[:-1]), text[-1]]) if len(text) > 1 else ''.join(text)
+
+
 def validate_numerical_basis(scenario: dict, config: dict) -> None:
     """Reject inputs that contradict the published demonstration assumptions."""
     basis = NUMERICAL_BASIS
@@ -76,6 +106,8 @@ def validate_numerical_basis(scenario: dict, config: dict) -> None:
         for channel in frame['channels']:
             limit = channel['assumed_limit']
             if limit is None:
+                if 'exceedance' in channel:
+                    raise ValueError('Exceedance requires a load limit')
                 continue
             assumed = basis['load_limits_Te'].get(channel['label'])
             if (assumed is None or channel['units'] != 'kN'
@@ -86,10 +118,7 @@ def validate_numerical_basis(scenario: dict, config: dict) -> None:
                     or alert['alert'] is not (alert['window_probability'] >= basis['alert_probability'])):
                 raise ValueError('Alert result differs from the numerical basis')
             settings = basis['forecast_settings']
-            first = 3 * settings['order'] - 1
-            dt = settings['sample_interval_s']
-            count = math.floor((frame['now_s'] / dt - first - settings['horizon_s'] / dt)
-                               / settings['stride_samples']) + 1
+            count = calibration_count(frame['now_s'], settings)
             windows = alert['calibration_windows']
             if windows != count or windows < settings['min_calibration_windows']:
                 raise ValueError('Window count differs from the calibration settings')
@@ -98,7 +127,7 @@ def validate_numerical_basis(scenario: dict, config: dict) -> None:
                 raise ValueError('Probability differs from the integer calibration count')
 
 
-def numerical_basis_html() -> str:
+def numerical_basis_html(frames: list[dict]) -> str:
     """Expose the assumptions and a hand-worked example independently of the series."""
     basis, rows = NUMERICAL_BASIS, []
     for label, limit in basis['load_limits_Te'].items():
@@ -106,6 +135,9 @@ def numerical_basis_html() -> str:
                     f'<td>{limit * basis["kN_per_Te"]:.3f}</td>'
                     f'<td>{escape(basis["load_limit_sources"][label])}</td></tr>')
     settings = basis['forecast_settings']
+    first, steps, last, count_rule = calibration_geometry(settings)
+    origins = joined_values([frame['now_s'] for frame in frames])
+    counts = joined_values([calibration_count(frame['now_s'], settings) for frame in frames])
     example = basis['worked_example']
     example_rows = ''.join(
         f'<tr><td>{errors[0]:g}, {errors[1]:g}</td>'
@@ -128,14 +160,16 @@ The window exceeds the load limit only if its maximum is strictly greater than t
 The empirical probability is the number of exceeding windows divided by the window count;
 an alert occurs when that probability is greater than or equal to the cutoff.</p>
 <h3>Forecast and calibration settings</h3>
-<p>{escape(settings['method'])}. Sampling interval: {settings['sample_interval_s']:g} s;
+<p>{escape(forecast_method(settings))}. Sampling interval: {settings['sample_interval_s']:g} s;
 forecast horizon: {settings['horizon_s']:g} s; calibration stride: {settings['stride_samples']} samples;
 minimum of {settings['min_calibration_windows']} complete calibration windows.</p>
 <p>The simulated time axis starts at {settings['time_origin_s']:g} s. The first back-test origin is
-sample 119 (three orders of training minus one); its 120 s horizon contains 240 samples.
-Thus 359 = 119 + 240, and the complete-window count for the displayed origins is
-<code>{escape(settings['window_count_rule'])}</code>, with NOW in seconds.
-At NOW 240, 300, 360, 420 and 480 s, N is 13, 25, 37, 49 and 61 respectively.</p>
+sample {first} (three orders of training minus one); its {settings['horizon_s']:g} s horizon contains {steps} samples.
+Thus {last} = {first} + {steps}, and the complete-window count for the displayed origins is
+<code>{escape(count_rule)}</code>, with NOW in seconds.
+At NOW {origins} s, N is {counts} respectively.</p>
+<p>Displayed exceeding-window counts are reconstructed as k = round(p * N) from the retained unrounded probabilities;
+the unpublished error trajectories are required to reproduce which windows exceed.</p>
 <h3>Independently worked arithmetic example</h3>
 <p>A hypothetical two-sample forecast is 100 and 110 kN, with a 110 kN load limit.
 Adding the following five error trajectories gives the maxima shown.</p>
@@ -211,7 +245,7 @@ def render(payload: dict, config: dict) -> str:
         for source in frame['channels']:
             channel = {key: source[key] for key in
                        ('label', 'units', 'history', 'forecast', 'assumed_limit')}
-            channel['method'] = source.get('method', NUMERICAL_BASIS['forecast_settings']['method'])
+            channel['method'] = forecast_method(NUMERICAL_BASIS['forecast_settings'])
             figures.append(chart(channel, frame['now_s']))
             if channel['assumed_limit'] is not None:
                 figures.append(f'<p>Provisional load limit: {channel["assumed_limit"]:.3f} '
@@ -232,11 +266,10 @@ def render(payload: dict, config: dict) -> str:
                 if e['alert']:
                     peak = max(channel['forecast']['values'])
                     limit = channel['assumed_limit']
-                    if peak >= limit:
-                        raise ValueError('Alert explanation requires a forecast peak below the load limit')
-                    figures.append(f'<p>At NOW {frame["now_s"]:g} s the plotted peak, {peak:.3f} kN, is '
-                                   f'{limit - peak:.3f} kN below the {limit:.3f} kN limit; '
-                                   'the alert comes from the back-test error spread.</p>')
+                    if peak < limit:
+                        figures.append(f'<p>At NOW {frame["now_s"]:g} s the plotted peak, {peak:.3f} kN, is '
+                                       f'{limit - peak:.3f} kN below the {limit:.3f} kN limit; '
+                                       'the alert comes from the back-test error spread.</p>')
             channels.append(channel)
         frames.append({'now_s': frame['now_s'], 'channels': channels})
         sections.append(f'<section><h2>NOW {frame["now_s"]:g} s</h2>' + ''.join(figures) + '</section>')
@@ -269,8 +302,9 @@ or operational risk calibration is established by this demonstration.</p>
 <tr><td>2</td><td>2026-10-20</td><td>Limit sources, forecast settings and empirical window counts are clarified without changing the retained series.</td></tr>
 <tr><td>3</td><td>2026-10-21</td><td>Unsupported basis claims are removed, the conversion source is cited, and calibration arithmetic and alert explanations are derived from their inputs.</td></tr>
 <tr><td>4</td><td>2026-11-06</td><td>Published revision history is preserved; input and written-page integrity checks remain active under optimized Python.</td></tr>
+<tr><td>5</td><td>2026-11-06</td><td>Calibration disclosures are derived from settings and origins; alerts with peaks at the limit are retained, and both outputs are verified before publication.</td></tr>
 </tbody></table><p>Table 1. Page revisions.</p></section>
-{numerical_basis_html()}{''.join(sections)}
+{numerical_basis_html(scenario['frames'])}{''.join(sections)}
 <footer>Only the selected history-only forecast series are retained. No live sensor connection,
 wave-preview forecast, withheld truth or full envelope dataset is published.</footer>
 <script type="application/json" id="forecast-data">{encoded}</script></main></body></html>
@@ -309,10 +343,19 @@ def build(payload_path: Path, config_path: Path, output: Path, scan_path: Path) 
     manifest_text = manifest_raw.decode('utf-8')
     if any(term.casefold() in manifest_text.casefold() for term in terms):
         raise ValueError('Manifest sanitization scan failed')
-    output.write_bytes(encoded)
-    output.with_suffix('.manifest.json').write_bytes(manifest_raw)
-    if output.read_bytes() != encoded:
-        raise ValueError('Written page differs from the rendered bytes')
+    # Stage under the configured temporary directory, preserving existing outputs
+    # until both serialized artifacts have passed their read-back checks.
+    with TemporaryDirectory(prefix='forecast-output-') as directory:
+        staged_page = Path(directory) / output.name
+        staged_manifest = staged_page.with_suffix('.manifest.json')
+        staged_page.write_bytes(encoded)
+        staged_manifest.write_bytes(manifest_raw)
+        if staged_page.read_bytes() != encoded:
+            raise ValueError('Written page differs from the rendered bytes')
+        if staged_manifest.read_bytes() != manifest_raw:
+            raise ValueError('Written manifest differs from the serialized bytes')
+        staged_page.replace(output)
+        staged_manifest.replace(output.with_suffix('.manifest.json'))
 
 
 if __name__ == '__main__':

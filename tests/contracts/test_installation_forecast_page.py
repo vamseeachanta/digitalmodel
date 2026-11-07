@@ -155,9 +155,9 @@ def test_load_sources_have_one_consistent_declaration():
                 f'<td>{source}</td>') in text
 
 
-def test_revision_four_preserves_published_history_and_appends_one_row():
+def test_revision_five_preserves_published_history_and_appends_one_row():
     text = PAGE.read_text(encoding='utf-8')
-    assert builder.NUMERICAL_BASIS['revision'] == 4
+    assert builder.NUMERICAL_BASIS['revision'] == 5
     table = re.search(r'<h2>Revision history</h2>.*?<tbody>(.*?)</tbody>', text, re.S).group(1)
     rows = re.findall(r'<tr>.*?</tr>', table, re.S)
     published_rows = [
@@ -165,10 +165,11 @@ def test_revision_four_preserves_published_history_and_appends_one_row():
         '<tr><td>1</td><td>2026-10-20</td><td>Numerical assumptions and a worked example are added to make the arithmetic inspectable.</td></tr>',
         '<tr><td>2</td><td>2026-10-20</td><td>Limit sources, forecast settings and empirical window counts are clarified without changing the retained series.</td></tr>',
         '<tr><td>3</td><td>2026-10-21</td><td>Unsupported basis claims are removed, the conversion source is cited, and calibration arithmetic and alert explanations are derived from their inputs.</td></tr>',
+        '<tr><td>4</td><td>2026-11-06</td><td>Published revision history is preserved; input and written-page integrity checks remain active under optimized Python.</td></tr>',
     ]
-    assert rows[:4] == published_rows
+    assert rows[:5] == published_rows
     assert len(rows) == len(published_rows) + 1
-    assert rows[4].startswith('<tr><td>4</td><td>2026-11-06</td>')
+    assert rows[5].startswith('<tr><td>5</td><td>2026-11-06</td>')
 
 
 @pytest.mark.parametrize('optimized', [False, True], ids=['normal', 'optimized'])
@@ -179,7 +180,7 @@ def test_revision_four_preserves_published_history_and_appends_one_row():
     ('forecast_length', 'Series times and values must have equal lengths'),
     ('empty_history', 'Series must contain times and values'),
     ('empty_forecast', 'Series must contain times and values'),
-    ('alert_cutoff', 'Alert cutoff differs from the configuration'),
+    ('alert_cutoff', 'Alert result differs from the numerical basis'),
     ('horizon', 'Forecast horizon differs from the exceedance horizon'),
 ])
 def test_input_integrity_checks_survive_optimization(tmp_path, fault, message, optimized):
@@ -195,9 +196,13 @@ def test_input_integrity_checks_survive_optimization(tmp_path, fault, message, o
     elif fault in {'empty_history', 'empty_forecast'}:
         channel[fault.removeprefix('empty_')] = {'times': [], 'values': []}
     else:
-        # A channel without a load limit reaches the render-level checks.
-        channel['exceedance'] = deepcopy(frame['channels'][1]['exceedance'])
-        channel['exceedance']['alert_probability' if fault == 'alert_cutoff' else 'horizon_s'] += 1
+        # Use a channel with a load limit for cutoff and horizon validation.
+        channel = frame['channels'][1]
+        channel['exceedance'] = deepcopy(channel['exceedance'])
+        if fault == 'alert_cutoff':
+            channel['exceedance']['alert_probability'] = 0.5
+        else:
+            channel['exceedance']['horizon_s'] += 1
     config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
     request = tmp_path / 'request.json'
     request.write_text(json.dumps({'payload': {'demo': {'scenarios': [scenario]}},
@@ -219,8 +224,9 @@ else:
     assert result.returncode == 0, result.stderr
 
 
+@pytest.mark.parametrize('target', ['page', 'manifest'])
 @pytest.mark.parametrize('optimized', [False, True], ids=['normal', 'optimized'])
-def test_written_page_integrity_check_survives_optimization(tmp_path, optimized):
+def test_written_page_integrity_check_survives_optimization(tmp_path, optimized, target):
     scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
     config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
     config_raw = json.dumps(config).encode('utf-8')
@@ -236,20 +242,28 @@ from unittest.mock import patch
 from scripts.capabilities import build_installation_forecast_page as builder
 root = Path(sys.argv[1])
 output = root / 'forecast.html'
+manifest = output.with_suffix('.manifest.json')
+output.write_bytes(b'previous page')
+manifest.write_bytes(b'previous manifest')
+target = output if sys.argv[2] == 'page' else manifest
 write_bytes = Path.write_bytes
 
 def corrupt_page(path, data):
-    return write_bytes(path, data + b'corrupted' if path == output else data)
+    return write_bytes(path, data + b'corrupted' if path.name == target.name else data)
 
 with patch.object(Path, 'write_bytes', corrupt_page):
     try:
         builder.build(root / 'payload', root / 'config', output, root / 'terms')
     except ValueError as error:
-        if str(error) != 'Written page differs from the rendered bytes':
+        expected = ('Written page differs from the rendered bytes' if sys.argv[2] == 'page'
+                    else 'Written manifest differs from the serialized bytes')
+        if str(error) != expected:
             raise
     else:
-        raise RuntimeError('Corrupted written page was accepted')
-''', str(tmp_path)]
+        raise RuntimeError('Corrupted written output was accepted')
+if output.read_bytes() != b'previous page' or manifest.read_bytes() != b'previous manifest':
+    raise RuntimeError('Failed verification replaced published outputs')
+''', str(tmp_path), target]
     result = subprocess.run(command, cwd=ROOT, capture_output=True, text=True)
     assert result.returncode == 0, result.stderr
 
@@ -311,13 +325,15 @@ def test_alert_explanation_is_absent_when_alert_is_false():
 
 
 @pytest.mark.parametrize('excess', [0, 1])
-def test_alert_explanation_rejects_peak_at_or_above_limit(excess):
+def test_alert_explanation_allows_peak_at_or_above_limit(excess):
     scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
     channel = scenario['frames'][4]['channels'][1]
     channel['forecast']['values'][0] = channel['assumed_limit'] + excess
     config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
-    with pytest.raises(ValueError, match='peak.*limit'):
-        builder.render({'demo': {'scenarios': [scenario]}}, config)
+    text = builder.render({'demo': {'scenarios': [scenario]}}, config)
+    assert 'At NOW 480 s the plotted peak' not in text
+    assert 'alert: true' in text
+    assert embedded_scenario(text)['frames'][4]['channels'][1] == channel
 
 
 def test_alert_explanation_covers_other_load_channels():
@@ -455,6 +471,40 @@ def test_all_private_scan_terms_absent():
             assert size > 0
             assert all(hashlib.sha256(text[i:i + size].encode('utf-8')).hexdigest()
                        != item['sha256'] for i in range(len(text) - size + 1))
+
+
+@pytest.mark.parametrize('time_origin', [0, 10])
+def test_calibration_text_is_derived_when_settings_change(monkeypatch, time_origin):
+    settings = deepcopy(builder.NUMERICAL_BASIS['forecast_settings'])
+    settings.update(order=20, ridge=0.002, horizon_s=60, sample_interval_s=1,
+                    stride_samples=5, min_calibration_windows=3, time_origin_s=time_origin)
+    monkeypatch.setitem(builder.NUMERICAL_BASIS, 'forecast_settings', settings)
+    frames = [{'now_s': 240}, {'now_s': 300}]
+    text = builder.numerical_basis_html(frames)
+    assert 'fixed order 20, ridge 0.002' in text
+    assert 'sample 59' in text
+    assert '60 s horizon contains 60 samples' in text
+    assert '119 = 59 + 60' in text
+    assert 'forecast horizon: 60 s' in text
+    assert 'calibration stride: 5 samples' in text
+    assert 'minimum of 3 complete calibration windows' in text
+    clock = 'NOW' if time_origin == 0 else '(NOW - 10)'
+    assert f'N = floor(({clock} / 1 - 119) / 5) + 1' in text
+    counts = '25 and 37' if time_origin == 0 else '23 and 35'
+    assert f'At NOW 240 and 300 s, N is {counts} respectively.' in text
+    assert 'fixed order 40' not in text
+
+
+@pytest.mark.parametrize('alert', [False, True])
+def test_exceedance_without_load_limit_has_explicit_error(alert):
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    frame = scenario['frames'][0]
+    channel = frame['channels'][0]
+    channel['exceedance'] = deepcopy(frame['channels'][1]['exceedance'])
+    channel['exceedance'].update(alert=alert, window_probability=int(alert))
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
+    with pytest.raises(ValueError, match='Exceedance requires a load limit'):
+        builder.render({'demo': {'scenarios': [scenario]}}, config)
 
 
 if __name__ == '__main__':
