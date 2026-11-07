@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fatigue applications module analysis: load scaling and stress conversion</title>
+<style>
+:root{color-scheme:light;--ink:#183449;--report-accent:#137e8a;--muted:#516573;--line:#d3dfe4}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:#edf2f4;font:16px/1.65 Georgia,serif}
+header{background:var(--ink);color:white;padding:58px max(6vw,24px);border-bottom:8px solid var(--report-accent)}
+h1{max-width:1100px;font:600 clamp(28px,3.5vw,46px)/1.2 Georgia,serif;margin:0}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1440px;margin:auto;background:white}
+nav{padding:32px 22px;font:14px/1.8 sans-serif;border-right:1px solid var(--line)}
+nav ol{padding-left:18px}nav a{color:var(--ink);text-decoration:none}nav a:hover{text-decoration:underline}
+main{padding:24px 42px 70px;min-width:0}section{padding:20px 0;border-bottom:1px solid var(--line)}
+h2{font:600 27px/1.3 Georgia,serif;margin:12px 0 22px}h3{font:600 20px/1.4 Georgia,serif;margin-top:26px}
+.prose h2{font-size:21px}.prose strong{color:#085965}p{max-width:86ch}
+.table-wrap{overflow-x:auto;margin:24px 0}table{border-collapse:collapse;width:100%;font:13px/1.5 sans-serif}
+th{background:var(--ink);color:white;text-align:left;padding:11px 9px}td{padding:9px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f2f7f8}caption{caption-side:bottom;text-align:left;color:var(--muted);padding:9px 0;font-size:13px}
+figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption{color:var(--muted);font:13px/1.6 sans-serif;margin-top:10px}
+.source{font:13px/1.5 sans-serif;color:var(--muted)}
+@media(max-width:900px){.layout{display:block}nav{border-bottom:1px solid var(--line);border-right:0}nav ol{columns:2}main{padding:16px 20px}}
+@media print{body{background:white;font-size:10pt}header{padding:24px;background:white;color:var(--ink)}h1{font-size:25pt}.layout{display:block}nav{display:none}main{padding:0}figure{break-inside:avoid}h2,h3{break-after:avoid}table{font-size:8pt}th,td{padding:5px}thead{display:table-header-group}}
+</style>
+<style>pre{white-space:pre-wrap;overflow-wrap:anywhere}code{overflow-wrap:anywhere}
+:focus-visible{outline:3px solid var(--report-accent)}#engineering-changes{border:1px solid var(--line);padding:16px}</style>
+</head><body class="hs-doc" id="fatigue-applications" data-revision="00">
+<header><h1>Fatigue applications module analysis: load scaling and stress conversion</h1>
+<p>Draft for maintainer review · Revision 00 · 2026-10-28</p>
+<p>Synthetic example; numerical software check only</p></header>
+<div class="layout"><nav aria-label="Contents"><ol><li><a href="#section-1">Executive Summary</a></li><li><a href="#section-2">Introduction</a></li><li><a href="#section-3">Data Basis</a></li><li><a href="#section-4">Theory and Equations</a></li><li><a href="#section-5">Worked Example</a></li><li><a href="#section-6">Validation Evidence</a></li><li><a href="#section-7">Limits of Use</a></li><li><a href="#section-8">Recommendations</a></li><li><a href="#section-9">References</a></li><li><a href="#section-10">Appendix</a></li></ol></nav><main>
+<section id="section-1"><h2>1. Executive Summary</h2>
+<p>The fatigue applications package implements reference-sea-state load scaling, cycle counting,
+stress conversion and fatigue damage processing. This analysis checks only the offline converter
+against a declared uniform-bar force/area surrogate. The synthetic lookup nodes, interpolation
+and extrapolation are checked separately against the roundoff criterion in Section 6.</p>
+<p>The maximum unrounded difference meets the roundoff criterion. Real stress-transfer tables, stress-concentration factors, counting qualification,
+fatigue damage and service life remain NOT_EVALUATED. The way forward is to qualify the missing
+inputs and methods before any engineering life assessment is issued.</p></section>
+<div id="revision-history"><h3>Revision history</h3><div class="table-wrap"><table><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead><tbody><tr><td>00</td><td>2026-10-28</td><td>First issue: separated the synthetic converter check from unresolved counting, damage and physical stress-transfer qualification.</td></tr></tbody><caption>Revision history. Earlier issue records will be retained on re-issue.</caption></table></div></div>
+<section id="section-2"><h2>2. Introduction</h2>
+<p>The public package exports counting, damage, reference-sea-state processing and visualisation
+routes [<a href="#source-exports">exports</a>]. The existing standalone scaling example remains a separate input-driven
+workflow [<a href="#source-example">example</a>]. The following method map describes source-inspected routes;
+only the offline converter example is executed by this report.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Route</th><th scope="col">Source-inspected data flow</th><th scope="col">Implementation</th><th scope="col">Evidence disposition</th><th scope="col">Source</th></tr></thead><tbody><tr><td>Load scaling</td><td>LoadScalingProcessor; squared wind-speed ratio and wave-height ratio; clipped factors; summed histories.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED here; baseline test cannot collect.</td><td>[<a href="#source-scaling">scaling</a>]</td></tr><tr><td>Reference-sea-state processing</td><td>ReferenceSeaStateProcessor; select histories, scale, combine, count, convert, accumulate damage.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED; timestamps and case completeness need qualification.</td><td>[<a href="#source-processor">processor</a>]</td></tr><tr><td>Lookup nodes</td><td>Offline TensionStressConverter; supplied synthetic force/area table.</td><td>IMPLEMENTED</td><td>INDEPENDENTLY_CHECKED against uniform-bar equilibrium only.</td><td>[<a href="#source-hand">hand</a>]</td></tr><tr><td>Lookup interpolation</td><td>Offline converter; linear segments between supplied nodes.</td><td>IMPLEMENTED</td><td>INDEPENDENTLY_CHECKED against uniform-bar equilibrium only.</td><td>[<a href="#source-offline">offline</a>]</td></tr><tr><td>Lookup extrapolation</td><td>Offline converter; endpoint segment continued outside the supplied table.</td><td>IMPLEMENTED</td><td>INDEPENDENTLY_CHECKED on synthetic probes only; no physical extrapolation authority.</td><td>[<a href="#source-offline">offline</a>]</td></tr><tr><td>Exported converter</td><td>TensionToStressConverter; numpy.interp clamps outside the table; separate CSV schema.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED; distinct from the offline example.</td><td>[<a href="#source-processor">processor</a>]</td></tr><tr><td>Counting</td><td>Exported rainflow_counter delegates to shared reversal counting and applies an optional range gate.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED by this report; registry marks fapps_counter conforming.</td><td>[<a href="#source-counter">counter</a>]</td></tr><tr><td>Alternate counting handoff</td><td>rainflow_counting.process_batch calls refuse_damage_calculation before reading files.</td><td>GUARDED</td><td>NOT_EVALUATED; diagnostic counting stays callable; damage handoff raises.</td><td>[<a href="#source-counting">counting</a>]</td></tr><tr><td>Damage processing</td><td>Exported calculator: stress concentration, curve evaluation, cycle ratios, occurrence weighting and annualisation.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED; cycle/stress threshold inconsistency remains a finding.</td><td>[<a href="#source-damage">damage</a>]</td></tr><tr><td>Alternate damage processing</td><td>Separate curve library and damage calculator; not the package export.</td><td>IMPLEMENTED</td><td>NOT_EVALUATED; no alternate curve is used here.</td><td>[<a href="#source-alternate">alternate</a>]</td></tr><tr><td>Validation framework</td><td>FatigueValidator.validate_all returns NOT_IMPLEMENTED.</td><td>PLACEHOLDER</td><td>NOT_EVALUATED; no clearance is inferred.</td><td>[<a href="#source-validation">validation</a>]</td></tr></tbody><caption>Method map. Implementation status does not establish numerical or physical qualification.</caption></table></div>
+<p>The exported <code>TensionToStressConverter</code> and offline
+<code>TensionStressConverter</code> are different interfaces. The former clamps at the supplied
+endpoints; the latter uses linear segment extrapolation [<a href="#source-processor">processor</a>] [<a href="#source-offline">offline</a>].
+Results from this example cannot be transferred between those interfaces without another check.</p></section>
+<section id="section-3"><h2>3. Data Basis</h2>
+<p>The geometry, table loads and probe loads are synthetic, taken from the independent uniform-bar
+test basis [<a href="#source-hand">hand</a>]. No measured, production or finite-element stress-transfer dataset is used.
+The input lookup is written explicitly under the supplied scratch directory before construction;
+both lookup and converter output paths are supplied. Default lookup creation is excluded.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Quantity</th><th scope="col">Value (unit stated)</th><th scope="col">Basis and source</th></tr></thead><tbody><tr><td>Synthetic uniform-bar area</td><td><span data-value="basis.area_mm2" data-unit="mm^2" data-equation="declared synthetic geometry" data-source="#source-hand" data-format="fixed">2500.0</span> mm^2</td><td>[<a href="#source-hand">hand</a>]</td></tr><tr><td>Converted cross-sectional area</td><td><span data-value="basis.area_m2" data-unit="m^2" data-equation="A_m2=A_mm2*m2_per_mm2" data-source="#source-hand" data-format="scientific">2.5e-03</span> m^2</td><td>[<a href="#source-hand">hand</a>]</td></tr><tr><td>Kilo force factor</td><td><span data-value="basis.newtons_per_kn" data-unit="N/kN" data-equation="kilo=10^3" data-source="#source-prefixes" data-format="scientific">1.0e+03</span> N/kN</td><td>[<a href="#source-prefixes">prefixes</a>]</td></tr><tr><td>Squared milli length factor</td><td><span data-value="basis.m2_per_mm2" data-unit="m^2/mm^2" data-equation="milli^2=(10^-3)^2" data-source="#source-prefixes" data-format="scientific">1.0e-06</span> m^2/mm^2</td><td>[<a href="#source-prefixes">prefixes</a>]</td></tr><tr><td>Mega pressure factor</td><td><span data-value="basis.pascals_per_mpa" data-unit="Pa/MPa" data-equation="mega=10^6" data-source="#source-prefixes" data-format="scientific">1.0e+06</span> Pa/MPa</td><td>[<a href="#source-prefixes">prefixes</a>]</td></tr><tr><td>Derived uniform-bar slope</td><td><span data-value="basis.slope_mpa_per_kn" data-unit="MPa/kN" data-equation="newtons_per_kn/A_m2/pascals_per_mpa" data-source="#source-hand" data-format="fixed">0.4</span> MPa/kN</td><td>[<a href="#source-hand">hand</a>]</td></tr></tbody><caption>Input and derived quantity register. SI factors are definitions; geometry is synthetic.</caption></table></div>
+<p>The node rows in Section 5 are the supplied synthetic lookup table in full. The other rows
+are numerical probes. No concentration factor is supplied or applied; omission does not qualify
+a physical stress-concentration factor. All values retain their stated units in the embedded record.</p></section>
+<section id="section-4"><h2>4. Theory and Equations</h2>
+<p>For uniform axial stress on a constant area, force equilibrium gives
+<code>F = integral(sigma dA) = sigma A</code>. Thus
+<code>sigma_MPa = (T_kN * 1000) / (2500 * 10^-6) / 10^6 = 0.4 T_kN</code>.
+The area is declared synthetic; kilo, milli and mega supply the exact conversion factors
+[<a href="#source-hand">hand</a>] [<a href="#source-prefixes">prefixes</a>]. This relation does not model bending, local stress or structural flexibility.</p>
+<p>The implemented converter evaluates a linear segment,
+<code>sigma(T) = sigma_a + (sigma_b - sigma_a)(T - T_a)/(T_b - T_a)</code>.
+Interior segments interpolate; the endpoint segments continue beyond the table because the
+interpolator sets <code>fill_value="extrapolate"</code> [<a href="#source-offline">offline</a>].
+Independent force/area arithmetic establishes the comparison, rather than the interpolator itself.</p>
+<p>For the documented processing flow, wind factors use the squared speed ratio and wave factors
+the height ratio; scaled tension histories are added [<a href="#source-scaling">scaling</a>]. Counting produces ranges and counts
+[<a href="#source-counter">counter</a>]. Damage processing evaluates a curve, sums count-to-failure ratios, applies occurrence
+weighting and annualises by duration [<a href="#source-damage">damage</a>]. These equations describe implemented flow;
+no counting, curve, damage or annual-life result is calculated here.</p></section>
+<section id="section-5"><h2>5. Worked Example</h2>
+<p>The supplied table and probes give the following converter results. Lookup nodes, interpolation
+and extrapolation are identified separately. Module values come from fresh converter calls;
+hand values come from force equilibrium on the synthetic area.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Regime</th><th scope="col">Tension (kN)</th><th scope="col">Module stress (MPa)</th><th scope="col">Hand stress (MPa)</th><th scope="col">Absolute difference (MPa)</th></tr></thead><tbody><tr><td>node</td><td><span data-value="cases.0.tension_kn" data-unit="kN" data-equation="synthetic table or probe" data-source="#source-hand" data-format="fixed">25.0</span> kN</td><td><span data-value="cases.0.stress_mpa" data-unit="MPa" data-equation="linear lookup segment" data-source="#source-offline" data-format="fixed">10.0</span> MPa</td><td><span data-value="cases.0.expected_mpa" data-unit="MPa" data-equation="sigma=F/A" data-source="#source-hand" data-format="fixed">10.0</span> MPa</td><td><span data-value="cases.0.absolute_error_mpa" data-unit="MPa" data-equation="abs(module-hand)" data-source="#source-report-test" data-format="fixed">0.0</span> MPa</td></tr><tr><td>node</td><td><span data-value="cases.1.tension_kn" data-unit="kN" data-equation="synthetic table or probe" data-source="#source-hand" data-format="fixed">100.0</span> kN</td><td><span data-value="cases.1.stress_mpa" data-unit="MPa" data-equation="linear lookup segment" data-source="#source-offline" data-format="fixed">40.0</span> MPa</td><td><span data-value="cases.1.expected_mpa" data-unit="MPa" data-equation="sigma=F/A" data-source="#source-hand" data-format="fixed">40.0</span> MPa</td><td><span data-value="cases.1.absolute_error_mpa" data-unit="MPa" data-equation="abs(module-hand)" data-source="#source-report-test" data-format="fixed">0.0</span> MPa</td></tr><tr><td>node</td><td><span data-value="cases.2.tension_kn" data-unit="kN" data-equation="synthetic table or probe" data-source="#source-hand" data-format="fixed">250.0</span> kN</td><td><span data-value="cases.2.stress_mpa" data-unit="MPa" data-equation="linear lookup segment" data-source="#source-offline" data-format="fixed">100.0</span> MPa</td><td><span data-value="cases.2.expected_mpa" data-unit="MPa" data-equation="sigma=F/A" data-source="#source-hand" data-format="fixed">100.0</span> MPa</td><td><span data-value="cases.2.absolute_error_mpa" data-unit="MPa" data-equation="abs(module-hand)" data-source="#source-report-test" data-format="fixed">0.0</span> MPa</td></tr><tr><td>interpolation</td><td><span data-value="cases.3.tension_kn" data-unit="kN" data-equation="synthetic table or probe" data-source="#source-hand" data-format="fixed">62.5</span> kN</td><td><span data-value="cases.3.stress_mpa" data-unit="MPa" data-equation="linear lookup segment" data-source="#source-offline" data-format="fixed">25.0</span> MPa</td><td><span data-value="cases.3.expected_mpa" data-unit="MPa" data-equation="sigma=F/A" data-source="#source-hand" data-format="fixed">25.0</span> MPa</td><td><span data-value="cases.3.absolute_error_mpa" data-unit="MPa" data-equation="abs(module-hand)" data-source="#source-report-test" data-format="fixed">0.0</span> MPa</td></tr><tr><td>interpolation</td><td><span data-value="cases.4.tension_kn" data-unit="kN" data-equation="synthetic table or probe" data-source="#source-hand" data-format="fixed">175.0</span> kN</td><td><span data-value="cases.4.stress_mpa" data-unit="MPa" data-equation="linear lookup segment" data-source="#source-offline" data-format="fixed">70.0</span> MPa</td><td><span data-value="cases.4.expected_mpa" data-unit="MPa" data-equation="sigma=F/A" data-source="#source-hand" data-format="fixed">70.0</span> MPa</td><td><span data-value="cases.4.absolute_error_mpa" data-unit="MPa" data-equation="abs(module-hand)" data-source="#source-report-test" data-format="fixed">0.0</span> MPa</td></tr><tr><td>extrapolation</td><td><span data-value="cases.5.tension_kn" data-unit="kN" data-equation="synthetic table or probe" data-source="#source-hand" data-format="fixed">0.0</span> kN</td><td><span data-value="cases.5.stress_mpa" data-unit="MPa" data-equation="linear lookup segment" data-source="#source-offline" data-format="fixed">0.0</span> MPa</td><td><span data-value="cases.5.expected_mpa" data-unit="MPa" data-equation="sigma=F/A" data-source="#source-hand" data-format="fixed">0.0</span> MPa</td><td><span data-value="cases.5.absolute_error_mpa" data-unit="MPa" data-equation="abs(module-hand)" data-source="#source-report-test" data-format="fixed">0.0</span> MPa</td></tr><tr><td>extrapolation</td><td><span data-value="cases.6.tension_kn" data-unit="kN" data-equation="synthetic table or probe" data-source="#source-hand" data-format="fixed">500.0</span> kN</td><td><span data-value="cases.6.stress_mpa" data-unit="MPa" data-equation="linear lookup segment" data-source="#source-offline" data-format="fixed">200.0</span> MPa</td><td><span data-value="cases.6.expected_mpa" data-unit="MPa" data-equation="sigma=F/A" data-source="#source-hand" data-format="fixed">200.0</span> MPa</td><td><span data-value="cases.6.absolute_error_mpa" data-unit="MPa" data-equation="abs(module-hand)" data-source="#source-report-test" data-format="fixed">0.0</span> MPa</td></tr></tbody><caption>Synthetic results. Input stresses at nodes are the declared lookup table; other rows are separate interpolation and extrapolation probes.</caption></table></div>
+<p>The absolute difference uses the unrounded values before display formatting.
+This is an analytic surrogate, not FEA-derived evidence.</p></section>
+<section id="section-6"><h2>6. Validation Evidence</h2>
+<p>The maximum unrounded difference meets the roundoff criterion.</p><div class="table-wrap"><table><thead><tr><th scope="col">Quantity</th><th scope="col">Value (MPa)</th><th scope="col">Equation and basis</th></tr></thead><tbody><tr><td>Maximum unrounded absolute difference</td><td><span data-value="comparison.max_error_mpa" data-unit="MPa" data-equation="max(abs(module-hand))" data-source="#source-report-test" data-format="fixed">0.0</span> MPa</td><td>[<a href="#source-report-test">report-test</a>]</td></tr><tr><td>Absolute comparison budget</td><td><span data-value="tolerance.absolute_mpa" data-unit="MPa" data-equation="gamma_16*4*200" data-source="#source-report-test" data-format="scientific">1.4e-12</span> MPa</td><td>[<a href="#source-report-test">report-test</a>]</td></tr></tbody><caption>Numerical comparison. Displayed differences are rounded; the decision uses unrounded values.</caption></table></div>
+<p>The comparison allowance is derived for this example: binary64 unit roundoff is
+<code>u = epsilon/2</code>; <code>gamma_16 = 16u/(1 - 16u)</code>. The segment expression uses
+six rounded operations; force/area with unit conversion uses four; comparison uses one;
+the non-dyadic prefix factor needs one representation allowance. Four reserve operations
+give the stated budget [<a href="#source-report-test">report-test</a>]. A magnification allowance of
+<code>4.0</code> exceeds the largest segment coordinate <code>8/3</code> at the upper probe;
+the stress scale is the maximum hand value <code>200.0 MPa</code>. The absolute criterion is
+<code>gamma_16 * 4 * 200 MPa</code>, with zero relative tolerance [<a href="#source-report-test">report-test</a>] [<a href="#source-roundoff">roundoff</a>].
+The budget applies only to these finite synthetic probes and accounts for numerical roundoff,
+not uncertainty in geometry, calibration or operating conditions.</p>
+<p>The existing converter suite checks table nodes, interpolation, extrapolation, unsorted rows
+and query order [<a href="#source-hand">hand</a>]. The new suite checks the unrounded oracle, every displayed quantity and unit,
+a fresh independent module call, controlled result mutation, inert JSON, isolated paths and identical rebuild bytes
+[<a href="#source-report-test">report-test</a>]. Reproducibility does not establish physical validation.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Suite</th><th scope="col">Collected (tests)</th><th scope="col">Passed (tests)</th><th scope="col">Failed (tests)</th><th scope="col">Skipped (tests)</th><th scope="col">Collection errors</th><th scope="col">Before / after disposition</th></tr></thead><tbody><tr><td>Converter hand calculations</td><td>3 / 3</td><td>3 / 3</td><td>0 / 0</td><td>0 / 0</td><td>0 / 0</td><td>Unchanged synthetic arithmetic scope; source-hand.</td></tr><tr><td>Load scaling</td><td>0 / 0</td><td>0 / 0</td><td>0 / 0</td><td>0 / 0</td><td>1 / 1</td><td>Baseline import error: LoadScaler is absent; source-scaling-test.</td></tr></tbody><caption>Existing suite baseline and final counts. An import error is distinct from a failed or skipped test.</caption></table></div>
+<p>The load-scaling suite imports a name absent from the implementation; the package defines
+<code>LoadScalingProcessor</code> [<a href="#source-scaling-test">scaling-test</a>] [<a href="#source-scaling">scaling</a>]. This baseline is recorded;
+it is not replaced with a compatibility alias or counted as passing evidence.</p></section>
+<section id="section-7"><h2>7. Limits of Use</h2><div class="table-wrap"><table><thead><tr><th scope="col">Method or intended use</th><th scope="col">Status</th><th scope="col">Evidence required before use</th></tr></thead><tbody><tr><td>Real stress-transfer tables</td><td>NOT_EVALUATED</td><td>Independently reviewed geometry, boundary conditions, units and calibrated stress-transfer evidence.</td></tr><tr><td>Stress-concentration factors</td><td>NOT_EVALUATED</td><td>A documented local stress definition, geometric detail and independent calibration.</td></tr><tr><td>Fatigue damage</td><td>NOT_EVALUATED</td><td>Qualified curve provenance, dimensionally consistent branch selection and independently checked accumulation.</td></tr><tr><td>Counting qualification</td><td>NOT_EVALUATED</td><td>Independent reference histories, residual-cycle policy, gate sensitivity and full range/count agreement.</td></tr><tr><td>Service life</td><td>NOT_EVALUATED</td><td>Complete operating cases, occurrence basis, measured sample timing and a qualified damage calculation.</td></tr></tbody><caption>Limits of use. Missing engineering evidence is not represented by a zero result.</caption></table></div>
+<p>The offline converter can create an assumed default table when input is missing or malformed,
+and can use a fallback slope for an underspecified table [<a href="#source-offline">offline</a>]. Explicit synthetic input prevents
+those branches in this example; the production behaviours remain unchanged.</p>
+<p>The alternate counter batch route calls <code>refuse_damage_calculation</code> and raises before file
+processing [<a href="#source-counting">counting</a>] [<a href="#source-contract">contract</a>]. Diagnostic counting remains available. The contract registry
+records separate verdicts for the exported and alternate counters; neither is newly qualified by this report.</p>
+<p>The exported damage calculator compares stress against a threshold documented in cycles
+[<a href="#source-damage">damage</a>]. Reference processing truncates histories, discards their timestamps during combination,
+annualises using an assumed sampling interval, and can represent missing damage cases as infinite life
+[<a href="#source-processor">processor</a>]. These are correctness concerns requiring separate qualification, not evidence of a service-life result.
+The knowledge pack contains historical checks whose code pins and line references are not treated as current clearance
+[<a href="#source-pack">pack</a>]. The validation framework remains a placeholder [<a href="#source-validation">validation</a>].</p></section>
+<section id="section-8"><h2>8. Recommendations</h2>
+<p>Retain this example as a converter regression and a reproducible report scaffold.
+Before physical use, supply a reviewed stress-transfer table with its geometry, stress definition,
+units and calibration; establish concentration factors separately. Reject unqualified fallbacks
+in the consuming engineering assessment rather than interpreting their presence as evidence.</p>
+<p>Resolve the stale load-scaling test interface and test the current processor against independent scaling
+and superposition controls. Qualify the selected counting path with complete histories and residual-cycle policy;
+retain the existing refusal for the alternate damage handoff. Resolve the stress/cycle threshold inconsistency,
+curve provenance, timestamp alignment and missing-case handling before independent damage accumulation and life checks.
+The parent module report issue remains open for this broader numerical qualification.</p></section>
+<section id="section-9"><h2>9. References</h2>
+<p>Implementation records identify inspected code; the independent uniform-bar derivation supplies
+the numerical comparison. SI prefixes supply unit definitions only. No licensed standard table or solver output
+is used. Source digests are retained in <code>sources.json</code> and below.</p><ol><li id="source-hand"><a href="../../../../tests/structural/fatigue_apps/test_tension_stress_conversion_hand_calcs.py">Independent uniform-bar derivation</a>. Module docstring and uniform-bar tests. independent synthetic derivation. SHA-256: <code>8d42f963d526c4034cfb02f237d820821f2fd4e437753cc3b72d49838398d1ea</code>.</li><li id="source-offline"><a href="../../../../src/digitalmodel/structural/fatigue_apps/tension_stress_conversion.py">Offline converter</a>. TensionStressConverter: constructor, lookup loading, interpolation and conversion. implementation evidence. SHA-256: <code>5fb3fa666ec9d18ca6e04a6895763eac26a5e08649a695c531f6fc218a73e2b5</code>.</li><li id="source-exports"><a href="../../../../src/digitalmodel/structural/fatigue_apps/__init__.py">Package public exports</a>. __all__. implementation evidence. SHA-256: <code>baecc04798804977f76f37aa7e860c885954b917e6d9f7b584bdda49033cd4f2</code>.</li><li id="source-scaling"><a href="../../../../src/digitalmodel/structural/fatigue_apps/load_scaling.py">Load scaling</a>. LoadScalingProcessor: reference selection, scaling limits, superposition. implementation evidence. SHA-256: <code>3cca32386f507af59bc66fc72d496d4d60a76d46af31d8537d70c7419e3fa1a4</code>.</li><li id="source-processor"><a href="../../../../src/digitalmodel/structural/fatigue_apps/reference_seastate_processor.py">Reference-sea-state processing</a>. TensionToStressConverter; process_fatigue_condition; process_configuration. implementation evidence. SHA-256: <code>f8f86917da8b2967816ba6a160c5227d4b8cbf127883296cfd0685968dc9aab1</code>.</li><li id="source-counter"><a href="../../../../src/digitalmodel/structural/fatigue_apps/rainflow_counter.py">Exported counter</a>. RainflowCounter.count_cycles; _rainflow_algorithm. implementation evidence. SHA-256: <code>e2a38124bb7c294b8110425cb9852411931766dbf50e9219d08f2787da4cdad7</code>.</li><li id="source-counting"><a href="../../../../src/digitalmodel/structural/fatigue_apps/rainflow_counting.py">Alternate counter and damage handoff</a>. RainflowCounter.process_batch: unconditional refusal. implementation evidence. SHA-256: <code>1477ee172c751379f3edb165edd66e169985bf7c883e9b17760c6348297356c8</code>.</li><li id="source-contract"><a href="../../../../src/digitalmodel/fatigue/counting_contract.py">Counting contract</a>. refuse_damage_calculation; fapps_counting and fapps_counter registry entries. implementation evidence. SHA-256: <code>2d450f2e8e13564aee8e64ce5d92f8f83a5383b65136b3beec4e54ef4875dbbf</code>.</li><li id="source-damage"><a href="../../../../src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py">Exported damage calculation</a>. SNCurveParameters.threshold; cycles_to_failure; calculate_damage; calculate_fatigue_life. implementation evidence. SHA-256: <code>cf09a09321afcc4fb4998976a466e3978effe68bac92890749d1d56b8219b73e</code>.</li><li id="source-alternate"><a href="../../../../src/digitalmodel/structural/fatigue_apps/fatigue_damage.py">Alternate damage calculation</a>. SNCurve; FatigueDamageCalculator. implementation evidence. SHA-256: <code>d71327b871f7258f108bbe9f1b14e440317248f619542cc1cf9342b407838a6d</code>.</li><li id="source-validation"><a href="../../../../src/digitalmodel/structural/fatigue_apps/fatigue_validation/validator.py">Validation placeholder</a>. FatigueValidator.validate_all. implementation evidence. SHA-256: <code>977e2d83c551cdfd8d43baf7baa451c3dfe66c4b4d37894eecb8b56c9c57c04e</code>.</li><li id="source-example"><a href="../../../../src/digitalmodel/structural/fatigue_apps/examples/load_scaling_runner.py">Existing standalone example</a>. LoadScalingProcessor.process_fatigue_condition; unchanged. implementation evidence. SHA-256: <code>e36d494dc513c041f0b68eccf65b03677a25330e0172edc0189cb3bd2cfb5a10</code>.</li><li id="source-pack"><a href="../../../../src/digitalmodel/structural/fatigue_apps/docs/agent-pack.md">Knowledge pack</a>. Purpose, methods, known failure modes; historical evidence, not a current execution record. implementation evidence. SHA-256: <code>2893394a63f7fbf3519872681cbeafa98ed37363a86f8258d78653244e4a3aab</code>.</li><li id="source-scaling-test"><a href="../../../../tests/structural/fatigue_apps/test_load_scaling.py">Baseline scaling suite</a>. Import of absent LoadScaler; explicit collection fails. implementation evidence. SHA-256: <code>eaa9db228f0595a0adb7949287f2f719dcf7fae5f9f05a8db0d5f6a495cfb7bf</code>.</li><li id="source-report-test"><a href="../../../../tests/structural/fatigue_apps/test_module_report.py">Report acceptance checks</a>. Independent Decimal oracle, mutation, parsed HTML, scratch paths and deterministic rebuild. implementation evidence. SHA-256: <code>c6853505a77a76bf3919a18a023fe327b8c6237a2072d8d8875ac8bf955de20f</code>.</li><li id="source-layout"><a href="../../../../docs/reports/pipeline-ffs-assessment.html">Report layout exemplar</a>. Embedded house stylesheet. implementation evidence. SHA-256: <code>488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f</code>.</li><li id="source-prefixes"><a href="https://www.nist.gov/pml/owm/metric-si-prefixes">NIST Metric (SI) Prefixes</a>. Prefixes table: kilo, mega and milli. Exact unit factors; no engineering calibration.</li><li id="source-roundoff"><a href="https://docs.python.org/3/library/sys.html#sys.float_info">Python system floating-point information</a>. sys.float_info.epsilon; gamma bound derived in report acceptance tests. Floating-point roundoff only.</li></ol></section>
+<section id="section-10"><h2>10. Appendix</h2>
+<p><code>T</code>: tension in kN; <code>sigma</code>: stress in MPa; <code>A</code>: area;
+<code>SCF</code>: stress-concentration factor; <code>FEA</code>: finite-element analysis.
+NOT_EVALUATED means the stated engineering use lacks the required evidence.</p>
+<p>Run from the repository root with the converter dependencies installed and
+<code>TMPDIR</code> set to the supplied scratch directory. The explicit output folder receives the page,
+source record and change record; all calculation intermediates stay in the explicit scratch folder.</p>
+<pre><code>PYTHONPATH=src uv run --no-project --python python3 python docs/reports/modules/fatigue_apps/build_report.py --output-dir &quot;$TMPDIR/fatigue-apps-report&quot; --scratch-dir &quot;$TMPDIR/fatigue-apps-calculation&quot;</code></pre>
+<details id="engineering-changes" open><summary>Engineering changes · Revision 00</summary>
+<ul><li>Added the synthetic uniform-bar lookup example to distinguish numerical agreement from structural calibration.</li><li>Documented separate converter interfaces, load scaling, counting guards and unresolved damage qualification.</li><li>Added parsed output, controlled calculation mutation and isolated rebuild checks to detect stale results.</li></ul></details>
+<script type="application/json" id="calculation-record">{
+  "basis": {
+    "area_m2": 0.0025,
+    "area_mm2": 2500.0,
+    "m2_per_mm2": 1e-06,
+    "newtons_per_kn": 1000.0,
+    "pascals_per_mpa": 1000000.0,
+    "slope_mpa_per_kn": 0.4
+  },
+  "cases": [
+    {
+      "absolute_error_mpa": 0.0,
+      "expected_mpa": 10.0,
+      "regime": "node",
+      "stress_mpa": 10.0,
+      "tension_kn": 25.0
+    },
+    {
+      "absolute_error_mpa": 0.0,
+      "expected_mpa": 40.0,
+      "regime": "node",
+      "stress_mpa": 40.0,
+      "tension_kn": 100.0
+    },
+    {
+      "absolute_error_mpa": 0.0,
+      "expected_mpa": 100.0,
+      "regime": "node",
+      "stress_mpa": 100.0,
+      "tension_kn": 250.0
+    },
+    {
+      "absolute_error_mpa": 0.0,
+      "expected_mpa": 25.0,
+      "regime": "interpolation",
+      "stress_mpa": 25.0,
+      "tension_kn": 62.5
+    },
+    {
+      "absolute_error_mpa": 0.0,
+      "expected_mpa": 70.0,
+      "regime": "interpolation",
+      "stress_mpa": 70.0,
+      "tension_kn": 175.0
+    },
+    {
+      "absolute_error_mpa": 0.0,
+      "expected_mpa": 0.0,
+      "regime": "extrapolation",
+      "stress_mpa": 0.0,
+      "tension_kn": 0.0
+    },
+    {
+      "absolute_error_mpa": 0.0,
+      "expected_mpa": 200.0,
+      "regime": "extrapolation",
+      "stress_mpa": 200.0,
+      "tension_kn": 500.0
+    }
+  ],
+  "comparison": {
+    "max_error_mpa": 0.0
+  },
+  "lookup_rows": [
+    [
+      25.0,
+      10.0
+    ],
+    [
+      100.0,
+      40.0
+    ],
+    [
+      250.0,
+      100.0
+    ]
+  ],
+  "tolerance": {
+    "absolute_mpa": 1.4210854715202028e-12,
+    "relative": 0
+  },
+  "units": {
+    "absolute_error_mpa": "MPa",
+    "area_m2": "m^2",
+    "area_mm2": "mm^2",
+    "expected_mpa": "MPa",
+    "m2_per_mm2": "m^2/mm^2",
+    "newtons_per_kn": "N/kN",
+    "pascals_per_mpa": "Pa/MPa",
+    "slope_mpa_per_kn": "MPa/kN",
+    "stress_mpa": "MPa",
+    "tension_kn": "kN"
+  }
+}</script>
+<script type="application/json" id="change-record">{
+  "changes": [
+    "Added the synthetic uniform-bar lookup example to distinguish numerical agreement from structural calibration.",
+    "Documented separate converter interfaces, load scaling, counting guards and unresolved damage qualification.",
+    "Added parsed output, controlled calculation mutation and isolated rebuild checks to detect stale results."
+  ],
+  "date": "2026-10-28",
+  "report": "fatigue-applications",
+  "revision": "00"
+}</script>
+</section></main></div></body></html>

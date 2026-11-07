@@ -1,0 +1,10 @@
+{
+  "changes": [
+    "Added the synthetic uniform-bar lookup example to distinguish numerical agreement from structural calibration.",
+    "Documented separate converter interfaces, load scaling, counting guards and unresolved damage qualification.",
+    "Added parsed output, controlled calculation mutation and isolated rebuild checks to detect stale results."
+  ],
+  "date": "2026-10-28",
+  "report": "fatigue-applications",
+  "revision": "00"
+}
