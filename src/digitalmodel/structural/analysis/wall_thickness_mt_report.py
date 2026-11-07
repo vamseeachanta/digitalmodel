@@ -404,8 +404,16 @@ def generate_mt_report(
         path.parent.mkdir(parents=True, exist_ok=True)
         with open(path, "w", encoding="utf-8") as f:
             f.write(html)
+        # Standalone JSON retains route caveats without repeating chart notices
+        # in the embedded manifest. Point rows remain identical across exports.
+        sidecar_manifest = dict(pressure_manifest)
+        if code == DesignCode.DNV_ST_F101:
+            sidecar_manifest["route_limitations"] = [F101_SCREENING_LABEL]
+            if limitation:
+                sidecar_manifest["route_limitations"].append(limitation)
         path.with_suffix(".pressure-sweep.json").write_text(
-            manifest_json + "\n", encoding="utf-8",
+            json.dumps(sidecar_manifest, ensure_ascii=True, allow_nan=False) + "\n",
+            encoding="utf-8",
         )
         with path.with_suffix(".pressure-sweep.csv").open(
             "w", newline="", encoding="utf-8",
@@ -1634,8 +1642,9 @@ def _build_html(
                 it exceeds cylinder force balance by the external pressure.
             </p>
             <p><strong>{PRESSURE_SWEEP_LIMITATION}.</strong>
-                These curves are the result of our implementation and do not establish
-                code compliance. The screening model also retains its existing
+                These curves are produced by this implementation and do not establish
+                code compliance. CSV point data must be read with the JSON sidecar or HTML report
+                for route-specific qualifications. The screening model also retains its existing
                 numerical search limits at pressures beyond its feasible range.
             </p>
             {ps_table_html}

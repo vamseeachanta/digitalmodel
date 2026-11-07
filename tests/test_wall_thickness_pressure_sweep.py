@@ -70,7 +70,11 @@ def test_every_condition_pressure_curve_matches_exports(
         csv_rows = list(csv.DictReader(stream))
     start = html.index('<script type="application/json" id="pressure-sweep-manifest">')
     embedded = json.loads(html[start:].split(">", 1)[1].split("</script>", 1)[0])
-    assert embedded == manifest
+    assert embedded == {k: v for k, v in manifest.items() if k != "route_limitations"}
+    if code == DesignCode.DNV_ST_F101:
+        assert report.F101_SCREENING_LABEL in manifest["route_limitations"]
+    else:
+        assert "route_limitations" not in manifest
     assert output.read_text() == html
     assert PRESSURE_SWEEP_LIMITATION in html
     assert manifest["working_pressures"] == [
@@ -152,6 +156,9 @@ def test_default_pressures_are_stated_and_assumed(pipe, figures, tmp_path):
     assert "may not bracket the design pressure" in html
     assert "net-pressure-on-bore approximation" in html
     assert "exceeds cylinder force balance by the external pressure" in html
+    assert "These curves are produced by this implementation and do not establish" in html
+    assert "our implementation" not in html
+    assert "CSV point data must be read with the JSON sidecar or HTML report" in html
 
 
 def test_batch_writes_one_report_and_exports_per_supported_code(
@@ -307,9 +314,17 @@ def test_f101_gate_controls_all_charts_and_sweep_manifest(
     )
     manifest = json.loads(output.with_suffix(".pressure-sweep.json").read_text())
     assert manifest["limitations"] == [PRESSURE_SWEEP_LIMITATION]
-    assert report.F101_SCREENING_LABEL not in json.dumps(manifest)
     label = report.F101_SIMPLIFIED_FORM_LABEL
-    assert label not in json.dumps(manifest)
+    expected = [report.F101_SCREENING_LABEL]
+    if state != "passed":
+        expected.append(label)
+    assert manifest["route_limitations"] == expected
+    start = html.index('<script type="application/json" id="pressure-sweep-manifest">')
+    embedded = json.loads(html[start:].split(">", 1)[1].split("</script>", 1)[0])
+    assert "route_limitations" not in embedded
+    assert report.F101_SCREENING_LABEL not in json.dumps(embedded)
+    assert label not in json.dumps(embedded)
+    assert embedded == {k: v for k, v in manifest.items() if k != "route_limitations"}
     notices = html.split('<p class="f101-envelope-limitation">')[1:]
     assert len(notices) == 3
     for notice in notices:
