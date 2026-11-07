@@ -62,6 +62,7 @@ def inputs(tmp_path):
             "centre_of_gravity_m": [115.5, 0, 8.0],
             "radii_of_gyration_m": [17.15, 57.75, 60.06],
             "centre_of_gravity_basis": "WEIGHT_REPORT: synthetic reviewed weight report",
+            "radii_of_gyration_basis": "WEIGHT_REPORT: synthetic reviewed weight report",
         },
         "final_frequency_list": "synthetic reviewed sampling reference",
         "approvals": {
@@ -290,8 +291,63 @@ def test_base_spec_requires_explicit_gyradii(inputs):
     assert not inputs[2].exists()
 
 
-def test_missing_loading_basis_uses_missing_input_diagnostic(inputs):
-    inputs[4]["base_values"]["centre_of_gravity_basis"] = None
+def test_base_spec_null_tensor_with_explicit_gyradii_can_issue(inputs):
+    inputs[3]["vessel"]["inertia"]["inertia_tensor"] = None
+    inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8")
+    assert len(prepare(inputs)["cases"]) == 12
+
+
+@pytest.mark.parametrize("basis", ["estimate", "omitted", "WEIGHT_REPORT: other"])
+def test_gyradii_basis_requires_matching_weight_report(inputs, basis):
+    values = inputs[4]["base_values"]
+    if basis == "omitted":
+        values.pop("radii_of_gyration_basis", None)
+    else:
+        values["radii_of_gyration_basis"] = basis
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
+    with pytest.raises(ValueError, match="radii_of_gyration_basis"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize(
+    "centre",
+    [
+        [115.5, 0, -5.5 + 1e-9],
+        [115.5, 0, -5.49],
+        [115.5, 1e-12, -5.5],
+        [115.6, 0.01, -5.5],
+        [115.5, 0, -5.5 - 1e-9],
+        [115.5, 0, -5.51],
+        [115.5, 0, -5.489],
+        [115.5, 0, -5.511],
+    ],
+)
+def test_perturbed_vertical_placeholder_cannot_issue(inputs, centre):
+    inputs[3]["vessel"]["inertia"]["centre_of_gravity"] = centre
+    inputs[4]["base_values"]["centre_of_gravity_m"] = centre
+    inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8")
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
+    with pytest.raises(ValueError, match="centre_of_gravity.*placeholder"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize("vertical", [-5.488999, -5.511001])
+def test_loading_outside_vertical_placeholder_tolerance_can_issue(inputs, vertical):
+    centre = [115.5, 0, vertical]
+    inputs[3]["vessel"]["inertia"]["centre_of_gravity"] = centre
+    inputs[4]["base_values"]["centre_of_gravity_m"] = centre
+    inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8")
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
+    assert len(prepare(inputs)["cases"]) == 12
+
+
+@pytest.mark.parametrize(
+    "field", ["centre_of_gravity_basis", "radii_of_gyration_basis"]
+)
+def test_missing_loading_basis_uses_missing_input_diagnostic(inputs, field):
+    inputs[4]["base_values"][field] = None
     inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
     with pytest.raises(ValueError, match="MISSING"):
         prepare(inputs)
@@ -356,6 +412,7 @@ def test_consistently_declared_placeholder_loading_cannot_issue(inputs, loading)
     values = inputs[4]["base_values"]
     values["centre_of_gravity_m"] = list(campaign.mesh_geometry.CENTRE_OF_GRAVITY)
     values["centre_of_gravity_basis"] = f"WEIGHT_REPORT: {inputs[4]['weight_report']}"
+    values["radii_of_gyration_basis"] = f"WEIGHT_REPORT: {inputs[4]['weight_report']}"
     inertia = inputs[3]["vessel"]["inertia"]
     inertia.update(
         mass=values["mass_kg"],
@@ -747,7 +804,7 @@ def test_missing_or_invalid_centre_of_gravity_blocks_all_cases(inputs, centre):
     assert not inputs[2].exists()
 
 
-@pytest.mark.parametrize("centre", [[0, 0, 0], [115.5, 1, -5.5]])
+@pytest.mark.parametrize("centre", [[0, 0, 0], [115.5, 1, 8.0]])
 def test_horizontal_loading_imbalance_blocks_all_cases(inputs, centre):
     inputs[3]["vessel"]["inertia"]["centre_of_gravity"] = centre
     inputs[4]["base_values"]["centre_of_gravity_m"] = centre

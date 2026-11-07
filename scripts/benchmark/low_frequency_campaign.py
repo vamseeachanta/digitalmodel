@@ -29,6 +29,9 @@ _GEOMETRY_SPEC = importlib.util.spec_from_file_location(
 mesh_geometry = importlib.util.module_from_spec(_GEOMETRY_SPEC)
 _GEOMETRY_SPEC.loader.exec_module(mesh_geometry)
 check_df2_buoyancy = mesh_geometry.check_df2_buoyancy
+# Supplied investigation criterion: reject vertical loading within 0.1% of
+# reconstructed draft about -draft/2. This does not qualify other loading.
+PLACEHOLDER_VERTICAL_TOLERANCE_M = Decimal(str(mesh_geometry.DRAFT)) * Decimal("0.001")
 APPROVALS = (
     "criteria",
     "geometry",
@@ -142,16 +145,13 @@ def require_evidence(request, headings):
         if not isinstance(value, str) or not value.strip():
             raise ValueError(f"required evidence missing for {field}")
     base_values = request.get("base_values")
-    basis = (
-        base_values.get("centre_of_gravity_basis")
-        if isinstance(base_values, dict)
-        else None
-    )
-    if basis != f"WEIGHT_REPORT: {request['weight_report']}":
-        raise ValueError(
-            "centre_of_gravity_basis must be WEIGHT_REPORT: followed by the exact "
-            "weight_report reference"
-        )
+    for field in ("centre_of_gravity_basis", "radii_of_gyration_basis"):
+        basis = base_values.get(field) if isinstance(base_values, dict) else None
+        if basis != f"WEIGHT_REPORT: {request['weight_report']}":
+            raise ValueError(
+                f"{field} must be WEIGHT_REPORT: followed by the exact "
+                "weight_report reference"
+            )
     asymptote = request["criteria"]["asymptotic_max_rad_s"]
     corrected = number(asymptote.get("heave_natural_frequency_rad_s"))
     if corrected <= 0:
@@ -176,7 +176,7 @@ def require_evidence(request, headings):
 
 def require_matching_loading(request, inertia):
     """Bind the request loading evidence to the inertia used in every case."""
-    if "inertia_tensor" in inertia:
+    if inertia.get("inertia_tensor") is not None:
         raise ValueError("base-spec inertia.inertia_tensor is unsupported; use gyradii")
     if "radii_of_gyration" not in inertia:
         raise ValueError("base-spec inertia.radii_of_gyration is required")
@@ -214,7 +214,11 @@ def require_matching_loading(request, inertia):
         if requested != supplied:
             raise ValueError(f"base_values.{field} must match base-spec inertia.{key}")
     # A matching reference string cannot qualify the constructed loading.
-    if tuple(inertia["centre_of_gravity"]) == mesh_geometry.CENTRE_OF_GRAVITY:
+    placeholder_z = -Decimal(str(mesh_geometry.DRAFT)) / 2
+    if (
+        abs(number(inertia["centre_of_gravity"][2]) - placeholder_z)
+        <= PLACEHOLDER_VERTICAL_TOLERANCE_M
+    ):
         raise ValueError(
             "base-spec inertia.centre_of_gravity: reconstructed buoyancy-centre "
             "placeholder loading is unsupported"
