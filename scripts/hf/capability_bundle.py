@@ -73,7 +73,102 @@ SOURCES = {
         "Synthetic pre-tax sensitivity; source rounding and null payback retained; "
         "source field-summary metadata differs from generator reservoir input.",
     ),
+    "casing_profiles": (
+        "well/casing-design-explorer.json",
+        "scripts/capabilities/build_casing_design_explorer.py",
+        "Synthetic reference well; rounded depth-aligned pressure profiles. "
+        "No site-specific well qualification.",
+    ),
+    "casing_products": (
+        "well/casing-design-explorer.json",
+        "scripts/capabilities/build_casing_design_explorer.py",
+        "Candidate product geometry and rounded ratings from the source study; "
+        "not a complete product catalog or a purchasing specification.",
+    ),
+    "casing_checks": (
+        "well/casing-design-explorer.json",
+        "scripts/capabilities/build_casing_design_explorer.py",
+        "Source pass flags and design factors are retained, not requalified. "
+        "load_unit applies to rating and max_load; factors are dimensionless.",
+    ),
+    "sloshing_curves": (
+        "structural/sloshing-explorer.json",
+        "scripts/capabilities/build_sloshing_explorer.py",
+        "Rounded analytical curves only; shape-specific ratio definitions differ. "
+        "characteristic_length_definition labels the ratio basis, not a length. "
+        "Equivalent-rectangle approximations apply to horizontal and oval tanks. "
+        "CFD, forced response, damping and SDOF results are excluded.",
+    ),
+    "sloshing_lookup": (
+        "structural/sloshing-explorer.json",
+        "scripts/capabilities/build_sloshing_explorer.py",
+        "Rounded analytical periods at each shape's default size. depth_ratio is "
+        "depth/length for rectangles, depth/diameter for cylinders, depth/height "
+        "for ovals; oval height follows the generator aspect ratio. "
+        "Not a resonance-load or damping qualification.",
+    ),
+    "dynacard_cases": (
+        "artificial-lift/dynacard-troubleshooting.json",
+        "scripts/capabilities/build_dynacard_troubleshooting.py",
+        "Synthetic troubleshooting summaries and rounded load metrics only. "
+        "Classifier confidence is not field accuracy. Field-card library, "
+        "controller settings, card coordinates and intervention advice are excluded.",
+    ),
+    "dynacard_differential": (
+        "artificial-lift/dynacard-troubleshooting.json",
+        "scripts/capabilities/build_dynacard_troubleshooting.py",
+        "Ordered source candidates for synthetic cases; probabilities are not "
+        "renormalised or independently calibrated; not field diagnostic validation.",
+    ),
 }
+
+# Only projected inputs are retained from mixed-content sidecars.
+# Selection precedes locator checking and projection; excluded results are never
+# staged. The original source digest and retained-source digest have distinct scopes.
+SOURCE_SECTIONS = {
+    "sloshing_curves": ("meta", "shapes"),
+    "sloshing_lookup": ("meta", "shapes"),
+    "dynacard_cases": ("cases",),
+    "dynacard_differential": ("cases",),
+}
+
+# A null leaf retains that value; mappings select keys in objects and list items.
+SOURCE_FIELDS = {
+    "dynacard_cases": {
+        "cases": {
+            "mode": None,
+            "seed": None,
+            "classification": None,
+            "confidence": None,
+            "severity": None,
+            "model_version": None,
+            "n_points": None,
+            "metrics": {
+                "fluid_load_lbs": None,
+                "peak_load_lbs": None,
+                "min_load_lbs": None,
+                "card_area_inlb": None,
+                "area_vs_healthy_pct": None,
+            },
+        },
+    },
+    "dynacard_differential": {
+        "cases": {
+            "mode": None,
+            "differential": {"mode": None, "probability": None},
+        },
+    },
+}
+
+
+def _select_fields(value, fields):
+    """Retain declared inputs only; missing required keys fail before writing."""
+    if isinstance(value, list):
+        return [_select_fields(item, fields) for item in value]
+    return {
+        key: value[key] if nested is None else _select_fields(value[key], nested)
+        for key, nested in fields.items()
+    }
 
 
 def _json_bytes(value: object) -> bytes:
@@ -123,19 +218,32 @@ def _rows(rows: list[dict]) -> tuple[list[dict], list[str]]:
     return [{column: row.get(column) for column in columns} for row in rows], columns
 
 
-def _table_files(name, project):
+def _table_files(name, project, source_bytes):
     source, generator, limits = SOURCES[name]
     source_path = REPO / "docs/api" / source
-    source_bytes = _text_bytes(source_path)
     document = json.loads(source_bytes)
+    sections = SOURCE_SECTIONS.get(name)
+    if sections is not None:
+        document = {key: document[key] for key in sections}
+    fields = SOURCE_FIELDS.get(name)
+    if fields is not None:
+        document = _select_fields(document, fields)
+    retained_bytes = (
+        _json_bytes(document)
+        if sections is not None or fields is not None
+        else source_bytes
+    )
     _check_locators(document)
     rows, columns = _rows(project(document))
     table_path = f"{name}/train.jsonl"
     data = b"".join(_json_bytes(row) for row in rows)
-    files = {table_path: data, f"sources/{name}.json": source_bytes}
+    files = {table_path: data, f"sources/{name}.json": retained_bytes}
     metadata = {
         "source": source_path.relative_to(REPO).as_posix(),
         "source_sha256": _sha(source_bytes),
+        "retained_source_sha256": _sha(retained_bytes),
+        "retained_source_sections": list(sections) if sections is not None else None,
+        "retained_source_fields": fields,
         "generator": generator,
         "generator_sha256": _sha(_text_bytes(REPO / generator)),
         "row_count": len(rows),
@@ -157,10 +265,14 @@ def bundle_files(dataset: str, *, license_id: str) -> dict[str, bytes]:
     if not re.fullmatch(r"[a-z][a-z0-9.-]*", license_id):
         raise ValueError("A license identifier is required")
     files: dict[str, bytes] = {}
+    snapshots: dict[str, bytes] = {}
     tables = {}
     configs = []
     for name, project in builder.DATASETS[dataset].items():
-        table_files, tables[name] = _table_files(name, project)
+        source = SOURCES[name][0]
+        if source not in snapshots:
+            snapshots[source] = _text_bytes(REPO / "docs/api" / source)
+        table_files, tables[name] = _table_files(name, project, snapshots[source])
         files.update(table_files)
         table_path = f"{name}/train.jsonl"
         configs.append(
@@ -192,7 +304,10 @@ def _card(dataset, tables, configs, license_id):
         "## Provenance and limits\n",
         "Engineering readiness: NOT_EVALUATED. Dataset export does not establish "
         "engineering qualification. Source and output digests are in manifest.json; "
-        "source sidecars are retained under sources/. Text hashes and retained sources "
+        "source sidecars are retained under sources/. Selected sections, where declared, "
+        "are the only retained payload; retained_source_fields declares nested key "
+        "selection where applied. source_sha256 identifies the complete input, "
+        "retained_source_sha256 identifies the retained bytes. Text hashes and sources "
         "use LF newlines. The manifest records the build system and architecture; "
         "byte verification also compares this platform metadata.\n",
     ]
