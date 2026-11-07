@@ -1,0 +1,229 @@
+# Structural FE workflow knowledge pack
+
+| Header | Value |
+| --- | --- |
+| Module | structural/fe |
+| Repository | digitalmodel |
+| Package path | src/digitalmodel/structural/fe |
+| Pack revision | 0 |
+| Code revision | aebd7e4bc5c3dda5f7433e20e021dd58ac17d0b3 |
+| Analysis family | FE |
+| Quality role | FEA quality manager |
+| Status | DRAFT |
+
+The code pin applies to repository citations; the independent implementation-map pin is recorded in section 9.
+
+## 1. Purpose and scope
+
+The package builds beam-model inputs and routes them to the in-process `ElasticBucklingSolver` and `VonMisesSolver`, then writes CSV results and replaces the input subsection with a summary. [src/digitalmodel/structural/fe/model_builder.py:L28-L43] [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L21-L68] [src/digitalmodel/structural/fe/von_mises_workflow.py:L20-L49]
+
+The engine dispatches `basename: elastic_buckling` and `basename: von_mises` to these routers; both durable workflow entries specify `runtime: offline`. [src/digitalmodel/engine.py:L533-L542] [docs/registry/workflows.yaml:L389-L404]
+
+The routing registry marks the containing structural domain `stable`; this is domain metadata, not evidence of general beam-model accuracy. [docs/registry/module-routing.yaml:L525-L530]
+
+The implemented element has two coordinates per node and a four-entry displacement vector, while its documentation mixes transverse-displacement/rotation and global x/y interpretations; arbitrary geometry and combined axial/bending accuracy remain outside the demonstrated scope (section 6). [src/digitalmodel/structural/fe/model_builder.py:L97-L110] [src/digitalmodel/infrastructure/base_solvers/structural/elements/beam_element.py:L15-L19] [src/digitalmodel/infrastructure/base_solvers/structural/elements/beam_element.py:L143-L150] [src/digitalmodel/infrastructure/base_solvers/structural/stress/von_mises.py:L178-L189]
+
+## 2. Inputs and outputs
+
+Input values below describe the implemented interface; ranges not enforced by the builder are explicitly distinguished from downstream checks. [src/digitalmodel/structural/fe/model_builder.py:L28-L43]
+
+| Input | Unit / convention | Range and default | Source |
+| --- | --- | --- | --- |
+| `nodes` | x/y coordinates; consistent length basis required | Nonempty list or mapping; IDs must be contiguous from 0; exactly 2 coordinates; no finite-value check | [src/digitalmodel/structural/fe/model_builder.py:L64-L110] |
+| `elements` | E in Pa, `I` in m⁴, A in m² in element documentation | Nonempty list; referenced nodes required; element E defaults to material E; `I` and A required; coincident nodes rejected below 1e-10 length units | [src/digitalmodel/structural/fe/model_builder.py:L113-L143] [src/digitalmodel/infrastructure/base_solvers/structural/elements/beam_element.py:L42-L69] |
+| `material` | E and yield stress in Pa; nu dimensionless; rho has no unit conversion in builder | E, nu, sigma_y required; rho defaults to 7850.0; stress solver checks E > 0, sigma_y > 0, 0 ≤ nu ≤ 0.5 | [src/digitalmodel/structural/fe/model_builder.py:L192-L205] [src/digitalmodel/infrastructure/base_solvers/structural/stress/von_mises.py:L71-L79] |
+| `boundary_conditions` | Node indices, dimensionless | Nonempty mapping; `fixed_nodes` defaults to empty list; only that list is checked by builder; example buckling uses `pinned_nodes` | [src/digitalmodel/structural/fe/model_builder.py:L146-L162] [examples/workflows/elastic-buckling/input.yml:L81-L84] |
+| `loads` | Signed magnitude on x or y; N is used by buckling force documentation | Nonempty list; node must exist; direction lowercased and restricted to x/y; magnitude converted to float | [src/digitalmodel/structural/fe/model_builder.py:L165-L189] [src/digitalmodel/infrastructure/base_solvers/structural/buckling/elastic_buckling.py:L204-L219] |
+| `axial_force` | Positive compression, N with SI E/I/length | Default 0.0 is rejected; same force is assigned to every element | [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L24-L26] [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L71-L75] |
+| `num_modes` | Integer count | Defaults to 5; adapter applies int(); solver accepts 1–100 | [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L28-L29] [src/digitalmodel/infrastructure/base_solvers/structural/buckling/elastic_buckling.py:L48-L61] |
+| `reference` | Length in coordinate units; effective-length factor and error tolerance dimensionless | Length defaults to summed element lengths, factor to 1.0; missing `euler_tolerance` disables comparison rejection | [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L43-L51] [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L85-L93] |
+| Output location | Filesystem path | `output_dir` defaults to `results`; relative paths use config directory, config-file parent, then current directory | [src/digitalmodel/structural/fe/model_builder.py:L46-L61] [src/digitalmodel/structural/fe/model_builder.py:L215-L226] |
+
+Coordinates have no declared origin, handedness or phase transformation in `_node_coords`; values are converted directly into a two-entry floating array, and element angle is computed from coordinate differences. [src/digitalmodel/structural/fe/model_builder.py:L97-L110] [src/digitalmodel/infrastructure/base_solvers/structural/elements/beam_element.py:L63-L75]
+
+UNVERIFIED: the full SI interpretation of coordinate length, load directions, density and all summary fields is not established by an explicit adapter unit/frame contract; use consistent SI inputs only as a documented assumption; issue pending (1).
+
+| Output | Unit / interpretation | Location and contents | Source |
+| --- | --- | --- | --- |
+| Buckling summary | Load factors dimensionless; critical loads follow axial-force units; Euler relative error dimensionless | Status, mesh counts, mode count, axial reference, first factor/load, Euler load/error, CSV path | [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L39-L67] |
+| Buckling CSV | Mode count, factor, critical load; no unit row | `<input-stem>_elastic_buckling.csv`; columns mode, eigenvalue, critical_load | [src/digitalmodel/structural/fe/model_builder.py:L46-L53] [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L96-L109] |
+| Stress summary | Stress follows E units; safety factors dimensionless; displacement follows solver convention | Status, mesh counts, maximum stress, minimum safety factor, critical count, maximum displacement, yield strength, CSV path | [src/digitalmodel/structural/fe/von_mises_workflow.py:L38-L48] |
+| Stress CSV | Stress follows E units; safety factor dimensionless; no unit row | `<input-stem>_von_mises.csv`; element ID, equivalent stress, safety factor, axial stress, top/bottom bending stress | [src/digitalmodel/structural/fe/model_builder.py:L46-L53] [src/digitalmodel/structural/fe/von_mises_workflow.py:L52-L78] |
+
+## 3. Method and governing standards
+
+| Method | Implementing definition and limits | Reference |
+| --- | --- | --- |
+| Model assembly | `build_beam_model` constructs nodes, beam elements, boundary conditions, loads and material; it does not calculate a mesh from geometry | [src/digitalmodel/structural/fe/model_builder.py:L28-L43] [src/digitalmodel/structural/fe/model_builder.py:L113-L143] |
+| Beam stiffness | `BeamElement.compute_local_stiffness_matrix` assembles the four-DOF Euler–Bernoulli stiffness matrix; global stiffness uses TᵀKT | [src/digitalmodel/infrastructure/base_solvers/structural/elements/beam_element.py:L83-L168] |
+| Eigen buckling | Adapter `router` assigns uniform compressive reference force; dependency `ElasticBucklingSolver.solve` reduces matrices, solves (K − λKg)φ = 0 and expands modes; adapter multiplies λ by reference force | [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L24-L44] [src/digitalmodel/infrastructure/base_solvers/structural/buckling/elastic_buckling.py:L120-L155] |
+| Euler comparison | `_euler_reference_load` calculates π²EI/(kL)² using the first element's E and second moment of area and summed lengths unless overridden; this is a uniform-column comparison, not an independent heterogeneous-member solution | [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L85-L93] |
+| Mode acceptance | `_validate_distinct_modes` checks positive first load and only the first pair for strict increase | [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L78-L82] |
+| Stress and yield | Adapter delegates stress solving; dependency uses E times derived strain, approximate section-fibre distance, maximum absolute axial or bending component, and yield/equivalent-stress safety factor; it does not sum axial and bending components for the maximum | [src/digitalmodel/structural/fe/von_mises_workflow.py:L24-L36] [src/digitalmodel/infrastructure/base_solvers/structural/elements/beam_element.py:L240-L265] [src/digitalmodel/infrastructure/base_solvers/structural/stress/von_mises.py:L204-L221] [src/digitalmodel/infrastructure/base_solvers/structural/stress/von_mises.py:L230-L257] |
+
+The four adapter files contain no governing standard edition or clause and no emitted `Citation` sidecar; their payloads contain the numeric summaries and CSV paths shown above. [src/digitalmodel/structural/fe/__init__.py:L1-L1] [src/digitalmodel/structural/fe/model_builder.py:L1-L226] [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L1-L109] [src/digitalmodel/structural/fe/von_mises_workflow.py:L1-L78]
+
+No licensed-standard clause is adopted as the acceptance basis of this pack; Euler's closed form in the dedicated test is the independent analytical comparator, while the stress path is not a hand-check reference. [tests/structural/fe/test_elastic_buckling_workflow.py:L11-L17] [tests/structural/fe/test_elastic_buckling_workflow.py:L70-L84] [tests/structural/fe/test_von_mises_workflow.py:L64-L74] [src/digitalmodel/infrastructure/base_solvers/structural/elements/beam_element.py:L240-L265]
+
+## 4. Validated worked examples
+
+Results below were observed at the code pin before and after this documentation change using `PYTHONPATH=src uv run --no-sources python -m pytest <paths> -q -rA -p no:cacheprovider --basetemp=<scratch>`; no addopts override or parallel workers were used.
+
+| Case / class | Independent expected value, tolerance and input | Existing test node ID | Offline result |
+| --- | --- | --- | --- |
+| E1 / validated analytical column | Test constructs a 3.0 m uniform pinned column, 8 elements, E = 2.10e11 Pa, I = 8.10e-6 m⁴; independently evaluates π²EI/L² = 1865355.2 N, with 5.0 % FE tolerance, and second mode 4 times the first analytical load; tolerance is the test's acceptance threshold, not a convergence study | `tests/structural/fe/test_elastic_buckling_workflow.py::test_elastic_buckling_workflow_matches_euler_column` | PASS / PASS; 1 passed each run. [tests/structural/fe/test_elastic_buckling_workflow.py:L11-L17] [tests/structural/fe/test_elastic_buckling_workflow.py:L67-L88] |
+| E2 / regression stress | Two-element example constructed by the test; requires finite positive stress, 2 CSV rows, no critical elements and yield/stress consistency; there is no independent expected stress assertion | `tests/structural/fe/test_von_mises_workflow.py::test_von_mises_workflow_writes_element_results_next_to_input` | PASS / PASS; 1 passed each run. [tests/structural/fe/test_von_mises_workflow.py:L11-L49] [tests/structural/fe/test_von_mises_workflow.py:L61-L74] |
+| E3 / regression durable buckling | `examples/workflows/elastic-buckling/input.yml`; compares FE first load to adapter Euler output within 5.0 %, CSV length to mode count and first two loads for strict increase; this durable assertion is not independent of adapter output | `tests/workflows/test_durable_workflows.py::test_workflow_registry[elastic-buckling]` | PASS / PASS in a scratch copy because the test writes beside its input. [docs/registry/workflows.yaml:L397-L404] [tests/workflows/test_durable_workflows.py:L638-L664] |
+| E4 / regression durable stress | `examples/workflows/von-mises/input.yml`; positive finite stress, positive safety factors, no critical elements and CSV count consistency; no independent stress target | `tests/workflows/test_durable_workflows.py::test_workflow_registry[von-mises]` | PASS / PASS in the same scratch copy. [docs/registry/workflows.yaml:L389-L396] [tests/workflows/test_durable_workflows.py:L620-L637] |
+
+The dedicated examples contain two test functions, and the registry supplies two additional parameterized cases; the inventory's approximate count is not used as an acceptance measure. [tests/structural/fe/test_elastic_buckling_workflow.py:L11-L11] [tests/structural/fe/test_von_mises_workflow.py:L11-L11] [docs/registry/workflows.yaml:L389-L404]
+
+## 5. QA gates
+
+Gate disposition is the proposed FE mapping of AQG r0 §§3–10: that revision has no FE family row; family-specific clearance remains issue pending (3).
+
+| Gate | Applicability | Module-specific check and numeric pass criterion | Executable evidence route |
+| --- | --- | --- | --- |
+| G0 inputs | Applicable | C0: E1 configuration has 9 nodes, 8 elements, 3 requested modes and positive axial reference force (> 0 N); E2 exports exactly 2 elements (counts, dimensionless) | Run E1 and E2; compare their explicit inputs and summary assertions. These are fixture checks, not general input qualification. [tests/structural/fe/test_elastic_buckling_workflow.py:L11-L53] [tests/structural/fe/test_elastic_buckling_workflow.py:L70-L76] [tests/structural/fe/test_von_mises_workflow.py:L64-L74] |
+| G1 load | Applicable | C1: 4 of 4 E1–E4 cases complete without engine/adapter load errors (count); target is the in-process Python implementation at the pin | Load route for both workflows: `engine(inputfile=...)` dispatches to the Python router, then sets nodes/elements/constraints/loads/material on its solver; no external deck or target program is written. [tests/structural/fe/test_elastic_buckling_workflow.py:L56-L70] [tests/structural/fe/test_von_mises_workflow.py:L50-L64] [src/digitalmodel/engine.py:L533-L542] [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L28-L35] [src/digitalmodel/structural/fe/von_mises_workflow.py:L24-L30] |
+| G2 static / analytical comparison | Applicable | C2: E1 first FE critical load differs from π²EI/L² by ≤ 5.0 %; second differs from 4π²EI/L² by ≤ 5.0 % (load in N); both first modes strictly increase (> 0 N difference) | Run E1; independent closed-form target is computed inside the test. No independent physical stress acceptance is asserted for E2. [tests/structural/fe/test_elastic_buckling_workflow.py:L17-L17] [tests/structural/fe/test_elastic_buckling_workflow.py:L70-L88] |
+| G3 short dynamics | NOT_APPLICABLE | 0 time-domain histories are produced by these static-stress/eigenvalue routes (count) | Routers call solve once and serialize static element stresses or eigenmode loads. [src/digitalmodel/structural/fe/von_mises_workflow.py:L30-L48] [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L35-L67] |
+| G4 diffraction | NOT_APPLICABLE | Beam nodes/elements rather than diffraction bodies/panels form the model | Model contains nodes, beam elements, constraints, loads and material only. [src/digitalmodel/structural/fe/model_builder.py:L19-L43] |
+| G5 evidence / appendix | Applicable to result evidence | C5: E1 CSV has 3 mode rows, E2 has 2 element rows; 0 output-location mismatches (counts); E3/E4 CSV row count equals summary mode/element count | Run E1–E4 and retain their logs/CSV files; adapter serializers provide result evidence, but do not create a signed QA appendix or fingerprint manifest; issue pending (3). [tests/structural/fe/test_elastic_buckling_workflow.py:L67-L80] [tests/structural/fe/test_von_mises_workflow.py:L61-L74] [tests/workflows/test_durable_workflows.py:L635-L637] [tests/workflows/test_durable_workflows.py:L648-L651] [src/digitalmodel/structural/fe/von_mises_workflow.py:L52-L78] [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L96-L109] |
+
+Checks defined: G0 = 1, G1 = 1, G2 = 1, G3 = 0, G4 = 0, G5 = 1; four executable checks, carried by E1–E4; a passing fixture is not proof of complete gate qualification.
+
+## 6. Known failure modes and pitfalls
+
+sweep: 37 found
+
+The following reproducible command searches every package Python file; each row records an error-handling, conversion, default or unit-assumption site, including guarded sites that do not silently fail:
+
+```sh
+rg -n 'except|continue|return None|return \[\]|return \{\}|\b(0(\.0)?|1970)\b|int\(|float\(|\.get\(|unit|cache' src/digitalmodel/structural/fe --glob '*.py'
+```
+
+There are no `continue`, `return None`, empty-result returns, epoch defaults or cache writes in these four files; the only exception handler is the display-path fallback. [src/digitalmodel/structural/fe/__init__.py:L1-L1] [src/digitalmodel/structural/fe/model_builder.py:L1-L226] [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L1-L109] [src/digitalmodel/structural/fe/von_mises_workflow.py:L1-L78]
+
+| Site | Symptom / cause | Existing detection and follow-up |
+| --- | --- | --- |
+| S01 `model_builder._nodes` | Repeated IDs in list or converted mapping keys overwrite earlier coordinates without duplicate detection. [src/digitalmodel/structural/fe/model_builder.py:L68-L76] | no detection check exists; issue pending (1) |
+| S02 `display_path` | ValueError from repository-relative conversion falls back to an absolute path, which can expose output location in summaries. [src/digitalmodel/structural/fe/model_builder.py:L56-L61] | C5 covers successful output resolution only; no detection check exists for identifier exposure; issue pending (1) |
+| S03 `results_csv_path` | Default `results` and input stem can overwrite earlier results because CSV files open with mode w. [src/digitalmodel/structural/fe/model_builder.py:L46-L53] [src/digitalmodel/structural/fe/von_mises_workflow.py:L55-L56] [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L101-L102] | C5 covers normal placement only; no detection check exists for collision; issue pending (1) |
+| S04 `_config_dir` | Missing config metadata silently uses current directory. [src/digitalmodel/structural/fe/model_builder.py:L215-L220] | no detection check exists; issue pending (1) |
+| S05 `_input_stem` | Missing config-file path falls back to basename without uniqueness enforcement. [src/digitalmodel/structural/fe/model_builder.py:L223-L226] | no detection check exists; issue pending (1) |
+| S06 `_nodes` | int(key) can truncate a numeric noninteger ID or reject grouped/decimal text without contextual error. [src/digitalmodel/structural/fe/model_builder.py:L73-L76] | no detection check exists; issue pending (1) |
+| S07 `_node_item` | int(id) has the same truncation/text risk for list entries. [src/digitalmodel/structural/fe/model_builder.py:L91-L94] | no detection check exists; issue pending (1) |
+| S08 `_node_coords`, x | float(coords[0]) accepts non-finite text; localized separators are not normalized. [src/digitalmodel/structural/fe/model_builder.py:L108-L110] | no detection check exists; issue pending (1) |
+| S09 `_node_coords`, y | float(coords[1]) has the same finite-value and separator gap. [src/digitalmodel/structural/fe/model_builder.py:L108-L110] | no detection check exists; issue pending (1) |
+| S10 `_elements`, id | int(id) has no strict integer or unique-element-ID check. [src/digitalmodel/structural/fe/model_builder.py:L123-L128] | no detection check exists; issue pending (1) |
+| S11 `_elements`, node1 | int(node1) may truncate before node-existence validation. [src/digitalmodel/structural/fe/model_builder.py:L126-L130] | no detection check exists for truncation; issue pending (1) |
+| S12 `_elements`, node2 | int(node2) may truncate before node-existence validation. [src/digitalmodel/structural/fe/model_builder.py:L126-L130] | no detection check exists for truncation; issue pending (1) |
+| S13 `_elements`, E | float(E) defaults to material E; no per-element finite/positive check is performed here. [src/digitalmodel/structural/fe/model_builder.py:L131-L141] | no detection check exists; issue pending (1) |
+| S14 `_elements`, I | float(I) has no finite/positive check in builder. [src/digitalmodel/structural/fe/model_builder.py:L138-L140] | no detection check exists; issue pending (1) |
+| S15 `_elements`, A | float(A) has no finite/positive check in builder. [src/digitalmodel/structural/fe/model_builder.py:L138-L140] | no detection check exists; issue pending (1) |
+| S16 `_boundary_conditions` | fixed_nodes defaults to [], with int() per entry; other constraint keys pass through unvalidated by this builder. [src/digitalmodel/structural/fe/model_builder.py:L151-L162] | no detection check exists for malformed constraints; issue pending (1) |
+| S17 `_loads`, node | int(node) can truncate before lookup. [src/digitalmodel/structural/fe/model_builder.py:L173-L178] | no detection check exists for truncation; issue pending (1) |
+| S18 `_loads`, magnitude | float(magnitude) lacks finite-value and unit checks; separators are not normalized. [src/digitalmodel/structural/fe/model_builder.py:L179-L187] | no detection check exists; issue pending (1) |
+| S19 `_material`, rho | float conversion with 7850.0 default assumes material density without an explicit unit field. [src/digitalmodel/structural/fe/model_builder.py:L192-L199] | no detection check exists; issue pending (1) |
+| S20 `_required_float`, E | Missing value raises; float(E) still accepts non-finite values. [src/digitalmodel/structural/fe/model_builder.py:L194-L205] | no detection check exists for non-finite input; issue pending (1) |
+| S21 `_required_float`, nu | Missing value raises; float(nu) has no builder range/finite check. [src/digitalmodel/structural/fe/model_builder.py:L194-L205] | no detection check exists in the adapter tests; issue pending (1) |
+| S22 `_required_float`, sigma_y | Missing value raises; float(sigma_y) has no builder finite check. [src/digitalmodel/structural/fe/model_builder.py:L194-L205] | no detection check exists; issue pending (1) |
+| S23 `build_beam_model` | Missing material falls back to {}, then required fields raise; optional get() lookups for nodes/elements/constraints/loads feed explicit missing/empty validation. [src/digitalmodel/structural/fe/model_builder.py:L28-L36] [src/digitalmodel/structural/fe/model_builder.py:L64-L81] [src/digitalmodel/structural/fe/model_builder.py:L119-L120] [src/digitalmodel/structural/fe/model_builder.py:L151-L154] [src/digitalmodel/structural/fe/model_builder.py:L170-L171] | Guarded, but no detection check exists for error-message coverage; issue pending (1) |
+| S24 Buckling `router`, settings/modes | Missing settings becomes {}; num_modes defaults to 5 and int() silently truncates noninteger numeric input. [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L21-L29] | C0 covers explicit 3 modes only; no detection check exists for truncation/default branch; issue pending (1) |
+| S25 Buckling `router`, result status | get(status) unequal to completed raises with get(error); missing/error results are not swallowed. [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L35-L37] | C1 detects failure for E1/E3; issue pending (1) for negative-path tests |
+| S26 Buckling `router`, eigenvalues | float(value) has no local finite check; critical loads and CSV inherit force units. [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L39-L44] | C2 compares first two modes only; no detection check exists for non-finite later modes; issue pending (1) |
+| S27 Buckling `router`, tolerance | Missing tolerance disables rejection; float(tolerance) lacks finite/positive validation. [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L43-L51] | C2 covers supplied finite tolerance only; no detection check exists for omitted/invalid tolerance; issue pending (1) |
+| S28 `_reference_axial_force` | 0.0 default is rejected, but float conversion and <= 0 comparison do not reject NaN. [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L71-L75] | no detection check exists; issue pending (1) |
+| S29 `_validate_distinct_modes` | Empty/nonpositive-first sequence raises; only second versus first is checked; later repeated, decreasing or non-finite modes can pass. [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L78-L82] | C2 covers first pair; no detection check exists for later modes; issue pending (1) |
+| S30 `_euler_reference_load`, length | float(length) defaults to sum of element lengths; this assumes a single uniform column and does not reject NaN. [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L85-L93] | C2 covers uniform straight column only; issue pending (1) |
+| S31 `_euler_reference_load`, factor | float(effective_length_factor) defaults to 1.0; nonpositive values raise, NaN does not. [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L85-L93] | no detection check exists for invalid factor; issue pending (1) |
+| S32 Stress `router`, settings/status | Missing settings becomes {}; incomplete solver status raises rather than silently succeeding. [src/digitalmodel/structural/fe/von_mises_workflow.py:L20-L32] | C1 checks E2/E4 success; issue pending (1) for negative-path tests |
+| S33 Stress `router`, maximum | float(max_stress) does not validate finiteness before export. [src/digitalmodel/structural/fe/von_mises_workflow.py:L38-L48] | C1/E2/E4 asserts finite positive fixture stress; no detection check exists for invalid returned value; issue pending (1) |
+| S34 Stress `router`, safety | float(min_safety_factor) can propagate infinity; no explicit finite-value guard here. [src/digitalmodel/structural/fe/von_mises_workflow.py:L38-L48] | no detection check exists for non-finite safety; issue pending (1) |
+| S35 Stress CSV index | int(index) selects an element by position; assumes solver stress keys are list positions, not arbitrary element IDs. [src/digitalmodel/structural/fe/von_mises_workflow.py:L68-L77] | C5 covers contiguous example IDs only; no detection check exists for invalid keys; issue pending (1) |
+| S36 Model unit/frame assumption | Coordinates, material and loads pass through without unit tags/conversions; output CSVs omit units. [src/digitalmodel/structural/fe/model_builder.py:L97-L110] [src/digitalmodel/structural/fe/model_builder.py:L131-L141] [src/digitalmodel/structural/fe/model_builder.py:L173-L198] [src/digitalmodel/structural/fe/von_mises_workflow.py:L58-L66] [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L104-L109] | no detection check exists; issue pending (1) |
+| S37 Stress-definition assumption | Adapter labels the dependency's maximum component stress as von Mises; element strain uses u_local[0]/L, approximate section depth and maximum separate components rather than combined fibre stress. [src/digitalmodel/structural/fe/von_mises_workflow.py:L24-L36] [src/digitalmodel/infrastructure/base_solvers/structural/elements/beam_element.py:L206-L216] [src/digitalmodel/infrastructure/base_solvers/structural/elements/beam_element.py:L240-L265] [src/digitalmodel/infrastructure/base_solvers/structural/stress/von_mises.py:L216-L221] | no detection check exists for physical stress correctness; issue pending (2); #3324 tracks independent report/example work |
+
+Issue references (context, not incident classifications): repository issue #3324, “Module report for beam-model builder and elastic buckling and von Mises workflows”; repository issue #2173, “Shell sections, plasticity, buckling and collapse steps”; repository issue #1152, “Open simulation workflows”.
+
+UNVERIFIED: general stress accuracy and coordinate/DOF compatibility are not established by the existing stress assertions; issue pending (2), with independent numerical evidence also tracked by #3324.
+
+## 7. Lessons log
+
+Append new evidence below without rewriting earlier rows; references are engineering evidence IDs rather than execution identifiers.
+
+| Date | Evidence ID | Lesson and pack change | Evidence | Shared-log entry |
+| --- | --- | --- | --- | --- |
+| 2026-11-07 | E1 | Separate a closed-form comparison from self-consistency assertions; sections 3–5 distinguish analytical buckling from stress regression | [tests/structural/fe/test_elastic_buckling_workflow.py:L17-L17] [tests/structural/fe/test_elastic_buckling_workflow.py:L70-L84] [tests/structural/fe/test_von_mises_workflow.py:L64-L74] | Entry pending, issue pending (3) |
+| 2026-11-07 | S37 | Do not use this stress path as an independent hand-check reference; sections 1, 3 and 6 record strain/component limitations | [src/digitalmodel/infrastructure/base_solvers/structural/elements/beam_element.py:L206-L216] [src/digitalmodel/infrastructure/base_solvers/structural/elements/beam_element.py:L240-L265] | Entry pending, issue pending (3) |
+
+## 8. Ownership
+
+Required review role: FEA quality manager, using a provider independent of the producer; escalation of engineering criteria and disputed method classifications goes to that family role, and unresolved repository scope goes to the maintainer (AQG r0 §11).
+
+UNVERIFIED: a deputy FEA quality role and a durable shared-log destination are not established by repository metadata; assign them through issue pending (3).
+
+Producing function: module documentation and offline evidence preparation; this DRAFT is not a record of independent clearance (AQG r0 §11).
+
+## 9. Dependencies and implementation inventory
+
+| Direction | Dependency / consumer | Verified relationship |
+| --- | --- | --- |
+| Upstream | NumPy and `BeamElement` | Builder creates floating arrays and element objects. [src/digitalmodel/structural/fe/model_builder.py:L9-L13] [src/digitalmodel/structural/fe/model_builder.py:L97-L110] [src/digitalmodel/structural/fe/model_builder.py:L131-L141] |
+| Upstream | `ElasticBucklingSolver`, SciPy eigen solver | Adapter calls Python buckling solver; its implementation imports scipy.linalg.eig. [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L28-L35] [src/digitalmodel/infrastructure/base_solvers/structural/buckling/elastic_buckling.py:L6-L11] |
+| Upstream | `VonMisesSolver` | Adapter invokes solver and its results summary. [src/digitalmodel/structural/fe/von_mises_workflow.py:L24-L36] |
+| Downstream | Engine and durable workflow registry | Both basenames route here; registry records both input examples and tests. [src/digitalmodel/engine.py:L533-L542] [docs/registry/workflows.yaml:L389-L404] |
+
+UNVERIFIED: a separate inventory row and independent numerical qualification for each upstream dependency were not established here; the adapter review does not qualify the entire dependency tree; issue pending (3).
+
+### Map revision and empty inventory
+
+Map ref: `origin/codex/implmap-work`; map commit: `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`; data revision: `270c8759c374b67a7f032953e7fcdb14e0224461`; map citations in this section use that map commit, all other repository citations use the header code pin. [docs/registry/implementation-map.yaml:L1-L3]
+
+Parsing the 13 families' `implementations` lists at that map commit gives 0 rows whose path starts with `src/digitalmodel/structural/fe/`; the complete module-family implementation inventory is therefore empty. [docs/registry/implementation-map.yaml:L345-L26503]
+
+| Inventory / counted search | Result | Reason |
+| --- | --- | --- |
+| Module map families | 0 | No in-package implementation row in any family; rejected candidates do not define a module family. [docs/registry/implementation-map.yaml:L345-L26503] |
+| Ranked / counted families | 0 | Ranking the empty module-family set produces no counted family. [docs/registry/implementation-map.yaml:L345-L26503] |
+| Counted-family grep | NOT_APPLICABLE | No module map family supplies a counted signal set; there is no package-path signal to exclude or hit to assign. [docs/registry/implementation-map.yaml:L345-L26503] |
+| Further second implementations for counted families | NOT_APPLICABLE | Empty inventory, not a claim that the repository has no overlapping methods. [docs/registry/implementation-map.yaml:L345-L26503] |
+
+The map holds two rejected candidates in this package: `_validate_distinct_modes` under irregular-frequency treatment and `_reference_axial_force` under on-bottom stability; their bodies check buckling modes and positive axial force rather than computing either mapped family's result. [docs/registry/implementation-map.yaml:L44506-L44512] [docs/registry/implementation-map.yaml:L52724-L52730] [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L71-L82]
+
+### Whole-repository method discovery and map follow-up
+
+Further discovery uses the following case-sensitive search across tracked Python files at the code pin, including `scripts/`; its 966 matching lines are lexical leads rather than an implementation count:
+
+```sh
+git grep -n -E 'Euler|euler|von_mises|[Vv]on.?[Mm]ises' aebd7e4bc5c3dda5f7433e20e021dd58ac17d0b3 -- '*.py'
+```
+
+| Definition | Classification / map follow-up |
+| --- | --- |
+| `elastic_buckling_workflow._euler_reference_load` | In-package Euler formula, already listed in section 3; add beam/Euler comparison family to the map before it becomes counted. [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L85-L93] |
+| `ElasticBucklingSolver.solve` | Upstream eigen-buckling algorithm, not another algorithm in the adapter package; candidate eigen-buckling family. [src/digitalmodel/infrastructure/base_solvers/structural/buckling/elastic_buckling.py:L120-L155] |
+| `BeamElement.compute_local_stiffness_matrix` / `compute_element_stresses` | Upstream beam stiffness and stress reconstruction; candidate beam-element / stress families. [src/digitalmodel/infrastructure/base_solvers/structural/elements/beam_element.py:L103-L131] [src/digitalmodel/infrastructure/base_solvers/structural/elements/beam_element.py:L240-L265] |
+| `ColumnBucklingAnalyzer.euler_buckling_load` | Separate Euler formula outside package, with mm-based geometry in its interface; map gap, not a counted-family miss. [src/digitalmodel/structural/structural_analysis/buckling.py:L162-L177] |
+| `VonMisesStressCalculator.calculate_from_stress_state` / `calculate_from_principal_stresses` | Separate stress-invariant formulas outside package; candidate stress family, not adapter qualification evidence. [src/digitalmodel/structural/stress/vm_stress.py:L164-L200] |
+| `scripts/parametric/build_drilling_riser_envelope_library.py` `_stub_von_mises_daf` | Synthetic placeholder explicitly disclaims a real dynamic result; vocabulary hit, not an alternative stress solver. [scripts/parametric/build_drilling_riser_envelope_library.py:L44-L58] |
+
+Map follow-up: beam model assembly, Euler-column comparison, eigen-buckling and beam/von-Mises stress reconstruction from section 3 lack in-package map rows and are not counted until added; issue pending (3). [docs/registry/implementation-map.yaml:L345-L26503] [src/digitalmodel/structural/fe/model_builder.py:L28-L43] [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L21-L44] [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L85-L93] [src/digitalmodel/structural/fe/von_mises_workflow.py:L20-L36]
+
+## 10. Coverage and open items
+
+Package coverage: all four Python files, 414 lines at the code pin; no package README, nested package or pre-existing docs are present in that tracked package inventory. [src/digitalmodel/structural/fe/__init__.py:L1-L1] [src/digitalmodel/structural/fe/model_builder.py:L1-L226] [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L1-L109] [src/digitalmodel/structural/fe/von_mises_workflow.py:L1-L78]
+
+Read set: the four files above; both dedicated test files; durable test registry setup and both case branches; both example inputs; routing registry structural entry; implementation map at its separate pin; upstream beam element, buckling and stress solver definitions cited in sections 1–9. [tests/structural/fe/test_elastic_buckling_workflow.py:L1-L88] [tests/structural/fe/test_von_mises_workflow.py:L1-L74] [tests/workflows/test_durable_workflows.py:L21-L28] [tests/workflows/test_durable_workflows.py:L49-L62] [tests/workflows/test_durable_workflows.py:L620-L664] [examples/workflows/elastic-buckling/input.yml:L1-L106] [examples/workflows/von-mises/input.yml:L1-L45] [docs/registry/module-routing.yaml:L525-L561]
+
+Module-naming documentation found under `docs/`: `docs/domains/plate-buckling/buckling-code-review-2026-06-26.md` distinguishes this FE path from plate buckling; `docs/plans/2026-09-25-issue-1057-ffs-offering-program.md` lists it among in-house solver capabilities; `docs/registry/workflows.yaml` records the two durable routes; `docs/registry/implementation-map.yaml` supplies the map evidence addressed in section 9. These documents do not independently validate this module's stress output. [docs/domains/plate-buckling/buckling-code-review-2026-06-26.md:L14-L21] [docs/plans/2026-09-25-issue-1057-ffs-offering-program.md:L15-L23] [docs/registry/workflows.yaml:L389-L404] [tests/structural/fe/test_von_mises_workflow.py:L64-L74]
+
+| Open item | Evidence / required closure | Responsible role and tracking |
+| --- | --- | --- |
+| Input/output contract and negative-path coverage | S01–S36; formal SI/frame conventions remain the first unresolved claim; reject non-finite/ambiguous identifiers, document defaults and output collisions | Maintainer, issue pending (1). [src/digitalmodel/structural/fe/model_builder.py:L64-L110] [src/digitalmodel/structural/fe/model_builder.py:L192-L226] [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L71-L93] |
+| Independent stress example and strain/DOF correctness | S37 and second unresolved claim; establish a physical closed-form benchmark before describing E2/E4 as validated | Maintainer, issue pending (2); #3324 covers the module report/example. [src/digitalmodel/infrastructure/base_solvers/structural/elements/beam_element.py:L206-L216] [src/digitalmodel/infrastructure/base_solvers/structural/elements/beam_element.py:L240-L265] [tests/structural/fe/test_von_mises_workflow.py:L64-L74] |
+| FE gate set, deputy, shared log and upstream inventory | Proposed AQG mapping needs independent acceptance; third and fourth unresolved claims concern role/log assignment and dependency qualification; a signed/fingerprinted appendix is not emitted by these CSV writers | Maintainer and FEA quality role, issue pending (3). [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L96-L109] [src/digitalmodel/structural/fe/von_mises_workflow.py:L52-L78] |
+| Method-map additions | Section-3 method families and outside-package alternatives need map rows; counted-family search currently has no applicable family | Maintainer, issue pending (3). [docs/registry/implementation-map.yaml:L345-L26503] [src/digitalmodel/structural/fe/elastic_buckling_workflow.py:L85-L93] |
+
+External solver executions and dependency-wide validation are excluded from this pack's evidence; both shipped FE workflows identify their runtime as offline. [docs/registry/workflows.yaml:L389-L404]
