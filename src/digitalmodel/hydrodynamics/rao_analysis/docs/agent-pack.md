@@ -5,7 +5,7 @@
 | Module | hydrodynamics/rao_analysis |
 | Repository | digitalmodel |
 | Package path | `src/digitalmodel/hydrodynamics/rao_analysis` |
-| Pack revision | 0 |
+| Pack revision | 1 |
 | Code revision | `aebd7e4bc5c3dda5f7433e20e021dd58ac17d0b3` |
 | Implementation-map revision | `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`; data revision `270c8759c374b67a7f032953e7fcdb14e0224461` |
 | Analysis family | diffraction; routing code DF |
@@ -52,6 +52,41 @@ UNVERIFIED: supported solver versions, coordinate-frame origin, heading sign and
 | `add_trace_to_fig` | caller-supplied x/y units | no return payload | Adds one Plotly scatter trace to the caller's subplot. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L309-L333] |
 
 UNVERIFIED: input amplitude normalisation, phase convention and length-unit consistency are not enforced by the empty `check_*` methods; #36. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L403-L416]
+
+### Public symbols
+
+| Public symbol | Definition source | Availability |
+| --- | --- | --- |
+| `Fatigue_plotRAODirection` | [src/digitalmodel/hydrodynamics/rao_analysis/legacy/Fatigue_plotRAODirection.py:L4-L4] | Legacy plotting helper; not executed |
+| `SixDOFPlot` | [src/digitalmodel/hydrodynamics/rao_analysis/legacy/Fatigue_plotRAODirection.py:L48-L48] | Legacy plotting helper; not executed |
+| `update_deep` | [src/digitalmodel/hydrodynamics/rao_analysis/legacy/dataManager/ymlInput.py:L25-L25] | Import blocked on Python >=3.11: removed `collections.Mapping` |
+| `ymlInput` | [src/digitalmodel/hydrodynamics/rao_analysis/legacy/dataManager/ymlInput.py:L7-L7] | Import blocked on Python >=3.11: removed `collections.Mapping` |
+| `SixDOFPlot` | [src/digitalmodel/hydrodynamics/rao_analysis/legacy/plotRAODirection.py:L43-L43] | Legacy plotting helper; not executed |
+| `plotRAODirection` | [src/digitalmodel/hydrodynamics/rao_analysis/legacy/plotRAODirection.py:L4-L4] | Legacy plotting helper; not executed |
+| `RAOAnalysis` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L12-L12] | Active module |
+| `RAOAnalysis.add_trace_to_fig` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L309-L309] | Active module |
+| `RAOAnalysis.assess_orcaflex_seastate_raos` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L418-L418] | Active module |
+| `RAOAnalysis.check_amplitudes` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L403-L403] | Active module |
+| `RAOAnalysis.check_definitions` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L412-L412] | Active module |
+| `RAOAnalysis.check_locations` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L409-L409] | Active module |
+| `RAOAnalysis.check_phases` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L406-L406] | Active module |
+| `RAOAnalysis.check_units` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L415-L415] | Active module |
+| `RAOAnalysis.filter_orcaflex_seastate_raos` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L443-L443] | Active module |
+| `RAOAnalysis.filter_orcaflex_seastate_raos_visual_grid` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L502-L502] | Active module |
+| `RAOAnalysis.get_DisplacementRAOs_for_draught` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L348-L348] | Active module |
+| `RAOAnalysis.get_draught_indices` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L367-L367] | Active module |
+| `RAOAnalysis.get_rao_data_for_vessel` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L335-L335] | Active module |
+| `RAOAnalysis.get_shape_data` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L544-L544] | Active module |
+| `RAOAnalysis.get_vessel_data` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L392-L392] | Active module |
+| `RAOAnalysis.plot_displacement_RAOs` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L77-L77] | Active module |
+| `RAOAnalysis.plot_displacement_RAOs_amplitudes_for_draught` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L85-L85] | Active module |
+| `RAOAnalysis.plot_displacement_RAOs_phases_for_draught` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L197-L197] | Active module |
+| `RAOAnalysis.plot_multiple_vessel_data` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L65-L65] | Active module |
+| `RAOAnalysis.plot_single_vessel_data` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L68-L68] | Active module |
+| `RAOAnalysis.read_orcaflex_displacement_raos` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L16-L16] | Active module |
+| `RAOAnalysis.read_vessel_data_from_file` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L35-L35] | Active module |
+| `RAOAnalysis.router` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L581-L581] | Active module |
+| `RAOAnalysis.write_filtered_orcaflex_seastate_rao_file` | [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L41-L41] | Active module |
 
 ## 3. Method and governing standards
 
@@ -109,26 +144,31 @@ These are acceptance procedures, not a statement that the physical-data gates ha
 
 | Check | Executable procedure / numeric criterion and unit | Evidence / gate |
 | --- | --- | --- |
-| C0.1 | Before `read_orcaflex_displacement_raos` or `assess_orcaflex_seastate_raos`, compare requested file paths with `isfile`: 0 missing paths; require 0 unexpected operations and 0 empty enabled data tables (counts) | Hand inventory against caller config; detects skipped inputs / permissive dispatch; G0. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L18-L28] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L420-L436] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L588-L602] |
+| C0.1 | Before `read_orcaflex_displacement_raos` or `assess_orcaflex_seastate_raos`, compare requested file paths with `isfile`: 0 missing paths; require 0 unexpected operations and 0 empty enabled data tables (counts). Before any YAML export, expand the actual output paths including the serializer's appended `.yml`: distinct paths for every input and export kind, 0 paths shared with inputs and 0 overwritten exports, including non-`.yml` inputs and multiple inputs in one directory | Hand inventory against caller config and export-path comparison; detects skipped inputs, permissive dispatch and output collisions; G0. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L18-L63] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L420-L436] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L571-L577] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L588-L602] |
 | C0.2 | Hand-compare `get_DisplacementRAOs_for_draught` to every source row: output row-count difference = 0 rows, changed heading/ordinate cells = 0 cells, empty requested heading traces = 0 traces; for each selected draught, selected source name equals requested name with 0 mismatches | Source/DataFrame comparison; selection can violate this criterion; G0. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L348-L390] |
 | C0.3 | Read source abscissa/phase/normalisation metadata and HTML labels: 0 inconsistent unit/convention fields; before/after `filter_orcaflex_seastate_raos`, require 0 changed input cells and 0 retained rows outside strict bounds; shape x/y sizes equal requested expanded sizes with 0 source-length-unit discrepancy | Hand comparison; absent metadata remains NOT_RUN, never assumed; G0. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L99-L119] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L211-L240] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L486-L500] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L553-L569] |
 | C1.1 | Run section-4 import test and synthetic trace test: 0 import-created files, 0 browser calls, 2 named traces and 4 x values per trace (counts) | Existing test assertions; PASS; G1. [tests/hydrodynamics/rao_analysis/test_synthetic_plot_example.py:L44-L77] |
 | C1.2 | For every YAML produced by `write_filtered_orcaflex_seastate_rao_file` and `get_shape_data`, load in the declared target OrcaFlex version: 0 errors, 0 load warnings, 0 object-count differences from the source manifest (counts); save version and message record | External licensed load, NOT_RUN here; no version is inferred; G1. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L41-L63] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L544-L579] |
 | C4.1 | For each imported vessel/draught, require 0 missing upstream G4 balance/mesh/centre records; where normalisation is confirmed, compare longest-period heave in the table with the unit limit: absolute difference ≤ 0.02 m/m; do not apply to frequency-labelled or differently normalised data | Hand comparison of source, table and upstream AQG r0 section-8 record; NOT_RUN for absent qualified reference data; G4. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L335-L365] |
 | C4.2 | Evaluate the section-4 hand fractions against both `build_figure` traces at 0, 5, 10, 15 rad/s; require 0 `pytest.approx` mismatches across 8 m/m ordinates (relative tolerance 1e-6, absolute tolerance 1e-12 m/m) and 0 incorrect axis titles (counts) | Existing `test_synthetic_rao_plot_preserves_hand_values`; PASS; plotting anchor only; G4. [tests/hydrodynamics/rao_analysis/test_synthetic_plot_example.py:L25-L66] |
-| C5.1 | For each HTML/YAML export, record input digest, code revision, units, program version or explicit absence, and every gate status: 0 missing fields, 0 digest mismatches, 0 unexplained NOT_APPLICABLE rows (counts) | Hand evidence manifest review; retain outstanding production records under #36; G5. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L41-L63] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L194-L195] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L306-L307] |
+| C5.1 | For each HTML/YAML export, record input digest, code revision, units, program version or explicit absence, output path and every gate status: 0 missing fields, 0 digest mismatches, 0 unexplained NOT_APPLICABLE rows, distinct export paths per input and export kind, and 0 overwritten exports (counts); compare planned paths before writing and read back every expected export | Hand evidence manifest and export-path review; retain outstanding production records under #36; G5. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L41-L63] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L194-L195] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L306-L307] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L571-L577] |
 
 ## 6. Known failure modes and pitfalls
 
-sweep: 39 found
+sweep: 45 found
 
-The count denotes separate fallback, empty-output or unit-assumption sites below, including intentional selection defaults; each site is reviewed rather than equated with a confirmed incident.
+The count denotes separate fallback, empty-output, unit-assumption, export-collision and fixed-count selection sites below, including intentional selection defaults; each site is reviewed rather than equated with a confirmed incident.
+
+Legacy sites 22–32, 38–39 and 43–44 describe text-level behaviour only: the legacy entrypoints fail at import on the supported Python >=3.11 interpreter. The YAML helper imports the removed `collections.Mapping`; independently, both reader scripts import `logs.setLogging`, which is not shipped under `src/` or `tests/` and is unavailable in the checked environment. The legacy plotter sites below are also source-level findings, not executed legacy-entrypoint results; issue pending (4). [pyproject.toml:L10-L10] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/dataManager/ymlInput.py:L1-L4] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/RAOAnalysis.py:L27-L29] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/FatigueRAOAnalysis.py:L8-L10]
+
+The writer collisions in sites 40–41 and 45 are reachable through direct writer calls. The assessment wrapper reaches the shape export in site 42, then fails in the incomplete visual-grid route before calling the filtered-data/model writer; these sites do not imply successful assessment-wrapper execution. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L428-L436] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L502-L542]
 
 Exact source sweep commands at the code pin (all Python files, including legacy):
 
 ```sh
 rg -n 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|0\.05|int\(|float\(|unit|Period|Freq|default|cache|pass' src/digitalmodel/hydrodynamics/rao_analysis --glob '*.py'
 rg -n 'isfile|return|=|\.get\(' src/digitalmodel/hydrodynamics/rao_analysis --glob '*.py'
+rg -n 'Draught.*\[[012]\]' src/digitalmodel/hydrodynamics/rao_analysis --glob '*.py'
 ```
 
 No external-text `int`/`float` conversions, `continue`, explicit `return None`, error-path empty literal return, numeric epoch fallback or cache write occurs in these Python files; loop indices and dataframe/container initialisation are not error defaults. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L1-L604] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/RAOAnalysis.py:L20-L77] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/FatigueRAOAnalysis.py:L1-L58] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/plotRAODirection.py:L1-L63] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/Fatigue_plotRAODirection.py:L1-L68] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/dataManager/ymlInput.py:L1-L36]
@@ -174,16 +214,22 @@ No external-text `int`/`float` conversions, `continue`, explicit `return None`, 
 | 37 | Phase x-range can remove all rows without rejecting the plot. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L251-L257] | C0.1/C0.2; issue pending (1). |
 | 38 | Legacy standard `SixDOFPlot` selection can yield empty traces. [src/digitalmodel/hydrodynamics/rao_analysis/legacy/plotRAODirection.py:L43-L50] | no detection check exists; issue pending (4). |
 | 39 | Legacy fatigue `SixDOFPlot` selection can yield empty traces. [src/digitalmodel/hydrodynamics/rao_analysis/legacy/Fatigue_plotRAODirection.py:L48-L55] | no detection check exists; issue pending (4). |
+| 40 | For a non-`.yml` suffix such as `.yaml`, both filtered-data and filtered-model names remain unchanged; the serializer appends `.yml`, so the model silently overwrites the data export at the same suffixed path, rather than overwriting the input. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L48-L63] | C0.1/C5.1: distinct paths per input/export kind, 0 overwritten exports; issue pending (3). |
+| 41 | Multiple `.yml` inputs in one directory share `filter_SeaStateRAOs_data.yml`; each later filtered-data export silently overwrites the previous input's rows. An input already named `filter_SeaStateRAOs_data.yml` is itself overwritten by that export. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L48-L56] | C0.1/C5.1: distinct paths per input, 0 paths shared with inputs and 0 overwritten exports; issue pending (3). |
+| 42 | Multiple `.yml` inputs in one directory share `shape_data.yml`; each later shape export silently overwrites the previous input's shape. An input already named `shape_data.yml` is itself overwritten. With a non-`.yml` suffix left unchanged by replacement, the name plus appended `.yml` collides with the same input's exports in site 40. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L571-L577] | C0.1/C5.1: distinct paths per input/export kind, 0 paths shared with inputs and 0 overwritten exports; issue pending (3). |
+| 43 | Legacy standard plotter selects exactly draught indices 0, 1 and 2: fewer than three raise `IndexError`; additional draughts are silently omitted. [src/digitalmodel/hydrodynamics/rao_analysis/legacy/plotRAODirection.py:L9-L11] | no detection check exists; text-level behaviour only; issue pending (4). |
+| 44 | Legacy fatigue plotter makes the same fixed-three-draught selection, raising `IndexError` for fewer and silently omitting additional draughts. [src/digitalmodel/hydrodynamics/rao_analysis/legacy/Fatigue_plotRAODirection.py:L9-L11] | no detection check exists; text-level behaviour only; issue pending (4). |
+| 45 | The model export for `<stem>.yml` overwrites an existing `<stem>_filtered.yml` in the same directory; if that path is another declared input, its data are changed before later processing can read them. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L60-L63] | C0.1/C5.1: compare derived model paths with every input, 0 paths shared with inputs and 0 overwritten exports; issue pending (3). |
 
 | Additional defect / incident lead | Evidence and detection |
 | --- | --- |
 | Draught subset or reordering selects wrong index | `get_draught_indices` appends requested-list position instead of position in available list; C0.2; issue pending (2). [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L376-L388] |
 | Visual-grid path cannot form output table | Undefined `SeaStateRAOs`, `df_columns`, `file_vessel_data` and `SeaStateRAOs_key` follow a shape write; no detection check exists; issue pending (3). [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L526-L542] |
 | Router filter route passes config as vessel-data argument | `filter_orcaflex_seastate_raos(self.cfg)` conflicts with nested list access; no detection check exists; issue pending (3). [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L592-L593] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L468-L470] |
-| Output suffix handling can select the input path | `.replace(stem + '.yml', ...)` leaves nonmatching extensions unchanged; no detection check exists; issue pending (3). [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L48-L63] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L571-L577] |
+| Export naming silently overwrites earlier exports or other inputs | Non-`.yml` suffixes make the filtered-data and filtered-model exports share the input name plus `.yml`; fixed `filter_SeaStateRAOs_data.yml` and `shape_data.yml` names also collide across inputs in one directory. The non-`.yml` case preserves its input; an input whose name equals a fixed export name or another input's derived `<stem>_filtered.yml` path can itself be overwritten. C0.1/C5.1, sites 40–42 and 45; issue pending (3). [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L48-L63] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L571-L577] |
 | Phase chart title is incorrect | Phase method sets title to amplitude; no detection check exists; #36. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L197-L209] |
 | Mock workflow hides reader defects | The engine result is mocked before assertions; C1.1 only exercises trace admission; #2672 remains relevant to real reader/response coverage. [tests/hydrodynamics/rao_analysis/test_rao_analysis.py:L13-L35] [tests/hydrodynamics/rao_analysis/test_synthetic_plot_example.py:L44-L63] |
-| Legacy runtime compatibility | `Mapping` imported from `collections`, plus standalone nonpackage imports; text-only review, no legacy entrypoint imported; no detection check exists; issue pending (4). [src/digitalmodel/hydrodynamics/rao_analysis/legacy/dataManager/ymlInput.py:L1-L4] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/RAOAnalysis.py:L27-L29] |
+| Legacy entrypoints fail at import on supported Python >=3.11 | Two independent blockers in the checked environment: removed `collections.Mapping` and unavailable `logs.setLogging`, which is not shipped under `src/` or `tests/`; sites 22–32, 38–39 and 43–44 describe text-level behaviour only. No legacy entrypoint was imported; no detection check exists; issue pending (4). [pyproject.toml:L10-L10] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/dataManager/ymlInput.py:L1-L4] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/RAOAnalysis.py:L27-L29] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/FatigueRAOAnalysis.py:L8-L10] |
 
 Issue leads #5 (QA criteria), #6 (seastate plotting) and #15 (grid trimming) are historical requirements, not proof of an incident or working implementation; the missing checks and broken grid route above provide the confirmed source evidence. No detection check exists for the complete physical QA requested in #5; #36 and #2672 retain that coverage gap. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L403-L416] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L526-L542] [tests/hydrodynamics/rao_analysis/test_rao_analysis.py:L13-L35]
 
@@ -201,7 +247,7 @@ Route unresolved data conventions, tolerances and duplicate-implementation class
 
 ## 9. Dependencies and implementation inventory
 
-The package imports pandas, pathlib, Plotly and assetutilities YAML/colour/save utilities; `__init__` exposes `RAOAnalysis`, and the engine's `rao_analysis` branch calls its reader/assessment methods. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L1-L9] [src/digitalmodel/hydrodynamics/rao_analysis/__init__.py:L1-L13] [src/digitalmodel/engine.py:L274-L279]
+The package imports pandas, pathlib, Plotly and assetutilities YAML/colour/save utilities; `__init__` exposes `RAOAnalysis`. The engine's `rao_analysis` branch calls only `read_orcaflex_displacement_raos`; it does not dispatch seastate assessment when that flag is enabled. `router`, seastate filtering and `assess_orcaflex_seastate_raos` are reachable only through direct calls, including calls made inside those methods. [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L1-L9] [src/digitalmodel/hydrodynamics/rao_analysis/__init__.py:L1-L13] [src/digitalmodel/engine.py:L274-L279] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L418-L436] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L588-L595]
 
 The legacy scripts use pandas, matplotlib and standalone `dataManager`/logging imports; these are text-read dependencies, not permission to import the scripts. [src/digitalmodel/hydrodynamics/rao_analysis/legacy/RAOAnalysis.py:L20-L29] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/FatigueRAOAnalysis.py:L1-L10] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/plotRAODirection.py:L1-L4] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/dataManager/ymlInput.py:L1-L4]
 
@@ -231,7 +277,7 @@ The module's package includes legacy Python files; no child package is excluded 
 
 The inventory uses exact map-record locators to identify each implementation's path and symbol without reproducing identifying external discovery names. It preserves every record, including multiple implementations in the same file; it makes no claim that a mapped implementation is correct or belongs to this package.
 
-Search procedure: read every tracked repository `.py` file at the code pin, including `scripts/`; apply each counted family's `search_signals[].pattern` with Python `re.search`, case-sensitive and with no unescaping or other modification. Exclude a signal only when `re.search(pattern, 'hydrodynamics/rao_analysis', re.I)` matches the package-relative path; neither family's signals matched that exclusion. Assign hits to the narrowest enclosing AST function/class, with top-level statements assigned to one module definition per file.
+Search procedure: read every tracked repository `.py` file at the code pin, including `scripts/`; apply each retained `search_signals[].pattern` with Python `re.search`, case-sensitive and with no unescaping or other modification. Exclude a signal when `re.search(pattern, 'hydrodynamics/rao_analysis', re.I)` matches the package-relative path. All three writer signals are retained. The reader/converter vocabulary signal is excluded because its `HydroD` alternative matches `hydrodynamics` case-insensitively; therefore the reader counts and classifications cover only the algorithm and constants/key signals, not the full vocabulary search. Assign hits to the narrowest enclosing AST function/class, with top-level statements assigned to one module definition per file.
 
 The audit found writer-signal hits in 3,091 repository Python files (485 under `scripts/`) and reader/converter-signal hits in 432 (67 under `scripts/`); these are search hits, not verified implementation counts. The package has 12 writer-hit definitions and 14 reader/converter-hit definitions, classified below. The exact regex text is preserved at the map locators below.
 
@@ -1032,6 +1078,15 @@ Map follow-up: reconcile the two legacy readers and the active table-assembly he
 ## 10. Coverage and open items
 
 Read scope: all 8 package Python files, including the empty legacy package initializer; active module, package initializer, two legacy reader scripts, two legacy plotters and the legacy YAML helper. No legacy entrypoint or licensed solver interface was imported. [src/digitalmodel/hydrodynamics/rao_analysis/__init__.py:L1-L13] [src/digitalmodel/hydrodynamics/rao_analysis/rao_analysis.py:L1-L604] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/RAOAnalysis.py:L20-L77] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/FatigueRAOAnalysis.py:L1-L58] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/plotRAODirection.py:L1-L63] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/Fatigue_plotRAODirection.py:L1-L68] [src/digitalmodel/hydrodynamics/rao_analysis/legacy/dataManager/ymlInput.py:L1-L36]
+
+Additional in-package artefact inventory at the code pin follows. These are unqualified legacy data and generated artefacts with unknown provenance, not valid engineering inputs; no YAML dataset was loaded and no plot was used as physical evidence. The glob locators were checked against every tracked package path at the pin: all 7 YAML datasets and all 12 PNG/SVG plots match these groups, with no additional nested datasets or plots. The locators avoid repeating discovery filenames requiring codenaming; issue pending (6).
+
+| Package-relative locator | Count | Qualification gap |
+| --- | --- | --- |
+| `legacy/dataManager/*.yml` | 7 YAML datasets | Source rights, units, conventions and physical provenance are unverified. |
+| `legacy/*.png` | 6 generated plots | Source data, generation revision and physical provenance are unverified. |
+| `legacy/*.svg` | 6 generated plots | Source data, generation revision and physical provenance are unverified. |
+| `legacy/RunAll` | 1 runner | Legacy execution instructions are inventoried only; runtime and data provenance are unverified. |
 
 Read tests: both `tests/hydrodynamics/rao_analysis/test_*.py` files, their `conftest.py`, `tests/unit/hydrodynamics/test_rao_analysis.py`, and `tests/docs/test_digitalmodel_routing_contract.py`; section 4 distinguishes the directly exercised path from neighboring calculations. [tests/hydrodynamics/rao_analysis/conftest.py:L1-L39] [tests/unit/hydrodynamics/test_rao_analysis.py:L18-L29] [tests/hydrodynamics/rao_analysis/test_rao_analysis.py:L13-L76] [tests/hydrodynamics/rao_analysis/test_synthetic_plot_example.py:L17-L132]
 
