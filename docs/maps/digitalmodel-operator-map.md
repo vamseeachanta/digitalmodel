@@ -31,6 +31,7 @@ licensed execution transport outside this repo, and cross-repository deployment 
 | Module | Source | Tests | Docs | Issue routing | Key dependencies |
 |---|---|---|---|---|---|
 | `ansys` | `src/digitalmodel/ansys/` | `tests/ansys/` | `docs/domains/ansys/` | ANSYS automation, APDL/WBJN parsing, pressure-vessel and weld checks | ANSYS file formats, engineering standards |
+| `aqg` | `src/digitalmodel/aqg/`, offline API `src/digitalmodel/aqg/diffraction.py` | `tests/unit/hydrodynamics/test_aqg_diffraction.py` | `docs/domains/diffraction/g4-evidence.html` | Diffraction G4 evidence records; source qualification and native acceptance evidence remain pending | Python standard library; no solver dependency |
 | `asset_integrity` | `src/digitalmodel/asset_integrity/` | `tests/asset_integrity/` | `docs/domains/README.md` | Fitness-for-service, API 579, BS 7910, RSF, fracture mechanics | NumPy, pandas, matplotlib |
 | `benchmarks` | `src/digitalmodel/benchmarks/` | `tests/benchmarks/` | `docs/domains/README.md` | Benchmark inventory, model comparison, reproducibility metrics | pytest-benchmark |
 | `cad` | `src/digitalmodel/cad/` | `tests/cad/` | `docs/cad-reader/guide.html`, `src/digitalmodel/cad/README.md` | DXF, STL and OBJ ingestion with explicit units; DWG through a caller-configured converter | Optional ezdxf, meshio; NumPy |
