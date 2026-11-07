@@ -434,3 +434,123 @@ def test_frozen_audit_preserves_strict_coefficient_correction(mutation):
     else:
         with pytest.raises(ValueError, match="changed"):
             _compare_frozen_models(original, candidate, True)
+
+
+HISTORY_REVISION = "d81ccf84ddc12a2a3cc45340537bec47a7807cd5"
+PACKET_PATH = "docs/verification/riser-mesh-review.json"
+
+
+def previous_packet(tmp_path):
+    """Retrieve the exact retained packet without changing the checkout."""
+    import subprocess
+
+    path = tmp_path / "previous-packet.json"
+    payload = subprocess.run(
+        ["git", "show", f"{HISTORY_REVISION}:{PACKET_PATH}"],
+        cwd=CAMPAIGN.parents[1], check=True, capture_output=True,
+    ).stdout
+    path.write_bytes(payload)
+    return path
+
+
+def test_audit_history_preserves_records_and_binds_committed_bytes(tmp_path):
+    from scripts.riser_campaign.audit_mesh import _history
+
+    path = previous_packet(tmp_path)
+    old = json.loads(path.read_bytes())
+    history, source = _history(path, HISTORY_REVISION)
+    assert history == old["historical_corrections"]
+    assert source == {"path": PACKET_PATH, "revision": HISTORY_REVISION,
+                      "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                      "bytes": len(path.read_bytes())}
+
+
+@pytest.mark.parametrize("mutation", ["record", "whitespace", "revision"])
+def test_audit_history_rejects_uncommitted_or_wrong_revision(tmp_path, mutation):
+    from scripts.riser_campaign.audit_mesh import _history
+
+    path = previous_packet(tmp_path)
+    revision = HISTORY_REVISION
+    if mutation == "revision":
+        revision = "0b83ecb072ca59f410b14872d426f9e5699ed41e"
+    elif mutation == "whitespace":
+        path.write_bytes(path.read_bytes() + b"\n")
+    else:
+        old = json.loads(path.read_bytes())
+        old["historical_corrections"]["coefficient_axis_correction"]["counted_mesh"] = "changed"
+        path.write_bytes(json.dumps(old).encode("utf-8"))
+    with pytest.raises(ValueError, match="history packet digest mismatch"):
+        _history(path, revision)
+
+
+def test_audit_history_imports_original_top_level_records(tmp_path):
+    import subprocess
+    from scripts.riser_campaign.audit_mesh import _history
+
+    revision = "0b83ecb072ca59f410b14872d426f9e5699ed41e"
+    path = tmp_path / "original-packet.json"
+    path.write_bytes(subprocess.run(
+        ["git", "show", f"{revision}:{PACKET_PATH}"],
+        cwd=CAMPAIGN.parents[1], check=True, capture_output=True,
+    ).stdout)
+    old = json.loads(path.read_bytes())
+    history, source = _history(path, revision)
+    assert history == {"recorded_at_revision": revision,
+                       "reference_revision": old["reference_revision"],
+                       **{key: old[key] for key in (
+                           "coefficient_axis_correction", "original_coefficient_axis_correction")}}
+    assert source["revision"] == revision
+
+
+@pytest.mark.parametrize("options", [
+    {"history_from": Path("previous.json")}, {"history_revision": HISTORY_REVISION},
+    {"history_from": Path("previous.json"), "history_revision": HISTORY_REVISION,
+     "coefficient_axes": True},
+    {"history_from": Path("previous.json"), "history_revision": HISTORY_REVISION,
+     "original_coefficient_axes": True},
+])
+def test_audit_rejects_incomplete_or_ambiguous_history_options(tmp_path, options):
+    from scripts.riser_campaign.audit_mesh import audit
+
+    with pytest.raises(ValueError, match="history"):
+        audit(tmp_path / "reference", tmp_path / "candidate", HISTORY_REVISION, **options)
+
+
+def test_audit_reproduces_committed_packet_with_verified_history(tmp_path):
+    """Run both committed reference generation and the current audit API."""
+    import io
+    import os
+    import subprocess
+    import sys
+    import tarfile
+    from scripts.riser_campaign.audit_mesh import audit
+    from scripts.riser_campaign.generate_inputs import generate
+
+    root = CAMPAIGN.parents[1]
+    committed = json.loads((root / PACKET_PATH).read_bytes())
+    reference_tree = tmp_path / "reference-tree"
+    reference_tree.mkdir()
+    archive = subprocess.run(
+        ["git", "archive", HISTORY_REVISION, "scripts/riser_campaign",
+         "examples/riser-campaign", "src/digitalmodel", "pyproject.toml",
+         "docs/domains/orcaflex/library/campaigns/generic-scr-slwr/basis.yml"],
+        cwd=root, check=True, capture_output=True,
+    ).stdout
+    with tarfile.open(fileobj=io.BytesIO(archive)) as stream:
+        stream.extractall(reference_tree, filter="data")
+    reference, candidate = tmp_path / "reference", tmp_path / "candidate"
+    env = {**os.environ, "PYTHONPATH": os.pathsep.join(("src", "."))}
+    subprocess.run(
+        [sys.executable, "-m", "scripts.riser_campaign.generate_inputs",
+         "--output-dir", str(reference)], cwd=reference_tree, env=env,
+        check=True, capture_output=True,
+    )
+    generate(CAMPAIGN / "manifest.json", candidate)
+    packet = audit(reference, candidate, HISTORY_REVISION,
+                   history_from=previous_packet(tmp_path), history_revision=HISTORY_REVISION)
+    # Runtime records also affect the containing index digests. All remaining
+    # fields, including source bindings, history and input digests, must match.
+    for value in (packet, committed):
+        for key in ("audit_runtime", "producing_runtime", "reference_index", "candidate_index"):
+            value.pop(key)
+    assert packet == committed

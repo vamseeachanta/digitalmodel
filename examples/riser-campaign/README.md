@@ -36,6 +36,7 @@ its native input templates remain unreleased pending readback and motion clearan
 | 5 | 2026-10-28 | Retain exact reviewed numerical geometry for portable input bytes and bind the producing runtime. |
 | 6 | 2026-10-28 | Name normal and axial hydrodynamic coefficients explicitly and refresh source bindings after regeneration; preserve the counted mesh and physical basis. |
 | 7 | 2026-10-28 | Apply named coefficients to the original comparison inputs with zero axial coefficients, regenerate worked examples and bind the proving regressions. |
+| 8 | 2026-11-06 | Reproduce retained correction history through a Git-verified audit option and reject anchored Windows output paths. Preserve reviewed input bytes; main integration remains outstanding. |
 
 ## Matrix and existing code
 
@@ -276,7 +277,24 @@ the old positional lists. Omit `--coefficient-axes` for the earlier audit from
 target segment lengths to graded explicit counts. To reissue evidence from an
 already counted reference with named coefficients, omit both correction flags;
 counted meshes and every physical field must then remain identical. Earlier
-coefficient corrections are retained separately as revision-bound history.
+coefficient corrections are retained separately as revision-bound history using:
+
+```bash
+PYTHONPATH=src:. uv run python -m scripts.riser_campaign.audit_mesh \
+  --reference-dir <reference-output> --candidate-dir <candidate-output> \
+  --reference-revision <reviewed-revision> \
+  --history-from <previous-packet> --history-revision <previous-packet-revision> \
+  --output <new-audit-file>
+```
+
+The history file must match the committed `docs/verification/riser-mesh-review.json`
+at the supplied history revision, including whitespace. Its SHA-256, byte length
+and full Git revision are recorded in `history_source`. Existing
+`historical_corrections` records are copied unchanged. For an earlier packet with
+top-level correction records, those records are retained with their original
+reference revision and the revision containing that packet. Both history options
+are required together and cannot be combined with either correction flag.
+No manual packet editing is part of the reissue procedure.
 
 The analytical reference uses the 1490 m hang-off separation and transforms
 ASB elevation to global z by subtracting the physical 1500 m water depth. The

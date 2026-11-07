@@ -9,7 +9,7 @@ import importlib.metadata
 import json
 import math
 import platform
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 from stat import FILE_ATTRIBUTE_REPARSE_POINT
 from typing import Any
 
@@ -260,7 +260,9 @@ def _is_link(path: Path) -> bool:
 
 def _write(root: Path, relative: str, payload: bytes) -> dict[str, Any]:
     relative_path = Path(relative)
-    if relative_path.is_absolute() or ".." in relative_path.parts:
+    windows_path = PureWindowsPath(relative)
+    if (relative_path.anchor or windows_path.anchor
+            or ".." in relative_path.parts or ".." in windows_path.parts):
         raise ValueError("output path must remain within the output root")
     path = root / relative_path
     descendants = [root]

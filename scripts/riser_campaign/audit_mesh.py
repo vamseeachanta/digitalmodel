@@ -20,6 +20,38 @@ from .generate_inputs import CAMPAIGN, _json_bytes, _write, producing_runtime
 
 COUNT_TABLE = "LineType, Length, NumberOfSegments"
 TARGET_TABLE = "LineType, Length, TargetSegmentLength"
+HISTORY_PACKET = "docs/verification/riser-mesh-review.json"
+
+
+def _history(path: Path, revision: str) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Retain correction records only from the exact committed packet bytes."""
+    repo = CAMPAIGN.parents[1]
+    recorded_revision = subprocess.run(
+        ["git", "rev-parse", "--verify", "--end-of-options", f"{revision}^{{commit}}"],
+        cwd=repo, check=True, capture_output=True, text=True, encoding="utf-8",
+    ).stdout.strip()
+    committed = subprocess.run(
+        ["git", "show", f"{recorded_revision}:{HISTORY_PACKET}"],
+        cwd=repo, check=True, capture_output=True,
+    ).stdout
+    payload = path.read_bytes()
+    digest = hashlib.sha256(payload).hexdigest()
+    if digest != hashlib.sha256(committed).hexdigest() or len(payload) != len(committed):
+        raise ValueError("history packet digest mismatch against the recorded revision")
+    packet = json.loads(payload)
+    if "historical_corrections" in packet:
+        history = packet["historical_corrections"]
+    else:
+        records = {key: packet[key] for key in (
+            "coefficient_axis_correction", "original_coefficient_axis_correction") if key in packet}
+        if not records:
+            raise ValueError("history packet has no correction records")
+        history = {"recorded_at_revision": recorded_revision,
+                   "reference_revision": packet["reference_revision"], **records}
+    if not isinstance(history, dict) or not history:
+        raise ValueError("history packet correction records must be a nonempty object")
+    return history, {"path": HISTORY_PACKET, "revision": recorded_revision,
+                     "sha256": digest, "bytes": len(payload)}
 
 
 def _correct_coefficient_axes(model: dict[str, Any], axial_drag: float = 0.008) -> None:
@@ -134,8 +166,15 @@ def mesh_statistics(sections: list[list[Any]]) -> dict[str, Any]:
 
 
 def audit(reference: Path, candidate: Path, reference_revision: str,
-          coefficient_axes: bool = False, original_coefficient_axes: bool = False) -> dict[str, Any]:
+          coefficient_axes: bool = False, original_coefficient_axes: bool = False,
+          history_from: Path | None = None, history_revision: str | None = None) -> dict[str, Any]:
     """Verify source ancestry, serialized meshes and physical preservation."""
+    if (history_from is None) != (history_revision is None):
+        raise ValueError("history requires both a packet and its recorded revision")
+    if history_from is not None and (coefficient_axes or original_coefficient_axes):
+        raise ValueError("history reissue requires both correction flags to be omitted")
+    retained_history = (_history(history_from, history_revision)
+                        if history_from is not None and history_revision is not None else None)
     repo = CAMPAIGN.parents[1]
     old = json.loads((reference / "index.json").read_bytes())
     new = json.loads((candidate / "index.json").read_bytes())
@@ -231,6 +270,8 @@ def audit(reference: Path, candidate: Path, reference_revision: str,
             "mesh_audits": audits, "inputs": inputs,
             "review_status": "INDEPENDENT_REVIEW_REQUIRED; any later byte change invalidates the packet",
             "native_handoff": "examples/riser-campaign/README.md#solver-free-mesh-audit-and-native-handoff"}
+    if retained_history is not None:
+        packet["historical_corrections"], packet["history_source"] = retained_history
     if coefficient_axes:
         packet["coefficient_axis_correction"] = {
             "removed_fields": {"Cd": [1.2, 0.008], "Ca": [1.0, 0]},
@@ -262,10 +303,15 @@ def main() -> None:
                         help="Compare counted meshes and allow only the known named-axis coefficient correction")
     parser.add_argument("--original-coefficient-axes", action="store_true",
                         help="Allow only the original comparison's named-axis replacement with zero axial coefficients")
+    parser.add_argument("--history-from", type=Path,
+                        help="Retain correction history from an exact committed review packet")
+    parser.add_argument("--history-revision",
+                        help="Git revision containing the previous review packet")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     packet = audit(args.reference_dir, args.candidate_dir, args.reference_revision,
-                   args.coefficient_axes, args.original_coefficient_axes)
+                   args.coefficient_axes, args.original_coefficient_axes,
+                   args.history_from, args.history_revision)
     _write(args.output.parent, args.output.name, _json_bytes(packet))
     print("Solver-free audit passed: 12 configurations, 144 counted inputs; native qualification NOT_RUN")
 

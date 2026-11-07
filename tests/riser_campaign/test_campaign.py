@@ -520,3 +520,12 @@ def test_output_writer_rejects_paths_outside_root(tmp_path, absolute):
     with pytest.raises(ValueError, match="within the output root"):
         api()._write(root, relative, b"input\n")
     assert not escaped.exists()
+
+
+@pytest.mark.parametrize("relative", [r"\escape.yml", "C:escape.yml", r"C:\escape.yml",
+                                      r"..\escape.yml"])
+def test_output_writer_rejects_windows_anchors_and_parent_paths(tmp_path, relative):
+    root = tmp_path / "output"
+    with pytest.raises(ValueError, match="within the output root"):
+        api()._write(root, relative, b"input\n")
+    assert not root.exists()
