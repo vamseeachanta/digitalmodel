@@ -1,6 +1,7 @@
 # # Copyright (c) 2024 Digital Model Project
 # # Licensed under the MIT License. See LICENSE file for details.
 """Regress static results, evidence ordering, removals and deterministic reporting."""
+import hashlib
 import importlib.util
 import json
 import math
@@ -10,6 +11,21 @@ from pathlib import Path
 import pytest
 
 RECORD = Path(__file__).resolve().parents[2] / "docs/domains/mooring/screening"
+
+
+@pytest.fixture(scope="module", autouse=True)
+def preserve_committed_record():
+    """Keep every record file byte-identical throughout this module's tests."""
+    def hashes():
+        return {path.relative_to(RECORD): hashlib.sha256(path.read_bytes()).hexdigest()
+                for path in RECORD.rglob("*") if path.is_file()}
+
+    # Importing the runner and builder must not add bytecode to the evidence.
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(sys, "dont_write_bytecode", True)
+        before = hashes()
+        yield
+        assert hashes() == before
 
 
 def load(name):
@@ -255,3 +271,115 @@ def test_website_export_includes_its_linked_run_record(run, builder, inputs, tmp
     for path in bundle.iterdir():
         relative = path.relative_to(website).as_posix()
         assert exported["files"][relative]["sha256"] == run.digest(path)
+
+
+@pytest.fixture(params=["native", "patch-version"])
+def readback_case(request, run, builder, inputs, tmp_path, monkeypatch):
+    """Exercise each real readback with a controlled computed record."""
+    computed = json.loads((RECORD / "results.json").read_text())
+    monkeypatch.setattr(run, "compute_record", lambda *_: computed)
+
+    def check():
+        if request.param == "native":
+            test_committed_native_output_and_manifest_readback(run, inputs)
+        else:
+            test_interpreter_patch_version_is_metadata_only(
+                run, builder, inputs, tmp_path, monkeypatch
+            )
+
+    return computed, check
+
+
+def test_readback_accepts_last_digit_float_roundoff(readback_case):
+    computed, check = readback_case
+
+    def perturb(value):
+        if type(value) is float:
+            return math.nextafter(value, math.inf)
+        if isinstance(value, dict):
+            return {key: perturb(item) for key, item in value.items()}
+        if isinstance(value, list):
+            return [perturb(item) for item in value]
+        return value
+
+    computed.update(perturb(computed))
+    check()
+
+
+def test_readback_accepts_relative_and_near_zero_roundoff(readback_case):
+    computed, check = readback_case
+    computed["solutions"][0]["native"]["fairlead_tension_n"] *= 1.0 + 5e-13
+    computed["solutions"][0]["resultant_error_n"] = 5e-10
+    check()
+
+
+def test_readback_rejects_material_float_change_with_field(readback_case):
+    computed, check = readback_case
+    computed["solutions"][0]["anchor_radius_m"] *= 1.0 + 1e-6
+    with pytest.raises(AssertionError, match=r"record\.solutions\[0\]\.anchor_radius_m"):
+        check()
+
+
+@pytest.mark.parametrize("field,value", [
+    ("resultant_error_n", 1.1e-9),
+    ("empirical_mbl_n", 1635200.0 * (1.0 + 2e-12)),
+])
+def test_readback_rejects_float_outside_tolerance(readback_case, field, value):
+    computed, check = readback_case
+    computed["solutions"][0][field] = value
+    with pytest.raises(AssertionError):
+        check()
+
+
+@pytest.mark.parametrize("path,value", [
+    (("revision",), "changed"),
+    (("counts", "unique_static_solves"), 6),
+    (("counts", "unique_static_solves"), 5.0),
+    (("solutions", 0, "water_depth_m"), 200.0),
+    (("solutions", 0, "checks", "positive_horizontal_tension"), False),
+    (("solutions", 0, "checks", "positive_horizontal_tension"), 1),
+    (("solutions", 0, "required_standard_factor"), 0),
+    (("solutions", 0, "empirical_mbl_n"), 1635200),
+    (("module_commit",), "0" * 40),
+], ids=["string", "integer", "integer-type", "depth-type", "boolean",
+        "boolean-type", "null", "float-type", "digest"])
+def test_readback_rejects_non_float_or_type_change(readback_case, path, value):
+    computed, check = readback_case
+    target = computed
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
+    with pytest.raises(AssertionError):
+        check()
+
+
+@pytest.mark.parametrize("fault", [
+    "missing-key", "extra-key", "short-list", "long-list", "list-order",
+])
+def test_readback_rejects_structure_change(readback_case, fault):
+    computed, check = readback_case
+    if fault == "missing-key":
+        del computed["solutions"][0]["native"]["fairlead_tension_n"]
+    elif fault == "extra-key":
+        computed["solutions"][0]["native"]["extra"] = 1.0
+    elif fault == "short-list":
+        computed["solutions"].pop()
+    elif fault == "long-list":
+        computed["solutions"].append(computed["solutions"][0])
+    else:
+        computed["solutions"].reverse()
+    with pytest.raises(AssertionError):
+        check()
+
+
+def test_committed_readback_still_rejects_manifest_digest_change(run, inputs, monkeypatch):
+    original_digest = run.digest
+
+    def changed_digest(path):
+        if path == RECORD / "results.json":
+            return "0" * 64
+        return original_digest(path)
+
+    monkeypatch.setattr(run, "digest", changed_digest)
+    with pytest.raises(AssertionError):
+        test_committed_native_output_and_manifest_readback(run, inputs)
