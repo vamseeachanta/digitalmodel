@@ -112,6 +112,9 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#data_models
   - module: data_systems
     submodules:
+      top_level:
+        agent_pack: src/digitalmodel/data_systems/docs/agent-pack.md
+        qa_family: EC
       data_procurement:
         agent_pack: src/digitalmodel/data_systems/data_procurement/docs/agent-pack.md
         qa_family: EC
