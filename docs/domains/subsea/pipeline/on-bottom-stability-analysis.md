@@ -13,6 +13,7 @@ Results are static arithmetic screens. Standard qualification and dynamic displa
 | 0 | 2026-10-22 | Calculation issue with explicit input provenance |
 | 1 | 2026-11-06 | Align peak checks and report precision with supplied inputs |
 | 2 | 2026-11-06 | Record strict bed contact and canonical report governors |
+| 3 | 2026-11-07 | Show governing utilisation and clarify rounded contact displays |
 
 ## Sea-state inputs and sampled phase
 
@@ -30,6 +31,7 @@ Depth, Hs in m; periods in s; Uw in m/s; phase in radians.
 ## Inputs
 
 Forces and weight are N/m; friction and safety factor are dimensionless.
+Dimensional inputs display one decimal place; arithmetic uses the unrounded supplied inputs.
 
 | Case | Weight | Horizontal | Lift | Friction | Passive | Safety factor | Passive basis | Source |
 |---|---:|---:|---:|---:|---:|---:|---|---|
@@ -42,16 +44,17 @@ Forces and weight are N/m; friction and safety factor are dimensionless.
 
 ## Utilisation
 
-Ratios display three decimal places; verdicts use unrounded demand <= capacity.
+Ratios display three decimal places; verdicts use unrounded demand <= capacity and strict bed contact.
+Displayed unity does not establish acceptance; rounded inputs and ratios cannot resolve the strict contact boundary.
 
-| Case | Lateral | Uplift | Governing | Arithmetic | Standard |
-|---|---:|---:|---|---|---|
-| depth 20, Hs 2 | 0.303 | 0.058 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
-| depth 20, Hs 4 | 0.925 | 0.202 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
-| depth 50, Hs 2 | 0.137 | 0.029 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
-| depth 50, Hs 4 | 0.327 | 0.070 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
-| depth 100, Hs 2 | 0.106 | 0.024 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
-| depth 100, Hs 4 | 0.161 | 0.035 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
+| Case | Lateral | Uplift | Governing utilisation | Governing | Arithmetic | Standard |
+|---|---:|---:|---:|---|---|---|
+| depth 20, Hs 2 | 0.303 | 0.058 | 0.303 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
+| depth 20, Hs 4 | 0.925 | 0.202 | 0.925 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
+| depth 50, Hs 2 | 0.137 | 0.029 | 0.137 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
+| depth 50, Hs 4 | 0.327 | 0.070 | 0.327 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
+| depth 100, Hs 2 | 0.106 | 0.024 | 0.106 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
+| depth 100, Hs 4 | 0.161 | 0.035 | 0.161 | lateral | ARITHMETIC_PASS | NOT_EVALUATED |
 
 ## Method and limits
 
@@ -59,6 +62,7 @@ Equations A1/A4/A5: module on-bottom-stability-analysis.md, independent force ba
 Absolute uses gamma*(H+mu*L)/(mu*W+FR) for nonnegative peak demands.
 Nonzero passive resistance requires initial_penetration or prior_loading provenance.
 Uplift uses gamma*L/W and bed contact requires W>L.
+For W>L, governing utilisation is max(eta_h, eta_z, z/w), with eta_h the lateral ratio, eta_z the uplift ratio and z/w=L/W the supplied contact screen.
 Standard editions, clauses, safety-class factors and calibrated soil resistance are not qualified.
 No generalised displacement envelope or dynamic time history is calculated.
 Use reviewed factors and an applicable soil/dynamic assessment before design acceptance.

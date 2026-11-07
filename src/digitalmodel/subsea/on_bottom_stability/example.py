@@ -282,13 +282,15 @@ def example_report() -> str:
     report = render_report(
         [row.static_case for row in example.rows],
         method="absolute",
-        report_date="2026-11-06",
-        revision="2",
-        revision_description="Record strict bed contact and canonical report governors",
+        report_date="2026-11-07",
+        revision="3",
+        revision_description="Show governing utilisation and clarify rounded contact displays",
         previous_revisions=(("0", "2026-10-22",
                              "Calculation issue with explicit input provenance"),
                             ("1", "2026-11-06",
-                             "Align peak checks and report precision with supplied inputs")),
+                             "Align peak checks and report precision with supplied inputs"),
+                            ("2", "2026-11-06",
+                             "Record strict bed contact and canonical report governors")),
     )
     report = report.replace(
         "Results are static arithmetic screens.",

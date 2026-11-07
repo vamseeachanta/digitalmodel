@@ -11,7 +11,6 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass, field, replace
 from datetime import date
-import math
 
 from ._validation import _number, _stability
 from .dnv_rp_f109 import absolute_stability_check, absolute_stability_margin
@@ -258,6 +257,7 @@ def render_report(
         "## Inputs",
         "",
         "Forces and weight are N/m; friction and safety factor are dimensionless.",
+        "Dimensional inputs display one decimal place; arithmetic uses the unrounded supplied inputs.",
         "",
         "| Case | Weight | Horizontal | Lift | Friction | Passive | Safety factor | Passive basis | Source |",
         "|---|---:|---:|---:|---:|---:|---:|---|---|",
@@ -283,16 +283,17 @@ def render_report(
         "",
         "## Utilisation",
         "",
-        "Ratios display three decimal places; verdicts use unrounded demand <= capacity.",
+        "Ratios display three decimal places; verdicts use unrounded demand <= capacity and strict bed contact.",
+        "Displayed unity does not establish acceptance; rounded inputs and ratios cannot resolve the strict contact boundary.",
         "",
-        "| Case | Lateral | Uplift | Governing | Arithmetic | Standard |",
-        "|---|---:|---:|---|---|---|",
+        "| Case | Lateral | Uplift | Governing utilisation | Governing | Arithmetic | Standard |",
+        "|---|---:|---:|---:|---|---|---|",
     ]
     for result in results:
         verdict = "ARITHMETIC_PASS" if result.arithmetic_pass else "ARITHMETIC_FAIL"
         lines.append(
             f"| {_cell(result.case.label)} | {result.lateral_utilisation:.3f} | "
-            f"{result.vertical_utilisation:.3f} | {result.governing_check} | "
+            f"{result.vertical_utilisation:.3f} | {result.utilisation:.3f} | {result.governing_check} | "
             f"{verdict} | {result.standard_status} |"
         )
     lines += [
@@ -303,6 +304,7 @@ def render_report(
         "Absolute uses gamma*(H+mu*L)/(mu*W+FR) for nonnegative peak demands.",
         "Nonzero passive resistance requires initial_penetration or prior_loading provenance.",
         "Uplift uses gamma*L/W and bed contact requires W>L.",
+        "For W>L, governing utilisation is max(eta_h, eta_z, z/w), with eta_h the lateral ratio, eta_z the uplift ratio and z/w=L/W the supplied contact screen.",
         "Standard editions, clauses, safety-class factors and calibrated soil resistance are not qualified.",
         "No generalised displacement envelope or dynamic time history is calculated.",
         "Use reviewed factors and an applicable soil/dynamic assessment before design acceptance.",

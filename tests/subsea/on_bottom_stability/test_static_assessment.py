@@ -296,8 +296,8 @@ def test_report_preserves_dimensionless_inputs_and_near_unity_verdicts():
             for label, h in [("over", 104), ("under", 96)]]
     report = render_report(rows, method="absolute", report_date="2026-11-06", revision="1", revision_description="Update synthetic calculation inputs")
     assert "| 0.25 | 0.0 | 1.15 |" in report
-    assert "| over | 1.040 | 0.000 | lateral | ARITHMETIC_FAIL |" in report
-    assert "| under | 0.960 | 0.000 | lateral | ARITHMETIC_PASS |" in report
+    assert "| over | 1.040 | 0.000 | 1.040 | lateral | ARITHMETIC_FAIL |" in report
+    assert "| under | 0.960 | 0.000 | 0.960 | lateral | ARITHMETIC_PASS |" in report
 
 
 @pytest.mark.parametrize("weight,lift,factor", [(100, 50, 1), (7, 3, 1), (100, 99.999, 0.98)])
@@ -311,7 +311,7 @@ def test_pure_lift_report_uses_the_canonical_governor(weight, lift, factor):
         [c], method="absolute", report_date="2026-11-06", revision="1", revision_description="Update synthetic calculation inputs"
     )
     ratio = lift / weight
-    assert f"| pure lift | {factor * ratio:.3f} | {factor * ratio:.3f} | contact | ARITHMETIC_PASS |" in report
+    assert f"| pure lift | {factor * ratio:.3f} | {factor * ratio:.3f} | {ratio:.3f} | contact | ARITHMETIC_PASS |" in report
 
 
 def test_report_appends_the_supplied_revision_description():
@@ -344,3 +344,33 @@ def test_report_requires_revision_description():
         render_report(
             [case()], method="absolute", report_date="2026-11-06", revision="2"
         )
+
+
+def test_report_displays_the_contact_governed_case_as_the_largest_utilisation():
+    rows = [
+        case(label="A", weight_n_m=100, horizontal_n_m=49.5,
+             lift_n_m=0, friction=0.5, safety_factor=1.0),
+        case(label="B", weight_n_m=100, horizontal_n_m=0,
+             lift_n_m=99.999, friction=0.5, safety_factor=0.98),
+    ]
+    report = render_report(
+        rows, method="absolute", report_date="2026-11-07", revision="3",
+        revision_description="Expose the governing utilisation including contact",
+    )
+    assert "Governing case: B." in report
+    table = report.split("## Utilisation", 1)[1].split("## Method and limits", 1)[0]
+    header = next(line for line in table.splitlines() if line.startswith("| Case |"))
+    columns = [cell.strip() for cell in header.strip("|").split("|")]
+    index = columns.index("Governing utilisation")
+    displayed = {}
+    for line in table.splitlines():
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if cells[0] in {"A", "B"}:
+            displayed[cells[0]] = float(cells[index])
+    # Independently: A is 49.5/(.5*100); B is governed by 99.999/100.
+    assert displayed == {"A": 0.990, "B": 1.000}
+    assert displayed["B"] == max(displayed.values())
+    assert "| B | 0.980 | 0.980 | 1.000 | contact | ARITHMETIC_PASS |" in table
+    assert "max(eta_h, eta_z, z/w)" in report
+    assert "Dimensional inputs display one decimal place" in report
+    assert "Displayed unity does not establish acceptance" in report

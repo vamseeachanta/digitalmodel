@@ -17,6 +17,7 @@ establish neither a site design nor a qualified standard implementation.
 | 3 | 2026-10-28 | Removed the unverified concept-page comparison, clarified the source basis and linked the synthetic example to independent expected-value arithmetic. |
 | 4 | 2026-11-07 | Added the strict bed-contact screen, its weight boundary and governor precedence so ratios and acceptance agree. |
 | 5 | 2026-11-07 | Included the contact ratio above the strict boundary so near-contact utilisation reports the available reserve. |
+| 6 | 2026-11-07 | Documented unit-factor contact labels as a compatibility change and exposed the governing ratio in reports. |
 
 ## Evidence and scope
 
@@ -141,6 +142,16 @@ contact governs: zero reserve does not pass. The weight ratio is distinct from
 a friction/drive ratio when lift or passive resistance is present.
 
 These contracts intentionally change previous behaviour:
+
+- Positive contact ratios win exact ties. With a unit safety factor, a case
+  formerly labelled `uplift` can therefore be labelled `contact` in the check,
+  margin and report. For example, W=100 N/m, H=0 N/m, L=50 N/m, mu=0.5
+  and gamma=1 give utilisation 0.5 and governor `contact`. Callers that key
+  on `uplift` must account for this label change. The equation ratios and
+  arithmetic verdict are unchanged by the tie precedence.
+- Report tables display the canonical governing utilisation, including the
+  contact ratio, alongside the lateral and uplift equation ratios. Rounded
+  unity does not establish acceptance at the strict contact boundary.
 
 - All static checks and wrappers require an explicit factor; generic load
   coefficients are explicit as well.
