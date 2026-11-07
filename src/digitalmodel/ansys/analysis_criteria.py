@@ -11,6 +11,7 @@ from copy import deepcopy
 from decimal import Decimal
 from pathlib import Path
 import re
+import unicodedata
 
 from digitalmodel.ansys.analysis_records import (
     decimal_text, nonempty, require_fields, verify_reference,
@@ -21,12 +22,19 @@ CRITERION_FIELDS = frozenset({
     "criterion_id", "quantity", "unit", "observed", "limit", "comparator", "source", "evidence",
 })
 SOURCE_FIELDS = frozenset({"document", "edition", "clause"})
-SOURCE_PLACEHOLDERS = frozenset(re.sub(r"[\W_]+", "", value) for value in {
-    "tbd", "n/a", "na", "unknown", "x", "none", "not applicable",
-    "not available", "unspecified", "unverified",
-    "tba", "pending", "to be confirmed", "see note",
-    "to be determined", "tbc", "null", "nil",
-})
+SOURCE_PLACEHOLDERS = frozenset(
+    re.sub(r"[\W_]+", "", unicodedata.normalize("NFKC", value).casefold())
+    for value in {
+        "tbd", "n/a", "na", "unknown", "x", "none", "not applicable",
+        "not available", "unspecified", "unverified",
+        "tba", "pending", "to be confirmed", "see note",
+        "to be determined", "tbc", "null", "nil",
+        "undefined", "not specified", "not given", "not known", "to be advised", "tbd1",
+    }
+)
+SOURCE_PLACEHOLDER_SEQUENCE = re.compile(
+    r"(?:" + "|".join(re.escape(token) for token in sorted(SOURCE_PLACEHOLDERS)) + r")+"
+)
 
 
 def _validate_source(source: dict) -> None:
@@ -37,8 +45,8 @@ def _validate_source(source: dict) -> None:
     for field in SOURCE_FIELDS:
         value = nonempty(source[field], "acceptance source " + field)
         # Punctuation-only values also normalize to empty and refuse below.
-        normalized = re.sub(r"[\W_]+", "", value.casefold())
-        if not normalized or normalized in SOURCE_PLACEHOLDERS:
+        normalized = re.sub(r"[\W_]+", "", unicodedata.normalize("NFKC", value).casefold())
+        if not normalized or SOURCE_PLACEHOLDER_SEQUENCE.fullmatch(normalized):
             raise ValueError("placeholder acceptance source " + field)
 
 

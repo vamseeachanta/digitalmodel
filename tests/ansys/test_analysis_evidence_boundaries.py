@@ -20,6 +20,8 @@ from tests.ansys.test_analysis_lookup import query
 from tests.ansys.test_analysis_qualification import protocol as protocol
 from tests.ansys.test_analysis_review_regressions import candidate as candidate
 
+__all__ = ["intake", "protocol", "candidate"]
+
 
 def _repin(protocol, **entry_changes):
     """Bind deliberate fixture changes without weakening any production gate."""
