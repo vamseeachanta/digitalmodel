@@ -247,7 +247,9 @@ def test_parallel_collapse_placeholders_are_explicit_findings(builder):
         definition = next(node for node in ast.walk(tree)
                           if isinstance(node, ast.FunctionDef) and node.name == symbol)
         assert any(isinstance(node, ast.Return) and isinstance(node.value, ast.Constant)
-                   and node.value.value == 100 for node in ast.walk(definition))
+                   and node.value.value == 100 for node in ast.walk(definition)), (
+            f"{path}: placeholder removed: update the common-capacity finding in build_report.py and rebuild"
+        )
     source = next(item for item in builder.source_record()["methods"]
                   if item["id"] == "common-capacity")
     page = ET.parse(REPORT / "report.html").getroot()

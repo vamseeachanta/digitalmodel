@@ -15,6 +15,7 @@ remains open; no full-module qualification is claimed.
 | 0 | 2026-10-25 | Initial geometry example with independent integrals and a reproducible HTML builder. |
 | 1 | 2026-10-28 | Added bounded module reporting and source records without changing the standalone example. |
 | 2 | 2026-11-06 | Documented source rebuilds, explicit collapse rejection and rounded embedded display records. |
+| 3 | 2026-11-06 | Clarified the implementation status and remaining parallel collapse placeholders to match the module report. |
 
 ## Build and read
 
@@ -120,3 +121,7 @@ common sizing call in this example. The unfinished custom collapse inverse now
 raises `NotImplementedError`; its external-pressure route cannot return the
 former numeric placeholder. Unsupported external-pressure code selectors raise
 `ValueError`. No replacement inverse or capacity qualification is supplied.
+The inverse is marked **NOT_IMPLEMENTED** in the method map; the unqualified
+placeholders in `common/PipeCapacity.py` and
+`asset_integrity/custom/PipeCapacity.py` still return `100` and are tracked under
+#3323.
