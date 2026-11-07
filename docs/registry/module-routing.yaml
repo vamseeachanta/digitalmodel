@@ -601,6 +601,10 @@ modules:
         qa_family: EC
   - module: visualization
     entry_point: src/digitalmodel/visualization/
+    submodules:
+      design_tools:
+        agent_pack: src/digitalmodel/visualization/design_tools/docs/agent-pack.md
+        qa_family: EC
     maturity: beta
     owner_wiki: docs/domains/visualization/
     key_tests: [tests/visualization/]
