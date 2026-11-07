@@ -16,8 +16,8 @@ from pathlib import Path
 
 from digitalmodel.marine_ops.jackup_inputs import observation_summary
 
-HOSSAIN = 'https://api.research-repository.uwa.edu.au/ws/portalfiles/portal/45701479/hossaintxt.pdf'
-HU = 'https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf'
+RESEARCH_R2019 = 'https://api.research-repository.uwa.edu.au/ws/portalfiles/portal/45701479/hossaintxt.pdf'
+RESEARCH_R2015 = 'https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf'
 NDBC = 'https://www.ndbc.noaa.gov/data/historical/stdmet/42019h2024.txt.gz'
 
 
@@ -58,7 +58,7 @@ def freeze(ndbc_archive, research, output):
     # Replay the fetched public archive through the existing NOAA date-query parser.
     class ArchiveClient(NOAAClient):
         def stream_lines(self, endpoint, **kwargs):
-            with gzip.open(ndbc_archive, 'rt', encoding='ascii') as stream:
+            with gzip.open(ndbc_archive, 'rt', encoding='utf-8') as stream:
                 yield from stream
     with ArchiveClient() as noaa_client:
         observations = observation_summary(noaa_client.query_by_date(
@@ -71,7 +71,7 @@ def freeze(ndbc_archive, research, output):
         'unit': synthetic_unit(),
         'particulars_basis': 'Synthetic inputs assumed, based on previous experience; not recovered specifications or collection statistics.',
         'soil': {
-            'source': HOSSAIN, 'locator': 'Table 1, Site 3; equation 1 interface definition',
+            'source': RESEARCH_R2019, 'locator': 'Table 1, Site 3; equation 1 interface definition',
             'scope': 'Published anonymized Gulf profile; not colocated with the buoy or bathymetry query.',
             'sand_thickness_m': 4.9, 'interface_su_kpa': 22.13, 'clay_gradient_kpa_m': 0.93,
             'sand_submerged_weight_kn_m3': 9.4, 'clay_submerged_weight_kn_m3': 7.3,
@@ -79,7 +79,7 @@ def freeze(ndbc_archive, research, output):
             'datum_note': 'Strength is evaluated relative to the interface, following equation 1; no datum is inferred from a collection column name.',
         },
         'method_assumptions': {
-            'source': HU, 'critical_state_friction_deg': 31.0,
+            'source': RESEARCH_R2015, 'critical_state_friction_deg': 31.0,
             'log_crushing_strength_kpa': 10.0, 'base_cone_angle_deg': 13.0,
             'basis': 'Illustrative assumptions for silica sand and a conical underside; actual mineralogy and geometry are unqualified.',
             'curve_connections': 'Illustrative linear mobilization and post-peak segments; only peak and clay branches follow research equations.',
@@ -105,17 +105,18 @@ def freeze(ndbc_archive, research, output):
         'reuse': 'Synthetic particulars and selected cited facts only; original tables, text and figures are excluded. Public access does not establish an unrestricted licence.',
     }
     output.mkdir(parents=True, exist_ok=True)
-    raw = (json.dumps(data, indent=2, sort_keys=True, allow_nan=False) + '\n').encode()
+    raw = (json.dumps(data, indent=2, sort_keys=True, allow_nan=False) + '\n').encode('utf-8')
     (output / 'inputs.json').write_bytes(raw)
     manifest = {
         'algorithm': 'sha256', 'files': {'inputs.json': hashlib.sha256(raw).hexdigest()},
         'external_source_digests': {
             'ndbc_archive': digest(ndbc_archive),
-            'hu_2015_manuscript': digest(research / 'hu2015.pdf'),
-            'hossain_2019_manuscript': digest(research / 'hossain2019.pdf')},
+            'research_r2015_manuscript': digest(research / 'research_r2015.pdf'),
+            'research_r2019_manuscript': digest(research / 'research_r2019.pdf')},
         'source_copy_policy': 'Originals remain external; digests refer to original bytes, not engineering qualification.',
     }
-    (output / 'manifest.json').write_text(json.dumps(manifest, indent=2, sort_keys=True) + '\n', encoding='utf-8')
+    (output / 'manifest.json').write_text(json.dumps(manifest, indent=2, sort_keys=True) + '\n',
+                                         encoding='utf-8', newline='\n')
 
 
 if __name__ == '__main__':

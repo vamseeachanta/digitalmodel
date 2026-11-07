@@ -4,7 +4,7 @@
 
 Local reference pressure is assumed to be q = 6.34 su at every depth, using
 the uniform-clay factor documented in spudcan.py. Linear strength interpolation
-and abrupt pocket boundaries are assumptions. This does not extend the Hu
+and abrupt pocket boundaries are assumptions. This does not extend the R2015
 sand-over-clay calibration or implement a general layered bearing solution.
 """
 
