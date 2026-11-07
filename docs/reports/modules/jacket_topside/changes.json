@@ -18,5 +18,10 @@
     "change": "Embed the canonical shared stylesheet so the report retains its presentation when opened outside the repository tree.",
     "date": "2026-11-06",
     "revision": "D"
+  },
+  {
+    "change": "Pin the shared palette to the light theme so it matches the declared colour scheme under a dark system preference.",
+    "date": "2026-11-06",
+    "revision": "E"
   }
 ]

@@ -36,6 +36,11 @@ CHANGES = [{
     "date": "2026-11-06",
     "change": "Embed the canonical shared stylesheet so the report retains its "
               "presentation when opened outside the repository tree.",
+}, {
+    "revision": "E",
+    "date": "2026-11-06",
+    "change": "Pin the shared palette to the light theme so it matches the "
+              "declared colour scheme under a dark system preference.",
 }]
 SOURCE_ITEMS = [
     ("src/digitalmodel/structural/jacket_topside/docs/worked-tubular-section-geometry.md",
@@ -311,7 +316,7 @@ def render(scratch):
     brand = "\n".join(line.rstrip() for line in brand.split("\n"))
     payload = json_text(data).replace("<", "\\u003c")
     return f'''<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8">
+<html lang="en" data-theme="light"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Jacket and topside module analysis</title>
 <style id="shared-brand">{brand}</style>
