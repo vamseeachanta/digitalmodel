@@ -350,6 +350,7 @@ class TestLayeredConfigurationSchema:
         assert "soil" not in summary
         assert params["soil"] == original_soil
 
+    @pytest.mark.parametrize("route", ["pile_capacity", "geotechnical"])
     @pytest.mark.parametrize("layered", [False, True], ids=["single", "layered"])
     @pytest.mark.parametrize("as_text", [False, True], ids=["numeric", "text"])
     @pytest.mark.parametrize(
@@ -363,16 +364,21 @@ class TestLayeredConfigurationSchema:
             ("applied_load_kn", math.nan, "must be a finite number"),
             ("applied_load_kn", math.inf, "must be a finite number"),
             ("applied_load_kn", -math.inf, "must be a finite number"),
+            ("factor_of_safety", "abc", "must be a finite number"),
+            ("factor_of_safety", None, "must be a finite number"),
+            ("applied_load_kn", "abc", "must be a finite number"),
+            ("applied_load_kn", {}, "must be a finite number"),
         ],
     )
     def test_cfg_rejects_invalid_design_before_calculation(
         self, pile_capacity_cfg, tmp_path, monkeypatch, layered, as_text,
-        field, value, message,
+        field, value, message, route,
     ):
         from copy import deepcopy
 
         from digitalmodel.geotechnical import pile_capacity
         from digitalmodel.geotechnical.cfg_workflows import PileCapacityWorkflow
+        from digitalmodel.geotechnical import workflow
 
         params = pile_capacity_cfg["pile_capacity"]
         params["design"] = {field: str(value) if as_text else value}
@@ -380,22 +386,57 @@ class TestLayeredConfigurationSchema:
             params["soil_layers"] = [
                 {"thickness_m": 3.0, "Su_kpa": 40.0, "sigma_v_kpa": 40.0}
             ]
-        before = deepcopy(pile_capacity_cfg)
+        if route == "pile_capacity":
+            cfg = pile_capacity_cfg
+            router = PileCapacityWorkflow().router
+        else:
+            cfg = {"geotechnical": {
+                "calculation": "pile_axial_capacity", "pile_axial_capacity": params,
+            }}
+            router = workflow.GeotechnicalWorkflow().router
+        before = deepcopy(cfg)
 
         def unexpected_calculation(*args, **kwargs):
             pytest.fail("Invalid design reached capacity arithmetic")
 
         with pytest.raises(ValueError, match=rf"^{field} {message}$"):
-            PileCapacityWorkflow().router(pile_capacity_cfg)
+            router(cfg)
         # Invalid inputs must fail before either capacity entry point is called.
         monkeypatch.setattr(pile_capacity, "alpha_method_capacity", unexpected_calculation)
         monkeypatch.setattr(
             pile_capacity, "alpha_method_capacity_multilayer", unexpected_calculation
         )
+        monkeypatch.setattr(workflow, "alpha_method_capacity", unexpected_calculation)
+        monkeypatch.setattr(
+            workflow, "alpha_method_capacity_multilayer", unexpected_calculation
+        )
         with pytest.raises(ValueError, match=rf"^{field} {message}$"):
-            PileCapacityWorkflow().router(pile_capacity_cfg)
-        assert pile_capacity_cfg == before
+            router(cfg)
+        assert cfg == before
         assert list(tmp_path.iterdir()) == []
+
+    @pytest.mark.parametrize("route", ["pile_capacity", "geotechnical"])
+    @pytest.mark.parametrize("design_state", ["absent", "null", "empty"])
+    def test_optional_design_uses_defaults(self, pile_capacity_cfg, route, design_state):
+        from digitalmodel.geotechnical.cfg_workflows import PileCapacityWorkflow
+        from digitalmodel.geotechnical.workflow import GeotechnicalWorkflow
+
+        params = pile_capacity_cfg["pile_capacity"]
+        params.pop("design", None)
+        if design_state != "absent":
+            params["design"] = None if design_state == "null" else {}
+        if route == "pile_capacity":
+            payload = PileCapacityWorkflow().router(pile_capacity_cfg)["pile_capacity"]
+        else:
+            cfg = {"geotechnical": {
+                "calculation": "pile_axial_capacity", "pile_axial_capacity": params,
+            }}
+            payload = GeotechnicalWorkflow().router(cfg)["geotechnical"][
+                "pile_axial_capacity"
+            ]
+        # Synthetic Qt=400*pi kN; the default safety factor gives 200*pi kN.
+        assert payload["design"]["factor_of_safety"] == 2.0
+        assert payload["design"]["allowable_capacity_kn"] == pytest.approx(200.0 * math.pi)
 
     @pytest.mark.parametrize("applied", [None, 0.0, -100.0, 100.0, "100.0"])
     def test_valid_design_preserves_allowable_capacity(self, pile_capacity_cfg, applied):
@@ -446,7 +487,9 @@ class TestSummarySerializationCompatibility:
         from digitalmodel.geotechnical.cfg_workflows import PileCapacityWorkflow
 
         pile_capacity_cfg["pile_capacity"]["metadata"] = {"value": math.nan}
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError, match="Out of range float values are not JSON compliant"
+        ):
             PileCapacityWorkflow().router(pile_capacity_cfg)
         assert list(tmp_path.iterdir()) == []
 

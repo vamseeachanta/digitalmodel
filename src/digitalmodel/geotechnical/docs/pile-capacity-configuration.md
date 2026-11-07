@@ -13,6 +13,7 @@ compared with the layer total. Single-layer input requires a finite, positive
 | 1 | 2026-11-06 | State which input defines embedment so layered configurations have an explicit length basis. |
 | 2 | 2026-11-06 | Omit ignored embedment from layered summaries and reject nonfinite JSON values to keep output unambiguous and readable by strict parsers. |
 | 3 | 2026-11-06 | Keep strict JSON local to pile summaries, omit ignored soil, and validate pile design inputs before calculation. |
+| 4 | 2026-11-06 | Apply the same named design errors and optional design defaults through both pile routers. |
 
 ## Configuration schema
 
@@ -43,10 +44,12 @@ block from the returned and written layered summary without changing the
 supplied input dictionary. Contradictory or nonfinite values in either ignored
 field do not affect the layered calculation.
 
-`PileCapacityWorkflow` requires a finite, positive `design.factor_of_safety`
+Both pile routers require a finite, positive `design.factor_of_safety`
 (default 2.0) and, when supplied, finite `design.applied_load_kn`. Numeric
 strings are converted before validation. Invalid values raise `ValueError`
-naming the field before capacity calculation or output creation. Finite zero
+naming the field before capacity calculation or output creation, including
+values that cannot be converted to numbers. An absent, null or empty `design`
+block uses the defaults. Finite zero
 and negative applied loads remain accepted; no load-sign criterion is added.
 
 Strict JSON serialization is requested only by `PileCapacityWorkflow`, before
