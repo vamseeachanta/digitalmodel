@@ -1745,6 +1745,18 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         assert res["critical_mode"] == 2
         assert res["a_d_ratio"] == pytest.approx(0.9789, abs=1e-3)
         assert res["fatigue_proxy"] > 0.0
+    elif workflow["id"] == "api579-part9-crack-fad":
+        result = cfg["api579_part9_crack_fad"]
+        assert result["measurement_sufficiency"]["status"] == "COMPLETE_FOR_REVIEW"
+        assert result["measurement_sufficiency"]["issues"] == []
+        assert len(result["checks"]) == 7
+        assert all(check["status"] == "NOT_EVALUATED" for check in result["checks"])
+        assert result["verdict"] == "NOT_EVALUATED"
+        assert result["acceptable"] is None
+        assert result["kr"] is result["lr"] is None
+        assert "report_html" not in result and "written_path" not in result
+        report = Path(cfg["part9_report"]["written_path"])
+        assert report.read_text(encoding="utf-8") == cfg["part9_report"]["report_html"]
     elif workflow["id"] == "api579-pitting-screen":
         assert cfg["api579_pitting_screen"]["level2"]["rsf"] == pytest.approx(0.9569915955570703)
     elif workflow["id"] == "api579-coverage-screen":
