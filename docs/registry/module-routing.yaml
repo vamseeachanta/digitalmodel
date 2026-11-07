@@ -572,6 +572,9 @@ modules:
     key_tests: [tests/subsea/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#subsea
     submodules:
+      cross_sections:
+        agent_pack: src/digitalmodel/subsea/cross_sections/docs/agent-pack.md
+        qa_family: EC
       manifolds:
         agent_pack: src/digitalmodel/subsea/manifolds/docs/agent-pack.md
         qa_family: EC
