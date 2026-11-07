@@ -5,7 +5,7 @@
 | Module | structural/parachute |
 | Repository | digitalmodel |
 | Package | src/digitalmodel/structural/parachute |
-| Pack revision | 0 |
+| Pack revision | 1 |
 | Code revision | 21942e8cfc7dfb985c5bfa693245df7d197cf76c |
 | Analysis family | Engineering calculations (EC); AQG r0 Python calculations |
 | Quality role | Engineering calculations family quality manager |
@@ -52,7 +52,7 @@ The two-dimensional preset uses a transverse/vertical frame with upward-positive
 
 Axial stress accepts tension-positive force; element rotations use the stated local/global transformation, and no harmonic phase convention is defined for these static and time-marching calculations. [src/digitalmodel/structural/parachute/member_check.py:L26-L38] [src/digitalmodel/structural/parachute/frame_solver.py:L52-L117] [src/digitalmodel/structural/parachute/chute_assessment.py:L204-L208]
 
-UNVERIFIED: U1 — the physical applicability of empirical defaults, sizing limits and preset geometry has not been established by independent measurements; issue pending (3).
+UNVERIFIED: U1 — the physical applicability of empirical defaults, sizing limits and preset geometry has not been established by independent measurements; the transient holds the opening-shock multiplier throughout the history (SF77), affecting impulse and speed decay; issue pending (3).
 
 UNVERIFIED: U2 — CAD exchange-unit scaling and browser-rendered bend fidelity have not been verified by a CAD round trip or browser measurement; issue pending (2).
 
@@ -63,7 +63,7 @@ UNVERIFIED: U2 — CAD exchange-unit scaling and browser-rendered bend fidelity 
 | Circular drag | `calculate_drag_force`: speed conversion, circular projected area, then `rho*V²*cd*A*cx/2`; no inflation history in this function | NASA, *Drag Equation*, reference-area discussion; the repository example separates synthetic coefficients from numerical consistency. [src/digitalmodel/structural/parachute/parachute_drag.py:L25-L74] [src/digitalmodel/structural/parachute/docs/worked-synthetic-canopy-drag.md:L44-L56] |
 | Dual drag | `calculate_dual_chute_drag` delegates to the single calculation twice and sums forces | No interference correction is computed. [src/digitalmodel/structural/parachute/chute_assessment.py:L81-L100] |
 | Lift and traction | `calculate_aero_lift` computes `rho*V²*cl*A/2`; `calculate_tire_traction` computes normal force from weight minus lift plus downforce, then multiplies by friction coefficient | Empirical caller inputs; not canopy or tire qualification. [src/digitalmodel/structural/parachute/chute_assessment.py:L103-L128] |
-| Load cases and transient | `assess_all_load_cases` chooses the first maximum; `simulate_deployment_transient` uses exponential inflation, explicit speed updates, weight-to-mass conversion and trapezoidal impulse | Reduced-order model; no time-step convergence or experimental benchmark asserted. [src/digitalmodel/structural/parachute/chute_assessment.py:L147-L186] [src/digitalmodel/structural/parachute/chute_assessment.py:L204-L279] |
+| Load cases and transient | `assess_all_load_cases` chooses the first maximum; `simulate_deployment_transient` uses exponential inflation, explicit speed updates, weight-to-mass conversion and trapezoidal impulse | Reduced-order model; `opening_shock_factor` (Cx) remains in the drag at every time step, multiplied by an inflation ramp rising monotonically to 1.0. No opening-shock overshoot or return to steady Cx=1.0 is modelled. For Cx>1, post-inflation drag and deceleration at a given speed are overstated relative to steady drag, biasing impulse and speed decay; `peak_force_lbs`, `impulse_lbf_s` and the speed history are unqualified. No time-step convergence or experimental benchmark asserted; U1/U3, issue pending (3). [src/digitalmodel/structural/parachute/chute_assessment.py:L232-L242] [docs/domains/structural/parachute/parachute-aerodynamics.md:L19-L19] [docs/domains/structural/parachute/parachute-aerodynamics.md:L49-L51] [src/digitalmodel/structural/parachute/chute_assessment.py:L147-L186] [src/digitalmodel/structural/parachute/chute_assessment.py:L204-L279] |
 | Tube sections | `tube_section_properties`: annular area/inertia, `S=I/(OD/2)`, `r=sqrt(I/A)` | Geometrical closed forms. [src/digitalmodel/structural/parachute/frame_model.py:L23-L46] |
 | Frame stiffness | `FrameElement2D.local_stiffness`, `transformation_matrix`, `global_stiffness`, `member_end_forces`; `solve_frame` assembles and solves the restrained linear system | Euler–Bernoulli bending plus axial; the documentation names matrix structural analysis references. [src/digitalmodel/structural/parachute/frame_solver.py:L21-L25] [src/digitalmodel/structural/parachute/frame_solver.py:L52-L117] [src/digitalmodel/structural/parachute/frame_solver.py:L140-L230] [docs/domains/structural/parachute/structural-analysis-method.md:L64-L69] |
 | Stress and unity | `tube_stress`, `von_mises_tube`, `unity_ratio`, `check_all_members`; signed axial and bending add in the scalar function, while the batch function uses absolute end-force maxima and a coded yield fraction | The material document cautions that individual ASD component allowables are not directly combined-stress allowables. [src/digitalmodel/structural/parachute/member_check.py:L22-L71] [src/digitalmodel/structural/parachute/member_check.py:L174-L206] [docs/domains/structural/parachute/material-properties-4130.md:L71-L98] |
@@ -73,7 +73,7 @@ UNVERIFIED: U2 — CAD exchange-unit scaling and browser-rendered bend fidelity 
 
 The documentation also discusses ASME B31.3 and Section VIII Division 2 stress intensity, but `member_check.py` exposes the tube/von-Mises and connection checks above rather than that documented principal-stress calculation; editions and clauses are unspecified, and clause text not checked against the licensed copy. [docs/domains/structural/parachute/structural-analysis-method.md:L113-L131] [src/digitalmodel/structural/parachute/member_check.py:L22-L209]
 
-UNVERIFIED: U3 — governing editions, clause applicability, material-property provenance, the combined-stress allowable basis and calculation Citation sidecars remain unqualified; issue pending (3).
+UNVERIFIED: U3 — governing editions, clause applicability, material-property provenance, the combined-stress allowable basis and calculation Citation sidecars remain unqualified; the transient Cx treatment conflicts with the documented peak/steady distinction (SF77); issue pending (3).
 
 ## 4. Validated worked examples and regression examples
 
@@ -87,11 +87,11 @@ Validation here means agreement with an independent closed form or published tea
 | V4 validated: synthetic drag arithmetic | NASA drag-law closed form independently evaluated in SI, with synthetic caller inputs; displayed expectations 475.3 N and 1069.5 N | Relative `5e-7` in N, `1e-12` in lbf, absolute tolerance 0; rounded conversion vs roundoff | `tests/structural/parachute/test_documented_synthetic_canopy_drag.py::test_documented_canopy_drag` | PASS at the code pin. [tests/structural/parachute/test_documented_synthetic_canopy_drag.py:L22-L41] [tests/structural/parachute/test_documented_synthetic_canopy_drag.py:L66-L100] [src/digitalmodel/structural/parachute/docs/worked-synthetic-canopy-drag.md:L87-L100] |
 | R1 regression: dual sum | Two calls to the production single-canopy function form the reference; no independent interference benchmark | Absolute difference below 1.0 lbf | `tests/structural/parachute/test_chute_assessment.py::TestDualChuteDrag::test_dual_is_sum_of_two_singles` | PASS at the code pin. [tests/structural/parachute/test_chute_assessment.py:L37-L44] |
 | R2 regression: YAML governing result | Round-trip reference is the module's own governing result | Governing ID equal; force difference below 1.0 lbf | `tests/structural/parachute/test_chute_assessment.py::TestExportResultsYaml::test_yaml_governing_matches_results` | PASS at the code pin. [tests/structural/parachute/test_chute_assessment.py:L161-L166] |
-| R3 regression: transient monotonicity | Initial value and successive speeds from the module's time history; no independently validated transient force history | Final speed lower; adjacent increase no greater than `1e-9 mph` | `tests/structural/parachute/test_chute_assessment.py::TestTransientDeploymentModel::test_vehicle_speed_decreases_monotonically` | PASS at the code pin. [tests/structural/parachute/test_chute_assessment.py:L194-L213] |
+| R3 regression: transient monotonicity | Initial value and successive speeds from the module's time history; no independently validated transient force history; monotonicity does not detect persistent Cx or qualify impulse/speed decay (SF77) | Final speed lower; adjacent increase no greater than `1e-9 mph` | `tests/structural/parachute/test_chute_assessment.py::TestTransientDeploymentModel::test_vehicle_speed_decreases_monotonically` | PASS at the code pin. [tests/structural/parachute/test_chute_assessment.py:L194-L213] |
 
-External source checks: NASA, *Drag Equation*, reference-area discussion; NASA, *Adventures in Rocket Science*, 2008, activity 23 part 2; NIST SP 811, 2008, Appendix B.8 and footnote 23 were opened during preparation, with response metadata retained in the verification evidence; their repository derivations are the reproducible input record. [docs/roadmaps/structural-parachute-example.md:L24-L38] [docs/roadmaps/structural-parachute-example.md:L86-L109] [src/digitalmodel/structural/parachute/docs/worked-synthetic-canopy-drag.md:L44-L100]
+External source status: NASA, *Drag Equation*, reference-area discussion; NASA, *Adventures in Rocket Science*, 2008, activity 23 part 2; NIST SP 811, 2008, Appendix B.8 and footnote 23 are cited by the repository derivations below. Preparation response metadata is not shipped; the historical external-source check is NOT_REPRODUCIBLE from the repository. No external-source access was repeated for this revision; the checked evidence is the repository derivation and arithmetic tests. [docs/roadmaps/structural-parachute-example.md:L24-L38] [docs/roadmaps/structural-parachute-example.md:L86-L109] [src/digitalmodel/structural/parachute/docs/worked-synthetic-canopy-drag.md:L44-L100]
 
-Reproduction form: set an external writable `TMPDIR`, then `PYTHONPATH=src uv run --no-sources python -m pytest tests/structural/parachute -q -rA -p no:cacheprovider --basetemp="$TMPDIR/parachute-check"`; no pytest configuration override was used. Results at the code pin before and after documentation changes: 177 collected, 170 passed, 0 failed, 7 skipped, 0 collection errors; the seven FreeCAD-dependent cases are NOT_RUN for CAD execution because the program is absent. [tests/structural/parachute/test_freecad_frame_builder.py:L15-L24] [tests/structural/parachute/test_freecad_frame_builder.py:L37-L116]
+Reproduction form: set an external writable `TMPDIR` and force UTF-8 mode with `PYTHONUTF8=1`, then `PYTHONPATH=src PYTHONUTF8=1 uv run --no-project --with pytest --with "numpy<2" --with pyyaml --with pytest-asyncio python -m pytest tests/structural/parachute -q -rA -p no:cacheprovider --basetemp="$TMPDIR/parachute-check"`; no pytest configuration override is used. UTF-8 is a precondition for the viewer writer and the tests' default-encoding reads until SF76 is corrected. The module results reproduced before and after this documentation revision are 177 collected, 170 passed, 0 failed, 7 skipped, 0 collection errors in UTF-8 mode. The reviewed cp1252 run without UTF-8 mode had five viewer failures; a cp1252-default interpreter run was not repeated here. The seven FreeCAD-dependent cases are NOT_RUN for CAD execution because the program is absent. [tests/structural/parachute/test_freecad_frame_builder.py:L15-L24] [tests/structural/parachute/test_freecad_frame_builder.py:L37-L116]
 
 ## 5. QA gates
 
@@ -101,7 +101,7 @@ Required family mapping: AQG r0, section 10, row “Python calculations”, and 
 | --- | --- | --- |
 | G0 | Applicable: inputs, units and citations | I1, I2, I3; test rejection and independent-unit comparisons below |
 | G1 | Applicable: Python imports/tests; CAD load route is FreeCAD document creation and export tests, no solver route | L1, L2; Python path PASS, seven CAD cases NOT_RUN because FreeCAD is absent |
-| G2 | Applicable: hand or published check | H1–H4; closed-form and arithmetic comparisons |
+| G2 | Applicable: hand or published check | H1–H3 and the traction part of H4; the lift part of H4 is regression evidence |
 | G3 | NOT_APPLICABLE: the family mapping excludes short licensed dynamics | The reduced-order Python transient is covered as a regression, not a solver dynamics clearance |
 | G4 | NOT_APPLICABLE: no diffraction-body calculation in this package | Geometry and CAD checks remain G0/G1 responsibilities |
 | G5 | Applicable: traceable QA evidence and result export | E1, E2; export is partial evidence, not an automatically generated complete AQG appendix |
@@ -113,18 +113,18 @@ Checks below are reproducible tests or explicit evidence audits; thresholds are 
 | I1 | G0 | Run `TestTubeSectionProperties.test_zero_wall_raises` and `.test_wall_exceeds_radius_raises` in the section-4 tube test file | 2 ValueError outcomes; 0 accepted invalid walls (cases) | PASS. [tests/structural/parachute/test_frame_model.py:L68-L74] |
 | I2 | G0 | Run `TestDragForce.test_negative_speed_raises` and `.test_zero_speed_zero_force` in the section-4 drag test file | 1 rejected negative speed (case); zero-speed force exactly 0 lbf | PASS. [tests/structural/parachute/test_parachute_drag.py:L165-L171] |
 | I3 | G0 | Run V4; compare `calculate_drag_force` with independent density, area and speed conversion | Relative error at most `5e-7` (N/N) and `1e-12` (lbf/lbf), absolute tolerance 0 | PASS. [tests/structural/parachute/test_documented_synthetic_canopy_drag.py:L66-L100] |
-| L1 | G1 | Run the full module test command in section 4 and enumerate all statuses | 177 cases accounted for, 0 failures, 170 passes; 7 absent-program cases explicitly NOT_RUN, never counted as CAD passes | Python PASS; CAD NOT_RUN. [tests/structural/parachute/test_freecad_frame_builder.py:L15-L24] |
+| L1 | G1 | Run the full module test command in section 4 with `PYTHONUTF8=1` and enumerate all statuses | 177 cases accounted for, 0 failures, 170 passes in UTF-8 mode; 7 absent-program cases explicitly NOT_RUN, never counted as CAD passes | Python PASS with the UTF-8 precondition; five viewer cases fail under the reviewed cp1252 default (SF76), so this is not a locale-independent pass; CAD NOT_RUN. [tests/structural/parachute/test_freecad_frame_builder.py:L15-L24] |
 | L2 | G1 | Run `TestFrameToJson` in `tests/structural/parachute/test_frame_viewer_3d.py` | 15 node, 16 member, 15 connection records; 0 count mismatches | PASS. [tests/structural/parachute/test_frame_viewer_3d.py:L33-L43] |
 | H1 | G2 | Run V1; compare `solve_frame` displacement with the independent cantilever formula | Relative displacement error below 0.1% (in/in) | PASS. [tests/structural/parachute/test_frame_solver.py:L96-L114] |
 | H2 | G2 | Run `TestCantileverBeam.test_fixed_end_reaction` and `.test_fixed_end_moment` in the section-4 solver test file | Reaction error below 0.1% (lbf/lbf); moment magnitude error below 1.0% (in-lbf/in-lbf) | PASS. [tests/structural/parachute/test_frame_solver.py:L116-L154] |
 | H3 | G2 | Run V2; compare `tube_section_properties` area with annular closed form | Absolute error below 0.001 in² | PASS. [tests/structural/parachute/test_frame_model.py:L46-L50] |
-| H4 | G2 | Run `TestAeroLift.test_lift_at_200mph` and `TestTireTraction.test_traction_basic` in the section-4 assessment test file | Lift error below 1.0 lbf; friction-capacity error below 0.1 lbf | PASS arithmetic; empirical applicability not established. [tests/structural/parachute/test_chute_assessment.py:L70-L73] [tests/structural/parachute/test_chute_assessment.py:L90-L97] |
+| H4 | G2 for traction only; lift regression | Run `TestAeroLift.test_lift_at_200mph` and `TestTireTraction.test_traction_basic` in the section-4 assessment test file | Lift regression difference below 1.0 lbf; independent friction-capacity error below 0.1 lbf | PASS traction arithmetic (G2); lift expectation reuses production `mph_to_fps` with a 1.0 lbf tolerance and receives no G2 credit; empirical applicability not established. [tests/structural/parachute/test_chute_assessment.py:L70-L73] [tests/structural/parachute/test_chute_assessment.py:L90-L97] |
 | E1 | G5 | Run `TestExportResultsYaml.test_yaml_has_required_keys` and R2 | 3 load-case records; governing ID equal; force round-trip error below 1.0 lbf | PASS; exported content omits traction/history. [tests/structural/parachute/test_chute_assessment.py:L154-L166] [src/digitalmodel/structural/parachute/chute_assessment.py:L296-L321] |
-| E2 | G5 | Audit the two module-run logs: parse PASSED/SKIPPED node records; compare status dictionaries; attach the code pin, input digests and run counts to the QA evidence | 177 unique node records per run; 0 status differences; 0 unaccounted cases; 2 run records (counts) | Preparation evidence retained; a production QA appendix generator remains #3309. [src/digitalmodel/structural/parachute/chute_assessment.py:L296-L321] |
+| E2 | G5 | Audit two retained module-run records with node-status lists, input digests and the code pin | Intended criterion: 177 unique nodes per run, 0 status differences and 0 unaccounted cases | NOT_RUN for a reproducible historical evidence audit: the two preparation records and their digests are not shipped. Current test counts do not replace that missing evidence; a production QA appendix generator remains #3309. [src/digitalmodel/structural/parachute/chute_assessment.py:L296-L321] |
 
 ## 6. Known failure modes and pitfalls
 
-sweep: 75 found
+sweep: 77 found
 
 The following inspection register includes silent fallbacks, unit assumptions and intentional initializations, not a claim that every match is a confirmed defect; code locations identify the symptom at the code pin, with unresolved causes grouped into issue drafts.
 
@@ -210,6 +210,16 @@ rg -n 'else 0|else 0\.0|return null|if \(!|\|\||max\(|min\(|rho|psi|inch|slug|ft
 | SF73 | Missing member labels use a generated label. [src/digitalmodel/structural/parachute/frame_solver.py:L214-L217] | no detection check exists for label provenance | #3309 |
 | SF74 | Missing result labels use a generated label. [src/digitalmodel/structural/parachute/member_check.py:L197-L200] | no detection check exists for label provenance | #3309 |
 | SF75 | CAD document name uses an identifying preset; the name supplies no geometry validation. [src/digitalmodel/structural/parachute/freecad_frame_builder.py:L137-L143] | no detection check exists for name codenaming | issue pending (5) |
+| SF76 | The viewer calls `write_text(html)` without an encoding; a cp1252 default raises `UnicodeEncodeError` for template characters. [src/digitalmodel/structural/parachute/frame_viewer_3d.py:L124-L138] | L1 runs all five viewer cases below in UTF-8 mode; no detection check exists for a non-UTF-8 locale matrix. The reviewed cp1252 run fails all five. | issue pending (1); use `write_text(html, encoding="utf-8")` and explicit UTF-8 test reads |
+| SF77 | The full Cx-scaled drag is multiplied by a monotone inflation ramp; Cx is held for the whole history, with no opening-shock overshoot or steady-state recovery to 1.0. For Cx>1, post-inflation drag/deceleration at a given speed are overstated relative to steady drag, biasing impulse and speed decay. Peak force, impulse and speed history lack physical qualification. [src/digitalmodel/structural/parachute/chute_assessment.py:L232-L242] [docs/domains/structural/parachute/parachute-aerodynamics.md:L19-L19] [docs/domains/structural/parachute/parachute-aerodynamics.md:L49-L51] | R3 checks monotonic speed only; no detection check exists for peak-to-steady Cx recovery or independent impulse/speed history. | U1/U3; issue pending (3) |
+
+SF76 affects these five L1 nodes (all in `tests/structural/parachute/test_frame_viewer_3d.py`):
+
+- `tests/structural/parachute/test_frame_viewer_3d.py::TestGenerateViewerHtml::test_creates_file`
+- `tests/structural/parachute/test_frame_viewer_3d.py::TestGenerateViewerHtml::test_contains_three_js`
+- `tests/structural/parachute/test_frame_viewer_3d.py::TestGenerateViewerHtml::test_contains_frame_data`
+- `tests/structural/parachute/test_frame_viewer_3d.py::TestGenerateViewerHtml::test_contains_html_structure`
+- `tests/structural/parachute/test_frame_viewer_3d.py::TestGenerateViewerHtml::test_contains_toggle_controls`
 
 The sweep found no cache-writing path or error-path empty-dictionary return; empty containers in the history and stiffness routines are initialized and then populated, while the empty member-input outcome is listed above. [src/digitalmodel/structural/parachute/chute_assessment.py:L220-L267] [src/digitalmodel/structural/parachute/frame_solver.py:L140-L230] [src/digitalmodel/structural/parachute/member_check.py:L177-L209]
 
@@ -224,6 +234,7 @@ Additional published issue leads read during preparation: #1703, “Cross-tool s
 | Date | Change reference | Lesson | Evidence | Pack change | Shared entry |
 | --- | --- | --- | --- | --- | --- |
 | 2026-11-07 | Initial pack | Independent closed forms check arithmetic; a source-qualified physical basis remains separate | [tests/structural/parachute/test_documented_synthetic_canopy_drag.py:L66-L100] | Sections 3–6 distinguish arithmetic, regression and empirical gaps | Pending maintainer registration; issue pending (3) |
+| 2026-11-07 | Pack revision 1 | A successful UTF-8 run and monotone speed history do not establish locale portability or peak-to-steady force validity | [src/digitalmodel/structural/parachute/frame_viewer_3d.py:L137-L137] [src/digitalmodel/structural/parachute/chute_assessment.py:L232-L242] | Require an encoding check for text writes and a peak/steady check for transient multipliers; SF76/SF77 record the gaps | issue pending (1); issue pending (3) |
 
 ## 8. Ownership
 
@@ -235,149 +246,149 @@ Package dependencies visible in code are the Python standard library, PyYAML for
 
 Assessment exports load-case YAML for downstream structural work; CAD exports and viewer HTML are separate outputs, and no external structural solver is launched by the frame solve. [src/digitalmodel/structural/parachute/chute_assessment.py:L296-L321] [src/digitalmodel/structural/parachute/freecad_frame_builder.py:L168-L185] [src/digitalmodel/structural/parachute/frame_viewer_3d.py:L124-L138] [src/digitalmodel/structural/parachute/frame_solver.py:L196-L230]
 
-Map source pin: `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`; map data revision: `270c8759c374b67a7f032953e7fcdb14e0224461`. Implementation-map citations in this section resolve at that separate map pin; all other source citations resolve at the header code revision. [docs/registry/implementation-map.yaml:L1-L4]
+Map source pin: `21942e8cfc7dfb985c5bfa693245df7d197cf76c` (the header code revision); map data revision: `270c8759c374b67a7f032953e7fcdb14e0224461`. All implementation-map citations resolve in the shipped tree and at the header code revision; each record range was re-read at this pin. [docs/registry/implementation-map.yaml:L1-L4]
 
-The package has one map family, `wind-and-current-force-routes`: five in-package rows, ranked first, with all 135 family rows inventoried below. Each ordinal is its one-based implementation-row position in that family at the map pin; its source range supplies the exact path, symbol and relation without repeating identifying discovery names. [docs/registry/implementation-map.yaml:L15393-L16791]
+The package has one map family, `wind-and-current-force-routes`: five in-package rows, with all 135 family rows inventoried below. It is the only counted family, ranked by its five in-package rows. Each ordinal is its one-based implementation-row position in that family at the map pin; its source range supplies the exact path, symbol and relation without repeating identifying discovery names. [docs/registry/implementation-map.yaml:L15369-L16768]
 
-| Map row | Scope / definition when in package | Map relation | Map record at the separate map pin |
+| Map row | Scope / definition when in package | Map relation | Map record at the header code revision |
 | --- | --- | --- | --- |
-| 1 | Outside package | example | [docs/registry/implementation-map.yaml:L15400-L15409] |
-| 2 | Outside package | example | [docs/registry/implementation-map.yaml:L15410-L15419] |
-| 3 | Outside package | example | [docs/registry/implementation-map.yaml:L15420-L15428] |
-| 4 | Outside package | example | [docs/registry/implementation-map.yaml:L15429-L15438] |
-| 5 | Outside package | example | [docs/registry/implementation-map.yaml:L15439-L15448] |
-| 6 | Outside package | example | [docs/registry/implementation-map.yaml:L15449-L15460] |
-| 7 | Outside package | example | [docs/registry/implementation-map.yaml:L15461-L15470] |
-| 8 | Outside package | example | [docs/registry/implementation-map.yaml:L15471-L15480] |
-| 9 | Outside package | example | [docs/registry/implementation-map.yaml:L15481-L15490] |
-| 10 | Outside package | example | [docs/registry/implementation-map.yaml:L15491-L15500] |
-| 11 | Outside package | example | [docs/registry/implementation-map.yaml:L15501-L15510] |
-| 12 | Outside package | example | [docs/registry/implementation-map.yaml:L15511-L15520] |
-| 13 | Outside package | example | [docs/registry/implementation-map.yaml:L15521-L15530] |
-| 14 | Outside package | example | [docs/registry/implementation-map.yaml:L15531-L15540] |
-| 15 | Outside package | example | [docs/registry/implementation-map.yaml:L15541-L15550] |
-| 16 | Outside package | independent | [docs/registry/implementation-map.yaml:L15551-L15559] |
-| 17 | Outside package | independent | [docs/registry/implementation-map.yaml:L15560-L15568] |
-| 18 | Outside package | independent | [docs/registry/implementation-map.yaml:L15569-L15578] |
-| 19 | Outside package | independent | [docs/registry/implementation-map.yaml:L15579-L15587] |
-| 20 | Outside package | independent | [docs/registry/implementation-map.yaml:L15588-L15597] |
-| 21 | Outside package | independent | [docs/registry/implementation-map.yaml:L15598-L15607] |
-| 22 | Outside package | independent | [docs/registry/implementation-map.yaml:L15608-L15617] |
-| 23 | Outside package | independent | [docs/registry/implementation-map.yaml:L15618-L15629] |
-| 24 | Outside package | independent | [docs/registry/implementation-map.yaml:L15630-L15639] |
-| 25 | Outside package | independent | [docs/registry/implementation-map.yaml:L15640-L15649] |
-| 26 | Outside package | independent | [docs/registry/implementation-map.yaml:L15650-L15659] |
-| 27 | Outside package | independent | [docs/registry/implementation-map.yaml:L15660-L15669] |
-| 28 | Outside package | independent | [docs/registry/implementation-map.yaml:L15670-L15684] |
-| 29 | Outside package | independent | [docs/registry/implementation-map.yaml:L15685-L15693] |
-| 30 | Outside package | independent | [docs/registry/implementation-map.yaml:L15694-L15703] |
-| 31 | Outside package | independent | [docs/registry/implementation-map.yaml:L15704-L15713] |
-| 32 | Outside package | independent | [docs/registry/implementation-map.yaml:L15714-L15723] |
-| 33 | Outside package | independent | [docs/registry/implementation-map.yaml:L15724-L15733] |
-| 34 | Outside package | independent | [docs/registry/implementation-map.yaml:L15734-L15743] |
-| 35 | Outside package | independent | [docs/registry/implementation-map.yaml:L15744-L15753] |
-| 36 | Outside package | independent | [docs/registry/implementation-map.yaml:L15754-L15763] |
-| 37 | Outside package | independent | [docs/registry/implementation-map.yaml:L15764-L15773] |
-| 38 | Outside package | independent | [docs/registry/implementation-map.yaml:L15774-L15783] |
-| 39 | Outside package | independent | [docs/registry/implementation-map.yaml:L15784-L15793] |
-| 40 | Outside package | caller | [docs/registry/implementation-map.yaml:L15794-L15806] |
-| 41 | Outside package | independent | [docs/registry/implementation-map.yaml:L15807-L15816] |
-| 42 | Outside package | independent | [docs/registry/implementation-map.yaml:L15817-L15826] |
-| 43 | Outside package | independent | [docs/registry/implementation-map.yaml:L15827-L15836] |
-| 44 | Outside package | independent | [docs/registry/implementation-map.yaml:L15837-L15846] |
-| 45 | Outside package | independent | [docs/registry/implementation-map.yaml:L15847-L15856] |
-| 46 | Outside package | independent | [docs/registry/implementation-map.yaml:L15857-L15866] |
-| 47 | Outside package | independent | [docs/registry/implementation-map.yaml:L15867-L15876] |
-| 48 | Outside package | independent | [docs/registry/implementation-map.yaml:L15877-L15886] |
-| 49 | Outside package | independent | [docs/registry/implementation-map.yaml:L15887-L15896] |
-| 50 | Outside package | independent | [docs/registry/implementation-map.yaml:L15897-L15906] |
-| 51 | Outside package | independent | [docs/registry/implementation-map.yaml:L15907-L15916] |
-| 52 | Outside package | independent | [docs/registry/implementation-map.yaml:L15917-L15926] |
-| 53 | Outside package | independent | [docs/registry/implementation-map.yaml:L15927-L15936] |
-| 54 | Outside package | independent | [docs/registry/implementation-map.yaml:L15937-L15946] |
-| 55 | Outside package | independent | [docs/registry/implementation-map.yaml:L15947-L15956] |
-| 56 | Outside package | independent | [docs/registry/implementation-map.yaml:L15957-L15965] |
-| 57 | Outside package | copy | [docs/registry/implementation-map.yaml:L15966-L15975] |
-| 58 | Outside package | copy | [docs/registry/implementation-map.yaml:L15976-L15987] |
-| 59 | Outside package | copy | [docs/registry/implementation-map.yaml:L15988-L15997] |
-| 60 | Outside package | copy | [docs/registry/implementation-map.yaml:L15998-L16009] |
-| 61 | Outside package | copy | [docs/registry/implementation-map.yaml:L16010-L16019] |
-| 62 | Outside package | independent | [docs/registry/implementation-map.yaml:L16020-L16029] |
-| 63 | Outside package | copy | [docs/registry/implementation-map.yaml:L16030-L16039] |
-| 64 | Outside package | copy | [docs/registry/implementation-map.yaml:L16040-L16049] |
-| 65 | Outside package | copy | [docs/registry/implementation-map.yaml:L16050-L16059] |
-| 66 | Outside package | copy | [docs/registry/implementation-map.yaml:L16060-L16074] |
-| 67 | Outside package | independent | [docs/registry/implementation-map.yaml:L16075-L16083] |
-| 68 | Outside package | independent | [docs/registry/implementation-map.yaml:L16084-L16093] |
-| 69 | Outside package | independent | [docs/registry/implementation-map.yaml:L16094-L16103] |
-| 70 | Outside package | independent | [docs/registry/implementation-map.yaml:L16104-L16113] |
-| 71 | Outside package | independent | [docs/registry/implementation-map.yaml:L16114-L16126] |
-| 72 | Outside package | copy | [docs/registry/implementation-map.yaml:L16127-L16136] |
-| 73 | Outside package | copy | [docs/registry/implementation-map.yaml:L16137-L16146] |
-| 74 | Outside package | copy | [docs/registry/implementation-map.yaml:L16147-L16156] |
-| 75 | Outside package | independent | [docs/registry/implementation-map.yaml:L16157-L16168] |
-| 76 | Outside package | independent | [docs/registry/implementation-map.yaml:L16169-L16178] |
-| 77 | Outside package | independent | [docs/registry/implementation-map.yaml:L16179-L16188] |
-| 78 | Outside package | independent | [docs/registry/implementation-map.yaml:L16189-L16198] |
-| 79 | Outside package | independent | [docs/registry/implementation-map.yaml:L16199-L16208] |
-| 80 | Outside package | independent | [docs/registry/implementation-map.yaml:L16209-L16218] |
-| 81 | Outside package | independent | [docs/registry/implementation-map.yaml:L16219-L16228] |
-| 82 | Outside package | independent | [docs/registry/implementation-map.yaml:L16229-L16238] |
-| 83 | Outside package | independent | [docs/registry/implementation-map.yaml:L16239-L16248] |
-| 84 | Outside package | independent | [docs/registry/implementation-map.yaml:L16249-L16258] |
-| 85 | Outside package | independent | [docs/registry/implementation-map.yaml:L16259-L16268] |
-| 86 | calculate_dual_chute_drag | independent | [docs/registry/implementation-map.yaml:L16269-L16280] |
-| 87 | assess_all_load_cases | caller | [docs/registry/implementation-map.yaml:L16281-L16293] |
-| 88 | simulate_deployment_transient | independent | [docs/registry/implementation-map.yaml:L16294-L16304] |
-| 89 | export_results_yaml | independent | [docs/registry/implementation-map.yaml:L16305-L16314] |
-| 90 | calculate_drag_force | independent | [docs/registry/implementation-map.yaml:L16315-L16324] |
-| 91 | Outside package | independent | [docs/registry/implementation-map.yaml:L16325-L16334] |
-| 92 | Outside package | independent | [docs/registry/implementation-map.yaml:L16335-L16344] |
-| 93 | Outside package | independent | [docs/registry/implementation-map.yaml:L16345-L16354] |
-| 94 | Outside package | independent | [docs/registry/implementation-map.yaml:L16355-L16364] |
-| 95 | Outside package | independent | [docs/registry/implementation-map.yaml:L16365-L16374] |
-| 96 | Outside package | independent | [docs/registry/implementation-map.yaml:L16375-L16384] |
-| 97 | Outside package | caller | [docs/registry/implementation-map.yaml:L16385-L16396] |
-| 98 | Outside package | caller | [docs/registry/implementation-map.yaml:L16397-L16408] |
-| 99 | Outside package | independent | [docs/registry/implementation-map.yaml:L16409-L16418] |
-| 100 | Outside package | independent | [docs/registry/implementation-map.yaml:L16419-L16428] |
-| 101 | Outside package | independent | [docs/registry/implementation-map.yaml:L16429-L16438] |
-| 102 | Outside package | independent | [docs/registry/implementation-map.yaml:L16439-L16448] |
-| 103 | Outside package | independent | [docs/registry/implementation-map.yaml:L16449-L16458] |
-| 104 | Outside package | independent | [docs/registry/implementation-map.yaml:L16459-L16468] |
-| 105 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16469-L16477] |
-| 106 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16478-L16487] |
-| 107 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16488-L16497] |
-| 108 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16498-L16507] |
-| 109 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16508-L16517] |
-| 110 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16518-L16528] |
-| 111 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16529-L16538] |
-| 112 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16539-L16549] |
-| 113 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16550-L16559] |
-| 114 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16560-L16569] |
-| 115 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16570-L16579] |
-| 116 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16580-L16589] |
-| 117 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16590-L16600] |
-| 118 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16601-L16611] |
-| 119 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16612-L16622] |
-| 120 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16623-L16633] |
-| 121 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16634-L16644] |
-| 122 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16645-L16655] |
-| 123 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16656-L16665] |
-| 124 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16666-L16675] |
-| 125 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16676-L16685] |
-| 126 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16686-L16695] |
-| 127 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16696-L16705] |
-| 128 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16706-L16715] |
-| 129 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16716-L16725] |
-| 130 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16726-L16735] |
-| 131 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16736-L16747] |
-| 132 | Outside package | independent | [docs/registry/implementation-map.yaml:L16748-L16758] |
-| 133 | Outside package | independent | [docs/registry/implementation-map.yaml:L16759-L16769] |
-| 134 | Outside package | independent | [docs/registry/implementation-map.yaml:L16770-L16781] |
-| 135 | Outside package | independent | [docs/registry/implementation-map.yaml:L16782-L16791] |
+| 1 | Outside package | example | [docs/registry/implementation-map.yaml:L15376-L15385] |
+| 2 | Outside package | example | [docs/registry/implementation-map.yaml:L15386-L15395] |
+| 3 | Outside package | example | [docs/registry/implementation-map.yaml:L15396-L15404] |
+| 4 | Outside package | example | [docs/registry/implementation-map.yaml:L15405-L15414] |
+| 5 | Outside package | example | [docs/registry/implementation-map.yaml:L15415-L15424] |
+| 6 | Outside package | example | [docs/registry/implementation-map.yaml:L15425-L15436] |
+| 7 | Outside package | example | [docs/registry/implementation-map.yaml:L15437-L15446] |
+| 8 | Outside package | example | [docs/registry/implementation-map.yaml:L15447-L15456] |
+| 9 | Outside package | example | [docs/registry/implementation-map.yaml:L15457-L15466] |
+| 10 | Outside package | example | [docs/registry/implementation-map.yaml:L15467-L15476] |
+| 11 | Outside package | example | [docs/registry/implementation-map.yaml:L15477-L15486] |
+| 12 | Outside package | example | [docs/registry/implementation-map.yaml:L15487-L15496] |
+| 13 | Outside package | example | [docs/registry/implementation-map.yaml:L15497-L15506] |
+| 14 | Outside package | example | [docs/registry/implementation-map.yaml:L15507-L15516] |
+| 15 | Outside package | example | [docs/registry/implementation-map.yaml:L15517-L15526] |
+| 16 | Outside package | independent | [docs/registry/implementation-map.yaml:L15527-L15535] |
+| 17 | Outside package | independent | [docs/registry/implementation-map.yaml:L15536-L15544] |
+| 18 | Outside package | independent | [docs/registry/implementation-map.yaml:L15545-L15554] |
+| 19 | Outside package | independent | [docs/registry/implementation-map.yaml:L15555-L15563] |
+| 20 | Outside package | independent | [docs/registry/implementation-map.yaml:L15564-L15573] |
+| 21 | Outside package | independent | [docs/registry/implementation-map.yaml:L15574-L15583] |
+| 22 | Outside package | independent | [docs/registry/implementation-map.yaml:L15584-L15593] |
+| 23 | Outside package | independent | [docs/registry/implementation-map.yaml:L15594-L15605] |
+| 24 | Outside package | independent | [docs/registry/implementation-map.yaml:L15606-L15615] |
+| 25 | Outside package | independent | [docs/registry/implementation-map.yaml:L15616-L15625] |
+| 26 | Outside package | independent | [docs/registry/implementation-map.yaml:L15626-L15635] |
+| 27 | Outside package | independent | [docs/registry/implementation-map.yaml:L15636-L15645] |
+| 28 | Outside package | independent | [docs/registry/implementation-map.yaml:L15646-L15660] |
+| 29 | Outside package | independent | [docs/registry/implementation-map.yaml:L15661-L15669] |
+| 30 | Outside package | independent | [docs/registry/implementation-map.yaml:L15670-L15679] |
+| 31 | Outside package | independent | [docs/registry/implementation-map.yaml:L15680-L15689] |
+| 32 | Outside package | independent | [docs/registry/implementation-map.yaml:L15690-L15699] |
+| 33 | Outside package | independent | [docs/registry/implementation-map.yaml:L15700-L15709] |
+| 34 | Outside package | independent | [docs/registry/implementation-map.yaml:L15710-L15719] |
+| 35 | Outside package | independent | [docs/registry/implementation-map.yaml:L15720-L15729] |
+| 36 | Outside package | independent | [docs/registry/implementation-map.yaml:L15730-L15739] |
+| 37 | Outside package | independent | [docs/registry/implementation-map.yaml:L15740-L15749] |
+| 38 | Outside package | independent | [docs/registry/implementation-map.yaml:L15750-L15759] |
+| 39 | Outside package | independent | [docs/registry/implementation-map.yaml:L15760-L15769] |
+| 40 | Outside package | caller | [docs/registry/implementation-map.yaml:L15770-L15782] |
+| 41 | Outside package | independent | [docs/registry/implementation-map.yaml:L15783-L15792] |
+| 42 | Outside package | independent | [docs/registry/implementation-map.yaml:L15793-L15802] |
+| 43 | Outside package | independent | [docs/registry/implementation-map.yaml:L15803-L15812] |
+| 44 | Outside package | independent | [docs/registry/implementation-map.yaml:L15813-L15822] |
+| 45 | Outside package | independent | [docs/registry/implementation-map.yaml:L15823-L15832] |
+| 46 | Outside package | independent | [docs/registry/implementation-map.yaml:L15833-L15842] |
+| 47 | Outside package | independent | [docs/registry/implementation-map.yaml:L15843-L15852] |
+| 48 | Outside package | independent | [docs/registry/implementation-map.yaml:L15853-L15862] |
+| 49 | Outside package | independent | [docs/registry/implementation-map.yaml:L15863-L15872] |
+| 50 | Outside package | independent | [docs/registry/implementation-map.yaml:L15873-L15882] |
+| 51 | Outside package | independent | [docs/registry/implementation-map.yaml:L15883-L15892] |
+| 52 | Outside package | independent | [docs/registry/implementation-map.yaml:L15893-L15902] |
+| 53 | Outside package | independent | [docs/registry/implementation-map.yaml:L15903-L15912] |
+| 54 | Outside package | independent | [docs/registry/implementation-map.yaml:L15913-L15922] |
+| 55 | Outside package | independent | [docs/registry/implementation-map.yaml:L15923-L15932] |
+| 56 | Outside package | independent | [docs/registry/implementation-map.yaml:L15933-L15941] |
+| 57 | Outside package | copy | [docs/registry/implementation-map.yaml:L15942-L15951] |
+| 58 | Outside package | copy | [docs/registry/implementation-map.yaml:L15952-L15963] |
+| 59 | Outside package | copy | [docs/registry/implementation-map.yaml:L15964-L15973] |
+| 60 | Outside package | copy | [docs/registry/implementation-map.yaml:L15974-L15985] |
+| 61 | Outside package | copy | [docs/registry/implementation-map.yaml:L15986-L15995] |
+| 62 | Outside package | independent | [docs/registry/implementation-map.yaml:L15996-L16005] |
+| 63 | Outside package | copy | [docs/registry/implementation-map.yaml:L16006-L16015] |
+| 64 | Outside package | copy | [docs/registry/implementation-map.yaml:L16016-L16025] |
+| 65 | Outside package | copy | [docs/registry/implementation-map.yaml:L16026-L16035] |
+| 66 | Outside package | copy | [docs/registry/implementation-map.yaml:L16036-L16050] |
+| 67 | Outside package | independent | [docs/registry/implementation-map.yaml:L16051-L16059] |
+| 68 | Outside package | independent | [docs/registry/implementation-map.yaml:L16060-L16069] |
+| 69 | Outside package | independent | [docs/registry/implementation-map.yaml:L16070-L16079] |
+| 70 | Outside package | independent | [docs/registry/implementation-map.yaml:L16080-L16089] |
+| 71 | Outside package | independent | [docs/registry/implementation-map.yaml:L16090-L16102] |
+| 72 | Outside package | copy | [docs/registry/implementation-map.yaml:L16103-L16112] |
+| 73 | Outside package | copy | [docs/registry/implementation-map.yaml:L16113-L16122] |
+| 74 | Outside package | copy | [docs/registry/implementation-map.yaml:L16123-L16132] |
+| 75 | Outside package | independent | [docs/registry/implementation-map.yaml:L16133-L16145] |
+| 76 | Outside package | independent | [docs/registry/implementation-map.yaml:L16146-L16155] |
+| 77 | Outside package | independent | [docs/registry/implementation-map.yaml:L16156-L16165] |
+| 78 | Outside package | independent | [docs/registry/implementation-map.yaml:L16166-L16175] |
+| 79 | Outside package | independent | [docs/registry/implementation-map.yaml:L16176-L16185] |
+| 80 | Outside package | independent | [docs/registry/implementation-map.yaml:L16186-L16195] |
+| 81 | Outside package | independent | [docs/registry/implementation-map.yaml:L16196-L16205] |
+| 82 | Outside package | independent | [docs/registry/implementation-map.yaml:L16206-L16215] |
+| 83 | Outside package | independent | [docs/registry/implementation-map.yaml:L16216-L16225] |
+| 84 | Outside package | independent | [docs/registry/implementation-map.yaml:L16226-L16235] |
+| 85 | Outside package | independent | [docs/registry/implementation-map.yaml:L16236-L16245] |
+| 86 | calculate_dual_chute_drag | independent | [docs/registry/implementation-map.yaml:L16246-L16257] |
+| 87 | assess_all_load_cases | caller | [docs/registry/implementation-map.yaml:L16258-L16270] |
+| 88 | simulate_deployment_transient | independent | [docs/registry/implementation-map.yaml:L16271-L16281] |
+| 89 | export_results_yaml | independent | [docs/registry/implementation-map.yaml:L16282-L16291] |
+| 90 | calculate_drag_force | independent | [docs/registry/implementation-map.yaml:L16292-L16301] |
+| 91 | Outside package | independent | [docs/registry/implementation-map.yaml:L16302-L16311] |
+| 92 | Outside package | independent | [docs/registry/implementation-map.yaml:L16312-L16321] |
+| 93 | Outside package | independent | [docs/registry/implementation-map.yaml:L16322-L16331] |
+| 94 | Outside package | independent | [docs/registry/implementation-map.yaml:L16332-L16341] |
+| 95 | Outside package | independent | [docs/registry/implementation-map.yaml:L16342-L16351] |
+| 96 | Outside package | independent | [docs/registry/implementation-map.yaml:L16352-L16361] |
+| 97 | Outside package | caller | [docs/registry/implementation-map.yaml:L16362-L16373] |
+| 98 | Outside package | caller | [docs/registry/implementation-map.yaml:L16374-L16385] |
+| 99 | Outside package | independent | [docs/registry/implementation-map.yaml:L16386-L16395] |
+| 100 | Outside package | independent | [docs/registry/implementation-map.yaml:L16396-L16405] |
+| 101 | Outside package | independent | [docs/registry/implementation-map.yaml:L16406-L16415] |
+| 102 | Outside package | independent | [docs/registry/implementation-map.yaml:L16416-L16425] |
+| 103 | Outside package | independent | [docs/registry/implementation-map.yaml:L16426-L16435] |
+| 104 | Outside package | independent | [docs/registry/implementation-map.yaml:L16436-L16445] |
+| 105 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16446-L16454] |
+| 106 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16455-L16464] |
+| 107 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16465-L16474] |
+| 108 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16475-L16484] |
+| 109 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16485-L16494] |
+| 110 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16495-L16505] |
+| 111 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16506-L16515] |
+| 112 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16516-L16526] |
+| 113 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16527-L16536] |
+| 114 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16537-L16546] |
+| 115 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16547-L16556] |
+| 116 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16557-L16566] |
+| 117 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16567-L16577] |
+| 118 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16578-L16588] |
+| 119 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16589-L16599] |
+| 120 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16600-L16610] |
+| 121 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16611-L16621] |
+| 122 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16622-L16632] |
+| 123 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16633-L16642] |
+| 124 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16643-L16652] |
+| 125 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16653-L16662] |
+| 126 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16663-L16672] |
+| 127 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16673-L16682] |
+| 128 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16683-L16692] |
+| 129 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16693-L16702] |
+| 130 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16703-L16712] |
+| 131 | Outside package | test_helper | [docs/registry/implementation-map.yaml:L16713-L16724] |
+| 132 | Outside package | independent | [docs/registry/implementation-map.yaml:L16725-L16735] |
+| 133 | Outside package | independent | [docs/registry/implementation-map.yaml:L16736-L16746] |
+| 134 | Outside package | independent | [docs/registry/implementation-map.yaml:L16747-L16758] |
+| 135 | Outside package | independent | [docs/registry/implementation-map.yaml:L16759-L16768] |
 
-Exact package grep, using Python `re`, case-sensitive and line by line, retains all three signals because none matches `structural/parachute` under case-insensitive matching; hits are assigned to their enclosing definition, with module statements grouped together. [docs/registry/implementation-map.yaml:L15393-L15399]
+Exact package grep, using Python `re`, case-sensitive and line by line, retains all three signals because none matches `structural/parachute` under case-insensitive matching; hits are assigned to their enclosing definition, with module statements grouped together. [docs/registry/implementation-map.yaml:L15369-L15375]
 
 ```python
 re.search('(?:0\\.5|1\\s*/\\s*2).*(?:rho|density).*(?:cd|drag|area)|(?:wind|current|drag|lift)_forces?|calculate_(?:wind|current)|OCIMF|current_profile|wind_height_coefficient', line)
@@ -418,7 +429,7 @@ Coverage record: all 11 package Python files, the package worked-example documen
 | `test_member_check.py` | 16 | 16 | 0 | [tests/structural/parachute/test_member_check.py:L30-L168] |
 | `test_parachute_drag.py` | 23 | 23 | 0 | [tests/structural/parachute/test_parachute_drag.py:L32-L305] |
 | `test_stroud_sizing.py` | 8 | 8 | 0 | [tests/structural/parachute/test_stroud_sizing.py:L12-L64] |
-| Total | 177 | 170 | 7 | The stored run records resolve each collected node to its recorded result. |
+| Total | 177 | 170 | 7 | Counts reproduced with the section-4 UTF-8 command; five viewer cases depend on UTF-8 mode (SF76). Historical node-status records are not shipped (E2). |
 
 Package files read: `__init__.py`, `chute_assessment.py`, `parachute_drag.py`, `stroud_sizing.py`, `frame_model.py`, `frame_solver.py`, `member_check.py`, `frame_geometry_3d.py`, `freecad_frame_builder.py`, `generate_frame_cad.py`, `frame_viewer_3d.py`; their methods and pitfalls are located in sections 2, 3, 6 and 9. [src/digitalmodel/structural/parachute/__init__.py:L1-L21] [src/digitalmodel/structural/parachute/generate_frame_cad.py:L20-L56] [src/digitalmodel/structural/parachute/frame_viewer_3d.py:L403-L420]
 
@@ -428,12 +439,14 @@ The calculation-citation contract was readable, but the numerical outputs here c
 
 | Open item | Responsible role | Tracking and closure evidence |
 | --- | --- | --- |
-| Invalid inputs and silent zero/lookup outcomes, including signed-stress and missing-load-node behavior | Calculation maintainer | issue pending (1); add finite/domain and missing-data tests for section-6 branches |
+| Invalid inputs and silent zero/lookup outcomes, including signed-stress, missing-load-node behavior and locale-dependent viewer writes (SF76) | Calculation maintainer | issue pending (1); add finite/domain and missing-data tests for section-6 branches; use explicit UTF-8 viewer writes/reads and check the five viewer cases under a non-UTF-8 default |
 | U2: CAD unit scaling, bend fallbacks, renderer curve fidelity and seven unavailable CAD test cases | CAD maintainer | issue pending (2); round-trip measured dimensions, forced-fallback checks and all seven CAD tests passing |
-| U1: empirical coefficients, sizing rules and preset physical applicability; U3: source editions, material discrepancy, allowable basis and missing Citation sidecars | Calculation maintainer | issue pending (3); authoritative sources, applicable clauses and independent physical/transient sensitivity checks |
+| U1: empirical coefficients, sizing rules and preset physical applicability; U3: source editions, material discrepancy, allowable basis and missing Citation sidecars | Calculation maintainer | issue pending (3); authoritative sources, applicable clauses and independent physical/transient sensitivity checks, including Cx peak-to-steady recovery and impulse/speed-history benchmarks (SF77) |
 | Implementation-map follow-up for lift and the uncovered method families listed in section 9; repository-wide discovery candidates need classification | Map maintainer | issue pending (4); revise the map before counting the new families |
 | Identifying discovery material, preset design-basis provenance and private-sidecar separation | Documentation maintainer | issue pending (5); codename discovery material; sidecar entry: to be created; no private values included here |
 | Full module worked example, independent frame/load integration and complete generated QA appendix | Calculation maintainer | #3309; independent integrated evidence beyond the bounded arithmetic examples |
 | Wider deployment and cross-tool comparison | Structural maintainer | #1677 and #1703; independent time histories and comparison evidence rather than scalar opening-factor agreement |
+
+The five numbered issue drafts are retained beside the pack in [ISSUES_DRAFT.md](ISSUES_DRAFT.md); their numbers are local draft references, not published issue numbers. Publication and replacement of the markers remain pending.
 
 No second-provider clearance is recorded by this draft; the required next action is independent citation, gate, example and silent-failure review under AQG r0 section 11.
