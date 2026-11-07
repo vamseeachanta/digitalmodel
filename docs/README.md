@@ -63,6 +63,12 @@ Raw inventory surfaces are discovery aids only. Broad generated indexes, histori
 reports, logs, cached outputs, and large extracted inventories can help locate
 candidate files, but they do not replace the curated routing surfaces above.
 
+## Module analyses
+
+The [hull library interface and synthetic panel analysis](reports/modules/hull_library/README.md)
+maps public exports and checks uniform and independent-axis scaling against
+Cartesian hand calculations. Broader physical qualification remains open.
+
 ## Knowledge pack review evidence
 
 Use the [Python source locator convention](standards/python-source-locators.md)

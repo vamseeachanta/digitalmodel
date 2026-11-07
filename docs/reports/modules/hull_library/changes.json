@@ -1,0 +1,11 @@
+{
+  "report": "hull-library-panel-scaling",
+  "revision": "03",
+  "date": "2026-11-06",
+  "issue": "3317",
+  "changes": [
+    "Rejected unrelated checkout destinations and linked output targets before calculation or writing to preserve existing evidence.",
+    "Made inherited Git regression skips fail and identified absent documented-command tools before launch.",
+    "Declared the two mesh-validator findings untracked pending #3317 so their tracking status is explicit."
+  ]
+}
