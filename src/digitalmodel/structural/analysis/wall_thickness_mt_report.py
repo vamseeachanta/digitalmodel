@@ -209,7 +209,10 @@ class WorkingPressure:
 
 
 DEFAULT_WORKING_PRESSURES = tuple(WorkingPressure(p) for p in (0.0, 10.0, 20.0))
-PRESSURE_SWEEP_LIMITATION = F101_SCREENING_LABEL
+PRESSURE_SWEEP_LIMITATION = (
+    "Pressure-sweep envelopes use the report's screening model; "
+    "reconciliation with code strategies remains pending"
+)
 
 
 def _validate_working_pressures(working_pressures):
@@ -771,11 +774,8 @@ def _pressure_sweep_manifest(sensitivity: List[Dict], code: DesignCode, pe: floa
     nominal wall for every route; it does not describe the strategy checks.
     """
     rows = []
-    limitations = [PRESSURE_SWEEP_LIMITATION]
-    if code == DesignCode.DNV_ST_F101:
-        limitation = _f101_combined_form_label()
-        if limitation:
-            limitations.append(limitation)
+    # F101 evidence labels belong to the three chart notices, independently of
+    # this route-neutral sweep limitation. Point rows carry curve inputs only.
     for case_index, case in enumerate(sensitivity):
         for condition_index, (condition, (tensions, moments)) in enumerate(
             case["envelopes"].items()
@@ -795,14 +795,12 @@ def _pressure_sweep_manifest(sensitivity: List[Dict], code: DesignCode, pe: floa
                     "basis": case["basis"],
                     "external_pressure_mpa": pe / 1e6,
                     "wall_basis": "nominal wall (screening)",
-                    "source": PRESSURE_SWEEP_LIMITATION,
                     "tension_kn": tension / 1e3,
                     "moment_knm": moment / 1e3,
                 })
     return {
         "schema_version": 1,
-        "limitation": PRESSURE_SWEEP_LIMITATION,
-        "limitations": limitations,
+        "limitations": [PRESSURE_SWEEP_LIMITATION],
         "working_pressures": [
             {"pressure_mpa": c["pi_MPa"], "basis": c["basis"]} for c in sensitivity
         ],

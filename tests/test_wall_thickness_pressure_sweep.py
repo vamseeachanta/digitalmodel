@@ -101,7 +101,7 @@ def test_every_condition_pressure_curve_matches_exports(
             for key, value in trace["meta"].items():
                 assert row[key] == value
             assert row["external_pressure_mpa"] == 1.0
-            assert row["source"] == PRESSURE_SWEEP_LIMITATION
+            assert "source" not in row
     for actual, exported in zip(manifest["rows"], csv_rows):
         assert set(actual) == set(exported)
         for key, value in actual.items():
@@ -111,7 +111,13 @@ def test_every_condition_pressure_curve_matches_exports(
                 assert exported[key] == value
     assert "+50%" not in html
     assert "+100%" not in html
+    assert manifest["limitations"] == [PRESSURE_SWEEP_LIMITATION]
+    assert "limitation" not in manifest
+    assert PRESSURE_SWEEP_LIMITATION != report.F101_SCREENING_LABEL
     assert all(label in html for label in manifest["limitations"])
+    if code != DesignCode.DNV_ST_F101:
+        assert report.F101_SCREENING_LABEL not in html
+        assert report.F101_SIMPLIFIED_FORM_LABEL not in html
     assert "4th Edition" not in html
 
 
@@ -300,14 +306,15 @@ def test_f101_gate_controls_all_charts_and_sweep_manifest(
         working_pressures=[WorkingPressure(5.0)], output_path=str(output),
     )
     manifest = json.loads(output.with_suffix(".pressure-sweep.json").read_text())
-    assert manifest["limitations"].count(report.F101_SCREENING_LABEL) == 1
+    assert manifest["limitations"] == [PRESSURE_SWEEP_LIMITATION]
+    assert report.F101_SCREENING_LABEL not in json.dumps(manifest)
     label = report.F101_SIMPLIFIED_FORM_LABEL
-    assert (label in manifest["limitations"]) == (state != "passed")
+    assert label not in json.dumps(manifest)
     notices = html.split('<p class="f101-envelope-limitation">')[1:]
     assert len(notices) == 3
     for notice in notices:
         paragraph = notice.split("</p>", 1)[0]
         assert paragraph.count(report.F101_SCREENING_LABEL) == 1
         assert paragraph.count(label) == (0 if state == "passed" else 1)
-    # The only other occurrence is in the embedded manifest, not a fourth notice.
-    assert html.count(label) == (0 if state == "passed" else 4)
+    assert html.count(report.F101_SCREENING_LABEL) == 3
+    assert html.count(label) == (0 if state == "passed" else 3)
