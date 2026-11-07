@@ -78,18 +78,18 @@ The package contains configuration, delegation and CSV logic rather than a stand
 The upstream physics documentation names legacy empirical and numerical methods; that documentation is an implementation reference, not an independently checked publication or a licensed-standard qualification. [src/digitalmodel/subsea/mooring_analysis/dynmoor.py:L14-L62]
 UNVERIFIED: Publication editions, validity envelopes and independent benchmark provenance for the delegated empirical methods have not been established; no published-method validation is claimed (issue pending (5)).
 
-## 4. Validated worked examples and regression examples
+## 4. Symmetry checks and regression examples
 
-The independent check below is limited to pairwise force and moment cancellation for the symmetric, equal-line, zero-offset fixture; it does not validate the general catenary or empirical force models. Opposite line vectors cancel and mirrored fairlead moments cancel. [tests/subsea/mooring_analysis/test_dynmoor.py:L82-L95] [tests/subsea/mooring_analysis/test_dynmoor.py:L625-L638]
+Validated magnitude examples: 0; symmetry/sign checks: 1; regression examples: 2. The independent check below is limited to pairwise force and moment cancellation for the symmetric, equal-line, zero-offset fixture; it does not validate the general catenary or empirical force models. Opposite line vectors cancel and mirrored fairlead moments cancel. [tests/subsea/mooring_analysis/test_dynmoor.py:L82-L95] [tests/subsea/mooring_analysis/test_dynmoor.py:L625-L638]
 Legacy-binary goldens and transliterations are retained as regression evidence because their benchmark provenance is described in test comments without a separately qualified dataset revision here. [tests/subsea/mooring_analysis/test_dynmoor.py:L1-L38]
 
 | ID / kind | Source / input | Expected result and tolerance | Existing test node ID | Offline result at code pin |
 |---|---|---|---|---|
-| V1 validated, limited closed form | Pairwise vector cancellation; `CASE_A_TYPE` and `CASE_A_LINES` | Surge and sway 0 lb, absolute tolerance 1e-6 lb; yaw 0 lb-ft, absolute tolerance 1e-4 lb-ft; assertion tolerances from test | `tests/subsea/mooring_analysis/test_dynmoor.py::TestTablesAndStatics::test_symmetric_pattern_equilibrium` | PASS before/after. [tests/subsea/mooring_analysis/test_dynmoor.py:L625-L641] |
+| V1 symmetry/sign check | Pairwise vector cancellation; `CASE_A_TYPE` and `CASE_A_LINES` | Surge and sway 0 lb, absolute tolerance 1e-6 lb; yaw 0 lb-ft, absolute tolerance 1e-4 lb-ft; assertion tolerances from test | `tests/subsea/mooring_analysis/test_dynmoor.py::TestTablesAndStatics::test_symmetric_pattern_equilibrium` | PASS before/after. [tests/subsea/mooring_analysis/test_dynmoor.py:L625-L641] |
 | R1 regression | `_base_config(tmp_path)`, synthetic fixture; legacy-output expectations | Pretension 75.0 kips ±0.05 kips; anchor distance 989.6 ft ±0.06 ft; angle 21.5° ±0.01°; 50 table rows and 2 offset rows | `tests/subsea/mooring_analysis/test_dynmoor_workflow.py::test_router_static_outputs` | PASS before/after. [tests/subsea/mooring_analysis/test_dynmoor_workflow.py:L69-L92] |
 | R2 regression | `_base_config(tmp_path)` plus parallel passing block | 237 samples; peak sway 37.4 kips ±0.5 kips; peak yaw 3400.0 kip-ft ±5.0%; legacy-output rounding basis in test comments | `tests/subsea/mooring_analysis/test_dynmoor_workflow.py::test_router_passing_ship` | PASS before/after. [tests/subsea/mooring_analysis/test_dynmoor_workflow.py:L95-L125] |
 
-Run record: both test files, 40 collected, 36 passed, 0 failed, 4 skipped existing time-domain placeholders, 0 NOT_RUN; before and after use `PYTHONPATH=src uv run --no-sources python -m pytest <both files> -q -rA -p no:cacheprovider --basetemp=<scratch>`, with the repository's unchanged addopts, against the header's code pin and uncommitted documentation changes. Test definitions and the four skip reasons are pinned here. [tests/subsea/mooring_analysis/test_dynmoor_workflow.py:L69-L151] [tests/subsea/mooring_analysis/test_dynmoor.py:L221-L299] [tests/subsea/mooring_analysis/test_dynmoor.py:L531-L820]
+Run record: both test files, 40 collected, 36 passed, 0 failed, 4 skipped existing time-domain placeholders, 0 NOT_RUN; the run at committed documentation revision `2b3acd4d59c27e7b24215e96eadeeac61ac444b0` uses `PYTHONPATH=src uv run --no-project --with pytest python -m pytest <both files> -q -vv -rA -p no:cacheprovider --basetemp=<scratch>`, with declared runtime/test dependencies installed and the repository's unchanged addopts. The test and implementation bytes match the header code pin; the section-10 inventory records all node/status pairs. Test definitions and the four skip reasons are pinned here. [tests/subsea/mooring_analysis/test_dynmoor_workflow.py:L69-L151] [tests/subsea/mooring_analysis/test_dynmoor.py:L221-L299] [tests/subsea/mooring_analysis/test_dynmoor.py:L531-L820]
 
 ## 5. QA gates
 
@@ -105,7 +105,7 @@ Gate applicability follows AQG r0, section 10, Python calculations, and section 
 | G5 | Applicable | C5: recompute SHA-256 of both test input source files at the code pin and preserve their test statuses beside the pin; require 40 recorded cases, 0 missing statuses (count), 0 changed implementation files (count) | Reproducible evidence record; do not treat CSV files alone as a generated QA appendix. [tests/subsea/mooring_analysis/test_dynmoor_workflow.py:L11-L61] [tests/subsea/mooring_analysis/test_dynmoor.py:L82-L108] [src/digitalmodel/dynmoor_mooring/workflow.py:L240-L272] |
 
 Checks defined: G0 1, G1 1, G2 1, G3 0, G4 0, G5 1; R1/R2 are the regression examples reused by C0/C1. C5 is a pack-level evidence check, not an assertion that the workflow generates fingerprints or signed gate records; adding those remains issue pending (3). [src/digitalmodel/dynmoor_mooring/workflow.py:L263-L272]
-Execute C5 by reading both pinned files with `git show`, hashing their bytes, parsing the two pytest logs, comparing sorted node/status pairs, and asserting 36 PASS plus 4 SKIP with zero differences; no solver package is required. [tests/subsea/mooring_analysis/test_dynmoor.py:L803-L820] [tests/subsea/mooring_analysis/test_dynmoor_workflow.py:L1-L151]
+Execute C5 by reading both files with `git show <code-pin>:<test-path>` and comparing their SHA-256 digests with the section-10 reference table. Generate fresh logs with the section-4 command before and after the documentation change; parse its per-node `PASSED`/`SKIPPED` lines, compare sorted node/status pairs against both columns of the section-10 inventory, and require 36 PASS plus 4 SKIP with zero differences. Historical scratch logs are not required; no solver package is required. [tests/subsea/mooring_analysis/test_dynmoor.py:L803-L820] [tests/subsea/mooring_analysis/test_dynmoor_workflow.py:L1-L151]
 
 ## 6. Known failure modes and pitfalls
 
@@ -128,11 +128,11 @@ sweep: 108 found
 | S003 | `settings.get('vessel')` — Missing value/default, optional-block omission or numeric conversion can suppress an intended load or accept nonfinite/truncated input | no detection check exists for this site; issue pending (1) | [src/digitalmodel/dynmoor_mooring/workflow.py:L111-L111] |
 | S004 | `float(vessel.get('draft_ft', 0.0)); vessel.get('draft_ft', 0.0)` — Missing value/default, optional-block omission or numeric conversion can suppress an intended load or accept nonfinite/truncated input | no detection check exists for this site; issue pending (1) | [src/digitalmodel/dynmoor_mooring/workflow.py:L112-L112] |
 | S005 | `table_rows = []` — Benign result accumulator, optional absence or padding; not an error return | C1; intentional control flow | [src/digitalmodel/dynmoor_mooring/workflow.py:L123-L123] |
-| S006 | `table.h[row] / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L132-L132] |
-| S007 | `table.t[row] / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L133-L133] |
-| S008 | `table.p[row] / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L135-L135] |
+| S006 | `table.h[row] / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 checks final horizontal table tension at 500.0 kips | [src/digitalmodel/dynmoor_mooring/workflow.py:L132-L132] |
+| S007 | `table.t[row] / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | R1 checks table row count only; no detection check exists for total-tension conversion magnitude; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L133-L133] |
+| S008 | `table.p[row] / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | R1 checks table row count only; no detection check exists for vertical-anchor-pull conversion magnitude; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L135-L135] |
 | S009 | `line_rows = []` — Benign result accumulator, optional absence or padding; not an error return | C1; intentional control flow | [src/digitalmodel/dynmoor_mooring/workflow.py:L139-L139] |
-| S010 | `sol.pretension_lb / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L146-L146] |
+| S010 | `sol.pretension_lb / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 checks pretension at 75.0 kips ±0.05 kips | [src/digitalmodel/dynmoor_mooring/workflow.py:L146-L146] |
 | S011 | `offset_rows = []` — Benign result accumulator, optional absence or padding; not an error return | C1; intentional control flow | [src/digitalmodel/dynmoor_mooring/workflow.py:L157-L157] |
 | S012 | `settings.get('fenders')` — Missing value/default, optional-block omission or numeric conversion can suppress an intended load or accept nonfinite/truncated input | no detection check exists for this site; issue pending (1) | [src/digitalmodel/dynmoor_mooring/workflow.py:L158-L158] |
 | S013 | `fender_cfg.get('curves', [])` — Missing value/default, optional-block omission or numeric conversion can suppress an intended load or accept nonfinite/truncated input | no detection check exists for this site; issue pending (1) | [src/digitalmodel/dynmoor_mooring/workflow.py:L159-L159] |
@@ -144,20 +144,20 @@ sweep: 108 found
 | S019 | `settings.get('offsets', [])` — Missing value/default, optional-block omission or numeric conversion can suppress an intended load or accept nonfinite/truncated input | no detection check exists for this site; issue pending (1) | [src/digitalmodel/dynmoor_mooring/workflow.py:L169-L169] |
 | S020 | `float(item.get('surge_ft', 0.0)); item.get('surge_ft', 0.0)` — Missing value/default, optional-block omission or numeric conversion can suppress an intended load or accept nonfinite/truncated input | no detection check exists for this site; issue pending (1) | [src/digitalmodel/dynmoor_mooring/workflow.py:L170-L170] |
 | S021 | `float(item.get('sway_ft', 0.0)); item.get('sway_ft', 0.0)` — Missing value/default, optional-block omission or numeric conversion can suppress an intended load or accept nonfinite/truncated input | no detection check exists for this site; issue pending (1) | [src/digitalmodel/dynmoor_mooring/workflow.py:L171-L171] |
-| S022 | `float(item.get('yaw_deg', 0.0)) * math.pi / 180.0; float(item.get('yaw_deg', 0.0)); item.get('yaw_deg', 0.0)` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L172-L172] |
+| S022 | `float(item.get('yaw_deg', 0.0)) * math.pi / 180.0; float(item.get('yaw_deg', 0.0)); item.get('yaw_deg', 0.0)` — Yaw input is in degrees; the dependency receives radians after multiplication by π/180 | R1 exercises nonzero yaw; no detection check exists for the degree-to-radian factor; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L172-L172] |
 | S023 | `float(item.get('yaw_deg', 0.0)); item.get('yaw_deg', 0.0)` — Missing value/default, optional-block omission or numeric conversion can suppress an intended load or accept nonfinite/truncated input | no detection check exists for this site; issue pending (1) | [src/digitalmodel/dynmoor_mooring/workflow.py:L177-L177] |
-| S024 | `result.surge_lb / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L178-L178] |
-| S025 | `result.sway_lb / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L179-L179] |
-| S026 | `result.yaw_lb_ft / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L180-L180] |
-| S027 | `tension / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L186-L186] |
-| S028 | `horizontal / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L187-L187] |
-| S029 | `fl / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L190-L190] |
-| S030 | `fmz / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L191-L191] |
+| S024 | `result.surge_lb / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 checks zero and negative restoring surge; no detection check exists for nonzero conversion magnitude; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L178-L178] |
+| S025 | `result.sway_lb / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | R1 emits offset rows; no detection check exists for restoring-sway conversion magnitude; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L179-L179] |
+| S026 | `result.yaw_lb_ft / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | R1 emits offset rows; no detection check exists for restoring-yaw conversion magnitude; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L180-L180] |
+| S027 | `tension / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | R1 emits per-line outputs; no detection check exists for total-line-tension conversion magnitude; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L186-L186] |
+| S028 | `horizontal / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | R1 emits per-line outputs; no detection check exists for horizontal-line-tension conversion magnitude; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L187-L187] |
+| S029 | `fl / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | no detection check exists for workflow fender-sway conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L190-L190] |
+| S030 | `fmz / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | no detection check exists for workflow fender-yaw conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L191-L191] |
 | S031 | `float(wind_cfg['speed_knots'])` — Missing value/default, optional-block omission or numeric conversion can suppress an intended load or accept nonfinite/truncated input | no detection check exists for this site; issue pending (1) | [src/digitalmodel/dynmoor_mooring/workflow.py:L195-L195] |
 | S032 | `float(wind_cfg['direction_deg'])` — Missing value/default, optional-block omission or numeric conversion can suppress an intended load or accept nonfinite/truncated input | no detection check exists for this site; issue pending (1) | [src/digitalmodel/dynmoor_mooring/workflow.py:L196-L196] |
-| S033 | `fwd[0] / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L199-L199] |
-| S034 | `fwd[1] / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L200-L200] |
-| S035 | `fwd[2] / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L201-L201] |
+| S033 | `fwd[0] / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | no detection check exists for workflow wind-surge conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L199-L199] |
+| S034 | `fwd[1] / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | no detection check exists for workflow wind-sway conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L200-L200] |
+| S035 | `fwd[2] / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | no detection check exists for workflow wind-yaw conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L201-L201] |
 | S036 | `passing_rows = []` — Benign result accumulator, optional absence or padding; not an error return | C1; intentional control flow | [src/digitalmodel/dynmoor_mooring/workflow.py:L204-L204] |
 | S037 | `settings.get('passing_ship')` — Missing value/default, optional-block omission or numeric conversion can suppress an intended load or accept nonfinite/truncated input | no detection check exists for this site; issue pending (1) | [src/digitalmodel/dynmoor_mooring/workflow.py:L205-L205] |
 | S038 | `passing_cfg.get('mode', 'parallel')` — Missing value/default, optional-block omission or numeric conversion can suppress an intended load or accept nonfinite/truncated input | no detection check exists for this site; issue pending (1) | [src/digitalmodel/dynmoor_mooring/workflow.py:L208-L208] |
@@ -173,9 +173,9 @@ sweep: 108 found
 | S048 | `float(passing_cfg.get('passing_midship_area_ft2', 0.0)); passing_cfg.get('passing_midship_area_ft2', 0.0)` — Missing value/default, optional-block omission or numeric conversion can suppress an intended load or accept nonfinite/truncated input | no detection check exists for this site; issue pending (1) | [src/digitalmodel/dynmoor_mooring/workflow.py:L225-L225] |
 | S049 | `float(passing_cfg.get('passing_draft_ft', 0.0)); passing_cfg.get('passing_draft_ft', 0.0)` — Missing value/default, optional-block omission or numeric conversion can suppress an intended load or accept nonfinite/truncated input | no detection check exists for this site; issue pending (1) | [src/digitalmodel/dynmoor_mooring/workflow.py:L226-L226] |
 | S050 | `float(passing_cfg.get('passing_displacement_kips', 0.0)); passing_cfg.get('passing_displacement_kips', 0.0)` — Missing value/default, optional-block omission or numeric conversion can suppress an intended load or accept nonfinite/truncated input | no detection check exists for this site; issue pending (1) | [src/digitalmodel/dynmoor_mooring/workflow.py:L227-L227] |
-| S051 | `s.surge_lb / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L233-L233] |
-| S052 | `s.sway_lb / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L234-L234] |
-| S053 | `s.yaw_lb_ft / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | C0/R1 for table/static route; no detection check exists for optional wind/fender conversion; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L235-L235] |
+| S051 | `s.surge_lb / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | R2 checks passing row count only for surge; no detection check exists for passing-surge conversion magnitude; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L233-L233] |
+| S052 | `s.sway_lb / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | R2 checks absolute peak passing sway at 37.4 kips ±0.5 kips | [src/digitalmodel/dynmoor_mooring/workflow.py:L234-L234] |
+| S053 | `s.yaw_lb_ft / 1000.0` — Unit conversion assumes legacy English input and lb-valued dependency result | R2 checks absolute peak passing yaw at 3400.0 kip-ft ±5.0% | [src/digitalmodel/dynmoor_mooring/workflow.py:L235-L235] |
 | S054 | `outputs: dict[str, str] = {}` — Benign result accumulator, optional absence or padding; not an error return | C1; intentional control flow | [src/digitalmodel/dynmoor_mooring/workflow.py:L240-L240] |
 | S055 | `peak = None` — Benign result accumulator, optional absence or padding; not an error return | C1; intentional control flow | [src/digitalmodel/dynmoor_mooring/workflow.py:L256-L256] |
 | S056 | `settings.get(name)` — List lookup or type coercion; guards cover missing list or out-of-range type | C0; no detection check exists for fractional type truncation; issue pending (1) | [src/digitalmodel/dynmoor_mooring/workflow.py:L279-L279] |
@@ -237,6 +237,7 @@ The sole caught exception is `_display_path`'s `ValueError`, which returns the r
 | Other symptom | Cause / limit | Detection | Tracking |
 |---|---|---|---|
 | Repeating `router` on its returned dictionary can lose required input fields | Input `lines` is overwritten by summary rows | no detection check exists; issue pending (2) | [src/digitalmodel/dynmoor_mooring/workflow.py:L263-L270] [src/digitalmodel/dynmoor_mooring/workflow.py:L346-L358] |
+| Wind or fenders supplied without offsets produce no force output or error | Force evaluation is inside the offsets loop; absent, null or empty offsets yield no evaluations | no detection check exists; issue pending (3) | [src/digitalmodel/dynmoor_mooring/workflow.py:L157-L202] |
 | Unsupported transient response | Time-domain implementation absent; non-null config rejected | C1 rejection test; 4 existing placeholders skipped; issue pending (4) | [src/digitalmodel/dynmoor_mooring/workflow.py:L102-L110] [tests/subsea/mooring_analysis/test_dynmoor.py:L803-L820] |
 | Broader empirical validation can be overstated | Binary/transliteration agreement shares legacy assumptions | C2 detects symmetry only; no detection check exists for general physical validity; issue pending (5) | [tests/subsea/mooring_analysis/test_dynmoor.py:L1-L38] |
 | Optional outputs and provenance lack workflow assertions | Existing five wrapper tests omit fender/wind branches and generated gate manifests | no detection check exists; issue pending (3) | [tests/subsea/mooring_analysis/test_dynmoor_workflow.py:L69-L151] [src/digitalmodel/dynmoor_mooring/workflow.py:L188-L201] [src/digitalmodel/dynmoor_mooring/workflow.py:L263-L272] |
@@ -248,6 +249,7 @@ No incident issue is named for this module in the acceptance scope. The issue se
 | Date | Change reference | Lesson | Evidence | Pack change / shared record |
 |---|---|---|---|---|
 | 2026-11-06 | Initial pack | Preserve the distinction between wrapper regression, legacy arithmetic agreement and independently derived symmetry | [tests/subsea/mooring_analysis/test_dynmoor_workflow.py:L75-L92] [tests/subsea/mooring_analysis/test_dynmoor.py:L1-L38] [tests/subsea/mooring_analysis/test_dynmoor.py:L625-L638] | Sections 3–6; shared record not assigned |
+| 2026-11-06 | #3891 | Bind map citations to the header pin and verify inventory paths and symbols; line bounds alone can resolve to a different definition | [docs/registry/implementation-map.yaml:L15760-L15769] | Sections 9–10; shared record not assigned |
 
 ## 8. Ownership
 
@@ -260,11 +262,11 @@ No solver version or external dataset is loaded by the wrapper; the `dynmoor_leg
 
 ### Implementation-map inventory and counted-family search
 
-Map ref: `origin/codex/implmap-work`, commit `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`, embedded data/code revision `270c8759c374b67a7f032953e7fcdb14e0224461`. Map-file citations in this section resolve at that map commit; all other file citations resolve at the header code pin. The package has 1 map family with 1 in-package row, so that family is counted. [docs/registry/implementation-map.yaml:L1-L3]
+Map ref: header code pin `21942e8cfc7dfb985c5bfa693245df7d197cf76c`, embedded data/code revision `270c8759c374b67a7f032953e7fcdb14e0224461`. All file citations resolve at the header code pin. The package has 1 map family with 1 in-package row, so that family is counted. [docs/registry/implementation-map.yaml:L1-L3]
 
-Counted family `wind-and-current-force-routes`: 1 in-package row; 135 total inventory rows, including wrappers and tests as the map records them. All are inventoried below without endorsing their map classifications. [docs/registry/implementation-map.yaml:L15393-L15400]
+Counted family `wind-and-current-force-routes`: 1 in-package row; 135 total inventory rows, including wrappers and tests as the map records them. All are inventoried below without endorsing their map classifications. [docs/registry/implementation-map.yaml:L15369-L15376]
 
-Search uses Python `re` case-sensitively, exactly the following patterns; none matches `dynmoor_mooring` under case-insensitive comparison, so none is excluded. [docs/registry/implementation-map.yaml:L15396-L15398]
+Search uses Python `re` case-sensitively, exactly the following patterns; none matches `dynmoor_mooring` under case-insensitive comparison, so none is excluded. [docs/registry/implementation-map.yaml:L15372-L15374]
 
 - `(?:0\.5|1\s*/\s*2).*(?:rho|density).*(?:cd|drag|area)|(?:wind|current|drag|lift)_forces?|calculate_(?:wind|current)|OCIMF|current_profile|wind_height_coefficient`
 - `OCIMF|wind.load|current.load|wind.force|current.force|drag.coefficient|current.profile`
@@ -272,141 +274,141 @@ Search uses Python `re` case-sensitively, exactly the following patterns; none m
 
 | Inventory row | Path | Definition as mapped | Map evidence |
 |---|---|---|---|
-| 1 | `examples/demos/gtm/demo_03_deepwater_mudmat_installation.py` | `calc_splash_zone` | [docs/registry/implementation-map.yaml:L15400-L15409] |
-| 2 | `examples/demos/gtm/demo_05_deepwater_rigid_jumper_installation.py` | `calc_phase_3_splash` | [docs/registry/implementation-map.yaml:L15410-L15419] |
-| 3 | `examples/demos/gtm/results_store_demo05.py` | `(module-level)` | [docs/registry/implementation-map.yaml:L15420-L15428] |
-| 4 | `examples/demos/gtm/tests/test_demo_05_results_store.py` | `_good_case` | [docs/registry/implementation-map.yaml:L15429-L15438] |
-| 5 | `examples/domains/fpso/fpso_mooring_analysis.py` | `calculate_environmental_forces` | [docs/registry/implementation-map.yaml:L15439-L15448] |
-| 6 | `examples/domains/fpso/fpso_mooring_analysis.py` | `main` | [docs/registry/implementation-map.yaml:L15449-L15460] |
-| 7 | `examples/domains/ocimf/ocimf_demo.py` | `main` | [docs/registry/implementation-map.yaml:L15461-L15470] |
-| 8 | `examples/domains/workflows/01_spread_mooring_8point.py` | `calculate_environmental_forces` | [docs/registry/implementation-map.yaml:L15471-L15480] |
-| 9 | `examples/domains/workflows/03_calm_buoy.py` | `analyze_calm_buoy` | [docs/registry/implementation-map.yaml:L15481-L15490] |
-| 10 | `examples/domains/workflows/05_jackup_installation.py` | `analyze_jackup_mooring` | [docs/registry/implementation-map.yaml:L15491-L15500] |
-| 11 | `examples/domains/workflows/06_floating_wind_turbine.py` | `analyze_floating_wind_mooring` | [docs/registry/implementation-map.yaml:L15501-L15510] |
-| 12 | `examples/domains/workflows/07_wave_energy_converter.py` | `analyze_wec_mooring` | [docs/registry/implementation-map.yaml:L15511-L15520] |
-| 13 | `examples/domains/workflows/08_aquaculture_mooring.py` | `analyze_aquaculture_mooring` | [docs/registry/implementation-map.yaml:L15521-L15530] |
-| 14 | `examples/domains/workflows/09_spm_terminal.py` | `analyze_spm_terminal` | [docs/registry/implementation-map.yaml:L15531-L15540] |
-| 15 | `examples/domains/workflows/10_dp_backup_mooring.py` | `analyze_dp_backup_mooring` | [docs/registry/implementation-map.yaml:L15541-L15550] |
-| 16 | `scripts/capabilities/build_onepagers.py` | `(module-level)` | [docs/registry/implementation-map.yaml:L15551-L15559] |
-| 17 | `scripts/python/digitalmodel/legacy/extract_ocimf_database.py` | `(module-level)` | [docs/registry/implementation-map.yaml:L15560-L15568] |
-| 18 | `scripts/python/digitalmodel/legacy/extract_ocimf_database.py` | `extract_ocimf_database` | [docs/registry/implementation-map.yaml:L15569-L15578] |
-| 19 | `scripts/python/digitalmodel/legacy/generate_integration_charts.py` | `(module-level)` | [docs/registry/implementation-map.yaml:L15579-L15587] |
-| 20 | `scripts/python/digitalmodel/legacy/generate_ocimf_report.py` | `main` | [docs/registry/implementation-map.yaml:L15588-L15597] |
-| 21 | `scripts/python/digitalmodel/legacy/profile_marine_modules.py` | `PerformanceProfiler._setup_test_data` | [docs/registry/implementation-map.yaml:L15598-L15607] |
-| 22 | `scripts/python/digitalmodel/legacy/profile_marine_modules.py` | `PerformanceProfiler.profile_ocimf_lookup` | [docs/registry/implementation-map.yaml:L15608-L15617] |
-| 23 | `scripts/python/digitalmodel/legacy/profile_marine_modules.py` | `PerformanceProfiler.run_all` | [docs/registry/implementation-map.yaml:L15618-L15629] |
-| 24 | `scripts/python/digitalmodel/legacy/profile_marine_modules.py` | `main` | [docs/registry/implementation-map.yaml:L15630-L15639] |
-| 25 | `scripts/python/digitalmodel/legacy/validate_phase2.py` | `Phase2Validator.generate_excel_reference_data` | [docs/registry/implementation-map.yaml:L15640-L15649] |
-| 26 | `scripts/python/digitalmodel/legacy/validate_phase2.py` | `Phase2Validator.export_statistics_to_csv` | [docs/registry/implementation-map.yaml:L15650-L15659] |
-| 27 | `scripts/python/digitalmodel/legacy/validate_phase2.py` | `Phase2Validator.export_json_summary` | [docs/registry/implementation-map.yaml:L15660-L15669] |
-| 28 | `scripts/python/digitalmodel/legacy/validate_phase2.py` | `Phase2Validator.run_complete_validation` | [docs/registry/implementation-map.yaml:L15670-L15684] |
-| 29 | `scripts/python/digitalmodel/legacy/visualize_ocimf_data.py` | `(module-level)` | [docs/registry/implementation-map.yaml:L15685-L15693] |
-| 30 | `scripts/python/digitalmodel/legacy/visualize_ocimf_data.py` | `main` | [docs/registry/implementation-map.yaml:L15694-L15703] |
-| 31 | `scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py` | `make_polar_overlay` | [docs/registry/implementation-map.yaml:L15704-L15713] |
-| 32 | `scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py` | `parse_args` | [docs/registry/implementation-map.yaml:L15714-L15723] |
-| 33 | `src/digitalmodel/ansys/pressure_vessel.py` | `PressureVesselGenerator.generate_wind_load` | [docs/registry/implementation-map.yaml:L15724-L15733] |
-| 34 | `src/digitalmodel/data_systems/data_procurement/mooring/database_clients/synthetic_rope_db_client.py` | `SyntheticRopeDatabaseClient._generate_rope_spec` | [docs/registry/implementation-map.yaml:L15734-L15743] |
-| 35 | `src/digitalmodel/data_systems/data_scraping/validators/validate_ocimf_data.py` | `main` | [docs/registry/implementation-map.yaml:L15744-L15753] |
-| 36 | `src/digitalmodel/drilling_riser/drift_off.py` | `environmental_force_n` | [docs/registry/implementation-map.yaml:L15754-L15763] |
-| 37 | `src/digitalmodel/drilling_riser/envelope.py` | `CurrentProfile.drag_load_n_per_m` | [docs/registry/implementation-map.yaml:L15764-L15773] |
-| 38 | `src/digitalmodel/drilling_riser/global_model/orcaflex_run.py` | `as_analysed_sections` | [docs/registry/implementation-map.yaml:L15774-L15783] |
-| 39 | `src/digitalmodel/dynmoor_mooring/workflow.py` | `router` | [docs/registry/implementation-map.yaml:L15784-L15793] |
-| 40 | `src/digitalmodel/engine.py` | `engine` | [docs/registry/implementation-map.yaml:L15794-L15806] |
-| 41 | `src/digitalmodel/hydrodynamics/cli.py` | `ocimf_wind_cmd` | [docs/registry/implementation-map.yaml:L15807-L15816] |
-| 42 | `src/digitalmodel/hydrodynamics/cli.py` | `ocimf_current_cmd` | [docs/registry/implementation-map.yaml:L15817-L15826] |
-| 43 | `src/digitalmodel/hydrodynamics/cli.py` | `combined_env_cmd` | [docs/registry/implementation-map.yaml:L15827-L15836] |
-| 44 | `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py` | `FatigueAnalysisComponents.get_total_viv_fatigue` | [docs/registry/implementation-map.yaml:L15837-L15846] |
-| 45 | `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py` | `FatigueAnalysisComponents.tabulate_viv_results` | [docs/registry/implementation-map.yaml:L15847-L15856] |
-| 46 | `src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py` | `VIVFatigueAnalysisComponents.get_total_viv_fatigue` | [docs/registry/implementation-map.yaml:L15857-L15866] |
-| 47 | `src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py` | `VIVFatigueAnalysisComponents.tabulate_viv_results` | [docs/registry/implementation-map.yaml:L15867-L15876] |
-| 48 | `src/digitalmodel/infrastructure/utils/ETL_components.py` | `ETL_components.transform_viv_current_reformat_1` | [docs/registry/implementation-map.yaml:L15877-L15886] |
-| 49 | `src/digitalmodel/installation/installation_pamphlet/calculations.py` | `compute_splashzone_envelope` | [docs/registry/implementation-map.yaml:L15887-L15896] |
-| 50 | `src/digitalmodel/installation/jumper_installation/calculations.py` | `calc_phase_3_splash` | [docs/registry/implementation-map.yaml:L15897-L15906] |
-| 51 | `src/digitalmodel/marine_ops/marine_analysis/__main__.py` | `main` | [docs/registry/implementation-map.yaml:L15907-L15916] |
-| 52 | `src/digitalmodel/marine_ops/marine_analysis/environmental_loading/ocimf.py` | `OCIMFDatabase.get_coefficients` | [docs/registry/implementation-map.yaml:L15917-L15926] |
-| 53 | `src/digitalmodel/marine_ops/marine_analysis/environmental_loading/ocimf.py` | `EnvironmentalForces.calculate_total_forces` | [docs/registry/implementation-map.yaml:L15927-L15936] |
-| 54 | `src/digitalmodel/marine_ops/marine_analysis/environmental_loading/ocimf.py` | `create_sample_database` | [docs/registry/implementation-map.yaml:L15937-L15946] |
-| 55 | `src/digitalmodel/marine_ops/marine_analysis/environmental_loading/workflow.py` | `OCIMFWorkflow.router` | [docs/registry/implementation-map.yaml:L15947-L15956] |
-| 56 | `src/digitalmodel/marine_ops/marine_analysis/extraction/extract_ocimf.py` | `(module-level)` | [docs/registry/implementation-map.yaml:L15957-L15965] |
-| 57 | `src/digitalmodel/marine_ops/marine_analysis/extraction/extract_ocimf.py` | `extract_ocimf_database` | [docs/registry/implementation-map.yaml:L15966-L15975] |
-| 58 | `src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py` | `PerformanceProfiler._setup_test_data` | [docs/registry/implementation-map.yaml:L15976-L15987] |
-| 59 | `src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py` | `PerformanceProfiler.profile_ocimf_lookup` | [docs/registry/implementation-map.yaml:L15988-L15997] |
-| 60 | `src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py` | `PerformanceProfiler.run_all` | [docs/registry/implementation-map.yaml:L15998-L16009] |
-| 61 | `src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py` | `main` | [docs/registry/implementation-map.yaml:L16010-L16019] |
-| 62 | `src/digitalmodel/marine_ops/marine_analysis/reporting/ocimf_interactive_report.py` | `main` | [docs/registry/implementation-map.yaml:L16020-L16029] |
-| 63 | `src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py` | `Phase2Validator.generate_excel_reference_data` | [docs/registry/implementation-map.yaml:L16030-L16039] |
-| 64 | `src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py` | `Phase2Validator.export_statistics_to_csv` | [docs/registry/implementation-map.yaml:L16040-L16049] |
-| 65 | `src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py` | `Phase2Validator.export_json_summary` | [docs/registry/implementation-map.yaml:L16050-L16059] |
-| 66 | `src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py` | `Phase2Validator.run_complete_validation` | [docs/registry/implementation-map.yaml:L16060-L16074] |
-| 67 | `src/digitalmodel/marine_ops/marine_analysis/visualization/integration_charts.py` | `(module-level)` | [docs/registry/implementation-map.yaml:L16075-L16083] |
-| 68 | `src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py` | `_output_dir` | [docs/registry/implementation-map.yaml:L16084-L16093] |
-| 69 | `src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py` | `_cli_output_dir` | [docs/registry/implementation-map.yaml:L16094-L16103] |
-| 70 | `src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py` | `load_data` | [docs/registry/implementation-map.yaml:L16104-L16113] |
-| 71 | `src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py` | `main` | [docs/registry/implementation-map.yaml:L16114-L16126] |
-| 72 | `src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py` | `OCIMFDatabase.get_coefficients` | [docs/registry/implementation-map.yaml:L16127-L16136] |
-| 73 | `src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py` | `EnvironmentalForces.calculate_total_forces` | [docs/registry/implementation-map.yaml:L16137-L16146] |
-| 74 | `src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py` | `create_sample_database` | [docs/registry/implementation-map.yaml:L16147-L16156] |
-| 75 | `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py` | `FPSOMooringFullWorkflow._environmental_forces` | [docs/registry/implementation-map.yaml:L16157-L16168] |
-| 76 | `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py` | `FPSOMooringFullWorkflow._ocimf_database_path` | [docs/registry/implementation-map.yaml:L16169-L16178] |
-| 77 | `src/digitalmodel/marine_ops/marine_engineering/visualization/polar_force_overlay.py` | `_resolve_arrow_direction_in_body_frame` | [docs/registry/implementation-map.yaml:L16179-L16188] |
-| 78 | `src/digitalmodel/marine_ops/marine_engineering/visualization/polar_force_overlay.py` | `polar_force_overlay` | [docs/registry/implementation-map.yaml:L16189-L16198] |
-| 79 | `src/digitalmodel/naval_architecture/maneuvering_envelope.py` | `threshold_speed_for_steerage` | [docs/registry/implementation-map.yaml:L16199-L16208] |
-| 80 | `src/digitalmodel/naval_architecture/maneuvering_envelope_workflow.py` | `run_maneuvering_envelope_sweep` | [docs/registry/implementation-map.yaml:L16209-L16218] |
-| 81 | `src/digitalmodel/orcaflex/installation_analysis.py` | `SplashZoneInput.calculate_splash_zone_loads` | [docs/registry/implementation-map.yaml:L16219-L16228] |
-| 82 | `src/digitalmodel/orcawave/drift_forces.py` | `compute_wind_current_drift` | [docs/registry/implementation-map.yaml:L16229-L16238] |
-| 83 | `src/digitalmodel/solvers/orcaflex/examples_integration/integrator.py` | `KnowledgeIntegrator._extract_configurations` | [docs/registry/implementation-map.yaml:L16239-L16248] |
-| 84 | `src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py` | `EnvironmentBuilder.build` | [docs/registry/implementation-map.yaml:L16249-L16258] |
-| 85 | `src/digitalmodel/solvers/orcaflex/reporting/extractors/loads_extractor.py` | `extract_loads` | [docs/registry/implementation-map.yaml:L16259-L16268] |
-| 86 | `src/digitalmodel/structural/parachute/chute_assessment.py` | `calculate_dual_chute_drag` | [docs/registry/implementation-map.yaml:L16269-L16280] |
-| 87 | `src/digitalmodel/structural/parachute/chute_assessment.py` | `assess_all_load_cases` | [docs/registry/implementation-map.yaml:L16281-L16293] |
-| 88 | `src/digitalmodel/structural/parachute/chute_assessment.py` | `simulate_deployment_transient` | [docs/registry/implementation-map.yaml:L16294-L16304] |
-| 89 | `src/digitalmodel/structural/parachute/chute_assessment.py` | `export_results_yaml` | [docs/registry/implementation-map.yaml:L16305-L16314] |
-| 90 | `src/digitalmodel/structural/parachute/parachute_drag.py` | `calculate_drag_force` | [docs/registry/implementation-map.yaml:L16315-L16324] |
-| 91 | `src/digitalmodel/subsea/mooring_analysis/cli.py` | `design_verification` | [docs/registry/implementation-map.yaml:L16325-L16334] |
-| 92 | `src/digitalmodel/subsea/mooring_analysis/designer.py` | `MooringDesigner.calculate_environmental_loads` | [docs/registry/implementation-map.yaml:L16335-L16344] |
-| 93 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `build_wind_model.force` | [docs/registry/implementation-map.yaml:L16345-L16354] |
-| 94 | `src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py` | `_phase_demand` | [docs/registry/implementation-map.yaml:L16355-L16364] |
-| 95 | `src/digitalmodel/subsea/on_bottom_stability/simplified.py` | `hydrodynamic_loads` | [docs/registry/implementation-map.yaml:L16365-L16374] |
-| 96 | `src/digitalmodel/subsea/on_bottom_stability/simplified.py` | `drag_force_per_meter` | [docs/registry/implementation-map.yaml:L16375-L16384] |
-| 97 | `src/digitalmodel/subsea/on_bottom_stability/simplified.py` | `lateral_stability_check` | [docs/registry/implementation-map.yaml:L16385-L16396] |
-| 98 | `src/digitalmodel/subsea/on_bottom_stability/simplified.py` | `check_lateral_stability` | [docs/registry/implementation-map.yaml:L16397-L16408] |
-| 99 | `src/digitalmodel/subsea/pipeline/integrity_workflows.py` | `run_on_bottom_stability` | [docs/registry/implementation-map.yaml:L16409-L16418] |
-| 100 | `src/digitalmodel/subsea/viv_analysis/screening.py` | `VIVScreening.screen_with_current_profile` | [docs/registry/implementation-map.yaml:L16419-L16428] |
-| 101 | `src/digitalmodel/subsea/viv_analysis/viv_analysis_legacy.py` | `viv_analysis` | [docs/registry/implementation-map.yaml:L16429-L16438] |
-| 102 | `src/digitalmodel/subsea/viv_analysis/vortex_shedding.py` | `VortexSheddingAnalyzer.analyze_with_profile` | [docs/registry/implementation-map.yaml:L16439-L16448] |
-| 103 | `src/digitalmodel/workflows/workflow_automation/templates.py` | `create_mooring_design_template` | [docs/registry/implementation-map.yaml:L16449-L16458] |
-| 104 | `src/digitalmodel/workflows/workflow_automation/workflows.py` | `MooringSystemDesignWorkflow.create` | [docs/registry/implementation-map.yaml:L16459-L16468] |
-| 105 | `tests/contracts/test_force_units_boundary_contract.py` | `(module-level)` | [docs/registry/implementation-map.yaml:L16469-L16477] |
-| 106 | `tests/legal/test_published_pages_have_no_internal_paths.py` | `_load_producer` | [docs/registry/implementation-map.yaml:L16478-L16487] |
-| 107 | `tests/marine_ops/marine_engineering/environmental_loading/test_ocimf.py` | `sample_database_path` | [docs/registry/implementation-map.yaml:L16488-L16497] |
-| 108 | `tests/marine_ops/marine_engineering/environmental_loading/test_ocimf.py` | `ocimf_db` | [docs/registry/implementation-map.yaml:L16498-L16507] |
-| 109 | `tests/marine_ops/marine_engineering/environmental_loading/test_ocimf.py` | `env_forces` | [docs/registry/implementation-map.yaml:L16508-L16517] |
-| 110 | `tests/marine_ops/marine_engineering/integration/integration_example.py` | `main` | [docs/registry/implementation-map.yaml:L16518-L16528] |
-| 111 | `tests/marine_ops/marine_engineering/integration/test_ocimf_mooring_integration.py` | `TestOCIMFMooringIntegration.test_combined_environmental_forces` | [docs/registry/implementation-map.yaml:L16529-L16538] |
-| 112 | `tests/marine_ops/marine_engineering/test_marine_eng_perf.py` | `ocimf_database` | [docs/registry/implementation-map.yaml:L16539-L16549] |
-| 113 | `tests/marine_ops/marine_engineering/test_marine_eng_perf.py` | `pytest_benchmark_update_json` | [docs/registry/implementation-map.yaml:L16550-L16559] |
-| 114 | `tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py` | `test_refactored_polar_signatures_match_fixture` | [docs/registry/implementation-map.yaml:L16560-L16569] |
-| 115 | `tests/solvers/orcaflex/reporting/fixture_helpers.py` | `_build_loads` | [docs/registry/implementation-map.yaml:L16570-L16579] |
-| 116 | `tests/structural/parachute/test_chute_assessment.py` | `TestAssessAllLoadCases.test_governing_force_within_1_percent_of_hand_calc` | [docs/registry/implementation-map.yaml:L16580-L16589] |
-| 117 | `tests/structural/parachute/test_parachute_drag.py` | `TestDragForce.test_drag_200_mph` | [docs/registry/implementation-map.yaml:L16590-L16600] |
-| 118 | `tests/structural/parachute/test_parachute_drag.py` | `TestDragForce.test_drag_250_mph` | [docs/registry/implementation-map.yaml:L16601-L16611] |
-| 119 | `tests/structural/parachute/test_parachute_drag.py` | `TestDragForce.test_force_scales_with_v_squared` | [docs/registry/implementation-map.yaml:L16612-L16622] |
-| 120 | `tests/structural/parachute/test_parachute_drag.py` | `TestDragForce.test_result_has_newtons` | [docs/registry/implementation-map.yaml:L16623-L16633] |
-| 121 | `tests/structural/parachute/test_parachute_drag.py` | `TestChatGPTCrossValidation.test_steady_state_250mph_matches_chatgpt_newtons` | [docs/registry/implementation-map.yaml:L16634-L16644] |
-| 122 | `tests/structural/parachute/test_parachute_drag.py` | `TestChatGPTCrossValidation.test_steady_state_250mph_matches_chatgpt_lbs` | [docs/registry/implementation-map.yaml:L16645-L16655] |
-| 123 | `tests/subsea/catenary_riser/conftest.py` | `catenary_environment` | [docs/registry/implementation-map.yaml:L16656-L16665] |
-| 124 | `tests/subsea/on_bottom_stability/test_dnv_rp_f109.py` | `TestLiftForce.test_known_lift_force` | [docs/registry/implementation-map.yaml:L16666-L16675] |
-| 125 | `tests/subsea/pipeline/test_on_bottom_stability.py` | `TestDragForce.test_scenario_1` | [docs/registry/implementation-map.yaml:L16676-L16685] |
-| 126 | `tests/subsea/pipeline/test_on_bottom_stability.py` | `TestLiftForce.test_scenario_1` | [docs/registry/implementation-map.yaml:L16686-L16695] |
-| 127 | `tests/test_automation/fixtures/engineering_fixtures.py` | `get_dnv_circular_mock` | [docs/registry/implementation-map.yaml:L16696-L16705] |
-| 128 | `tests/test_automation/fixtures/engineering_fixtures.py` | `get_dnv_rectangular_mock` | [docs/registry/implementation-map.yaml:L16706-L16715] |
-| 129 | `tests/test_on_bottom_stability.py` | `TestHydrodynamicLoads.test_drag_force_per_meter` | [docs/registry/implementation-map.yaml:L16716-L16725] |
-| 130 | `tests/test_on_bottom_stability.py` | `TestHydrodynamicLoads.test_lift_force_per_meter` | [docs/registry/implementation-map.yaml:L16726-L16735] |
-| 131 | `tests/workflows/test_durable_workflows.py` | `test_workflow_registry` | [docs/registry/implementation-map.yaml:L16736-L16747] |
-| 132 | `src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py` | `hydrodynamic_force_per_meter` | [docs/registry/implementation-map.yaml:L16748-L16758] |
-| 133 | `src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py` | `lift_force_per_meter` | [docs/registry/implementation-map.yaml:L16759-L16769] |
-| 134 | `src/digitalmodel/subsea/on_bottom_stability/simplified.py` | `lift_force_per_meter` | [docs/registry/implementation-map.yaml:L16770-L16781] |
-| 135 | `src/digitalmodel/subsea/on_bottom_stability/simplified.py` | `inertia_force_per_meter` | [docs/registry/implementation-map.yaml:L16782-L16791] |
+| 1 | `examples/demos/gtm/demo_03_deepwater_mudmat_installation.py` | `calc_splash_zone` | [docs/registry/implementation-map.yaml:L15376-L15385] |
+| 2 | `examples/demos/gtm/demo_05_deepwater_rigid_jumper_installation.py` | `calc_phase_3_splash` | [docs/registry/implementation-map.yaml:L15386-L15395] |
+| 3 | `examples/demos/gtm/results_store_demo05.py` | `(module-level)` | [docs/registry/implementation-map.yaml:L15396-L15404] |
+| 4 | `examples/demos/gtm/tests/test_demo_05_results_store.py` | `_good_case` | [docs/registry/implementation-map.yaml:L15405-L15414] |
+| 5 | `examples/domains/fpso/fpso_mooring_analysis.py` | `calculate_environmental_forces` | [docs/registry/implementation-map.yaml:L15415-L15424] |
+| 6 | `examples/domains/fpso/fpso_mooring_analysis.py` | `main` | [docs/registry/implementation-map.yaml:L15425-L15436] |
+| 7 | `examples/domains/ocimf/ocimf_demo.py` | `main` | [docs/registry/implementation-map.yaml:L15437-L15446] |
+| 8 | `examples/domains/workflows/01_spread_mooring_8point.py` | `calculate_environmental_forces` | [docs/registry/implementation-map.yaml:L15447-L15456] |
+| 9 | `examples/domains/workflows/03_calm_buoy.py` | `analyze_calm_buoy` | [docs/registry/implementation-map.yaml:L15457-L15466] |
+| 10 | `examples/domains/workflows/05_jackup_installation.py` | `analyze_jackup_mooring` | [docs/registry/implementation-map.yaml:L15467-L15476] |
+| 11 | `examples/domains/workflows/06_floating_wind_turbine.py` | `analyze_floating_wind_mooring` | [docs/registry/implementation-map.yaml:L15477-L15486] |
+| 12 | `examples/domains/workflows/07_wave_energy_converter.py` | `analyze_wec_mooring` | [docs/registry/implementation-map.yaml:L15487-L15496] |
+| 13 | `examples/domains/workflows/08_aquaculture_mooring.py` | `analyze_aquaculture_mooring` | [docs/registry/implementation-map.yaml:L15497-L15506] |
+| 14 | `examples/domains/workflows/09_spm_terminal.py` | `analyze_spm_terminal` | [docs/registry/implementation-map.yaml:L15507-L15516] |
+| 15 | `examples/domains/workflows/10_dp_backup_mooring.py` | `analyze_dp_backup_mooring` | [docs/registry/implementation-map.yaml:L15517-L15526] |
+| 16 | `scripts/capabilities/build_onepagers.py` | `(module-level)` | [docs/registry/implementation-map.yaml:L15527-L15535] |
+| 17 | `scripts/python/digitalmodel/legacy/extract_ocimf_database.py` | `(module-level)` | [docs/registry/implementation-map.yaml:L15536-L15544] |
+| 18 | `scripts/python/digitalmodel/legacy/extract_ocimf_database.py` | `extract_ocimf_database` | [docs/registry/implementation-map.yaml:L15545-L15554] |
+| 19 | `scripts/python/digitalmodel/legacy/generate_integration_charts.py` | `(module-level)` | [docs/registry/implementation-map.yaml:L15555-L15563] |
+| 20 | `scripts/python/digitalmodel/legacy/generate_ocimf_report.py` | `main` | [docs/registry/implementation-map.yaml:L15564-L15573] |
+| 21 | `scripts/python/digitalmodel/legacy/profile_marine_modules.py` | `PerformanceProfiler._setup_test_data` | [docs/registry/implementation-map.yaml:L15574-L15583] |
+| 22 | `scripts/python/digitalmodel/legacy/profile_marine_modules.py` | `PerformanceProfiler.profile_ocimf_lookup` | [docs/registry/implementation-map.yaml:L15584-L15593] |
+| 23 | `scripts/python/digitalmodel/legacy/profile_marine_modules.py` | `PerformanceProfiler.run_all` | [docs/registry/implementation-map.yaml:L15594-L15605] |
+| 24 | `scripts/python/digitalmodel/legacy/profile_marine_modules.py` | `main` | [docs/registry/implementation-map.yaml:L15606-L15615] |
+| 25 | `scripts/python/digitalmodel/legacy/validate_phase2.py` | `Phase2Validator.generate_excel_reference_data` | [docs/registry/implementation-map.yaml:L15616-L15625] |
+| 26 | `scripts/python/digitalmodel/legacy/validate_phase2.py` | `Phase2Validator.export_statistics_to_csv` | [docs/registry/implementation-map.yaml:L15626-L15635] |
+| 27 | `scripts/python/digitalmodel/legacy/validate_phase2.py` | `Phase2Validator.export_json_summary` | [docs/registry/implementation-map.yaml:L15636-L15645] |
+| 28 | `scripts/python/digitalmodel/legacy/validate_phase2.py` | `Phase2Validator.run_complete_validation` | [docs/registry/implementation-map.yaml:L15646-L15660] |
+| 29 | `scripts/python/digitalmodel/legacy/visualize_ocimf_data.py` | `(module-level)` | [docs/registry/implementation-map.yaml:L15661-L15669] |
+| 30 | `scripts/python/digitalmodel/legacy/visualize_ocimf_data.py` | `main` | [docs/registry/implementation-map.yaml:L15670-L15679] |
+| 31 | `scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py` | `make_polar_overlay` | [docs/registry/implementation-map.yaml:L15680-L15689] |
+| 32 | `scripts/python/digitalmodel/ocimf/build_coefficient_explorer.py` | `parse_args` | [docs/registry/implementation-map.yaml:L15690-L15699] |
+| 33 | `src/digitalmodel/ansys/pressure_vessel.py` | `PressureVesselGenerator.generate_wind_load` | [docs/registry/implementation-map.yaml:L15700-L15709] |
+| 34 | `src/digitalmodel/data_systems/data_procurement/mooring/database_clients/synthetic_rope_db_client.py` | `SyntheticRopeDatabaseClient._generate_rope_spec` | [docs/registry/implementation-map.yaml:L15710-L15719] |
+| 35 | `src/digitalmodel/data_systems/data_scraping/validators/validate_ocimf_data.py` | `main` | [docs/registry/implementation-map.yaml:L15720-L15729] |
+| 36 | `src/digitalmodel/drilling_riser/drift_off.py` | `environmental_force_n` | [docs/registry/implementation-map.yaml:L15730-L15739] |
+| 37 | `src/digitalmodel/drilling_riser/envelope.py` | `CurrentProfile.drag_load_n_per_m` | [docs/registry/implementation-map.yaml:L15740-L15749] |
+| 38 | `src/digitalmodel/drilling_riser/global_model/orcaflex_run.py` | `as_analysed_sections` | [docs/registry/implementation-map.yaml:L15750-L15759] |
+| 39 | `src/digitalmodel/dynmoor_mooring/workflow.py` | `router` | [docs/registry/implementation-map.yaml:L15760-L15769] |
+| 40 | `src/digitalmodel/engine.py` | `engine` | [docs/registry/implementation-map.yaml:L15770-L15782] |
+| 41 | `src/digitalmodel/hydrodynamics/cli.py` | `ocimf_wind_cmd` | [docs/registry/implementation-map.yaml:L15783-L15792] |
+| 42 | `src/digitalmodel/hydrodynamics/cli.py` | `ocimf_current_cmd` | [docs/registry/implementation-map.yaml:L15793-L15802] |
+| 43 | `src/digitalmodel/hydrodynamics/cli.py` | `combined_env_cmd` | [docs/registry/implementation-map.yaml:L15803-L15812] |
+| 44 | `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py` | `FatigueAnalysisComponents.get_total_viv_fatigue` | [docs/registry/implementation-map.yaml:L15813-L15822] |
+| 45 | `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py` | `FatigueAnalysisComponents.tabulate_viv_results` | [docs/registry/implementation-map.yaml:L15823-L15832] |
+| 46 | `src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py` | `VIVFatigueAnalysisComponents.get_total_viv_fatigue` | [docs/registry/implementation-map.yaml:L15833-L15842] |
+| 47 | `src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py` | `VIVFatigueAnalysisComponents.tabulate_viv_results` | [docs/registry/implementation-map.yaml:L15843-L15852] |
+| 48 | `src/digitalmodel/infrastructure/utils/ETL_components.py` | `ETL_components.transform_viv_current_reformat_1` | [docs/registry/implementation-map.yaml:L15853-L15862] |
+| 49 | `src/digitalmodel/installation/installation_pamphlet/calculations.py` | `compute_splashzone_envelope` | [docs/registry/implementation-map.yaml:L15863-L15872] |
+| 50 | `src/digitalmodel/installation/jumper_installation/calculations.py` | `calc_phase_3_splash` | [docs/registry/implementation-map.yaml:L15873-L15882] |
+| 51 | `src/digitalmodel/marine_ops/marine_analysis/__main__.py` | `main` | [docs/registry/implementation-map.yaml:L15883-L15892] |
+| 52 | `src/digitalmodel/marine_ops/marine_analysis/environmental_loading/ocimf.py` | `OCIMFDatabase.get_coefficients` | [docs/registry/implementation-map.yaml:L15893-L15902] |
+| 53 | `src/digitalmodel/marine_ops/marine_analysis/environmental_loading/ocimf.py` | `EnvironmentalForces.calculate_total_forces` | [docs/registry/implementation-map.yaml:L15903-L15912] |
+| 54 | `src/digitalmodel/marine_ops/marine_analysis/environmental_loading/ocimf.py` | `create_sample_database` | [docs/registry/implementation-map.yaml:L15913-L15922] |
+| 55 | `src/digitalmodel/marine_ops/marine_analysis/environmental_loading/workflow.py` | `OCIMFWorkflow.router` | [docs/registry/implementation-map.yaml:L15923-L15932] |
+| 56 | `src/digitalmodel/marine_ops/marine_analysis/extraction/extract_ocimf.py` | `(module-level)` | [docs/registry/implementation-map.yaml:L15933-L15941] |
+| 57 | `src/digitalmodel/marine_ops/marine_analysis/extraction/extract_ocimf.py` | `extract_ocimf_database` | [docs/registry/implementation-map.yaml:L15942-L15951] |
+| 58 | `src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py` | `PerformanceProfiler._setup_test_data` | [docs/registry/implementation-map.yaml:L15952-L15963] |
+| 59 | `src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py` | `PerformanceProfiler.profile_ocimf_lookup` | [docs/registry/implementation-map.yaml:L15964-L15973] |
+| 60 | `src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py` | `PerformanceProfiler.run_all` | [docs/registry/implementation-map.yaml:L15974-L15985] |
+| 61 | `src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py` | `main` | [docs/registry/implementation-map.yaml:L15986-L15995] |
+| 62 | `src/digitalmodel/marine_ops/marine_analysis/reporting/ocimf_interactive_report.py` | `main` | [docs/registry/implementation-map.yaml:L15996-L16005] |
+| 63 | `src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py` | `Phase2Validator.generate_excel_reference_data` | [docs/registry/implementation-map.yaml:L16006-L16015] |
+| 64 | `src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py` | `Phase2Validator.export_statistics_to_csv` | [docs/registry/implementation-map.yaml:L16016-L16025] |
+| 65 | `src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py` | `Phase2Validator.export_json_summary` | [docs/registry/implementation-map.yaml:L16026-L16035] |
+| 66 | `src/digitalmodel/marine_ops/marine_analysis/validation/validate_phase2.py` | `Phase2Validator.run_complete_validation` | [docs/registry/implementation-map.yaml:L16036-L16050] |
+| 67 | `src/digitalmodel/marine_ops/marine_analysis/visualization/integration_charts.py` | `(module-level)` | [docs/registry/implementation-map.yaml:L16051-L16059] |
+| 68 | `src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py` | `_output_dir` | [docs/registry/implementation-map.yaml:L16060-L16069] |
+| 69 | `src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py` | `_cli_output_dir` | [docs/registry/implementation-map.yaml:L16070-L16079] |
+| 70 | `src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py` | `load_data` | [docs/registry/implementation-map.yaml:L16080-L16089] |
+| 71 | `src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py` | `main` | [docs/registry/implementation-map.yaml:L16090-L16102] |
+| 72 | `src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py` | `OCIMFDatabase.get_coefficients` | [docs/registry/implementation-map.yaml:L16103-L16112] |
+| 73 | `src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py` | `EnvironmentalForces.calculate_total_forces` | [docs/registry/implementation-map.yaml:L16113-L16122] |
+| 74 | `src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py` | `create_sample_database` | [docs/registry/implementation-map.yaml:L16123-L16132] |
+| 75 | `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py` | `FPSOMooringFullWorkflow._environmental_forces` | [docs/registry/implementation-map.yaml:L16133-L16145] |
+| 76 | `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py` | `FPSOMooringFullWorkflow._ocimf_database` | [docs/registry/implementation-map.yaml:L16146-L16155] |
+| 77 | `src/digitalmodel/marine_ops/marine_engineering/visualization/polar_force_overlay.py` | `_resolve_arrow_direction_in_body_frame` | [docs/registry/implementation-map.yaml:L16156-L16165] |
+| 78 | `src/digitalmodel/marine_ops/marine_engineering/visualization/polar_force_overlay.py` | `polar_force_overlay` | [docs/registry/implementation-map.yaml:L16166-L16175] |
+| 79 | `src/digitalmodel/naval_architecture/maneuvering_envelope.py` | `threshold_speed_for_steerage` | [docs/registry/implementation-map.yaml:L16176-L16185] |
+| 80 | `src/digitalmodel/naval_architecture/maneuvering_envelope_workflow.py` | `run_maneuvering_envelope_sweep` | [docs/registry/implementation-map.yaml:L16186-L16195] |
+| 81 | `src/digitalmodel/orcaflex/installation_analysis.py` | `SplashZoneInput.calculate_splash_zone_loads` | [docs/registry/implementation-map.yaml:L16196-L16205] |
+| 82 | `src/digitalmodel/orcawave/drift_forces.py` | `compute_wind_current_drift` | [docs/registry/implementation-map.yaml:L16206-L16215] |
+| 83 | `src/digitalmodel/solvers/orcaflex/examples_integration/integrator.py` | `KnowledgeIntegrator._extract_configurations` | [docs/registry/implementation-map.yaml:L16216-L16225] |
+| 84 | `src/digitalmodel/solvers/orcaflex/modular_generator/builders/environment_builder.py` | `EnvironmentBuilder.build` | [docs/registry/implementation-map.yaml:L16226-L16235] |
+| 85 | `src/digitalmodel/solvers/orcaflex/reporting/extractors/loads_extractor.py` | `extract_loads` | [docs/registry/implementation-map.yaml:L16236-L16245] |
+| 86 | `src/digitalmodel/structural/parachute/chute_assessment.py` | `calculate_dual_chute_drag` | [docs/registry/implementation-map.yaml:L16246-L16257] |
+| 87 | `src/digitalmodel/structural/parachute/chute_assessment.py` | `assess_all_load_cases` | [docs/registry/implementation-map.yaml:L16258-L16270] |
+| 88 | `src/digitalmodel/structural/parachute/chute_assessment.py` | `simulate_deployment_transient` | [docs/registry/implementation-map.yaml:L16271-L16281] |
+| 89 | `src/digitalmodel/structural/parachute/chute_assessment.py` | `export_results_yaml` | [docs/registry/implementation-map.yaml:L16282-L16291] |
+| 90 | `src/digitalmodel/structural/parachute/parachute_drag.py` | `calculate_drag_force` | [docs/registry/implementation-map.yaml:L16292-L16301] |
+| 91 | `src/digitalmodel/subsea/mooring_analysis/cli.py` | `design_verification` | [docs/registry/implementation-map.yaml:L16302-L16311] |
+| 92 | `src/digitalmodel/subsea/mooring_analysis/designer.py` | `MooringDesigner.calculate_environmental_loads` | [docs/registry/implementation-map.yaml:L16312-L16321] |
+| 93 | `src/digitalmodel/subsea/mooring_analysis/dynmoor.py` | `build_wind_model.force` | [docs/registry/implementation-map.yaml:L16322-L16331] |
+| 94 | `src/digitalmodel/subsea/on_bottom_stability/e305_simplified.py` | `_phase_demand` | [docs/registry/implementation-map.yaml:L16332-L16341] |
+| 95 | `src/digitalmodel/subsea/on_bottom_stability/simplified.py` | `hydrodynamic_loads` | [docs/registry/implementation-map.yaml:L16342-L16351] |
+| 96 | `src/digitalmodel/subsea/on_bottom_stability/simplified.py` | `drag_force_per_meter` | [docs/registry/implementation-map.yaml:L16352-L16361] |
+| 97 | `src/digitalmodel/subsea/on_bottom_stability/simplified.py` | `lateral_stability_check` | [docs/registry/implementation-map.yaml:L16362-L16373] |
+| 98 | `src/digitalmodel/subsea/on_bottom_stability/simplified.py` | `check_lateral_stability` | [docs/registry/implementation-map.yaml:L16374-L16385] |
+| 99 | `src/digitalmodel/subsea/pipeline/integrity_workflows.py` | `run_on_bottom_stability` | [docs/registry/implementation-map.yaml:L16386-L16395] |
+| 100 | `src/digitalmodel/subsea/viv_analysis/screening.py` | `VIVScreening.screen_with_current_profile` | [docs/registry/implementation-map.yaml:L16396-L16405] |
+| 101 | `src/digitalmodel/subsea/viv_analysis/viv_analysis_legacy.py` | `viv_analysis` | [docs/registry/implementation-map.yaml:L16406-L16415] |
+| 102 | `src/digitalmodel/subsea/viv_analysis/vortex_shedding.py` | `VortexSheddingAnalyzer.analyze_with_profile` | [docs/registry/implementation-map.yaml:L16416-L16425] |
+| 103 | `src/digitalmodel/workflows/workflow_automation/templates.py` | `create_mooring_design_template` | [docs/registry/implementation-map.yaml:L16426-L16435] |
+| 104 | `src/digitalmodel/workflows/workflow_automation/workflows.py` | `MooringSystemDesignWorkflow.create` | [docs/registry/implementation-map.yaml:L16436-L16445] |
+| 105 | `tests/contracts/test_force_units_boundary_contract.py` | `(module-level)` | [docs/registry/implementation-map.yaml:L16446-L16454] |
+| 106 | `tests/legal/test_published_pages_have_no_internal_paths.py` | `_load_producer` | [docs/registry/implementation-map.yaml:L16455-L16464] |
+| 107 | `tests/marine_ops/marine_engineering/environmental_loading/test_ocimf.py` | `sample_database_path` | [docs/registry/implementation-map.yaml:L16465-L16474] |
+| 108 | `tests/marine_ops/marine_engineering/environmental_loading/test_ocimf.py` | `ocimf_db` | [docs/registry/implementation-map.yaml:L16475-L16484] |
+| 109 | `tests/marine_ops/marine_engineering/environmental_loading/test_ocimf.py` | `env_forces` | [docs/registry/implementation-map.yaml:L16485-L16494] |
+| 110 | `tests/marine_ops/marine_engineering/integration/integration_example.py` | `main` | [docs/registry/implementation-map.yaml:L16495-L16505] |
+| 111 | `tests/marine_ops/marine_engineering/integration/test_ocimf_mooring_integration.py` | `TestOCIMFMooringIntegration.test_combined_environmental_forces` | [docs/registry/implementation-map.yaml:L16506-L16515] |
+| 112 | `tests/marine_ops/marine_engineering/test_marine_eng_perf.py` | `ocimf_database` | [docs/registry/implementation-map.yaml:L16516-L16526] |
+| 113 | `tests/marine_ops/marine_engineering/test_marine_eng_perf.py` | `pytest_benchmark_update_json` | [docs/registry/implementation-map.yaml:L16527-L16536] |
+| 114 | `tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py` | `test_refactored_polar_signatures_match_fixture` | [docs/registry/implementation-map.yaml:L16537-L16546] |
+| 115 | `tests/solvers/orcaflex/reporting/fixture_helpers.py` | `_build_loads` | [docs/registry/implementation-map.yaml:L16547-L16556] |
+| 116 | `tests/structural/parachute/test_chute_assessment.py` | `TestAssessAllLoadCases.test_governing_force_within_1_percent_of_hand_calc` | [docs/registry/implementation-map.yaml:L16557-L16566] |
+| 117 | `tests/structural/parachute/test_parachute_drag.py` | `TestDragForce.test_drag_200_mph` | [docs/registry/implementation-map.yaml:L16567-L16577] |
+| 118 | `tests/structural/parachute/test_parachute_drag.py` | `TestDragForce.test_drag_250_mph` | [docs/registry/implementation-map.yaml:L16578-L16588] |
+| 119 | `tests/structural/parachute/test_parachute_drag.py` | `TestDragForce.test_force_scales_with_v_squared` | [docs/registry/implementation-map.yaml:L16589-L16599] |
+| 120 | `tests/structural/parachute/test_parachute_drag.py` | `TestDragForce.test_result_has_newtons` | [docs/registry/implementation-map.yaml:L16600-L16610] |
+| 121 | `tests/structural/parachute/test_parachute_drag.py` | `TestChatGPTCrossValidation.test_steady_state_250mph_matches_chatgpt_newtons` | [docs/registry/implementation-map.yaml:L16611-L16621] |
+| 122 | `tests/structural/parachute/test_parachute_drag.py` | `TestChatGPTCrossValidation.test_steady_state_250mph_matches_chatgpt_lbs` | [docs/registry/implementation-map.yaml:L16622-L16632] |
+| 123 | `tests/subsea/catenary_riser/conftest.py` | `catenary_environment` | [docs/registry/implementation-map.yaml:L16633-L16642] |
+| 124 | `tests/subsea/on_bottom_stability/test_dnv_rp_f109.py` | `TestLiftForce.test_known_lift_force` | [docs/registry/implementation-map.yaml:L16643-L16652] |
+| 125 | `tests/subsea/pipeline/test_on_bottom_stability.py` | `TestDragForce.test_scenario_1` | [docs/registry/implementation-map.yaml:L16653-L16662] |
+| 126 | `tests/subsea/pipeline/test_on_bottom_stability.py` | `TestLiftForce.test_scenario_1` | [docs/registry/implementation-map.yaml:L16663-L16672] |
+| 127 | `tests/test_automation/fixtures/engineering_fixtures.py` | `get_dnv_circular_mock` | [docs/registry/implementation-map.yaml:L16673-L16682] |
+| 128 | `tests/test_automation/fixtures/engineering_fixtures.py` | `get_dnv_rectangular_mock` | [docs/registry/implementation-map.yaml:L16683-L16692] |
+| 129 | `tests/test_on_bottom_stability.py` | `TestHydrodynamicLoads.test_drag_force_per_meter` | [docs/registry/implementation-map.yaml:L16693-L16702] |
+| 130 | `tests/test_on_bottom_stability.py` | `TestHydrodynamicLoads.test_lift_force_per_meter` | [docs/registry/implementation-map.yaml:L16703-L16712] |
+| 131 | `tests/workflows/test_durable_workflows.py` | `test_workflow_registry` | [docs/registry/implementation-map.yaml:L16713-L16724] |
+| 132 | `src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py` | `hydrodynamic_force_per_meter` | [docs/registry/implementation-map.yaml:L16725-L16735] |
+| 133 | `src/digitalmodel/subsea/on_bottom_stability/dnv_rp_f109.py` | `lift_force_per_meter` | [docs/registry/implementation-map.yaml:L16736-L16746] |
+| 134 | `src/digitalmodel/subsea/on_bottom_stability/simplified.py` | `lift_force_per_meter` | [docs/registry/implementation-map.yaml:L16747-L16758] |
+| 135 | `src/digitalmodel/subsea/on_bottom_stability/simplified.py` | `inertia_force_per_meter` | [docs/registry/implementation-map.yaml:L16759-L16768] |
 
 | Signal hit definition | Hit lines | Classification / second implementation count |
 |---|---|---|
@@ -416,7 +418,7 @@ Search uses Python `re` case-sensitively, exactly the following patterns; none m
 Counted-family result: 0 further second implementations; A8 inventory includes all 135 map rows and passes the ≤1-miss criterion. The map labels `router` independent, but the code calls upstream wind functions; this classification discrepancy is a map follow-up, not an additional implementation. [src/digitalmodel/dynmoor_mooring/workflow.py:L163-L168] [src/digitalmodel/dynmoor_mooring/workflow.py:L192-L201]
 
 Repository-wide discovery also searches tracked Python text, including `scripts/`, for the package route and the delegated method names; the upstream implementations are outside this package's A8 boundary. The inventory above preserves map rows from scripts, examples and tests. [src/digitalmodel/subsea/mooring_analysis/dynmoor.py:L689-L700] [src/digitalmodel/subsea/mooring_analysis/dynmoor.py:L833-L884] [src/digitalmodel/subsea/mooring_analysis/dynmoor.py:L913-L961] [src/digitalmodel/subsea/mooring_analysis/dynmoor.py:L1086-L1127]
-Map follow-up: upstream `static_wind_force` computes its own result and is absent from this family's inventory; add/reconcile that outside-package map gap. Add package rows for line tables/pretension/restoring, fenders and passing-force routes before those families count in a later map revision; they currently have no rows in this package. Record the router's delegation classification too (issue pending (6)). [src/digitalmodel/dynmoor_mooring/workflow.py:L79-L94] [src/digitalmodel/dynmoor_mooring/workflow.py:L116-L120] [src/digitalmodel/dynmoor_mooring/workflow.py:L173-L173] [src/digitalmodel/dynmoor_mooring/workflow.py:L188-L207] [src/digitalmodel/subsea/mooring_analysis/dynmoor.py:L1104-L1118]
+Map follow-up: upstream `static_wind_force` computes its own result and is absent from this family's inventory; add/reconcile that outside-package map gap. Add package rows for line tables/pretension/restoring, fenders and passing-force routes before those families count in a later map revision; they currently have no rows in this package. Record the router's delegation classification too (issue pending (6)). Re-pin map citations in the five other packs reported with side-revision references and verify inventory path/symbol matches (issue pending (7)). [src/digitalmodel/dynmoor_mooring/workflow.py:L79-L94] [src/digitalmodel/dynmoor_mooring/workflow.py:L116-L120] [src/digitalmodel/dynmoor_mooring/workflow.py:L173-L173] [src/digitalmodel/dynmoor_mooring/workflow.py:L188-L207] [src/digitalmodel/subsea/mooring_analysis/dynmoor.py:L1104-L1118]
 
 ## 10. Coverage and open items
 
@@ -429,7 +431,7 @@ Read scope: both package Python files in full; both module test files in full; t
 | `docs/registry/module-routing.yaml` | Existing development entry, both test paths. [docs/registry/module-routing.yaml:L267-L272] |
 | `docs/registry/agent-pack-audit/production-nde-functions-3.json` | Ancillary discovery: structural diagnostics for the separate physics package; not numerical qualification evidence. [docs/registry/agent-pack-audit/production-nde-functions-3.json:L1-L18] [docs/registry/agent-pack-audit/production-nde-functions-3.json:L6482-L6518] |
 | `docs/registry/implementation-map.md` | Repository-wide wind/current family discovery summary. [docs/registry/implementation-map.md:L24-L24] |
-| `docs/registry/implementation-map.yaml` | Full parsed map family inventory in section 9 at its separately stated ref. [docs/registry/implementation-map.yaml:L1-L3] |
+| `docs/registry/implementation-map.yaml` | Full parsed map family inventory in section 9 at the header code pin. [docs/registry/implementation-map.yaml:L1-L3] |
 | `docs/plans/2026-07-13-issue-1571-aqwa-triangles-frequency-v261.md` | Incidental historical mention of DYNMOOR field-name contracts; no additional wrapper requirements inferred. [docs/plans/2026-07-13-issue-1571-aqwa-triangles-frequency-v261.md:L171-L171] |
 
 The calculation-citation contract was read from the planning repository; no unavailable referenced contract is claimed, and this change introduces no standards-derived constants or module code. Existing serializer outputs carry no citation sidecar. [src/digitalmodel/dynmoor_mooring/workflow.py:L240-L272]
@@ -442,6 +444,15 @@ The calculation-citation contract was read from the planning repository; no unav
 | Time-domain scope | Four placeholders remain SKIP, not NOT_RUN; scope or implement separately; issue pending (4). [tests/subsea/mooring_analysis/test_dynmoor.py:L803-L820] |
 | UNVERIFIED claim in section 3 | Qualify publication editions, validity envelopes and independent benchmark provenance; issue pending (5). [tests/subsea/mooring_analysis/test_dynmoor.py:L1-L38] |
 | Map gaps and router classification | Add missing package families and upstream wind definition, reconcile delegation; issue pending (6). [src/digitalmodel/dynmoor_mooring/workflow.py:L79-L94] [src/digitalmodel/subsea/mooring_analysis/dynmoor.py:L1104-L1118] |
+
+### Pinned test fingerprints and offline statuses
+
+C5 reference pin: `21942e8cfc7dfb985c5bfa693245df7d197cf76c`. SHA-256 values below hash the complete bytes returned by `git show` at that pin. The 40-node status table below is the reference record; its 36 PASS and 4 SKIP entries are available without historical scratch logs.
+
+| Test source at reference pin | SHA-256 |
+|---|---|
+| `tests/subsea/mooring_analysis/test_dynmoor.py` | `f73073e5ddf3febab814bff83c315d9ed21a878e07ab5a4d063550b304d65b27` |
+| `tests/subsea/mooring_analysis/test_dynmoor_workflow.py` | `0824336d5987bcb8fd5c8d2a4f21dd6d991914569d56e91da2214e1961c99d04` |
 
 ### Full offline test inventory
 
