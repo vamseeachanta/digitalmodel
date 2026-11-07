@@ -62,25 +62,37 @@ def test_stream_rejects_vorticity_outside_matching_layout(monkeypatch, shape):
         flow.ShearFlowLoader().stream_sample(n_steps=1)
 
 
-def test_explicit_upstream_transpose_preserves_coordinates(monkeypatch):
-    """A non-square (x, y, component) snapshot needs both axis permutations.
+@pytest.mark.parametrize("component_axis", [False, True], ids=["xy", "xy1"])
+def test_explicit_upstream_transpose_preserves_coordinates(monkeypatch, component_axis):
+    """Converted scalar layouts must preserve coordinates on a non-square grid.
 
     Chosen spacings dx=0.5 m, dy=2 m and u=3y+2x+7, v=5x-4y-1
     give the independent curl 5-3=2 inverse seconds. Moving only the
-    component axis would leave x and y reversed.
+    component axis would leave x and y reversed. A separate scalar fixture
+    10*x+y checks vorticity transport; it is not the curl of this velocity.
     """
     x, y = np.meshgrid(np.arange(4) * 0.5, np.arange(3) * 2, indexing="ij")
     raw_velocity = np.stack((3 * y + 2 * x + 7, 5 * x - 4 * y - 1), axis=-1)
-    raw_vorticity = np.full((4, 3, 1), 2.0)
+    raw_vorticity = 10 * x + y
+    if component_axis:
+        raw_vorticity = raw_vorticity[..., np.newaxis]
+        vorticity = raw_vorticity.transpose(2, 1, 0)
+    else:
+        vorticity = raw_vorticity.T[np.newaxis]
     sample = {
         "velocity": raw_velocity.transpose(2, 1, 0),
-        "vorticity": raw_vorticity.transpose(2, 1, 0),
+        "vorticity": vorticity,
     }
     monkeypatch.setattr(flow, "WELL_AVAILABLE", True)
     monkeypatch.setattr(flow.ShearFlowLoader, "_build_dataset", lambda self: [sample])
     snapshot = flow.ShearFlowLoader().stream_sample(n_steps=1)[0]
     assert snapshot["velocity"].shape == (2, 3, 4)
     assert snapshot["vorticity"].shape == (1, 3, 4)
+    # Hand values of 10*x+y: x=(0, 0.5, 1, 1.5), y=(0, 2, 4).
+    np.testing.assert_array_equal(
+        snapshot["vorticity"],
+        np.array([[[0, 5, 10, 15], [2, 7, 12, 17], [4, 9, 14, 19]]]),
+    )
     np.testing.assert_array_equal(
         flow.vorticity_from_velocity(snapshot["velocity"], dx_m=0.5, dy_m=2),
         np.full((1, 3, 4), 2.0),

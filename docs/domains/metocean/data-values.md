@@ -15,6 +15,7 @@ and data-interface behavior; they do not qualify a measured dataset or a design.
 | 3 | 2026-11-06 | Enforced matching snapshot shapes at extraction and specified the upstream axis permutation to prevent silent acceptance of incompatible layouts. |
 | 4 | 2026-11-06 | Clarified that live data requires conversion in the dataset builder because the shipped iterator returns upstream data unchanged. |
 | 5 | 2026-11-06 | Distinguished scalar vorticity conversion from vector conversion so that a field without a component axis uses a valid permutation. |
+| 6 | 2026-11-06 | Checked both raw scalar layouts with coordinate-dependent values so that incorrect spatial permutations are observable. |
 
 ## Slice 1: pressure CSV retrieval
 
@@ -94,8 +95,7 @@ explicit permutation on a non-square grid with unequal spacings. Shape checks
 cannot identify swapped axes or coincident dimensions. Comparing a synthetic
 snapshot with its injected vorticity tests transport and arithmetic, not
 real-dataset axis order; live upstream compatibility remains unverified.
-These are tests that inject converted samples; no production conversion is
-implemented.
+The tests above inject converted samples; no production conversion is implemented.
 
 Interior derivatives use centred difference quotients; boundary derivatives
 use one-sided quotients, without periodic wrapping. For an affine field,
