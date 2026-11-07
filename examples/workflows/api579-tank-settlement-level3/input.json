@@ -1,0 +1,30 @@
+{
+  "basis": "Synthetic preparation example; all geometry, loads and coefficients are assumed for arithmetic demonstration, not engineering acceptance inputs.",
+  "geometry": {
+    "radius_m": 10.0,
+    "courses": [
+      {"height_m": 5.0, "thickness_m": 0.010, "material_ref": "synthetic steel"},
+      {"height_m": 5.0, "thickness_m": 0.008, "material_ref": "synthetic steel"}
+    ],
+    "bottom": {"thickness_m": 0.006, "material_ref": "synthetic steel"},
+    "annular_ring": {"width_m": 1.0, "thickness_m": 0.010, "material_ref": "synthetic steel"},
+    "top_angle": {"area_m2": 0.001, "material_ref": "synthetic steel"},
+    "wind_girders": []
+  },
+  "loads": {
+    "product_density_kg_m3": 800.0,
+    "steel_density_kg_m3": 7800.0,
+    "gravity_m_s2": 10.0,
+    "fill_height_m": 8.0
+  },
+  "settlement": {
+    "source_ref": "synthetic finite Fourier series; NIST DLMF equation 1.8.1",
+    "mean_m": -0.010,
+    "harmonics": [
+      {"order": 1, "cos_m": 0.002, "sin_m": 0.0},
+      {"order": 2, "cos_m": 0.0, "sin_m": 0.003}
+    ],
+    "angles_deg": [0, 45, 90, 135, 180, 225, 270, 315]
+  },
+  "mesh": {"target_size_m": 0.5, "junction_size_m": 0.1}
+}
