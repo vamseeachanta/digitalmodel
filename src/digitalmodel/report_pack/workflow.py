@@ -175,9 +175,9 @@ class ReportPack:
 def router(cfg: dict) -> dict:
     """Write a report pack after validating destinations and relative links.
 
-    Figures on a different filesystem drive from the Markdown report are
-    rejected with ReportPackConfigError before any output is written,
-    including HTML and manifests, even though HTML embeds those figures.
+    Figures on a different filesystem drive from the Markdown report use
+    absolute file URIs in Markdown. HTML still embeds those figures, and
+    manifests retain relative links between the generated outputs.
     """
     pack = load_pack(cfg)
     settings = cfg["report_pack"]
@@ -905,19 +905,18 @@ def _markdown_results(results: dict[str, Any], output_path: Path | None = None) 
         lines.append("")
         lines.append(f"Source: `{table['source']}`")
         lines.append("")
-    for index, figure in enumerate(results["figures"], start=1):
+    for figure in results["figures"]:
         path = figure["path"]
         try:
-            link = (
+            link = quote(
                 relative_artifact_path(path, output_path)
-                if output_path is not None else path.name
+                if output_path is not None else path.name,
+                safe="/",
             )
-        except ValueError as exc:
-            raise ReportPackConfigError(
-                f"report_pack.results.figures[{index}] {figure['title']!r}: "
-                f"cannot link figure {path.as_posix()}: {exc}"
-            ) from exc
-        lines.append(f"![{figure['title']}]({quote(link, safe='/')})")
+        except ValueError:
+            # as_uri already encodes reserved characters and retains the scheme.
+            link = path.as_uri()
+        lines.append(f"![{figure['title']}]({link})")
         lines.append("")
     return lines
 

@@ -55,37 +55,60 @@ def test_display_paths_use_forward_slashes(monkeypatch, artifact, expected):
     assert workflow._display_path(path) == expected
 
 
-def test_incompatible_figure_roots_leave_no_outputs(tmp_path, monkeypatch):
-    import digitalmodel._output_paths as paths
+@pytest.mark.parametrize("suffix", [".svg", ".png"])
+def test_incompatible_figure_roots_use_file_uri_and_keep_pack(tmp_path, monkeypatch, suffix):
 
     cfg = _cfg(tmp_path)
-    figure = tmp_path / "figure.svg"
-    figure.write_text(
-        '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
-        encoding="utf-8", newline="\n",
-    )
+    figure = tmp_path / f"figure #50% ü{suffix}"
+    if suffix == ".svg":
+        figure.write_text(
+            '<svg xmlns="http://www.w3.org/2000/svg"><title>Fixture</title></svg>',
+            encoding="utf-8", newline="\n",
+        )
+    else:
+        from base64 import b64decode
+
+        figure.write_bytes(b64decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aM1cAAAAASUVORK5CYII="
+        ))
     before = sha256(figure.read_bytes()).digest()
     cfg["report_pack"]["results"] = {
         "figures": [{"title": "Fixture", "path": str(figure)}],
     }
-    original = paths.os.path.relpath
+    original = workflow.relative_artifact_path
 
-    def incompatible_figure(artifact, document_dir):
+    def incompatible_figure(artifact, document):
         if artifact == figure.resolve():
             raise ValueError("Synthetic incompatible roots")
-        return original(artifact, document_dir)
+        return original(artifact, document)
 
-    monkeypatch.setattr(paths.os.path, "relpath", incompatible_figure)
-    with pytest.raises(ValueError, match="incompatible roots") as caught:
-        workflow.router(cfg)
-    assert isinstance(caught.value, workflow.ReportPackConfigError)
-    message = str(caught.value)
-    assert "report_pack.results.figures[1]" in message
-    assert "Fixture" in message
-    assert figure.as_posix() in message
-    assert isinstance(caught.value.__cause__, ValueError)
-    assert not (tmp_path / "results.html.json").exists()
+    monkeypatch.setattr(workflow, "relative_artifact_path", incompatible_figure)
+    workflow.router(cfg)
+    directory = tmp_path / "results.html.json"
+    assert {path.name for path in directory.iterdir()} == set(OUTPUTS) - {"analysis_report.pdf"}
+    markdown = (directory / "analysis_report.md").read_text(encoding="utf-8")
+    link = re.search(r"!\[Fixture\]\(([^)]+)\)", markdown).group(1)
+    assert link == figure.resolve().as_uri()
+    assert "%23" in link and "%25" in link and "%C3%BC" in link
+    html = (directory / "analysis_report.html").read_text(encoding="utf-8")
+    assert ("<svg" if suffix == ".svg" else "data:image/png;base64,") in html
+    manifest = json.loads((directory / "analysis_manifest.json").read_text(encoding="utf-8"))
+    assert manifest["html_report"] == "analysis_report.html"
+    assert manifest["markdown_report"] == "analysis_report.md"
     assert sha256(figure.read_bytes()).digest() == before
+
+
+def test_cross_drive_figure_uri_preserves_drive_and_encoding(monkeypatch):
+    def incompatible_roots(*args):
+        raise ValueError("Synthetic incompatible roots")
+
+    monkeypatch.setattr(workflow, "relative_artifact_path", incompatible_roots)
+    results = {"tables": [], "figures": [{
+        "title": "Fixture", "path": PureWindowsPath("D:/figures/figure #50% ü.svg"),
+    }]}
+    assert workflow._markdown_results(results, PureWindowsPath("C:/reports/analysis.md")) == [
+        "![Fixture](file:///D:/figures/figure%20%2350%25%20%C3%BC.svg)", "",
+    ]
 
 
 def test_unsupported_figure_error_uses_forward_slashes(monkeypatch):

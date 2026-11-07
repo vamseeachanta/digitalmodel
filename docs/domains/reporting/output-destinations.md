@@ -3,8 +3,9 @@
 Report-pack output, the wall-thickness explorer and cross-section reports now
 validate their selected destinations before writing. Colliding names, resolved
 symlinks, hard links and case-only aliases raise `ValueError`. Report-pack links
-are relative to the document that contains them; explorer sidecars can be placed
-in a separate directory. No engineering calculations or acceptance limits change.
+are relative to the document that contains them where possible; explorer
+sidecars can be placed in a separate directory. No engineering calculations or
+acceptance limits change.
 
 ## Revision history
 
@@ -12,6 +13,7 @@ in a separate directory. No engineering calculations or acceptance limits change
 | --- | --- | --- |
 | Initial | 2026-10-22 | Add destination preflight, artifact links and disposable examples to prevent overwritten outputs and broken links. |
 | Correction | 2026-11-03 | Apply retained permissions before writing replacement content and cite the exclusive creation API in use. |
+| Cross-drive figures | 2026-11-06 | Use absolute file URIs for cross-drive Markdown figures so the report pack can still be written. |
 
 ## Audit coverage
 
@@ -78,8 +80,11 @@ Preflight does not lock the filesystem or provide a transaction across all
 outputs. Concurrent path changes and failures after writing begins remain
 possible. Distinct existing output files retain each writer's replacement
 policy. Hard links are checked only when they exist. Case-only destinations are
-rejected conservatively even on case-sensitive filesystems. Relative links
-across different filesystem drives are unsupported and raise before writing.
+rejected conservatively even on case-sensitive filesystems. Markdown figures
+on a different filesystem drive use absolute file URIs; HTML still embeds their
+content. Those URIs require access to the original local files and can be blocked
+by a browser when the Markdown is served over HTTP. Other artifact links still
+require compatible filesystem roots.
 Moving a Markdown report without its referenced figures can still break links.
 Symlinked artifacts must be served at their resolved locations for the generated
 relative links to work; arbitrary web-server alias mappings are outside scope.
