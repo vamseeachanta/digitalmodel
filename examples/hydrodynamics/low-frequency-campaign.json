@@ -11,7 +11,7 @@
     "basis": "assumed, based on previous experience; reviewed source specification not retained",
     "mass_kg": 119052930,
     "centre_of_gravity_m": [115.5, 0, -5.5],
-    "centre_of_gravity_basis": "estimate",
+    "centre_of_gravity_basis": "set at reconstructed centre of buoyancy; vertical coordinate is a placeholder until a weight report is supplied",
     "radii_of_gyration_m": [17.15, 57.75, 60.06],
     "radii_of_gyration_basis": "estimate",
     "B44": 6000000,

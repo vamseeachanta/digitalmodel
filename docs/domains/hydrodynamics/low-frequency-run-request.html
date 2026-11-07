@@ -24,6 +24,7 @@ and physical qualification are not established; no solver is run by these tools.
 <tr><td>1</td><td>2026-10-20</td><td>Added reconstructed full-body geometry, buoyancy and symmetry gates, proposed sampling and pilot order because the original mesh represented half the body.</td></tr>
 <tr><td>2</td><td>2026-10-24</td><td>Required complete preparation evidence and justification for each heading, enforced the corrected natural-frequency bound, and marked unverified geometry inputs as assumptions.</td></tr>
 <tr><td>3</td><td>2026-11-06</td><td>Required horizontal buoyancy alignment with the supplied centre of gravity before preparation and clarified the constructed mass-balance result.</td></tr>
+<tr><td>4</td><td>2026-11-06</td><td>Clarified that the assumed centre of gravity equals reconstructed buoyancy, so horizontal alignment checks integration and vertical loading awaits a weight report.</td></tr>
 </tbody>
 <caption>Retained issue history.</caption>
 </table>
@@ -31,9 +32,10 @@ and physical qualification are not established; no solver is run by these tools.
 <h2>Geometry and loading basis</h2>
 <p>Scope: issue 1548. Geometry, loading and environmental inputs are assumed, based on previous experience;
 a reviewed source specification is not retained with this package. The assumed mass is 119,052,930 kg,
-CoG [115.5, 0, -5.5] m (estimate), gyradii [17.15, 57.75, 60.06] m (estimate), B44 = 6.0e6,
+CoG [115.5, 0, -5.5] m (set at the reconstructed centre of buoyancy), gyradii [17.15, 57.75, 60.06] m (estimate), B44 = 6.0e6,
 water depth 1,000 m, density 1,025 kg/m3 and gravity 9.80665 m/s2. A weight report is MISSING.
 The heading convention, including which end is the bow, and the final frequency list are MISSING.
+The vertical CoG value is a placeholder until a weight report is supplied, not a KG estimate.
 The estimates do not replace a weight report.</p>
 <p>The deterministic NumPy generator constructs a full wall-sided hull of length 231.0 m, beam 49.0 m
 and draft 11.0 m, with equal end breadths and linear tapers over x = 0 to 16.5 m and 214.5 to 231.0 m.
@@ -58,8 +60,10 @@ The mass check also applies to externally supplied meshes. Horizontal alignment 
 |x_B − x_G| ≤ 0.001 × mesh length and |y_B − y_G| ≤ 0.001 × mesh beam, measured from panel extents.
 The centre of gravity must be supplied as three finite metre coordinates in the same frame as the mesh;
 vertical separation is allowed. Missing or invalid coordinates return NOT_EVALUATED, and an exceeded
-horizontal limit returns FAIL even with matching displacement. The generated geometry passes these
-limits with the assumed CoG above. These are supplied investigation criteria, not independently verified
+horizontal limit returns FAIL even with matching displacement. The assumed CoG was set at the reconstructed
+centre of buoyancy, so the generated horizontal PASS is by construction and confirms integration only;
+it does not establish agreement with an independent loading estimate.
+These are supplied investigation criteria, not independently verified
 standard limits, and do not establish stability. Digest agreement
 establishes reproducibility, not source validity. The half-body negative control has volume 58,074.6 m3, half the waterplane,
 an off-centre buoyancy location and 50.0 % mass residual, and returns FAIL. Missing, nonfinite, open,

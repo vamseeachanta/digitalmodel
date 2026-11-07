@@ -20,6 +20,8 @@ import numpy as np
 LENGTH, BEAM, DRAFT, TAPER = 231.0, 49.0, 11.0, 16.5
 VOLUME, MASS, RHO, GRAVITY = 116149.2, 119052930.0, 1025.0, 9.80665
 END_HALF_BREADTH = (VOLUME / DRAFT - BEAM * (LENGTH - TAPER)) / (2 * TAPER)
+# Set at reconstructed buoyancy centre; vertical loading awaits a weight report.
+CENTRE_OF_GRAVITY = (LENGTH / 2, 0.0, -DRAFT / 2)
 # (end intervals, middle intervals, transverse intervals, vertical intervals).
 # Even transverse counts split the bottom and transoms at the centreline.
 # Counts and target sizes are supplied meshing choices; quality is unqualified.
@@ -301,9 +303,7 @@ def generate(output):
                 raise ValueError("existing mesh digest mismatch")
         else:
             path.write_bytes(data)
-        report = check_df2_buoyancy(
-            path, MASS, centre_of_gravity=[LENGTH / 2, 0, -DRAFT / 2]
-        )
+        report = check_df2_buoyancy(path, MASS, centre_of_gravity=CENTRE_OF_GRAVITY)
         if report["decision"] != "PASS":
             raise ValueError("generated mesh fails DF2")
         manifest["meshes"][level] = dict(

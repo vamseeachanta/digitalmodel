@@ -17,6 +17,15 @@ mesh = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(mesh)
 
 
+def test_generator_loading_centre_matches_example_template():
+    template = json.loads(
+        (ROOT / "examples/hydrodynamics/low-frequency-campaign.json").read_text()
+    )
+    assert (
+        list(mesh.CENTRE_OF_GRAVITY) == template["base_values"]["centre_of_gravity_m"]
+    )
+
+
 @pytest.mark.parametrize("level", ["coarse", "medium", "fine"])
 def test_full_mesh_geometry_and_determinism(level, tmp_path):
     data = mesh.gdf_bytes(level)
