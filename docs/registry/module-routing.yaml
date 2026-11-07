@@ -397,6 +397,10 @@ modules:
     key_tests: [tests/process_piping/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#process_piping
   - module: production_chemistry
+    submodules:
+      production_chemistry:
+        agent_pack: src/digitalmodel/production_chemistry/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/production_chemistry/
     maturity: development
     owner_wiki: docs/domains/README.md
