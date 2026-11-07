@@ -5,7 +5,7 @@
 | Module | signal_processing/time_series |
 | Repository | digitalmodel |
 | Path | src/digitalmodel/signal_processing/time_series |
-| Pack revision | 0 |
+| Pack revision | 1 |
 | Code revision | 21942e8cfc7dfb985c5bfa693245df7d197cf76c |
 | Analysis family | Engineering calculations (EC); AQG r0, section 10, Python calculations |
 | Quality role | Engineering calculations quality manager |
@@ -55,7 +55,7 @@ The FFT has no spatial coordinate frame; custom displacement computes forward/st
 | Peak extraction | Wavelet, local extrema or `find_peaks`; height and minimum distance from configured percentages | Unsupported selection silently returns an empty list. [src/digitalmodel/signal_processing/time_series/time_series_components.py:L332-L362] [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L256-L283] |
 | Frequency filtering | Coefficient mask and inverse FFT; exclusive band bounds | Abrupt cutoff; main inverse errors become `None`. [src/digitalmodel/signal_processing/time_series/time_series_components.py:L397-L437] [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L301-L328] |
 | Rainflow | Delegates to the external `rainflow.extract_cycles`; docstring names ASTM E1049-85 | ASTM E1049, Standard Practices for Cycle Counting in Fatigue Analysis, edition 1985; no clause title specified in code; clause text not checked against the licensed copy; no compliance claim or citation sidecar emitted by this wrapper. [src/digitalmodel/signal_processing/time_series/time_series_components.py:L644-L657] |
-| Auxiliary calculations | Rolling mean, sigma clipping, statistics, two-component Euclidean resultant, tangent displacement and cumulative trapezoid integration | No governing standard specified in these implementations; legacy API defects are recorded in section 6. [src/digitalmodel/signal_processing/time_series/time_series_components.py:L498-L591] [src/digitalmodel/signal_processing/time_series/time_series_components.py:L659-L738] [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L338-L513] |
+| Auxiliary calculations | Rolling mean, sigma clipping, statistics, two-component Euclidean resultant, tangent displacement and cumulative trapezoid integration | No governing standard specified in these implementations. Integration calls `scipy.integrate.cumtrapz`, removed in SciPy 1.14, and raises `AttributeError` under locked SciPy 1.15.3 until replaced with `scipy.integrate.cumulative_trapezoid`; section 6 records the other legacy API defects. [src/digitalmodel/signal_processing/time_series/time_series_components.py:L498-L591] [src/digitalmodel/signal_processing/time_series/time_series_components.py:L659-L738] [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L338-L513] |
 
 The synthetic hand values are independent finite-sum answers, not snapshots; the existing documentation derives two nonzero coefficients, amplitude 4 A and mean-square 8 A², with absolute tolerance 1e-9 and relative tolerance zero. [docs/domains/signal_processing/synthetic-value-checks.md:L55-L77] [tests/signal_processing/time_series/test_component_values.py:L47-L84]
 
@@ -75,14 +75,14 @@ Independent answers use the finite geometric-sum and Parseval derivations in the
 | F1 main average, not validated | Arithmetic mean of two identical spectra should retain 262144 A², amplitude 4 A, mean-square 8 A²; abs 1e-9, rel 0 | `tests/signal_processing/time_series/test_component_values.py::test_window_average_preserves_amplitude_and_parseval[components]` | FAIL (strict XFAIL) / same; [tests/signal_processing/time_series/test_component_values.py:L124-L149] |
 | F2 alternate average, not validated | Same independent expected answer; defective divisor is not adopted as reference | `tests/signal_processing/time_series/test_component_values.py::test_window_average_preserves_amplitude_and_parseval[variant]` | FAIL (strict XFAIL) / same; [tests/signal_processing/time_series/test_component_values.py:L124-L149] |
 
-Regression examples (four; no independent amplitude acceptance for the noisy workflow, no numerical acceptance for mocked wrappers). [tests/workflows/test_durable_workflows.py:L462-L467] [tests/signal_processing/time_series/test_sample_fft.py:L13-L38]
+Regression examples (four; no independent amplitude acceptance for the workflow with seeded pseudo-random noise (fixed seed 1234), no numerical acceptance for mocked wrappers). [tests/workflows/test_durable_workflows.py:L462-L467] [tests/signal_processing/time_series/test_sample_fft.py:L13-L38]
 
 | Case | Input and expected result | Test node ID | BASE / AFTER |
 |---|---|---|---|
 | R1 wrapper | `sample_fft.yml`; mocked completed status only; no numerical tolerance | `tests/signal_processing/time_series/test_sample_fft.py::test_run_process` | PASS / PASS; [tests/signal_processing/time_series/test_sample_fft.py:L13-L38] |
 | R2 wrapper | `sample_window_fft.yml`; same mock limitation | `tests/signal_processing/time_series/test_window_fft.py::test_run_process` | PASS / PASS; [tests/signal_processing/time_series/test_window_fft.py:L13-L38] |
 | R3 wrapper | `csv_window_fft.yml`; same mock limitation | `tests/signal_processing/time_series/test_csv_window_fft.py::test_run_process` | PASS / PASS; [tests/signal_processing/time_series/test_csv_window_fft.py:L13-L38] |
-| R4 durable workflow | `examples/workflows/time-series/input.yml`; dominant frequency 0.20 Hz (pytest approximate default), raw power greater than 250000 A²; stochastic power threshold is regression evidence | `tests/workflows/test_durable_workflows.py::test_workflow_registry[time-series]` | PASS / PASS; [docs/registry/workflows.yaml:L231-L239] [tests/workflows/test_durable_workflows.py:L462-L467] |
+| R4 durable workflow | `examples/workflows/time-series/input.yml`; dominant frequency 0.20 Hz (pytest approximate default), raw power greater than 250000 A²; seeded pseudo-random noise with fixed seed 1234; power threshold is regression evidence only | `tests/workflows/test_durable_workflows.py::test_workflow_registry[time-series]` | PASS / PASS; [docs/registry/workflows.yaml:L231-L239] [examples/workflows/time-series/input.yml:L10-L14] [tests/workflows/test_durable_workflows.py:L462-L467] |
 
 ## 5. QA gates
 
@@ -90,12 +90,12 @@ Applicability follows AQG r0, section 10, Python calculations; G5 follows AQG r0
 
 | Gate | Applicability | Module check and numeric pass criterion | Evidence |
 |---|---|---|---|
-| G0 | Applicable | C0: check synthetic input rate times `time_step` differs from 1 by at most 1e-12 dimensionless; C7: resolve every pack citation, 0 missing files or line ranges | Synthetic fixture and source resolver; [tests/signal_processing/time_series/test_component_values.py:L25-L44] [tests/signal_processing/time_series/test_component_values.py:L47-L58] |
+| G0 | Applicable | C0: check synthetic input rate times `time_step` differs from 1 by at most 1e-12 dimensionless; C7: resolve every Python source locator with the repository checker and inspect remaining citation ranges with `git show <code-revision>:<path>`, all at the header code revision; 0 missing files or line ranges | Synthetic fixture; `python scripts/docs/source_locators.py src/digitalmodel/signal_processing/time_series/docs/agent-pack.md` (requires the pinned Markdown formatter and Node.js); [tests/signal_processing/time_series/test_component_values.py:L25-L44] [tests/signal_processing/time_series/test_component_values.py:L47-L58] |
 | G1 | Applicable, Python imports and tests | C1: component collection 10 nodes and workflow collection 1 node; 0 unexpected test failures and 0 unexplained skips; preserve and report the two strict expected failures separately | Offline pytest summaries; [tests/signal_processing/time_series/test_component_values.py:L17-L22] [tests/signal_processing/time_series/test_component_values.py:L124-L149] [docs/registry/workflows.yaml:L231-L239] |
 | G2 | Applicable, hand values | C2: raw `fft_analysis` amplitude 4 A, spacing 1 Hz, mean-square 8 A², power 262144 A², abs error at most 1e-9 in each stated unit, rel 0 (V1/V2); C3: both APIs give that power within 1e-9 A² (V3); C4: `identify_signal_peaks` and window flags yield exactly [16] Hz, 0 Hz error (V4/V5); C6: averaging retains the same hand power within 1e-9 A² (F1/F2), currently FAIL | Test assertions; [tests/signal_processing/time_series/test_component_values.py:L47-L149] |
 | G3 | NOT_APPLICABLE | Short solver dynamics is outside the Python calculation gate set | AQG r0, section 10, Python calculations |
 | G4 | NOT_APPLICABLE | No diffraction mesh or hydrostatics in the reviewed FFT calculation route | AQG r0, section 10, Python calculations; [src/digitalmodel/signal_processing/time_series/time_series_analysis.py:L20-L41] |
-| G5 | Applicable | C5: evidence manifest contains 11 example-node results, 6 gate applicability rows and both test-run records; 0 missing entries, unit records | This pack sections 4–5 and scratch self-check JSON; AQG r0, section 9 |
+| G5 | Applicable | C5: collect all 11 section-4 example-node IDs with 0 unresolved nodes; inspect the 6 gate applicability rows and both test-run records for 0 missing entries, including units | This pack sections 4–5 and `PYTHONPATH=src uv run --no-project --with pytest python -m pytest tests/docs/test_agent_pack_node_ids.py -k time_series -q -p no:cacheprovider --basetemp=<scratch>`; AQG r0, section 9 |
 
 Checks defined: eight; G0 two, G1 one, G2 four, G5 one. C0 and C7 are reproducible arithmetic/source checks; C1–C4 and C6 use existing test nodes; C5 checks record completeness. These criteria define this draft's review procedure, not approval of the failed average.
 
@@ -138,9 +138,9 @@ rg -n 'default|seed|random|rolling|floor|window|range|initial|empty|cache|read_c
 | S22 | Sample generator resets global random state and uses fixed noise scale 0.5 | no detection check exists | issue pending (2); [src/digitalmodel/signal_processing/time_series/time_series_components.py:L622-L626] |
 | S23 | Custom resultant ignores a dataset not matching the expected dataframe selector | no detection check exists | issue pending (1); [src/digitalmodel/signal_processing/time_series/time_series_components.py:L666-L672] |
 | S24 | Displacement takes tangent of caller angles directly and assumes compatible length units | no detection check exists | issue pending (2); [src/digitalmodel/signal_processing/time_series/time_series_components.py:L686-L707] |
-| S25 | Integration treats first column as datetime and uses minimum microsecond component, losing whole seconds | no detection check exists | issue pending (2); [src/digitalmodel/signal_processing/time_series/time_series_components.py:L724-L727] |
-| S26 | Unsupported integration selector leaves the frame without integration columns | no detection check exists | issue pending (1); [src/digitalmodel/signal_processing/time_series/time_series_components.py:L728-L738] |
-| S27 | Single/double integration sets initial integrals to zero without caller initial conditions | no detection check exists | issue pending (2); [src/digitalmodel/signal_processing/time_series/time_series_components.py:L729-L735] |
+| S25 | Integration treats first column as datetime and uses minimum microsecond component, losing whole seconds; selected integration raises `AttributeError` under locked SciPy 1.15.3 until `cumtrapz` is replaced with `cumulative_trapezoid` | no detection check exists | issue pending (2); [src/digitalmodel/signal_processing/time_series/time_series_components.py:L724-L727] |
+| S26 | Unsupported integration selector leaves the frame without integration columns; selected integration raises `AttributeError` under locked SciPy 1.15.3 until `cumtrapz` is replaced with `cumulative_trapezoid` | no detection check exists | issue pending (1); [src/digitalmodel/signal_processing/time_series/time_series_components.py:L728-L738] |
+| S27 | Single/double integration sets initial integrals to zero without caller initial conditions; selected integration raises `AttributeError` under locked SciPy 1.15.3 until `cumtrapz` is replaced with `cumulative_trapezoid` | no detection check exists | issue pending (2); [src/digitalmodel/signal_processing/time_series/time_series_components.py:L729-L735] |
 | S28 | Database connection exception printed and loop continues | no detection check exists | issue pending (1); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L18-L25] |
 | S29 | Input acquisition exception printed and loop continues | no detection check exists | issue pending (1); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L26-L33] |
 | S30 | Missing data source exits with default successful exit status | no detection check exists | issue pending (1); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L35-L38] |
@@ -163,9 +163,9 @@ rg -n 'default|seed|random|rolling|floor|window|range|initial|empty|cache|read_c
 | S47 | Alternate upper clipping tests first range item and substitutes NaN | no detection check exists | issue pending (2); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L388-L399] |
 | S48 | Alternate resultant silently ignores unmatched dataframe selector | no detection check exists | issue pending (1); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L443-L449] |
 | S49 | Alternate tangent displacement assumes radian angles and compatible lengths | no detection check exists | issue pending (2); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L462-L483] |
-| S50 | Alternate integration loses whole seconds from datetime step | no detection check exists | issue pending (2); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L499-L502] |
-| S51 | Unsupported alternate integration selector silently omits output columns | no detection check exists | issue pending (1); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L503-L513] |
-| S52 | Alternate single/double integration assumes zero initial integral | no detection check exists | issue pending (2); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L504-L510] |
+| S50 | Alternate integration loses whole seconds from datetime step; selected integration raises `AttributeError` under locked SciPy 1.15.3 until `cumtrapz` is replaced with `cumulative_trapezoid` | no detection check exists | issue pending (2); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L499-L502] |
+| S51 | Unsupported alternate integration selector silently omits output columns; selected integration raises `AttributeError` under locked SciPy 1.15.3 until `cumtrapz` is replaced with `cumulative_trapezoid` | no detection check exists | issue pending (1); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L503-L513] |
+| S52 | Alternate single/double integration assumes zero initial integral; selected integration raises `AttributeError` under locked SciPy 1.15.3 until `cumtrapz` is replaced with `cumulative_trapezoid` | no detection check exists | issue pending (2); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L504-L510] |
 | S53 | Alternate sample fixes seed, interval, period, range and noise, resets global RNG | no detection check exists | issue pending (2); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L519-L526] |
 | S54 | Example discards the boolean result of allclose instead of asserting | no detection check exists | issue pending (3); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L546-L548] |
 | S55 | Example high-frequency coefficients zeroed at selected peak | no detection check exists | #60; [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L558-L560] |
@@ -180,8 +180,10 @@ No actual `continue` statement, external-text `int()`/`float()` conversion, 1970
 | Standalone driver imports an obsolete common path and calls undefined TimeSeriesComponentsAdapter | no detection check exists | issue pending (3); [src/digitalmodel/signal_processing/time_series/time_series.py:L39-L48] |
 | Main dataframe FFT wrapper calls fft_analysis and fft_window_analysis without required arguments | no detection check exists | issue pending (3); [src/digitalmodel/signal_processing/time_series/time_series_components.py:L199-L213] |
 | Response-ratio helper calls fft_window_analysis with an incompatible signature | no detection check exists | issue pending (3); [src/digitalmodel/signal_processing/time_series/time_series_components.py:L439-L445] |
-| Statistics mean/stdev rows include one extra None and can have the wrong row length | no detection check exists | issue pending (3); [src/digitalmodel/signal_processing/time_series/time_series_components.py:L575-L589] |
-| Alternate statistics repeats the row-length defect | no detection check exists | issue pending (3); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L413-L426] |
+| Statistics mean/stdev rows always include one extra None; a nonempty-column input always raises ValueError on row assignment under locked pandas 2.3.3; sigma clipping that needs the stdev row is unreachable through this path | no detection check exists | issue pending (3); [src/digitalmodel/signal_processing/time_series/time_series_components.py:L575-L589] |
+| Alternate statistics repeats the extra-element defect and always raises ValueError for a nonempty-column input under locked pandas 2.3.3; dependent sigma clipping is unreachable through it | no detection check exists | issue pending (3); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L413-L426] |
+| Main integration calls removed scipy.integrate.cumtrapz; selected trapz solver raises AttributeError under locked SciPy 1.15.3 until replaced with scipy.integrate.cumulative_trapezoid | no detection check exists | issue pending (3); [src/digitalmodel/signal_processing/time_series/time_series_components.py:L729-L735] |
+| Alternate integration repeats the removed cumtrapz call and raises AttributeError under locked SciPy 1.15.3 until replaced with scipy.integrate.cumulative_trapezoid | no detection check exists | issue pending (3); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L504-L510] |
 | Alternate run_example unpacks three return values from a two-value FFT API | no detection check exists | issue pending (3); [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L533-L539] |
 | Spectrum filtering uses min/max variables even when filter flag is absent or false | no detection check exists | #60; [src/digitalmodel/signal_processing/time_series/time_series_components.py:L263-L273] |
 | Alternate peak assignment uses chained indexing; warning is explicitly tested, future pandas behavior unqualified | C4 | #3350; [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L241-L243] |
@@ -208,11 +210,11 @@ The durable time-series workflow uses the package's engine route and local synth
 
 The alternate database/visualization routes use obsolete `common.*` imports and a database adapter; their operation is outside the passing numerical examples. [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L52-L55] [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L109-L119] [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L430-L434]
 
-Implementation-map source pin: `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`; data revision named by that map: `270c8759c374b67a7f032953e7fcdb14e0224461`. Every citation to `docs/registry/implementation-map.yaml` below resolves at that source pin; all other repository citations resolve at the code pin in the header. [docs/registry/implementation-map.yaml:L1-L3]
+The implementation map is read at the header code revision, like every repository citation in this pack; the historical data revision named inside that map is `270c8759c374b67a7f032953e7fcdb14e0224461`. This data identifier is metadata, not a second citation pin. [docs/registry/implementation-map.yaml:L1-L3]
 
-Counted family: `sn-curves-and-miner-damage`, with two in-package implementation rows; it is the only family with such rows, hence the first and only counted family. Its package rows are `TimeSeriesAnalysis.router` and `TimeSeriesComponents.count_cycles`. [docs/registry/implementation-map.yaml:L18780-L18799]
+Counted family: `sn-curves-and-miner-damage`, with two in-package implementation rows; it is the only family with such rows, hence the first and only counted family. Its package rows are `TimeSeriesAnalysis.router` and `TimeSeriesComponents.count_cycles`. [docs/registry/implementation-map.yaml:L18757-L18776]
 
-The exact case-sensitive Python `re` patterns are shown below; none matches the package path under `src/digitalmodel/` case-insensitively, so none is excluded. [docs/registry/implementation-map.yaml:L16807-L16816]
+The exact case-sensitive Python `re` patterns are shown below; none matches the package path under `src/digitalmodel/` case-insensitively, so none is excluded. [docs/registry/implementation-map.yaml:L16784-L16789]
 
 ```text
 rainflow|miner|cycles_to_failure|log_a|log10.*(?:cycles|stress)|(?:stress|stress_range|delta_sigma).*\*\*.*\bm\b|damage_sum|thickness_correction|endurance_limit|sn_curve|SNcurve|sn_data|stress_life
@@ -222,408 +224,410 @@ thickness_correction|endurance_limit|n_cycles|sn_curve|stress_ranges
 
 At the code pin the grep hits module-level deprecation/import lines, `count_cycles`, and the router. Module-level text/imports compute no result; the two definitions are already inventoried, and `count_cycles` delegates to the external package. The alternate component file and standalone driver have zero hits. Further second implementations: 0; A8 passes the threshold of at most 1. [src/digitalmodel/signal_processing/time_series/time_series_components.py:L1-L29] [src/digitalmodel/signal_processing/time_series/time_series_components.py:L644-L657] [src/digitalmodel/signal_processing/time_series/time_series_analysis.py:L20-L41] [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L1-L574] [src/digitalmodel/signal_processing/time_series/time_series.py:L1-L87]
 
-Whole-repository discovery includes tracked Python files under `scripts/`, using the same expressions and definition assignment. External hits are map follow-up candidates, not package misses; listed rows retain the map's classification without independently qualifying every external routine. The complete family inventory follows in map order, including helpers, examples and test definitions that the map itself lists. [docs/registry/implementation-map.yaml:L16807-L20963]
+Whole-repository discovery includes tracked Python files under `scripts/`, using the same expressions and definition assignment. External hits are map follow-up candidates, not package misses; listed rows retain the map's classification without independently qualifying every external routine. The complete family inventory follows in map order, including helpers, examples and test definitions that the map itself lists. [docs/registry/implementation-map.yaml:L16784-L20940]
+
+The map also records `TimeSeriesComponents.filter_spectrum` for `wave-spectra` and `TimeSeriesComponents.count_cycles` for `wind-and-current-force-routes` as `needs_review` candidates; both are excluded from implementation counts pending inspection, issue pending (4). [docs/registry/implementation-map.yaml:L45870-L45876] [docs/registry/implementation-map.yaml:L46248-L46254]
 
 Map follow-up: FFT, window averaging, peak selection, filtering, response ratio, moving average, clipping/statistics, resultant, tangent displacement and integration have no in-package family rows in this map revision; they are not counted until mapped, issue pending (4). Their implementations are listed in section 3. [src/digitalmodel/signal_processing/time_series/time_series_components.py:L263-L591] [src/digitalmodel/signal_processing/time_series/time_series_components.py:L659-L738] [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L193-L513]
 
 ### Full map-family inventory
 
-The following table reproduces every one of the map family's 392 implementation rows; row numbers are local inventory ordinals, and source lines are map lines rather than code-pin implementation lines. [docs/registry/implementation-map.yaml:L16807-L20963]
+The following table reproduces every one of the map family's 392 implementation rows; row numbers are local inventory ordinals, and source lines are map lines rather than code-pin implementation lines. [docs/registry/implementation-map.yaml:L16784-L20940]
 
 | Row | Implementation path | Symbol | Map evidence |
 |---|---|---|---|
-| 1 | `docs/domains/examples/orcaflex_signal_analysis_example.py` | `example_6_custom_workflow` | [docs/registry/implementation-map.yaml:L16814-L16823] |
-| 2 | `docs/domains/examples/signal_analysis_usage_example.py` | `example_1_basic_rainflow_counting` | [docs/registry/implementation-map.yaml:L16824-L16833] |
-| 3 | `docs/domains/examples/signal_analysis_usage_example.py` | `example_4_fatigue_analysis` | [docs/registry/implementation-map.yaml:L16834-L16843] |
-| 4 | `docs/domains/examples/signal_analysis_usage_example.py` | `example_6_backward_compatibility` | [docs/registry/implementation-map.yaml:L16844-L16853] |
-| 5 | `docs/domains/examples/signal_analysis_usage_example.py` | `main` | [docs/registry/implementation-map.yaml:L16854-L16867] |
-| 6 | `examples/demos/demo_sn_library.py` | `main` | [docs/registry/implementation-map.yaml:L16868-L16879] |
-| 7 | `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `demonstrate_sn_curves` | [docs/registry/implementation-map.yaml:L16880-L16889] |
-| 8 | `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `demonstrate_rainflow_counting` | [docs/registry/implementation-map.yaml:L16890-L16899] |
-| 9 | `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `demonstrate_damage_accumulation` | [docs/registry/implementation-map.yaml:L16900-L16909] |
-| 10 | `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `demonstrate_frequency_domain_analysis` | [docs/registry/implementation-map.yaml:L16910-L16919] |
-| 11 | `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `demonstrate_quick_analysis` | [docs/registry/implementation-map.yaml:L16920-L16929] |
-| 12 | `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `main` | [docs/registry/implementation-map.yaml:L16930-L16945] |
-| 13 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_cli.py` | `list_curves` | [docs/registry/implementation-map.yaml:L16946-L16955] |
-| 14 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_cli.py` | `compare_curves` | [docs/registry/implementation-map.yaml:L16956-L16965] |
-| 15 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_2_linear_log` | [docs/registry/implementation-map.yaml:L16966-L16975] |
-| 16 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_3_with_scf` | [docs/registry/implementation-map.yaml:L16976-L16985] |
-| 17 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_4_without_fatigue_limit` | [docs/registry/implementation-map.yaml:L16986-L16995] |
-| 18 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_5_dnv_comparison` | [docs/registry/implementation-map.yaml:L16996-L17005] |
-| 19 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_6_abs_comparison` | [docs/registry/implementation-map.yaml:L17006-L17015] |
-| 20 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_7_reference_comparison` | [docs/registry/implementation-map.yaml:L17016-L17025] |
-| 21 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_8_joint_type_comparison` | [docs/registry/implementation-map.yaml:L17026-L17035] |
-| 22 | `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_1_basic_sn_curves` | [docs/registry/implementation-map.yaml:L17036-L17045] |
-| 23 | `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_2_multislope_curves` | [docs/registry/implementation-map.yaml:L17046-L17055] |
-| 24 | `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_3_time_domain_analysis` | [docs/registry/implementation-map.yaml:L17056-L17065] |
-| 25 | `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_4_frequency_domain_analysis` | [docs/registry/implementation-map.yaml:L17066-L17075] |
-| 26 | `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_5_high_stress_range_analysis` | [docs/registry/implementation-map.yaml:L17076-L17085] |
-| 27 | `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_6_shear_data_analysis` | [docs/registry/implementation-map.yaml:L17086-L17095] |
-| 28 | `examples/domains/fatigue/fatigue_analysis_examples.py` | `run_all_examples` | [docs/registry/implementation-map.yaml:L17096-L17112] |
-| 29 | `examples/domains/reservoir/reservoir_analysis_examples.py` | `example_well_log_analysis` | [docs/registry/implementation-map.yaml:L17113-L17122] |
-| 30 | `examples/domains/reservoir/reservoir_analysis_examples.py` | `example_stratigraphic_correlation` | [docs/registry/implementation-map.yaml:L17123-L17132] |
-| 31 | `examples/domains/reservoir/reservoir_analysis_examples.py` | `main` | [docs/registry/implementation-map.yaml:L17133-L17145] |
-| 32 | `scripts/capabilities/build_onepagers.py` | `<module>` | [docs/registry/implementation-map.yaml:L17146-L17154] |
-| 33 | `scripts/python/digitalmodel/legacy/27_-_RainflowHalfCycles.py` | `<module>` | [docs/registry/implementation-map.yaml:L17155-L17163] |
-| 34 | `scripts/python/digitalmodel/tools/check_process_fatigue_single.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L17164-L17173] |
-| 35 | `scripts/python/digitalmodel/tools/migrate_yaml_configs.py` | `YAMLConfigMigrator._migrate_analysis` | [docs/registry/implementation-map.yaml:L17174-L17183] |
-| 36 | `scripts/python/digitalmodel/tools/migrate_yaml_configs.py` | `YAMLConfigMigrator._migrate_time_series_components` | [docs/registry/implementation-map.yaml:L17184-L17193] |
-| 37 | `scripts/python/digitalmodel/tools/process_fatigue_data.py` | `process_fatigue_files` | [docs/registry/implementation-map.yaml:L17194-L17203] |
-| 38 | `scripts/python/digitalmodel/tools/process_fatigue_final.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L17204-L17213] |
-| 39 | `scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py` | `process_fatigue_file` | [docs/registry/implementation-map.yaml:L17214-L17223] |
-| 40 | `scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py` | `process_sample_file` | [docs/registry/implementation-map.yaml:L17224-L17235] |
-| 41 | `scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py` | `batch_process_all_files` | [docs/registry/implementation-map.yaml:L17236-L17246] |
-| 42 | `scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py` | `rainflow_counting` | [docs/registry/implementation-map.yaml:L17247-L17256] |
-| 43 | `scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py` | `process_fatigue_file` | [docs/registry/implementation-map.yaml:L17257-L17268] |
-| 44 | `scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py` | `batch_process` | [docs/registry/implementation-map.yaml:L17269-L17280] |
-| 45 | `scripts/python/digitalmodel/tools/process_fatigue_single_test_v2.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L17281-L17290] |
-| 46 | `scripts/python/digitalmodel/tools/process_fatigue_single_test_v3.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L17291-L17300] |
-| 47 | `scripts/python/digitalmodel/tools/process_fatigue_single_test_v4.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L17301-L17310] |
-| 48 | `scripts/python/digitalmodel/tools/process_fatigue_single_test_v5.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L17311-L17320] |
-| 49 | `scripts/python/digitalmodel/tools/process_fatigue_single_test_v6.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L17321-L17330] |
-| 50 | `scripts/riser_database/build_tables.py` | `<module>` | [docs/registry/implementation-map.yaml:L17331-L17339] |
-| 51 | `src/digitalmodel/ansys/fatigue_postprocessor.py` | `SNcurve.from_dnv` | [docs/registry/implementation-map.yaml:L17340-L17349] |
-| 52 | `src/digitalmodel/ansys/fatigue_postprocessor.py` | `FatiguePostprocessor.calculate_cycles_to_failure` | [docs/registry/implementation-map.yaml:L17350-L17359] |
-| 53 | `src/digitalmodel/ansys/fatigue_postprocessor.py` | `FatiguePostprocessor.calculate_fatigue_damage` | [docs/registry/implementation-map.yaml:L17360-L17371] |
-| 54 | `src/digitalmodel/ansys/fatigue_postprocessor.py` | `FatiguePostprocessor.generate_sn_curve_apdl` | [docs/registry/implementation-map.yaml:L17372-L17381] |
-| 55 | `src/digitalmodel/ansys/fatigue_postprocessor.py` | `FatiguePostprocessor.create_damage_summary_df` | [docs/registry/implementation-map.yaml:L17382-L17391] |
-| 56 | `src/digitalmodel/benchmarks/inventory.py` | `build_model_inventory` | [docs/registry/implementation-map.yaml:L17392-L17401] |
-| 57 | `src/digitalmodel/drilling_riser/global_model/fatigue_channels.py` | `half_cycles` | [docs/registry/implementation-map.yaml:L17402-L17411] |
-| 58 | `src/digitalmodel/drilling_riser/global_model/fatigue_channels.py` | `extract` | [docs/registry/implementation-map.yaml:L17412-L17423] |
-| 59 | `src/digitalmodel/engine.py` | `engine` | [docs/registry/implementation-map.yaml:L17424-L17441] |
-| 60 | `src/digitalmodel/fatg_spectral_fatigue/workflow.py` | `router` | [docs/registry/implementation-map.yaml:L17442-L17454] |
-| 61 | `src/digitalmodel/fatg_spectral_fatigue/workflow.py` | `_sn_curve` | [docs/registry/implementation-map.yaml:L17455-L17464] |
-| 62 | `src/digitalmodel/fatigue/assessment.py` | `_case_histogram` | [docs/registry/implementation-map.yaml:L17465-L17474] |
-| 63 | `src/digitalmodel/fatigue/assessment.py` | `assess_fatigue` | [docs/registry/implementation-map.yaml:L17475-L17488] |
-| 64 | `src/digitalmodel/fatigue/counting_contract.py` | `<module>` | [docs/registry/implementation-map.yaml:L17489-L17497] |
-| 65 | `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_pylife_4pt` | [docs/registry/implementation-map.yaml:L17498-L17507] |
-| 66 | `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_pypi_rainflow` | [docs/registry/implementation-map.yaml:L17508-L17517] |
-| 67 | `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_sigproc_astm` | [docs/registry/implementation-map.yaml:L17518-L17527] |
-| 68 | `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_calm_buoy` | [docs/registry/implementation-map.yaml:L17528-L17537] |
-| 69 | `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_fapps_counting` | [docs/registry/implementation-map.yaml:L17538-L17547] |
-| 70 | `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_fapps_counter` | [docs/registry/implementation-map.yaml:L17548-L17557] |
-| 71 | `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_struct_fatigue` | [docs/registry/implementation-map.yaml:L17558-L17567] |
-| 72 | `src/digitalmodel/fatigue/counting_contract.py` | `_is_counting_name` | [docs/registry/implementation-map.yaml:L17568-L17577] |
-| 73 | `src/digitalmodel/fatigue/damage.py` | `miner_damage` | [docs/registry/implementation-map.yaml:L17578-L17587] |
-| 74 | `src/digitalmodel/fatigue/damage.py` | `design_life_check` | [docs/registry/implementation-map.yaml:L17588-L17599] |
-| 75 | `src/digitalmodel/fatigue/environmental_correction.py` | `environment_correction` | [docs/registry/implementation-map.yaml:L17600-L17609] |
-| 76 | `src/digitalmodel/fatigue/environmental_correction.py` | `apply_environment_to_sn` | [docs/registry/implementation-map.yaml:L17610-L17621] |
-| 77 | `src/digitalmodel/fatigue/fatg.py` | `fatg_sea_state_damage` | [docs/registry/implementation-map.yaml:L17622-L17631] |
-| 78 | `src/digitalmodel/fatigue/fatg.py` | `fatg_annual_damage` | [docs/registry/implementation-map.yaml:L17632-L17643] |
-| 79 | `src/digitalmodel/fatigue/fatigue_reporting.py` | `_sec_fatigue_locations` | [docs/registry/implementation-map.yaml:L17644-L17653] |
-| 80 | `src/digitalmodel/fatigue/rainflow.py` | `fatigue_life` | [docs/registry/implementation-map.yaml:L17654-L17666] |
-| 81 | `src/digitalmodel/fatigue/sn_curves.py` | `_compute_sd` | [docs/registry/implementation-map.yaml:L17667-L17676] |
-| 82 | `src/digitalmodel/fatigue/sn_curves.py` | `_build_curve_dict` | [docs/registry/implementation-map.yaml:L17677-L17688] |
-| 83 | `src/digitalmodel/fatigue/sn_curves.py` | `get_sn_curve` | [docs/registry/implementation-map.yaml:L17689-L17699] |
-| 84 | `src/digitalmodel/fatigue/sn_library.py` | `SNCurveRecord.knee_stress` | [docs/registry/implementation-map.yaml:L17700-L17711] |
-| 85 | `src/digitalmodel/fatigue/sn_library.py` | `SNCurveRecord.switch_stress` | [docs/registry/implementation-map.yaml:L17712-L17723] |
-| 86 | `src/digitalmodel/fatigue/sn_library.py` | `SNCurveRecord.cycles` | [docs/registry/implementation-map.yaml:L17724-L17735] |
-| 87 | `src/digitalmodel/fatigue/sn_library.py` | `_knee_stress` | [docs/registry/implementation-map.yaml:L17736-L17745] |
-| 88 | `src/digitalmodel/fatigue/sn_library.py` | `_switch_stress` | [docs/registry/implementation-map.yaml:L17746-L17756] |
-| 89 | `src/digitalmodel/fatigue/sn_library.py` | `_bilinear_cycles` | [docs/registry/implementation-map.yaml:L17757-L17766] |
-| 90 | `src/digitalmodel/fatigue/sn_library.py` | `_sd` | [docs/registry/implementation-map.yaml:L17767-L17776] |
-| 91 | `src/digitalmodel/fatigue/sn_library.py` | `_build_dnv_curves` | [docs/registry/implementation-map.yaml:L17777-L17786] |
-| 92 | `src/digitalmodel/fatigue/sn_library.py` | `_build_api_curves` | [docs/registry/implementation-map.yaml:L17787-L17796] |
-| 93 | `src/digitalmodel/fatigue/sn_library.py` | `_build_bs7608_curves` | [docs/registry/implementation-map.yaml:L17797-L17808] |
-| 94 | `src/digitalmodel/fatigue/sn_library.py` | `_build_iiw_curves` | [docs/registry/implementation-map.yaml:L17809-L17819] |
-| 95 | `src/digitalmodel/fatigue/sn_library.py` | `_build_eurocode3_curves` | [docs/registry/implementation-map.yaml:L17820-L17830] |
-| 96 | `src/digitalmodel/fatigue/sn_library.py` | `_build_norsok_curves` | [docs/registry/implementation-map.yaml:L17831-L17841] |
-| 97 | `src/digitalmodel/fatigue/sn_library.py` | `_build_aws_curves` | [docs/registry/implementation-map.yaml:L17842-L17851] |
-| 98 | `src/digitalmodel/fatigue/sn_library.py` | `_build_asme_curves` | [docs/registry/implementation-map.yaml:L17852-L17861] |
-| 99 | `src/digitalmodel/fatigue/sn_library.py` | `_build_en13445_curves` | [docs/registry/implementation-map.yaml:L17862-L17872] |
-| 100 | `src/digitalmodel/fatigue/sn_library.py` | `_build_pd5500_curves` | [docs/registry/implementation-map.yaml:L17873-L17883] |
-| 101 | `src/digitalmodel/fatigue/sn_library.py` | `_build_abs_curves` | [docs/registry/implementation-map.yaml:L17884-L17893] |
-| 102 | `src/digitalmodel/fatigue/sn_library.py` | `_build_iso19902_curves` | [docs/registry/implementation-map.yaml:L17894-L17904] |
-| 103 | `src/digitalmodel/fatigue/sn_library.py` | `_build_csa_curves` | [docs/registry/implementation-map.yaml:L17905-L17914] |
-| 104 | `src/digitalmodel/fatigue/sn_library.py` | `_build_hse_curves` | [docs/registry/implementation-map.yaml:L17915-L17925] |
-| 105 | `src/digitalmodel/fatigue/sn_library.py` | `_build_doe_curves` | [docs/registry/implementation-map.yaml:L17926-L17936] |
-| 106 | `src/digitalmodel/fatigue/sn_library.py` | `_build_gl_curves` | [docs/registry/implementation-map.yaml:L17937-L17946] |
-| 107 | `src/digitalmodel/fatigue/sn_library.py` | `_build_jis_curves` | [docs/registry/implementation-map.yaml:L17947-L17956] |
-| 108 | `src/digitalmodel/fatigue/sn_library.py` | `_ensure_loaded` | [docs/registry/implementation-map.yaml:L17957-L17966] |
-| 109 | `src/digitalmodel/fatigue/sn_library.py` | `summary_table` | [docs/registry/implementation-map.yaml:L17967-L17978] |
-| 110 | `src/digitalmodel/fatigue/sn_library_api.py` | `_record_to_curve_info` | [docs/registry/implementation-map.yaml:L17979-L17988] |
-| 111 | `src/digitalmodel/fatigue/sn_library_api.py` | `_record_to_sncurve` | [docs/registry/implementation-map.yaml:L17989-L17998] |
-| 112 | `src/digitalmodel/fatigue/sn_library_api.py` | `get_curve` | [docs/registry/implementation-map.yaml:L17999-L18010] |
-| 113 | `src/digitalmodel/fatigue/sn_library_api.py` | `calculate_endurance` | [docs/registry/implementation-map.yaml:L18011-L18023] |
-| 114 | `src/digitalmodel/fatigue/spectral_fatigue.py` | `wirsching_light_damage` | [docs/registry/implementation-map.yaml:L18024-L18033] |
-| 115 | `src/digitalmodel/fatigue/spectral_fatigue.py` | `benasciutti_tovo_damage` | [docs/registry/implementation-map.yaml:L18034-L18043] |
-| 116 | `src/digitalmodel/fatigue/weld_fatigue_quickcheck.py` | `weld_fatigue_quickcheck` | [docs/registry/implementation-map.yaml:L18044-L18054] |
-| 117 | `src/digitalmodel/fatigue/weld_fatigue_quickcheck.py` | `main` | [docs/registry/implementation-map.yaml:L18055-L18064] |
-| 118 | `src/digitalmodel/fatigue/woehler_fitting.py` | `generate_test_data` | [docs/registry/implementation-map.yaml:L18065-L18074] |
-| 119 | `src/digitalmodel/fatigue/woehler_fitting.py` | `_fallback_log_regression` | [docs/registry/implementation-map.yaml:L18075-L18084] |
-| 120 | `src/digitalmodel/fatigue/workflow.py` | `router` | [docs/registry/implementation-map.yaml:L18085-L18102] |
-| 121 | `src/digitalmodel/fatigue/workflow.py` | `_curve_ids` | [docs/registry/implementation-map.yaml:L18103-L18112] |
-| 122 | `src/digitalmodel/fatigue/workflow.py` | `_stress_ranges` | [docs/registry/implementation-map.yaml:L18113-L18122] |
-| 123 | `src/digitalmodel/fatigue/workflow.py` | `_curve_summary` | [docs/registry/implementation-map.yaml:L18123-L18132] |
-| 124 | `src/digitalmodel/fatigue/workflow.py` | `_curve_csv_path` | [docs/registry/implementation-map.yaml:L18133-L18144] |
-| 125 | `src/digitalmodel/fatigue/workflow.py` | `_input_stem` | [docs/registry/implementation-map.yaml:L18145-L18154] |
-| 126 | `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py` | `FatigueAnalysis.router` | [docs/registry/implementation-map.yaml:L18155-L18167] |
-| 127 | `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py` | `FatigueAnalysis.damage_from_sn_data` | [docs/registry/implementation-map.yaml:L18168-L18177] |
-| 128 | `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py` | `FatigueAnalysis.damage_from_rainflow_cycles` | [docs/registry/implementation-map.yaml:L18178-L18187] |
-| 129 | `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py` | `FatigueAnalysis.damage_from_timetrace` | [docs/registry/implementation-map.yaml:L18188-L18200] |
-| 130 | `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py` | `FatigueAnalysis.get_rainflow_from_timetrace` | [docs/registry/implementation-map.yaml:L18201-L18210] |
-| 131 | `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py` | `FatigueAnalysisComponents.orcaflex_wave_fatigue_analysis` | [docs/registry/implementation-map.yaml:L18211-L18220] |
-| 132 | `src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py` | `ShipFatigueAnalysis.router` | [docs/registry/implementation-map.yaml:L18221-L18232] |
-| 133 | `src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py` | `ShipFatigueAnalysis.get_lcf_timetrace_rainflow_and_fatigue_damage` | [docs/registry/implementation-map.yaml:L18233-L18244] |
-| 134 | `src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py` | `ShipFatigueAnalysis.get_fatigue_damage_output_df_for_timetrace` | [docs/registry/implementation-map.yaml:L18245-L18256] |
-| 135 | `src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py` | `ShipFatigueAnalysis.get_fatigue_df_definition_for_timetrace` | [docs/registry/implementation-map.yaml:L18257-L18266] |
-| 136 | `src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py` | `VIVFatigueAnalysisComponents.orcaflex_wave_fatigue_analysis` | [docs/registry/implementation-map.yaml:L18267-L18276] |
-| 137 | `src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py` | `SNcurve.cycles_to_failure` | [docs/registry/implementation-map.yaml:L18277-L18286] |
-| 138 | `src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py` | `RainflowFatigue.count_cycles` | [docs/registry/implementation-map.yaml:L18287-L18296] |
-| 139 | `src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py` | `MinersRuleDamage.compute` | [docs/registry/implementation-map.yaml:L18297-L18306] |
-| 140 | `src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py` | `ScatterDiagramFatigue.compute` | [docs/registry/implementation-map.yaml:L18307-L18316] |
-| 141 | `src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py` | `compute_fatigue_life` | [docs/registry/implementation-map.yaml:L18317-L18326] |
-| 142 | `src/digitalmodel/marine_ops/reservoir/analysis.py` | `StratigraphicAnalysis.add_well_analysis` | [docs/registry/implementation-map.yaml:L18327-L18336] |
-| 143 | `src/digitalmodel/marine_ops/reservoir/analysis.py` | `StratigraphicAnalysis.set_well_order` | [docs/registry/implementation-map.yaml:L18337-L18346] |
-| 144 | `src/digitalmodel/marine_ops/reservoir/analysis.py` | `StratigraphicAnalysis.create_flattened_section` | [docs/registry/implementation-map.yaml:L18347-L18356] |
-| 145 | `src/digitalmodel/marine_ops/reservoir/analysis.py` | `WellCorrelation.add_well_data` | [docs/registry/implementation-map.yaml:L18357-L18366] |
-| 146 | `src/digitalmodel/marine_ops/reservoir/analysis.py` | `CoreAnalysis.correlate_core_to_logs` | [docs/registry/implementation-map.yaml:L18367-L18376] |
-| 147 | `src/digitalmodel/marine_ops/reservoir/analysis.py` | `ReservoirAnalysis.add_well_analysis` | [docs/registry/implementation-map.yaml:L18377-L18386] |
-| 148 | `src/digitalmodel/marine_ops/reservoir/analysis.py` | `ReservoirAnalysis.run_comprehensive_analysis` | [docs/registry/implementation-map.yaml:L18387-L18396] |
-| 149 | `src/digitalmodel/mooring_fatigue/workflow.py` | `router` | [docs/registry/implementation-map.yaml:L18397-L18410] |
-| 150 | `src/digitalmodel/mooring_fatigue/workflow.py` | `_evaluate_line` | [docs/registry/implementation-map.yaml:L18411-L18421] |
-| 151 | `src/digitalmodel/mooring_fatigue/workflow.py` | `_history_bins` | [docs/registry/implementation-map.yaml:L18422-L18431] |
-| 152 | `src/digitalmodel/mooring_fatigue/workflow.py` | `_curve_settings` | [docs/registry/implementation-map.yaml:L18432-L18441] |
-| 153 | `src/digitalmodel/parametric/generate.py` | `_mooring_fatigue_damage` | [docs/registry/implementation-map.yaml:L18442-L18452] |
-| 154 | `src/digitalmodel/parametric/generate.py` | `_free_span_utilisation` | [docs/registry/implementation-map.yaml:L18453-L18462] |
-| 155 | `src/digitalmodel/parametric/generate.py` | `_span_rectification_utilisation` | [docs/registry/implementation-map.yaml:L18463-L18472] |
-| 156 | `src/digitalmodel/parametric/refresh.py` | `<module>` | [docs/registry/implementation-map.yaml:L18473-L18481] |
-| 157 | `src/digitalmodel/rao_spectral_fatigue/workflow.py` | `router` | [docs/registry/implementation-map.yaml:L18482-L18493] |
-| 158 | `src/digitalmodel/riser_fatigue/touchdown.py` | `assess_touchdown_fatigue` | [docs/registry/implementation-map.yaml:L18494-L18503] |
-| 159 | `src/digitalmodel/riser_fatigue/workflow.py` | `router` | [docs/registry/implementation-map.yaml:L18504-L18515] |
-| 160 | `src/digitalmodel/riser_fatigue/workflow.py` | `_viv_damage` | [docs/registry/implementation-map.yaml:L18516-L18526] |
-| 161 | `src/digitalmodel/riser_fatigue/workflow.py` | `_curve_settings` | [docs/registry/implementation-map.yaml:L18527-L18536] |
-| 162 | `src/digitalmodel/signal_processing/signal_analysis/adapters.py` | `TimeSeriesComponentsAdapter.get_rainflow_count_from_time_series` | [docs/registry/implementation-map.yaml:L18537-L18546] |
-| 163 | `src/digitalmodel/signal_processing/signal_analysis/adapters.py` | `FatigueAnalysisAdapter.get_rainflow_from_timetrace` | [docs/registry/implementation-map.yaml:L18547-L18556] |
-| 164 | `src/digitalmodel/signal_processing/signal_analysis/adapters.py` | `FatigueAnalysisAdapter.damage_from_rainflow_cycles` | [docs/registry/implementation-map.yaml:L18557-L18566] |
-| 165 | `src/digitalmodel/signal_processing/signal_analysis/adapters.py` | `OrcaFlexAdapter.RainflowHalfCycles` | [docs/registry/implementation-map.yaml:L18567-L18576] |
-| 166 | `src/digitalmodel/signal_processing/signal_analysis/cli.py` | `rainflow_cmd` | [docs/registry/implementation-map.yaml:L18577-L18586] |
-| 167 | `src/digitalmodel/signal_processing/signal_analysis/core/rainflow.py` | `RainflowCounter.count_cycles` | [docs/registry/implementation-map.yaml:L18587-L18596] |
-| 168 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/curves.py` | `SNCurve._bilinear` | [docs/registry/implementation-map.yaml:L18597-L18606] |
-| 169 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/curves.py` | `SNCurve.from_test_data` | [docs/registry/implementation-map.yaml:L18607-L18616] |
-| 170 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator.calculate_damage` | [docs/registry/implementation-map.yaml:L18617-L18632] |
-| 171 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._miners_rule` | [docs/registry/implementation-map.yaml:L18633-L18644] |
-| 172 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._modified_miners_rule` | [docs/registry/implementation-map.yaml:L18645-L18655] |
-| 173 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._nonlinear_damage` | [docs/registry/implementation-map.yaml:L18656-L18666] |
-| 174 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._calculate_allowable_cycles` | [docs/registry/implementation-map.yaml:L18667-L18676] |
-| 175 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._apply_mean_stress_correction` | [docs/registry/implementation-map.yaml:L18677-L18686] |
-| 176 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._estimate_cycles_to_failure` | [docs/registry/implementation-map.yaml:L18687-L18696] |
-| 177 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator.calculate_equivalent_stress` | [docs/registry/implementation-map.yaml:L18697-L18706] |
-| 178 | `src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py` | `create_parser` | [docs/registry/implementation-map.yaml:L18707-L18716] |
-| 179 | `src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py` | `build_config_from_args` | [docs/registry/implementation-map.yaml:L18717-L18726] |
-| 180 | `src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py` | `main` | [docs/registry/implementation-map.yaml:L18727-L18739] |
-| 181 | `src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py` | `TimeSeriesAnalyzer._analyze_column` | [docs/registry/implementation-map.yaml:L18740-L18749] |
-| 182 | `src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py` | `TimeSeriesAnalyzer._generate_outputs` | [docs/registry/implementation-map.yaml:L18750-L18759] |
-| 183 | `src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py` | `TimeSeriesAnalyzer._generate_summary` | [docs/registry/implementation-map.yaml:L18760-L18769] |
-| 184 | `src/digitalmodel/signal_processing/signal_analysis/orcaflex/error_handling.py` | `SafeAnalyzer.safe_rainflow_analysis` | [docs/registry/implementation-map.yaml:L18770-L18779] |
-| 185 | `src/digitalmodel/signal_processing/time_series/time_series_analysis.py` | `TimeSeriesAnalysis.router` | [docs/registry/implementation-map.yaml:L18780-L18789] |
-| 186 | `src/digitalmodel/signal_processing/time_series/time_series_components.py` | `TimeSeriesComponents.count_cycles` | [docs/registry/implementation-map.yaml:L18790-L18799] |
-| 187 | `src/digitalmodel/solvers/orcaflex/opp_time_series.py` | `OPPTimeSeries.get_histogram_object_from_orcaflex_run` | [docs/registry/implementation-map.yaml:L18800-L18809] |
-| 188 | `src/digitalmodel/solvers/orcaflex/opp_time_series.py` | `OPPTimeSeries.get_detailed_histogram_df_columns` | [docs/registry/implementation-map.yaml:L18810-L18819] |
-| 189 | `src/digitalmodel/solvers/orcaflex/opp_time_series_v2.py` | `OPPTimeSeriesV2.process_histograms` | [docs/registry/implementation-map.yaml:L18820-L18829] |
-| 190 | `src/digitalmodel/solvers/orcaflex/orcaflex_analysis_components.py` | `OrcaFlexAnalysis.get_histogram_object_from_orcaflex_run` | [docs/registry/implementation-map.yaml:L18830-L18839] |
-| 191 | `src/digitalmodel/solvers/orcaflex/orcaflex_analysis_components.py` | `OrcaFlexAnalysis.get_detailed_histogram_df_columns` | [docs/registry/implementation-map.yaml:L18840-L18849] |
-| 192 | `src/digitalmodel/solvers/orcaflex/time_trace_processor.py` | `OrcaFlexTimeTraceProcessor._perform_fatigue_analysis` | [docs/registry/implementation-map.yaml:L18850-L18861] |
-| 193 | `src/digitalmodel/solvers/orcaflex/time_trace_processor.py` | `OrcaFlexTimeTraceProcessor._parallel_fatigue_analysis` | [docs/registry/implementation-map.yaml:L18862-L18871] |
-| 194 | `src/digitalmodel/solvers/orcaflex/time_trace_processor.py` | `OrcaFlexTimeTraceProcessor._analyze_single_trace` | [docs/registry/implementation-map.yaml:L18872-L18881] |
-| 195 | `src/digitalmodel/spectral_fatigue/workflow.py` | `router` | [docs/registry/implementation-map.yaml:L18882-L18893] |
-| 196 | `src/digitalmodel/spectral_fatigue/workflow.py` | `_sn_curve` | [docs/registry/implementation-map.yaml:L18894-L18903] |
-| 197 | `src/digitalmodel/structural/fatigue/__init__.py` | `quick_fatigue_analysis` | [docs/registry/implementation-map.yaml:L18904-L18917] |
-| 198 | `src/digitalmodel/structural/fatigue/__init__.py` | `get_module_info` | [docs/registry/implementation-map.yaml:L18918-L18927] |
-| 199 | `src/digitalmodel/structural/fatigue/analysis.py` | `<module>` | [docs/registry/implementation-map.yaml:L18928-L18936] |
-| 200 | `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine._setup_sn_curve` | [docs/registry/implementation-map.yaml:L18937-L18947] |
-| 201 | `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine._setup_damage_calculator` | [docs/registry/implementation-map.yaml:L18948-L18957] |
-| 202 | `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine._setup_rainflow_counter` | [docs/registry/implementation-map.yaml:L18958-L18967] |
-| 203 | `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine.analyze_time_series` | [docs/registry/implementation-map.yaml:L18968-L18979] |
-| 204 | `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine.analyze_psd` | [docs/registry/implementation-map.yaml:L18980-L18989] |
-| 205 | `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine.calculate_high_stress_range_life` | [docs/registry/implementation-map.yaml:L18990-L18999] |
-| 206 | `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine.analyze_shear_data` | [docs/registry/implementation-map.yaml:L19000-L19009] |
-| 207 | `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine._perform_engineering_validation` | [docs/registry/implementation-map.yaml:L19010-L19019] |
-| 208 | `src/digitalmodel/structural/fatigue/analysis.py` | `quick_time_domain_analysis` | [docs/registry/implementation-map.yaml:L19020-L19029] |
-| 209 | `src/digitalmodel/structural/fatigue/analysis.py` | `quick_frequency_domain_analysis` | [docs/registry/implementation-map.yaml:L19030-L19039] |
-| 210 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `<module>` | [docs/registry/implementation-map.yaml:L19040-L19048] |
-| 211 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `LinearDamageAccumulation.calculate_damage` | [docs/registry/implementation-map.yaml:L19049-L19060] |
-| 212 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `LinearDamageAccumulation._apply_mean_stress_correction` | [docs/registry/implementation-map.yaml:L19061-L19070] |
-| 213 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `ModifiedMinersRule.calculate_damage` | [docs/registry/implementation-map.yaml:L19071-L19080] |
-| 214 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `NonlinearDamageAccumulation.calculate_damage` | [docs/registry/implementation-map.yaml:L19081-L19094] |
-| 215 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `NonlinearDamageAccumulation._marco_starkey_damage` | [docs/registry/implementation-map.yaml:L19095-L19104] |
-| 216 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `NonlinearDamageAccumulation._corten_dolan_damage` | [docs/registry/implementation-map.yaml:L19105-L19114] |
-| 217 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `NonlinearDamageAccumulation._double_linear_damage` | [docs/registry/implementation-map.yaml:L19115-L19124] |
-| 218 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `compare_damage_methods` | [docs/registry/implementation-map.yaml:L19125-L19134] |
-| 219 | `src/digitalmodel/structural/fatigue/design_code_report.py` | `_build_curve` | [docs/registry/implementation-map.yaml:L19135-L19144] |
-| 220 | `src/digitalmodel/structural/fatigue/fatigue_reliability.py` | `failure_probability` | [docs/registry/implementation-map.yaml:L19145-L19154] |
-| 221 | `src/digitalmodel/structural/fatigue/fatigue_reliability.py` | `sensitivity_analysis` | [docs/registry/implementation-map.yaml:L19155-L19164] |
-| 222 | `src/digitalmodel/structural/fatigue/fatigue_reliability.py` | `monte_carlo_fatigue` | [docs/registry/implementation-map.yaml:L19165-L19174] |
-| 223 | `src/digitalmodel/structural/fatigue/frequency_domain.py` | `<module>` | [docs/registry/implementation-map.yaml:L19175-L19183] |
-| 224 | `src/digitalmodel/structural/fatigue/frequency_domain.py` | `NarrowBandMethod.calculate_damage_rate` | [docs/registry/implementation-map.yaml:L19184-L19193] |
-| 225 | `src/digitalmodel/structural/fatigue/frequency_domain.py` | `DirlikMethod.calculate_damage_rate` | [docs/registry/implementation-map.yaml:L19194-L19203] |
-| 226 | `src/digitalmodel/structural/fatigue/frequency_domain.py` | `TovoBenasciuttiMethod.calculate_damage_rate` | [docs/registry/implementation-map.yaml:L19204-L19213] |
-| 227 | `src/digitalmodel/structural/fatigue/frequency_domain.py` | `SingleMomentMethod.calculate_damage_rate` | [docs/registry/implementation-map.yaml:L19214-L19223] |
-| 228 | `src/digitalmodel/structural/fatigue/frequency_domain.py` | `compare_frequency_methods` | [docs/registry/implementation-map.yaml:L19224-L19233] |
-| 229 | `src/digitalmodel/structural/fatigue/parametric_sweep.py` | `run_sweep` | [docs/registry/implementation-map.yaml:L19234-L19243] |
-| 230 | `src/digitalmodel/structural/fatigue/parametric_sweep.py` | `compute_sensitivity._single_damage` | [docs/registry/implementation-map.yaml:L19244-L19253] |
-| 231 | `src/digitalmodel/structural/fatigue/parametric_sweep.py` | `_build_scatter_json` | [docs/registry/implementation-map.yaml:L19254-L19263] |
-| 232 | `src/digitalmodel/structural/fatigue/rainflow.py` | `<module>` | [docs/registry/implementation-map.yaml:L19264-L19272] |
-| 233 | `src/digitalmodel/structural/fatigue/rainflow.py` | `RainflowCounter.count_cycles` | [docs/registry/implementation-map.yaml:L19273-L19284] |
-| 234 | `src/digitalmodel/structural/fatigue/rainflow.py` | `RainflowCounter._rainflow_count` | [docs/registry/implementation-map.yaml:L19285-L19294] |
-| 235 | `src/digitalmodel/structural/fatigue/rainflow.py` | `RainflowCounter.extract_cycles_with_means` | [docs/registry/implementation-map.yaml:L19295-L19306] |
-| 236 | `src/digitalmodel/structural/fatigue/rainflow.py` | `rainflow_count` | [docs/registry/implementation-map.yaml:L19307-L19316] |
-| 237 | `src/digitalmodel/structural/fatigue/rainflow.py` | `rainflow_with_means` | [docs/registry/implementation-map.yaml:L19317-L19326] |
-| 238 | `src/digitalmodel/structural/fatigue/scatter_fatigue.py` | `scatter_fatigue_damage` | [docs/registry/implementation-map.yaml:L19327-L19336] |
-| 239 | `src/digitalmodel/structural/fatigue/skill.py` | `fatigue_assessment` | [docs/registry/implementation-map.yaml:L19337-L19348] |
-| 240 | `src/digitalmodel/structural/fatigue/sn_curve_plotter.py` | `main` | [docs/registry/implementation-map.yaml:L19349-L19358] |
-| 241 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `<module>` | [docs/registry/implementation-map.yaml:L19359-L19367] |
-| 242 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `StandardSNCurves._ensure_loaded` | [docs/registry/implementation-map.yaml:L19368-L19377] |
-| 243 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `StandardSNCurves.register_custom_curve` | [docs/registry/implementation-map.yaml:L19378-L19387] |
-| 244 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `StandardSNCurves.get_dnv_c203_curve` | [docs/registry/implementation-map.yaml:L19388-L19397] |
-| 245 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `StandardSNCurves.get_curve` | [docs/registry/implementation-map.yaml:L19398-L19407] |
-| 246 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `StandardSNCurves.get_multislope_curve` | [docs/registry/implementation-map.yaml:L19408-L19417] |
-| 247 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `ThicknessCorrection.apply_thickness_effect` | [docs/registry/implementation-map.yaml:L19418-L19427] |
-| 248 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `SNDataFitting.fit_power_law` | [docs/registry/implementation-map.yaml:L19428-L19437] |
-| 249 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `get_dnv_curve` | [docs/registry/implementation-map.yaml:L19438-L19447] |
-| 250 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `get_api_curve` | [docs/registry/implementation-map.yaml:L19448-L19457] |
-| 251 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `get_bs_curve` | [docs/registry/implementation-map.yaml:L19458-L19467] |
-| 252 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `_dnv_curves_from_c203` | [docs/registry/implementation-map.yaml:L19468-L19477] |
-| 253 | `src/digitalmodel/structural/fatigue/worked_examples.py` | `_dnv_seawater_cp` | [docs/registry/implementation-map.yaml:L19478-L19487] |
-| 254 | `src/digitalmodel/structural/fatigue/worked_examples.py` | `_dnv_seawater_free` | [docs/registry/implementation-map.yaml:L19488-L19497] |
-| 255 | `src/digitalmodel/structural/fatigue/worked_examples.py` | `_chain_seawater_cp` | [docs/registry/implementation-map.yaml:L19498-L19507] |
-| 256 | `src/digitalmodel/structural/fatigue/worked_examples.py` | `pipeline_girth_weld` | [docs/registry/implementation-map.yaml:L19508-L19520] |
-| 257 | `src/digitalmodel/structural/fatigue/worked_examples.py` | `scr_touchdown` | [docs/registry/implementation-map.yaml:L19521-L19533] |
-| 258 | `src/digitalmodel/structural/fatigue/worked_examples.py` | `mooring_chain` | [docs/registry/implementation-map.yaml:L19534-L19546] |
-| 259 | `src/digitalmodel/structural/fatigue/worked_examples.py` | `_compute_example` | [docs/registry/implementation-map.yaml:L19547-L19556] |
-| 260 | `src/digitalmodel/structural/fatigue_apps/__main__.py` | `run_analysis` | [docs/registry/implementation-map.yaml:L19557-L19568] |
-| 261 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage.py` | `SNCurve._load_sn_parameters` | [docs/registry/implementation-map.yaml:L19569-L19578] |
-| 262 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage.py` | `SNCurve.calculate_cycles_to_failure` | [docs/registry/implementation-map.yaml:L19579-L19588] |
-| 263 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage.py` | `FatigueDamageCalculator.calculate_damage` | [docs/registry/implementation-map.yaml:L19589-L19598] |
-| 264 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage.py` | `main` | [docs/registry/implementation-map.yaml:L19599-L19608] |
-| 265 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `<module>` | [docs/registry/implementation-map.yaml:L19609-L19617] |
-| 266 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `SNCurveParameters.a1` | [docs/registry/implementation-map.yaml:L19618-L19627] |
-| 267 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `SNCurveParameters.a2` | [docs/registry/implementation-map.yaml:L19628-L19637] |
-| 268 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `FatigueDamageCalculator.cycles_to_failure` | [docs/registry/implementation-map.yaml:L19638-L19647] |
-| 269 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `FatigueDamageCalculator.calculate_damage` | [docs/registry/implementation-map.yaml:L19648-L19659] |
-| 270 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `FatigueDamageCalculator.export_results` | [docs/registry/implementation-map.yaml:L19660-L19669] |
-| 271 | `src/digitalmodel/structural/fatigue_apps/file_namer.py` | `FatigueFileNamer.get_rainflow_filename` | [docs/registry/implementation-map.yaml:L19670-L19679] |
-| 272 | `src/digitalmodel/structural/fatigue_apps/file_namer.py` | `<module>` | [docs/registry/implementation-map.yaml:L19680-L19688] |
-| 273 | `src/digitalmodel/structural/fatigue_apps/integrated_processor.py` | `IntegratedFatigueProcessor.process_fatigue_condition` | [docs/registry/implementation-map.yaml:L19689-L19698] |
-| 274 | `src/digitalmodel/structural/fatigue_apps/integrated_processor.py` | `main` | [docs/registry/implementation-map.yaml:L19699-L19708] |
-| 275 | `src/digitalmodel/structural/fatigue_apps/integrated_processor_with_naming.py` | `IntegratedFatigueProcessorWithNaming._process_condition_base` | [docs/registry/implementation-map.yaml:L19709-L19718] |
-| 276 | `src/digitalmodel/structural/fatigue_apps/rainflow_counter.py` | `<module>` | [docs/registry/implementation-map.yaml:L19719-L19727] |
-| 277 | `src/digitalmodel/structural/fatigue_apps/rainflow_counter.py` | `RainflowCounter.count_cycles` | [docs/registry/implementation-map.yaml:L19728-L19739] |
-| 278 | `src/digitalmodel/structural/fatigue_apps/rainflow_counter.py` | `RainflowCounter._rainflow_algorithm` | [docs/registry/implementation-map.yaml:L19740-L19749] |
-| 279 | `src/digitalmodel/structural/fatigue_apps/rainflow_counter.py` | `RainflowCounter.export_results` | [docs/registry/implementation-map.yaml:L19750-L19759] |
-| 280 | `src/digitalmodel/structural/fatigue_apps/rainflow_counter.py` | `rainflow_count` | [docs/registry/implementation-map.yaml:L19760-L19769] |
-| 281 | `src/digitalmodel/structural/fatigue_apps/rainflow_counting.py` | `RainflowCounter.process_time_series` | [docs/registry/implementation-map.yaml:L19770-L19779] |
-| 282 | `src/digitalmodel/structural/fatigue_apps/rainflow_counting.py` | `RainflowCounter.process_batch` | [docs/registry/implementation-map.yaml:L19780-L19791] |
-| 283 | `src/digitalmodel/structural/fatigue_apps/rainflow_counting.py` | `RainflowCounter.save_cycle_data` | [docs/registry/implementation-map.yaml:L19792-L19801] |
-| 284 | `src/digitalmodel/structural/fatigue_apps/rainflow_counting.py` | `main` | [docs/registry/implementation-map.yaml:L19802-L19811] |
-| 285 | `src/digitalmodel/structural/fatigue_apps/reference_seastate_processor.py` | `ReferenceSeaStateProcessor.process_fatigue_condition` | [docs/registry/implementation-map.yaml:L19812-L19821] |
-| 286 | `src/digitalmodel/structural/fatigue_apps/tension_stress_conversion.py` | `TensionStressConverter.process_batch` | [docs/registry/implementation-map.yaml:L19822-L19831] |
-| 287 | `src/digitalmodel/structural/fatigue_apps/tension_stress_conversion.py` | `main` | [docs/registry/implementation-map.yaml:L19832-L19841] |
-| 288 | `src/digitalmodel/structural/fatigue_apps/visualizer.py` | `generate_all_visualizations` | [docs/registry/implementation-map.yaml:L19842-L19851] |
-| 289 | `src/digitalmodel/structural/spectral_fatigue.py` | `narrow_band_damage` | [docs/registry/implementation-map.yaml:L19852-L19861] |
-| 290 | `src/digitalmodel/subsea/connectors/fatigue.py` | `assess_jumper_fatigue` | [docs/registry/implementation-map.yaml:L19862-L19873] |
-| 291 | `src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py` | `_dnv_params` | [docs/registry/implementation-map.yaml:L19874-L19883] |
-| 292 | `src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py` | `get_sn_curve` | [docs/registry/implementation-map.yaml:L19884-L19895] |
-| 293 | `src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py` | `SpanFatigueDamage._load_sn_curve` | [docs/registry/implementation-map.yaml:L19896-L19907] |
-| 294 | `src/digitalmodel/subsea/viv_analysis/fatigue.py` | `VIVFatigueCalculator.calculate_damage` | [docs/registry/implementation-map.yaml:L19908-L19917] |
-| 295 | `src/digitalmodel/subsea/viv_analysis/fatigue.py` | `VIVFatigueCalculator.calculate_fatigue_life` | [docs/registry/implementation-map.yaml:L19918-L19927] |
-| 296 | `src/digitalmodel/subsea/viv_analysis/fatigue.py` | `VIVFatigueCalculator.analyze_viv_fatigue` | [docs/registry/implementation-map.yaml:L19928-L19940] |
-| 297 | `src/digitalmodel/subsea/viv_analysis/fatigue.py` | `VIVFatigueCalculator.cumulative_damage` | [docs/registry/implementation-map.yaml:L19941-L19952] |
-| 298 | `src/digitalmodel/viv_screening/inputs.py` | `parse_inputs` | [docs/registry/implementation-map.yaml:L19953-L19962] |
-| 299 | `src/digitalmodel/viv_screening/workflow.py` | `router` | [docs/registry/implementation-map.yaml:L19963-L19976] |
-| 300 | `src/digitalmodel/viv_screening/workflow.py` | `_damage_rate` | [docs/registry/implementation-map.yaml:L19977-L19987] |
-| 301 | `src/digitalmodel/viv_screening/workflow.py` | `_provenance` | [docs/registry/implementation-map.yaml:L19988-L19997] |
-| 302 | `src/digitalmodel/web/digitaltwinfeed/app.py` | `page` | [docs/registry/implementation-map.yaml:L19998-L20007] |
-| 303 | `tests/ansys/padeye_pressure_bundle.py` | `_check_receipt` | [docs/registry/implementation-map.yaml:L20008-L20017] |
-| 304 | `tests/ansys/padeye_pressure_bundle.py` | `verify_pressure_bundle` | [docs/registry/implementation-map.yaml:L20018-L20029] |
-| 305 | `tests/ansys/test_fatigue_postprocessor.py` | `TestThicknessCorrection.test_known_correction` | [docs/registry/implementation-map.yaml:L20030-L20039] |
-| 306 | `tests/ansys/test_padeye_pressure_bundle.py` | `bundle` | [docs/registry/implementation-map.yaml:L20040-L20049] |
-| 307 | `tests/fatigue/test_assessment.py` | `histogram_input` | [docs/registry/implementation-map.yaml:L20050-L20061] |
-| 308 | `tests/fatigue/test_c203_consumers.py` | `_span_input` | [docs/registry/implementation-map.yaml:L20062-L20071] |
-| 309 | `tests/fatigue/test_c203_sn_values.py` | `_non_dnv_bilinear` | [docs/registry/implementation-map.yaml:L20072-L20081] |
-| 310 | `tests/fatigue/test_c203_sn_values.py` | `test_non_dnv_bilinear_switch_stays_at_endurance_limit` | [docs/registry/implementation-map.yaml:L20082-L20095] |
-| 311 | `tests/fatigue/test_c203_variable_amplitude.py` | `_signal_e` | [docs/registry/implementation-map.yaml:L20096-L20105] |
-| 312 | `tests/fatigue/test_c203_variable_amplitude.py` | `_user_curve` | [docs/registry/implementation-map.yaml:L20106-L20115] |
-| 313 | `tests/fatigue/test_c203_variable_amplitude.py` | `_span_input` | [docs/registry/implementation-map.yaml:L20116-L20125] |
-| 314 | `tests/fatigue/test_c203_variable_amplitude.py` | `_fresh_standard_curves` | [docs/registry/implementation-map.yaml:L20126-L20135] |
-| 315 | `tests/fatigue/test_c203_variable_amplitude.py` | `_data_dir` | [docs/registry/implementation-map.yaml:L20136-L20145] |
-| 316 | `tests/fatigue/test_damage.py` | `f_curve` | [docs/registry/implementation-map.yaml:L20146-L20156] |
-| 317 | `tests/fatigue/test_damage.py` | `TestThicknessCorrection.test_correction_above_ref` | [docs/registry/implementation-map.yaml:L20157-L20166] |
-| 318 | `tests/fatigue/test_damage.py` | `TestThicknessCorrection.test_correction_formula` | [docs/registry/implementation-map.yaml:L20167-L20176] |
-| 319 | `tests/fatigue/test_fatg.py` | `TestAgainstTransliterationSweep.test_all_presets_and_curves` | [docs/registry/implementation-map.yaml:L20177-L20188] |
-| 320 | `tests/fatigue/test_fatg_workflow.py` | `_cfg` | [docs/registry/implementation-map.yaml:L20189-L20198] |
-| 321 | `tests/fatigue/test_fatg_workflow.py` | `_library_reference` | [docs/registry/implementation-map.yaml:L20199-L20209] |
-| 322 | `tests/fatigue/test_fatigue_reporting.py` | `_sample_locations` | [docs/registry/implementation-map.yaml:L20210-L20219] |
-| 323 | `tests/fatigue/test_rainflow_invariants.py` | `_damage_calls` | [docs/registry/implementation-map.yaml:L20220-L20232] |
-| 324 | `tests/fatigue/test_rainflow_invariants.py` | `_damage_calls.calm_scatter` | [docs/registry/implementation-map.yaml:L20233-L20242] |
-| 325 | `tests/fatigue/test_rainflow_invariants.py` | `_damage_calls.fapps_batch` | [docs/registry/implementation-map.yaml:L20243-L20252] |
-| 326 | `tests/fatigue/test_sn_curves.py` | `TestGetSNCurve.test_f_curve_at_100mpa` | [docs/registry/implementation-map.yaml:L20253-L20263] |
-| 327 | `tests/fatigue/test_sn_curves.py` | `TestGetSNCurve.test_d_curve_at_100mpa` | [docs/registry/implementation-map.yaml:L20264-L20274] |
-| 328 | `tests/fatigue/test_weld_fatigue_quickcheck.py` | `_hand_N` | [docs/registry/implementation-map.yaml:L20275-L20284] |
-| 329 | `tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py` | `TestSNcurve.test_cycles_to_failure_chain_known_value` | [docs/registry/implementation-map.yaml:L20285-L20294] |
-| 330 | `tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py` | `TestSNcurve.test_cycles_to_failure_wire_rope_known_value` | [docs/registry/implementation-map.yaml:L20295-L20304] |
-| 331 | `tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py` | `TestSNcurve.test_custom_sn_curve` | [docs/registry/implementation-map.yaml:L20305-L20314] |
-| 332 | `tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py` | `TestMinersRuleDamage.test_single_range_known_damage` | [docs/registry/implementation-map.yaml:L20315-L20324] |
-| 333 | `tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py` | `TestMinersRuleDamage.test_damage_additivity` | [docs/registry/implementation-map.yaml:L20325-L20334] |
-| 334 | `tests/parametric/test_atlas.py` | `_small_atlas` | [docs/registry/implementation-map.yaml:L20335-L20344] |
-| 335 | `tests/signal_processing/signal_analysis/fatigue_analysis_reference/process_fatigue_final.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L20345-L20354] |
-| 336 | `tests/signal_processing/signal_analysis/reference_fatigue_processor.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L20355-L20364] |
-| 337 | `tests/signal_processing/signal_analysis/test_generate_outputs.py` | `<module>` | [docs/registry/implementation-map.yaml:L20365-L20373] |
-| 338 | `tests/signal_processing/signal_analysis/test_generate_outputs.py` | `analyze_signal` | [docs/registry/implementation-map.yaml:L20374-L20383] |
-| 339 | `tests/signal_processing/signal_analysis/test_generate_outputs.py` | `main` | [docs/registry/implementation-map.yaml:L20384-L20395] |
-| 340 | `tests/signal_processing/signal_analysis/test_orcaflex_tension_analysis.py` | `OrcaFlexTensionAnalyzer.analyze_tension` | [docs/registry/implementation-map.yaml:L20396-L20405] |
-| 341 | `tests/signal_processing/signal_analysis/test_orcaflex_tension_analysis.py` | `OrcaFlexTensionAnalyzer.export_results` | [docs/registry/implementation-map.yaml:L20406-L20415] |
-| 342 | `tests/signal_processing/signal_analysis/test_rainflow_timeseries1.py` | `run_rainflow_for_timeseries` | [docs/registry/implementation-map.yaml:L20416-L20425] |
-| 343 | `tests/signal_processing/signal_analysis/test_rainflow_timeseries1.py` | `test_rainflow_for_timeseries` | [docs/registry/implementation-map.yaml:L20426-L20437] |
-| 344 | `tests/signal_processing/signal_analysis/validate_module.py` | `main` | [docs/registry/implementation-map.yaml:L20438-L20452] |
-| 345 | `tests/solvers/test_integration_solvers.py` | `mock_solver_factory.MockSolverFactory.create_fatigue_solver` | [docs/registry/implementation-map.yaml:L20453-L20462] |
-| 346 | `tests/structural/fatigue/conftest.py` | `simple_sn_curve` | [docs/registry/implementation-map.yaml:L20463-L20472] |
-| 347 | `tests/structural/fatigue/test_damage_accumulation.py` | `dnv_d_curve` | [docs/registry/implementation-map.yaml:L20473-L20482] |
-| 348 | `tests/structural/fatigue/test_damage_accumulation.py` | `simple_curve` | [docs/registry/implementation-map.yaml:L20483-L20492] |
-| 349 | `tests/structural/fatigue/test_damage_accumulation.py` | `curve_with_material` | [docs/registry/implementation-map.yaml:L20493-L20502] |
-| 350 | `tests/structural/fatigue/test_fatigue_migration.py` | `TestSNCurveMigration.test_multislope_curve_implementation` | [docs/registry/implementation-map.yaml:L20503-L20512] |
-| 351 | `tests/structural/fatigue/test_fatigue_migration.py` | `TestSNCurveMigration.test_curve_continuity` | [docs/registry/implementation-map.yaml:L20513-L20522] |
-| 352 | `tests/structural/fatigue/test_fatigue_migration.py` | `TestFrequencyDomainMigration.test_basic_frequency_analysis` | [docs/registry/implementation-map.yaml:L20523-L20532] |
-| 353 | `tests/structural/fatigue/test_fatigue_reliability.py` | `simple_sn` | [docs/registry/implementation-map.yaml:L20533-L20542] |
-| 354 | `tests/structural/fatigue/test_fatigue_reliability.py` | `mild_sn` | [docs/registry/implementation-map.yaml:L20543-L20552] |
-| 355 | `tests/structural/fatigue/test_fatigue_skill.py` | `_simple_input` | [docs/registry/implementation-map.yaml:L20553-L20562] |
-| 356 | `tests/structural/fatigue/test_fatigue_skill.py` | `TestOffshoreScenario.test_high_cycle_low_stress_result` | [docs/registry/implementation-map.yaml:L20563-L20574] |
-| 357 | `tests/structural/fatigue/test_frequency_domain.py` | `simple_sn_curve` | [docs/registry/implementation-map.yaml:L20575-L20584] |
-| 358 | `tests/structural/fatigue/test_rainflow.py` | `default_counter` | [docs/registry/implementation-map.yaml:L20585-L20594] |
-| 359 | `tests/structural/fatigue/test_scatter_fatigue.py` | `simple_sn` | [docs/registry/implementation-map.yaml:L20595-L20604] |
-| 360 | `tests/structural/fatigue/test_scatter_fatigue.py` | `TestFatigueLife.test_fatigue_life_inverse_of_damage` | [docs/registry/implementation-map.yaml:L20605-L20616] |
-| 361 | `tests/structural/fatigue/test_sn_curves.py` | `simple_power_law` | [docs/registry/implementation-map.yaml:L20617-L20626] |
-| 362 | `tests/structural/fatigue/test_sn_curves.py` | `power_law_with_limit` | [docs/registry/implementation-map.yaml:L20627-L20636] |
-| 363 | `tests/structural/fatigue/test_sn_curves.py` | `bilinear_curve` | [docs/registry/implementation-map.yaml:L20637-L20646] |
-| 364 | `tests/structural/fatigue/test_sn_curves.py` | `dnv_d_curve` | [docs/registry/implementation-map.yaml:L20647-L20656] |
-| 365 | `tests/structural/fatigue/test_sn_curves.py` | `TestBS7608RevisedCurveParameters.test_bs7608_revised_d_known_n_at_50mpa` | [docs/registry/implementation-map.yaml:L20657-L20666] |
-| 366 | `tests/structural/fatigue/test_sn_curves.py` | `TestISO19902CurveParameters.test_iso19902_f_air_known_n_at_100mpa` | [docs/registry/implementation-map.yaml:L20667-L20676] |
-| 367 | `tests/structural/fatigue/test_sn_curves.py` | `TestISO19902CurveParameters.test_iso19902_f2_sw_cp_known_n_at_50mpa` | [docs/registry/implementation-map.yaml:L20677-L20686] |
-| 368 | `tests/structural/fatigue/test_sn_curves_yaml.py` | `_all_single_slope_cases` | [docs/registry/implementation-map.yaml:L20687-L20696] |
-| 369 | `tests/structural/fatigue/test_sn_curves_yaml.py` | `_all_multislope_cases` | [docs/registry/implementation-map.yaml:L20697-L20706] |
-| 370 | `tests/structural/fatigue_analysis/conftest.py` | `sn_curve_data` | [docs/registry/implementation-map.yaml:L20707-L20716] |
-| 371 | `tests/structural/fatigue_analysis/test_fatigue_analysis_sn.py` | `run_fatigue_analysis` | [docs/registry/implementation-map.yaml:L20717-L20727] |
-| 372 | `tests/structural/fatigue_analysis/test_fatigue_analysis_timetrace.py` | `run_fatigue_analysis` | [docs/registry/implementation-map.yaml:L20728-L20738] |
-| 373 | `tests/subsea/pipeline/test_free_span_f105.py` | `ref_input` | [docs/registry/implementation-map.yaml:L20739-L20748] |
-| 374 | `tests/subsea/viv_analysis/test_viv_analysis_unit.py` | `TestVIVFatigueCalculator.test_cumulative_damage` | [docs/registry/implementation-map.yaml:L20749-L20758] |
-| 375 | `tests/test_automation/fixtures/engineering_fixtures.py` | `get_orcaflex_post_process_mock` | [docs/registry/implementation-map.yaml:L20759-L20768] |
-| 376 | `tests/test_automation/scripts/comprehensive_fix_campaign.py` | `ComprehensiveTestFixCampaign.generate_mock_data` | [docs/registry/implementation-map.yaml:L20769-L20778] |
-| 377 | `tests/test_complete_fatigue_pipeline.py` | `process_configuration` | [docs/registry/implementation-map.yaml:L20779-L20788] |
-| 378 | `tests/test_complete_fatigue_pipeline.py` | `main` | [docs/registry/implementation-map.yaml:L20789-L20800] |
-| 379 | `tests/test_fatigue_basic.py` | `run_all_tests` | [docs/registry/implementation-map.yaml:L20801-L20810] |
-| 380 | `tests/test_rainflow_with_effective_tension.py` | `process_effective_tension_file` | [docs/registry/implementation-map.yaml:L20811-L20820] |
-| 381 | `tests/test_rainflow_with_effective_tension.py` | `main` | [docs/registry/implementation-map.yaml:L20821-L20831] |
-| 382 | `tests/test_reservoir_framework.py` | `run_performance_tests` | [docs/registry/implementation-map.yaml:L20832-L20841] |
-| 383 | `tests/test_spectral_fatigue_validation.py` | `TestSNCurveDNVReference.test_dnv_d_curve_parameters` | [docs/registry/implementation-map.yaml:L20842-L20853] |
-| 384 | `tests/workflows/test_durable_workflows.py` | `test_workflow_registry` | [docs/registry/implementation-map.yaml:L20854-L20864] |
-| 385 | `tests/workflows/test_durable_workflows.py` | `test_spectral_fatigue_workflow_matches_narrow_band_closed_form` | [docs/registry/implementation-map.yaml:L20865-L20875] |
-| 386 | `tests/workflows/test_durable_workflows.py` | `test_rao_spectral_fatigue_constant_rao_matches_fixed_gain_screening` | [docs/registry/implementation-map.yaml:L20876-L20886] |
-| 387 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `PowerLawSNCurve.get_allowable_cycles` | [docs/registry/implementation-map.yaml:L20887-L20897] |
-| 388 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `PowerLawSNCurve.get_stress_range` | [docs/registry/implementation-map.yaml:L20898-L20907] |
-| 389 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `BilinearSNCurve.get_allowable_cycles` | [docs/registry/implementation-map.yaml:L20908-L20917] |
-| 390 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `BilinearSNCurve.get_stress_range` | [docs/registry/implementation-map.yaml:L20918-L20928] |
-| 391 | `src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py` | `BilinearSNCurve.get_allowable_cycles` | [docs/registry/implementation-map.yaml:L20929-L20938] |
-| 392 | `src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py` | `BilinearSNCurve.get_stress_range` | [docs/registry/implementation-map.yaml:L20939-L20948] |
+| 1 | `docs/domains/examples/orcaflex_signal_analysis_example.py` | `example_6_custom_workflow` | [docs/registry/implementation-map.yaml:L16791-L16800] |
+| 2 | `docs/domains/examples/signal_analysis_usage_example.py` | `example_1_basic_rainflow_counting` | [docs/registry/implementation-map.yaml:L16801-L16810] |
+| 3 | `docs/domains/examples/signal_analysis_usage_example.py` | `example_4_fatigue_analysis` | [docs/registry/implementation-map.yaml:L16811-L16820] |
+| 4 | `docs/domains/examples/signal_analysis_usage_example.py` | `example_6_backward_compatibility` | [docs/registry/implementation-map.yaml:L16821-L16830] |
+| 5 | `docs/domains/examples/signal_analysis_usage_example.py` | `main` | [docs/registry/implementation-map.yaml:L16831-L16844] |
+| 6 | `examples/demos/demo_sn_library.py` | `main` | [docs/registry/implementation-map.yaml:L16845-L16856] |
+| 7 | `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `demonstrate_sn_curves` | [docs/registry/implementation-map.yaml:L16857-L16866] |
+| 8 | `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `demonstrate_rainflow_counting` | [docs/registry/implementation-map.yaml:L16867-L16876] |
+| 9 | `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `demonstrate_damage_accumulation` | [docs/registry/implementation-map.yaml:L16877-L16886] |
+| 10 | `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `demonstrate_frequency_domain_analysis` | [docs/registry/implementation-map.yaml:L16887-L16896] |
+| 11 | `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `demonstrate_quick_analysis` | [docs/registry/implementation-map.yaml:L16897-L16906] |
+| 12 | `examples/domains/fatigue/advanced_examples/complete_fatigue_analysis.py` | `main` | [docs/registry/implementation-map.yaml:L16907-L16922] |
+| 13 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_cli.py` | `list_curves` | [docs/registry/implementation-map.yaml:L16923-L16932] |
+| 14 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_cli.py` | `compare_curves` | [docs/registry/implementation-map.yaml:L16933-L16942] |
+| 15 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_2_linear_log` | [docs/registry/implementation-map.yaml:L16943-L16952] |
+| 16 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_3_with_scf` | [docs/registry/implementation-map.yaml:L16953-L16962] |
+| 17 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_4_without_fatigue_limit` | [docs/registry/implementation-map.yaml:L16963-L16972] |
+| 18 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_5_dnv_comparison` | [docs/registry/implementation-map.yaml:L16973-L16982] |
+| 19 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_6_abs_comparison` | [docs/registry/implementation-map.yaml:L16983-L16992] |
+| 20 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_7_reference_comparison` | [docs/registry/implementation-map.yaml:L16993-L17002] |
+| 21 | `examples/domains/fatigue/advanced_examples/plot_sn_curves_examples.py` | `example_8_joint_type_comparison` | [docs/registry/implementation-map.yaml:L17003-L17012] |
+| 22 | `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_1_basic_sn_curves` | [docs/registry/implementation-map.yaml:L17013-L17022] |
+| 23 | `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_2_multislope_curves` | [docs/registry/implementation-map.yaml:L17023-L17032] |
+| 24 | `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_3_time_domain_analysis` | [docs/registry/implementation-map.yaml:L17033-L17042] |
+| 25 | `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_4_frequency_domain_analysis` | [docs/registry/implementation-map.yaml:L17043-L17052] |
+| 26 | `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_5_high_stress_range_analysis` | [docs/registry/implementation-map.yaml:L17053-L17062] |
+| 27 | `examples/domains/fatigue/fatigue_analysis_examples.py` | `example_6_shear_data_analysis` | [docs/registry/implementation-map.yaml:L17063-L17072] |
+| 28 | `examples/domains/fatigue/fatigue_analysis_examples.py` | `run_all_examples` | [docs/registry/implementation-map.yaml:L17073-L17089] |
+| 29 | `examples/domains/reservoir/reservoir_analysis_examples.py` | `example_well_log_analysis` | [docs/registry/implementation-map.yaml:L17090-L17099] |
+| 30 | `examples/domains/reservoir/reservoir_analysis_examples.py` | `example_stratigraphic_correlation` | [docs/registry/implementation-map.yaml:L17100-L17109] |
+| 31 | `examples/domains/reservoir/reservoir_analysis_examples.py` | `main` | [docs/registry/implementation-map.yaml:L17110-L17122] |
+| 32 | `scripts/capabilities/build_onepagers.py` | `<module>` | [docs/registry/implementation-map.yaml:L17123-L17131] |
+| 33 | `scripts/python/digitalmodel/legacy/27_-_RainflowHalfCycles.py` | `<module>` | [docs/registry/implementation-map.yaml:L17132-L17140] |
+| 34 | `scripts/python/digitalmodel/tools/check_process_fatigue_single.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L17141-L17150] |
+| 35 | `scripts/python/digitalmodel/tools/migrate_yaml_configs.py` | `YAMLConfigMigrator._migrate_analysis` | [docs/registry/implementation-map.yaml:L17151-L17160] |
+| 36 | `scripts/python/digitalmodel/tools/migrate_yaml_configs.py` | `YAMLConfigMigrator._migrate_time_series_components` | [docs/registry/implementation-map.yaml:L17161-L17170] |
+| 37 | `scripts/python/digitalmodel/tools/process_fatigue_data.py` | `process_fatigue_files` | [docs/registry/implementation-map.yaml:L17171-L17180] |
+| 38 | `scripts/python/digitalmodel/tools/process_fatigue_final.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L17181-L17190] |
+| 39 | `scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py` | `process_fatigue_file` | [docs/registry/implementation-map.yaml:L17191-L17200] |
+| 40 | `scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py` | `process_sample_file` | [docs/registry/implementation-map.yaml:L17201-L17212] |
+| 41 | `scripts/python/digitalmodel/tools/process_fatigue_simplified_rainflow.py` | `batch_process_all_files` | [docs/registry/implementation-map.yaml:L17213-L17223] |
+| 42 | `scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py` | `rainflow_counting` | [docs/registry/implementation-map.yaml:L17224-L17233] |
+| 43 | `scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py` | `process_fatigue_file` | [docs/registry/implementation-map.yaml:L17234-L17245] |
+| 44 | `scripts/python/digitalmodel/tools/process_fatigue_simplified_standalone.py` | `batch_process` | [docs/registry/implementation-map.yaml:L17246-L17257] |
+| 45 | `scripts/python/digitalmodel/tools/process_fatigue_single_test_v2.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L17258-L17267] |
+| 46 | `scripts/python/digitalmodel/tools/process_fatigue_single_test_v3.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L17268-L17277] |
+| 47 | `scripts/python/digitalmodel/tools/process_fatigue_single_test_v4.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L17278-L17287] |
+| 48 | `scripts/python/digitalmodel/tools/process_fatigue_single_test_v5.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L17288-L17297] |
+| 49 | `scripts/python/digitalmodel/tools/process_fatigue_single_test_v6.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L17298-L17307] |
+| 50 | `scripts/riser_database/build_tables.py` | `<module>` | [docs/registry/implementation-map.yaml:L17308-L17316] |
+| 51 | `src/digitalmodel/ansys/fatigue_postprocessor.py` | `SNcurve.from_dnv` | [docs/registry/implementation-map.yaml:L17317-L17326] |
+| 52 | `src/digitalmodel/ansys/fatigue_postprocessor.py` | `FatiguePostprocessor.calculate_cycles_to_failure` | [docs/registry/implementation-map.yaml:L17327-L17336] |
+| 53 | `src/digitalmodel/ansys/fatigue_postprocessor.py` | `FatiguePostprocessor.calculate_fatigue_damage` | [docs/registry/implementation-map.yaml:L17337-L17348] |
+| 54 | `src/digitalmodel/ansys/fatigue_postprocessor.py` | `FatiguePostprocessor.generate_sn_curve_apdl` | [docs/registry/implementation-map.yaml:L17349-L17358] |
+| 55 | `src/digitalmodel/ansys/fatigue_postprocessor.py` | `FatiguePostprocessor.create_damage_summary_df` | [docs/registry/implementation-map.yaml:L17359-L17368] |
+| 56 | `src/digitalmodel/benchmarks/inventory.py` | `build_model_inventory` | [docs/registry/implementation-map.yaml:L17369-L17378] |
+| 57 | `src/digitalmodel/drilling_riser/global_model/fatigue_channels.py` | `half_cycles` | [docs/registry/implementation-map.yaml:L17379-L17388] |
+| 58 | `src/digitalmodel/drilling_riser/global_model/fatigue_channels.py` | `extract` | [docs/registry/implementation-map.yaml:L17389-L17400] |
+| 59 | `src/digitalmodel/engine.py` | `engine` | [docs/registry/implementation-map.yaml:L17401-L17418] |
+| 60 | `src/digitalmodel/fatg_spectral_fatigue/workflow.py` | `router` | [docs/registry/implementation-map.yaml:L17419-L17431] |
+| 61 | `src/digitalmodel/fatg_spectral_fatigue/workflow.py` | `_sn_curve` | [docs/registry/implementation-map.yaml:L17432-L17441] |
+| 62 | `src/digitalmodel/fatigue/assessment.py` | `_case_histogram` | [docs/registry/implementation-map.yaml:L17442-L17451] |
+| 63 | `src/digitalmodel/fatigue/assessment.py` | `assess_fatigue` | [docs/registry/implementation-map.yaml:L17452-L17465] |
+| 64 | `src/digitalmodel/fatigue/counting_contract.py` | `<module>` | [docs/registry/implementation-map.yaml:L17466-L17474] |
+| 65 | `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_pylife_4pt` | [docs/registry/implementation-map.yaml:L17475-L17484] |
+| 66 | `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_pypi_rainflow` | [docs/registry/implementation-map.yaml:L17485-L17494] |
+| 67 | `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_sigproc_astm` | [docs/registry/implementation-map.yaml:L17495-L17504] |
+| 68 | `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_calm_buoy` | [docs/registry/implementation-map.yaml:L17505-L17514] |
+| 69 | `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_fapps_counting` | [docs/registry/implementation-map.yaml:L17515-L17524] |
+| 70 | `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_fapps_counter` | [docs/registry/implementation-map.yaml:L17525-L17534] |
+| 71 | `src/digitalmodel/fatigue/counting_contract.py` | `_adapt_struct_fatigue` | [docs/registry/implementation-map.yaml:L17535-L17544] |
+| 72 | `src/digitalmodel/fatigue/counting_contract.py` | `_is_counting_name` | [docs/registry/implementation-map.yaml:L17545-L17554] |
+| 73 | `src/digitalmodel/fatigue/damage.py` | `miner_damage` | [docs/registry/implementation-map.yaml:L17555-L17564] |
+| 74 | `src/digitalmodel/fatigue/damage.py` | `design_life_check` | [docs/registry/implementation-map.yaml:L17565-L17576] |
+| 75 | `src/digitalmodel/fatigue/environmental_correction.py` | `environment_correction` | [docs/registry/implementation-map.yaml:L17577-L17586] |
+| 76 | `src/digitalmodel/fatigue/environmental_correction.py` | `apply_environment_to_sn` | [docs/registry/implementation-map.yaml:L17587-L17598] |
+| 77 | `src/digitalmodel/fatigue/fatg.py` | `fatg_sea_state_damage` | [docs/registry/implementation-map.yaml:L17599-L17608] |
+| 78 | `src/digitalmodel/fatigue/fatg.py` | `fatg_annual_damage` | [docs/registry/implementation-map.yaml:L17609-L17620] |
+| 79 | `src/digitalmodel/fatigue/fatigue_reporting.py` | `_sec_fatigue_locations` | [docs/registry/implementation-map.yaml:L17621-L17630] |
+| 80 | `src/digitalmodel/fatigue/rainflow.py` | `fatigue_life` | [docs/registry/implementation-map.yaml:L17631-L17643] |
+| 81 | `src/digitalmodel/fatigue/sn_curves.py` | `_compute_sd` | [docs/registry/implementation-map.yaml:L17644-L17653] |
+| 82 | `src/digitalmodel/fatigue/sn_curves.py` | `_build_curve_dict` | [docs/registry/implementation-map.yaml:L17654-L17665] |
+| 83 | `src/digitalmodel/fatigue/sn_curves.py` | `get_sn_curve` | [docs/registry/implementation-map.yaml:L17666-L17676] |
+| 84 | `src/digitalmodel/fatigue/sn_library.py` | `SNCurveRecord.knee_stress` | [docs/registry/implementation-map.yaml:L17677-L17688] |
+| 85 | `src/digitalmodel/fatigue/sn_library.py` | `SNCurveRecord.switch_stress` | [docs/registry/implementation-map.yaml:L17689-L17700] |
+| 86 | `src/digitalmodel/fatigue/sn_library.py` | `SNCurveRecord.cycles` | [docs/registry/implementation-map.yaml:L17701-L17712] |
+| 87 | `src/digitalmodel/fatigue/sn_library.py` | `_knee_stress` | [docs/registry/implementation-map.yaml:L17713-L17722] |
+| 88 | `src/digitalmodel/fatigue/sn_library.py` | `_switch_stress` | [docs/registry/implementation-map.yaml:L17723-L17733] |
+| 89 | `src/digitalmodel/fatigue/sn_library.py` | `_bilinear_cycles` | [docs/registry/implementation-map.yaml:L17734-L17743] |
+| 90 | `src/digitalmodel/fatigue/sn_library.py` | `_sd` | [docs/registry/implementation-map.yaml:L17744-L17753] |
+| 91 | `src/digitalmodel/fatigue/sn_library.py` | `_build_dnv_curves` | [docs/registry/implementation-map.yaml:L17754-L17763] |
+| 92 | `src/digitalmodel/fatigue/sn_library.py` | `_build_api_curves` | [docs/registry/implementation-map.yaml:L17764-L17773] |
+| 93 | `src/digitalmodel/fatigue/sn_library.py` | `_build_bs7608_curves` | [docs/registry/implementation-map.yaml:L17774-L17785] |
+| 94 | `src/digitalmodel/fatigue/sn_library.py` | `_build_iiw_curves` | [docs/registry/implementation-map.yaml:L17786-L17796] |
+| 95 | `src/digitalmodel/fatigue/sn_library.py` | `_build_eurocode3_curves` | [docs/registry/implementation-map.yaml:L17797-L17807] |
+| 96 | `src/digitalmodel/fatigue/sn_library.py` | `_build_norsok_curves` | [docs/registry/implementation-map.yaml:L17808-L17818] |
+| 97 | `src/digitalmodel/fatigue/sn_library.py` | `_build_aws_curves` | [docs/registry/implementation-map.yaml:L17819-L17828] |
+| 98 | `src/digitalmodel/fatigue/sn_library.py` | `_build_asme_curves` | [docs/registry/implementation-map.yaml:L17829-L17838] |
+| 99 | `src/digitalmodel/fatigue/sn_library.py` | `_build_en13445_curves` | [docs/registry/implementation-map.yaml:L17839-L17849] |
+| 100 | `src/digitalmodel/fatigue/sn_library.py` | `_build_pd5500_curves` | [docs/registry/implementation-map.yaml:L17850-L17860] |
+| 101 | `src/digitalmodel/fatigue/sn_library.py` | `_build_abs_curves` | [docs/registry/implementation-map.yaml:L17861-L17870] |
+| 102 | `src/digitalmodel/fatigue/sn_library.py` | `_build_iso19902_curves` | [docs/registry/implementation-map.yaml:L17871-L17881] |
+| 103 | `src/digitalmodel/fatigue/sn_library.py` | `_build_csa_curves` | [docs/registry/implementation-map.yaml:L17882-L17891] |
+| 104 | `src/digitalmodel/fatigue/sn_library.py` | `_build_hse_curves` | [docs/registry/implementation-map.yaml:L17892-L17902] |
+| 105 | `src/digitalmodel/fatigue/sn_library.py` | `_build_doe_curves` | [docs/registry/implementation-map.yaml:L17903-L17913] |
+| 106 | `src/digitalmodel/fatigue/sn_library.py` | `_build_gl_curves` | [docs/registry/implementation-map.yaml:L17914-L17923] |
+| 107 | `src/digitalmodel/fatigue/sn_library.py` | `_build_jis_curves` | [docs/registry/implementation-map.yaml:L17924-L17933] |
+| 108 | `src/digitalmodel/fatigue/sn_library.py` | `_ensure_loaded` | [docs/registry/implementation-map.yaml:L17934-L17943] |
+| 109 | `src/digitalmodel/fatigue/sn_library.py` | `summary_table` | [docs/registry/implementation-map.yaml:L17944-L17955] |
+| 110 | `src/digitalmodel/fatigue/sn_library_api.py` | `_record_to_curve_info` | [docs/registry/implementation-map.yaml:L17956-L17965] |
+| 111 | `src/digitalmodel/fatigue/sn_library_api.py` | `_record_to_sncurve` | [docs/registry/implementation-map.yaml:L17966-L17975] |
+| 112 | `src/digitalmodel/fatigue/sn_library_api.py` | `get_curve` | [docs/registry/implementation-map.yaml:L17976-L17987] |
+| 113 | `src/digitalmodel/fatigue/sn_library_api.py` | `calculate_endurance` | [docs/registry/implementation-map.yaml:L17988-L18000] |
+| 114 | `src/digitalmodel/fatigue/spectral_fatigue.py` | `wirsching_light_damage` | [docs/registry/implementation-map.yaml:L18001-L18010] |
+| 115 | `src/digitalmodel/fatigue/spectral_fatigue.py` | `benasciutti_tovo_damage` | [docs/registry/implementation-map.yaml:L18011-L18020] |
+| 116 | `src/digitalmodel/fatigue/weld_fatigue_quickcheck.py` | `weld_fatigue_quickcheck` | [docs/registry/implementation-map.yaml:L18021-L18031] |
+| 117 | `src/digitalmodel/fatigue/weld_fatigue_quickcheck.py` | `main` | [docs/registry/implementation-map.yaml:L18032-L18041] |
+| 118 | `src/digitalmodel/fatigue/woehler_fitting.py` | `generate_test_data` | [docs/registry/implementation-map.yaml:L18042-L18051] |
+| 119 | `src/digitalmodel/fatigue/woehler_fitting.py` | `_fallback_log_regression` | [docs/registry/implementation-map.yaml:L18052-L18061] |
+| 120 | `src/digitalmodel/fatigue/workflow.py` | `router` | [docs/registry/implementation-map.yaml:L18062-L18079] |
+| 121 | `src/digitalmodel/fatigue/workflow.py` | `_curve_ids` | [docs/registry/implementation-map.yaml:L18080-L18089] |
+| 122 | `src/digitalmodel/fatigue/workflow.py` | `_stress_ranges` | [docs/registry/implementation-map.yaml:L18090-L18099] |
+| 123 | `src/digitalmodel/fatigue/workflow.py` | `_curve_summary` | [docs/registry/implementation-map.yaml:L18100-L18109] |
+| 124 | `src/digitalmodel/fatigue/workflow.py` | `_curve_csv_path` | [docs/registry/implementation-map.yaml:L18110-L18121] |
+| 125 | `src/digitalmodel/fatigue/workflow.py` | `_input_stem` | [docs/registry/implementation-map.yaml:L18122-L18131] |
+| 126 | `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py` | `FatigueAnalysis.router` | [docs/registry/implementation-map.yaml:L18132-L18144] |
+| 127 | `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py` | `FatigueAnalysis.damage_from_sn_data` | [docs/registry/implementation-map.yaml:L18145-L18154] |
+| 128 | `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py` | `FatigueAnalysis.damage_from_rainflow_cycles` | [docs/registry/implementation-map.yaml:L18155-L18164] |
+| 129 | `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py` | `FatigueAnalysis.damage_from_timetrace` | [docs/registry/implementation-map.yaml:L18165-L18177] |
+| 130 | `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py` | `FatigueAnalysis.get_rainflow_from_timetrace` | [docs/registry/implementation-map.yaml:L18178-L18187] |
+| 131 | `src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis_components.py` | `FatigueAnalysisComponents.orcaflex_wave_fatigue_analysis` | [docs/registry/implementation-map.yaml:L18188-L18197] |
+| 132 | `src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py` | `ShipFatigueAnalysis.router` | [docs/registry/implementation-map.yaml:L18198-L18209] |
+| 133 | `src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py` | `ShipFatigueAnalysis.get_lcf_timetrace_rainflow_and_fatigue_damage` | [docs/registry/implementation-map.yaml:L18210-L18221] |
+| 134 | `src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py` | `ShipFatigueAnalysis.get_fatigue_damage_output_df_for_timetrace` | [docs/registry/implementation-map.yaml:L18222-L18233] |
+| 135 | `src/digitalmodel/infrastructure/base_solvers/marine/ship/ship_fatigue_analysis.py` | `ShipFatigueAnalysis.get_fatigue_df_definition_for_timetrace` | [docs/registry/implementation-map.yaml:L18234-L18243] |
+| 136 | `src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py` | `VIVFatigueAnalysisComponents.orcaflex_wave_fatigue_analysis` | [docs/registry/implementation-map.yaml:L18244-L18253] |
+| 137 | `src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py` | `SNcurve.cycles_to_failure` | [docs/registry/implementation-map.yaml:L18254-L18263] |
+| 138 | `src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py` | `RainflowFatigue.count_cycles` | [docs/registry/implementation-map.yaml:L18264-L18273] |
+| 139 | `src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py` | `MinersRuleDamage.compute` | [docs/registry/implementation-map.yaml:L18274-L18283] |
+| 140 | `src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py` | `ScatterDiagramFatigue.compute` | [docs/registry/implementation-map.yaml:L18284-L18293] |
+| 141 | `src/digitalmodel/marine_ops/marine_engineering/calm_buoy_fatigue.py` | `compute_fatigue_life` | [docs/registry/implementation-map.yaml:L18294-L18303] |
+| 142 | `src/digitalmodel/marine_ops/reservoir/analysis.py` | `StratigraphicAnalysis.add_well_analysis` | [docs/registry/implementation-map.yaml:L18304-L18313] |
+| 143 | `src/digitalmodel/marine_ops/reservoir/analysis.py` | `StratigraphicAnalysis.set_well_order` | [docs/registry/implementation-map.yaml:L18314-L18323] |
+| 144 | `src/digitalmodel/marine_ops/reservoir/analysis.py` | `StratigraphicAnalysis.create_flattened_section` | [docs/registry/implementation-map.yaml:L18324-L18333] |
+| 145 | `src/digitalmodel/marine_ops/reservoir/analysis.py` | `WellCorrelation.add_well_data` | [docs/registry/implementation-map.yaml:L18334-L18343] |
+| 146 | `src/digitalmodel/marine_ops/reservoir/analysis.py` | `CoreAnalysis.correlate_core_to_logs` | [docs/registry/implementation-map.yaml:L18344-L18353] |
+| 147 | `src/digitalmodel/marine_ops/reservoir/analysis.py` | `ReservoirAnalysis.add_well_analysis` | [docs/registry/implementation-map.yaml:L18354-L18363] |
+| 148 | `src/digitalmodel/marine_ops/reservoir/analysis.py` | `ReservoirAnalysis.run_comprehensive_analysis` | [docs/registry/implementation-map.yaml:L18364-L18373] |
+| 149 | `src/digitalmodel/mooring_fatigue/workflow.py` | `router` | [docs/registry/implementation-map.yaml:L18374-L18387] |
+| 150 | `src/digitalmodel/mooring_fatigue/workflow.py` | `_evaluate_line` | [docs/registry/implementation-map.yaml:L18388-L18398] |
+| 151 | `src/digitalmodel/mooring_fatigue/workflow.py` | `_history_bins` | [docs/registry/implementation-map.yaml:L18399-L18408] |
+| 152 | `src/digitalmodel/mooring_fatigue/workflow.py` | `_curve_settings` | [docs/registry/implementation-map.yaml:L18409-L18418] |
+| 153 | `src/digitalmodel/parametric/generate.py` | `_mooring_fatigue_damage` | [docs/registry/implementation-map.yaml:L18419-L18429] |
+| 154 | `src/digitalmodel/parametric/generate.py` | `_free_span_utilisation` | [docs/registry/implementation-map.yaml:L18430-L18439] |
+| 155 | `src/digitalmodel/parametric/generate.py` | `_span_rectification_utilisation` | [docs/registry/implementation-map.yaml:L18440-L18449] |
+| 156 | `src/digitalmodel/parametric/refresh.py` | `<module>` | [docs/registry/implementation-map.yaml:L18450-L18458] |
+| 157 | `src/digitalmodel/rao_spectral_fatigue/workflow.py` | `router` | [docs/registry/implementation-map.yaml:L18459-L18470] |
+| 158 | `src/digitalmodel/riser_fatigue/touchdown.py` | `assess_touchdown_fatigue` | [docs/registry/implementation-map.yaml:L18471-L18480] |
+| 159 | `src/digitalmodel/riser_fatigue/workflow.py` | `router` | [docs/registry/implementation-map.yaml:L18481-L18492] |
+| 160 | `src/digitalmodel/riser_fatigue/workflow.py` | `_viv_damage` | [docs/registry/implementation-map.yaml:L18493-L18503] |
+| 161 | `src/digitalmodel/riser_fatigue/workflow.py` | `_curve_settings` | [docs/registry/implementation-map.yaml:L18504-L18513] |
+| 162 | `src/digitalmodel/signal_processing/signal_analysis/adapters.py` | `TimeSeriesComponentsAdapter.get_rainflow_count_from_time_series` | [docs/registry/implementation-map.yaml:L18514-L18523] |
+| 163 | `src/digitalmodel/signal_processing/signal_analysis/adapters.py` | `FatigueAnalysisAdapter.get_rainflow_from_timetrace` | [docs/registry/implementation-map.yaml:L18524-L18533] |
+| 164 | `src/digitalmodel/signal_processing/signal_analysis/adapters.py` | `FatigueAnalysisAdapter.damage_from_rainflow_cycles` | [docs/registry/implementation-map.yaml:L18534-L18543] |
+| 165 | `src/digitalmodel/signal_processing/signal_analysis/adapters.py` | `OrcaFlexAdapter.RainflowHalfCycles` | [docs/registry/implementation-map.yaml:L18544-L18553] |
+| 166 | `src/digitalmodel/signal_processing/signal_analysis/cli.py` | `rainflow_cmd` | [docs/registry/implementation-map.yaml:L18554-L18563] |
+| 167 | `src/digitalmodel/signal_processing/signal_analysis/core/rainflow.py` | `RainflowCounter.count_cycles` | [docs/registry/implementation-map.yaml:L18564-L18573] |
+| 168 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/curves.py` | `SNCurve._bilinear` | [docs/registry/implementation-map.yaml:L18574-L18583] |
+| 169 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/curves.py` | `SNCurve.from_test_data` | [docs/registry/implementation-map.yaml:L18584-L18593] |
+| 170 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator.calculate_damage` | [docs/registry/implementation-map.yaml:L18594-L18609] |
+| 171 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._miners_rule` | [docs/registry/implementation-map.yaml:L18610-L18621] |
+| 172 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._modified_miners_rule` | [docs/registry/implementation-map.yaml:L18622-L18632] |
+| 173 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._nonlinear_damage` | [docs/registry/implementation-map.yaml:L18633-L18643] |
+| 174 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._calculate_allowable_cycles` | [docs/registry/implementation-map.yaml:L18644-L18653] |
+| 175 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._apply_mean_stress_correction` | [docs/registry/implementation-map.yaml:L18654-L18663] |
+| 176 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator._estimate_cycles_to_failure` | [docs/registry/implementation-map.yaml:L18664-L18673] |
+| 177 | `src/digitalmodel/signal_processing/signal_analysis/fatigue/damage.py` | `FatigueDamageCalculator.calculate_equivalent_stress` | [docs/registry/implementation-map.yaml:L18674-L18683] |
+| 178 | `src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py` | `create_parser` | [docs/registry/implementation-map.yaml:L18684-L18693] |
+| 179 | `src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py` | `build_config_from_args` | [docs/registry/implementation-map.yaml:L18694-L18703] |
+| 180 | `src/digitalmodel/signal_processing/signal_analysis/orcaflex/__main__.py` | `main` | [docs/registry/implementation-map.yaml:L18704-L18716] |
+| 181 | `src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py` | `TimeSeriesAnalyzer._analyze_column` | [docs/registry/implementation-map.yaml:L18717-L18726] |
+| 182 | `src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py` | `TimeSeriesAnalyzer._generate_outputs` | [docs/registry/implementation-map.yaml:L18727-L18736] |
+| 183 | `src/digitalmodel/signal_processing/signal_analysis/orcaflex/analyzer.py` | `TimeSeriesAnalyzer._generate_summary` | [docs/registry/implementation-map.yaml:L18737-L18746] |
+| 184 | `src/digitalmodel/signal_processing/signal_analysis/orcaflex/error_handling.py` | `SafeAnalyzer.safe_rainflow_analysis` | [docs/registry/implementation-map.yaml:L18747-L18756] |
+| 185 | `src/digitalmodel/signal_processing/time_series/time_series_analysis.py` | `TimeSeriesAnalysis.router` | [docs/registry/implementation-map.yaml:L18757-L18766] |
+| 186 | `src/digitalmodel/signal_processing/time_series/time_series_components.py` | `TimeSeriesComponents.count_cycles` | [docs/registry/implementation-map.yaml:L18767-L18776] |
+| 187 | `src/digitalmodel/solvers/orcaflex/opp_time_series.py` | `OPPTimeSeries.get_histogram_object_from_orcaflex_run` | [docs/registry/implementation-map.yaml:L18777-L18786] |
+| 188 | `src/digitalmodel/solvers/orcaflex/opp_time_series.py` | `OPPTimeSeries.get_detailed_histogram_df_columns` | [docs/registry/implementation-map.yaml:L18787-L18796] |
+| 189 | `src/digitalmodel/solvers/orcaflex/opp_time_series_v2.py` | `OPPTimeSeriesV2.process_histograms` | [docs/registry/implementation-map.yaml:L18797-L18806] |
+| 190 | `src/digitalmodel/solvers/orcaflex/orcaflex_analysis_components.py` | `OrcaFlexAnalysis.get_histogram_object_from_orcaflex_run` | [docs/registry/implementation-map.yaml:L18807-L18816] |
+| 191 | `src/digitalmodel/solvers/orcaflex/orcaflex_analysis_components.py` | `OrcaFlexAnalysis.get_detailed_histogram_df_columns` | [docs/registry/implementation-map.yaml:L18817-L18826] |
+| 192 | `src/digitalmodel/solvers/orcaflex/time_trace_processor.py` | `OrcaFlexTimeTraceProcessor._perform_fatigue_analysis` | [docs/registry/implementation-map.yaml:L18827-L18838] |
+| 193 | `src/digitalmodel/solvers/orcaflex/time_trace_processor.py` | `OrcaFlexTimeTraceProcessor._parallel_fatigue_analysis` | [docs/registry/implementation-map.yaml:L18839-L18848] |
+| 194 | `src/digitalmodel/solvers/orcaflex/time_trace_processor.py` | `OrcaFlexTimeTraceProcessor._analyze_single_trace` | [docs/registry/implementation-map.yaml:L18849-L18858] |
+| 195 | `src/digitalmodel/spectral_fatigue/workflow.py` | `router` | [docs/registry/implementation-map.yaml:L18859-L18870] |
+| 196 | `src/digitalmodel/spectral_fatigue/workflow.py` | `_sn_curve` | [docs/registry/implementation-map.yaml:L18871-L18880] |
+| 197 | `src/digitalmodel/structural/fatigue/__init__.py` | `quick_fatigue_analysis` | [docs/registry/implementation-map.yaml:L18881-L18894] |
+| 198 | `src/digitalmodel/structural/fatigue/__init__.py` | `get_module_info` | [docs/registry/implementation-map.yaml:L18895-L18904] |
+| 199 | `src/digitalmodel/structural/fatigue/analysis.py` | `<module>` | [docs/registry/implementation-map.yaml:L18905-L18913] |
+| 200 | `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine._setup_sn_curve` | [docs/registry/implementation-map.yaml:L18914-L18924] |
+| 201 | `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine._setup_damage_calculator` | [docs/registry/implementation-map.yaml:L18925-L18934] |
+| 202 | `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine._setup_rainflow_counter` | [docs/registry/implementation-map.yaml:L18935-L18944] |
+| 203 | `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine.analyze_time_series` | [docs/registry/implementation-map.yaml:L18945-L18956] |
+| 204 | `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine.analyze_psd` | [docs/registry/implementation-map.yaml:L18957-L18966] |
+| 205 | `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine.calculate_high_stress_range_life` | [docs/registry/implementation-map.yaml:L18967-L18976] |
+| 206 | `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine.analyze_shear_data` | [docs/registry/implementation-map.yaml:L18977-L18986] |
+| 207 | `src/digitalmodel/structural/fatigue/analysis.py` | `FatigueAnalysisEngine._perform_engineering_validation` | [docs/registry/implementation-map.yaml:L18987-L18996] |
+| 208 | `src/digitalmodel/structural/fatigue/analysis.py` | `quick_time_domain_analysis` | [docs/registry/implementation-map.yaml:L18997-L19006] |
+| 209 | `src/digitalmodel/structural/fatigue/analysis.py` | `quick_frequency_domain_analysis` | [docs/registry/implementation-map.yaml:L19007-L19016] |
+| 210 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `<module>` | [docs/registry/implementation-map.yaml:L19017-L19025] |
+| 211 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `LinearDamageAccumulation.calculate_damage` | [docs/registry/implementation-map.yaml:L19026-L19037] |
+| 212 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `LinearDamageAccumulation._apply_mean_stress_correction` | [docs/registry/implementation-map.yaml:L19038-L19047] |
+| 213 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `ModifiedMinersRule.calculate_damage` | [docs/registry/implementation-map.yaml:L19048-L19057] |
+| 214 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `NonlinearDamageAccumulation.calculate_damage` | [docs/registry/implementation-map.yaml:L19058-L19071] |
+| 215 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `NonlinearDamageAccumulation._marco_starkey_damage` | [docs/registry/implementation-map.yaml:L19072-L19081] |
+| 216 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `NonlinearDamageAccumulation._corten_dolan_damage` | [docs/registry/implementation-map.yaml:L19082-L19091] |
+| 217 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `NonlinearDamageAccumulation._double_linear_damage` | [docs/registry/implementation-map.yaml:L19092-L19101] |
+| 218 | `src/digitalmodel/structural/fatigue/damage_accumulation.py` | `compare_damage_methods` | [docs/registry/implementation-map.yaml:L19102-L19111] |
+| 219 | `src/digitalmodel/structural/fatigue/design_code_report.py` | `_build_curve` | [docs/registry/implementation-map.yaml:L19112-L19121] |
+| 220 | `src/digitalmodel/structural/fatigue/fatigue_reliability.py` | `failure_probability` | [docs/registry/implementation-map.yaml:L19122-L19131] |
+| 221 | `src/digitalmodel/structural/fatigue/fatigue_reliability.py` | `sensitivity_analysis` | [docs/registry/implementation-map.yaml:L19132-L19141] |
+| 222 | `src/digitalmodel/structural/fatigue/fatigue_reliability.py` | `monte_carlo_fatigue` | [docs/registry/implementation-map.yaml:L19142-L19151] |
+| 223 | `src/digitalmodel/structural/fatigue/frequency_domain.py` | `<module>` | [docs/registry/implementation-map.yaml:L19152-L19160] |
+| 224 | `src/digitalmodel/structural/fatigue/frequency_domain.py` | `NarrowBandMethod.calculate_damage_rate` | [docs/registry/implementation-map.yaml:L19161-L19170] |
+| 225 | `src/digitalmodel/structural/fatigue/frequency_domain.py` | `DirlikMethod.calculate_damage_rate` | [docs/registry/implementation-map.yaml:L19171-L19180] |
+| 226 | `src/digitalmodel/structural/fatigue/frequency_domain.py` | `TovoBenasciuttiMethod.calculate_damage_rate` | [docs/registry/implementation-map.yaml:L19181-L19190] |
+| 227 | `src/digitalmodel/structural/fatigue/frequency_domain.py` | `SingleMomentMethod.calculate_damage_rate` | [docs/registry/implementation-map.yaml:L19191-L19200] |
+| 228 | `src/digitalmodel/structural/fatigue/frequency_domain.py` | `compare_frequency_methods` | [docs/registry/implementation-map.yaml:L19201-L19210] |
+| 229 | `src/digitalmodel/structural/fatigue/parametric_sweep.py` | `run_sweep` | [docs/registry/implementation-map.yaml:L19211-L19220] |
+| 230 | `src/digitalmodel/structural/fatigue/parametric_sweep.py` | `compute_sensitivity._single_damage` | [docs/registry/implementation-map.yaml:L19221-L19230] |
+| 231 | `src/digitalmodel/structural/fatigue/parametric_sweep.py` | `_build_scatter_json` | [docs/registry/implementation-map.yaml:L19231-L19240] |
+| 232 | `src/digitalmodel/structural/fatigue/rainflow.py` | `<module>` | [docs/registry/implementation-map.yaml:L19241-L19249] |
+| 233 | `src/digitalmodel/structural/fatigue/rainflow.py` | `RainflowCounter.count_cycles` | [docs/registry/implementation-map.yaml:L19250-L19261] |
+| 234 | `src/digitalmodel/structural/fatigue/rainflow.py` | `RainflowCounter._rainflow_count` | [docs/registry/implementation-map.yaml:L19262-L19271] |
+| 235 | `src/digitalmodel/structural/fatigue/rainflow.py` | `RainflowCounter.extract_cycles_with_means` | [docs/registry/implementation-map.yaml:L19272-L19283] |
+| 236 | `src/digitalmodel/structural/fatigue/rainflow.py` | `rainflow_count` | [docs/registry/implementation-map.yaml:L19284-L19293] |
+| 237 | `src/digitalmodel/structural/fatigue/rainflow.py` | `rainflow_with_means` | [docs/registry/implementation-map.yaml:L19294-L19303] |
+| 238 | `src/digitalmodel/structural/fatigue/scatter_fatigue.py` | `scatter_fatigue_damage` | [docs/registry/implementation-map.yaml:L19304-L19313] |
+| 239 | `src/digitalmodel/structural/fatigue/skill.py` | `fatigue_assessment` | [docs/registry/implementation-map.yaml:L19314-L19325] |
+| 240 | `src/digitalmodel/structural/fatigue/sn_curve_plotter.py` | `main` | [docs/registry/implementation-map.yaml:L19326-L19335] |
+| 241 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `<module>` | [docs/registry/implementation-map.yaml:L19336-L19344] |
+| 242 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `StandardSNCurves._ensure_loaded` | [docs/registry/implementation-map.yaml:L19345-L19354] |
+| 243 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `StandardSNCurves.register_custom_curve` | [docs/registry/implementation-map.yaml:L19355-L19364] |
+| 244 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `StandardSNCurves.get_dnv_c203_curve` | [docs/registry/implementation-map.yaml:L19365-L19374] |
+| 245 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `StandardSNCurves.get_curve` | [docs/registry/implementation-map.yaml:L19375-L19384] |
+| 246 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `StandardSNCurves.get_multislope_curve` | [docs/registry/implementation-map.yaml:L19385-L19394] |
+| 247 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `ThicknessCorrection.apply_thickness_effect` | [docs/registry/implementation-map.yaml:L19395-L19404] |
+| 248 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `SNDataFitting.fit_power_law` | [docs/registry/implementation-map.yaml:L19405-L19414] |
+| 249 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `get_dnv_curve` | [docs/registry/implementation-map.yaml:L19415-L19424] |
+| 250 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `get_api_curve` | [docs/registry/implementation-map.yaml:L19425-L19434] |
+| 251 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `get_bs_curve` | [docs/registry/implementation-map.yaml:L19435-L19444] |
+| 252 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `_dnv_curves_from_c203` | [docs/registry/implementation-map.yaml:L19445-L19454] |
+| 253 | `src/digitalmodel/structural/fatigue/worked_examples.py` | `_dnv_seawater_cp` | [docs/registry/implementation-map.yaml:L19455-L19464] |
+| 254 | `src/digitalmodel/structural/fatigue/worked_examples.py` | `_dnv_seawater_free` | [docs/registry/implementation-map.yaml:L19465-L19474] |
+| 255 | `src/digitalmodel/structural/fatigue/worked_examples.py` | `_chain_seawater_cp` | [docs/registry/implementation-map.yaml:L19475-L19484] |
+| 256 | `src/digitalmodel/structural/fatigue/worked_examples.py` | `pipeline_girth_weld` | [docs/registry/implementation-map.yaml:L19485-L19497] |
+| 257 | `src/digitalmodel/structural/fatigue/worked_examples.py` | `scr_touchdown` | [docs/registry/implementation-map.yaml:L19498-L19510] |
+| 258 | `src/digitalmodel/structural/fatigue/worked_examples.py` | `mooring_chain` | [docs/registry/implementation-map.yaml:L19511-L19523] |
+| 259 | `src/digitalmodel/structural/fatigue/worked_examples.py` | `_compute_example` | [docs/registry/implementation-map.yaml:L19524-L19533] |
+| 260 | `src/digitalmodel/structural/fatigue_apps/__main__.py` | `run_analysis` | [docs/registry/implementation-map.yaml:L19534-L19545] |
+| 261 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage.py` | `SNCurve._load_sn_parameters` | [docs/registry/implementation-map.yaml:L19546-L19555] |
+| 262 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage.py` | `SNCurve.calculate_cycles_to_failure` | [docs/registry/implementation-map.yaml:L19556-L19565] |
+| 263 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage.py` | `FatigueDamageCalculator.calculate_damage` | [docs/registry/implementation-map.yaml:L19566-L19575] |
+| 264 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage.py` | `main` | [docs/registry/implementation-map.yaml:L19576-L19585] |
+| 265 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `<module>` | [docs/registry/implementation-map.yaml:L19586-L19594] |
+| 266 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `SNCurveParameters.a1` | [docs/registry/implementation-map.yaml:L19595-L19604] |
+| 267 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `SNCurveParameters.a2` | [docs/registry/implementation-map.yaml:L19605-L19614] |
+| 268 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `FatigueDamageCalculator.cycles_to_failure` | [docs/registry/implementation-map.yaml:L19615-L19624] |
+| 269 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `FatigueDamageCalculator.calculate_damage` | [docs/registry/implementation-map.yaml:L19625-L19636] |
+| 270 | `src/digitalmodel/structural/fatigue_apps/fatigue_damage_calculator.py` | `FatigueDamageCalculator.export_results` | [docs/registry/implementation-map.yaml:L19637-L19646] |
+| 271 | `src/digitalmodel/structural/fatigue_apps/file_namer.py` | `FatigueFileNamer.get_rainflow_filename` | [docs/registry/implementation-map.yaml:L19647-L19656] |
+| 272 | `src/digitalmodel/structural/fatigue_apps/file_namer.py` | `<module>` | [docs/registry/implementation-map.yaml:L19657-L19665] |
+| 273 | `src/digitalmodel/structural/fatigue_apps/integrated_processor.py` | `IntegratedFatigueProcessor.process_fatigue_condition` | [docs/registry/implementation-map.yaml:L19666-L19675] |
+| 274 | `src/digitalmodel/structural/fatigue_apps/integrated_processor.py` | `main` | [docs/registry/implementation-map.yaml:L19676-L19685] |
+| 275 | `src/digitalmodel/structural/fatigue_apps/integrated_processor_with_naming.py` | `IntegratedFatigueProcessorWithNaming._process_condition_base` | [docs/registry/implementation-map.yaml:L19686-L19695] |
+| 276 | `src/digitalmodel/structural/fatigue_apps/rainflow_counter.py` | `<module>` | [docs/registry/implementation-map.yaml:L19696-L19704] |
+| 277 | `src/digitalmodel/structural/fatigue_apps/rainflow_counter.py` | `RainflowCounter.count_cycles` | [docs/registry/implementation-map.yaml:L19705-L19716] |
+| 278 | `src/digitalmodel/structural/fatigue_apps/rainflow_counter.py` | `RainflowCounter._rainflow_algorithm` | [docs/registry/implementation-map.yaml:L19717-L19726] |
+| 279 | `src/digitalmodel/structural/fatigue_apps/rainflow_counter.py` | `RainflowCounter.export_results` | [docs/registry/implementation-map.yaml:L19727-L19736] |
+| 280 | `src/digitalmodel/structural/fatigue_apps/rainflow_counter.py` | `rainflow_count` | [docs/registry/implementation-map.yaml:L19737-L19746] |
+| 281 | `src/digitalmodel/structural/fatigue_apps/rainflow_counting.py` | `RainflowCounter.process_time_series` | [docs/registry/implementation-map.yaml:L19747-L19756] |
+| 282 | `src/digitalmodel/structural/fatigue_apps/rainflow_counting.py` | `RainflowCounter.process_batch` | [docs/registry/implementation-map.yaml:L19757-L19768] |
+| 283 | `src/digitalmodel/structural/fatigue_apps/rainflow_counting.py` | `RainflowCounter.save_cycle_data` | [docs/registry/implementation-map.yaml:L19769-L19778] |
+| 284 | `src/digitalmodel/structural/fatigue_apps/rainflow_counting.py` | `main` | [docs/registry/implementation-map.yaml:L19779-L19788] |
+| 285 | `src/digitalmodel/structural/fatigue_apps/reference_seastate_processor.py` | `ReferenceSeaStateProcessor.process_fatigue_condition` | [docs/registry/implementation-map.yaml:L19789-L19798] |
+| 286 | `src/digitalmodel/structural/fatigue_apps/tension_stress_conversion.py` | `TensionStressConverter.process_batch` | [docs/registry/implementation-map.yaml:L19799-L19808] |
+| 287 | `src/digitalmodel/structural/fatigue_apps/tension_stress_conversion.py` | `main` | [docs/registry/implementation-map.yaml:L19809-L19818] |
+| 288 | `src/digitalmodel/structural/fatigue_apps/visualizer.py` | `generate_all_visualizations` | [docs/registry/implementation-map.yaml:L19819-L19828] |
+| 289 | `src/digitalmodel/structural/spectral_fatigue.py` | `narrow_band_damage` | [docs/registry/implementation-map.yaml:L19829-L19838] |
+| 290 | `src/digitalmodel/subsea/connectors/fatigue.py` | `assess_jumper_fatigue` | [docs/registry/implementation-map.yaml:L19839-L19850] |
+| 291 | `src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py` | `_dnv_params` | [docs/registry/implementation-map.yaml:L19851-L19860] |
+| 292 | `src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py` | `get_sn_curve` | [docs/registry/implementation-map.yaml:L19861-L19872] |
+| 293 | `src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py` | `SpanFatigueDamage._load_sn_curve` | [docs/registry/implementation-map.yaml:L19873-L19884] |
+| 294 | `src/digitalmodel/subsea/viv_analysis/fatigue.py` | `VIVFatigueCalculator.calculate_damage` | [docs/registry/implementation-map.yaml:L19885-L19894] |
+| 295 | `src/digitalmodel/subsea/viv_analysis/fatigue.py` | `VIVFatigueCalculator.calculate_fatigue_life` | [docs/registry/implementation-map.yaml:L19895-L19904] |
+| 296 | `src/digitalmodel/subsea/viv_analysis/fatigue.py` | `VIVFatigueCalculator.analyze_viv_fatigue` | [docs/registry/implementation-map.yaml:L19905-L19917] |
+| 297 | `src/digitalmodel/subsea/viv_analysis/fatigue.py` | `VIVFatigueCalculator.cumulative_damage` | [docs/registry/implementation-map.yaml:L19918-L19929] |
+| 298 | `src/digitalmodel/viv_screening/inputs.py` | `parse_inputs` | [docs/registry/implementation-map.yaml:L19930-L19939] |
+| 299 | `src/digitalmodel/viv_screening/workflow.py` | `router` | [docs/registry/implementation-map.yaml:L19940-L19953] |
+| 300 | `src/digitalmodel/viv_screening/workflow.py` | `_damage_rate` | [docs/registry/implementation-map.yaml:L19954-L19964] |
+| 301 | `src/digitalmodel/viv_screening/workflow.py` | `_provenance` | [docs/registry/implementation-map.yaml:L19965-L19974] |
+| 302 | `src/digitalmodel/web/digitaltwinfeed/app.py` | `page` | [docs/registry/implementation-map.yaml:L19975-L19984] |
+| 303 | `tests/ansys/padeye_pressure_bundle.py` | `_check_receipt` | [docs/registry/implementation-map.yaml:L19985-L19994] |
+| 304 | `tests/ansys/padeye_pressure_bundle.py` | `verify_pressure_bundle` | [docs/registry/implementation-map.yaml:L19995-L20006] |
+| 305 | `tests/ansys/test_fatigue_postprocessor.py` | `TestThicknessCorrection.test_known_correction` | [docs/registry/implementation-map.yaml:L20007-L20016] |
+| 306 | `tests/ansys/test_padeye_pressure_bundle.py` | `bundle` | [docs/registry/implementation-map.yaml:L20017-L20026] |
+| 307 | `tests/fatigue/test_assessment.py` | `histogram_input` | [docs/registry/implementation-map.yaml:L20027-L20038] |
+| 308 | `tests/fatigue/test_c203_consumers.py` | `_span_input` | [docs/registry/implementation-map.yaml:L20039-L20048] |
+| 309 | `tests/fatigue/test_c203_sn_values.py` | `_non_dnv_bilinear` | [docs/registry/implementation-map.yaml:L20049-L20058] |
+| 310 | `tests/fatigue/test_c203_sn_values.py` | `test_non_dnv_bilinear_switch_stays_at_endurance_limit` | [docs/registry/implementation-map.yaml:L20059-L20072] |
+| 311 | `tests/fatigue/test_c203_variable_amplitude.py` | `_signal_e` | [docs/registry/implementation-map.yaml:L20073-L20082] |
+| 312 | `tests/fatigue/test_c203_variable_amplitude.py` | `_user_curve` | [docs/registry/implementation-map.yaml:L20083-L20092] |
+| 313 | `tests/fatigue/test_c203_variable_amplitude.py` | `_span_input` | [docs/registry/implementation-map.yaml:L20093-L20102] |
+| 314 | `tests/fatigue/test_c203_variable_amplitude.py` | `_fresh_standard_curves` | [docs/registry/implementation-map.yaml:L20103-L20112] |
+| 315 | `tests/fatigue/test_c203_variable_amplitude.py` | `_data_dir` | [docs/registry/implementation-map.yaml:L20113-L20122] |
+| 316 | `tests/fatigue/test_damage.py` | `f_curve` | [docs/registry/implementation-map.yaml:L20123-L20133] |
+| 317 | `tests/fatigue/test_damage.py` | `TestThicknessCorrection.test_correction_above_ref` | [docs/registry/implementation-map.yaml:L20134-L20143] |
+| 318 | `tests/fatigue/test_damage.py` | `TestThicknessCorrection.test_correction_formula` | [docs/registry/implementation-map.yaml:L20144-L20153] |
+| 319 | `tests/fatigue/test_fatg.py` | `TestAgainstTransliterationSweep.test_all_presets_and_curves` | [docs/registry/implementation-map.yaml:L20154-L20165] |
+| 320 | `tests/fatigue/test_fatg_workflow.py` | `_cfg` | [docs/registry/implementation-map.yaml:L20166-L20175] |
+| 321 | `tests/fatigue/test_fatg_workflow.py` | `_library_reference` | [docs/registry/implementation-map.yaml:L20176-L20186] |
+| 322 | `tests/fatigue/test_fatigue_reporting.py` | `_sample_locations` | [docs/registry/implementation-map.yaml:L20187-L20196] |
+| 323 | `tests/fatigue/test_rainflow_invariants.py` | `_damage_calls` | [docs/registry/implementation-map.yaml:L20197-L20209] |
+| 324 | `tests/fatigue/test_rainflow_invariants.py` | `_damage_calls.calm_scatter` | [docs/registry/implementation-map.yaml:L20210-L20219] |
+| 325 | `tests/fatigue/test_rainflow_invariants.py` | `_damage_calls.fapps_batch` | [docs/registry/implementation-map.yaml:L20220-L20229] |
+| 326 | `tests/fatigue/test_sn_curves.py` | `TestGetSNCurve.test_f_curve_at_100mpa` | [docs/registry/implementation-map.yaml:L20230-L20240] |
+| 327 | `tests/fatigue/test_sn_curves.py` | `TestGetSNCurve.test_d_curve_at_100mpa` | [docs/registry/implementation-map.yaml:L20241-L20251] |
+| 328 | `tests/fatigue/test_weld_fatigue_quickcheck.py` | `_hand_N` | [docs/registry/implementation-map.yaml:L20252-L20261] |
+| 329 | `tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py` | `TestSNcurve.test_cycles_to_failure_chain_known_value` | [docs/registry/implementation-map.yaml:L20262-L20271] |
+| 330 | `tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py` | `TestSNcurve.test_cycles_to_failure_wire_rope_known_value` | [docs/registry/implementation-map.yaml:L20272-L20281] |
+| 331 | `tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py` | `TestSNcurve.test_custom_sn_curve` | [docs/registry/implementation-map.yaml:L20282-L20291] |
+| 332 | `tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py` | `TestMinersRuleDamage.test_single_range_known_damage` | [docs/registry/implementation-map.yaml:L20292-L20301] |
+| 333 | `tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py` | `TestMinersRuleDamage.test_damage_additivity` | [docs/registry/implementation-map.yaml:L20302-L20311] |
+| 334 | `tests/parametric/test_atlas.py` | `_small_atlas` | [docs/registry/implementation-map.yaml:L20312-L20321] |
+| 335 | `tests/signal_processing/signal_analysis/fatigue_analysis_reference/process_fatigue_final.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L20322-L20331] |
+| 336 | `tests/signal_processing/signal_analysis/reference_fatigue_processor.py` | `process_single_test_file` | [docs/registry/implementation-map.yaml:L20332-L20341] |
+| 337 | `tests/signal_processing/signal_analysis/test_generate_outputs.py` | `<module>` | [docs/registry/implementation-map.yaml:L20342-L20350] |
+| 338 | `tests/signal_processing/signal_analysis/test_generate_outputs.py` | `analyze_signal` | [docs/registry/implementation-map.yaml:L20351-L20360] |
+| 339 | `tests/signal_processing/signal_analysis/test_generate_outputs.py` | `main` | [docs/registry/implementation-map.yaml:L20361-L20372] |
+| 340 | `tests/signal_processing/signal_analysis/test_orcaflex_tension_analysis.py` | `OrcaFlexTensionAnalyzer.analyze_tension` | [docs/registry/implementation-map.yaml:L20373-L20382] |
+| 341 | `tests/signal_processing/signal_analysis/test_orcaflex_tension_analysis.py` | `OrcaFlexTensionAnalyzer.export_results` | [docs/registry/implementation-map.yaml:L20383-L20392] |
+| 342 | `tests/signal_processing/signal_analysis/test_rainflow_timeseries1.py` | `run_rainflow_for_timeseries` | [docs/registry/implementation-map.yaml:L20393-L20402] |
+| 343 | `tests/signal_processing/signal_analysis/test_rainflow_timeseries1.py` | `test_rainflow_for_timeseries` | [docs/registry/implementation-map.yaml:L20403-L20414] |
+| 344 | `tests/signal_processing/signal_analysis/validate_module.py` | `main` | [docs/registry/implementation-map.yaml:L20415-L20429] |
+| 345 | `tests/solvers/test_integration_solvers.py` | `mock_solver_factory.MockSolverFactory.create_fatigue_solver` | [docs/registry/implementation-map.yaml:L20430-L20439] |
+| 346 | `tests/structural/fatigue/conftest.py` | `simple_sn_curve` | [docs/registry/implementation-map.yaml:L20440-L20449] |
+| 347 | `tests/structural/fatigue/test_damage_accumulation.py` | `dnv_d_curve` | [docs/registry/implementation-map.yaml:L20450-L20459] |
+| 348 | `tests/structural/fatigue/test_damage_accumulation.py` | `simple_curve` | [docs/registry/implementation-map.yaml:L20460-L20469] |
+| 349 | `tests/structural/fatigue/test_damage_accumulation.py` | `curve_with_material` | [docs/registry/implementation-map.yaml:L20470-L20479] |
+| 350 | `tests/structural/fatigue/test_fatigue_migration.py` | `TestSNCurveMigration.test_multislope_curve_implementation` | [docs/registry/implementation-map.yaml:L20480-L20489] |
+| 351 | `tests/structural/fatigue/test_fatigue_migration.py` | `TestSNCurveMigration.test_curve_continuity` | [docs/registry/implementation-map.yaml:L20490-L20499] |
+| 352 | `tests/structural/fatigue/test_fatigue_migration.py` | `TestFrequencyDomainMigration.test_basic_frequency_analysis` | [docs/registry/implementation-map.yaml:L20500-L20509] |
+| 353 | `tests/structural/fatigue/test_fatigue_reliability.py` | `simple_sn` | [docs/registry/implementation-map.yaml:L20510-L20519] |
+| 354 | `tests/structural/fatigue/test_fatigue_reliability.py` | `mild_sn` | [docs/registry/implementation-map.yaml:L20520-L20529] |
+| 355 | `tests/structural/fatigue/test_fatigue_skill.py` | `_simple_input` | [docs/registry/implementation-map.yaml:L20530-L20539] |
+| 356 | `tests/structural/fatigue/test_fatigue_skill.py` | `TestOffshoreScenario.test_high_cycle_low_stress_result` | [docs/registry/implementation-map.yaml:L20540-L20551] |
+| 357 | `tests/structural/fatigue/test_frequency_domain.py` | `simple_sn_curve` | [docs/registry/implementation-map.yaml:L20552-L20561] |
+| 358 | `tests/structural/fatigue/test_rainflow.py` | `default_counter` | [docs/registry/implementation-map.yaml:L20562-L20571] |
+| 359 | `tests/structural/fatigue/test_scatter_fatigue.py` | `simple_sn` | [docs/registry/implementation-map.yaml:L20572-L20581] |
+| 360 | `tests/structural/fatigue/test_scatter_fatigue.py` | `TestFatigueLife.test_fatigue_life_inverse_of_damage` | [docs/registry/implementation-map.yaml:L20582-L20593] |
+| 361 | `tests/structural/fatigue/test_sn_curves.py` | `simple_power_law` | [docs/registry/implementation-map.yaml:L20594-L20603] |
+| 362 | `tests/structural/fatigue/test_sn_curves.py` | `power_law_with_limit` | [docs/registry/implementation-map.yaml:L20604-L20613] |
+| 363 | `tests/structural/fatigue/test_sn_curves.py` | `bilinear_curve` | [docs/registry/implementation-map.yaml:L20614-L20623] |
+| 364 | `tests/structural/fatigue/test_sn_curves.py` | `dnv_d_curve` | [docs/registry/implementation-map.yaml:L20624-L20633] |
+| 365 | `tests/structural/fatigue/test_sn_curves.py` | `TestBS7608RevisedCurveParameters.test_bs7608_revised_d_known_n_at_50mpa` | [docs/registry/implementation-map.yaml:L20634-L20643] |
+| 366 | `tests/structural/fatigue/test_sn_curves.py` | `TestISO19902CurveParameters.test_iso19902_f_air_known_n_at_100mpa` | [docs/registry/implementation-map.yaml:L20644-L20653] |
+| 367 | `tests/structural/fatigue/test_sn_curves.py` | `TestISO19902CurveParameters.test_iso19902_f2_sw_cp_known_n_at_50mpa` | [docs/registry/implementation-map.yaml:L20654-L20663] |
+| 368 | `tests/structural/fatigue/test_sn_curves_yaml.py` | `_all_single_slope_cases` | [docs/registry/implementation-map.yaml:L20664-L20673] |
+| 369 | `tests/structural/fatigue/test_sn_curves_yaml.py` | `_all_multislope_cases` | [docs/registry/implementation-map.yaml:L20674-L20683] |
+| 370 | `tests/structural/fatigue_analysis/conftest.py` | `sn_curve_data` | [docs/registry/implementation-map.yaml:L20684-L20693] |
+| 371 | `tests/structural/fatigue_analysis/test_fatigue_analysis_sn.py` | `run_fatigue_analysis` | [docs/registry/implementation-map.yaml:L20694-L20704] |
+| 372 | `tests/structural/fatigue_analysis/test_fatigue_analysis_timetrace.py` | `run_fatigue_analysis` | [docs/registry/implementation-map.yaml:L20705-L20715] |
+| 373 | `tests/subsea/pipeline/test_free_span_f105.py` | `ref_input` | [docs/registry/implementation-map.yaml:L20716-L20725] |
+| 374 | `tests/subsea/viv_analysis/test_viv_analysis_unit.py` | `TestVIVFatigueCalculator.test_cumulative_damage` | [docs/registry/implementation-map.yaml:L20726-L20735] |
+| 375 | `tests/test_automation/fixtures/engineering_fixtures.py` | `get_orcaflex_post_process_mock` | [docs/registry/implementation-map.yaml:L20736-L20745] |
+| 376 | `tests/test_automation/scripts/comprehensive_fix_campaign.py` | `ComprehensiveTestFixCampaign.generate_mock_data` | [docs/registry/implementation-map.yaml:L20746-L20755] |
+| 377 | `tests/test_complete_fatigue_pipeline.py` | `process_configuration` | [docs/registry/implementation-map.yaml:L20756-L20765] |
+| 378 | `tests/test_complete_fatigue_pipeline.py` | `main` | [docs/registry/implementation-map.yaml:L20766-L20777] |
+| 379 | `tests/test_fatigue_basic.py` | `run_all_tests` | [docs/registry/implementation-map.yaml:L20778-L20787] |
+| 380 | `tests/test_rainflow_with_effective_tension.py` | `process_effective_tension_file` | [docs/registry/implementation-map.yaml:L20788-L20797] |
+| 381 | `tests/test_rainflow_with_effective_tension.py` | `main` | [docs/registry/implementation-map.yaml:L20798-L20808] |
+| 382 | `tests/test_reservoir_framework.py` | `run_performance_tests` | [docs/registry/implementation-map.yaml:L20809-L20818] |
+| 383 | `tests/test_spectral_fatigue_validation.py` | `TestSNCurveDNVReference.test_dnv_d_curve_parameters` | [docs/registry/implementation-map.yaml:L20819-L20830] |
+| 384 | `tests/workflows/test_durable_workflows.py` | `test_workflow_registry` | [docs/registry/implementation-map.yaml:L20831-L20841] |
+| 385 | `tests/workflows/test_durable_workflows.py` | `test_spectral_fatigue_workflow_matches_narrow_band_closed_form` | [docs/registry/implementation-map.yaml:L20842-L20852] |
+| 386 | `tests/workflows/test_durable_workflows.py` | `test_rao_spectral_fatigue_constant_rao_matches_fixed_gain_screening` | [docs/registry/implementation-map.yaml:L20853-L20863] |
+| 387 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `PowerLawSNCurve.get_allowable_cycles` | [docs/registry/implementation-map.yaml:L20864-L20874] |
+| 388 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `PowerLawSNCurve.get_stress_range` | [docs/registry/implementation-map.yaml:L20875-L20884] |
+| 389 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `BilinearSNCurve.get_allowable_cycles` | [docs/registry/implementation-map.yaml:L20885-L20894] |
+| 390 | `src/digitalmodel/structural/fatigue/sn_curves.py` | `BilinearSNCurve.get_stress_range` | [docs/registry/implementation-map.yaml:L20895-L20905] |
+| 391 | `src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py` | `BilinearSNCurve.get_allowable_cycles` | [docs/registry/implementation-map.yaml:L20906-L20915] |
+| 392 | `src/digitalmodel/subsea/pipeline/free_span/_bilinear_sn.py` | `BilinearSNCurve.get_stress_range` | [docs/registry/implementation-map.yaml:L20916-L20925] |
 
 ## 10. Coverage and open items
 
@@ -640,7 +644,7 @@ Coverage records below identify the source inspected, not a claim that roadmap p
 | Migration plan | [docs/domains/migration/signal_analysis_migration_plan.md:L89-L109] | Old example calls an API absent from this class; roadmap figures are not adopted; issue pending (3) |
 | Solver post-processing migration guide, inspected as text only | [docs/domains/migration/orcaflex_migration_guide.md:L19-L35] | Same stale old-API call; no solver/API import or execution; issue pending (3) |
 | Engine testing plan | [docs/domains/testing/engine_test_implementation_plan.md:L607-L627] | Mock routing recipe, not independent numerical evidence; #3350 |
-| Implementation-map documentation | [docs/registry/implementation-map.md:L25-L25] | Family discovery lead; section 9 separately pins the actual map data; issue pending (4) |
+| Implementation-map documentation | [docs/registry/implementation-map.md:L25-L25] | Family discovery lead; section 9 reads the map at the header code revision; issue pending (4) |
 | Legacy engineering-flow catalog | [docs/migration/legacy-engineering-flow-catalog.md:L59-L62] | Legacy path lead, not proof of present functionality; issue pending (3) |
 | Domain index | [docs/domains/domains_index.md:L288-L291] | Historical time-series folder spelling; verify navigation in documentation follow-up; issue pending (3) |
 | Identifying documentation discovery | One discovery file with an identifying name is omitted from the public path list | Codenaming and public discovery follow-up; issue pending (4) |
@@ -651,7 +655,7 @@ Discovery used `rg -l 'signal_processing[./]time_series|time_series_analysis|tim
 |---|---|---|---|
 | Silent error/default sites | Module maintainer | issue pending (1), #60 | Add explicit failure/status and empty-output tests for section-6 sites; [src/digitalmodel/signal_processing/time_series/time_series_components.py:L425-L432] [src/digitalmodel/signal_processing/time_series/time_series_components_bop.py:L18-L50] |
 | Units and numerical edge contracts | Module maintainer | issue pending (2) | Complete seconds extraction, interval/angle contracts, masking and discarded-window evidence; [src/digitalmodel/signal_processing/time_series/time_series_components.py:L681-L738] |
-| Entry points, statistics and navigation | Module maintainer | issue pending (3) | Correct undefined names, incompatible signatures and extra row values; stale migration-guide target named by deprecation text was not found at the code pin; [src/digitalmodel/signal_processing/time_series/time_series_analysis.py:L34-L37] [src/digitalmodel/signal_processing/time_series/time_series_components.py:L9-L9] [src/digitalmodel/signal_processing/time_series/time_series_components.py:L575-L589] |
+| Entry points, statistics and navigation | Module maintainer | issue pending (3) | Correct undefined names, incompatible signatures, extra row values and removed SciPy integration calls; stale migration-guide target named by deprecation text was not found at the code pin; [src/digitalmodel/signal_processing/time_series/time_series_analysis.py:L34-L37] [src/digitalmodel/signal_processing/time_series/time_series_components.py:L9-L9] [src/digitalmodel/signal_processing/time_series/time_series_components.py:L575-L589] |
 | Average defect and warning boundary | Module maintainer | #3350 | F1/F2 fail independently derived values; V5 depends on current pandas warning behavior; [tests/signal_processing/time_series/test_component_values.py:L105-L149] |
 | Map expansion, public discovery and evidence registration | Module maintainer and family quality manager | issue pending (4) | Add section-3 families to map before counting; record shared-log and role appointments; [src/digitalmodel/signal_processing/time_series/time_series_components.py:L263-L591] [src/digitalmodel/signal_processing/time_series/time_series_components.py:L659-L738] |
 
