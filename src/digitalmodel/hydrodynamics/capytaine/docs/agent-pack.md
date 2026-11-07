@@ -5,7 +5,7 @@
 | Module | hydrodynamics/capytaine |
 | Repository | digitalmodel |
 | Package | `src/digitalmodel/hydrodynamics/capytaine` |
-| Pack revision | 0 |
+| Pack revision | 1 |
 | Code pin | `21942e8cfc7dfb985c5bfa693245df7d197cf76c` |
 | Analysis family | diffraction (DF) |
 | Quality role | diffraction family quality manager |
@@ -51,6 +51,51 @@ Input limits below distinguish enforced checks from merely documented dimensions
 
 UNVERIFIED: mesh-file axis orientation, wave-heading sense and origin agreement across every supported reader have not been independently established; no reader-side coordinate transformation is present in this wrapper. See issue pending (1). [src/digitalmodel/hydrodynamics/capytaine/mesh_adapter.py:L148-L177]
 
+Public definitions include package-module helpers and class members; local re-exports from the initializer are represented once. Units and limits are detailed in the input and output tables above.
+
+| Public symbol | Inputs | Output | Evidence |
+| --- | --- | --- | --- |
+| `resolved_lid` | immersed mesh; elevation; initial radius | native lid mesh | [src/digitalmodel/hydrodynamics/capytaine/lid.py:L16-L45] |
+| `merge_lid_cells` | lid mesh; maximum edge length, m | aggregated native mesh | [src/digitalmodel/hydrodynamics/capytaine/lid.py:L73-L100] |
+| `create_floating_body` | BodyConfig | native floating body | [src/digitalmodel/hydrodynamics/capytaine/mesh_adapter.py:L51-L116] |
+| `MeshFormat` | format string | mesh-format enum | [src/digitalmodel/hydrodynamics/capytaine/models.py:L19-L26] |
+| `DOF` | motion name | rigid-body enum | [src/digitalmodel/hydrodynamics/capytaine/models.py:L29-L51] |
+| `DOF.all_dofs` | none | six motions | [src/digitalmodel/hydrodynamics/capytaine/models.py:L39-L41] |
+| `DOF.translational` | none | three translations | [src/digitalmodel/hydrodynamics/capytaine/models.py:L44-L46] |
+| `DOF.rotational` | none | three rotations | [src/digitalmodel/hydrodynamics/capytaine/models.py:L49-L51] |
+| `MeshConfig` | source, format and shape settings | mesh configuration | [src/digitalmodel/hydrodynamics/capytaine/models.py:L55-L70] |
+| `BodyConfig` | mesh, mass, motions and lid settings | body configuration | [src/digitalmodel/hydrodynamics/capytaine/models.py:L74-L93] |
+| `BodyConfig.rotation_center_or_com` | body configuration | rotation centre coordinates | [src/digitalmodel/hydrodynamics/capytaine/models.py:L91-L93] |
+| `WaveConditions` | frequency, heading and environment | wave configuration | [src/digitalmodel/hydrodynamics/capytaine/models.py:L97-L162] |
+| `WaveConditions.omega_array` | wave configuration | angular frequencies, rad/s | [src/digitalmodel/hydrodynamics/capytaine/models.py:L115-L119] |
+| `WaveConditions.period_array` | wave configuration | periods, s | [src/digitalmodel/hydrodynamics/capytaine/models.py:L122-L126] |
+| `WaveConditions.from_period_range` | period bounds; heading degrees | wave configuration | [src/digitalmodel/hydrodynamics/capytaine/models.py:L129-L144] |
+| `WaveConditions.from_omega_range` | frequency bounds; heading degrees | wave configuration | [src/digitalmodel/hydrodynamics/capytaine/models.py:L147-L162] |
+| `SolverConfig` | engine and method settings | solver configuration | [src/digitalmodel/hydrodynamics/capytaine/models.py:L166-L177] |
+| `BEMResult` | coefficients and coordinates | BEM result container | [src/digitalmodel/hydrodynamics/capytaine/models.py:L181-L203] |
+| `RAOResult` | complex response and coordinates | RAO result container | [src/digitalmodel/hydrodynamics/capytaine/models.py:L207-L217] |
+| `compute_rao` | BEM result with hydrostatics | RAOResult | [src/digitalmodel/hydrodynamics/capytaine/rao.py:L18-L69] |
+| `compute_rao_manual` | BEM result; mass and stiffness matrices; optional extra damping | RAOResult | [src/digitalmodel/hydrodynamics/capytaine/rao.py:L72-L182] |
+| `export_netcdf` | BEM result; output path | written NetCDF path | [src/digitalmodel/hydrodynamics/capytaine/results.py:L27-L44] |
+| `added_mass_table` | BEM result; optional motion pair | formatted coefficient string | [src/digitalmodel/hydrodynamics/capytaine/results.py:L52-L86] |
+| `excitation_force_table` | BEM result; heading index | formatted force-magnitude string | [src/digitalmodel/hydrodynamics/capytaine/results.py:L89-L127] |
+| `plot_added_mass_damping` | BEM result; motions; save/show settings | Matplotlib figure | [src/digitalmodel/hydrodynamics/capytaine/results.py:L135-L188] |
+| `plot_rao` | RAO result; motions; heading index; save/show settings | Matplotlib figure | [src/digitalmodel/hydrodynamics/capytaine/results.py:L191-L252] |
+| `plot_excitation_force` | BEM result; motions; heading index; save/show settings | Matplotlib figure | [src/digitalmodel/hydrodynamics/capytaine/results.py:L255-L307] |
+| `normalised_difference` | computed and held arrays | percent-difference array | [src/digitalmodel/hydrodynamics/capytaine/screening.py:L17-L38] |
+| `rigid_body_mass_matrix` | mass, centre and inertia in SI | 6 by 6 mass matrix | [src/digitalmodel/hydrodynamics/capytaine/screening.py:L41-L69] |
+| `finite_depth_wave_number` | period, s; depth, m; gravity, m/s² | wave number, rad/m | [src/digitalmodel/hydrodynamics/capytaine/screening.py:L72-L94] |
+| `natural_period` | mass, added-mass curve and stiffness | period, s | [src/digitalmodel/hydrodynamics/capytaine/screening.py:L97-L132] |
+| `drag_band_flags` | periods and natural periods | Boolean resonance-band array | [src/digitalmodel/hydrodynamics/capytaine/screening.py:L135-L151] |
+| `read_reference` | repository root | held SI data and digests | [src/digitalmodel/hydrodynamics/capytaine/screening_io.py:L26-L62] |
+| `diffraction_results` | BEM result, response, hydrostatics and date | DiffractionResults | [src/digitalmodel/hydrodynamics/capytaine/screening_io.py:L80-L125] |
+| `CapytaineSolver` | body, waves and optional settings | solver wrapper | [src/digitalmodel/hydrodynamics/capytaine/solver.py:L34-L267] |
+| `CapytaineSolver.validate_inputs` | configured inputs | validity Boolean and error list | [src/digitalmodel/hydrodynamics/capytaine/solver.py:L62-L84] |
+| `CapytaineSolver.solve` | configured inputs; hydrostatics flag | BEMResult | [src/digitalmodel/hydrodynamics/capytaine/solver.py:L86-L122] |
+| `CapytaineSolver.dataset` | solved state | native dataset or unset | [src/digitalmodel/hydrodynamics/capytaine/solver.py:L260-L262] |
+| `CapytaineSolver.body` | configured state | native floating body or unset | [src/digitalmodel/hydrodynamics/capytaine/solver.py:L265-L267] |
+| `run_bem_analysis` | body, waves, optional settings and hydrostatics flag | BEMResult | [src/digitalmodel/hydrodynamics/capytaine/solver.py:L281-L299] |
+
 ## 3. Method and governing standards
 
 DNV-RP-C205, *Environmental Conditions and Environmental Loads*, edition 2021, is the manifest's named standard; clause text not checked against the licensed copy. The source supplies clause numbers but not independently checked clause titles. [src/digitalmodel/hydrodynamics/capytaine/manifest.yaml:L4-L26]
@@ -84,7 +129,7 @@ Validated examples below use independently written closed-form arithmetic with s
 | R2 singular operator / regression | zero impedance with unit force deliberately returns minimum-norm zero | zero differing elements (count); does not establish physical equilibrium | `tests/hydrodynamics/capytaine/test_rao_manual_input_contract.py::test_manual_rao_preserves_singular_least_squares` | PASS; [tests/hydrodynamics/capytaine/test_rao_manual_input_contract.py:L167-L176] |
 | R3 schema readback / regression | synthetic unit response converted to deg/m; `solver` source, SI and unknown phase metadata survive serialisation | zero round-trip differences (count); pitch magnitude 180/π deg/m with pytest default tolerance | `tests/hydrodynamics/capytaine/test_screening_storage.py::test_si_schema_rotations_and_solver_source_round_trip` | PASS; [tests/hydrodynamics/capytaine/test_screening_storage.py:L39-L59] |
 
-Evidence record: `PYTHONPATH=src uv run --no-sources python -m pytest tests/hydrodynamics/capytaine -q -rA -p no:cacheprovider --basetemp=<scratch>` collected 96 executable cases, all PASS, and six import-time skipped files. The identical command after the documentation edits again passed 96 cases with the same six import-time skipped files; both runs used the code pin above with source files unchanged. Dependency attempt `uv run --no-sources --with capytaine==3.0.0 --no-build-package capytaine python -m pytest ...` failed before collection: `Because capytaine==3.0.0 has no usable wheels and you require capytaine==3.0.0, we can conclude that your requirements are unsatisfiable.` Native cases are NOT_RUN, not passing validations.
+Evidence record: `PYTHONPATH=src uv run --no-sources python -m pytest tests/hydrodynamics/capytaine -q -rA -p no:cacheprovider --basetemp=<scratch>` collected 96 executable cases, all PASS with UTF-8 default text encoding, and six import-time skipped files. The identical command after the documentation edits again passed 96 cases with UTF-8 default text encoding and the same six import-time skipped files; both runs used the code pin above with source files unchanged. Dependency attempt `uv run --no-sources --with capytaine==3.0.0 --no-build-package capytaine python -m pytest ...` failed before collection: `Because capytaine==3.0.0 has no usable wheels and you require capytaine==3.0.0, we can conclude that your requirements are unsatisfiable.` Native cases are NOT_RUN, not passing validations.
 
 ## 5. QA gates and executable checks
 
@@ -95,7 +140,7 @@ Gate application is the diffraction analogue of AQG r0 §10: G0, G1, G4 and G5 a
 | G0 | C01 | Run manual RAO input-contract tests: invalid shapes, missing arrays and nonfinite values raise before either linear solver; zero invalid arrays reach solve (count) | input-contract suite PASS; [tests/hydrodynamics/capytaine/test_rao_manual_input_contract.py:L55-L134] |
 | G0 | C02 | Run `test_old_solver_rejected_before_body_creation`: zero body constructions (count) for an old dependency version | compatibility suite PASS; [tests/hydrodynamics/capytaine/test_solver_compatibility.py:L26-L41] |
 | G0 | C03 | Run `test_coefficients_follow_requested_coordinates`: zero array element mismatches (count), frequency rad/s and heading rad order retained | R1 PASS; [tests/hydrodynamics/capytaine/test_result_coordinates.py:L19-L41] |
-| G0 | C04 | Run held-reference shape/units test: 32 periods (count), 9 headings (count), six motions (count) and exact source digest equality | storage suite PASS; digest guard present; engineering unit interpretation remains open; [tests/hydrodynamics/capytaine/test_screening_storage.py:L13-L26] [src/digitalmodel/hydrodynamics/capytaine/screening_io.py:L38-L53] |
+| G0 | C04 | Run held-reference shape/units test: 32 periods (count), 9 headings (count), six motions (count) and exact source digest equality | storage suite PASS with UTF-8 default text encoding; non-UTF-8 defaults can fail before unit checks (S50); digest guard present; engineering unit interpretation remains open; [tests/hydrodynamics/capytaine/test_screening_storage.py:L13-L26] [src/digitalmodel/hydrodynamics/capytaine/screening_io.py:L38-L53] |
 | G1 | C05 | Native route: `test_one_period_sphere_has_finite_coefficients_and_analytical_added_mass` creates the body through `create_floating_body`, assembles the dataset through `_run_fill_dataset`, and solves one frequency; zero nonfinite A/B entries (count) | NOT_RUN: no usable dependency wheel; [tests/hydrodynamics/capytaine/test_solver_smoke.py:L24-L40] |
 | G1 | C06 | NetCDF route: `export_netcdf` then `xr.open_dataset`, recombine real and imaginary excitation; zero differing complex force entries (count) | NOT_RUN: no usable dependency wheel; [tests/hydrodynamics/capytaine/test_lid_and_export.py:L56-L69] |
 | G2 | — | NOT_APPLICABLE: no nonlinear static equilibrium stage in this solve path | [src/digitalmodel/hydrodynamics/capytaine/solver.py:L86-L122] |
@@ -121,7 +166,7 @@ Full G4 remains uncleared: independent displaced volume, weight–buoyancy balan
 
 The sweep records error suppression, defaults and assumptions separately from confirmed defects; a listed default is not by itself a defect. Locations refer to the code pin; `no detection check exists` means no matching shipped assertion was identified. [src/digitalmodel/hydrodynamics/capytaine/solver.py:L140-L141] [src/digitalmodel/hydrodynamics/capytaine/models.py:L74-L104]
 
-sweep: 49 found
+sweep: 50 found
 
 | ID | Symptom / assumption and cause | Detection check | Tracking | Evidence |
 | --- | --- | --- | --- | --- |
@@ -166,14 +211,15 @@ sweep: 49 found
 | S39 | Schema phase is unknown despite an exp(-iωt) note | C17 preserves this limit; no physical phase-convention check exists | issue pending (1) | [src/digitalmodel/hydrodynamics/capytaine/screening_io.py:L122-L125] |
 | S40 | Matrix records zip arrays and frequencies, silently truncating a length mismatch; float conversion assumes numeric omega | no detection check exists | issue pending (4) | [src/digitalmodel/hydrodynamics/capytaine/screening_io.py:L128-L132] |
 | S41 | Added-mass table zips periods and stored values and labels a requested rotational pair as kg | no detection check exists for truncation or rotational table units | issue pending (1) | [src/digitalmodel/hydrodynamics/capytaine/results.py:L62-L84] |
-| S42 | Rotational RAO plots use unconverted amplitudes but label them deg/m; mass/damping plots use translation-only axis labels | no detection check exists | issue pending (1) | [src/digitalmodel/hydrodynamics/capytaine/results.py:L161-L175] |
-| S43 | The same rotational plotting mismatch is visible in plot_rao indexing, unit selection and direct amplitude plot | no detection check exists | issue pending (1) | [src/digitalmodel/hydrodynamics/capytaine/results.py:L220-L232] |
+| S42 | Mass/damping coefficient plots use translation-only axis labels for rotational motions | no detection check exists | issue pending (1) | [src/digitalmodel/hydrodynamics/capytaine/results.py:L161-L175] |
+| S43 | Rotational RAO plots use unconverted radian amplitudes but label them deg/m | no detection check exists | issue pending (1) | [src/digitalmodel/hydrodynamics/capytaine/results.py:L220-L232] |
 | S44 | Plot helpers use all motions when supplied an empty list; tables and RAO/excitation plots default to heading index zero | no detection check exists for empty selection; C03 covers explicit table coordinates | issue pending (1) | [src/digitalmodel/hydrodynamics/capytaine/results.py:L89-L94] [src/digitalmodel/hydrodynamics/capytaine/results.py:L135-L155] [src/digitalmodel/hydrodynamics/capytaine/results.py:L191-L205] [src/digitalmodel/hydrodynamics/capytaine/results.py:L255-L269] |
 | S45 | Configured hydrostatic_stiffness is declared on BodyConfig but native hydrostatics overwrites body stiffness without reading that input | no detection check exists | issue pending (3) | [src/digitalmodel/hydrodynamics/capytaine/models.py:L80-L88] [src/digitalmodel/hydrodynamics/capytaine/solver.py:L124-L141] |
 | S46 | An individual waterline component with no generated lid faces is omitted while other component lids can still be returned | no detection check exists for per-component completeness | issue pending (5) | [src/digitalmodel/hydrodynamics/capytaine/lid.py:L53-L70] |
 | S47 | A true symmetry flag with no symmetry plane silently leaves the mesh unwrapped | no detection check exists | issue pending (1) | [src/digitalmodel/hydrodynamics/capytaine/models.py:L63-L65] [src/digitalmodel/hydrodynamics/capytaine/mesh_adapter.py:L70-L74] |
 | S48 | When both mesh sources are supplied, the predefined shape takes precedence over the path | no detection check exists for ambiguous sources | issue pending (3) | [src/digitalmodel/hydrodynamics/capytaine/mesh_adapter.py:L63-L68] [src/digitalmodel/hydrodynamics/capytaine/solver.py:L78-L80] |
 | S49 | Matrix serialisation hardcodes source=solver even for caller-assembled BEMResult arrays; the label is not evidence of a native run | C17 confirms the label, not provenance; no native-origin detection check exists | issue pending (4) | [src/digitalmodel/hydrodynamics/capytaine/screening_io.py:L128-L132] [tests/hydrodynamics/capytaine/test_screening_storage.py:L44-L55] |
+| S50 | Held-reference deck uses platform-default text decoding; a UTF-8 byte-order mark decoded as cp1252 prevents YAML directive recognition and raises a multi-document parsing error before unit checks | no detection check exists for non-UTF-8 default text encoding | issue pending (8) | [src/digitalmodel/hydrodynamics/capytaine/screening_io.py:L54-L56] |
 
 Additional fail-closed handlers rethrow import errors in `solver._import_capytaine`, `mesh_adapter._import_capytaine` and `_load_via_meshio`; manual-array conversion raises ValueError; `compute_rao` tries a second import path rather than replacing results. No error-path `return None`, empty-list/dict return, 1970 sentinel or empty-result cache write was found in the inspected package. [src/digitalmodel/hydrodynamics/capytaine/solver.py:L24-L31] [src/digitalmodel/hydrodynamics/capytaine/mesh_adapter.py:L26-L35] [src/digitalmodel/hydrodynamics/capytaine/mesh_adapter.py:L166-L177] [src/digitalmodel/hydrodynamics/capytaine/rao.py:L45-L50] [src/digitalmodel/hydrodynamics/capytaine/rao.py:L112-L120]
 
@@ -181,7 +227,7 @@ Exact sweep commands, followed by full source inspection:
 
 ```sh
 rg -n 'except|continue|return None|return \[\]|return \{\}|= 0(\.0)?\b|1970|0\.05|\.get\(' src/digitalmodel/hydrodynamics/capytaine --glob '*.py'
-rg -n 'int\(|float\(|dtype=float|unit|kg|rad|deg|metre|radius|rho|gravity|np\.interp|zip\(' src/digitalmodel/hydrodynamics/capytaine --glob '*.py'
+rg -n 'int\(|float\(|dtype=float|unit|kg|rad|deg|metre|radius|rho|gravity|np\.interp|zip\(|read_text\(|open\(|encoding' src/digitalmodel/hydrodynamics/capytaine --glob '*.py'
 ```
 
 | Incident / lead | Confirmed scope at the code pin | Detection / disposition | Evidence |
@@ -192,7 +238,7 @@ rg -n 'int\(|float\(|dtype=float|unit|kg|rad|deg|metre|radius|rho|gravity|np\.in
 | #465 | benchmark expansion lead; current semi-sub tests explicitly exclude quantitative cross-program agreement | C15 is only a weak limiting check; no detection check exists for full independent hull qualification | [tests/hydrodynamics/capytaine/test_oc4_semisub_benchmark.py:L1-L15] |
 | #3316 | module documentation/qualification lead, not evidence of accepted results | C18; independent evidence remains required before engineering use | [src/digitalmodel/hydrodynamics/capytaine/results.py:L27-L44] |
 
-All new observations are dated 2026-11-06; existing issue numbers identify read-only leads, not an assertion that a new incident occurred on that date.
+S01–S49 observations are dated 2026-11-06; S50 is dated 2026-11-07; existing issue numbers identify read-only leads, not an assertion that a new incident occurred on that date.
 
 ## 7. Lessons log
 
@@ -347,7 +393,7 @@ Documentation discovery command: `rg -l -i 'capytaine' docs --glob '*.md'`; the 
 
 One discovery file has an identifying name and is not reproduced here; codenaming and the restricted coverage pointer are issue pending (6). No private reference repository was read, no client-derived value is reproduced, and no private sidecar entry is claimed.
 
-The calculation-citation contract was readable from the planning repository; no external standard, licensed copy or published hydrodynamic paper was opened. Adjacent discovery documents were inspected for their module references; complete qualification of their other claims is outside this package pack and remains issue pending (6). Historical plans propose interfaces and acceptance thresholds that are not established by the present exports. [docs/plans/2026-05-05-issue-464-capytaine-bem-module.md:L36-L59] [docs/plans/2026-05-05-issue-465-capytaine-ship-hull-benchmarking.md:L21-L55]
+No external standard, licensed copy or published hydrodynamic paper was opened. Adjacent discovery documents were inspected for their module references; complete qualification of their other claims is outside this package pack and remains issue pending (6). Historical plans propose interfaces and acceptance thresholds that are not established by the present exports. [docs/plans/2026-05-05-issue-464-capytaine-bem-module.md:L36-L59] [docs/plans/2026-05-05-issue-465-capytaine-ship-hull-benchmarking.md:L21-L55]
 
 ### Test coverage and limitations
 
@@ -438,6 +484,7 @@ Each row is assigned to the module maintainers for disposition and the diffracti
 | Numerical completeness | singular-response qualification, factory finiteness, shape/order/length and interpolation-range checks remain incomplete | issue pending (4); section 6 |
 | Physical qualification and native portability | native dependency wheel unavailable; G1/G4 checks NOT_RUN; full mesh/hydrostatics/irregular-frequency evidence and consumer tests remain open | issue pending (5), #465 and #898; sections 4–6 |
 | Documentation governance | identifying discovery file needs codenaming; deputy assignment, shared-log record and external-library inventory links not established | issue pending (6); sections 7–10 |
+| Reference text portability | held-reference YAML parsing depends on UTF-8 default text decoding; explicit UTF-8 BOM handling and a non-UTF-8 regression test remain open | issue pending (8); C04 and S50 |
 | Map follow-up | new lid definitions and missing in-package method-family rows require map maintenance at its next data revision | issue pending (7); section 9 |
 | Report appendix | no engineering report produced; C18 not executed and no independent G4 clearance claimed | #3316; section 5 |
 
