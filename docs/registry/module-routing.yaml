@@ -519,6 +519,9 @@ modules:
     key_tests: [tests/structural/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#structural
     submodules:
+      parachute:
+        agent_pack: src/digitalmodel/structural/parachute/docs/agent-pack.md
+        qa_family: EC
       top_level:
         agent_pack: src/digitalmodel/structural/docs/agent-pack.md
         qa_family: EC
