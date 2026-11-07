@@ -19,6 +19,17 @@ from dataclasses import dataclass
 from numbers import Integral, Real
 
 
+# Classification bounds are separate from the cycle quadrature tolerances.
+_ARRIVAL_DEPTH_FRACTION = 1e-6
+_DEPTH_RESOLUTION_ULPS = 4
+_THRESHOLD_ULPS = 4
+
+
+def _near_threshold(value, threshold):
+    """Use one rounding band for every positive-threshold comparison."""
+    return threshold > 0 and abs(value - threshold) <= _THRESHOLD_ULPS * math.ulp(threshold)
+
+
 def validate_scalar(value, name, *, integer=False):
     """Return a finite real/integral scalar; booleans are never numbers here.
 
@@ -202,20 +213,22 @@ def integrate_growth(
     For continuous DeltaK, positive-threshold arrival within the endpoint
     depth resolution uses the finite propagating-side threshold rate. The
     resolution is the smaller of initial panel width * 2**(-max_refinements)
-    and 1e-6 * limit_m, with a floor of four ulps of limit_m. The approach
+    and ``_ARRIVAL_DEPTH_FRACTION * limit_m``, with a floor of
+    ``_DEPTH_RESOLUTION_ULPS`` ulps of limit_m. The approach
     probe must still propagate;
     all adaptive samples inside the same unresolved final gap use that rule.
     A resolved arrest before that probe retains null life. Treating an
     unresolved final gap as arrival conservatively avoids an infinite-life
     inspection cap. This depth classification is separate from the cycle
     quadrature error estimate; unvisited dips remain outside the guarantee.
-    At initial/interior zero-rate samples within four ulps of a positive
-    threshold, threshold_equality defaults to "raise". An explicitly qualified
+    At initial/interior zero-rate samples within ``_THRESHOLD_ULPS`` ulps of
+    a positive threshold, threshold_equality defaults to "raise". An explicitly qualified
     "arrest" policy uses the
     stationary zero rate; "propagate" uses the positive threshold rate for
     these ambiguous samples, including plateaus. When the endpoint and its
-    non-propagating approach probe are both within four ulps of a positive threshold, the
-    same policy resolves their rounding ambiguity. Other subthreshold input
+    non-propagating approach probe are both within ``_THRESHOLD_ULPS`` ulps of
+    a positive threshold, the same policy resolves their rounding ambiguity.
+    Other subthreshold input
     retains the stationary zero rate; GrowthLaw.rate is unchanged.
     All nodes in a sample batch are evaluated before an arrest decision;
     an otherwise unreachable equality in that batch can also raise.
@@ -249,9 +262,9 @@ def _integrate_panels(
     depth_resolution = max(
         min(
             math.ldexp((limit_m - initial_m) / steps, -min(refinements, 1074)),
-            1e-6 * limit_m,
+            _ARRIVAL_DEPTH_FRACTION * limit_m,
         ),
-        4 * math.ulp(limit_m),
+        _DEPTH_RESOLUTION_ULPS * math.ulp(limit_m),
     )
 
     approach = max(initial_m, limit_m - depth_resolution)
@@ -259,10 +272,7 @@ def _integrate_panels(
     def inverse_rate(depth):
         value = validate_scalar(dk(depth), "DeltaK")
         rate = law.rate(value)
-        equality = (
-            rate == 0 and law.threshold > 0
-            and abs(value - law.threshold) <= 4 * math.ulp(law.threshold)
-        )
+        equality = rate == 0 and _near_threshold(value, law.threshold)
         location = "initial or interior"
         if rate == 0 and depth >= approach and law.threshold > 0:
             # Bracket an unresolved final arrest within the stated depth
@@ -277,9 +287,7 @@ def _integrate_panels(
                 # At the endpoint, a resolved subthreshold approach proves
                 # arrest; otherwise apply the same ambiguity policy used
                 # at initial and interior zero-rate samples.
-                equality = equality and (
-                    abs(probe_value - law.threshold) <= 4 * math.ulp(law.threshold)
-                )
+                equality = equality and _near_threshold(probe_value, law.threshold)
         if rate == 0 and equality:
             if threshold_equality == "raise":
                 raise ValueError(
