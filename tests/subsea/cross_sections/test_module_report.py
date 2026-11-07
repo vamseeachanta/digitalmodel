@@ -116,6 +116,49 @@ def test_report_numbers_retain_four_significant_figures(value, expected):
     assert builder()["format_number"](value) == expected
 
 
+@pytest.mark.parametrize("value,expected", [
+    (553.75 * math.pi, "1,739.7"), (653.75 * math.pi, "2,053.8"),
+    (2517522500 * math.pi, "7.909 × 10⁹"),
+    (20586514.0625 * math.pi, "6.467 × 10⁷"),
+    (0, "0.0"), (-1739.7, "-1,739.7"),
+    (0.001, "0.001000"), (999999.1, "999,999.1"),
+    (1e6, "1.000 × 10⁶"), (1e-4, "1.000 × 10⁻⁴"),
+])
+def test_report_numbers_use_grouping_and_readable_exponents(value, expected):
+    assert builder()["format_number"](value) == expected
+
+
+def test_report_inputs_preserve_entered_moduli():
+    module = builder()
+    html = module["render"](module["calculate"]())
+    for value in ("200,000,000,000", "1,000,000,000", "1,000,000"):
+        assert f"<td>{value}</td>" in html
+
+
+def test_worked_modulus_provenance_distinguishes_reference_and_assumptions(monkeypatch):
+    module = builder()
+    captured = []
+    original = module["calculate"].__globals__["calculate_elastic_section"]
+
+    def capture(items):
+        captured.extend(items)
+        return original(items)
+
+    monkeypatch.setitem(module["calculate"].__globals__, "calculate_elastic_section", capture)
+    module["calculate"]()
+    steel, coating, insulation = [item.modulus_provenance for item in captured]
+    assert steel.source_type != "project_assumption"
+    assert steel.citation == module["SOURCES"]["elasticity"][0]
+    assert steel.url_or_path == module["SOURCES"]["elasticity"][1]
+    assert "Table 12.1" in steel.note
+    assert "no public textbook category" in steel.note
+    for source in (coating, insulation):
+        assert source.source_type == "project_assumption"
+        assert source.note == "assumed, based on previous experience"
+        assert source.citation is None
+        assert source.url_or_path is None
+
+
 def test_report_writes_explicit_lf_newlines(tmp_path, monkeypatch):
     written_newlines = []
     original = Path.write_text
@@ -244,7 +287,7 @@ def test_rebuild_matches_committed_artifacts_and_is_repeatable(tmp_path):
         relative = str((REPORT / name).relative_to(ROOT))
         assert subprocess.run(["git", "check-ignore", "-q", relative], cwd=ROOT).returncode == 1
     changes = json.loads(first["changes.json"])
-    assert changes["revision"] == 1
+    assert changes["revision"] == 2
     assert changes["changes"]
 
 

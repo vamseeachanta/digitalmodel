@@ -13,8 +13,10 @@ import argparse
 from dataclasses import asdict
 from html import escape
 import json
+import math
 from pathlib import Path
 import re
+from typing import TypedDict
 
 from digitalmodel.subsea.cross_sections.calculations import (
     BondedAxialLayer,
@@ -49,8 +51,19 @@ SOURCES = {
     "si": ("BIPM SI Brochure, ninth edition (2019), Table 7, SI prefixes",
            "https://www.bipm.org/documents/20126/41483022/SI-Brochure-9.pdf"),
 }
-CHANGES = {
-    "document": "cross-section-module-analysis", "revision": 1, "date": DATE,
+
+
+class DocumentChanges(TypedDict):
+    """Describe the revision manifest written alongside the report."""
+
+    document: str
+    revision: int
+    date: str
+    changes: list[str]
+
+
+CHANGES: DocumentChanges = {
+    "document": "cross-section-module-analysis", "revision": 2, "date": DATE,
     "changes": [
         "Document per-layer mass, explicit bore buoyancy and bonded elastic stiffness.",
         "Separate assumed example inputs from public material reference values.",
@@ -59,6 +72,7 @@ CHANGES = {
         "Avoid comparing packed-component diameter magnitudes in incompatible units.",
         "Require explicit Pa units and separate provenance for each bonded modulus.",
         "Preserve four significant figures, validate fixture units and write LF artifacts.",
+        "Separate reference and assumed modulus records and retain readable numerical precision.",
     ],
 }
 
@@ -94,7 +108,7 @@ def calculate() -> dict:
     # Water: SOURCES['mass'], Table 14.1, fresh water. Gravity is a deliberately
     # rounded illustrative assumption. Steel E: SOURCES['elasticity'], Table 12.1.
     # Coating/insulation E are explicit assumptions, not reference properties.
-    moduli = [2e11, 1e9, 1e6]
+    moduli = [200_000_000_000, 1_000_000_000, 1_000_000]
     environment = dict(water_density_kg_m3=1000, gravity_m_s2=10)
     sealed = calculate_radial_section(definition.radial_layers, **environment, bore_condition="sealed")
     flooded = calculate_radial_section(definition.radial_layers, **environment, bore_condition="flooded")
@@ -102,9 +116,15 @@ def calculate() -> dict:
         layer=layer, youngs_modulus_pa=modulus, modulus_unit="Pa",
         modulus_provenance=Provenance(
             source_id="worked-modulus-" + layer.name,
-            source_type="project_assumption",
+            source_type="calculation" if layer.role == "steel" else "project_assumption",
             citation=SOURCES["elasticity"][0] if layer.role == "steel" else None,
-            note="Steel reference value; other moduli assumed, based on previous experience.",
+            url_or_path=SOURCES["elasticity"][1] if layer.role == "steel" else None,
+            derived_from=["openstax-table-12-1"] if layer.role == "steel" else [],
+            note=(
+                "Public textbook reference: OpenStax Table 12.1, steel E = 20 × 10¹⁰ Pa. "
+                "SourceType has no public textbook category; calculation records the table value in Pa."
+                if layer.role == "steel" else "assumed, based on previous experience"
+            ),
         ),
     ) for layer, modulus in zip(definition.radial_layers, moduli, strict=True)]
     elastic = calculate_elastic_section(bonded)
@@ -132,8 +152,16 @@ def calculate() -> dict:
 
 
 def format_number(value: float) -> str:
-    """Retain four significant figures in computed quantities."""
-    return f"{value:.4g}"
+    """Keep at least four significant figures, grouping and readable exponents."""
+    magnitude = abs(value)
+    if magnitude == 0:
+        return "0.0"
+    if 1e-3 <= magnitude < 1e6:
+        decimals = max(1, 3 - math.floor(math.log10(magnitude)))
+        return f"{value:,.{decimals}f}"
+    mantissa, exponent = f"{value:.3e}".split("e")
+    superscript = str(int(exponent)).translate(str.maketrans("-0123456789", "⁻⁰¹²³⁴⁵⁶⁷⁸⁹"))
+    return f"{mantissa} × 10{superscript}"
 
 
 def table(headers: list[str], rows: list[list[str]]) -> str:
@@ -165,10 +193,10 @@ def render(data: dict) -> str:
     if style is None:
         raise ValueError("shared report stylesheet is missing")
 
-    def number(key):
+    def number(key: str) -> str:
         return f'<span data-result="{key}">{format_number(data["results"][key])}</span>'
 
-    def source(key):
+    def source(key: str) -> str:
         label, url = SOURCES[key]
         return f'<a href="{escape(url)}">{escape(label)}</a>'
 
@@ -176,9 +204,9 @@ def render(data: dict) -> str:
     for layer, modulus, properties in zip(data["definition"].radial_layers, data["moduli"], data["layers"], strict=True):
         # BIPM SI Brochure (2019), Table 7: milli=10^-3, so m -> mm multiplies by 1000.
         input_rows.append([
-            escape(layer.name), format_number(layer.derived_inner_diameter.value * 1000),
-            format_number(layer.derived_outer_diameter.value * 1000), format_number(layer.density.value),
-            format_number(modulus), "public reference" if layer.role == "steel" else "assumed, based on previous experience",
+            escape(layer.name), f"{layer.derived_inner_diameter.value * 1000:,}",
+            f"{layer.derived_outer_diameter.value * 1000:,}", f"{layer.density.value:,}",
+            f"{modulus:,}", "public reference" if layer.role == "steel" else "assumed, based on previous experience",
         ])
         layer_rows.append([escape(layer.name), format_number(properties.area_m2), format_number(properties.mass_per_length_kg_m)])
     fixture_rows = [[escape(row["id"]), str(row["layers"]), str(row["components"]),
@@ -213,7 +241,8 @@ results under declared assumptions; no design acceptance is established.</p></se
 <section id="revision"><h2>Revision history</h2>
 {table(['Revision', 'Date', 'What changed and why'], [
     ['0', '2026-10-22', 'Initial issue: document computed section properties and distinguish missing fixture material data.'],
-    ['1', DATE, 'Require documented moduli, check inventory units and preserve numerical and file precision.'],
+    ['1', '2026-11-06', 'Require documented moduli, check inventory units and preserve numerical and file precision.'],
+    ['2', DATE, 'Distinguish referenced and assumed moduli and make computed values readable without losing precision.'],
 ])}
 </section>
 <section id="inputs"><h2>Inputs</h2>

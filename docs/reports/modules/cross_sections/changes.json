@@ -1,6 +1,6 @@
 {
   "document": "cross-section-module-analysis",
-  "revision": 1,
+  "revision": 2,
   "date": "2026-11-06",
   "changes": [
     "Document per-layer mass, explicit bore buoyancy and bonded elastic stiffness.",
@@ -9,6 +9,7 @@
     "Correct empty report selection and preserve the open bore in radial figures.",
     "Avoid comparing packed-component diameter magnitudes in incompatible units.",
     "Require explicit Pa units and separate provenance for each bonded modulus.",
-    "Preserve four significant figures, validate fixture units and write LF artifacts."
+    "Preserve four significant figures, validate fixture units and write LF artifacts.",
+    "Separate reference and assumed modulus records and retain readable numerical precision."
   ]
 }

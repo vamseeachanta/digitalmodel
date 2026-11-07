@@ -217,9 +217,12 @@ def test_solid_circle_elastic_properties():
 
 @pytest.mark.parametrize("moduli", [[None, 1, 2], [1, None, 2], [1, 2, 0], [1, 2, -1],
                                      [1, 2, math.inf], [1, 2, math.nan]])
-def test_modulus_required_for_every_layer(moduli):
+def test_elastic_revalidates_invalid_modulus_in_every_layer(moduli):
+    items = bonded_layers(stack(), [1, 1, 1])
+    for item, modulus in zip(items, moduli, strict=True):
+        item.youngs_modulus_pa = modulus
     with pytest.raises(ValueError):
-        calc.calculate_elastic_section(bonded_layers(stack(), moduli))
+        calc.calculate_elastic_section(items)
 
 
 def test_si_contract_and_explicit_round_trip():
