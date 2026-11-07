@@ -107,6 +107,8 @@ def test_structured_source_accepts(criteria):
     "TBD.", "TBA", "pending", "to be confirmed", "see note",
     " tBd... ", "N/A!", "Pending?", "To Be Confirmed.", "See Note:", "TBD…", "See Note;\t!",
     "(TBD)", "[TBA]", '"TBD"', "<pending>", "T.B.D.", "N.A.",
+    "To be determined", "TBC", "tbc.", "N_A", "to-be-confirmed",
+    "not-applicable", "Not-Available", "null", "nil", "N / A", "?",
 ])
 def test_source_fields_refuse_placeholders(criteria, field, value):
     matrix, resolver = criteria

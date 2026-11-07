@@ -21,10 +21,11 @@ CRITERION_FIELDS = frozenset({
     "criterion_id", "quantity", "unit", "observed", "limit", "comparator", "source", "evidence",
 })
 SOURCE_FIELDS = frozenset({"document", "edition", "clause"})
-SOURCE_PLACEHOLDERS = frozenset(re.sub(r"[.\s]+", "", value) for value in {
-    "tbd", "n/a", "na", "-", "unknown", "x", "none", "not applicable",
-    "not available", "unspecified", "unverified", "?",
+SOURCE_PLACEHOLDERS = frozenset(re.sub(r"[\W_]+", "", value) for value in {
+    "tbd", "n/a", "na", "unknown", "x", "none", "not applicable",
+    "not available", "unspecified", "unverified",
     "tba", "pending", "to be confirmed", "see note",
+    "to be determined", "tbc", "null", "nil",
 })
 
 
@@ -35,8 +36,8 @@ def _validate_source(source: dict) -> None:
         raise ValueError("unknown acceptance source fields")
     for field in SOURCE_FIELDS:
         value = nonempty(source[field], "acceptance source " + field)
-        normalized = re.sub(r"^[\W_]+|[\W_]+$", "", value.strip().casefold())
-        normalized = re.sub(r"[.\s]+", "", normalized)
+        # Punctuation-only values also normalize to empty and refuse below.
+        normalized = re.sub(r"[\W_]+", "", value.casefold())
         if not normalized or normalized in SOURCE_PLACEHOLDERS:
             raise ValueError("placeholder acceptance source " + field)
 

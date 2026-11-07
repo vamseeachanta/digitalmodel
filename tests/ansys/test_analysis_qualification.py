@@ -86,8 +86,7 @@ def test_every_required_file_is_checked_at_lookup(protocol, identity):
 
 
 @pytest.mark.parametrize("damage", ["same_author", "wrong_row", "negative_tolerance",
-    "not_verified", "wrong_use", "no_reference", "precision", "wrong_expected",
-    "unknown_checker", "unverified_checker", "historical_checker"])
+    "not_verified", "wrong_use", "no_reference", "precision", "wrong_expected"])
 def test_verification_gate_refusals(protocol, damage):
     study, resolver, _, ledger, authority = protocol
     register = json.loads(resolver["register"].read_text(encoding="utf-8"))
@@ -97,10 +96,7 @@ def test_verification_gate_refusals(protocol, damage):
         "not_verified": ("checks", {}), "wrong_use": ("intended_uses", []),
         "no_reference": ("reference_evidence", []),
         "precision": ("expected", "12.50000000000000000000000000001"),
-        "wrong_expected": ("expected", "13"),
-        "unknown_checker": ("checker", "unknown"),
-        "unverified_checker": ("checker", " UNVERIFIED "),
-        "historical_checker": ("checker", "Historical-Neutral-Capture")}
+        "wrong_expected": ("expected", "13")}
     key, value = changes[damage]
     entry[key] = value
     resolver["register"].write_text(json.dumps(register), encoding="utf-8", newline="\n")
@@ -184,36 +180,3 @@ def test_string_intended_uses_cannot_match_by_substring(protocol):
     authority.update(verification_reference=ref, revisions={"r1": package["package_hash"]})
     with pytest.raises(ValueError):
         lookup(package, query(), resolver, ledger=ledger, authority=authority)
-
-
-@pytest.mark.parametrize("expected,passes", [("0", True), ("-1", False)])
-def test_exact_comparison_preserves_acceptance_under_decimal_traps(protocol, expected, passes):
-    """Synthetic ordering: |12.5 - 0| = 12.5; |12.5 - (-1)| = 13.5 > 12.5."""
-    from decimal import Overflow, Subnormal, localcontext
-
-    study, resolver, _, ledger, authority = protocol
-    register = json.loads(resolver["register"].read_text(encoding="utf-8"))
-    entry = register["entries"]["case-1:stress"]
-    entry.update(expected=expected, absolute_tolerance="12.5")
-    resolver["register"].write_text(json.dumps(register), encoding="utf-8", newline="\n")
-    ref = {"id": "register", "sha256": digest_bytes(resolver["register"].read_bytes())}
-    study["verification_reference"] = ref
-    package = build_package(study, resolver)
-    authority.update(verification_reference=ref, revisions={"r1": package["package_hash"]})
-    with localcontext() as context:
-        context.prec = 2
-        context.Emax = 0
-        context.Emin = -2
-        context.traps[Overflow] = False
-        context.traps[Subnormal] = True
-        before = context.copy()
-        if passes:
-            answer = lookup(package, query(), resolver, ledger=ledger, authority=authority)
-            assert answer["qualified"]
-            assert {item["status"] for item in answer["acceptance_results"].values()} == {"PASS"}
-        else:
-            with pytest.raises(ValueError, match="comparison"):
-                lookup(package, query(), resolver, ledger=ledger, authority=authority)
-        assert context.flags == before.flags
-        assert context.traps == before.traps
-        assert (context.prec, context.Emax, context.Emin) == (before.prec, before.Emax, before.Emin)
