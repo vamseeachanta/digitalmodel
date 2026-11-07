@@ -5,7 +5,7 @@
 | Module | process_diagrams |
 | Repository | digitalmodel |
 | Package path | src/digitalmodel/process_diagrams |
-| Pack revision | 0, 2026-11-07 |
+| Pack revision | 1, 2026-11-07 |
 | Code revision | `309d343e08a2f83aebc6ea5344e586407b80c1f8` |
 | Analysis family | EC — Python calculations |
 | Quality manager role | Engineering calculations quality manager |
@@ -17,7 +17,7 @@ Code citations below resolve at the code revision; the implementation-map invent
 
 ## 1. Purpose and scope
 
-The package assembles standalone SVG piping and instrumentation diagrams from symbol fragments, pipe paths, parsed instrument tags, line identifiers, sheet frames, notes and title blocks. [src/digitalmodel/process_diagrams/__init__.py:L1-L8]
+The package assembles un-namespaced `<svg>` fragments for HTML inlining from symbol fragments, pipe paths, parsed instrument tags, line identifiers, sheet frames, notes and title blocks; standalone SVG image loading is not established. [src/digitalmodel/process_diagrams/__init__.py:L1-L8] [src/digitalmodel/process_diagrams/sheet.py:L123-L140]
 
 The registry assigns beta maturity and directs module tests to `tests/process_diagrams/`; maturity is a routing label rather than evidence of standards conformance. [docs/registry/module-routing.yaml:L387-L392]
 
@@ -45,18 +45,18 @@ Input contracts are the implemented signatures and guards, rather than additiona
 
 | Output | Unit and meaning | Consumer or limit | Source |
 | --- | --- | --- | --- |
-| `Sheet.render()` | Standalone SVG string with viewBox and accessibility attributes | Inherits current colour; embeds raw elements without XML validation | [src/digitalmodel/process_diagrams/sheet.py:L123-L140] |
+| `Sheet.render()` | Un-namespaced `<svg>` fragment with viewBox and accessibility attributes, suitable for HTML inlining | No SVG namespace declaration; inherits current colour and embeds raw elements without XML validation | [src/digitalmodel/process_diagrams/sheet.py:L123-L140] |
 | Geometry and symbol functions | SVG path data or fragment strings | Schematic geometry, no physical dimension conversion | [src/digitalmodel/process_diagrams/geometry.py:L33-L103] [src/digitalmodel/process_diagrams/symbols.py:L1-L5] |
 | `run_length(points)` | Sum of segment lengths in supplied coordinate units | A drawing-space takeoff unless caller supplies an independent physical scale | [src/digitalmodel/process_diagrams/geometry.py:L98-L103] [src/digitalmodel/process_diagrams/sheet.py:L23-L36] |
 | `Tag`, `LineNumber` | Frozen dataclasses; line size in inches | Tag description, loop comparison, safety/trip predicates and insulation predicate | [src/digitalmodel/process_diagrams/tags.py:L72-L122] [src/digitalmodel/process_diagrams/tags.py:L190-L206] |
 | `Sheet.lint()`, `Sheet.loops()`, `Sheet.note()` | Defect strings, loop-to-tag mapping, 1-based note count | Lint checks missing fail annotations and exact raw duplicate tags only | [src/digitalmodel/process_diagrams/sheet.py:L90-L120] |
-| Legend example | UTF-8 SVG file | Optional caller-supplied output path; default output in current directory | [examples/process_diagrams/legend_sheet.py:L98-L106] |
+| Legend example | UTF-8 file containing an un-namespaced `<svg>` fragment | Optional output path; default output in current directory; an `.svg` suffix does not establish standalone image loading | [examples/process_diagrams/legend_sheet.py:L98-L106] [src/digitalmodel/process_diagrams/sheet.py:L126-L127] |
 
 ## 3. Method and governing standards
 
 | Method | Implementation and reference | Boundary |
 | --- | --- | --- |
-| Instrument identification | `parse_tag` normalises input, applies anchored regex and vocabulary checks, removes modifiers, then creates Tag | Disambiguation is expressly described as grammar policy requiring a drawing legend, rather than a quoted standard rule. [src/digitalmodel/process_diagrams/tags.py:L125-L187] |
+| Instrument identification | `parse_tag` normalises input, applies anchored regex and vocabulary checks, removes modifiers, then creates Tag | Grammar policy requires a drawing legend; second-position S can lose the switch function and trailing L loses the light function, as S24 records. [src/digitalmodel/process_diagrams/tags.py:L125-L187] |
 | Line identification | `parse_line_number` matches a compound identifier and computes mixed/fractional size using float conversion and division | No physical-size range or denominator check. [src/digitalmodel/process_diagrams/tags.py:L209-L239] |
 | Line crossing | `_hops_between`, `horizontal`, `vertical` sort interior crossings and place SVG arcs either side | Radius is a code drafting constant; endpoints are excluded. [src/digitalmodel/process_diagrams/geometry.py:L19-L72] |
 | Run length | `run_length` sums square roots of squared coordinate differences | Closed-form Euclidean segment length, without unit conversion or point-count validation. [src/digitalmodel/process_diagrams/geometry.py:L98-L103] |
@@ -90,7 +90,7 @@ Gate allocation follows AQG r0, section 10, Python calculations, with G5 from se
 | Gate | Applicability and route | Module checks |
 | --- | --- | --- |
 | G0 | Applicable: identifier inputs, SVG units and drafting checks | C01, C06, C07, C08 |
-| G1 | Applicable: Python import through pytest; SVG parsed by ElementTree; no separate native CAD loader is implemented | C02, C04; rendering route [src/digitalmodel/process_diagrams/sheet.py:L123-L140] |
+| G1 | Applicable: Python import through pytest; ElementTree checks XML well-formedness, not native-renderer loading or the SVG namespace; no separate native CAD loader is implemented | C02, C04; rendering route [src/digitalmodel/process_diagrams/sheet.py:L123-L140] |
 | G2 | Applicable: independent closed-form length arithmetic and literal crossing geometry | C03, C09 |
 | G3 | NOT_APPLICABLE: no time integrator in the drawing/rendering path | [src/digitalmodel/process_diagrams/sheet.py:L123-L140] [src/digitalmodel/process_diagrams/geometry.py:L33-L103] |
 | G4 | NOT_APPLICABLE: SVG drafting path has no diffraction mesh or hydrostatic computation | [src/digitalmodel/process_diagrams/sheet.py:L123-L140] [src/digitalmodel/process_diagrams/symbols.py:L177-L290] |
@@ -112,13 +112,13 @@ These checks cover ordinary code behaviour; they do not detect every invalid dra
 
 ## 6. Known failure modes and pitfalls
 
-sweep: 23 found
+sweep: 25 found
 
-The sweep classifies 23 findings below, including intentional defaults and empty results; a finding is not automatically a defect. All rows were inspected at the code pin on 2026-11-07. The commands were:
+The sweep classifies 25 findings below, including intentional defaults and empty results; a finding is not automatically a defect. All rows were inspected at the code pin on 2026-11-07. Both commands select Python source only, excluding this pack so the counts remain reproducible at the pack head. The commands were:
 
 ```bash
-rg -n 'except|continue|return None|return \[\]|return \{\}' src/digitalmodel/process_diagrams
-rg -n -i 'except|continue|return None|return \[\]|return \{\}|return ""|= 0(\.0)?\b|1970|\b(int|float)\(|units?|default|\.get\(|else|\[:2\]|0\.0?5|0\.5' src/digitalmodel/process_diagrams
+rg -n 'except|continue|return None|return \[\]|return \{\}' src/digitalmodel/process_diagrams --glob '*.py'
+rg -n -i 'except|continue|return None|return \[\]|return \{\}|return ""|= 0(\.0)?\b|1970|\b(int|float)\(|units?|default|\.get\(|else|\[:2\]|0\.0?5|0\.5' src/digitalmodel/process_diagrams --glob '*.py'
 ```
 
 The first command produced 0 matches; the package has no swallowed exception, skipped-record continue, explicit None/empty-list/empty-dict return, 1970 fallback or cache write in the inspected functions. Empty collections returned through variables and omitted strings are classified below. [src/digitalmodel/process_diagrams/geometry.py:L23-L124] [src/digitalmodel/process_diagrams/sheet.py:L60-L252] [src/digitalmodel/process_diagrams/symbols.py:L33-L290] [src/digitalmodel/process_diagrams/tags.py:L84-L239]
@@ -126,10 +126,10 @@ The first command produced 0 matches; the package has no swallowed exception, sk
 | ID | Symptom and cause at the pin | Detection check or gap | Tracking |
 | --- | --- | --- | --- |
 | S01 | `run_length` starts from 0.0 and silently returns zero for empty or single-point input. [src/digitalmodel/process_diagrams/geometry.py:L98-L103] | C03 covers ordinary lengths; no detection check exists for short input | issue pending (1) |
-| S02 | `_n` converts integral floats to int, otherwise uses general float formatting; coordinates can lose precision and nonfinite values are not rejected. [src/digitalmodel/process_diagrams/geometry.py:L120-L124] | no detection check exists | issue pending (1) |
+| S02 | `_n` preserves integer-valued floats through `str(int(value))`; other floats and integer inputs use `:g` with 6 significant digits. `_n(1234.5678)` gives `1234.57`; `_n(1234567)` gives `1.23457e+06`. The general-format branch uses exponent notation for magnitudes at or above 1e6; `_n(1234567.0)` instead gives `1234567`. Nonfinite values pass as `inf`/`nan`. [src/digitalmodel/process_diagrams/geometry.py:L120-L124] | no detection check exists | issue pending (1) |
 | S03 | SVG units are assumed, with downward y; nominal pipe size instead uses inches, without a drawing-scale conversion. [src/digitalmodel/process_diagrams/geometry.py:L12-L20] [src/digitalmodel/process_diagrams/tags.py:L190-L199] [src/digitalmodel/process_diagrams/sheet.py:L23-L36] | C03 checks drawing-space length; no detection check exists for physical-scale misuse | issue pending (1) |
 | S04 | Crossings at/beyond endpoints are intentionally filtered; omitted crossings give straight paths. [src/digitalmodel/process_diagrams/geometry.py:L23-L30] [src/digitalmodel/process_diagrams/geometry.py:L33-L72] | C09 detects the documented endpoint behaviour | issue pending (1) |
-| S05 | Duplicate or closely spaced crossings are sorted but not deduplicated or checked against jump radius, so arcs can overlap. [src/digitalmodel/process_diagrams/geometry.py:L19-L30] [src/digitalmodel/process_diagrams/geometry.py:L48-L72] | no detection check exists | issue pending (1) |
+| S05 | Duplicate, closely spaced and near-endpoint crossings are sorted but not deduplicated or checked against the 7-user-unit HOP_RADIUS. Arcs can overlap and paths can backtrack: `horizontal(0,100,50,[3])` starts its arc at x = -4 outside the run; `[40,40,45]` backtracks from x = 47 to 33, then from 47 to 38. [src/digitalmodel/process_diagrams/geometry.py:L19-L30] [src/digitalmodel/process_diagrams/geometry.py:L48-L72] | no detection check exists | issue pending (1) |
 | S06 | Empty fragment/tag lists yield empty lint/loop outputs; raw added symbols bypass tag/fail tracking, so a clean lint does not establish drawing completeness. [src/digitalmodel/process_diagrams/sheet.py:L54-L63] [src/digitalmodel/process_diagrams/sheet.py:L96-L120] | C07 covers tracked valves only; no detection check exists for raw-fragment completeness | issue pending (2) |
 | S07 | Omitted valve fail annotation becomes the default text; false-valued explicit annotations are recorded, but arbitrary nonempty strings are accepted. [src/digitalmodel/process_diagrams/sheet.py:L79-L88] [src/digitalmodel/process_diagrams/symbols.py:L116-L137] | C07 detects missing annotation only when passed explicitly; no detection check exists for unspecified intent or invalid nonempty text | issue pending (2) |
 | S08 | Duplicate counter defaults to zero and keys by raw spelling, so differently cased tags evade duplicate lint. [src/digitalmodel/process_diagrams/sheet.py:L106-L112] [src/digitalmodel/process_diagrams/tags.py:L147-L150] [src/digitalmodel/process_diagrams/tags.py:L179-L186] | C08 detects exact duplicates; no detection check exists for case variants | issue pending (2) |
@@ -143,11 +143,13 @@ The first command produced 0 matches; the package has no swallowed exception, sk
 | S16 | `_actuator` falls back to the manual geometry for any unmatched kind. [src/digitalmodel/process_diagrams/symbols.py:L140-L153] | no detection check exists | issue pending (3) |
 | S17 | Fixed drafting dimensions, default radii/orientations and default head depth proportions are code conventions rather than input-specific design calculations. [src/digitalmodel/process_diagrams/geometry.py:L19-L20] [src/digitalmodel/process_diagrams/symbols.py:L33-L80] [src/digitalmodel/process_diagrams/symbols.py:L86-L117] [src/digitalmodel/process_diagrams/symbols.py:L177-L204] [src/digitalmodel/process_diagrams/symbols.py:L216-L290] [src/digitalmodel/process_diagrams/sheet.py:L142-L210] [src/digitalmodel/process_diagrams/sheet.py:L213-L247] | C02/R4 parse representative output; no detection check exists for independent symbol fidelity | issue pending (4) |
 | S18 | `packed_beds or []` draws no internals for missing/empty input, without a warning; vessel heads default from half-dimensions. [src/digitalmodel/process_diagrams/symbols.py:L177-L213] | C02/R4 includes one nonempty packed-bed case; no detection check exists for omitted required internals | issue pending (6) |
-| S19 | `Tag.describe` uses unknown-variable/modifier/function fallbacks for directly constructed dataclasses; optional modifier strings collapse to empty parts. [src/digitalmodel/process_diagrams/tags.py:L84-L115] | no detection check exists for invalid direct construction | issue pending (6) |
+| S19 | `Tag.describe` has unknown-variable/variable-modifier/function fallbacks and omits empty modifier strings, but indexes the function-modifier dictionary without a fallback. A directly constructed public Tag with a nonempty function_modifier outside HH/LL/H/L raises KeyError, not TagError: `Tag("x","P",None,"I","M","1").describe()` raises `KeyError: 'M'`. [src/digitalmodel/process_diagrams/tags.py:L84-L115] [src/digitalmodel/process_diagrams/tags.py:L113-L114] [src/digitalmodel/process_diagrams/__init__.py:L31-L34] | no detection check exists for invalid direct construction | issue pending (6) |
 | S20 | Tag parsing normalises grammar but retains raw spelling; raw tag strings are also split for rendering, so normalisation and displayed spelling differ. [src/digitalmodel/process_diagrams/tags.py:L147-L150] [src/digitalmodel/process_diagrams/tags.py:L179-L187] [src/digitalmodel/process_diagrams/sheet.py:L74-L77] | C02 includes normalised letters; no detection check exists for display/duplicate consistency | issue pending (2) |
 | S21 | External size text uses float conversion at all 3 branches; regex rejects comma/grouped forms, but zero denominator escapes as ZeroDivisionError and zero size is accepted. [src/digitalmodel/process_diagrams/tags.py:L59-L65] [src/digitalmodel/process_diagrams/tags.py:L219-L239] | C01 checks malformed grammar, not numeric domain; no detection check exists for zero denominator/size | issue pending (1) |
-| S22 | Modifier-only tags can pass the empty-function guard; absent modifiers and insulation use None/False defaults, not missing-input errors. [src/digitalmodel/process_diagrams/tags.py:L72-L82] [src/digitalmodel/process_diagrams/tags.py:L157-L187] [src/digitalmodel/process_diagrams/tags.py:L190-L203] | C02 covers intended safety/optional-insulation cases; no detection check exists for unintended modifier-only tags | issue pending (2) |
+| S22 | Modifier-only tags can pass the empty-function guard; absent modifiers and insulation use None/False defaults, not missing-input errors. [src/digitalmodel/process_diagrams/tags.py:L72-L82] [src/digitalmodel/process_diagrams/tags.py:L157-L187] [src/digitalmodel/process_diagrams/tags.py:L190-L203] | C02 preserves current safety/trip and optional-insulation expectations, including the S-as-safety reading of PSHH/LSLL; it does not establish intended switch semantics. No detection check exists for unintended modifier-only tags; see S24. [tests/process_diagrams/test_tags.py:L43-L55] | issue pending (2) |
 | S23 | Raw fragments and marker identifier are inserted unescaped; the render join omits empty parts without validating the assembled XML. [src/digitalmodel/process_diagrams/sheet.py:L60-L63] [src/digitalmodel/process_diagrams/sheet.py:L123-L140] | C06 checks selected escaped text fields only; no detection check exists for malformed raw fragments/marker identifiers | issue pending (2) |
+| S24 | `parse_tag` consumes S as the "safety" variable modifier when followed by H/L/HH/LL or another function letter, losing the switch function; a trailing L is always read as "low", losing the light function. PSH-101, PSL-101, PSHH-401 and LSLL-102 have empty `Tag.functions`; `describe()` gives "pressure, safety, high", "pressure, safety, low", "pressure, safety, high-high" and "level, safety, low-low", respectively. LSH-1 and TSH-3 similarly give "level, safety, high" and "temperature, safety, high" with empty functions. ZSC-101 and ZSO-101 retain C/O but lose S: "position, safety, control" and "position, safety, orifice or restriction". ZL-101, LL-101 and XL-5 lose L and give "position, low", "level, low" and "unclassified, low" with empty functions. Despite its "safety" description, PSHH-401 has `is_safety_function == False`. [src/digitalmodel/process_diagrams/tags.py:L164-L171] [src/digitalmodel/process_diagrams/tags.py:L89-L115] [src/digitalmodel/process_diagrams/tags.py:L179-L187] | no detection check exists; C02's PSHH/LSLL tests preserve the current parsing rather than detect lost switch/light functions. [tests/process_diagrams/test_tags.py:L43-L55] | issue pending (2) |
+| S25 | Sheet rendering and the example's `.svg` file omit `xmlns="http://www.w3.org/2000/svg"`; ElementTree reports the unqualified root tag `svg`. The result is an un-namespaced fragment suitable for HTML inlining; standalone SVG image loading is not established. [src/digitalmodel/process_diagrams/sheet.py:L126-L127] [examples/process_diagrams/legend_sheet.py:L98-L106] | C02 and C04 check XML well-formedness only; `root.tag == "svg"` passes because the namespace is absent. No detection check exists for namespace-aware standalone loading. [tests/process_diagrams/test_sheet.py:L31-L36] | issue pending (2) |
 
 No incident issue was named for this module; repository issue searches for the module, ISA designation and named parser/connector functions found no confirmed matching defect issue. The tracking references above are drafts for the maintainers, not existing issue numbers.
 
@@ -156,6 +158,7 @@ No incident issue was named for this module; repository issue searches for the m
 | Date | Entry | Lesson and evidence | Pack change | Shared-log entry |
 | --- | --- | --- | --- | --- |
 | 2026-11-07 | Initial pack | An empty drafting-lint result covers only tracked fail annotations and raw duplicates, not symbol correctness or complete XML. [src/digitalmodel/process_diagrams/sheet.py:L60-L88] [src/digitalmodel/process_diagrams/sheet.py:L96-L140] | Separate ordinary regression checks from uncovered drawing defects in sections 4–6 | Pending; issue pending (6) |
+| 2026-11-07 | Revision 1 | The switch/light parser, direct Tag construction and SVG namespace probes reproduce the gaps recorded in S19, S24 and S25. [src/digitalmodel/process_diagrams/tags.py:L101-L114] [src/digitalmodel/process_diagrams/tags.py:L164-L171] [src/digitalmodel/process_diagrams/sheet.py:L126-L127] | Correct sections 1–3, G1 and S19/S22; extend the sweep to 25 rows and quantify S02/S05 | Pending; issue pending (6) |
 
 ## 8. Ownership
 
@@ -196,7 +199,7 @@ This vocabulary search is a discovery result, not proof that every algorithmic d
 | --- | --- | --- |
 | Internal upstream | Geometry formatting/escaping and tag parser feed symbol/sheet assembly | [src/digitalmodel/process_diagrams/symbols.py:L18-L18] [src/digitalmodel/process_diagrams/sheet.py:L17-L18] [src/digitalmodel/process_diagrams/sheet.py:L72-L88] |
 | Runtime upstream | Standard-library dataclasses, re and collection/typing declarations; no CAD/plotting dependency in the five package files | [src/digitalmodel/process_diagrams/__init__.py:L7-L8] [src/digitalmodel/process_diagrams/geometry.py:L15-L17] [src/digitalmodel/process_diagrams/tags.py:L19-L22] [src/digitalmodel/process_diagrams/sheet.py:L13-L18] [src/digitalmodel/process_diagrams/symbols.py:L14-L18] |
-| Downstream example | Legend build consumes symbols and Sheet, then main writes UTF-8 SVG | [examples/process_diagrams/legend_sheet.py:L17-L18] [examples/process_diagrams/legend_sheet.py:L59-L106] |
+| Downstream example | Legend build consumes symbols and Sheet, then main writes a UTF-8 un-namespaced fragment; standalone SVG loading remains unestablished | [examples/process_diagrams/legend_sheet.py:L17-L18] [examples/process_diagrams/legend_sheet.py:L59-L106] |
 | Test tools | pytest assertions and ElementTree parsing; inline inputs rather than private data fixtures | [tests/process_diagrams/test_geometry.py:L5-L14] [tests/process_diagrams/test_tags.py:L5-L12] [tests/process_diagrams/test_sheet.py:L5-L15] [tests/process_diagrams/test_sheet.py:L148-L167] |
 | Routing | Existing module registry and operator-map row point to the package, test directory and domain documentation | [docs/registry/module-routing.yaml:L387-L392] [docs/maps/digitalmodel-operator-map.md:L59-L59] |
 
@@ -215,7 +218,7 @@ The test command form is `PYTHONPATH=src uv run --no-sources python -m pytest te
 | Open item | Evidence and missing work | Responsible role | Tracking |
 | --- | --- | --- | --- |
 | Geometry and size validation | Cover S01–S05, S11 and S21; define coordinate precision, finite values, size and grid ranges. [src/digitalmodel/process_diagrams/geometry.py:L23-L124] [src/digitalmodel/process_diagrams/tags.py:L219-L239] [src/digitalmodel/process_diagrams/sheet.py:L148-L162] | Maintainer | issue pending (1) |
-| Drafting-lint coverage | Cover raw content, safety classification, case variants, metadata and modifier-only inputs in S06–S09, S12, S20, S22–S23. [src/digitalmodel/process_diagrams/sheet.py:L60-L140] [src/digitalmodel/process_diagrams/tags.py:L157-L187] | Maintainer | issue pending (2) |
+| Drafting-lint coverage | Cover raw content, safety classification, case variants, metadata, modifier-only inputs, lost switch/light functions and missing SVG namespace in S06–S09, S12, S20, S22–S25. [src/digitalmodel/process_diagrams/sheet.py:L60-L140] [src/digitalmodel/process_diagrams/tags.py:L157-L187] | Maintainer | issue pending (2) |
 | Lossy connector and option fallbacks | Cover S13–S16 with explicit option and label-count policy. [src/digitalmodel/process_diagrams/sheet.py:L213-L239] [src/digitalmodel/process_diagrams/symbols.py:L58-L80] [src/digitalmodel/process_diagrams/symbols.py:L140-L153] | Maintainer | issue pending (3) |
 | Standards provenance | U1, the single UNVERIFIED claim in section 3: establish ISA-5.1 edition applicability, clause/table locators, provenance and independent symbol checks; clause text not checked against the licensed copy. [src/digitalmodel/process_diagrams/symbols.py:L7-L11] [src/digitalmodel/process_diagrams/tags.py:L14-L16] | Family quality manager | issue pending (4) |
 | Implementation-map coverage | Inventory is empty at the named map revision; register all section-3 method families and broaden repository discovery | Maintainer | issue pending (5) |
