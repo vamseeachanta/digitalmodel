@@ -103,7 +103,9 @@ def test_squeezing_is_bounded_and_transmitted_through_upper_clay():
     curve = penetration_curve(profile, Spudcan(10), [0, 1, 3, 4.9, 5, 10], preload_kn=8000)
     assert point(curve, 0).pressure_kpa == pytest.approx(93.4)
     assert point(curve, 3).pressure_kpa == pytest.approx(70.1)
+    assert point(curve, 3).branch == 'clay_squeezing'
     assert point(curve, 4.9).pressure_kpa == pytest.approx(190.2)
+    assert point(curve, 4.9).branch == 'lower_layer_support'
     assert point(curve, 5).pressure_kpa == pytest.approx(190.2)
     assert curve.maximum.pressure_kpa == pytest.approx(190.2)
     assert curve.peak.pressure_kpa == pytest.approx(93.4)
@@ -121,6 +123,112 @@ def test_equal_clay_strengths_have_no_artificial_drop():
     curve = penetration_curve(profile, Spudcan(10), [0, 10], preload_kn=15000)
     assert not curve.punch_through_flag
     assert not curve.events
+
+
+@pytest.mark.parametrize('scale', [1e-6, 1.0, 1e6])
+@pytest.mark.parametrize('dense', [False, True])
+def test_constant_capacity_plateau_is_grid_invariant(scale, dense):
+    # D=6: switch z=10-6*(63.4-31.7)/30=3.66 m.
+    # Thereafter q=31.7+5*(10-z)+5*z=81.7 kPa; Q=735.3*pi kN.
+    # Scaling all strengths and weights preserves this constant branch.
+    profile = LayeredProfile((clay(0, 10, 10 * scale, 5 * scale),
+                              clay(10, 30, 5 * scale, 5 * scale)))
+    depths = [i / 10 for i in range(101)] if dense else [0, 10]
+    curve = penetration_curve(profile, Spudcan(6), depths, preload_kn=10000 * scale)
+    assert point(curve, 10).pressure_kpa == pytest.approx(81.7 * scale)
+    assert curve.maximum.load_kn == pytest.approx(735.3 * math.pi * scale)
+    assert curve.events == ()
+    assert curve.peak.depth_m == pytest.approx(3.66)
+    assert curve.maximum.depth_m == pytest.approx(3.66)
+    assert curve.post_peak_drop_kn == 0
+    assert curve.punch_through_flag is False
+    assert curve.preload_support_depth_m is None
+
+
+@pytest.mark.parametrize('direction', [-math.inf, math.inf])
+@pytest.mark.parametrize('dense', [False, True])
+def test_preload_roundoff_does_not_turn_a_real_loss_into_support(direction, dense):
+    # D=6, gamma=0: q=63.4 kPa until z=3.66, then 31.7+5*(10-z).
+    # At z=10, q=31.7 kPa; loss=(63.4-31.7)*9*pi=285.3*pi kN.
+    # A preload one representable value from the peak remains at that peak.
+    profile = LayeredProfile((clay(0, 10, 10, 0), clay(10, 30, 5, 0)))
+    preload = math.nextafter(570.6 * math.pi, direction)
+    depths = [i / 10 for i in range(101)] if dense else [0, 10]
+    curve = penetration_curve(profile, Spudcan(6), depths, preload_kn=preload)
+    assert len(curve.events) == 1
+    assert curve.events[0].drop_kn == pytest.approx(285.3 * math.pi)
+    assert curve.events[0].preload_reaches_peak is True
+    assert curve.punch_through_flag is True
+    assert curve.preload_support_depth_m is None
+    assert curve.events[0].preload_recovery_depth_m is None
+
+
+@pytest.mark.parametrize('dense', [False, True])
+def test_small_physical_loss_is_retained_above_roundoff(dense):
+    # q=31.7+5*(10-z)+(5-1e-7)*z=81.7-1e-7*z kPa after z=3.66.
+    # The real loss to z=10 is 6.34e-7 kPa, or 5.706e-6*pi kN.
+    profile = LayeredProfile((clay(0, 10, 10, 4.9999999),
+                              clay(10, 30, 5, 4.9999999)))
+    depths = [i / 10 for i in range(101)] if dense else [0, 10]
+    curve = penetration_curve(profile, Spudcan(6), depths, preload_kn=10000)
+    assert len(curve.events) == 1
+    assert curve.events[0].peak.depth_m == pytest.approx(3.66)
+    assert curve.events[0].trough.depth_m == 10
+    assert curve.events[0].drop_kn == pytest.approx(5.706e-6 * math.pi, abs=1e-10)
+    assert curve.punch_through_flag is True
+
+
+@pytest.mark.parametrize('scale', [1e-6, 1.0, 1e6])
+@pytest.mark.parametrize('dense', [False, True])
+def test_cumulative_subtolerance_steps_retain_physical_loss(scale, dense):
+    # D=6: punching starts at z=3.66 m. The existing clay expression gives
+    # q=31.7+5*(10-z)+(5-1e-9)*z=81.7-1e-9*z kPa thereafter.
+    # Peak q=81.69999999634; trough q=81.69999999 at z=10 m.
+    # Loss=(10-3.66)*1e-9*9*pi=5.706e-8*pi kN before scaling.
+    # Individual 0.01 m steps are below the relative load tolerance.
+    profile = LayeredProfile((clay(0, 10, 10 * scale, 4.999999999 * scale),
+                              clay(10, 30, 5 * scale, 4.999999999 * scale)))
+    depths = [i / 100 for i in range(1001)] if dense else [0, 10]
+    curve = penetration_curve(profile, Spudcan(6), depths, preload_kn=10000 * scale)
+    assert len(curve.events) == 1
+    event = curve.events[0]
+    assert event.peak.depth_m == pytest.approx(3.66)
+    assert event.peak.pressure_kpa / scale == pytest.approx(81.69999999634, rel=1e-14)
+    assert event.trough.depth_m == 10
+    assert event.trough.pressure_kpa / scale == pytest.approx(81.69999999, rel=1e-14)
+    # Subtracting nearly equal loads loses precision; allow 0.01% of the loss.
+    assert event.drop_kn / scale == pytest.approx(5.706e-8 * math.pi, rel=1e-4, abs=0)
+    assert curve.post_peak_drop_kn == event.drop_kn
+    assert curve.punch_through_flag is True
+    assert curve.preload_support_depth_m is None
+
+
+@pytest.mark.parametrize('dense', [False, True])
+def test_cumulative_shallow_recovery_separates_subsequent_loss(dense):
+    # Above z=10 the preceding loss applies; below it q increases by
+    # 1e-10 kPa/m. Recovery of the 6.34e-9 kPa loss needs 63.4 m,
+    # outside this evaluated interval. A weaker third layer causes a second
+    # descent at z=20-6*(31.7-15.85)/15=13.66 m after the shallow recovery.
+    profile = LayeredProfile((clay(0, 10, 10, 4.999999999),
+                              clay(10, 20, 5, 1e-10), clay(20, 30, 2.5, 1e-10)))
+    depths = [i / 100 for i in range(2001)] if dense else [0, 10, 20]
+    curve = penetration_curve(profile, Spudcan(6), depths, preload_kn=10000)
+    assert len(curve.events) == 2
+    assert curve.events[0].trough.depth_m == 10
+    assert curve.events[0].recovery_depth_m is None
+    assert curve.events[1].peak.depth_m == pytest.approx(13.66)
+    assert curve.events[1].trough.depth_m == 20
+    assert curve.punch_through_flag is True
+
+
+@pytest.mark.parametrize('direction', [-math.inf, math.inf])
+def test_single_point_support_accepts_preload_roundoff(direction):
+    # q(10)=6.34*5+5*10=81.7 kPa; Q=735.3*pi kN for D=6.
+    profile = LayeredProfile((clay(0, 30, 5, 5),))
+    curve = penetration_curve(profile, Spudcan(6), [10],
+                              preload_kn=math.nextafter(math.nextafter(735.3 * math.pi, direction), direction))
+    assert curve.preload_support_depth_m == 10
+    assert curve.punch_through_flag is False
 
 
 @pytest.mark.parametrize('method', ['load_spread', 'punching_shear'])
@@ -193,8 +301,9 @@ def test_invalid_preload(preload):
         penetration_curve(LayeredProfile((clay(0, 20, 20),)), Spudcan(10), [0, 10], preload_kn=preload)
 
 
-def test_example_outputs_are_portable_offline_and_replayable(tmp_path):
-    path = Path('examples/domains/geotechnical/jackup_layered_penetration.py')
+def test_example_outputs_are_portable_offline_and_replayable(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    path = Path(__file__).resolve().parents[2] / 'examples/domains/geotechnical/jackup_layered_penetration.py'
     spec = importlib.util.spec_from_file_location('layered_example', path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -212,22 +321,38 @@ def test_example_outputs_are_portable_offline_and_replayable(tmp_path):
         'uniform_soft': (230.1 * 36 * math.pi, False),
     }
     for source in inputs:
-        payload = json.loads(source.read_text())
+        payload = json.loads(source.read_text(encoding="utf-8"))
         assert payload['basis'] == 'assumed, based on previous experience'
         assert payload['parameter_ranges']
         profile, spudcan, depths, preload = module.from_input(payload)
         curve = penetration_curve(profile, spudcan, depths, preload_kn=preload)
         name = source.name.removesuffix('.input.json')
         assert (tmp_path / f'{name}.curve.csv').is_file()
-        figure = json.loads((tmp_path / f'{name}.figure.json').read_text())
+        figure = json.loads((tmp_path / f'{name}.figure.json').read_text(encoding="utf-8"))
         assert figure['layout']['xaxis']['title']['text'] == 'Tip penetration below mudline (m)'
         assert any(t['name'] == 'Preload reaction' for t in figure['data'])
-        summary = json.loads((tmp_path / f'{name}.summary.json').read_text())
+        summary = json.loads((tmp_path / f'{name}.summary.json').read_text(encoding="utf-8"))
         expected_peak, expected_flag = expected[name]
         assert curve.peak.load_kn == pytest.approx(expected_peak)
         assert summary['peak']['load_kn'] == pytest.approx(expected_peak)
         assert summary['punch_through_flag'] is expected_flag
         assert summary['standards'][0]['clause'] == 'TO CONFIRM'
+
+
+@pytest.mark.parametrize('name', ['stiff_over_soft', 'sand_over_soft', 'uniform_soft'])
+@pytest.mark.parametrize('bound', [0, 1])
+def test_example_offset_range_stays_within_investigated_profile(name, bound):
+    root = Path(__file__).resolve().parents[2]
+    spec = importlib.util.spec_from_file_location(
+        'layered_example', root / 'examples/domains/geotechnical/jackup_layered_penetration.py')
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    source = root / 'examples/data/jackup_layered_penetration' / f'{name}.json'
+    payload = json.loads(source.read_text(encoding='utf-8'))
+    payload['spudcan']['tip_to_bearing_m'] = payload['parameter_ranges']['spudcan.tip_to_bearing_m'][bound]
+    profile, spudcan, depths, preload = module.from_input(payload)
+    curve = penetration_curve(profile, spudcan, depths, preload_kn=preload)
+    assert max(p.depth_m for p in curve.points) <= profile.layers[-1].bottom_m
 
 
 def test_preload_support_is_separate_from_capacity_loss_flag():
