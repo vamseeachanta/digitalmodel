@@ -146,9 +146,12 @@ def test_builder_publishes_numerical_basis(tmp_path):
 
 def test_load_sources_have_one_consistent_declaration():
     text = render_embedded_scenario()
+    assert 'Acceptance criteria come from a workbook' not in text
+    assert 'Source criteria originate from a splash-zone workbook' not in text
     assert 'no component capacity, workbook applicability or operational acceptance is established' in text
     assert 'original derivation is not established' not in text
     basis = builder.NUMERICAL_BASIS
+    assert set(basis['load_limit_sources']) == set(basis['load_limits_Te'])
     for label, limit in basis['load_limits_Te'].items():
         source = basis['load_limit_sources'][label]
         assert 'original derivation is unverified' in source
@@ -171,6 +174,7 @@ def test_revision_four_preserves_main_history_and_appends_one_row():
     assert len(rows) == len(published_rows) + 1
     assert rows[4].startswith('<tr><td>4</td><td>2026-11-07</td>')
     assert 'outputs are staged beside their destinations and restored on replacement failure' in rows[4]
+    assert 'calibration window counts and integer probabilities are checked' in rows[4]
 
 
 @pytest.mark.parametrize('optimized', [False, True], ids=['normal', 'optimized'])
@@ -365,9 +369,9 @@ def test_manifest_bytes_follow_builder_order_and_record_carry_over():
     assert 'carried over from revision 0' in manifest['provenance_note']
     assert 'not revalidated against external inputs' in manifest['provenance_note']
     assert raw == (json.dumps({key: manifest[key] for key in keys}, indent=2) + '\n').encode()
-
     assert raw == builder.manifest_bytes(PAGE.read_bytes(), manifest['source_sha256'],
                                          manifest['sanitization'], manifest['provenance_note'])
+
 
 def test_navigation_is_registered():
     assert str(Path('installation/installation-forecast.html')) in registered_site_paths(ROOT)
@@ -548,6 +552,8 @@ def test_staging_uses_output_filesystem(build_request, monkeypatch):
     builder.build(root / 'payload', root / 'config', output, root / 'terms')
     assert {destination for _, destination in calls} == {output, output.with_suffix('.manifest.json')}
     assert all(source.is_relative_to(output_dir) for source, _ in calls)
+    assert all(source.parent.name.startswith('.forecast-output-') for source, _ in calls)
+    assert not list(output_dir.glob('*forecast-output-*'))
     manifest = json.loads(output.with_suffix('.manifest.json').read_bytes())
     assert manifest['sha256'] == hashlib.sha256(output.read_bytes()).hexdigest()
 
@@ -578,6 +584,70 @@ def test_second_replace_failure_restores_outputs(build_request, monkeypatch, exi
     else:
         assert not output.exists()
         assert not manifest.exists()
+    assert not list(root.glob('*forecast-output-*'))
+
+
+@pytest.mark.parametrize('restore_target', ['page', 'manifest'])
+def test_failed_restoration_retains_complete_backups(build_request, monkeypatch, restore_target):
+    root = build_request
+    output = root / 'forecast.html'
+    manifest = output.with_suffix('.manifest.json')
+    output.write_bytes(b'previous page')
+    manifest.write_bytes(b'previous manifest')
+    replace = Path.replace
+
+    def fail_publication_and_restore(source, destination):
+        if source.name in {manifest.name, f'previous-{restore_target}', f'restore-{restore_target}'}:
+            raise OSError('Replacement unavailable')
+        return replace(source, destination)
+
+    monkeypatch.setattr(Path, 'replace', fail_publication_and_restore)
+    with pytest.raises(OSError, match='backups retained at') as error:
+        builder.build(root / 'payload', root / 'config', output, root / 'terms')
+    stage, = root.glob('*forecast-output-*')
+    assert str(stage) in str(error.value)
+    assert (stage / 'previous-page').read_bytes() == b'previous page'
+    assert (stage / 'previous-manifest').read_bytes() == b'previous manifest'
+    assert not output.exists()
+    assert not manifest.exists()
+
+
+@pytest.mark.parametrize('status', ['insufficient_calibration', 'unknown'])
+def test_uncalibrated_exceedance_has_explicit_error(status):
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    scenario['frames'][0]['channels'][1]['exceedance'].update(
+        status=status, window_probability=None, alert=None)
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
+    with pytest.raises(ValueError, match='Exceedance status must be calibrated'):
+        builder.render({'demo': {'scenarios': [scenario]}}, config)
+
+
+def test_too_few_calibration_windows_has_explicit_error():
+    scenario = embedded_scenario(PAGE.read_text(encoding='utf-8'))
+    scenario['frames'][0]['now_s'] = 210
+    scenario['frames'][0]['channels'][1]['exceedance']['calibration_windows'] = 7
+    config = {'scenarios': [scenario], 'exceedance': {'alert_probability': 0.2}}
+    with pytest.raises(ValueError, match='Window count is below the minimum calibration requirement'):
+        builder.render({'demo': {'scenarios': [scenario]}}, config)
+
+
+@pytest.mark.parametrize('invocation', ['api', 'cli'])
+def test_build_retains_explicit_provenance_note(build_request, invocation):
+    root = build_request
+    output = root / 'forecast.html'
+    retained = json.loads(PAGE.with_suffix('.manifest.json').read_bytes())['provenance_note']
+    if invocation == 'api':
+        builder.build(root / 'payload', root / 'config', output, root / 'terms',
+                      provenance_note=retained)
+    else:
+        subprocess.run([sys.executable, str(Path(builder.__file__)),
+                        '--payload', str(root / 'payload'), '--config', str(root / 'config'),
+                        '--output', str(output), '--scan-terms', str(root / 'terms'),
+                        '--provenance-note', retained], check=True, capture_output=True)
+    manifest = json.loads(output.with_suffix('.manifest.json').read_bytes())
+    assert manifest['provenance_note'] == retained
+    assert output.with_suffix('.manifest.json').read_bytes() == builder.manifest_bytes(
+        output.read_bytes(), manifest['source_sha256'], manifest['sanitization'], retained)
 
 
 def test_published_revision_three_disclosures_are_preserved():

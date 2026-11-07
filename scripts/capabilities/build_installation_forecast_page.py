@@ -12,7 +12,8 @@ from html import escape
 import json
 import math
 from pathlib import Path
-from tempfile import TemporaryDirectory
+import shutil
+from tempfile import mkdtemp
 
 LABEL = 'SIMULATED DEMO, not connected offshore'
 CRITERIA = ('Load limits are provisional demonstration assumptions; '
@@ -93,6 +94,8 @@ def validate_numerical_basis(scenario: dict, config: dict) -> None:
                     or not math.isclose(limit, assumed * basis['kN_per_Te'], rel_tol=0, abs_tol=1e-9)):
                 raise ValueError('Load limit differs from the numerical basis')
             alert = channel['exceedance']
+            if alert['status'] != 'calibrated':
+                raise ValueError('Exceedance status must be calibrated')
             if (alert['alert_probability'] != basis['alert_probability']
                     or alert['alert'] is not (alert['window_probability'] >= basis['alert_probability'])):
                 raise ValueError('Alert result differs from the numerical basis')
@@ -101,7 +104,9 @@ def validate_numerical_basis(scenario: dict, config: dict) -> None:
             origin = round((frame['now_s'] - settings['trace_start_s']) / settings['sample_interval_s'])
             count = max(0, (origin - last) // settings['stride_samples'] + 1)
             windows = alert['calibration_windows']
-            if windows != count or windows < settings['min_calibration_windows']:
+            if windows < settings['min_calibration_windows']:
+                raise ValueError('Window count is below the minimum calibration requirement')
+            if windows != count:
                 raise ValueError('Window count differs from the calibration settings')
             numerator = alert['window_probability'] * windows
             if not math.isclose(numerator, round(numerator), rel_tol=0, abs_tol=1e-9):
@@ -280,7 +285,7 @@ or operational risk calibration is established by this demonstration.</p>
 <tr><td>1</td><td>2026-10-20</td><td>Numerical assumptions and a worked example are added to make the arithmetic inspectable.</td></tr>
 <tr><td>2</td><td>2026-10-20</td><td>Limit sources, forecast settings and empirical window counts are clarified without changing the retained series.</td></tr>
 <tr><td>3</td><td>2026-10-21</td><td>Unsupported basis claims are removed, the conversion source is cited, and calibration arithmetic and alert explanations are derived from their inputs.</td></tr>
-<tr><td>4</td><td>2026-11-07</td><td>Input and output integrity checks remain active under optimized Python; outputs are staged beside their destinations and restored on replacement failure; checkout paths use portable separators and incomplete load alerts are rejected.</td></tr>
+<tr><td>4</td><td>2026-11-07</td><td>Input and output integrity checks remain active under optimized Python; outputs are staged beside their destinations and restored on replacement failure; checkout paths use portable separators and incomplete load alerts are rejected; calibration window counts and integer probabilities are checked.</td></tr>
 </tbody></table><p>Table 1. Page revisions.</p></section>
 {numerical_basis_html(frames)}{''.join(sections)}
 <footer>Only the selected history-only forecast series are retained. No live sensor connection,
@@ -302,8 +307,13 @@ def manifest_bytes(encoded: bytes, sources: dict, sanitization: dict,
     return (json.dumps(manifest, indent=2) + '\n').encode('utf-8')
 
 
-def build(payload_path: Path, config_path: Path, output: Path, scan_path: Path) -> None:
-    """Validate reviewed inputs and write the scanned page with its manifest."""
+def build(payload_path: Path, config_path: Path, output: Path, scan_path: Path,
+          provenance_note: str | None = None) -> None:
+    """Validate inputs and write artifacts, retaining an explicitly supplied note.
+
+    To reproduce a manifest with carried-over provenance, supply its note through
+    provenance_note or the command-line --provenance-note option.
+    """
     raw, config_raw = payload_path.read_bytes(), config_path.read_bytes()
     payload, config = json.loads(raw), json.loads(config_raw)
     if digest(config_raw) != payload['provenance']['demo_config']['sha256']:
@@ -317,15 +327,16 @@ def build(payload_path: Path, config_path: Path, output: Path, scan_path: Path) 
     sanitization = {'findings': 0, 'terms_checked': len(terms), 'substring_fingerprints': [
         {'length': len(term.casefold()), 'sha256': digest(term.casefold().encode('utf-8'))}
         for term in terms]}
-    manifest_raw = manifest_bytes(encoded, sources, sanitization)
+    manifest_raw = manifest_bytes(encoded, sources, sanitization, provenance_note)
     manifest_text = manifest_raw.decode('utf-8')
     if any(term.casefold() in manifest_text.casefold() for term in terms):
         raise ValueError('Manifest sanitization scan failed')
     manifest_output = output.with_suffix('.manifest.json')
     # Stage beside the destinations so replacements stay on the same filesystem.
     # Keep backups until both verified artifacts have been published.
-    with TemporaryDirectory(prefix='forecast-output-', dir=output.parent) as directory:
-        stage = Path(directory)
+    stage = Path(mkdtemp(prefix='.forecast-output-', dir=output.parent))
+    retain_backups = False
+    try:
         staged_page, staged_manifest = stage / output.name, stage / manifest_output.name
         backups = []
         for destination, name in ((output, 'previous-page'), (manifest_output, 'previous-manifest')):
@@ -346,20 +357,31 @@ def build(payload_path: Path, config_path: Path, output: Path, scan_path: Path) 
             try:
                 for destination, backup in backups:
                     if backup.exists():
-                        backup.replace(destination)
+                        # Restore from a copy so the complete original pair remains
+                        # recoverable if a later restoration fails.
+                        restore = stage / backup.name.replace('previous-', 'restore-', 1)
+                        shutil.copyfile(backup, restore)
+                        restore.replace(destination)
                     else:
                         destination.unlink(missing_ok=True)
-            except OSError:
-                # If restoration also fails, leave no mismatched published pair.
-                output.unlink(missing_ok=True)
-                manifest_output.unlink(missing_ok=True)
-                raise
+            except OSError as error:
+                retain_backups = True
+                try:
+                    # If restoration also fails, leave no mismatched published pair.
+                    output.unlink(missing_ok=True)
+                    manifest_output.unlink(missing_ok=True)
+                finally:
+                    raise OSError(f'Output restoration failed; backups retained at {stage}') from error
             raise
+    finally:
+        if not retain_backups:
+            shutil.rmtree(stage)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('payload', 'config', 'output', 'scan_terms'):
         parser.add_argument('--' + name.replace('_', '-'), type=Path, required=True)
+    parser.add_argument('--provenance-note', help='Retained provenance note from the reviewed manifest')
     args = parser.parse_args()
-    build(args.payload, args.config, args.output, args.scan_terms)
+    build(args.payload, args.config, args.output, args.scan_terms, args.provenance_note)
