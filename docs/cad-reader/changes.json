@@ -1,16 +1,21 @@
 {
-  "revision": "1",
-  "date": "2026-10-25",
+  "revision": "4",
+  "date": "2026-11-04",
   "changes": [
     {
-      "section": "STL connectivity",
-      "change": "Disclose exact-coordinate corner deduplication into shared point indices.",
-      "reason": "Describe the decoder behavior without implying independent facet corners."
+      "section": "7. Validation",
+      "change": "Record unitless STEP and IGES checks in millimetres, metres and inches.",
+      "reason": "Match the demonstrated synthetic unit coverage without implying production-file validation."
     },
     {
-      "section": "Validation",
-      "change": "Add two-facet ASCII and binary STL regressions for shared connectivity and retained face order.",
-      "reason": "Check five unique points from six corners with one repeated position."
+      "section": "9. Appendix",
+      "change": "Link the no-JavaScript change panel to the current change record.",
+      "reason": "Provide the current changes and reasons when scripting is unavailable."
+    },
+    {
+      "section": "10. Further development",
+      "change": "Remove shell-count and shared-face assertions from future work and synchronize the displayed change record.",
+      "reason": "Keep the remaining work and displayed revision consistent with implemented checks."
     }
   ]
 }

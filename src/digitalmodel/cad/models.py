@@ -9,7 +9,7 @@ from typing import Literal, cast
 LengthUnit = Literal["m", "mm", "cm", "in", "ft"]
 Point3D = tuple[float, float, float]
 EntityKind = Literal["point", "line", "polyline", "triangle", "polygon"]
-CadFormat = Literal["dxf", "stl", "obj", "dwg"]
+CadFormat = Literal["dxf", "stl", "obj", "dwg", "step", "iges"]
 UnitBasis = Literal["file", "caller", "file_and_caller"]
 
 
@@ -41,12 +41,32 @@ class GeometryEntity:
 
 
 @dataclass(frozen=True)
+class BrepSummary:
+    """Exact boundary-representation properties from the geometry kernel.
+
+    Lengths are in metres. Volume is the sum over solids and is None when the
+    shape has no solid; area is the total over all faces. Validity is the
+    kernel topology and geometry check, not an analysis acceptance criterion.
+    """
+
+    solids: int
+    shells: int
+    faces: int
+    bounding_box: tuple[Point3D, Point3D]
+    volume_m3: float | None
+    surface_area_m2: float | None
+    is_valid: bool
+    linear_deflection_m: float
+
+
+@dataclass(frozen=True)
 class CadGeometry:
     """World-coordinate geometry in metres, without welding or mesh repair.
 
     Entity indices address points. Winding and source vertex order are retained;
     disconnected and coincident points are permitted. This record certifies
-    neither watertightness nor suitability for an analysis.
+    neither watertightness nor suitability for an analysis. STEP and IGES
+    results add ``brep``; their triangles are a display tessellation.
     """
 
     points: tuple[Point3D, ...]
@@ -54,6 +74,7 @@ class CadGeometry:
     unit_decision: UnitDecision
     format: CadFormat
     units: Literal["m"] = "m"
+    brep: BrepSummary | None = None
 
 
 def normalized_geometry(

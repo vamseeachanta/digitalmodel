@@ -321,7 +321,8 @@ def test_source_digests_normalize_checkout_line_endings(tmp_path):
     source.write_text(text, encoding="utf-8", newline="\n")
     expected = hashlib.sha256(text.encode("utf-8")).hexdigest()
     assert module.source_digest(source) == expected
-    source.write_text(text, encoding="utf-8", newline="\r\n")
+    source.write_bytes(text.replace("\n", "\r\n").encode("utf-8"))
+    assert b"\r\n" in source.read_bytes()
     assert module.source_digest(source) == expected
 
 
@@ -402,9 +403,22 @@ def test_ci_subsea_command_collects_the_report_suite(monkeypatch, capsys):
         exec(compile(code, "<workflow command selection>", "exec"), {})
         command = shlex.split(capsys.readouterr().out.strip())
         original = shlex.split(gate["command"])
-        assert command[:len(original)] == original
-        if name == "tests-subsea":
-            assert "tests/riser_fatigue/" in command
+        expected = original.copy()
+        if name == "tests-contracts":
+            assert original[:2] == ["uv", "run"]
+            assert original.count("tests/cad/") == 1
+            pins = (
+                "cadquery-ocp==7.9.3.1.1",
+                "build123d==0.7.0",
+                "py-lib3mf==2.3.1",
+                "numpy==1.26.4",
+                "ezdxf==1.4.5",
+                "meshio==5.3.5",
+            )
+            expected[2:2] = [arg for pin in pins for arg in ("--with", pin)]
+        elif name == "tests-subsea":
+            expected.append("tests/riser_fatigue/")
+        assert command == expected, name
 
 
 def test_report_sources_include_the_deterministic_power_module():

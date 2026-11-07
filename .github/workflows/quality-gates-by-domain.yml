@@ -427,6 +427,20 @@ jobs:
           command = gates[os.environ["GATE_NAME"]]["command"]
           if os.environ["GATE_NAME"] == "tests-subsea":
               command += " tests/riser_fatigue/"
+          if os.environ["GATE_NAME"] == "tests-contracts":
+              # The CAD readers need kernel-enabled tests, including build123d's
+              # legacy 3MF import; unpinned py-lib3mf no longer supplies it.
+              # hullprod in .[test] requires cadquery-ocp >=7.9.3.1.1.
+              # These six pins apply to the entire contracts shard, including
+              # its non-CAD tests; other shards retain their own dependencies.
+              pins = (
+                  "cadquery-ocp==7.9.3.1.1", "build123d==0.7.0",
+                  "py-lib3mf==2.3.1", "numpy==1.26.4",
+                  "ezdxf==1.4.5", "meshio==5.3.5",
+              )
+              command = command.replace(
+                  "uv run ", "uv run " + " ".join(f"--with {pin}" for pin in pins) + " ", 1
+              )
           print(command)
           PY
           )
@@ -445,6 +459,7 @@ jobs:
       - name: Run domain gate
         id: domain-gate
         env:
+          CAD_REQUIRE_KERNEL: "1"
           GH_TOKEN: ${{ github.token }}
         run: |
           set +e
