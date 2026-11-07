@@ -33,6 +33,8 @@ HISTORY_FIXTURES = {
         "reissue-packet.json", "89cf5e9bc9d721947702d61e980001480eb8fcfb6691e233288e617b991914a2"),
     "0b83ecb072ca59f410b14872d426f9e5699ed41e": (
         "original-packet.json", "6803055a86130c496c934dc172c1ca7258d4abe600c0e567be7a43003ba45a42"),
+    "5e2b86952264377d2dfd9461f3a59ef12cc88b02": (
+        "predecessor-packet.json", "59b7e216680e172acaf85d49d227bf70f90f2304adb5351aaa6f3c6f1faefdb0"),
 }
 
 
@@ -167,20 +169,45 @@ def _changed_fields(before: Any, after: Any, path: str = "$") -> list[str]:
     return [] if before == after else [path]
 
 
+def _mapping_key_changes(before: Any, after: Any, path: str = "$") -> list[dict[str, Any]]:
+    """Retain mapping key sequences, including mappings nested in lists."""
+    changes = []
+    if isinstance(before, dict) and isinstance(after, dict):
+        if list(before) != list(after):
+            changes.append({"path": path, "old_keys": list(before), "new_keys": list(after)})
+        for key in before:
+            if key in after:
+                changes.extend(_mapping_key_changes(before[key], after[key], f"{path}.{key}"))
+    elif isinstance(before, list) and isinstance(after, list):
+        for index, (left, right) in enumerate(zip(before, after)):
+            changes.extend(_mapping_key_changes(left, right, f"{path}[{index}]"))
+    return changes
+
+
 def _serialization_record(old: bytes, new: bytes, relative: str,
                           records: list[dict[str, Any]], old_model: Any, new_model: Any) -> None:
     fields = _changed_fields(old_model, new_model)
-    # Parsed equality alone would also allow comment and scalar-style changes.
-    # Require the exact same non-comment YAML lines for a key-order-only claim.
-    old_lines = sorted(line.strip() for line in old.decode("utf-8").splitlines()
-                       if line.strip() and not line.lstrip().startswith("#"))
-    new_lines = sorted(line.strip() for line in new.decode("utf-8").splitlines()
-                       if line.strip() and not line.lstrip().startswith("#"))
+    # Correction normalization is for values only. Key sequences must describe
+    # the actual input bytes, including the old positional coefficient keys.
+    mapping_changes = _mapping_key_changes(yaml.safe_load(old), yaml.safe_load(new))
+    old_text, new_text = old.decode("utf-8").splitlines(), new.decode("utf-8").splitlines()
+    old_data = [line for line in old_text if not line.lstrip().startswith("#")]
+    new_data = [line for line in new_text if not line.lstrip().startswith("#")]
+    old_comments = [line for line in old_text if line.lstrip().startswith("#")]
+    new_comments = [line for line in new_text if line.lstrip().startswith("#")]
+    # Equal parsed models do not establish safe sequential application by the
+    # native loader. Record the affected mappings and require native readback.
+    old_lines = sorted(line.strip().removeprefix("- ") for line in old_data if line.strip())
+    new_lines = sorted(line.strip().removeprefix("- ") for line in new_data if line.strip())
     kind = ("VALUE_CHANGE" if fields else "BYTE_IDENTICAL" if old == new else
-            "KEY_ORDER_ONLY" if old_lines == new_lines else "SERIALIZATION_ONLY")
+            "COMMENT_ONLY" if old_data == new_data and old_comments != new_comments else
+            "KEY_ORDER_ONLY" if mapping_changes and old_lines == new_lines
+            and old_comments == new_comments else "SERIALIZATION_ONLY")
     records.append({"path": relative, "old_sha256": hashlib.sha256(old).hexdigest(),
                     "new_sha256": hashlib.sha256(new).hexdigest(),
-                    "classification": kind, "changed_field_paths": fields})
+                    "classification": kind, "changed_field_paths": fields,
+                    "mapping_key_changes": mapping_changes,
+                    "native_readback_required": bool(mapping_changes)})
     if fields:
         raise ValueError("undeclared model value change at " + ", ".join(fields))
 
@@ -305,10 +332,13 @@ def mesh_statistics(sections: list[list[Any]]) -> dict[str, Any]:
 def audit(reference: Path, candidate: Path, reference_revision: str,
           coefficient_axes: bool = False, original_coefficient_axes: bool = False,
           history_from: Path | None = None, history_revision: str | None = None,
-          serialization_change: bool = False) -> dict[str, Any]:
+          serialization_change: bool = False,
+          frozen_reference_only: bool = False) -> dict[str, Any]:
     """Verify source ancestry, serialized meshes and physical preservation."""
     if (history_from is None) != (history_revision is None):
         raise ValueError("history requires both a packet and its recorded revision")
+    if frozen_reference_only and original_coefficient_axes:
+        raise ValueError("original coefficient correction requires an original reference")
     retained_history = (_history(history_from, history_revision)
                         if history_from is not None and history_revision is not None else None)
     repo = CAMPAIGN.parents[1]
@@ -337,7 +367,7 @@ def audit(reference: Path, candidate: Path, reference_revision: str,
             if _verified(reference, a) != _verified(candidate, b):
                 raise ValueError(f"frozen snapshot bytes changed: {key}")
     serialization_records = [] if serialization_change else None
-    original_inputs = _compare_original_inputs(
+    original_inputs = None if frozen_reference_only else _compare_original_inputs(
         reference, candidate, old["cases"], new["cases"], original_coefficient_axes,
         serialization_records)
     if [case["case_id"] for case in before["cases"]] != [case["case_id"] for case in after["cases"]]:
@@ -378,7 +408,8 @@ def audit(reference: Path, candidate: Path, reference_revision: str,
         audits.append({"case_id": b["case_id"], **statistics,
                        "physical_model_matches": len(b["inputs"]),
                        "geometry": b["geometry"], "section": b["section"]})
-    if len(audits) != 12 or len(inputs) != 144 or original_inputs != 288:
+    if (len(audits) != 12 or len(inputs) != 144
+            or (original_inputs is not None and original_inputs != 288)):
         raise ValueError("campaign coverage differs from the frozen plan")
     source_paths = [source["path"].removeprefix("source/") for source in after["code_sources"]]
     source_paths += ["scripts/riser_campaign/audit_mesh.py", "tests/riser_campaign/test_mesh.py",
@@ -388,7 +419,8 @@ def audit(reference: Path, candidate: Path, reference_revision: str,
                      "src/digitalmodel/solvers/orcaflex/modular_generator/schema/riser.py",
                      "tests/riser_campaign/test_campaign.py"]
     source_paths += ["tests/riser_campaign/fixtures/" + name for name in (
-        "prior-packet.json", "original-packet.json", "reissue-packet.json", "reviewed-reference.tar.xz")]
+        "prior-packet.json", "original-packet.json", "reissue-packet.json", "predecessor-packet.json",
+        "reviewed-reference.tar.xz")]
     for entry in after["code_sources"]:
         if _verified(candidate, entry) != (repo / entry["path"].removeprefix("source/")).read_bytes():
             raise ValueError("candidate source snapshot differs from the working source")
@@ -402,19 +434,27 @@ def audit(reference: Path, candidate: Path, reference_revision: str,
             "case_order": [case["case_id"] for case in after["cases"]],
             "counts": {"written": after["written_counts"], "planned": after["phase_a_required"],
                        "pending": after["pending_governing_qa"]},
-            "preservation": {("original_physical_model_matches" if original_coefficient_axes or serialization_change
-                              else "original_input_byte_matches"): original_inputs,
-                             "frozen_physical_model_matches": len(inputs),
+            "preservation": {("frozen_parsed_model_matches" if serialization_change
+                              else "frozen_physical_model_matches"): len(inputs),
                              "geometry_and_section_byte_matches": len(audits),
                              "scope_criteria_load_ledger_and_manifest": "BYTE_IDENTICAL"},
             "mesh_audits": audits, "inputs": inputs,
             "review_status": "INDEPENDENT_REVIEW_REQUIRED; any later byte change invalidates the packet",
             "native_handoff": "examples/riser-campaign/README.md#solver-free-mesh-audit-and-native-handoff"}
+    if original_inputs is None:
+        packet["preservation"]["original_comparison"] = {
+            "status": "NOT_RUN", "reason": "SAME_PLATFORM_REFERENCE_UNAVAILABLE", "inputs": 288}
+    else:
+        original_kind = ("original_parsed_model_matches" if serialization_change else
+                         "original_physical_model_matches" if original_coefficient_axes else
+                         "original_input_byte_matches")
+        packet["preservation"][original_kind] = original_inputs
     if retained_history is not None:
         packet["historical_corrections"], packet["history"] = retained_history
     if serialization_records is not None:
         packet["serialization_change"] = {
             "inputs": serialization_records,
+            "native_preservation": "NOT_ESTABLISHED; native readback remains required",
             "declared_corrections": {"coefficient_axes": coefficient_axes,
                                      "original_coefficient_axes": original_coefficient_axes},
         }
@@ -455,11 +495,14 @@ def main() -> None:
                         help="Git revision containing the previous review packet")
     parser.add_argument("--serialization-change", action="store_true",
                         help="Compare parsed inputs and bind both digests; reject undeclared value changes")
+    parser.add_argument("--frozen-reference-only", action="store_true",
+                        help="Audit only the portable frozen reference; record the original comparison as NOT_RUN")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     packet = audit(args.reference_dir, args.candidate_dir, args.reference_revision,
                    args.coefficient_axes, args.original_coefficient_axes,
-                   args.history_from, args.history_revision, args.serialization_change)
+                   args.history_from, args.history_revision, args.serialization_change,
+                   args.frozen_reference_only)
     _write(args.output.parent, args.output.name, _json_bytes(packet))
     print("Solver-free audit passed: 12 configurations, 144 counted inputs; native qualification NOT_RUN")
 

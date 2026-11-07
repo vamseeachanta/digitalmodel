@@ -38,6 +38,7 @@ its native input templates remain unreleased pending readback and motion clearan
 | 7 | 2026-10-28 | Apply named coefficients to the original comparison inputs with zero axial coefficients, regenerate worked examples and bind the proving regressions. |
 | 8 | 2026-11-06 | Reproduce retained correction history through a Git-verified audit option and reject anchored Windows output paths. Preserve reviewed input bytes; main integration remains outstanding. |
 | 9 | 2026-11-06 | Audit serialization changes explicitly and retain digest-pinned reference fixtures so history survives removal of the original branch. Preserve every predecessor when reissuing evidence. |
+| 10 | 2026-11-07 | Limit portable retained-reference audits to the frozen tranche, record the unavailable original comparison and require native readback for changed mapping order. Separate comment-only changes and clarify authoritative correction history. |
 
 ## Matrix and existing code
 
@@ -293,10 +294,23 @@ at the supplied history revision, including whitespace. If that revision is
 unavailable, only the exact earlier packets pinned in
 `tests/riser_campaign/fixtures/` are accepted. Their SHA-256 values are fixed in
 the audit code. Unknown revisions and modified fixture bytes are rejected.
-The compressed reference fixture retains the reviewed generated inputs and
-indexed source digests, with its own SHA-256 pin; it can supply the reference directory
-without checking out the original branch. This preserves reproducibility after
-a squash merge and removal of the original branch.
+The compressed reference fixture retains reviewed generated inputs and
+indexed source digests, with its own SHA-256 pin. Only its frozen tranche is
+portable. The original comparison uses numerical geometry whose last digits
+can differ by platform; the archive is not a portable original reference.
+Use `--frozen-reference-only` when auditing the retained archive without a
+same-platform original reference. The packet then records the original 288-input
+comparison as `NOT_RUN` with reason `SAME_PLATFORM_REFERENCE_UNAVAILABLE`;
+it makes no original input-preservation claim. This explicit mode cannot be
+combined with `--original-coefficient-axes`. Frozen model, mesh, geometry,
+section, scope and source checks remain enforced. Regenerate an original
+reference from retained reviewed sources on the producing platform for a full
+comparison; do not compare numerical geometry with foreign-platform bytes.
+Mutation tests build their original reference in the same process as the
+candidate. That tests comparison behavior and does not prove historical original
+preservation. The frozen reference remains independently pinned to the archive.
+The current reissue audits only the frozen tranche and retains the preceding
+packet as a digest-bound fixture for append-only history after a squash merge.
 Raw shared source text is omitted from that fixture. Missing source snapshots
 are accepted only for the exact retained revision and its authenticated index
 entries, including SHA-256 and byte length. Available Git objects are checked
@@ -307,7 +321,11 @@ snapshots continue to match every current working source byte.
 Each predecessor's SHA-256, byte length, full Git revision and correction records
 are appended to `history`. Earlier entries are copied unchanged, including
 legacy `history_source` bindings. Existing
-`historical_corrections` records are copied unchanged. For an earlier packet with
+`historical_corrections` records are copied unchanged as a legacy summary.
+The `history` array is authoritative: its revision-bound `records` include every
+predecessor's top-level corrections, including corrections added alongside an
+existing legacy summary. Consumers must read the full array rather than infer
+complete history from `historical_corrections`. For an earlier packet with
 top-level correction records, those records are retained with their original
 reference revision and the revision containing that packet. Both history options
 are required together. A separately declared coefficient correction may accompany
@@ -316,9 +334,17 @@ No manual packet editing is part of the reissue procedure.
 
 For an integration that changes serialization, add `--serialization-change` to
 the reissue command. The audit compares parsed original and frozen models,
-records all 432 old/new input digests and classifies each as `BYTE_IDENTICAL`,
-`KEY_ORDER_ONLY`, `SERIALIZATION_ONLY` or `VALUE_CHANGE`. Mapping insertion order
-is ignored; list order, booleans, scalar values and field presence remain binding.
+records all compared old/new input digests and classifies each as `BYTE_IDENTICAL`,
+`COMMENT_ONLY`, `KEY_ORDER_ONLY`, `SERIALIZATION_ONLY` or `VALUE_CHANGE`.
+With `--frozen-reference-only`, this covers 144 frozen inputs; a full reference
+covers all 432. Full-line comment-only edits have their own class. Every mapping
+whose key sequence changes is recorded with its field path and both key lists,
+including mappings inside lists. Mapping order does not affect parsed equality;
+list order, booleans, scalar values and field presence remain binding.
+Native text data is applied sequentially, so a changed mapping sequence sets
+`native_readback_required`. A `KEY_ORDER_ONLY` result is a parsed-model match,
+not established native preservation. Serialization-mode counts therefore report
+parsed-model matches; native readback must confirm preservation before release.
 Integer and floating-point spellings of the exact same number are equivalent;
 numeric strings and booleans remain distinct from numbers.
 Changed field paths are reported and any undeclared value change fails the

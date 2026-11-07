@@ -439,6 +439,7 @@ def test_frozen_audit_preserves_strict_coefficient_correction(mutation):
 HISTORY_REVISION = "d81ccf84ddc12a2a3cc45340537bec47a7807cd5"
 PACKET_PATH = "docs/verification/riser-mesh-review.json"
 REISSUE_REVISION = "bb123d57e5a51bfc15020eeee3674cd5103043e4"
+PREDECESSOR_REVISION = "5e2b86952264377d2dfd9461f3a59ef12cc88b02"
 
 
 def previous_packet(tmp_path):
@@ -505,8 +506,8 @@ def test_audit_rejects_incomplete_or_ambiguous_history_options(tmp_path, options
 
 
 @pytest.fixture(scope="module")
-def audit_outputs(tmp_path_factory):
-    """Retain reviewed bytes independently of branch-only Git history."""
+def retained_audit_outputs(tmp_path_factory):
+    """Use retained bytes only for the portable frozen-tranche comparison."""
     from scripts.riser_campaign.audit_mesh import reference_fixture
     from scripts.riser_campaign.generate_inputs import generate
 
@@ -520,15 +521,39 @@ def audit_outputs(tmp_path_factory):
     return reference, candidate
 
 
-def test_audit_reproduces_committed_packet_with_verified_history(tmp_path, audit_outputs):
-    """Reproduce the packet from digest-pinned reference inputs and history."""
+@pytest.fixture(scope="module")
+def audit_outputs(tmp_path_factory, retained_audit_outputs):
+    """Generate original mutation references in the same process as candidates.
+
+    These original inputs test comparison behavior, not historical preservation.
+    Frozen inputs and source pins still come from the authenticated archive.
+    """
+    import shutil
+
+    retained, candidate = retained_audit_outputs
+    reference = tmp_path_factory.mktemp("local-reference")
+    shutil.copytree(retained, reference, dirs_exist_ok=True)
+    index = json.loads((reference / "index.json").read_bytes())
+    current = json.loads((candidate / "index.json").read_bytes())
+    index["cases"] = current["cases"]
+    for case in index["cases"]:
+        for entry in [case["geometry"], *case["inputs"]]:
+            target = reference / entry["path"]
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes((candidate / entry["path"]).read_bytes())
+    (reference / "index.json").write_text(json.dumps(index), encoding="utf-8", newline="\n")
+    return reference, candidate
+
+
+def test_audit_reproduces_committed_packet_with_verified_history(tmp_path, retained_audit_outputs):
+    """Reproduce the frozen audit without claiming portable original geometry."""
     from scripts.riser_campaign.audit_mesh import audit
 
     committed = json.loads((CAMPAIGN.parents[1] / PACKET_PATH).read_bytes())
-    reference, candidate = audit_outputs
+    reference, candidate = retained_audit_outputs
     packet = audit(reference, candidate, HISTORY_REVISION,
-                   history_from=Path(__file__).parent / "fixtures/reissue-packet.json",
-                   history_revision=REISSUE_REVISION)
+                   history_from=Path(__file__).parent / "fixtures/predecessor-packet.json",
+                   history_revision=PREDECESSOR_REVISION, frozen_reference_only=True)
     # Runtime records also affect the containing index digests. All remaining
     # fields, including source bindings, history and input digests, must match.
     for value in (packet, committed):
@@ -573,7 +598,11 @@ def test_serialization_audit_compares_original_models_and_records_digests(tmp_pa
         assert changes == [{"path": "input.yml", "old_sha256": before[0]["inputs"][0]["sha256"],
                             "new_sha256": after[0]["inputs"][0]["sha256"],
                             "classification": ("KEY_ORDER_ONLY" if mutation == "order"
-                                               else "SERIALIZATION_ONLY"), "changed_field_paths": []}]
+                                               else "SERIALIZATION_ONLY"), "changed_field_paths": [],
+                            "mapping_key_changes": [{"path": "$.General",
+                                                     "old_keys": ["UnitsSystem", "Duration"],
+                                                     "new_keys": ["Duration", "UnitsSystem"]}],
+                            "native_readback_required": True}]
         with pytest.raises(ValueError, match="index changed"):
             _compare_original_inputs(reference, candidate, before, after)
     else:
@@ -588,6 +617,7 @@ def test_serialization_audit_compares_original_models_and_records_digests(tmp_pa
 @pytest.mark.parametrize("filename, revision", [
     ("prior-packet.json", HISTORY_REVISION), ("reissue-packet.json", REISSUE_REVISION),
     ("original-packet.json", "0b83ecb072ca59f410b14872d426f9e5699ed41e"),
+    ("predecessor-packet.json", PREDECESSOR_REVISION),
 ])
 def test_history_works_without_retained_git_objects(tmp_path, monkeypatch, filename, revision):
     import subprocess
@@ -673,10 +703,16 @@ def test_serialization_mode_audits_both_tranches(tmp_path, audit_outputs, tranch
         assert changed["classification"] == "KEY_ORDER_ONLY"
         assert changed["old_sha256"] != changed["new_sha256"]
         assert changed["changed_field_paths"] == []
+        assert changed["mapping_key_changes"][0]["path"] == "$"
+        assert changed["native_readback_required"] is True
+        assert packet["preservation"]["original_parsed_model_matches"] == 288
+        assert packet["preservation"]["frozen_parsed_model_matches"] == 144
+        assert "original_physical_model_matches" not in packet["preservation"]
+        assert "frozen_physical_model_matches" not in packet["preservation"]
         assert packet["history"][-1]["revision"] == HISTORY_REVISION
 
 
-def test_audit_reproduction_without_branch_objects(tmp_path, audit_outputs, monkeypatch):
+def test_audit_reproduction_without_branch_objects(tmp_path, retained_audit_outputs, monkeypatch):
     import subprocess
     from scripts.riser_campaign import audit_mesh
 
@@ -684,12 +720,12 @@ def test_audit_reproduction_without_branch_objects(tmp_path, audit_outputs, monk
         return subprocess.CompletedProcess(args, 128, stdout=b"", stderr=b"missing object")
 
     monkeypatch.setattr(audit_mesh.subprocess, "run", missing_git)
-    reference, candidate = audit_outputs
+    reference, candidate = retained_audit_outputs
     packet = audit_mesh.audit(reference, candidate, HISTORY_REVISION,
                               history_from=Path(__file__).parent / "fixtures/reissue-packet.json",
-                              history_revision=REISSUE_REVISION)
+                              history_revision=REISSUE_REVISION, frozen_reference_only=True)
     assert len(packet["inputs"]) == 144
-    assert packet["preservation"]["original_input_byte_matches"] == 288
+    assert packet["preservation"]["original_comparison"]["status"] == "NOT_RUN"
 
 
 def test_history_fixture_tampering_is_rejected(tmp_path, monkeypatch):
@@ -773,3 +809,114 @@ def test_reference_without_raw_snapshots_requires_exact_retained_source_pins(tmp
         changed[0][mutation] = "0" * 64 if mutation == "sha256" else changed[0][mutation] + 1
     with pytest.raises(ValueError, match="retained source pin"):
         _verify_reference_sources(tmp_path, changed, HISTORY_REVISION)
+
+
+@pytest.mark.parametrize("serialization_change", [False, True])
+def test_frozen_reference_mode_records_original_comparison_as_unavailable(
+        tmp_path, audit_outputs, serialization_change):
+    from scripts.riser_campaign.audit_mesh import audit
+
+    reference, candidate = audit_outputs
+    packet = audit(reference, candidate, HISTORY_REVISION,
+                   frozen_reference_only=True, serialization_change=serialization_change)
+    preservation = packet["preservation"]
+    assert preservation["original_comparison"] == {
+        "status": "NOT_RUN", "reason": "SAME_PLATFORM_REFERENCE_UNAVAILABLE", "inputs": 288}
+    assert not any(key.startswith("original_") and key.endswith("matches") for key in preservation)
+    if serialization_change:
+        assert len(packet["serialization_change"]["inputs"]) == 144
+    else:
+        assert preservation["frozen_physical_model_matches"] == 144
+    with pytest.raises(ValueError, match="original coefficient correction requires an original reference"):
+        audit(reference, candidate, HISTORY_REVISION,
+              frozen_reference_only=True, original_coefficient_axes=True)
+
+
+@pytest.mark.parametrize("mutation", ["original_geometry", "frozen_value"])
+def test_frozen_reference_mode_separates_platform_geometry_from_frozen_models(
+        tmp_path, audit_outputs, mutation):
+    import shutil
+    from scripts.riser_campaign.audit_mesh import audit
+
+    reviewed, candidate = audit_outputs
+    reference = tmp_path / "reference"
+    shutil.copytree(reviewed, reference)
+    index = json.loads((reference / "index.json").read_bytes())
+    if mutation == "original_geometry":
+        entry = index["cases"][0]["geometry"]
+        geometry = json.loads((reference / entry["path"]).read_bytes())
+        angle = geometry["offsets"][0]["top_angle_deg"]
+        geometry["offsets"][0]["top_angle_deg"] = math.nextafter(angle, math.inf)
+        payload = json.dumps(geometry).encode("utf-8")
+    else:
+        entry = index["frozen_tranche"]["cases"][0]["inputs"][0]
+        model = yaml.safe_load((reference / entry["path"]).read_bytes())
+        model["General"]["UnitsSystem"] = "US"
+        payload = yaml.safe_dump(model, sort_keys=False).encode("utf-8")
+    (reference / entry["path"]).write_bytes(payload)
+    entry.update(sha256=hashlib.sha256(payload).hexdigest(), bytes=len(payload))
+    (reference / "index.json").write_text(json.dumps(index), encoding="utf-8", newline="\n")
+    if mutation == "original_geometry":
+        with pytest.raises(ValueError, match="original comparison index changed"):
+            audit(reference, candidate, HISTORY_REVISION)
+        packet = audit(reference, candidate, HISTORY_REVISION, frozen_reference_only=True)
+        assert packet["preservation"]["frozen_physical_model_matches"] == 144
+    else:
+        with pytest.raises(ValueError, match="outside the permitted correction changed"):
+            audit(reference, candidate, HISTORY_REVISION, frozen_reference_only=True)
+
+
+@pytest.mark.parametrize("path", ["$", "$.General", "$.Items[0]"])
+def test_serialization_records_mapping_sequences_and_requires_native_readback(path):
+    from scripts.riser_campaign.audit_mesh import _serialization_record
+
+    first = {"DynamicsSolutionMethod": "Implicit", "ImplicitUseVariableTimeStep": "No"}
+    second = dict(reversed(list(first.items())))
+    old, new = first, second
+    if path == "$.General":
+        old, new = {"General": first}, {"General": second}
+    elif path == "$.Items[0]":
+        old, new = {"Items": [first]}, {"Items": [second]}
+    records = []
+    _serialization_record(yaml.safe_dump(old, sort_keys=False).encode("utf-8"),
+                          yaml.safe_dump(new, sort_keys=False).encode("utf-8"),
+                          "input.yml", records, old, new)
+    assert records[0]["classification"] == "KEY_ORDER_ONLY"
+    assert records[0]["mapping_key_changes"] == [{
+        "path": path, "old_keys": list(first), "new_keys": list(second)}]
+    assert records[0]["native_readback_required"] is True
+    assert records[0]["changed_field_paths"] == []
+
+
+@pytest.mark.parametrize("old_comment,new_comment", [
+    (b"# prior\n", b"# revised\n"), (b"", b"# added\n"), (b"# removed\n", b""),
+])
+def test_serialization_reports_full_line_comment_only_changes(old_comment, new_comment):
+    from scripts.riser_campaign.audit_mesh import _serialization_record
+
+    model = {"General": {"UnitsSystem": "SI"}}
+    payload = yaml.safe_dump(model, sort_keys=False).encode("utf-8")
+    records = []
+    _serialization_record(old_comment + payload, new_comment + payload,
+                          "input.yml", records, model, model)
+    assert records[0]["classification"] == "COMMENT_ONLY"
+    assert records[0]["mapping_key_changes"] == []
+    assert records[0]["native_readback_required"] is False
+
+
+def test_serialization_records_raw_mapping_sequences_during_coefficient_correction():
+    from scripts.riser_campaign.audit_mesh import _correct_coefficient_axes, _serialization_record
+
+    original = {"LineTypes": [{"Cd": [1.2, 0.008], "Ca": [1.0, 0]}],
+                "Lines": [{"IncludeTorsion": "No"}]}
+    corrected = copy.deepcopy(original)
+    _correct_coefficient_axes(corrected)
+    records = []
+    _serialization_record(yaml.safe_dump(original, sort_keys=False).encode("utf-8"),
+                          yaml.safe_dump(corrected, sort_keys=False).encode("utf-8"),
+                          "input.yml", records, corrected, corrected)
+    assert records[0]["changed_field_paths"] == []
+    assert records[0]["mapping_key_changes"] == [{
+        "path": "$.LineTypes[0]", "old_keys": ["Cd", "Ca"],
+        "new_keys": ["Cdn", "Cdz", "Can", "Caz"]}]
+    assert records[0]["native_readback_required"] is True

@@ -240,6 +240,72 @@
       },
       "revision": "bb123d57e5a51bfc15020eeee3674cd5103043e4",
       "sha256": "89cf5e9bc9d721947702d61e980001480eb8fcfb6691e233288e617b991914a2"
+    },
+    {
+      "bytes": 61684,
+      "path": "docs/verification/riser-mesh-review.json",
+      "records": {
+        "coefficient_axis_correction": {
+          "all_other_model_fields": "IDENTICAL",
+          "axis_values": {
+            "added_mass": {
+              "x": 1.0,
+              "y": 1.0,
+              "z": 0
+            },
+            "drag": {
+              "x": 1.2,
+              "y": 1.2,
+              "z": 0.008
+            }
+          },
+          "convention": "LineTypeBuilder.DEFAULT_HYDRO_COEFFS: n normal (x/y), z axial; RiserLine.include_torsion defaults to false",
+          "counted_mesh": "IDENTICAL",
+          "include_torsion": "No",
+          "named_fields": {
+            "Can": 1.0,
+            "Caz": 0,
+            "Cdn": 1.2,
+            "Cdz": 0.008
+          },
+          "removed_fields": {
+            "Ca": [
+              1.0,
+              0
+            ],
+            "Cd": [
+              1.2,
+              0.008
+            ]
+          }
+        },
+        "original_coefficient_axis_correction": {
+          "all_other_model_fields": "IDENTICAL",
+          "geometry_bytes": "IDENTICAL",
+          "include_torsion": "No",
+          "inputs": 288,
+          "named_fields": {
+            "Can": 1.0,
+            "Caz": 0,
+            "Cdn": 1.2,
+            "Cdz": 0
+          },
+          "removed_fields": {
+            "Ca": [
+              1.0,
+              0
+            ],
+            "Cd": [
+              1.2,
+              0
+            ]
+          }
+        },
+        "recorded_at_revision": "0b83ecb072ca59f410b14872d426f9e5699ed41e",
+        "reference_revision": "328c3e81665d90b22511a1d0aae3fa7d73103f0d"
+      },
+      "revision": "5e2b86952264377d2dfd9461f3a59ef12cc88b02",
+      "sha256": "59b7e216680e172acaf85d49d227bf70f90f2304adb5351aaa6f3c6f1faefdb0"
     }
   ],
   "inputs": [
@@ -1763,7 +1829,11 @@
   "preservation": {
     "frozen_physical_model_matches": 144,
     "geometry_and_section_byte_matches": 12,
-    "original_input_byte_matches": 288,
+    "original_comparison": {
+      "inputs": 288,
+      "reason": "SAME_PLATFORM_REFERENCE_UNAVAILABLE",
+      "status": "NOT_RUN"
+    },
     "scope_criteria_load_ledger_and_manifest": "BYTE_IDENTICAL"
   },
   "producing_runtime": {
@@ -1806,9 +1876,9 @@
       "sha256": "262fed28756484e928a2580e40f86bc1bde41fc0f2c14870584440a562717009"
     },
     {
-      "bytes": 29454,
+      "bytes": 31643,
       "path": "examples/riser-campaign/README.md",
-      "sha256": "f8b37256f309bbe3848d725c68534e72011f55e9776d939ff8d1c20671256aa4"
+      "sha256": "9c3f06c455c7c449320dd9b28425fc407cf249ea49e65b80b643bb93327618b4"
     },
     {
       "bytes": 780016,
@@ -1816,9 +1886,9 @@
       "sha256": "0ad653e242f5c3b2d6147edacd79228d874024ef99829f269de7face969c988f"
     },
     {
-      "bytes": 26318,
+      "bytes": 29065,
       "path": "scripts/riser_campaign/audit_mesh.py",
-      "sha256": "7c4fd2abb11d2991ee14823ebf1aaa8b8c54488545e7fc12d38de2b6ed10c85f"
+      "sha256": "a7afdad56e335ce62d5663c126953c7e485bc3ebfd66e99c1828e08993ee73a3"
     },
     {
       "bytes": 22189,
@@ -1896,6 +1966,11 @@
       "sha256": "6803055a86130c496c934dc172c1ca7258d4abe600c0e567be7a43003ba45a42"
     },
     {
+      "bytes": 61684,
+      "path": "tests/riser_campaign/fixtures/predecessor-packet.json",
+      "sha256": "59b7e216680e172acaf85d49d227bf70f90f2304adb5351aaa6f3c6f1faefdb0"
+    },
+    {
       "bytes": 57259,
       "path": "tests/riser_campaign/fixtures/prior-packet.json",
       "sha256": "5139c5e2e6ff7192976ff2305c3786bf27576445317a8ad81bc7ab473d2f294c"
@@ -1911,9 +1986,9 @@
       "sha256": "6d45a583a2265db6ecd1e8f47f2cc7c50893fe88f2fba19fa048f88e02aca657"
     },
     {
-      "bytes": 24480,
+      "bytes": 24649,
       "path": "tests/riser_campaign/test_campaign.py",
-      "sha256": "518e8b02d2decc06b7bf23572ee5e1d8fce1c965a573c090acf2aa5a2183b829"
+      "sha256": "f92d93398a374b063f87f4a203c8a199a0790fbeda1e3b092d45149f6396a530"
     },
     {
       "bytes": 2999,
@@ -1926,9 +2001,9 @@
       "sha256": "23e9ddd9c21b78827480684a51b4a106dc7af7643f1546ab554c81f2f6e9a78a"
     },
     {
-      "bytes": 37605,
+      "bytes": 45441,
       "path": "tests/riser_campaign/test_mesh.py",
-      "sha256": "142816ad76c6bcec79002974c0bad679244e473cbfd72e366d1257ffb44dec45"
+      "sha256": "3c62c77b5e74b8d906a50f4e16c86dbc276febaf48a8926b10764e13a97eafec"
     }
   ],
   "status": "SOLVER_FREE_ONLY",

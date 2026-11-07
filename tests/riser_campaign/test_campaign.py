@@ -285,7 +285,10 @@ def test_original_inputs_use_named_normal_and_zero_axial_coefficients(tmp_path):
 def test_review_packet_records_original_axis_correction():
     packet = json.loads((ROOT / "docs/verification/riser-mesh-review.json").read_text(encoding="utf-8"))
     correction = packet["historical_corrections"]["original_coefficient_axis_correction"]
-    assert correction["inputs"] == packet["preservation"]["original_input_byte_matches"] == 288
+    assert correction["inputs"] == 288
+    assert packet["preservation"]["original_comparison"] == {
+        "status": "NOT_RUN", "reason": "SAME_PLATFORM_REFERENCE_UNAVAILABLE", "inputs": 288}
+    assert "original_input_byte_matches" not in packet["preservation"]
     assert correction["named_fields"] == {"Cdn": 1.2, "Cdz": 0, "Can": 1.0, "Caz": 0}
     assert correction["geometry_bytes"] == correction["all_other_model_fields"] == "IDENTICAL"
     assert correction["include_torsion"] == "No"
