@@ -343,6 +343,9 @@ modules:
       nde:
         agent_pack: src/digitalmodel/nde/docs/agent-pack.md
         qa_family: EC
+      well_acoustic:
+        agent_pack: src/digitalmodel/nde/well_acoustic/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/nde/
     maturity: development
     owner_wiki: docs/domains/README.md
