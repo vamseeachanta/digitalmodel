@@ -54,12 +54,14 @@ import json
 import math
 import os
 import platform
+import shutil
 import subprocess
 import sys
 import tempfile
 import traceback
 import urllib.request
 from datetime import datetime, timezone
+from fractions import Fraction
 from pathlib import Path
 from typing import Any, Callable
 
@@ -111,14 +113,24 @@ def fetch(url: str, dest: Path, headers: dict[str, str] | None = None,
         tmp.write_bytes(data)
         tmp.replace(dest)
         retrieved = utc_now()
-    return {"url": url, "path": str(dest), "sha256": sha256_file(dest),
+    return {"url": url, "path": dest.as_posix(), "sha256": sha256_file(dest),
             "retrieved_utc": retrieved}
+
+
+# Variables that would make git ignore "-C <path>" and act on another repository.
+GIT_BINDINGS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE",
+                "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_NAMESPACE")
+
+
+def git_env() -> dict[str, str]:
+    """Environment for git subprocesses, without the variables in GIT_BINDINGS."""
+    return {k: v for k, v in os.environ.items() if k.upper() not in GIT_BINDINGS}
 
 
 def git_head(path: Path) -> str | None:
     try:
         out = subprocess.run(["git", "-C", str(path), "rev-parse", "HEAD"],
-                             capture_output=True, text=True, timeout=30)
+                             capture_output=True, text=True, timeout=30, env=git_env())
         return out.stdout.strip() or None
     except (OSError, subprocess.SubprocessError):
         return None
@@ -132,14 +144,48 @@ def git_blob(repo: Path, commit: str, path: str, fetch: bool = True) -> bytes | 
     """
     def show():
         return subprocess.run(["git", "-C", str(repo), "show", f"{commit}:{path}"],
-                              capture_output=True, timeout=300)
+                              capture_output=True, timeout=300, env=git_env())
     try:
         out = show()
         if out.returncode != 0 and fetch:
             subprocess.run(["git", "-C", str(repo), "fetch", "-q", "origin", commit],
-                           capture_output=True, timeout=600)
+                           capture_output=True, timeout=600, env=git_env())
             out = show()
         return out.stdout if out.returncode == 0 else None
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def scratch_dir(args: argparse.Namespace) -> Path:
+    """A private temporary directory for this invocation; main() removes it when compute() ends."""
+    if getattr(args, "_scratch", None) is None:
+        args._scratch = Path(tempfile.mkdtemp(prefix="report-evals-pinned-"))
+    return args._scratch
+
+
+def artifacts_dirty(folder: Path, names: tuple[str, ...]) -> bool | None:
+    """Whether the bound files differ from the HEAD of the repository holding them.
+
+    True when any file is missing, not in HEAD (untracked, ignored or only
+    staged; also when the repository has no commit yet) or has bytes other
+    than its HEAD blob, which also covers skip-worktree and assume-unchanged
+    entries. None outside a repository.
+    """
+    def git(*cmd: str) -> subprocess.CompletedProcess:
+        return subprocess.run(["git", "-C", str(folder), *cmd], capture_output=True, text=True,
+                              timeout=30, env=git_env())
+    try:
+        if git("rev-parse", "--is-inside-work-tree").stdout.strip() != "true":
+            return None
+        for name in names:
+            if not (folder / name).is_file():
+                return True
+            at_head = git("rev-parse", "--verify", "-q", f"HEAD:./{name}")
+            on_disk = git("hash-object", "--", name)
+            if (at_head.returncode != 0 or on_disk.returncode != 0
+                    or at_head.stdout.strip() != on_disk.stdout.strip()):
+                return True
+        return False
     except (OSError, subprocess.SubprocessError):
         return None
 
@@ -148,7 +194,7 @@ def repo_file(args: argparse.Namespace, rel: str) -> Path:
     """Path of a repository file at the selected revision.
 
     candidate: the file in the checkout (args.repo_root). pinned: the blob at
-    code.commit, written under <temp>/report-evals-pinned/<commit>/ with the
+    code.commit, written to a private temporary directory per invocation with the
     same relative path, so scripts that load files beside them still work.
     """
     if getattr(args, "revision", "candidate") != "pinned":
@@ -157,7 +203,7 @@ def repo_file(args: argparse.Namespace, rel: str) -> Path:
                     fetch=not getattr(args, "offline", False))
     if blob is None:
         raise FileNotFoundError(f"{rel} at {args.pinned_commit[:12]} is not readable from {args.repo_root}")
-    dest = Path(tempfile.gettempdir()) / "report-evals-pinned" / args.pinned_commit[:12] / rel
+    dest = scratch_dir(args) / rel
     dest.parent.mkdir(parents=True, exist_ok=True)
     dest.write_bytes(blob)
     return dest
@@ -266,6 +312,9 @@ def validate(doc: dict[str, Any], schema: dict | None = None) -> list[str]:
         results = []
     seen = set()
     for i, r in enumerate(results):
+        if not isinstance(r, dict):
+            errors.append(f"results[{i}] must be an object")
+            continue
         errors += [f"results[{i}] missing {k}" for k in REQUIRED_RESULT if k not in r]
         rid = r.get("id")
         if rid in seen:
@@ -307,17 +356,23 @@ def compare_one(expected: dict[str, Any], got: Any) -> tuple[str, str]:
     elif _is_number(want):
         if not _is_number(got):
             return "MISMATCH", f"expected a number, got {type(got).__name__}"
-        if not math.isfinite(got):
-            return "MISMATCH", f"non-finite {got!r}"
-        diff = float(got) - float(want)
+        try:
+            if not math.isfinite(got):
+                return "MISMATCH", f"non-finite {got!r}"
+            diff = float(got) - float(want)
+        except OverflowError:  # an integer beyond the float range (for example 401 digits)
+            return "MISMATCH", "number outside the comparable range"
         tol = expected["tolerance"]
-        if "abs" in tol:
-            bound = float(tol["abs"])
-        else:
-            bound = float(tol["rel_pct"]) / 100.0 * abs(float(want))
         both_int = isinstance(want, int) and isinstance(got, int)
-        allowance = 0.0 if both_int else 1e-9 * abs(float(want))  # float representation only
-        ok = abs(got - want if both_int else diff) <= bound + allowance
+        if both_int:
+            bound = (Fraction(str(tol["abs"])) if "abs" in tol else
+                     Fraction(str(tol["rel_pct"])) / 100 * abs(want))
+            ok = abs(got - want) <= bound
+        else:
+            bound = (float(tol["abs"]) if "abs" in tol else
+                     float(tol["rel_pct"]) / 100.0 * abs(float(want)))
+            allowance = 1e-9 * abs(float(want))  # float representation only
+            ok = abs(diff) <= bound + allowance
         text = f"{diff:+.6g} ({diff / abs(float(want)) * 100:+.3g} %)" if want else f"{diff:+.6g}"
     else:
         if not isinstance(got, str):
@@ -351,6 +406,18 @@ def evaluate(results: list[dict[str, Any]], values: dict[str, Any],
                      "basis": r["basis"], "status": status, "difference": diff,
                      "note": notes.get(rid, "")})
     return rows
+
+
+def json_safe(value: Any) -> Any:
+    """Copy of value for a strict JSON record: a non-finite float becomes the string
+    "inf", "-inf" or "nan", so the record never holds Infinity or NaN."""
+    if isinstance(value, float) and not math.isfinite(value):
+        return repr(value)
+    if isinstance(value, dict):
+        return {k: json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_safe(v) for v in value]
+    return value
 
 
 def print_table(report_id: str, rows: list[dict[str, Any]], verdict: str,
@@ -487,7 +554,10 @@ def main(results_path: Path,
         mode = "prompt-level"
         graded = [r for r in doc["results"] if r.get("scope", "both") == "both"]
         values, structural = reader_values(args.compare, {r["id"] for r in graded})
-        context["reader_file_sha256"] = sha256_file(args.compare) if args.compare.exists() else None
+        try:
+            context["reader_file_sha256"] = sha256_file(args.compare) if args.compare.is_file() else None
+        except OSError:
+            context["reader_file_sha256"] = None
         names = PROMPT_ARTIFACTS
     else:
         mode = "rebuild"
@@ -506,8 +576,14 @@ def main(results_path: Path,
             for r in graded:
                 if r["id"] not in values and r["id"] not in notes:
                     values[r["id"]] = exc
+        finally:
+            if getattr(args, "_scratch", None) is not None:
+                shutil.rmtree(args._scratch, ignore_errors=True)
+                args._scratch = None
     if "repo_root" in context:  # keep the folder name only, not the local path
         context["repo_root"] = Path(context["repo_root"]).name
+    context["artifacts_repo_head"] = git_head(folder)
+    context["artifacts_dirty"] = artifacts_dirty(folder, names)
     head = context.get("repo_head")
     if mode == "rebuild" and "code_mode" not in context:
         # historical: code and repository inputs at the pinned commit; candidate: another revision.
@@ -531,7 +607,7 @@ def main(results_path: Path,
         "errors": structural,
         "results": rows,
     }
-    text = json.dumps(record, indent=1, default=str) + "\n"
+    text = json.dumps(json_safe(record), indent=1, default=str, allow_nan=False) + "\n"
     if args.out:  # an explicit destination is replaced on purpose
         out = args.out
         out.parent.mkdir(parents=True, exist_ok=True)
