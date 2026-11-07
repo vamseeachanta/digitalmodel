@@ -141,6 +141,23 @@ def require_evidence(request, headings):
         value = request.get(field)
         if not isinstance(value, str) or not value.strip():
             raise ValueError(f"required evidence missing for {field}")
+    base_values = request.get("base_values")
+    basis = (
+        base_values.get("centre_of_gravity_basis")
+        if isinstance(base_values, dict)
+        else None
+    )
+    if (
+        not isinstance(basis, str)
+        or not basis.strip()
+        or any(
+            marker in basis.casefold()
+            for marker in ("placeholder", "reconstructed centre of buoyancy")
+        )
+    ):
+        raise ValueError(
+            "reviewed centre_of_gravity_basis required; placeholder loading cannot issue"
+        )
     asymptote = request["criteria"]["asymptotic_max_rad_s"]
     corrected = number(asymptote.get("heave_natural_frequency_rad_s"))
     if corrected <= 0:

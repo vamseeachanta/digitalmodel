@@ -53,6 +53,9 @@ def inputs(tmp_path):
         "base_spec": "synthetic reviewed base specification",
         "heading_convention": "synthetic heading convention",
         "weight_report": "synthetic reviewed weight report",
+        "base_values": {
+            "centre_of_gravity_basis": "synthetic loading evidence from weight report",
+        },
         "final_frequency_list": "synthetic reviewed sampling reference",
         "approvals": {
             key: "APPROVED: synthetic reference" for key in campaign.APPROVALS
@@ -143,6 +146,48 @@ def test_preparation_preserves_physical_inputs_and_sources(inputs):
         assert spec["solver_options"]["irregular_frequency_method"] == case["treatment"]
         assert spec["frequencies"]["values"] == inputs[4]["frequencies_rad_s"]
     assert campaign.verify_manifest(inputs[2] / "manifest.json") == manifest
+
+
+@pytest.mark.parametrize(
+    "basis",
+    [
+        None,
+        "",
+        "   ",
+        42,
+        "vertical coordinate is a placeholder until a weight report is supplied",
+        "set at reconstructed centre of buoyancy",
+        "  PLACEHOLDER from weight report  ",
+        "Set at Reconstructed Centre of Buoyancy; weight report supplied",
+    ],
+)
+def test_weight_report_does_not_approve_placeholder_loading(inputs, basis):
+    inputs[4]["base_values"]["centre_of_gravity_basis"] = basis
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
+    with pytest.raises(ValueError, match="centre_of_gravity_basis|MISSING"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize("field", ["base_values", "centre_of_gravity_basis"])
+def test_loading_basis_cannot_be_omitted(inputs, field):
+    if field == "base_values":
+        inputs[4].pop(field)
+    else:
+        inputs[4]["base_values"].pop(field)
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
+    with pytest.raises(ValueError, match="centre_of_gravity_basis"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+def test_template_loading_stays_blocked_with_weight_report(inputs):
+    template = SCRIPT.parents[2] / "examples/hydrodynamics/low-frequency-campaign.json"
+    inputs[4]["base_values"] = json.loads(template.read_bytes())["base_values"]
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
+    with pytest.raises(ValueError, match="centre_of_gravity_basis"):
+        prepare(inputs)
+    assert not inputs[2].exists()
 
 
 @pytest.mark.parametrize(

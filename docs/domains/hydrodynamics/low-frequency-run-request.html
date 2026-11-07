@@ -25,6 +25,7 @@ and physical qualification are not established; no solver is run by these tools.
 <tr><td>2</td><td>2026-10-24</td><td>Required complete preparation evidence and justification for each heading, enforced the corrected natural-frequency bound, and marked unverified geometry inputs as assumptions.</td></tr>
 <tr><td>3</td><td>2026-11-06</td><td>Required horizontal buoyancy alignment with the supplied centre of gravity before preparation and clarified the constructed mass-balance result.</td></tr>
 <tr><td>4</td><td>2026-11-06</td><td>Clarified that the assumed centre of gravity equals reconstructed buoyancy, so horizontal alignment checks integration and vertical loading awaits a weight report.</td></tr>
+<tr><td>5</td><td>2026-11-06</td><td>Required a loading basis without placeholder or reconstructed-buoyancy wording before preparation, because a weight-report reference alone does not establish loading.</td></tr>
 </tbody>
 <caption>Retained issue history.</caption>
 </table>
@@ -79,6 +80,12 @@ recorded as <code>APPROVED: reference</code>, and each comparison criterion must
 These strings record evidence; they do not authenticate an approval.</p>
 <p>The required evidence fields <code>base_spec</code>, <code>heading_convention</code>,
 <code>weight_report</code> and <code>final_frequency_list</code> require nonblank reference strings.
+The <code>base_values.centre_of_gravity_basis</code> field also requires a nonblank string.
+Preparation rejects it if it contains <code>placeholder</code> or
+<code>reconstructed centre of buoyancy</code>, regardless of letter case, even when a weight-report
+reference and approvals are supplied. The template loading therefore remains blocked until its basis
+is replaced with reviewed loading evidence. This text check does not authenticate the weight report
+or independently verify the supplied centre of gravity.
 Within <code>criteria.asymptotic_max_rad_s</code>, <code>heave_natural_frequency_rad_s</code>
 requires a positive finite corrected frequency, and <code>heading_justification</code> requires an object
 mapping each requested heading in degrees to a nonblank evidence reference or rationale. Numeric heading
