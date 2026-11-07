@@ -176,8 +176,8 @@ def router(cfg: dict) -> dict:
     """Write a report pack after validating destinations and relative links.
 
     Figures on a different filesystem drive from the Markdown report are
-    rejected with ValueError before any output is written, including HTML
-    and manifests, even though HTML embeds those figures.
+    rejected with ReportPackConfigError before any output is written,
+    including HTML and manifests, even though HTML embeds those figures.
     """
     pack = load_pack(cfg)
     settings = cfg["report_pack"]
@@ -468,7 +468,7 @@ def _load_results(settings: dict[str, Any], config_dir: Path) -> dict[str, Any]:
         fig_path = _resolve_file(entry["path"], config_dir, f"{label}.path")
         if fig_path.suffix.lower() not in FIGURE_SUFFIXES:
             raise ReportPackConfigError(
-                f"unsupported figure format {fig_path.suffix!r} "
+                f"{label}: unsupported figure format {fig_path.suffix!r} "
                 f"(use png/jpg/svg/gif): {fig_path.as_posix()}"
             )
         figures.append(

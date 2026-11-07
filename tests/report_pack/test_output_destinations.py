@@ -94,8 +94,32 @@ def test_unsupported_figure_error_uses_forward_slashes(monkeypatch):
     settings = {"results": {"figures": [{"title": "Fixture", "path": str(figure)}]}}
     with pytest.raises(workflow.ReportPackConfigError, match="unsupported figure format") as caught:
         workflow._load_results(settings, PureWindowsPath("C:/repo"))
+    assert str(caught.value).startswith("report_pack.results.figures[1]: ")
     assert figure.as_posix() in str(caught.value)
     assert "\\" not in str(caught.value)
+
+
+def test_unsupported_second_figure_names_index_and_preserves_inputs(tmp_path):
+    cfg = _cfg(tmp_path)
+    supported = tmp_path / "first.svg"
+    unsupported = tmp_path / "second.tiff"
+    supported.write_text(
+        '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+        encoding="utf-8", newline="\n",
+    )
+    unsupported.write_bytes(b"unsupported fixture")
+    figures = (supported, unsupported)
+    before = [sha256(path.read_bytes()).digest() for path in figures]
+    cfg["report_pack"]["results"] = {
+        "figures": [{"path": str(path)} for path in figures],
+    }
+    with pytest.raises(workflow.ReportPackConfigError) as caught:
+        workflow.router(cfg)
+    message = str(caught.value)
+    assert message.startswith("report_pack.results.figures[2]: unsupported figure format")
+    assert unsupported.as_posix() in message
+    assert not (tmp_path / "results.html.json").exists()
+    assert [sha256(path.read_bytes()).digest() for path in figures] == before
 
 
 @pytest.mark.parametrize("alias", ["symlink", "hardlink"])
