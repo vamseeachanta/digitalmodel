@@ -559,6 +559,9 @@ modules:
       jacket_topside:
         agent_pack: src/digitalmodel/structural/jacket_topside/docs/agent-pack.md
         qa_family: EC
+      fe:
+        agent_pack: src/digitalmodel/structural/fe/docs/agent-pack.md
+        qa_family: FE
   - module: subsea
     entry_point: src/digitalmodel/subsea/
     maturity: stable
