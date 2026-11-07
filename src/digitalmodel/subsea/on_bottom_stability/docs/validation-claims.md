@@ -21,7 +21,7 @@ and fails for missing rows or empty equation, edition/reference, clause or statu
 
 | Function | Equation or contract | Edition/reference | Clause or applicability | Status |
 |---|---|---|---|---|
-| `dnv_rp_f109.absolute_stability_check` | max(gamma (FH+mu FL)/(mu W+FR), gamma FL/W); positive contact | DNV-RP-F109; supplied clause-map basis, edition qualification open | §3.6.2 Eqs. (3.38)–(3.39); passive basis §3.6.5 | NOT_EVALUATED |
+| `dnv_rp_f109.absolute_stability_check` | max(gamma (FH+mu FL)/(mu W+FR), gamma FL/W); strict contact W>FL | DNV-RP-F109; supplied clause-map basis, edition qualification open | §3.6.2 Eqs. (3.38)–(3.39); passive basis §3.6.5; contact is an additional supplied screen | NOT_EVALUATED |
 | `dnv_rp_f109.generalized_stability_check` | Deprecated alias of absolute_stability_check; warns | DNV-RP-F109; supplied clause-map basis | §3.6.2; displacement §3.5 remains unimplemented | NOT_EVALUATED |
 | `dnv_rp_f109.hydrodynamic_force_per_meter` | Signed instantaneous Morison FD+FI | Public Morison theory, original equation 1950 | Fixed-body equation; does not generate §3.6.4 peaks | ARITHMETIC_TESTED |
 | `dnv_rp_f109.lift_force_per_meter` | rho CL D U² / 2 | Explicit coefficient definition; independent arithmetic | Instantaneous lift; does not generate §3.6.4 peaks | ARITHMETIC_TESTED |
@@ -51,7 +51,7 @@ and fails for missing rows or empty equation, edition/reference, clause or statu
 | `simplified.submerged_weight` | g(sum(rho A)-rho_water A_displaced); g=9.81 | DNV-RP-F109; supplied clause-map basis | §1.5 and §2.3 | NOT_EVALUATED |
 | `assessment.assess_static` | Canonical absolute check, supplied passive basis and separate contact | Independent arithmetic; canonical supplied clause-map basis | Analysis A1/A4; standard qualification open | ARITHMETIC_TESTED |
 | `assessment.solve_required_weight` | Feasible-endpoint bisection; canonical absolute margin | Independent arithmetic, 2026 | Analysis A5; fixed forces and resistance | ARITHMETIC_TESTED |
-| `assessment.render_report` | SI inputs, unrounded verdict and governing case | Repository report contract, 2026 | Analysis report contract; no normative clause applies | CONTRACT_TESTED |
+| `assessment.render_report` | SI inputs, canonical governor, unrounded verdict and supplied revision description | Repository report contract, 2026 | Analysis report contract; no normative clause applies | CONTRACT_TESTED |
 | `example.build_example` | Layer ledger, spectral kinematics, sampled A1 demand and A5 root | Synthetic input basis, 2026; legacy helper unqualified | Analysis A1/A4/A5; F105 helper clause unresolved | ARITHMETIC_TESTED |
 | `example.example_report` | Deterministic six-case report | Repository report contract, 2026 | Analysis reproduction contract; no normative clause | CONTRACT_TESTED |
 
@@ -60,7 +60,7 @@ and fails for missing rows or empty equation, edition/reference, clause or statu
 | `dnv_rp_f109.load_reduction_factor` | Product of supplied direction-specific reductions | DNV-RP-F109; supplied clause-map basis, qualification open | §3.4.5 Eq. (3.17) | NOT_EVALUATED |
 | `dnv_rp_f109.absolute_peak_loads` | Supplied peak coefficients times dynamic pressure and reductions | DNV-RP-F109; supplied clause-map basis, qualification open | §3.6.4 Eqs. (3.40)–(3.41) | NOT_EVALUATED |
 | `dnv_rp_f109.low_kc_horizontal_coefficient` | Inverse KC below a supplied anchor | DNV-RP-F109; supplied clause-map basis, qualification open | §3.6.4; explicit Table 3-9 anchor | NOT_EVALUATED |
-| `dnv_rp_f109.absolute_stability_margin` | Invert lateral and uplift criteria for weight | DNV-RP-F109; supplied clause-map basis, qualification open | §3.6.2 Eqs. (3.38)–(3.39) | NOT_EVALUATED |
+| `dnv_rp_f109.absolute_stability_margin` | max(0, (gamma (FH+mu FL)-FR)/mu, gamma FL, FL); contact bound is strict | DNV-RP-F109; supplied clause-map basis, qualification open | §3.6.2 Eqs. (3.38)–(3.39); contact is an additional supplied screen | NOT_EVALUATED |
 | `e305_evidence.canonical_input_basis` | Canonical explicit parity Pipe and Case inputs | Repository evidence schema v1 | Data contract; no standard clause applies | CONTRACT_TESTED |
 | `e305_evidence.basis_digest` | SHA-256 of validated canonical input basis | Repository evidence schema v1 | Data contract; no standard clause applies | CONTRACT_TESTED |
 | `e305_evidence.write_evidence` | Validate identities and retained output bytes before exclusive sidecar write | Repository evidence schema v1 | Data contract; no standard clause applies | CONTRACT_TESTED |

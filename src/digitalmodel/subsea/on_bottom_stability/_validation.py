@@ -11,7 +11,11 @@ from numbers import Real
 def _number(name, value, *, positive=False, signed=False):
     if isinstance(value, bool) or not isinstance(value, Real):
         raise ValueError(f"{name} must be a finite number")
-    if not math.isfinite(value):
+    try:
+        finite = math.isfinite(value)
+    except OverflowError:
+        raise ValueError(f"{name} must be finite") from None
+    if not finite:
         raise ValueError(f"{name} must be finite")
     if positive and value <= 0:
         raise ValueError(f"{name} must be positive")

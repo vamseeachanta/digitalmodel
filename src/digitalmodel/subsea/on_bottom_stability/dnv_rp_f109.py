@@ -29,10 +29,11 @@ class StabilityResult(NamedTuple):
 
 
 class AbsoluteStabilityMargin(NamedTuple):
-    """Weight boundary from Eqs. (3.38)-(3.39), forces in N/m.
+    """Weight boundary from Eqs. (3.38)-(3.39) and contact, forces in N/m.
 
     Ratio is supplied / required, or None for zero demand. Both utilisations
-    and the separate weight boundaries are retained. A positive reserve
+    and the separate weight boundaries are retained. The contact bound W>L
+    is strict: zero reserve does not pass when contact governs. A positive reserve
     cannot qualify unsupported or invalid input. This is no-slip screening,
     not a displacement or structural assessment.
     """
@@ -47,6 +48,7 @@ class AbsoluteStabilityMargin(NamedTuple):
     vertical_utilisation: float
     required_lateral_weight_N_m: float
     required_vertical_weight_N_m: float
+    required_contact_weight_N_m: float
 
 
 class AbsolutePeakLoads(NamedTuple):
@@ -308,9 +310,10 @@ def absolute_stability_check(
         "capacity": capacity, "demand": demand,
         "lateral_utilisation": lateral, "vertical_utilisation": vertical,
         "required_lateral_weight_N_m": required_h, "required_vertical_weight_N_m": required_z,
+        "required_contact_weight_N_m": F_L_N_m,
         "governing_check": governing, "no_lateral_slip": stable,
         "load_basis": "extreme_cycle_peaks",
-        "acceptance_basis": "3.6.1; 3.6.2 Eqs. (3.38)-(3.39)",
+        "acceptance_basis": "3.6.1; 3.6.2 Eqs. (3.38)-(3.39); bed contact W > L (supplied screen, not a clause criterion)",
     })
 
 
@@ -321,8 +324,11 @@ def absolute_stability_margin(
 ) -> AbsoluteStabilityMargin:
     """Invert clause 3.6.2 Eqs. (3.38)-(3.39) for required submerged weight.
 
-    Required weight is max(0, (gamma*(h+mu*z)-p)/mu, gamma*z).
+    Required weight is max(0, (gamma*(h+mu*z)-p)/mu, gamma*z, z).
     The separate uplift boundary cannot be reduced by passive resistance.
+    Bed contact W>z is an additional supplied screen, not a clause criterion.
+    Its bound is strict: required weight is an infimum when contact governs,
+    and zero weight margin does not establish acceptance. Use is_stable.
     The margin governor identifies the larger required weight; the check's
     governor identifies the larger utilisation at the supplied weight.
     These may differ with nonzero passive resistance.
@@ -335,9 +341,12 @@ def absolute_stability_margin(
                                      F_R_N_m=F_R_N_m,
                                      passive_resistance_basis=passive_resistance_basis)
     d = check.details
-    required = max(d["required_lateral_weight_N_m"], d["required_vertical_weight_N_m"])
+    required = max(d["required_lateral_weight_N_m"], d["required_vertical_weight_N_m"],
+                   d["required_contact_weight_N_m"])
     _finite("required_weight_N_m", required, minimum=0)
     governing = ("no_load" if F_H_N_m == F_L_N_m == 0 else
+                 "contact" if F_L_N_m > 0 and F_L_N_m >= max(
+                     d["required_lateral_weight_N_m"], d["required_vertical_weight_N_m"]) else
                  "uplift" if d["required_vertical_weight_N_m"] > 0
                  and d["required_vertical_weight_N_m"] >= d["required_lateral_weight_N_m"]
                  else "absolute_lateral")
@@ -346,6 +355,7 @@ def absolute_stability_margin(
         W_s_N_m - required, governing, check.is_stable,
         d["lateral_utilisation"], d["vertical_utilisation"],
         d["required_lateral_weight_N_m"], d["required_vertical_weight_N_m"],
+        d["required_contact_weight_N_m"],
     )
 
 

@@ -275,7 +275,7 @@ def test_wrapper_factored_lift_and_explicit_factor():
             function(*args)
     with pytest.raises(ValueError, match="F_H_N_m"):
         lateral_stability_check(100, -30, 20, 0.5, 1.25)
-    with pytest.raises(ValueError, match="F_L_N_m"):
+    with pytest.raises(ValueError, match="lift_load_per_meter_kn"):
         check_vertical_stability(0.1, -0.02, 1.25)
 
 

@@ -12,6 +12,7 @@ Results are static arithmetic screens. Standard qualification and dynamic displa
 |---|---|---|
 | 0 | 2026-10-22 | Calculation issue with explicit input provenance |
 | 1 | 2026-11-06 | Align peak checks and report precision with supplied inputs |
+| 2 | 2026-11-06 | Record strict bed contact and canonical report governors |
 
 ## Sea-state inputs and sampled phase
 
@@ -127,8 +128,11 @@ establish standard compliance.
   positive contact. Unity is this ratio definition, not an empirical factor.
 - **A5 — required fixed-geometry weight:** solve A1/A4 in a supplied bracket
   by bisection using the canonical absolute margin and retaining a feasible
-  endpoint. For mu>0, W_required=max(0, (gamma*(H+mu*L)-FR)/mu, gamma*L).
-  Contact is checked independently. A precision or iteration limit returns
+  endpoint. For mu>0, W_required=max(0, (gamma*(H+mu*L)-FR)/mu, gamma*L, L).
+  Bed contact W>L is an additional supplied screen, not a clause criterion.
+  When contact governs, required weight is a strict lower bound, and zero
+  weight margin does not pass. The residual uses this same boundary.
+  A precision or iteration limit returns
   the last feasible weight with converged=False. Coating design must rebuild
   diameter, buoyancy and hydrodynamics; this is not a thickness solver.
 - **Hydrodynamics:** FD=rho*CD*D*U*abs(U)/2;

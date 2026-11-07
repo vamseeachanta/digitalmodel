@@ -14,7 +14,7 @@ from digitalmodel.subsea.on_bottom_stability import simplified
 from digitalmodel.subsea.on_bottom_stability.e305_simplified import Case, evaluate_case
 
 
-@pytest.mark.parametrize("bad", [math.nan, math.inf, -math.inf, True])
+@pytest.mark.parametrize("bad", [math.nan, math.inf, -math.inf, True, 10**400])
 @pytest.mark.parametrize(
     "function,args,index",
     [
@@ -104,6 +104,25 @@ def test_kn_wrapper_validates_before_unit_conversion(field):
     values[field] = True
     with pytest.raises(ValueError):
         simplified.check_lateral_stability(*values.values(), 0.5, 2)
+
+
+@pytest.mark.parametrize("wrapper,values,field,bad,reason", [
+    (simplified.check_lateral_stability, [0.2, 0.04, 0.01, 0.5, 2],
+     "submerged_weight_per_meter_kn", True, "a finite number"),
+    (simplified.check_lateral_stability, [0.2, 0.04, 0.01, 0.5, 2],
+     "horizontal_load_per_meter_kn", -1, "nonnegative"),
+    (simplified.check_lateral_stability, [0.2, 0.04, 0.01, 0.5, 2],
+     "lift_load_per_meter_kn", -1, "nonnegative"),
+    (simplified.check_vertical_stability, [0.2, 0.01, 2],
+     "submerged_weight_per_meter_kn", 0, "positive"),
+    (simplified.check_vertical_stability, [0.2, 0.01, 2],
+     "lift_load_per_meter_kn", -1, "nonnegative"),
+])
+def test_kn_wrapper_errors_identify_the_supplied_parameter(wrapper, values, field, bad, reason):
+    kwargs = dict(zip(inspect.signature(wrapper).parameters, values))
+    kwargs[field] = bad
+    with pytest.raises(ValueError, match=f"^{field} must be {reason}$"):
+        wrapper(**kwargs)
 
 
 @pytest.mark.parametrize("weight", [math.nan, math.inf, -math.inf, True])

@@ -318,9 +318,9 @@ def check_lateral_stability(
     Raises:
         ValueError: If submerged weight is zero or negative.
     """
-    _number("W_s_N_m", submerged_weight_per_meter_kn, signed=True)
-    _number("F_H_N_m", horizontal_load_per_meter_kn)
-    _number("F_L_N_m", lift_load_per_meter_kn)
+    _number("submerged_weight_per_meter_kn", submerged_weight_per_meter_kn, signed=True)
+    _number("horizontal_load_per_meter_kn", horizontal_load_per_meter_kn)
+    _number("lift_load_per_meter_kn", lift_load_per_meter_kn)
     return lateral_stability_check(
         submerged_weight_n_per_m=submerged_weight_per_meter_kn * 1000.0,
         horizontal_force_n_per_m=horizontal_load_per_meter_kn * 1000.0,
@@ -341,8 +341,8 @@ def check_vertical_stability(
     Weight must be positive; lift is a nonnegative peak. This is distinct
     from the flotation check under clause 3.2 Eq. (3.1).
     """
-    _number("W_s_N_m", submerged_weight_per_meter_kn, positive=True)
-    _number("F_L_N_m", lift_load_per_meter_kn)
+    _number("submerged_weight_per_meter_kn", submerged_weight_per_meter_kn, positive=True)
+    _number("lift_load_per_meter_kn", lift_load_per_meter_kn)
     if submerged_weight_per_meter_kn <= 0:
         raise ValueError("submerged_weight_per_meter_kn must be positive")
     canonical = absolute_stability_check(

@@ -110,8 +110,9 @@ def assess_static(case: StaticCase, *, method: str) -> StaticResult:
     vertical = check.details["vertical_utilisation"]
     contact = case.weight_n_m > case.lift_n_m
     utilisation = max(lateral, vertical) if contact else math.inf
-    governing = (
-        "contact" if not contact else ("uplift" if vertical > lateral else "lateral")
+    canonical_governor = check.details["governing_check"]
+    governing = "contact" if not contact else (
+        "lateral" if canonical_governor == "absolute_lateral" else canonical_governor
     )
     return StaticResult(
         case, method, lateral, vertical, utilisation, utilisation <= 1, governing
@@ -211,6 +212,7 @@ def render_report(
     method: str,
     report_date: str,
     revision: str,
+    revision_description: str,
     previous_revisions: Sequence[tuple[str, str, str]] = (),
 ) -> str:
     """Render inputs, arithmetic verdicts, unrounded governing case and limits.
@@ -223,6 +225,7 @@ def render_report(
     _method(method)
     date.fromisoformat(report_date)
     _text("revision", revision)
+    _text("revision description", revision_description)
     history = []
     seen = {revision}
     for old_revision, old_date, description in previous_revisions:
@@ -250,7 +253,7 @@ def render_report(
         "| Revision | Date | Change and reason |",
         "|---|---|---|",
         *history,
-        f"| {_cell(revision)} | {report_date} | Align peak checks and report precision with supplied inputs |",
+        f"| {_cell(revision)} | {report_date} | {_cell(revision_description)} |",
         "",
         "## Inputs",
         "",

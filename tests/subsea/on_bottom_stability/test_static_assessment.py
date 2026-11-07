@@ -176,6 +176,22 @@ def test_weight_solver_uplift_root():
     assert result.weight_n_m == pytest.approx(200, abs=1e-7)
 
 
+@pytest.mark.parametrize("factor", [0.98, 1.0])
+def test_weight_solver_contact_residual_uses_the_strict_boundary(factor):
+    """With H=0 and gamma<=1 the contact infimum is L=101, not gamma*L."""
+    c = case(horizontal_n_m=0, lift_n_m=101, safety_factor=factor)
+    result = solve_required_weight(
+        c, method="absolute", lower_n_m=0, upper_n_m=200,
+        tolerance_n_m=1e-7,
+    )
+    assert result.converged
+    assert 101 < result.weight_n_m <= 101 + 1e-7
+    assert 0 < result.residual_n_m <= 1e-7
+    assert result.residual_n_m == pytest.approx(result.weight_n_m - 101)
+    assert assess_static(replace(c, weight_n_m=result.weight_n_m), method="absolute").arithmetic_pass
+    assert not assess_static(replace(c, weight_n_m=101), method="absolute").arithmetic_pass
+
+
 def test_solver_bracket_endpoints_failure_and_iteration_limit():
     """Absolute closed-form root=180. Feasible endpoints must stay feasible."""
     kwargs = dict(method="absolute", tolerance_n_m=1e-7)
@@ -220,7 +236,7 @@ def test_report_contains_inputs_method_unrounded_governing_case_and_limits():
     """W=180 is unity and W=179 fails; selection uses unrounded ratios."""
     rows = [case(label="unity", weight_n_m=180), case(label="over", weight_n_m=179)]
     report = render_report(
-        rows, method="absolute", report_date="2026-10-22", revision="0"
+        rows, method="absolute", report_date="2026-10-22", revision="0", revision_description="Initial arithmetic issue"
     )
     assert "Governing case: over" in report
     assert report.index("## Revision history") < report.index("## Inputs")
@@ -235,7 +251,7 @@ def test_report_rejects_empty_and_duplicate_cases():
     for rows in ([], [case(), case()]):
         with pytest.raises(ValueError):
             render_report(
-                rows, method="absolute", report_date="2026-10-22", revision="0"
+                rows, method="absolute", report_date="2026-10-22", revision="0", revision_description="Initial arithmetic issue"
             )
 
 
@@ -245,7 +261,7 @@ def test_report_reissue_preserves_earlier_revision_rows():
         [case()],
         method="absolute",
         report_date="2026-10-22",
-        revision="1",
+        revision="1", revision_description="Update synthetic calculation inputs",
         previous_revisions=history,
     )
     assert "| 0 | 2026-10-21 | Initial issue with assumed inputs |" in report
@@ -256,7 +272,7 @@ def test_report_reissue_preserves_earlier_revision_rows():
             [case()],
             method="absolute",
             report_date="2026-10-22",
-            revision="0",
+            revision="0", revision_description="Initial arithmetic issue",
             previous_revisions=history,
         )
 
@@ -278,7 +294,52 @@ def test_report_preserves_dimensionless_inputs_and_near_unity_verdicts():
     rows = [case(label=label, weight_n_m=460, horizontal_n_m=h, lift_n_m=0,
                  friction=.25, safety_factor=1.15)
             for label, h in [("over", 104), ("under", 96)]]
-    report = render_report(rows, method="absolute", report_date="2026-11-06", revision="1")
+    report = render_report(rows, method="absolute", report_date="2026-11-06", revision="1", revision_description="Update synthetic calculation inputs")
     assert "| 0.25 | 0.0 | 1.15 |" in report
     assert "| over | 1.040 | 0.000 | lateral | ARITHMETIC_FAIL |" in report
     assert "| under | 0.960 | 0.000 | lateral | ARITHMETIC_PASS |" in report
+
+
+@pytest.mark.parametrize("weight,lift", [(100, 50), (7, 3)])
+def test_pure_lift_report_uses_the_canonical_governor(weight, lift):
+    c = case(label="pure lift", weight_n_m=weight, horizontal_n_m=0,
+             lift_n_m=lift, safety_factor=1)
+    result = assess_static(c, method="absolute")
+    assert result.governing_check == "uplift"
+    report = render_report(
+        [c], method="absolute", report_date="2026-11-06", revision="1", revision_description="Update synthetic calculation inputs"
+    )
+    ratio = lift / weight
+    assert f"| pure lift | {ratio:.3f} | {ratio:.3f} | uplift | ARITHMETIC_PASS |" in report
+
+
+def test_report_appends_the_supplied_revision_description():
+    history = (
+        ("0", "2026-10-21", "Initial issue with assumed inputs"),
+        ("1", "2026-10-22", "Align peak checks and report precision with supplied inputs"),
+    )
+    report = render_report(
+        [case()], method="absolute", report_date="2026-11-06", revision="2",
+        revision_description="Record strict bed contact and canonical report governors",
+        previous_revisions=history,
+    )
+    for revision, report_date, description in history:
+        assert f"| {revision} | {report_date} | {description} |" in report
+    assert "| 2 | 2026-11-06 | Record strict bed contact and canonical report governors |" in report
+    assert report.count("Align peak checks and report precision with supplied inputs") == 1
+
+
+@pytest.mark.parametrize("description", [None, "", "   "])
+def test_report_rejects_invalid_revision_description(description):
+    with pytest.raises(ValueError, match="revision description"):
+        render_report(
+            [case()], method="absolute", report_date="2026-11-06", revision="2",
+            revision_description=description,
+        )
+
+
+def test_report_requires_revision_description():
+    with pytest.raises(TypeError, match="revision_description"):
+        render_report(
+            [case()], method="absolute", report_date="2026-11-06", revision="2"
+        )
