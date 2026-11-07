@@ -131,19 +131,20 @@ def test_threshold_arrival_uses_walker_limiting_rate():
     assert result.life_cycles == pytest.approx(172_839.5, rel=2e-6)
 
 
+@pytest.mark.parametrize("steps", [1, 2, 4])
 @pytest.mark.parametrize("delta_k", [math.nextafter(5, 0), 5, math.nextafter(5, math.inf)])
-def test_stationary_threshold_comparison_remains_exact(delta_k):
+def test_stationary_threshold_comparison_remains_exact(delta_k, steps):
     assert law(threshold=5).rate(delta_k) == (
         0 if delta_k <= 5 else 1e-11 * delta_k**3
     )
     if delta_k <= 5:
         with pytest.raises(ValueError, match="threshold equality"):
             integrate_growth(
-                law(threshold=5), delta_k, initial_m=0.001, limit_m=0.005, steps=1,
+                law(threshold=5), delta_k, initial_m=0.001, limit_m=0.005, steps=steps,
             )
         return
     result = integrate_growth(
-        law(threshold=5), delta_k, initial_m=0.001, limit_m=0.005, steps=1,
+        law(threshold=5), delta_k, initial_m=0.001, limit_m=0.005, steps=steps,
     )
     assert result.status == ("ARRESTED" if delta_k <= 5 else "LIMIT_REACHED")
 
@@ -541,7 +542,9 @@ def test_endpoint_depth_resolution_boundary(gap_ratio, status):
 
 
 def test_adaptive_samples_inside_unresolved_endpoint_gap_use_arrival_rule():
-    initial, limit, refinements = 0.001, 0.005, 2
+    # A short path keeps this sampled gap within the fixed depth bound.
+    limit, refinements = 0.005, 2
+    initial = limit - 1e-8
     resolution = math.ldexp(limit - initial, -refinements)
     arrest = limit - 0.99 * resolution
     sampled = []
@@ -558,3 +561,66 @@ def test_adaptive_samples_inside_unresolved_endpoint_gap_use_arrival_rule():
     assert result.status == "LIMIT_REACHED"
     assert math.isfinite(result.life_cycles)
     assert result.history[-1].depth_m == limit
+
+
+@pytest.mark.parametrize("fraction", [0.8, 0.9, 0.97])
+@pytest.mark.parametrize("refinements", [2, 3, 4, 6, 20])
+def test_resolved_arrest_is_independent_of_quadrature_budget(fraction, refinements):
+    initial, limit = 0.001, 0.005
+    arrest = initial + fraction * (limit - initial)
+    result = integrate_growth(
+        law(threshold=5), lambda a: 5 + 1000 * (arrest - a),
+        initial_m=initial, limit_m=limit, steps=1,
+        max_refinements=refinements, absolute_tolerance=1e6, relative_tolerance=0,
+    )
+    assert result.status == "ARRESTED"
+    assert result.life_cycles is None
+    assert result.estimated_error_cycles is None
+    assert result.history[-1].depth_m < arrest
+
+
+@pytest.mark.parametrize("gap_ratio, status", [(0.99, "LIMIT_REACHED"), (1.01, "ARRESTED")])
+def test_low_refinement_arrival_gap_has_fixed_relative_depth_bound(gap_ratio, status):
+    initial, limit = 0.001, 0.005
+    arrest = limit - gap_ratio * (1e-6 * limit)
+    result = integrate_growth(
+        law(threshold=5), lambda a: 5 + 1000 * (arrest - a),
+        initial_m=initial, limit_m=limit, steps=1, max_refinements=2,
+        absolute_tolerance=1e6, relative_tolerance=0,
+    )
+    assert result.status == status
+    if status == "LIMIT_REACHED":
+        assert math.isfinite(result.life_cycles)
+        assert result.history[-1].depth_m == limit
+    else:
+        assert result.life_cycles is None
+        assert result.history[-1].depth_m < arrest
+
+
+@pytest.mark.parametrize("steps", [1, 2, 4])
+@pytest.mark.parametrize("policy", ["raise", "arrest", "propagate"])
+def test_near_threshold_initial_sample_uses_explicit_policy(steps, policy):
+    args = dict(
+        initial_m=0.001, limit_m=0.005, steps=steps, threshold_equality=policy,
+    )
+    delta_k = math.nextafter(5, 0)
+    if policy == "raise":
+        with pytest.raises(ValueError, match="initial or interior threshold equality"):
+            integrate_growth(law(threshold=5), delta_k, **args)
+        return
+    result = integrate_growth(law(threshold=5), delta_k, **args)
+    assert result.status == ("ARRESTED" if policy == "arrest" else "LIMIT_REACHED")
+    if policy == "propagate":
+        assert result.life_cycles == pytest.approx(3_200_000)
+    else:
+        assert result.life_cycles is None
+        assert [p.depth_m for p in result.history] == [0.001]
+
+
+def test_near_threshold_interior_sample_requires_explicit_policy():
+    with pytest.raises(ValueError, match="initial or interior threshold equality"):
+        integrate_growth(
+            law(threshold=5),
+            lambda a: math.nextafter(5, 0) if a == 0.003 else 6,
+            initial_m=0.001, limit_m=0.005, steps=1,
+        )

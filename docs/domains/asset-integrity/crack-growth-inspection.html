@@ -25,7 +25,8 @@ as <code>NOT_EVALUATED</code>; through-wall geometry alone establishes no LBB ac
 <tbody><tr><td>1</td><td>2026-10-20</td><td>Growth, assessment-limit and inspection interfaces are documented with independent examples so their calculation basis can be checked.</td></tr>
 <tr><td>2</td><td>2026-10-22</td><td>Adaptive quadrature controls, error estimates, governing depth limits, total FAD length and crack-specific RBI policy evidence are clarified.</td></tr>
 <tr><td>3</td><td>2026-11-06</td><td>Finite positive-threshold arrival, endpoint depth resolution and explicit equality policies are documented to prevent a rounded arrival from selecting the maximum inspection interval.</td></tr>
-<tr><td>4</td><td>2026-11-07</td><td>Near-threshold endpoint ambiguity uses the explicit equality policy, and adaptive samples follow the same endpoint depth boundary to avoid rounding-dependent inspection caps.</td></tr></tbody>
+<tr><td>4</td><td>2026-11-07</td><td>Near-threshold endpoint ambiguity uses the explicit equality policy, and adaptive samples follow the same endpoint depth boundary to avoid rounding-dependent inspection caps.</td></tr>
+<tr><td>5</td><td>2026-11-07</td><td>The arrival gap is capped independently of the refinement budget, and initial and interior near-threshold samples use the explicit ambiguity policy to avoid panel-dependent results.</td></tr></tbody>
 <caption>Table 1. Document revisions.</caption></table>
 <h2>Method and source basis</h2>
 <p>The <a href="https://web.mit.edu/course/3/3.11/www/modules/fatigue.pdf">MIT
@@ -58,23 +59,26 @@ the refinement budget raises <code>ValueError</code>; no passing inspection plan
 produced from an unconverged integral. For continuous DeltaK approaching a positive
 threshold at the limiting depth, the finite propagating-side threshold rate is used.
 A subthreshold endpoint is also treated as arrival when an approach probe still
-propagates within the endpoint depth resolution. That resolution is the initial panel
-width multiplied by <code>2**(-max_refinements)</code>, with a floor of four ulps of
-the limiting depth. Adaptive samples inside that final gap use the same arrival rule.
+propagates within the endpoint depth resolution. That resolution is the smaller of
+the initial panel width multiplied by <code>2**(-max_refinements)</code> and
+<code>1e-6</code> times the limiting depth, with a floor of four ulps of the limiting
+depth. A low refinement budget therefore cannot widen the gap beyond this fixed bound. Adaptive samples inside that final gap use the same arrival rule.
 Treating this unresolved final gap as arrival conservatively avoids
 an infinite-life inspection cap; the depth classification is separate from the cycle
 quadrature error estimate. A resolved sampled arrest returns null remaining cycles and
 null estimated error. History retains the initial depth and completed initial panels,
 without an unreached limiting-depth endpoint.</p>
-<p>At initial or interior equality with a positive threshold, the default
+<p>At initial or interior zero-rate samples within four ulps of a positive threshold,
+the default
 <code>threshold_equality="raise"</code> policy raises <code>ValueError</code>, including
-constant DeltaK equal to the threshold. The kernel accepts an explicitly qualified
+constant DeltaK equal to or rounded slightly below the threshold. The kernel accepts an explicitly qualified
 <code>threshold_equality="arrest"</code> policy for stationary zero growth or
-<code>threshold_equality="propagate"</code> for the positive branch at equality,
-including a plateau. If an endpoint sample and its non-propagating approach probe
+<code>threshold_equality="propagate"</code> for the positive threshold rate at these
+ambiguous samples, including a plateau. If an endpoint sample and its non-propagating approach probe
 are both within four ulps of the positive threshold, the same policy resolves their
 rounding ambiguity, including slightly subthreshold rounded values. The default raises
-an endpoint-specific error. Other subthreshold samples retain zero stationary growth.
+an endpoint-specific error. A resolved subthreshold approach proves endpoint arrest;
+other resolved subthreshold samples retain zero stationary growth.
 All nodes in a sample batch are evaluated before arrest is decided; an otherwise
 unreachable equality in that batch can also raise under the default policy.</p>
 <p>The error estimate assumes a smooth reciprocal growth rate. An arbitrary callable

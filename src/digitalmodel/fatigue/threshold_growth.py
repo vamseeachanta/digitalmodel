@@ -201,18 +201,20 @@ def integrate_growth(
     threshold dips or singularities, or bound their true integral error.
     For continuous DeltaK, positive-threshold arrival within the endpoint
     depth resolution uses the finite propagating-side threshold rate. The
-    resolution is the initial panel width * 2**(-max_refinements), with a
-    floor of four ulps of limit_m. The approach probe must still propagate;
+    resolution is the smaller of initial panel width * 2**(-max_refinements)
+    and 1e-6 * limit_m, with a floor of four ulps of limit_m. The approach
+    probe must still propagate;
     all adaptive samples inside the same unresolved final gap use that rule.
     A resolved arrest before that probe retains null life. Treating an
     unresolved final gap as arrival conservatively avoids an infinite-life
     inspection cap. This depth classification is separate from the cycle
     quadrature error estimate; unvisited dips remain outside the guarantee.
-    At initial/interior positive-threshold equality, threshold_equality
-    defaults to "raise". An explicitly qualified "arrest" policy uses the
-    stationary zero rate; "propagate" continues the positive branch through
-    equality, including plateaus. When the endpoint and its non-propagating
-    approach probe are both within four ulps of a positive threshold, the
+    At initial/interior zero-rate samples within four ulps of a positive
+    threshold, threshold_equality defaults to "raise". An explicitly qualified
+    "arrest" policy uses the
+    stationary zero rate; "propagate" uses the positive threshold rate for
+    these ambiguous samples, including plateaus. When the endpoint and its
+    non-propagating approach probe are both within four ulps of a positive threshold, the
     same policy resolves their rounding ambiguity. Other subthreshold input
     retains the stationary zero rate; GrowthLaw.rate is unchanged.
     All nodes in a sample batch are evaluated before an arrest decision;
@@ -245,7 +247,10 @@ def _integrate_panels(
         return GrowthResult("LIMIT_REACHED", 0.0, tuple(history), law.basis, 0.0)
     dk = delta_k if callable(delta_k) else lambda _: delta_k
     depth_resolution = max(
-        math.ldexp((limit_m - initial_m) / steps, -min(refinements, 1074)),
+        min(
+            math.ldexp((limit_m - initial_m) / steps, -min(refinements, 1074)),
+            1e-6 * limit_m,
+        ),
         4 * math.ulp(limit_m),
     )
 
@@ -254,7 +259,10 @@ def _integrate_panels(
     def inverse_rate(depth):
         value = validate_scalar(dk(depth), "DeltaK")
         rate = law.rate(value)
-        equality = value == law.threshold and law.threshold > 0
+        equality = (
+            rate == 0 and law.threshold > 0
+            and abs(value - law.threshold) <= 4 * math.ulp(law.threshold)
+        )
         location = "initial or interior"
         if rate == 0 and depth >= approach and law.threshold > 0:
             # Bracket an unresolved final arrest within the stated depth
@@ -265,14 +273,13 @@ def _integrate_panels(
             location = "endpoint"
             if law.rate(probe_value) > 0:
                 rate = law._propagation_rate(law.threshold)
-            elif (
-                abs(value - law.threshold) <= 4 * math.ulp(law.threshold)
-                and abs(probe_value - law.threshold) <= 4 * math.ulp(law.threshold)
-            ):
-                # A flat approach can round to equality or just below it.
-                # Resolve this ambiguity explicitly instead of assigning
-                # infinite life from a floating-point classification.
-                equality = True
+            else:
+                # At the endpoint, a resolved subthreshold approach proves
+                # arrest; otherwise apply the same ambiguity policy used
+                # at initial and interior zero-rate samples.
+                equality = equality and (
+                    abs(probe_value - law.threshold) <= 4 * math.ulp(law.threshold)
+                )
         if rate == 0 and equality:
             if threshold_equality == "raise":
                 raise ValueError(
