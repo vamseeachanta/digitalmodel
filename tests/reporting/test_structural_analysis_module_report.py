@@ -323,3 +323,13 @@ def test_report_retention_has_one_shared_parent_block():
                   if line.startswith("!") and line[1:].removeprefix("/").startswith(parent)
                   and i != opening[0]]
     assert all(exclusion[0] < i < end for i in exceptions)
+
+
+def test_exported_page_has_stylesheet_independent_color_fallbacks(tmp_path):
+    """An exported page retains table rules and emphasis without docs assets."""
+    page = builder().render(tmp_path)
+    style = re.search(r"<style>(.*?)</style>", page, re.S).group(1)
+    variables = re.findall(r"var\(([^)]+)\)", style)
+    assert variables
+    assert all("," in variable for variable in variables)
+    assert "border-bottom:1px solid var(--edge,#d0d7de)" in style

@@ -176,17 +176,33 @@ def test_committed_plate_demo_matches_supported_default(tmp_path):
     assert "Nonzero transverse stress is not implemented" in page
 
 
-def test_plate_demo_builds_outside_checkout(tmp_path):
+def test_plate_demo_builds_outside_checkout(tmp_path, monkeypatch):
     """The documented producer must run from any checkout into job scratch."""
     import importlib.util
+    import sys
     from pathlib import Path
 
     root = Path(__file__).resolve().parents[2]
     script = root / "examples/demos/structural/ship_plate_buckling_parametric.py"
     spec = importlib.util.spec_from_file_location("plate_demo", script)
     demo = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(demo)
-    demo.main(output_dir=tmp_path)
+
+    original_path = sys.path.copy()
+    missing = object()
+    original_template = sys.modules.get("report_template", missing)
+    with monkeypatch.context() as imports:
+        imports.syspath_prepend(str(root / "examples/demos/gtm"))
+        try:
+            sys.modules.pop("report_template", None)
+            spec.loader.exec_module(demo)
+            demo.main(output_dir=tmp_path)
+        finally:
+            if original_template is missing:
+                sys.modules.pop("report_template", None)
+            else:
+                sys.modules["report_template"] = original_template
+    assert sys.path == original_path
+    assert sys.modules.get("report_template", missing) is original_template
     assert {path.name for path in tmp_path.iterdir()} == {
         "cases.csv", "results.json", "ship_plate_buckling_report.html",
     }

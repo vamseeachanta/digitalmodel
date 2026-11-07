@@ -41,6 +41,11 @@ CHANGES = [{
               "transverse stress gives an option error. Source bindings cover "
               "the calculation and dedicated evidence; shared presentation "
               "and registry files are referenced without byte bindings.",
+}, {
+    "revision": "D", "date": "2026-11-07",
+    "change": "Exported pages retain color and table-rule fallbacks when the "
+              "shared stylesheet is unavailable. Demo import isolation and "
+              "portable regeneration instructions are checked.",
 }]
 SOURCES = [
     "scripts/reports/build_structural_analysis_module_report.py",
@@ -227,9 +232,9 @@ def render(scratch: str | Path) -> str:
 <link rel="stylesheet" href="../../../api/_assets/brand.css"><style>
 body{{margin:0;background:var(--bg,#f5f7fa);color:var(--ink,#142838);font-family:system-ui,sans-serif;line-height:1.6}}
 main{{max-width:1100px;margin:auto;padding:2rem}}h1,h2,h3{{line-height:1.25}}h2{{margin-top:2.5rem}}
-table{{width:100%;border-collapse:collapse;font-size:.9rem}}td,th{{padding:.6rem;text-align:left;vertical-align:top;border-bottom:1px solid var(--edge)}}
-code{{overflow-wrap:anywhere}}.table-wrap{{overflow:auto}}.equation,details{{padding:1rem;background:var(--panel-2);margin:1rem 0}}
-.status{{border-left:4px solid var(--brand);padding-left:1rem}}caption,figcaption{{caption-side:bottom;text-align:left;padding:.6rem 0}}
+table{{width:100%;border-collapse:collapse;font-size:.9rem}}td,th{{padding:.6rem;text-align:left;vertical-align:top;border-bottom:1px solid var(--edge,#d0d7de)}}
+code{{overflow-wrap:anywhere}}.table-wrap{{overflow:auto}}.equation,details{{padding:1rem;background:var(--panel-2,#edf2f7);margin:1rem 0}}
+.status{{border-left:4px solid var(--brand,#1769aa);padding-left:1rem}}caption,figcaption{{caption-side:bottom;text-align:left;padding:.6rem 0}}
 @media print{{main{{padding:0}}table{{font-size:.75rem}}h2{{break-after:avoid}}tr{{break-inside:avoid}}}}
 </style></head><body class="hs-doc"><main>
 <header><p>Engineering mechanics · Synthetic worked basis · Revision {CHANGES[-1]["revision"]}</p>
