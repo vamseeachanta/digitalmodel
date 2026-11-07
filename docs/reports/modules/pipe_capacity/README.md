@@ -15,6 +15,7 @@ remains open; no full-module qualification is claimed.
 | 0 | 2026-10-25 | Initial geometry example with independent integrals and a reproducible HTML builder. |
 | 1 | 2026-10-28 | Added bounded module reporting and source records without changing the standalone example. |
 | 2 | 2026-11-06 | Documented source rebuilds, explicit collapse rejection and rounded embedded display records. |
+| 3 | 2026-11-06 | Clarified the NOT_IMPLEMENTED inverse status and the parallel placeholder finding to match the module report. |
 
 ## Build and read
 
@@ -120,3 +121,9 @@ common sizing call in this example. The unfinished custom collapse inverse now
 raises `NotImplementedError`; its external-pressure route cannot return the
 former numeric placeholder. Unsupported external-pressure code selectors raise
 `ValueError`. No replacement inverse or capacity qualification is supplied.
+
+The custom collapse inverse has implementation status **NOT_IMPLEMENTED**.
+The parallel inverses in
+`src/digitalmodel/structural/pipe_capacity/common/PipeCapacity.py` and
+`src/digitalmodel/asset_integrity/custom/PipeCapacity.py` still contain unqualified
+`return 100` placeholders, tracked under #3323; these are not thickness results.

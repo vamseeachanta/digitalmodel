@@ -247,7 +247,10 @@ def test_parallel_collapse_placeholders_are_explicit_findings(builder):
         definition = next(node for node in ast.walk(tree)
                           if isinstance(node, ast.FunctionDef) and node.name == symbol)
         assert any(isinstance(node, ast.Return) and isinstance(node.value, ast.Constant)
-                   and node.value.value == 100 for node in ast.walk(definition))
+                   and node.value.value == 100 for node in ast.walk(definition)), (
+                       f"{path}: placeholder removed: update the common-capacity finding in "
+                       "build_report.py and rebuild"
+                   )
     source = next(item for item in builder.source_record()["methods"]
                   if item["id"] == "common-capacity")
     page = ET.parse(REPORT / "report.html").getroot()
@@ -260,6 +263,30 @@ def test_parallel_collapse_placeholders_are_explicit_findings(builder):
         ):
             assert required in evidence
     assert source["qualification"] == "NOT_EVALUATED"
+
+
+@pytest.mark.parametrize("relative_path", (
+    "src/digitalmodel/structural/pipe_capacity/common/PipeCapacity.py",
+    "src/digitalmodel/asset_integrity/custom/PipeCapacity.py",
+))
+def test_removed_placeholder_names_report_rebuild(builder, monkeypatch, relative_path):
+    """A future inverse implementation points maintainers to the stale finding."""
+    original_read = Path.read_text
+    target = ROOT / relative_path
+
+    def read_without_placeholder(path, *args, **kwargs):
+        text = original_read(path, *args, **kwargs)
+        if path == target:
+            return text.replace("return 100", "raise NotImplementedError")
+        return text
+
+    monkeypatch.setattr(Path, "read_text", read_without_placeholder)
+    with pytest.raises(AssertionError, match=(
+        "placeholder removed: update the common-capacity finding in "
+        "build_report.py and rebuild"
+    )) as failure:
+        test_parallel_collapse_placeholders_are_explicit_findings(builder)
+    assert relative_path in str(failure.value)
 
 
 def test_report_writes_explicit_utf8_and_lf(builder, tmp_path, monkeypatch):
