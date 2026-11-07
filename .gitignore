@@ -27,6 +27,9 @@
 /agos
 /tools
 
+# Retain forecast recovery backups without publishing them.
+.forecast-output-*/
+
 # Claude temp working directories
 tmpclaude-*-cwd
 

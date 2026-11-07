@@ -371,6 +371,8 @@ def test_manifest_bytes_follow_builder_order_and_record_carry_over():
     assert raw == (json.dumps({key: manifest[key] for key in keys}, indent=2) + '\n').encode()
     assert raw == builder.manifest_bytes(PAGE.read_bytes(), manifest['source_sha256'],
                                          manifest['sanitization'], manifest['provenance_note'])
+    assert raw == builder.manifest_bytes(PAGE.read_bytes(), manifest['source_sha256'],
+                                         manifest['sanitization'])
 
 
 def test_navigation_is_registered():
@@ -608,8 +610,56 @@ def test_failed_restoration_retains_complete_backups(build_request, monkeypatch,
     assert str(stage) in str(error.value)
     assert (stage / 'previous-page').read_bytes() == b'previous page'
     assert (stage / 'previous-manifest').read_bytes() == b'previous manifest'
+    for name in ('previous-page', 'previous-manifest'):
+        published_backup = PAGE.parent.relative_to(ROOT) / stage.name / name
+        subprocess.run(['git', 'check-ignore', '-q', '--', published_backup.as_posix()],
+                       cwd=ROOT, check=True)
     assert not output.exists()
     assert not manifest.exists()
+
+
+@pytest.mark.parametrize('failure', ['none', 'validation', 'publication'])
+def test_cleanup_failure_reports_residue_without_masking_errors(
+        build_request, monkeypatch, caplog, failure):
+    root = build_request
+    output = root / 'forecast.html'
+    manifest = output.with_suffix('.manifest.json')
+    output.write_bytes(b'previous page')
+    manifest.write_bytes(b'previous manifest')
+    read_bytes, replace = Path.read_bytes, Path.replace
+
+    def read_with_validation_fault(path):
+        if (failure == 'validation' and path.name == output.name
+                and path.parent.name.startswith('.forecast-output-')):
+            return b'corrupt staged page'
+        return read_bytes(path)
+
+    def replace_with_publication_fault(source, destination):
+        if failure == 'publication' and source.name == manifest.name:
+            raise OSError('Manifest replacement failed')
+        return replace(source, destination)
+
+    def unavailable_cleanup(path, ignore_errors=False):
+        if not ignore_errors:
+            raise OSError('Cleanup unavailable')
+
+    monkeypatch.setattr(Path, 'read_bytes', read_with_validation_fault)
+    monkeypatch.setattr(Path, 'replace', replace_with_publication_fault)
+    monkeypatch.setattr(builder.shutil, 'rmtree', unavailable_cleanup)
+    arguments = (root / 'payload', root / 'config', output, root / 'terms')
+    if failure == 'none':
+        builder.build(*arguments)
+        assert json.loads(manifest.read_bytes())['sha256'] == builder.digest(output.read_bytes())
+    else:
+        error, message = ((ValueError, 'Written page differs from the rendered bytes')
+                          if failure == 'validation' else (OSError, 'Manifest replacement failed'))
+        with pytest.raises(error, match=message):
+            builder.build(*arguments)
+        assert output.read_bytes() == b'previous page'
+        assert manifest.read_bytes() == b'previous manifest'
+    stage, = root.glob('.forecast-output-*')
+    assert 'Output staging residue retained at' in caplog.text
+    assert str(stage) in caplog.text
 
 
 @pytest.mark.parametrize('status', ['insufficient_calibration', 'unknown'])
@@ -632,10 +682,13 @@ def test_too_few_calibration_windows_has_explicit_error():
 
 
 @pytest.mark.parametrize('invocation', ['api', 'cli'])
-def test_build_retains_explicit_provenance_note(build_request, invocation):
+@pytest.mark.parametrize('note_source', ['retained', 'override'])
+def test_build_retains_explicit_provenance_note(build_request, invocation, note_source):
     root = build_request
     output = root / 'forecast.html'
     retained = json.loads(PAGE.with_suffix('.manifest.json').read_bytes())['provenance_note']
+    if note_source == 'override':
+        retained = 'Reviewed provenance override.'
     if invocation == 'api':
         builder.build(root / 'payload', root / 'config', output, root / 'terms',
                       provenance_note=retained)
@@ -646,6 +699,25 @@ def test_build_retains_explicit_provenance_note(build_request, invocation):
                         '--provenance-note', retained], check=True, capture_output=True)
     manifest = json.loads(output.with_suffix('.manifest.json').read_bytes())
     assert manifest['provenance_note'] == retained
+    assert output.with_suffix('.manifest.json').read_bytes() == builder.manifest_bytes(
+        output.read_bytes(), manifest['source_sha256'], manifest['sanitization'], retained)
+
+
+@pytest.mark.parametrize('invocation', ['api', 'cli'])
+def test_build_defaults_to_published_provenance_note(build_request, invocation):
+    root = build_request
+    output = root / 'forecast.html'
+    retained = json.loads(PAGE.with_suffix('.manifest.json').read_bytes())['provenance_note']
+    if invocation == 'api':
+        builder.build(root / 'payload', root / 'config', output, root / 'terms')
+    else:
+        subprocess.run([sys.executable, str(Path(builder.__file__)),
+                        '--payload', str(root / 'payload'), '--config', str(root / 'config'),
+                        '--output', str(output), '--scan-terms', str(root / 'terms')],
+                       check=True, capture_output=True)
+    manifest = json.loads(output.with_suffix('.manifest.json').read_bytes())
+    assert manifest['provenance_note'] == retained
+    assert output.read_bytes() == PAGE.read_bytes()
     assert output.with_suffix('.manifest.json').read_bytes() == builder.manifest_bytes(
         output.read_bytes(), manifest['source_sha256'], manifest['sanitization'], retained)
 

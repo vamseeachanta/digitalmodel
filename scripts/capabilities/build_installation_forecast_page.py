@@ -5,11 +5,22 @@
 
 The SVG scaling follows installation_envelope_dashboard.drawChart. Input paths
 are command-line arguments and are never embedded in the published artifact.
+
+Rebuild with the reviewed input files held outside the repository::
+
+    python scripts/capabilities/build_installation_forecast_page.py \
+        --payload input.json --config settings.json \
+        --output installation-forecast.html \
+        --scan-terms terms.json
+
+The default provenance note retains the published source-history evidence.
+Use --provenance-note to override it when the input history differs.
 """
 import argparse
 import hashlib
 from html import escape
 import json
+import logging
 import math
 from pathlib import Path
 import shutil
@@ -21,6 +32,12 @@ CRITERIA = ('Load limits are provisional demonstration assumptions; '
 FORECAST_SETTINGS = {'order': 40, 'ridge': 0.001, 'sample_interval_s': 0.5,
                      'horizon_s': 120, 'stride_samples': 10, 'min_calibration_windows': 10,
                      'trace_start_s': 0}
+RETAINED_PROVENANCE_NOTE = (
+    'Source digests and sanitization fingerprints are carried over from revision 0; '
+    'source digests are not revalidated against external inputs. '
+    'This revision is rendered from the retained embedded scenario. '
+    'The current page and manifest are rescanned using the retained fingerprints.'
+)
 
 
 def calibration_geometry(settings: dict) -> tuple[int, int, int, str]:
@@ -295,7 +312,7 @@ wave-preview forecast, withheld truth or full envelope dataset is published.</fo
 
 
 def manifest_bytes(encoded: bytes, sources: dict, sanitization: dict,
-                   provenance_note: str | None = None) -> bytes:
+                   provenance_note: str | None = RETAINED_PROVENANCE_NOTE) -> bytes:
     """Serialize fresh artifact metadata with explicitly retained source evidence."""
     manifest = {'sha256': digest(encoded), 'size_bytes': len(encoded),
                 'source_sha256': sources,
@@ -308,11 +325,11 @@ def manifest_bytes(encoded: bytes, sources: dict, sanitization: dict,
 
 
 def build(payload_path: Path, config_path: Path, output: Path, scan_path: Path,
-          provenance_note: str | None = None) -> None:
-    """Validate inputs and write artifacts, retaining an explicitly supplied note.
+          provenance_note: str | None = RETAINED_PROVENANCE_NOTE) -> None:
+    """Validate inputs and write artifacts with the published provenance by default.
 
-    To reproduce a manifest with carried-over provenance, supply its note through
-    provenance_note or the command-line --provenance-note option.
+    Override the retained note through provenance_note or --provenance-note when
+    the input history differs. The module docstring gives the rebuild command.
     """
     raw, config_raw = payload_path.read_bytes(), config_path.read_bytes()
     payload, config = json.loads(raw), json.loads(config_raw)
@@ -375,13 +392,16 @@ def build(payload_path: Path, config_path: Path, output: Path, scan_path: Path,
             raise
     finally:
         if not retain_backups:
-            shutil.rmtree(stage)
+            shutil.rmtree(stage, ignore_errors=True)
+            if stage.exists():
+                logging.getLogger(__name__).warning('Output staging residue retained at %s', stage)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('payload', 'config', 'output', 'scan_terms'):
         parser.add_argument('--' + name.replace('_', '-'), type=Path, required=True)
-    parser.add_argument('--provenance-note', help='Retained provenance note from the reviewed manifest')
+    parser.add_argument('--provenance-note', default=RETAINED_PROVENANCE_NOTE,
+                        help='Override the retained provenance note from the reviewed manifest')
     args = parser.parse_args()
     build(args.payload, args.config, args.output, args.scan_terms, args.provenance_note)
