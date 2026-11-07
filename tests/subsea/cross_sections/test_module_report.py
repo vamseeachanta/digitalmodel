@@ -135,6 +135,21 @@ def test_report_inputs_preserve_entered_moduli():
         assert f"<td>{value}</td>" in html
 
 
+@pytest.mark.parametrize("water_density,gravity,density_text,gravity_text", [
+    (1000, 10, "Water density is 1,000 kg/m³", "Gravity is 10 m/s²"),
+    (1025.25, 9.81, "Water density is 1,025.25 kg/m³", "Gravity is 9.81 m/s²"),
+])
+def test_report_environment_inputs_preserve_entered_values(
+    water_density, gravity, density_text, gravity_text,
+):
+    module = builder()
+    data = module["calculate"]()
+    data["environment"] = dict(water_density_kg_m3=water_density, gravity_m_s2=gravity)
+    html = module["render"](data)
+    assert density_text in html
+    assert gravity_text in html
+
+
 def test_worked_modulus_provenance_distinguishes_reference_and_assumptions(monkeypatch):
     module = builder()
     captured = []
@@ -147,16 +162,37 @@ def test_worked_modulus_provenance_distinguishes_reference_and_assumptions(monke
     monkeypatch.setitem(module["calculate"].__globals__, "calculate_elastic_section", capture)
     module["calculate"]()
     steel, coating, insulation = [item.modulus_provenance for item in captured]
-    assert steel.source_type != "project_assumption"
+    assert steel.source_type == "reference"
     assert steel.citation == module["SOURCES"]["elasticity"][0]
     assert steel.url_or_path == module["SOURCES"]["elasticity"][1]
     assert "Table 12.1" in steel.note
-    assert "no public textbook category" in steel.note
+    assert steel.derived_from == []
     for source in (coating, insulation):
         assert source.source_type == "project_assumption"
         assert source.note == "assumed, based on previous experience"
         assert source.citation is None
         assert source.url_or_path is None
+
+
+def test_worked_example_provenance_links_resolve(monkeypatch):
+    module = builder()
+    captured = []
+    original = module["calculate"].__globals__["calculate_elastic_section"]
+
+    def capture(items):
+        captured.extend(items)
+        return original(items)
+
+    monkeypatch.setitem(module["calculate"].__globals__, "calculate_elastic_section", capture)
+    data = module["calculate"]()
+    sources = [
+        *data["definition"].provenance,
+        *(item.layer.provenance for item in captured),
+        *(item.modulus_provenance for item in captured),
+    ]
+    declared = {source.source_id for source in sources}
+    for source in sources:
+        assert set(source.derived_from) <= declared, source.source_id
 
 
 def test_report_writes_explicit_lf_newlines(tmp_path, monkeypatch):
@@ -287,7 +323,7 @@ def test_rebuild_matches_committed_artifacts_and_is_repeatable(tmp_path):
         relative = str((REPORT / name).relative_to(ROOT))
         assert subprocess.run(["git", "check-ignore", "-q", relative], cwd=ROOT).returncode == 1
     changes = json.loads(first["changes.json"])
-    assert changes["revision"] == 2
+    assert changes["revision"] == 3
     assert changes["changes"]
 
 

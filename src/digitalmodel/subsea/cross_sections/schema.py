@@ -24,6 +24,7 @@ AllowedUnit = Literal[
     "kg/m",
 ]
 SourceType = Literal[
+    "reference",
     "wiki",
     "standard",
     "vendor_catalogue",
