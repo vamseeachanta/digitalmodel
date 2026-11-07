@@ -212,7 +212,9 @@ def expand_sector(mesh):
         if flag:
             reflected = vertices.copy()
             reflected[:, axis] *= -1
-            panels = np.concatenate([panels, panels[:, ::-1] + len(vertices)])
+            # Keep the fan's first corner and diagonal when reversing winding.
+            reverse = [0, 3, 2, 1] if panels.shape[1] == 4 else [0, 2, 1]
+            panels = np.concatenate([panels, panels[:, reverse] + len(vertices)])
             vertices = np.concatenate([vertices, reflected])
     # Cut nodes were snapped by validate_symmetry before exact welding.
     vertices, inverse = np.unique(vertices, axis=0, return_inverse=True)
