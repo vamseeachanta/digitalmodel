@@ -213,21 +213,21 @@ def integrate_growth(
     For continuous DeltaK, positive-threshold arrival within the endpoint
     depth resolution uses the finite propagating-side threshold rate. The
     resolution is the smaller of initial panel width * 2**(-max_refinements)
-    and ``_ARRIVAL_DEPTH_FRACTION * limit_m``, with a floor of
-    ``_DEPTH_RESOLUTION_ULPS`` ulps of limit_m. The approach
+    and 1e-6 (``_ARRIVAL_DEPTH_FRACTION``) times limit_m, with a floor of
+    four (``_DEPTH_RESOLUTION_ULPS``) ulps of limit_m. The approach
     probe must still propagate;
     all adaptive samples inside the same unresolved final gap use that rule.
     A resolved arrest before that probe retains null life. Treating an
     unresolved final gap as arrival conservatively avoids an infinite-life
     inspection cap. This depth classification is separate from the cycle
     quadrature error estimate; unvisited dips remain outside the guarantee.
-    At initial/interior zero-rate samples within ``_THRESHOLD_ULPS`` ulps of
-    a positive threshold, threshold_equality defaults to "raise". An explicitly qualified
-    "arrest" policy uses the
+    At initial/interior zero-rate samples within four (``_THRESHOLD_ULPS``) ulps
+    of a positive threshold, threshold_equality defaults to "raise". An
+    explicitly qualified "arrest" policy uses the
     stationary zero rate; "propagate" uses the positive threshold rate for
     these ambiguous samples, including plateaus. When the endpoint and its
-    non-propagating approach probe are both within ``_THRESHOLD_ULPS`` ulps of
-    a positive threshold, the same policy resolves their rounding ambiguity.
+    non-propagating approach probe are both within four (``_THRESHOLD_ULPS``) ulps
+    of a positive threshold, the same policy resolves their rounding ambiguity.
     Other subthreshold input
     retains the stationary zero rate; GrowthLaw.rate is unchanged.
     All nodes in a sample batch are evaluated before an arrest decision;

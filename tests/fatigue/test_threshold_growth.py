@@ -7,7 +7,26 @@ import math
 import numpy as np
 import pytest
 
-from digitalmodel.fatigue.threshold_growth import GrowthLaw, integrate_growth
+from digitalmodel.fatigue.threshold_growth import (
+    _ARRIVAL_DEPTH_FRACTION,
+    _DEPTH_RESOLUTION_ULPS,
+    _THRESHOLD_ULPS,
+    GrowthLaw,
+    integrate_growth,
+)
+
+
+def test_classification_bounds_match_guide():
+    """Keep docs/domains/asset-integrity/crack-growth-inspection.html aligned."""
+    assert _ARRIVAL_DEPTH_FRACTION == 1e-6 and _THRESHOLD_ULPS == _DEPTH_RESOLUTION_ULPS == 4
+
+
+def test_integration_help_states_classification_values():
+    """Public help must state the numeric bounds beside their constant names."""
+    doc = integrate_growth.__doc__
+    assert "1e-6 (``_ARRIVAL_DEPTH_FRACTION``)" in doc
+    assert "four (``_DEPTH_RESOLUTION_ULPS``) ulps" in doc
+    assert "four (``_THRESHOLD_ULPS``) ulps" in doc
 
 
 def law(**overrides):
