@@ -2,21 +2,21 @@
  "schema_version": "1.0",
  "report_id": "issue-002-cp-anode-editions",
  "mode": "rebuild",
- "started_utc": "2026-11-07T02:55:15Z",
- "finished_utc": "2026-11-07T02:55:17Z",
+ "started_utc": "2026-11-07T03:59:24Z",
+ "finished_utc": "2026-11-07T03:59:26Z",
  "grade": "PASS",
  "pinned_commit": "09089a121a16069c4b657d1a320a630a23ab1dd5",
  "artifacts": {
   "results.json": "aef2bcb94bac6cf03a12c6e2ecd80f21c6ff55cfc01bc89d0f5049986a35502c",
   "eval.py": "6386fbc4fcbadc9b1926404521c174218ffca902f2d35048b080b24f1627ceef",
-  "../evalkit.py": "091d8f7659b1d65741e516427c805089768d25ee60379b6b1a90d828891d037d"
+  "../evalkit.py": "5993133e4d58514b587cece30cb850a487ffcd4032e6fb34142f2b0bbab31a7e"
  },
  "python": "3.11.15",
  "platform": "Windows",
  "context": {
   "revision": "pinned",
   "repo_root": "dm-evals",
-  "repo_head": "f4ad8e8dbcee4748b7ae8eb8b9212118fdada31d",
+  "repo_head": "741142375857153fcaa20d0c988f754b17ce6989",
   "digitalmodel_file": "outside the clone: digitalmodel",
   "digitalmodel_head": "09089a121a16069c4b657d1a320a630a23ab1dd5",
   "pipeline_mass_kg": {
@@ -25,17 +25,17 @@
   },
   "fig4_csv": {
    "url": "https://www.aceengineer.com/assets/data/newsletter/issue-002/energy-fig4-platforms-standing.csv",
-   "path": "<tmp>\\report-evals-cache\\2026-11-06\\energy-fig4-platforms-standing.csv",
+   "path": "<tmp>/report-evals-cache/2026-11-06/energy-fig4-platforms-standing.csv",
    "sha256": "a4990f5575243391497d49cd427d0ed3412d28844eb094d6358e39601d3f6ffd",
    "retrieved_utc": "cached"
   },
   "bsee_platform_file": {
    "url": "https://www.data.bsee.gov/Platform/Files/PlatStrucRawData.zip",
-   "path": "<tmp>\\report-evals-cache\\2026-11-06\\PlatStrucRawData.zip",
+   "path": "<tmp>/report-evals-cache/2026-11-06/PlatStrucRawData.zip",
    "sha256": "2c5b1a269c693b00468225cfcffb7cce5c49ccc1cc1d330a2c953b3f2914652e",
    "retrieved_utc": "cached"
   },
-  "artifacts_repo_head": "f4ad8e8dbcee4748b7ae8eb8b9212118fdada31d",
+  "artifacts_repo_head": "741142375857153fcaa20d0c988f754b17ce6989",
   "artifacts_dirty": false,
   "code_mode": "historical"
  },

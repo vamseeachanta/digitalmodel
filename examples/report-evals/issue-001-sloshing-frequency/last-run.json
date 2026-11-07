@@ -2,26 +2,26 @@
  "schema_version": "1.0",
  "report_id": "issue-001-sloshing-frequency",
  "mode": "rebuild",
- "started_utc": "2026-11-07T02:55:10Z",
- "finished_utc": "2026-11-07T02:55:11Z",
+ "started_utc": "2026-11-07T03:59:17Z",
+ "finished_utc": "2026-11-07T03:59:18Z",
  "grade": "PASS",
  "pinned_commit": "705857af62385a4567c96be99a129cdff3051a52",
  "artifacts": {
   "results.json": "a14b293c187e842dc42e2b497d60b74da9bb599eca6ac9ab649d99c1652f2f1e",
   "eval.py": "d3d726fc3f21c76b831b7bc6bbce48189d7f195dc82b0f96eeea9e7264455046",
-  "../evalkit.py": "091d8f7659b1d65741e516427c805089768d25ee60379b6b1a90d828891d037d"
+  "../evalkit.py": "5993133e4d58514b587cece30cb850a487ffcd4032e6fb34142f2b0bbab31a7e"
  },
  "python": "3.12.10",
  "platform": "Windows",
  "context": {
   "revision": "candidate",
   "repo_root": "dm-evals",
-  "repo_head": "f4ad8e8dbcee4748b7ae8eb8b9212118fdada31d",
+  "repo_head": "741142375857153fcaa20d0c988f754b17ce6989",
   "sha256": {
    "docs/api/structural/sloshing-cfd-benchmark.json": "46acb0c2afb37bf4f6bc9a7b6f8b85736f854791cf3af8a1b5ee2fed9e71e1d3",
    "docs/api/cfd/sloshing-convergence.json": "c36a4f50ff67da9ddd8054f8beae6e25e760ea0289af8b3d6ef10c99ac0b66db"
   },
-  "artifacts_repo_head": "f4ad8e8dbcee4748b7ae8eb8b9212118fdada31d",
+  "artifacts_repo_head": "741142375857153fcaa20d0c988f754b17ce6989",
   "artifacts_dirty": false,
   "code_mode": "candidate"
  },
