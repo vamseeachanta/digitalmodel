@@ -350,6 +350,7 @@ class TestLayeredConfigurationSchema:
         assert "soil" not in summary
         assert params["soil"] == original_soil
 
+    @pytest.mark.parametrize("route", ["pile_capacity", "geotechnical"])
     @pytest.mark.parametrize("layered", [False, True], ids=["single", "layered"])
     @pytest.mark.parametrize("as_text", [False, True], ids=["numeric", "text"])
     @pytest.mark.parametrize(
@@ -363,15 +364,17 @@ class TestLayeredConfigurationSchema:
             ("applied_load_kn", math.nan, "must be a finite number"),
             ("applied_load_kn", math.inf, "must be a finite number"),
             ("applied_load_kn", -math.inf, "must be a finite number"),
+            ("factor_of_safety", "abc", "must be a finite number"),
+            ("applied_load_kn", "abc", "must be a finite number"),
         ],
     )
     def test_cfg_rejects_invalid_design_before_calculation(
         self, pile_capacity_cfg, tmp_path, monkeypatch, layered, as_text,
-        field, value, message,
+        field, value, message, route,
     ):
         from copy import deepcopy
 
-        from digitalmodel.geotechnical import pile_capacity
+        from digitalmodel.geotechnical import pile_capacity, workflow
         from digitalmodel.geotechnical.cfg_workflows import PileCapacityWorkflow
 
         params = pile_capacity_cfg["pile_capacity"]
@@ -380,40 +383,125 @@ class TestLayeredConfigurationSchema:
             params["soil_layers"] = [
                 {"thickness_m": 3.0, "Su_kpa": 40.0, "sigma_v_kpa": 40.0}
             ]
-        before = deepcopy(pile_capacity_cfg)
+        if route == "pile_capacity":
+            cfg = pile_capacity_cfg
+            router = PileCapacityWorkflow()
+        else:
+            cfg = {"geotechnical": {
+                "calculation": "pile_axial_capacity", "pile_axial_capacity": params,
+            }}
+            router = workflow.GeotechnicalWorkflow()
+        before = deepcopy(cfg)
 
         def unexpected_calculation(*args, **kwargs):
             pytest.fail("Invalid design reached capacity arithmetic")
 
         with pytest.raises(ValueError, match=rf"^{field} {message}$"):
-            PileCapacityWorkflow().router(pile_capacity_cfg)
+            router.router(cfg)
         # Invalid inputs must fail before either capacity entry point is called.
         monkeypatch.setattr(pile_capacity, "alpha_method_capacity", unexpected_calculation)
         monkeypatch.setattr(
             pile_capacity, "alpha_method_capacity_multilayer", unexpected_calculation
         )
+        monkeypatch.setattr(workflow, "alpha_method_capacity", unexpected_calculation)
+        monkeypatch.setattr(
+            workflow, "alpha_method_capacity_multilayer", unexpected_calculation
+        )
         with pytest.raises(ValueError, match=rf"^{field} {message}$"):
-            PileCapacityWorkflow().router(pile_capacity_cfg)
-        assert pile_capacity_cfg == before
+            router.router(cfg)
+        assert cfg == before
         assert list(tmp_path.iterdir()) == []
 
+    @pytest.mark.parametrize("route", ["pile_capacity", "geotechnical"])
     @pytest.mark.parametrize("applied", [None, 0.0, -100.0, 100.0, "100.0"])
-    def test_valid_design_preserves_allowable_capacity(self, pile_capacity_cfg, applied):
+    def test_valid_design_preserves_allowable_capacity(self, pile_capacity_cfg, applied, route):
         from digitalmodel.geotechnical.cfg_workflows import PileCapacityWorkflow
 
         pile_capacity_cfg["pile_capacity"]["design"] = {
             "factor_of_safety": "2.0", "applied_load_kn": applied,
         }
-        design = PileCapacityWorkflow().router(pile_capacity_cfg)["pile_capacity"]["design"]
+        from digitalmodel.geotechnical.workflow import GeotechnicalWorkflow
+
+        if route == "pile_capacity":
+            design = PileCapacityWorkflow().router(pile_capacity_cfg)["pile_capacity"]["design"]
+            load_key = "required_capacity_kn"
+        else:
+            cfg = {"geotechnical": {
+                "calculation": "pile_axial_capacity",
+                "pile_axial_capacity": pile_capacity_cfg["pile_capacity"],
+            }}
+            design = GeotechnicalWorkflow().router(cfg)["geotechnical"][
+                "pile_axial_capacity"
+            ]["design"]
+            load_key = "applied_load_kn"
         # Synthetic total capacity=400*pi; allowable=400*pi/2 kN.
         assert design["allowable_capacity_kn"] == pytest.approx(200.0 * math.pi)
         assert design["factor_of_safety"] == 2.0
         if applied is None:
-            assert "required_capacity_kn" not in design
+            assert load_key not in design
         else:
-            assert design["required_capacity_kn"] == float(applied)
+            assert design[load_key] == float(applied)
             assert design["utilization"] == pytest.approx(float(applied) / (200.0 * math.pi))
             assert design["status"] == "PASS"
+
+    @pytest.mark.parametrize("route", ["pile_capacity", "geotechnical"])
+    @pytest.mark.parametrize("layered", [False, True], ids=["single", "layered"])
+    @pytest.mark.parametrize("field,value", [
+        ("factor_of_safety", None), ("factor_of_safety", []),
+        ("factor_of_safety", {}), ("applied_load_kn", []), ("applied_load_kn", {}),
+    ])
+    def test_nonnumeric_design_has_named_error(
+        self, pile_capacity_cfg, tmp_path, route, layered, value, field
+    ):
+        from copy import deepcopy
+
+        from digitalmodel.geotechnical.cfg_workflows import PileCapacityWorkflow
+        from digitalmodel.geotechnical.workflow import GeotechnicalWorkflow
+
+        params = pile_capacity_cfg["pile_capacity"]
+        params["design"] = {field: value}
+        if layered:
+            params["soil_layers"] = [
+                {"thickness_m": 3.0, "Su_kpa": 40.0, "sigma_v_kpa": 40.0}
+            ]
+        if route == "pile_capacity":
+            cfg, router = pile_capacity_cfg, PileCapacityWorkflow()
+        else:
+            cfg = {"geotechnical": {
+                "calculation": "pile_axial_capacity", "pile_axial_capacity": params,
+            }}
+            router = GeotechnicalWorkflow()
+        before = deepcopy(cfg)
+        with pytest.raises(ValueError, match=rf"^{field} must be a finite number$"):
+            router.router(cfg)
+        assert cfg == before
+        assert list(tmp_path.iterdir()) == []
+
+    @pytest.mark.parametrize("route", ["pile_capacity", "geotechnical"])
+    @pytest.mark.parametrize("layered", [False, True], ids=["single", "layered"])
+    def test_null_design_uses_defaults(self, pile_capacity_cfg, route, layered):
+        from digitalmodel.geotechnical.cfg_workflows import PileCapacityWorkflow
+        from digitalmodel.geotechnical.workflow import GeotechnicalWorkflow
+
+        params = pile_capacity_cfg["pile_capacity"]
+        params["design"] = None
+        if layered:
+            params["soil_layers"] = [
+                {"thickness_m": 3.0, "Su_kpa": 40.0, "sigma_v_kpa": 40.0}
+            ]
+        if route == "pile_capacity":
+            payload = PileCapacityWorkflow().router(pile_capacity_cfg)["pile_capacity"]
+        else:
+            cfg = {"geotechnical": {
+                "calculation": "pile_axial_capacity", "pile_axial_capacity": params,
+            }}
+            payload = GeotechnicalWorkflow().router(cfg)["geotechnical"][
+                "pile_axial_capacity"
+            ]
+        # Synthetic nominal capacity=400*pi and default factor=2.0.
+        assert payload["design"]["factor_of_safety"] == 2.0
+        assert payload["design"]["allowable_capacity_kn"] == pytest.approx(200.0 * math.pi)
+        assert params["design"] is None
 
 
 class TestSummarySerializationCompatibility:
@@ -446,7 +534,9 @@ class TestSummarySerializationCompatibility:
         from digitalmodel.geotechnical.cfg_workflows import PileCapacityWorkflow
 
         pile_capacity_cfg["pile_capacity"]["metadata"] = {"value": math.nan}
-        with pytest.raises(ValueError):
+        with pytest.raises(
+            ValueError, match="Out of range float values are not JSON compliant"
+        ):
             PileCapacityWorkflow().router(pile_capacity_cfg)
         assert list(tmp_path.iterdir()) == []
 

@@ -22,6 +22,7 @@ from digitalmodel.geotechnical.anchors import (
     drag_anchor_capacity,
     suction_anchor_capacity,
 )
+from digitalmodel.geotechnical.cfg_workflows import _pile_design_inputs
 from digitalmodel.geotechnical.pile_capacity import (
     alpha_method_capacity,
     alpha_method_capacity_multilayer,
@@ -65,7 +66,7 @@ class GeotechnicalWorkflow:
     ) -> dict[str, Any]:
         params = workflow_cfg["pile_axial_capacity"]
         pile = params["pile"]
-        design = params.get("design", {})
+        fos, applied_load_kn = _pile_design_inputs(params)
         nc = float(pile.get("Nc", 9.0))
 
         layers = params.get("soil_layers")
@@ -87,8 +88,6 @@ class GeotechnicalWorkflow:
                 Nc=nc,
             )
 
-        fos = float(design.get("factor_of_safety", 2.0))
-        applied_load_kn = design.get("applied_load_kn")
         allowable_kn = result.total_capacity_kn / fos
         summary = {
             "calculation": "pile_axial_capacity",
@@ -100,7 +99,7 @@ class GeotechnicalWorkflow:
             },
         }
         if applied_load_kn is not None:
-            applied = float(applied_load_kn)
+            applied = applied_load_kn
             summary["design"]["applied_load_kn"] = applied
             summary["design"]["utilization"] = applied / allowable_kn
             summary["design"]["status"] = "PASS" if applied <= allowable_kn else "FAIL"

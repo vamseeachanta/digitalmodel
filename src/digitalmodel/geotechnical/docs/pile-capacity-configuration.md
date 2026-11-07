@@ -13,6 +13,7 @@ compared with the layer total. Single-layer input requires a finite, positive
 | 1 | 2026-11-06 | State which input defines embedment so layered configurations have an explicit length basis. |
 | 2 | 2026-11-06 | Omit ignored embedment from layered summaries and reject nonfinite JSON values to keep output unambiguous and readable by strict parsers. |
 | 3 | 2026-11-06 | Keep strict JSON local to pile summaries, omit ignored soil, and validate pile design inputs before calculation. |
+| 4 | 2026-11-07 | Apply the same named design errors and null defaults through both pile routers. |
 
 ## Configuration schema
 
@@ -43,9 +44,11 @@ block from the returned and written layered summary without changing the
 supplied input dictionary. Contradictory or nonfinite values in either ignored
 field do not affect the layered calculation.
 
-`PileCapacityWorkflow` requires a finite, positive `design.factor_of_safety`
+Both pile configuration routes require a finite, positive `design.factor_of_safety`
 (default 2.0) and, when supplied, finite `design.applied_load_kn`. Numeric
-strings are converted before validation. Invalid values raise `ValueError`
+strings are converted before validation. An omitted or null `design` block
+selects the defaults; an omitted or null applied load leaves the load check
+unset. Nonnumeric and invalid numeric values raise `ValueError`
 naming the field before capacity calculation or output creation. Finite zero
 and negative applied loads remain accepted; no load-sign criterion is added.
 
@@ -64,7 +67,9 @@ summary against synthetic hand calculations. Existing geometry regressions
 cover invalid diameter and layer thickness. Layered summary checks use strict
 JSON decoding and confirm that ignored lengths are absent from the echoed
 pile fields and that ignored soil is absent. Additional cases reject nonfinite
-design inputs and nonpositive design factors before calculation or output.
+design inputs and nonpositive design factors through both routers before
+calculation or output. Nonnumeric inputs identify the field, and null design
+blocks preserve the default factor and synthetic allowable capacity.
 The shared-writer regression checks that zero mudmat bearing resistance still
 writes a failure result with infinite utilization.
 

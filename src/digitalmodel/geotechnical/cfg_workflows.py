@@ -37,6 +37,28 @@ def _write_summary(
     return summary_path
 
 
+def _pile_design_inputs(workflow_cfg: dict[str, Any]) -> tuple[float, float | None]:
+    """Validate design inputs before either pile router calls a calculator."""
+    design_cfg = workflow_cfg.get("design") or {}
+
+    def finite_number(field: str, value: Any) -> float:
+        try:
+            number = float(value)
+        except (TypeError, ValueError, OverflowError) as exc:
+            raise ValueError(f"{field} must be a finite number") from exc
+        if not isfinite(number):
+            raise ValueError(f"{field} must be a finite number")
+        return number
+
+    fos = finite_number("factor_of_safety", design_cfg.get("factor_of_safety", 2.0))
+    if fos <= 0:
+        raise ValueError("factor_of_safety must be positive")
+    applied = design_cfg.get("applied_load_kn")
+    if applied is not None:
+        applied = finite_number("applied_load_kn", applied)
+    return fos, applied
+
+
 def _design_status(required: float | None, allowable: float) -> dict[str, Any]:
     design: dict[str, Any] = {"allowable_capacity_kn": allowable}
     if required is not None:
@@ -126,17 +148,7 @@ class PileCapacityWorkflow:
         )
 
         workflow_cfg = cfg.get("pile_capacity", {})
-        design_cfg = workflow_cfg.get("design", {})
-        fos = float(design_cfg.get("factor_of_safety", 2.0))
-        if not isfinite(fos):
-            raise ValueError("factor_of_safety must be a finite number")
-        if fos <= 0:
-            raise ValueError("factor_of_safety must be positive")
-        applied = design_cfg.get("applied_load_kn")
-        if applied is not None:
-            applied = float(applied)
-            if not isfinite(applied):
-                raise ValueError("applied_load_kn must be a finite number")
+        fos, applied = _pile_design_inputs(workflow_cfg)
 
         pile = workflow_cfg["pile"]
         nc = float(pile.get("Nc", 9.0))
