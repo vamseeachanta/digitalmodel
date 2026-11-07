@@ -270,6 +270,10 @@ reports/
 docs/reports/*
 !docs/reports/orcaflex-smoke-artifact-freshness.html
 !docs/reports/2026-09-13-ansys-evidence-stage-a.html
+!docs/reports/minimum-wall-table/
+docs/reports/minimum-wall-table/*
+!docs/reports/minimum-wall-table/minimum-wall.csv
+!docs/reports/minimum-wall-table/minimum-wall.manifest.json
 # BEGIN shared module-report retention rules
 # Open the parent and exclude module directories before named exceptions.
 !/docs/reports/modules/
