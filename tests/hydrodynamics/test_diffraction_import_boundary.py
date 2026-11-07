@@ -454,14 +454,17 @@ def test_flags_reflect_resolved_exports(
     )
 
 
-def test_flags_reject_exports_after_interface_fixture_teardown(tmp_path):
-    """Cached converter classes must not make a missing interface available."""
+@pytest.mark.parametrize("read_before_teardown", [False, True])
+def test_flags_reject_exports_after_interface_fixture_teardown(
+    read_before_teardown, tmp_path,
+):
+    """All flags follow the interface resolution cached at first access."""
     _run_guarded(
-        """
+        f"""
         import importlib
         from types import ModuleType
         from digitalmodel.hydrodynamics import diffraction as package
-        from digitalmodel.hydrodynamics.diffraction import solver
+        from digitalmodel.hydrodynamics.diffraction import result_extractor, solver
 
         # Model the converter tests' temporary interface and module imports.
         sys.modules["OrcFxAPI"] = ModuleType("OrcFxAPI")
@@ -469,13 +472,19 @@ def test_flags_reject_exports_after_interface_fixture_teardown(tmp_path):
         extractor = importlib.import_module(solver.__name__ + ".orcawave_data_extraction")
         assert solver.OrcaWaveConverter is converter.OrcaWaveConverter
         assert solver.OrcaWaveDataExtractor is extractor.OrcaWaveDataExtractor
+        if {read_before_teardown!r}:
+            assert package.ORCAWAVE_AVAILABLE is True
+            assert package.TEST_UTILITIES_AVAILABLE is True
+            assert result_extractor.CONVERTER_AVAILABLE is True
+            assert solver.OrcFxAPI is sys.modules["OrcFxAPI"]
         del sys.modules["OrcFxAPI"]
 
-        assert solver.OrcFxAPI is None
+        assert (solver.OrcFxAPI is not None) is {read_before_teardown!r}
         for _ in range(2):
-            assert package.ORCAWAVE_AVAILABLE is False
-            assert package.TEST_UTILITIES_AVAILABLE is False
-        assert attempts and set(attempts) == {"OrcFxAPI"}
+            assert package.ORCAWAVE_AVAILABLE is {read_before_teardown!r}
+            assert package.TEST_UTILITIES_AVAILABLE is {read_before_teardown!r}
+            assert result_extractor.CONVERTER_AVAILABLE is {read_before_teardown!r}
+        assert attempts and set(attempts) == {{"OrcFxAPI"}}
     """,
         tmp_path,
         guard=_MISSING_INTERFACE,

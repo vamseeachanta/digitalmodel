@@ -20,7 +20,7 @@ def __getattr__(name):
     if name == "CONVERTER_AVAILABLE":
         from digitalmodel.hydrodynamics.diffraction import solver
 
-        return solver.OrcaWaveConverter is not None
+        return solver.OrcFxAPI is not None and solver.OrcaWaveConverter is not None
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
 
 
