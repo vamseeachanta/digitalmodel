@@ -105,9 +105,12 @@ class ShearFlowLoader:
         Source for the upstream distinction: The Well file-format specification,
         https://polymathic-ai.org/the_well/data_format/, lists spatial axes in
         ``dimensions/@spatial_dims`` order (its 2-D example uses x, y), with
-        vector components last. A dataset adapter must convert each raw
-        (x, y, component) snapshot with ``transpose(2, 1, 0)`` before yielding
-        it to this method; ``moveaxis(-1, 0)`` leaves x and y reversed.
+        vector components last. The shipped ``_build_dataset`` returns the
+        upstream dataset unchanged. ``stream_sample`` cannot be used on live
+        data until ``_build_dataset`` or a subclass override of it yields
+        snapshots with both fields converted to the local convention. Each raw
+        (x, y, component) field requires ``transpose(2, 1, 0)``;
+        ``moveaxis(-1, 0)`` leaves x and y reversed.
         Unadapted arrays outside the local shapes raise ``ValueError``.
         Shapes alone cannot identify swapped axes or coincident dimensions.
         Synthetic adapter tests establish this local contract only; live
