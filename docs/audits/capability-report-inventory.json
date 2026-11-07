@@ -7,6 +7,12 @@
       "report_id": "cfd-calm-water"
     },
     {
+      "action": "Obtain component-specific curves, qualified cycle exposure and measured-load evidence before engineering acceptance.",
+      "kind": "qualification",
+      "priority": 1,
+      "report_id": "mooring-fatigue"
+    },
+    {
       "action": "Open and retain permitted public source evidence for fixture dimensions and preserve a report-specific execution record; keep schematic scope explicit.",
       "kind": "unreviewed-evidence",
       "priority": 2,
@@ -39,19 +45,19 @@
   ],
   "generated": {
     "counts": {
-      "INDICATIVE": 2,
+      "INDICATIVE": 3,
       "MISSING": 1,
       "RETAINED": 1,
       "UNKNOWN": 1
     },
-    "discovered_report_count": 40,
+    "discovered_report_count": 41,
     "discovered_roots": [
       "docs/benchmarks",
       "docs/domains/openfoam",
       "docs/reports",
       "docs/subsea/cross_sections"
     ],
-    "discovery_sha256": "f8940bc595dcb86f9a5978bfae3d63db5085e95821c6939c3bd3b9a2f9b77795",
+    "discovery_sha256": "7f89371f6314e183e3ec60e746c976470ce8209397f400b72b175c6e0438a9ca",
     "source_digests": {
       "config/cfd/calm_water_study.json": "e9bb4db5f8a96c11118ae71270dcc3d8479df82a70cf0bdccffa0ba809f2f5ec",
       "data/cfd/calm_water_study/manifest.json": "c359820b5abc9577bc8e98d1198119ceae3c93d129665897c9d31cea0130c474",
@@ -60,13 +66,17 @@
       "docs/benchmarks/unit_box/benchmark_report.html": "1519db4683059bdde303d7bfe9a459ea18762d0475f11624d2f7828bd7a2b3bd",
       "docs/benchmarks/unit_box/benchmark_report.json": "29cb712e76793365fb53763b25b0b3f069151a8f271d8777e095ef3974b1252d",
       "docs/domains/openfoam/calm-water-resistance-study.html": "c384dafce539fedd11b8f36cece1e231f09adc7a9babfeb067a91a3adbb0c427",
+      "docs/reports/modules/mooringfatigue/report.html": "46cecc03e5749ebf19d038c0eb5ad065b97df7ceab5208367af4da820e3933ba",
       "docs/reports/padeye-lift-point-analysis.html": "72fa87b7be27807b51dd785441381245bc7ea8398892460154a0ae9163c23959",
       "docs/reports/pipeline-ffs-assessment.html": "488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f",
       "docs/reports/pipeline-ffs-assessment.manifest.json": "d94c2fe29c609fd5fe565f05496e7c8fe50069575525108d5c2e78511c917a4c",
       "docs/subsea/cross_sections/offshore_cross_section_report.html": "2e1a8b71a26797d3a34414e79b6e216b010364d126da79048eadbafb1abfa79b",
+      "examples/workflows/mooring-fatigue/README.md": "adfc5bd0eaff4fc8fec42679c91fcec3baa2256b3709eaabd796966c08ae42db",
+      "examples/workflows/mooring-fatigue/input.yml": "e707539680f132ac6d050199900a952dde34cdc1e85fb8cb84e10961a85a0351",
       "examples/workflows/pipeline-ffs-assessment/assumptions.yml": "f5f5cfb581b9305d5fdf040f160389a34f0f0d497816a6fd4b1d109c20db3952",
       "examples/workflows/pipeline-ffs-assessment/input.yml": "af5b5d739b9f84066fcb55ecdb3dc399eed9497e23826db4045f262ddbca152b",
       "scripts/cfd/build_calm_water_study.py": "4d5c29b600ede9eed46e378f0281cf4604cb6d1224d5798d132ed40fa8ae7975",
+      "scripts/reporting/build_mooring_fatigue_module_report.py": "e9d4e6e3760deec991e3e1a2994132809941b3e928e882ccf1acdaa94e01fe35",
       "scripts/reporting/build_pipeline_ffs_report.py": "194ae54694b1b9575bba8f29a8cdb2b20508605d7ef45160e7d1134cfac1f578",
       "src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py": "2dcbb5fcae95eca0016087d3cfc4fab5ffae5183726df67dabc7e042940a1ee6",
       "src/digitalmodel/lifting_lug/report.py": "445c19750756ed643884cc2ad0e46f2c23d2c067fa6bdbd7078d3b4470b7b40f",
@@ -76,6 +86,7 @@
       "tests/hydrodynamics/diffraction/test_unit_box_report_pipeline_labels.py": "43c37403e9b52b2911459ffd2473fdb2dd49dcb449732388a5165bc19325ba55",
       "tests/lifting_lug/test_assessment.py": "71fca544bdba226b4c99d5c542cf16a3832c7628fb04de002956e29feaaee20d",
       "tests/lifting_lug/test_report.py": "b08518ca478814d33b793742761f54223d0caf0735873b91924cc0bb631a9171",
+      "tests/reporting/test_mooring_fatigue_module_report.py": "1381efdf457e0c04ff45e72216c0c7171f097bd15074049a95e0de4394327e5a",
       "tests/solvers/openfoam/test_calm_water_study_committed_data.py": "b1211af28c3849556ca508efa01d7578966b7a0f7dd50702168a2490fb1aeae8",
       "tests/solvers/openfoam/test_calm_water_study_criteria.py": "1be7f089828f666c4063815c7d382b653c3b1f02dbf8fc1ec9cc7215104f8eee",
       "tests/subsea/cross_sections/test_reporting.py": "e480bc4445513991e907a8a896d7d20bcc5519b90694c52a316d0225cd3c2d92"
@@ -83,7 +94,7 @@
     "unreviewed_report_count": 35
   },
   "observations": {
-    "observed_at": "2026-11-05T02:34:44Z",
+    "observed_at": "2026-11-06T15:37:23.549433Z",
     "reports": [
       {
         "capability": "CFD calm-water resistance",
@@ -199,6 +210,44 @@
         ]
       },
       {
+        "capability": "Metallic mooring fatigue screening",
+        "criterion": "Software evidence requires deterministic report regeneration, explicit UTF-8 text I/O and independent arithmetic checkpoints; a physical component acceptance basis is not established.",
+        "evidence_refs": [
+          {
+            "kind": "criterion",
+            "path": "examples/workflows/mooring-fatigue/README.md"
+          },
+          {
+            "kind": "reference",
+            "path": "examples/workflows/mooring-fatigue/input.yml"
+          }
+        ],
+        "evidence_status": "INDICATIVE",
+        "generator_path": "scripts/reporting/build_mooring_fatigue_module_report.py",
+        "id": "mooring-fatigue",
+        "limitations": [
+          "Both chain and wire component statuses remain NOT_EVALUATED because the example uses a generic welded-joint curve and assumed lifetime cycle exposure.",
+          "INDICATIVE denotes software evidence only; no measured-load or component-specific reference result is retained.",
+          "Browser-specific file-dialog behaviour is not established by the Node-based interface tests."
+        ],
+        "next_action": "Obtain component-specific curves, qualified cycle exposure and measured-load evidence before engineering acceptance.",
+        "observation": "The public example exercises tension-to-stress conversion, Miner damage, life and margin. Its documented screening limit is the reciprocal of the input design fatigue factor.",
+        "priority": 1,
+        "proposed_card_link": "docs/reports/modules/mooringfatigue/report.html",
+        "qualification": "INDICATIVE",
+        "report_path": "docs/reports/modules/mooringfatigue/report.html",
+        "source_digests": {
+          "docs/reports/modules/mooringfatigue/report.html": "46cecc03e5749ebf19d038c0eb5ad065b97df7ceab5208367af4da820e3933ba",
+          "examples/workflows/mooring-fatigue/README.md": "adfc5bd0eaff4fc8fec42679c91fcec3baa2256b3709eaabd796966c08ae42db",
+          "examples/workflows/mooring-fatigue/input.yml": "e707539680f132ac6d050199900a952dde34cdc1e85fb8cb84e10961a85a0351",
+          "scripts/reporting/build_mooring_fatigue_module_report.py": "e9d4e6e3760deec991e3e1a2994132809941b3e928e882ccf1acdaa94e01fe35",
+          "tests/reporting/test_mooring_fatigue_module_report.py": "1381efdf457e0c04ff45e72216c0c7171f097bd15074049a95e0de4394327e5a"
+        },
+        "test_paths": [
+          "tests/reporting/test_mooring_fatigue_module_report.py"
+        ]
+      },
+      {
         "capability": "Lift point analysis",
         "criterion": "A separate accessible result record and retained execution evidence are required for an evidence-backed result claim; source assertions alone are insufficient.",
         "evidence_refs": [],
@@ -282,6 +331,11 @@
         "change": "Refresh the pipeline manifest observation after calculation sources changed; retain synthetic scope and qualification limits.",
         "date": "2026-11-05",
         "revision": "1"
+      },
+      {
+        "change": "Add the reproducible mooring fatigue example as indicative software evidence while retaining unevaluated component statuses.",
+        "date": "2026-11-06",
+        "revision": "2"
       }
     ],
     "scope_roots": [
@@ -290,7 +344,7 @@
       "docs/reports",
       "docs/subsea/cross_sections"
     ],
-    "source_revision": "69d72c8473f088151c07f2fc705d1a5228b98d60"
+    "source_revision": "cccba5dbb5d7c77d64e783fd7099ed3e2b634dda"
   },
   "reports": [
     {
@@ -407,6 +461,44 @@
       ]
     },
     {
+      "capability": "Metallic mooring fatigue screening",
+      "criterion": "Software evidence requires deterministic report regeneration, explicit UTF-8 text I/O and independent arithmetic checkpoints; a physical component acceptance basis is not established.",
+      "evidence_refs": [
+        {
+          "kind": "criterion",
+          "path": "examples/workflows/mooring-fatigue/README.md"
+        },
+        {
+          "kind": "reference",
+          "path": "examples/workflows/mooring-fatigue/input.yml"
+        }
+      ],
+      "evidence_status": "INDICATIVE",
+      "generator_path": "scripts/reporting/build_mooring_fatigue_module_report.py",
+      "id": "mooring-fatigue",
+      "limitations": [
+        "Both chain and wire component statuses remain NOT_EVALUATED because the example uses a generic welded-joint curve and assumed lifetime cycle exposure.",
+        "INDICATIVE denotes software evidence only; no measured-load or component-specific reference result is retained.",
+        "Browser-specific file-dialog behaviour is not established by the Node-based interface tests."
+      ],
+      "next_action": "Obtain component-specific curves, qualified cycle exposure and measured-load evidence before engineering acceptance.",
+      "observation": "The public example exercises tension-to-stress conversion, Miner damage, life and margin. Its documented screening limit is the reciprocal of the input design fatigue factor.",
+      "priority": 1,
+      "proposed_card_link": "docs/reports/modules/mooringfatigue/report.html",
+      "qualification": "INDICATIVE",
+      "report_path": "docs/reports/modules/mooringfatigue/report.html",
+      "source_digests": {
+        "docs/reports/modules/mooringfatigue/report.html": "46cecc03e5749ebf19d038c0eb5ad065b97df7ceab5208367af4da820e3933ba",
+        "examples/workflows/mooring-fatigue/README.md": "adfc5bd0eaff4fc8fec42679c91fcec3baa2256b3709eaabd796966c08ae42db",
+        "examples/workflows/mooring-fatigue/input.yml": "e707539680f132ac6d050199900a952dde34cdc1e85fb8cb84e10961a85a0351",
+        "scripts/reporting/build_mooring_fatigue_module_report.py": "e9d4e6e3760deec991e3e1a2994132809941b3e928e882ccf1acdaa94e01fe35",
+        "tests/reporting/test_mooring_fatigue_module_report.py": "1381efdf457e0c04ff45e72216c0c7171f097bd15074049a95e0de4394327e5a"
+      },
+      "test_paths": [
+        "tests/reporting/test_mooring_fatigue_module_report.py"
+      ]
+    },
+    {
       "capability": "Lift point analysis",
       "criterion": "A separate accessible result record and retained execution evidence are required for an evidence-backed result claim; source assertions alone are insufficient.",
       "evidence_refs": [],
@@ -481,5 +573,5 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "69d72c8473f088151c07f2fc705d1a5228b98d60"
+  "source_revision": "cccba5dbb5d7c77d64e783fd7099ed3e2b634dda"
 }

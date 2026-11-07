@@ -300,6 +300,11 @@ docs/reports/*
 !/docs/reports/modules/riserfatigue/report.html
 !/docs/reports/modules/riserfatigue/changes.json
 
+!/docs/reports/modules/mooringfatigue/
+/docs/reports/modules/mooringfatigue/*
+!/docs/reports/modules/mooringfatigue/report.html
+!/docs/reports/modules/mooringfatigue/changes.json
+
 !/docs/reports/modules/vesselseakeeping/
 /docs/reports/modules/vesselseakeeping/*
 !/docs/reports/modules/vesselseakeeping/index.html
