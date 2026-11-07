@@ -37,7 +37,8 @@ jobs:
         run: uv sync --extra test --no-sources
 
       - name: Run tests
-        run: uv run --no-sources pytest tests/ -x --tb=short -q -m "not solver and not slow"
+        # Chromium layout tests run in quality-gates-by-domain.yml with browser provisioning.
+        run: uv run --no-sources pytest tests/ -x --tb=short -q -m "not solver and not slow and not browser_layout"
 
       - name: Build package
         run: uv build
