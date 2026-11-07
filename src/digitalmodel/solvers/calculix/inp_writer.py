@@ -302,6 +302,10 @@ class INPWriter:
                 elset = "EALL"
             lines.append(f"*ELEMENT, TYPE={ccx_type}, ELSET={elset}")
             for row in data["connectivity"]:
+                if ccx_type == "B32":
+                    # Gmsh manual, Node ordering: Line3 is end/end/middle.
+                    # CalculiX 2.22, section 6.2.33, Fig. 73: end/middle/end.
+                    row = [row[0], row[2], row[1]]
                 node_refs = ", ".join(str(int(n) + 1) for n in row)
                 lines.append(f"{elem_id}, {node_refs}")
                 elem_id += 1
