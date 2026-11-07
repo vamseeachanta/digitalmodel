@@ -385,6 +385,10 @@ modules:
         agent_pack: src/digitalmodel/power/protection/docs/agent-pack.md
         qa_family: EC
   - module: process_diagrams
+    submodules:
+      process_diagrams:
+        agent_pack: src/digitalmodel/process_diagrams/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/process_diagrams/
     maturity: beta
     owner_wiki: docs/domains/README.md
