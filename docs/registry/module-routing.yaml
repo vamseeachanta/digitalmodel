@@ -182,6 +182,9 @@ modules:
     key_tests: [tests/hydrodynamics/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#hydrodynamics
     submodules:
+      rao_analysis:
+        agent_pack: src/digitalmodel/hydrodynamics/rao_analysis/docs/agent-pack.md
+        qa_family: DF
       river_currents:
         agent_pack: src/digitalmodel/hydrodynamics/river_currents/docs/agent-pack.md
         qa_family: EC
