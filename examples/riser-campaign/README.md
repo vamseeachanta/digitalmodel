@@ -37,6 +37,7 @@ its native input templates remain unreleased pending readback and motion clearan
 | 6 | 2026-10-28 | Name normal and axial hydrodynamic coefficients explicitly and refresh source bindings after regeneration; preserve the counted mesh and physical basis. |
 | 7 | 2026-10-28 | Apply named coefficients to the original comparison inputs with zero axial coefficients, regenerate worked examples and bind the proving regressions. |
 | 8 | 2026-11-06 | Reproduce retained correction history through a Git-verified audit option and reject anchored Windows output paths. Preserve reviewed input bytes; main integration remains outstanding. |
+| 9 | 2026-11-06 | Audit serialization changes explicitly and retain digest-pinned reference fixtures so history survives removal of the original branch. Preserve every predecessor when reissuing evidence. |
 
 ## Matrix and existing code
 
@@ -288,13 +289,45 @@ PYTHONPATH=src:. uv run python -m scripts.riser_campaign.audit_mesh \
 ```
 
 The history file must match the committed `docs/verification/riser-mesh-review.json`
-at the supplied history revision, including whitespace. Its SHA-256, byte length
-and full Git revision are recorded in `history_source`. Existing
+at the supplied history revision, including whitespace. If that revision is
+unavailable, only the exact earlier packets pinned in
+`tests/riser_campaign/fixtures/` are accepted. Their SHA-256 values are fixed in
+the audit code. Unknown revisions and modified fixture bytes are rejected.
+The compressed reference fixture retains the reviewed generated inputs and
+indexed source digests, with its own SHA-256 pin; it can supply the reference directory
+without checking out the original branch. This preserves reproducibility after
+a squash merge and removal of the original branch.
+Raw shared source text is omitted from that fixture. Missing source snapshots
+are accepted only for the exact retained revision and its authenticated index
+entries, including SHA-256 and byte length. Available Git objects are checked
+against those pins; when an object is unavailable the fixture pins remain
+binding. Other references still require their raw source snapshots. Candidate
+snapshots continue to match every current working source byte.
+
+Each predecessor's SHA-256, byte length, full Git revision and correction records
+are appended to `history`. Earlier entries are copied unchanged, including
+legacy `history_source` bindings. Existing
 `historical_corrections` records are copied unchanged. For an earlier packet with
 top-level correction records, those records are retained with their original
 reference revision and the revision containing that packet. Both history options
-are required together and cannot be combined with either correction flag.
+are required together. A separately declared coefficient correction may accompany
+history; its new record is stored alongside the retained records.
 No manual packet editing is part of the reissue procedure.
+
+For an integration that changes serialization, add `--serialization-change` to
+the reissue command. The audit compares parsed original and frozen models,
+records all 432 old/new input digests and classifies each as `BYTE_IDENTICAL`,
+`KEY_ORDER_ONLY`, `SERIALIZATION_ONLY` or `VALUE_CHANGE`. Mapping insertion order
+is ignored; list order, booleans, scalar values and field presence remain binding.
+Integer and floating-point spellings of the exact same number are equivalent;
+numeric strings and booleans remain distinct from numbers.
+Changed field paths are reported and any undeclared value change fails the
+audit. Only the existing coefficient flags declare an allowed value correction;
+there is no general value-change override. Counted meshes, geometry, sections,
+physical snapshots and scope coverage remain checked. A successful comparison
+reissues digests as evidence; it establishes no native qualification. The
+serialization mode has solver-free mutation coverage; main integration and its
+real serialization classification remain outstanding.
 
 The analytical reference uses the 1490 m hang-off separation and transforms
 ASB elevation to global z by subtracting the physical 1500 m water depth. The

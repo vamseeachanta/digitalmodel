@@ -438,17 +438,13 @@ def test_frozen_audit_preserves_strict_coefficient_correction(mutation):
 
 HISTORY_REVISION = "d81ccf84ddc12a2a3cc45340537bec47a7807cd5"
 PACKET_PATH = "docs/verification/riser-mesh-review.json"
+REISSUE_REVISION = "bb123d57e5a51bfc15020eeee3674cd5103043e4"
 
 
 def previous_packet(tmp_path):
     """Retrieve the exact retained packet without changing the checkout."""
-    import subprocess
-
     path = tmp_path / "previous-packet.json"
-    payload = subprocess.run(
-        ["git", "show", f"{HISTORY_REVISION}:{PACKET_PATH}"],
-        cwd=CAMPAIGN.parents[1], check=True, capture_output=True,
-    ).stdout
+    payload = (Path(__file__).parent / "fixtures/prior-packet.json").read_bytes()
     path.write_bytes(payload)
     return path
 
@@ -460,9 +456,9 @@ def test_audit_history_preserves_records_and_binds_committed_bytes(tmp_path):
     old = json.loads(path.read_bytes())
     history, source = _history(path, HISTORY_REVISION)
     assert history == old["historical_corrections"]
-    assert source == {"path": PACKET_PATH, "revision": HISTORY_REVISION,
-                      "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
-                      "bytes": len(path.read_bytes())}
+    assert source == [{"path": PACKET_PATH, "revision": HISTORY_REVISION,
+                       "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                       "bytes": len(path.read_bytes()), "records": history}]
 
 
 @pytest.mark.parametrize("mutation", ["record", "whitespace", "revision"])
@@ -484,30 +480,22 @@ def test_audit_history_rejects_uncommitted_or_wrong_revision(tmp_path, mutation)
 
 
 def test_audit_history_imports_original_top_level_records(tmp_path):
-    import subprocess
     from scripts.riser_campaign.audit_mesh import _history
 
     revision = "0b83ecb072ca59f410b14872d426f9e5699ed41e"
     path = tmp_path / "original-packet.json"
-    path.write_bytes(subprocess.run(
-        ["git", "show", f"{revision}:{PACKET_PATH}"],
-        cwd=CAMPAIGN.parents[1], check=True, capture_output=True,
-    ).stdout)
+    path.write_bytes((Path(__file__).parent / "fixtures/original-packet.json").read_bytes())
     old = json.loads(path.read_bytes())
     history, source = _history(path, revision)
     assert history == {"recorded_at_revision": revision,
                        "reference_revision": old["reference_revision"],
                        **{key: old[key] for key in (
                            "coefficient_axis_correction", "original_coefficient_axis_correction")}}
-    assert source["revision"] == revision
+    assert source[-1]["revision"] == revision
 
 
 @pytest.mark.parametrize("options", [
     {"history_from": Path("previous.json")}, {"history_revision": HISTORY_REVISION},
-    {"history_from": Path("previous.json"), "history_revision": HISTORY_REVISION,
-     "coefficient_axes": True},
-    {"history_from": Path("previous.json"), "history_revision": HISTORY_REVISION,
-     "original_coefficient_axes": True},
 ])
 def test_audit_rejects_incomplete_or_ambiguous_history_options(tmp_path, options):
     from scripts.riser_campaign.audit_mesh import audit
@@ -516,41 +504,272 @@ def test_audit_rejects_incomplete_or_ambiguous_history_options(tmp_path, options
         audit(tmp_path / "reference", tmp_path / "candidate", HISTORY_REVISION, **options)
 
 
-def test_audit_reproduces_committed_packet_with_verified_history(tmp_path):
-    """Run both committed reference generation and the current audit API."""
-    import io
-    import os
-    import subprocess
-    import sys
-    import tarfile
-    from scripts.riser_campaign.audit_mesh import audit
+@pytest.fixture(scope="module")
+def audit_outputs(tmp_path_factory):
+    """Retain reviewed bytes independently of branch-only Git history."""
+    from scripts.riser_campaign.audit_mesh import reference_fixture
     from scripts.riser_campaign.generate_inputs import generate
 
-    root = CAMPAIGN.parents[1]
-    committed = json.loads((root / PACKET_PATH).read_bytes())
-    reference_tree = tmp_path / "reference-tree"
-    reference_tree.mkdir()
-    archive = subprocess.run(
-        ["git", "archive", HISTORY_REVISION, "scripts/riser_campaign",
-         "examples/riser-campaign", "src/digitalmodel", "pyproject.toml",
-         "docs/domains/orcaflex/library/campaigns/generic-scr-slwr/basis.yml"],
-        cwd=root, check=True, capture_output=True,
-    ).stdout
-    with tarfile.open(fileobj=io.BytesIO(archive)) as stream:
-        stream.extractall(reference_tree, filter="data")
-    reference, candidate = tmp_path / "reference", tmp_path / "candidate"
-    env = {**os.environ, "PYTHONPATH": os.pathsep.join(("src", "."))}
-    subprocess.run(
-        [sys.executable, "-m", "scripts.riser_campaign.generate_inputs",
-         "--output-dir", str(reference)], cwd=reference_tree, env=env,
-        check=True, capture_output=True,
-    )
+    root = tmp_path_factory.mktemp("audit-outputs")
+    reference, candidate = root / "reference", root / "candidate"
+    for relative, payload in reference_fixture().items():
+        target = reference / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(payload)
     generate(CAMPAIGN / "manifest.json", candidate)
+    return reference, candidate
+
+
+def test_audit_reproduces_committed_packet_with_verified_history(tmp_path, audit_outputs):
+    """Reproduce the packet from digest-pinned reference inputs and history."""
+    from scripts.riser_campaign.audit_mesh import audit
+
+    committed = json.loads((CAMPAIGN.parents[1] / PACKET_PATH).read_bytes())
+    reference, candidate = audit_outputs
     packet = audit(reference, candidate, HISTORY_REVISION,
-                   history_from=previous_packet(tmp_path), history_revision=HISTORY_REVISION)
+                   history_from=Path(__file__).parent / "fixtures/reissue-packet.json",
+                   history_revision=REISSUE_REVISION)
     # Runtime records also affect the containing index digests. All remaining
     # fields, including source bindings, history and input digests, must match.
     for value in (packet, committed):
         for key in ("audit_runtime", "producing_runtime", "reference_index", "candidate_index"):
             value.pop(key)
     assert packet == committed
+
+
+@pytest.mark.parametrize("mutation", ["order", "numeric_spelling", "value", "list_order", "type"])
+def test_serialization_audit_compares_original_models_and_records_digests(tmp_path, mutation):
+    from scripts.riser_campaign.audit_mesh import _compare_original_inputs
+
+    reference, candidate = tmp_path / "reference", tmp_path / "candidate"
+    reference.mkdir()
+    candidate.mkdir()
+    model = {"General": {"UnitsSystem": "SI", "Duration": 1}, "Loads": [1, 2]}
+    changed = copy.deepcopy(model)
+    if mutation == "value":
+        changed["General"]["Duration"] = 20
+    elif mutation == "numeric_spelling":
+        changed["General"]["Duration"] = 1.0
+    elif mutation == "list_order":
+        changed["Loads"].reverse()
+    elif mutation == "type":
+        changed["General"]["Duration"] = True
+    for root, value, order in ((reference, model, False), (candidate, changed, True)):
+        (root / "input.yml").write_text(yaml.safe_dump(value, sort_keys=order), encoding="utf-8")
+        (root / "geometry.json").write_text("{}\n", encoding="utf-8")
+
+    def entry(root, path):
+        payload = (root / path).read_bytes()
+        return {"path": path, "sha256": hashlib.sha256(payload).hexdigest(), "bytes": len(payload)}
+
+    before = [{"case_id": "synthetic", "geometry": entry(reference, "geometry.json"),
+               "inputs": [entry(reference, "input.yml")]}]
+    after = [{"case_id": "synthetic", "geometry": entry(candidate, "geometry.json"),
+              "inputs": [entry(candidate, "input.yml")]}]
+    changes = []
+    if mutation in ("order", "numeric_spelling"):
+        assert _compare_original_inputs(reference, candidate, before, after,
+                                        serialization_change=changes) == 1
+        assert changes == [{"path": "input.yml", "old_sha256": before[0]["inputs"][0]["sha256"],
+                            "new_sha256": after[0]["inputs"][0]["sha256"],
+                            "classification": ("KEY_ORDER_ONLY" if mutation == "order"
+                                               else "SERIALIZATION_ONLY"), "changed_field_paths": []}]
+        with pytest.raises(ValueError, match="index changed"):
+            _compare_original_inputs(reference, candidate, before, after)
+    else:
+        field = "$.General.Duration" if mutation in ("value", "type") else "$.Loads[0]"
+        with pytest.raises(ValueError, match="value change") as error:
+            _compare_original_inputs(reference, candidate, before, after, serialization_change=changes)
+        assert field in str(error.value)
+        assert changes[0]["classification"] == "VALUE_CHANGE"
+        assert field in changes[0]["changed_field_paths"]
+
+
+@pytest.mark.parametrize("filename, revision", [
+    ("prior-packet.json", HISTORY_REVISION), ("reissue-packet.json", REISSUE_REVISION),
+    ("original-packet.json", "0b83ecb072ca59f410b14872d426f9e5699ed41e"),
+])
+def test_history_works_without_retained_git_objects(tmp_path, monkeypatch, filename, revision):
+    import subprocess
+    from scripts.riser_campaign import audit_mesh
+
+    def missing_git(*args, **kwargs):
+        return subprocess.CompletedProcess(args[0], 128, stdout=b"", stderr=b"missing object")
+
+    monkeypatch.setattr(audit_mesh.subprocess, "run", missing_git)
+    path = Path(__file__).parent / "fixtures" / filename
+    history, sources = audit_mesh._history(path, revision)
+    assert history["coefficient_axis_correction"]["counted_mesh"] == "IDENTICAL"
+    assert sources[-1]["revision"] == revision
+    if revision == REISSUE_REVISION:
+        previous = json.loads(path.read_bytes())["history_source"]
+        assert {key: sources[0][key] for key in previous} == previous
+        assert len(sources) == 2
+    with pytest.raises(ValueError, match="unavailable.*fixture"):
+        audit_mesh._history(path, "0" * 40)
+
+
+def test_history_reissues_retain_every_predecessor_and_new_corrections(tmp_path, monkeypatch):
+    import subprocess
+    from scripts.riser_campaign import audit_mesh
+
+    prior = previous_packet(tmp_path)
+    history, sources = audit_mesh._history(prior, HISTORY_REVISION)
+    packet = {"reference_revision": HISTORY_REVISION, "historical_corrections": history,
+              "history": sources, "coefficient_axis_correction": {"new": "record"}}
+    payload = json.dumps(packet).encode("utf-8")
+    prior.write_bytes(payload)
+    revision = "1" * 40
+
+    def git_packet(args, **kwargs):
+        output = (revision + "\n") if args[1] == "rev-parse" else payload
+        return subprocess.CompletedProcess(args, 0, stdout=output, stderr="")
+
+    monkeypatch.setattr(audit_mesh.subprocess, "run", git_packet)
+    retained, appended = audit_mesh._history(prior, revision)
+    assert retained == history
+    assert appended[:-1] == sources
+    assert appended[-1]["records"]["coefficient_axis_correction"] == {"new": "record"}
+    assert appended[-1]["sha256"] == hashlib.sha256(payload).hexdigest()
+
+
+@pytest.mark.parametrize("tranche", ["original", "frozen"])
+@pytest.mark.parametrize("mutation", ["order", "value"])
+def test_serialization_mode_audits_both_tranches(tmp_path, audit_outputs, tranche, mutation):
+    import shutil
+    from scripts.riser_campaign.audit_mesh import audit
+
+    reference, current = audit_outputs
+    candidate = tmp_path / "candidate"
+    shutil.copytree(current, candidate)
+    index = json.loads((candidate / "index.json").read_bytes())
+    cases = index["cases"] if tranche == "original" else index["frozen_tranche"]["cases"]
+    entry = cases[0]["inputs"][0]
+    target = candidate / entry["path"]
+    model = yaml.safe_load(target.read_bytes())
+    if mutation == "value":
+        model["General"]["UnitsSystem"] = "US"
+    if mutation == "order":
+        lines = target.read_bytes().splitlines(keepends=True)
+        starts = [i for i, line in enumerate(lines)
+                  if line and line[:1] not in b" #\r\n-\t" and b":" in line]
+        blocks = [b"".join(lines[a:b]) for a, b in zip(starts, [*starts[1:], len(lines)])]
+        payload = b"".join(lines[:starts[0]]) + b"".join(reversed(blocks))
+    else:
+        payload = yaml.safe_dump(model, sort_keys=True).encode("utf-8")
+    target.write_bytes(payload)
+    entry.update(sha256=hashlib.sha256(payload).hexdigest(), bytes=len(payload))
+    (candidate / "index.json").write_text(json.dumps(index), encoding="utf-8")
+    options = {"history_from": previous_packet(tmp_path), "history_revision": HISTORY_REVISION,
+               "serialization_change": True}
+    if mutation == "value":
+        with pytest.raises(ValueError, match=r"value change.*General.UnitsSystem"):
+            audit(reference, candidate, HISTORY_REVISION, **options)
+    else:
+        packet = audit(reference, candidate, HISTORY_REVISION, **options)
+        records = packet["serialization_change"]["inputs"]
+        assert len(records) == 432
+        changed = next(row for row in records if row["path"] == entry["path"])
+        assert changed["classification"] == "KEY_ORDER_ONLY"
+        assert changed["old_sha256"] != changed["new_sha256"]
+        assert changed["changed_field_paths"] == []
+        assert packet["history"][-1]["revision"] == HISTORY_REVISION
+
+
+def test_audit_reproduction_without_branch_objects(tmp_path, audit_outputs, monkeypatch):
+    import subprocess
+    from scripts.riser_campaign import audit_mesh
+
+    def missing_git(args, **kwargs):
+        return subprocess.CompletedProcess(args, 128, stdout=b"", stderr=b"missing object")
+
+    monkeypatch.setattr(audit_mesh.subprocess, "run", missing_git)
+    reference, candidate = audit_outputs
+    packet = audit_mesh.audit(reference, candidate, HISTORY_REVISION,
+                              history_from=Path(__file__).parent / "fixtures/reissue-packet.json",
+                              history_revision=REISSUE_REVISION)
+    assert len(packet["inputs"]) == 144
+    assert packet["preservation"]["original_input_byte_matches"] == 288
+
+
+def test_history_fixture_tampering_is_rejected(tmp_path, monkeypatch):
+    import subprocess
+    from scripts.riser_campaign import audit_mesh
+
+    fixture = tmp_path / "fixtures"
+    fixture.mkdir()
+    (fixture / "prior-packet.json").write_bytes(previous_packet(tmp_path).read_bytes() + b"\n")
+    monkeypatch.setattr(audit_mesh, "FIXTURES", fixture)
+    monkeypatch.setattr(audit_mesh.subprocess, "run", lambda args, **kwargs:
+                        subprocess.CompletedProcess(args, 128, stdout=b"", stderr=b"missing object"))
+    with pytest.raises(ValueError, match="fixture digest mismatch"):
+        audit_mesh._history(previous_packet(tmp_path), HISTORY_REVISION)
+
+
+@pytest.mark.parametrize("serialization_change", [False, True])
+def test_history_can_accompany_declared_coefficient_corrections(tmp_path, audit_outputs,
+                                                               serialization_change):
+    import shutil
+    from scripts.riser_campaign.audit_mesh import audit
+
+    reviewed, candidate = audit_outputs
+    reference = tmp_path / "reference"
+    shutil.copytree(reviewed, reference)
+    index = json.loads((reference / "index.json").read_bytes())
+    for cases in (index["cases"], index["frozen_tranche"]["cases"]):
+        for case in cases:
+            for entry in case["inputs"]:
+                target = reference / entry["path"]
+                model = yaml.safe_load(target.read_bytes())
+                for line_type in model["LineTypes"]:
+                    line_type["Cd"] = [line_type.pop("Cdn"), line_type.pop("Cdz")]
+                    line_type["Ca"] = [line_type.pop("Can"), line_type.pop("Caz")]
+                payload = yaml.safe_dump(model, sort_keys=False).encode("utf-8")
+                target.write_bytes(payload)
+                entry.update(sha256=hashlib.sha256(payload).hexdigest(), bytes=len(payload))
+    (reference / "index.json").write_text(json.dumps(index), encoding="utf-8")
+    packet = audit(reference, candidate, HISTORY_REVISION, coefficient_axes=True,
+                   original_coefficient_axes=True, history_from=previous_packet(tmp_path),
+                   history_revision=HISTORY_REVISION, serialization_change=serialization_change)
+    assert packet["history"][-1]["revision"] == HISTORY_REVISION
+    assert packet["historical_corrections"]["coefficient_axis_correction"]["counted_mesh"] == "IDENTICAL"
+    assert packet["coefficient_axis_correction"]["all_other_model_fields"] == "IDENTICAL"
+    assert packet["original_coefficient_axis_correction"]["inputs"] == 288
+    if serialization_change:
+        assert len(packet["serialization_change"]["inputs"]) == 432
+        assert packet["serialization_change"]["declared_corrections"] == {
+            "coefficient_axes": True, "original_coefficient_axes": True}
+
+
+def test_reference_fixture_tampering_is_rejected(tmp_path, monkeypatch):
+    from scripts.riser_campaign import audit_mesh
+
+    (tmp_path / "reviewed-reference.tar.xz").write_bytes(b"altered archive")
+    monkeypatch.setattr(audit_mesh, "FIXTURES", tmp_path)
+    with pytest.raises(ValueError, match="fixture digest mismatch"):
+        audit_mesh.reference_fixture()
+
+
+@pytest.mark.parametrize("mutation", ["sha256", "bytes", "omission", "duplicate", "empty"])
+def test_reference_without_raw_snapshots_requires_exact_retained_source_pins(tmp_path, mutation):
+    from scripts.riser_campaign.audit_mesh import _verify_reference_sources, reference_fixture
+
+    retained = reference_fixture()
+    assert not any(name.startswith("source/") for name in retained)
+    sources = json.loads(retained["index.json"])["frozen_tranche"]["code_sources"]
+    for relative, payload in retained.items():
+        target = tmp_path / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(payload)
+    _verify_reference_sources(tmp_path, sources, HISTORY_REVISION)
+    changed = copy.deepcopy(sources)
+    if mutation == "omission":
+        changed.pop()
+    elif mutation == "duplicate":
+        changed.append(copy.deepcopy(changed[0]))
+    elif mutation == "empty":
+        changed = []
+    else:
+        changed[0][mutation] = "0" * 64 if mutation == "sha256" else changed[0][mutation] + 1
+    with pytest.raises(ValueError, match="retained source pin"):
+        _verify_reference_sources(tmp_path, changed, HISTORY_REVISION)
