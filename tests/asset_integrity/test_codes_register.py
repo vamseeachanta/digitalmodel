@@ -3,7 +3,7 @@
 import ast
 import io
 import tokenize
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 import pytest
 
@@ -54,7 +54,7 @@ def _screening_reference_uses(root):
                 except (ValueError, SyntaxError):
                     value = None  # Dynamic strings are outside this static guard.
             if value == "ASME_B31_8_SCREENING":
-                uses.append(f"{source.relative_to(root)}:{token.start[0]}")
+                uses.append(f"{source.relative_to(root).as_posix()}:{token.start[0]}")
     return uses
 
 
@@ -79,6 +79,22 @@ def test_citation_guard_detects_direct_and_quoted_lookups(tmp_path, folder, expr
     source.parent.mkdir(parents=True)
     source.write_text(f"result = {expression}\n", encoding="utf-8")
     assert _screening_reference_uses(tmp_path) == [f"{folder}/consumer.py:1"]
+
+
+def test_citation_guard_reports_posix_paths(tmp_path, monkeypatch):
+    source = tmp_path / "scripts" / "consumer.py"
+    source.parent.mkdir()
+    source.write_text("result = codes.ASME_B31_8_SCREENING.label\n", encoding="utf-8")
+    relative_to = type(source).relative_to
+
+    def windows_relative_to(path, *args, **kwargs):
+        return PureWindowsPath(relative_to(path, *args, **kwargs))
+
+    # Exercise Windows path rendering without requiring a Windows filesystem.
+    with monkeypatch.context() as patch:
+        patch.setattr(type(source), "relative_to", windows_relative_to)
+        uses = _screening_reference_uses(tmp_path)
+    assert uses == ["scripts/consumer.py:1"]
 
 
 def test_citation_guard_ignores_comments_and_definition(tmp_path):
