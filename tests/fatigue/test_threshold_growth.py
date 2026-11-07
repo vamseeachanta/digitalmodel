@@ -133,7 +133,10 @@ def test_threshold_arrival_uses_walker_limiting_rate():
 
 @pytest.mark.parametrize("delta_k", [math.nextafter(5, 0), 5, math.nextafter(5, math.inf)])
 def test_stationary_threshold_comparison_remains_exact(delta_k):
-    if delta_k == 5:
+    assert law(threshold=5).rate(delta_k) == (
+        0 if delta_k <= 5 else 1e-11 * delta_k**3
+    )
+    if delta_k <= 5:
         with pytest.raises(ValueError, match="threshold equality"):
             integrate_growth(
                 law(threshold=5), delta_k, initial_m=0.001, limit_m=0.005, steps=1,
@@ -466,3 +469,92 @@ def test_invalid_threshold_equality_policy_rejected_before_early_return(policy):
             law(), 10, initial_m=0.005, limit_m=0.005, steps=4,
             threshold_equality=policy,
         )
+
+
+@pytest.mark.parametrize("endpoint_ulps, probe_ulps", [(0, 0), (-1, -1), (-4, -4)])
+@pytest.mark.parametrize("policy", ["raise", "arrest", "propagate"])
+def test_unresolved_endpoint_threshold_uses_explicit_policy(endpoint_ulps, probe_ulps, policy):
+    initial, limit, steps, refinements = 0.001, 0.005, 4, 20
+    resolution = math.ldexp((limit - initial) / steps, -refinements)
+    probe = limit - resolution
+
+    def delta_k(a):
+        if a == limit:
+            return 5 + endpoint_ulps * math.ulp(5.0)
+        if a == probe:
+            return 5 + probe_ulps * math.ulp(5.0)
+        # Positive growth at all earlier samples, with an unresolved final
+        # threshold comparison. The reciprocal rate is essentially constant.
+        return 5 + 1e-7 * (limit - a)
+
+    args = dict(initial_m=initial, limit_m=limit, steps=steps, threshold_equality=policy)
+    if policy == "raise":
+        with pytest.raises(ValueError, match="endpoint threshold equality.*threshold_equality"):
+            integrate_growth(law(threshold=5), delta_k, **args)
+        return
+    result = integrate_growth(law(threshold=5), delta_k, **args)
+    assert result.status == ("ARRESTED" if policy == "arrest" else "LIMIT_REACHED")
+    if policy == "arrest":
+        assert result.life_cycles is None
+        assert result.history[-1].depth_m < limit
+    else:
+        # Independent constant-rate limit: .004 / (1e-11 * 5**3).
+        assert result.life_cycles == pytest.approx(3_200_000, rel=1e-6)
+        assert result.history[-1].depth_m == limit
+
+
+@pytest.mark.parametrize("endpoint_ulps, probe_ulps", [(-5, -1), (-1, -5)])
+def test_resolved_subthreshold_endpoint_does_not_use_equality_policy(endpoint_ulps, probe_ulps):
+    initial, limit = 0.001, 0.005
+    probe = limit - math.ldexp((limit - initial) / 4, -20)
+
+    def delta_k(a):
+        if a == limit:
+            return 5 + endpoint_ulps * math.ulp(5.0)
+        if a == probe:
+            return 5 + probe_ulps * math.ulp(5.0)
+        return 5 + 1e-7 * (limit - a)
+
+    result = integrate_growth(
+        law(threshold=5), delta_k, initial_m=initial, limit_m=limit, steps=4,
+    )
+    assert result.status == "ARRESTED"
+    assert result.life_cycles is None
+
+
+@pytest.mark.parametrize("gap_ratio, status", [(0.99, "LIMIT_REACHED"), (1.01, "ARRESTED")])
+def test_endpoint_depth_resolution_boundary(gap_ratio, status):
+    initial, limit, steps = 0.001, 0.005, 4
+    resolution = math.ldexp((limit - initial) / steps, -20)
+    arrest = limit - gap_ratio * resolution
+    result = integrate_growth(
+        law(threshold=5), lambda a: 5 + 1000 * (arrest - a),
+        initial_m=initial, limit_m=limit, steps=steps,
+    )
+    assert result.status == status
+    if status == "LIMIT_REACHED":
+        assert result.life_cycles == pytest.approx(1_382_716.05, rel=2e-6)
+        assert result.history[-1].depth_m == limit
+    else:
+        assert result.life_cycles is None
+        assert result.history[-1].depth_m < arrest
+
+
+def test_adaptive_samples_inside_unresolved_endpoint_gap_use_arrival_rule():
+    initial, limit, refinements = 0.001, 0.005, 2
+    resolution = math.ldexp(limit - initial, -refinements)
+    arrest = limit - 0.99 * resolution
+    sampled = []
+
+    def delta_k(a):
+        sampled.append(a)
+        return 5 + 1000 * (arrest - a)
+
+    result = integrate_growth(
+        law(threshold=5), delta_k, initial_m=initial, limit_m=limit, steps=1,
+        max_refinements=refinements, absolute_tolerance=1e6, relative_tolerance=0,
+    )
+    assert any(arrest < a < limit for a in sampled)
+    assert result.status == "LIMIT_REACHED"
+    assert math.isfinite(result.life_cycles)
+    assert result.history[-1].depth_m == limit

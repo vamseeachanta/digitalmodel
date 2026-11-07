@@ -203,14 +203,18 @@ def integrate_growth(
     depth resolution uses the finite propagating-side threshold rate. The
     resolution is the initial panel width * 2**(-max_refinements), with a
     floor of four ulps of limit_m. The approach probe must still propagate;
-    a resolved arrest before that probe retains null life. Treating an
+    all adaptive samples inside the same unresolved final gap use that rule.
+    A resolved arrest before that probe retains null life. Treating an
     unresolved final gap as arrival conservatively avoids an infinite-life
     inspection cap. This depth classification is separate from the cycle
     quadrature error estimate; unvisited dips remain outside the guarantee.
     At initial/interior positive-threshold equality, threshold_equality
     defaults to "raise". An explicitly qualified "arrest" policy uses the
     stationary zero rate; "propagate" continues the positive branch through
-    equality, including plateaus. Neither policy promotes subthreshold input.
+    equality, including plateaus. When the endpoint and its non-propagating
+    approach probe are both within four ulps of a positive threshold, the
+    same policy resolves their rounding ambiguity. Other subthreshold input
+    retains the stationary zero rate; GrowthLaw.rate is unchanged.
     All nodes in a sample batch are evaluated before an arrest decision;
     an otherwise unreachable equality in that batch can also raise.
     Arrest returns no finite life/error and only fully traversed initial
@@ -245,25 +249,38 @@ def _integrate_panels(
         4 * math.ulp(limit_m),
     )
 
+    approach = max(initial_m, limit_m - depth_resolution)
+
     def inverse_rate(depth):
         value = validate_scalar(dk(depth), "DeltaK")
         rate = law.rate(value)
-        if rate == 0 and depth == limit_m and law.threshold > 0:
+        equality = value == law.threshold and law.threshold > 0
+        location = "initial or interior"
+        if rate == 0 and depth >= approach and law.threshold > 0:
             # Bracket an unresolved final arrest within the stated depth
             # resolution. This also covers analytically exact arrival whose
-            # endpoint DeltaK rounds below the threshold. A stationary or
-            # resolved earlier arrest cannot pass the propagating probe.
-            approach = max(initial_m, limit_m - depth_resolution)
-            if law.rate(dk(approach)) > 0:
+            # endpoint DeltaK rounds below the threshold. Apply this rule to
+            # adaptive samples in the gap as well as the endpoint itself.
+            probe_value = validate_scalar(dk(approach), "DeltaK")
+            location = "endpoint"
+            if law.rate(probe_value) > 0:
                 rate = law._propagation_rate(law.threshold)
-        if rate == 0 and value == law.threshold and law.threshold > 0:
+            elif (
+                abs(value - law.threshold) <= 4 * math.ulp(law.threshold)
+                and abs(probe_value - law.threshold) <= 4 * math.ulp(law.threshold)
+            ):
+                # A flat approach can round to equality or just below it.
+                # Resolve this ambiguity explicitly instead of assigning
+                # infinite life from a floating-point classification.
+                equality = True
+        if rate == 0 and equality:
             if threshold_equality == "raise":
                 raise ValueError(
-                    "initial or interior threshold equality requires an explicit "
+                    f"{location} threshold equality requires an explicit "
                     'threshold_equality="arrest" or "propagate" policy'
                 )
             if threshold_equality == "propagate":
-                rate = law._propagation_rate(value)
+                rate = law._propagation_rate(law.threshold)
         if rate == 0:
             return None
         inverse = 1 / rate
