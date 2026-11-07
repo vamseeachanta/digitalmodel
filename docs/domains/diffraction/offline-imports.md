@@ -14,6 +14,7 @@ it changes no hydrodynamic equations, coefficients or acceptance limits.
 | 2 | 2026-11-06 | Derive flags from usable exports, cache optional resolutions and preserve command converter mocks. |
 | 3 | 2026-11-06 | Require the interface as well as cached exports, clarify dependency errors and reject retired comparison options before interface detection. |
 | 4 | 2026-11-06 | Align the extraction flag with the interface check and document both temporary-interface access orders. |
+| 5 | 2026-11-06 | Distinguish the cached-interface limitation from the missing-interface contract and narrow when tests need a fresh interpreter. |
 
 ## Import contract
 
@@ -41,14 +42,16 @@ read. Without `OrcFxAPI`, all three flags now return `False` rather than the
 previous `True`, so `convert-orcawave`, `compare` and `plot-raos` report the
 missing dependency before conversion. Optional solver exports retain a `None`
 fallback if importing the dependency raises `ImportError`. `ORCAWAVE_AVAILABLE`
-and `result_extractor.CONVERTER_AVAILABLE` require both the interface and converter exports, and
-`TEST_UTILITIES_AVAILABLE` requires both the interface and data extractor exports;
+and `result_extractor.CONVERTER_AVAILABLE` require both the interface and
+converter exports, and `TEST_UTILITIES_AVAILABLE` requires both the interface
+and data extractor exports;
 an importable interface alone does not make these flags true. Cached converter
 classes left by temporary test interfaces do not bypass the interface check when
 the interface is first resolved after teardown. If a flag is read while a
 temporary interface is installed, the cached interface can keep all three flags
-true after teardown. Tests that change interface availability need a fresh
-interpreter to avoid carrying those cached resolutions between cases.
+true after teardown. Tests that read the availability flags or `solver.OrcFxAPI`
+while a temporary interface is installed need a fresh interpreter to avoid
+carrying those cached resolutions between cases.
 Solver export resolutions, including `None`, are cached on first access for the
 process lifetime. Restart the process after changing installed dependencies.
 Direct converter submodule imports retain their normal missing-dependency

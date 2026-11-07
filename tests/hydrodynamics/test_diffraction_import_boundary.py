@@ -454,11 +454,18 @@ def test_flags_reflect_resolved_exports(
     )
 
 
-@pytest.mark.parametrize("read_before_teardown", [False, True])
-def test_flags_reject_exports_after_interface_fixture_teardown(
-    read_before_teardown, tmp_path,
-):
-    """All flags follow the interface resolution cached at first access."""
+def test_flags_reject_exports_when_first_read_after_teardown(tmp_path):
+    """Reject cached converter exports when the interface is already absent."""
+    _check_flags_after_interface_teardown(False, tmp_path)
+
+
+def test_flags_keep_interface_cached_during_stand_in_lifetime(tmp_path):
+    """Record the documented stale-cache limitation, not a required contract."""
+    _check_flags_after_interface_teardown(True, tmp_path)
+
+
+def _check_flags_after_interface_teardown(read_before_teardown, tmp_path):
+    """Check the two access orders in separate interpreters."""
     _run_guarded(
         f"""
         import importlib
