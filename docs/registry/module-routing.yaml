@@ -270,6 +270,10 @@ modules:
     owner_wiki: docs/domains/mooring/dynmoor-legacy-mooring.md
     key_tests: [tests/subsea/mooring_analysis/test_dynmoor.py, tests/subsea/mooring_analysis/test_dynmoor_workflow.py]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#dynmoor_mooring
+    submodules:
+      dynmoor_mooring:
+        agent_pack: src/digitalmodel/dynmoor_mooring/docs/agent-pack.md
+        qa_family: EC
   - module: foam_system
     agent_pack: src/digitalmodel/foam_system/docs/agent-pack.md
     entry_point: src/digitalmodel/foam_system/
