@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -41,6 +42,25 @@ def test_independent_raw_fingerprint_vector():
 @pytest.fixture(scope="module")
 def inventory():
     return json.loads(INDEX.read_text(encoding="utf-8"))
+
+
+@pytest.fixture(scope="module")
+def unchanged_inventory(inventory):
+    """Reach digest checks without failing changed-entry retention first."""
+    env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    git = ["git", "-C", str(ROOT)]
+    base = subprocess.check_output(
+        [*git, "merge-base", "origin/main", "HEAD"], env=env,
+    ).decode("ascii").strip()
+    previous = json.loads(subprocess.check_output(
+        [*git, "show", f"{base}:atlases/historical-provenance.json"], env=env,
+    ))["atlases"]
+    by_manifest = {row["manifest"]: row for row in previous}
+    rows = [row for row in inventory["atlases"] if row == by_manifest.get(row["manifest"])]
+    assert {"VERIFIED", "NOT_EVALUATED"} <= {row["status"] for row in rows}, (
+        "Digest tests require unchanged VERIFIED and NOT_EVALUATED inventory records"
+    )
+    return {"atlases": rows}
 
 
 def test_inventory_covers_every_computed_manifest(inventory):
@@ -262,7 +282,7 @@ def test_live_artifact_tampering_is_rejected(retained_record, tmp_path):
 
 
 @pytest.fixture(params=["VERIFIED", "NOT_EVALUATED"])
-def artifact_checkout(inventory, tmp_path, monkeypatch, request):
+def artifact_checkout(unchanged_inventory, tmp_path, monkeypatch, request):
     """Share read-only Git objects while keeping artifact edits temporary."""
     for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
         monkeypatch.delenv(key, raising=False)
@@ -270,11 +290,13 @@ def artifact_checkout(inventory, tmp_path, monkeypatch, request):
     monkeypatch.setenv("GIT_CONFIG_COUNT", "1")
     monkeypatch.setenv("GIT_CONFIG_KEY_0", "core.autocrlf")
     monkeypatch.setenv("GIT_CONFIG_VALUE_0", "false")
-    row = copy.deepcopy(next(r for r in inventory["atlases"] if r["status"] == request.param))
+    row = copy.deepcopy(next(
+        r for r in unchanged_inventory["atlases"] if r["status"] == request.param
+    ))
     git_dir = subprocess.check_output(
         ["git", "-C", str(ROOT), "rev-parse", "--absolute-git-dir"], text=True,
     ).strip()
-    (tmp_path / ".git").write_text(f"gitdir: {git_dir}\n", encoding="utf-8")
+    (tmp_path / ".git").write_text(f"gitdir: {git_dir}\n", encoding="utf-8", newline="\n")
     for name in row["artifacts"]:
         path = tmp_path / name
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -369,8 +391,8 @@ def test_unsupported_algorithm_is_rejected(retained_record):
         history.verify_sources(retained_record, lambda name: b"")
 
 
-def test_declared_gap_does_not_hide_source_corruption(inventory):
-    row = next(r for r in inventory["atlases"] if r["status"] == "NOT_EVALUATED")
+def test_declared_gap_does_not_hide_source_corruption(unchanged_inventory):
+    row = next(r for r in unchanged_inventory["atlases"] if r["status"] == "NOT_EVALUATED")
     row = copy.deepcopy(row)
     name = next(iter(row["sources"]))
     row["sources"][name] = "0" * 64
@@ -383,7 +405,7 @@ def test_cli_reports_status_and_refuses_incomplete_audit(
     retained_record, tmp_path, monkeypatch, capsys, status,
 ):
     index = tmp_path / "index.json"
-    index.write_text(json.dumps({"atlases": [retained_record]}), encoding="utf-8")
+    index.write_text(json.dumps({"atlases": [retained_record]}), encoding="utf-8", newline="\n")
 
     def verify(*args, **kwargs):
         if status == "REJECTED":
@@ -402,7 +424,7 @@ def test_cli_exits_nonzero_on_checkout_content_drift(
     path = root / row["manifest"]
     path.write_bytes(path.read_bytes() + b"# changed\n")
     index = root / "index.json"
-    index.write_text(json.dumps({"atlases": [row]}), encoding="utf-8")
+    index.write_text(json.dumps({"atlases": [row]}), encoding="utf-8", newline="\n")
     verify = history.verify_git
 
     def verify_checkout(record, *, retained_ref):
@@ -420,6 +442,7 @@ def test_cli_reads_utf8_index_under_legacy_default(retained_record, tmp_path, mo
     index.write_text(
         json.dumps({"atlases": [retained_record], "description": "\u00e9vidence"}, ensure_ascii=False),
         encoding="utf-8",
+        newline="\n",
     )
     read_text = Path.read_text
 

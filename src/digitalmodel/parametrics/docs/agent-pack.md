@@ -55,7 +55,7 @@ The diffraction pilot copies the source mesh and replaces only the environment w
 | Watch-circle response | `orcaflex_fowt_watch_circle_sweep.runner` delegates to `FOWTMooringWorkflow.router`; only the utilisation quotient and rounding are local | Not an independent hand-check reference. [src/digitalmodel/parametrics/pilots.py:L157-L180] [src/digitalmodel/orcaflex/fowt_mooring_workflow.py:L28-L42] |
 | Atlas adaptation | Filter completed cases, sort each parameter grid, require expected row count and nonmissing response, then construct `Atlas` | Count equality is not unique Cartesian membership; see #2118. [src/digitalmodel/parametrics/atlas_bridge.py:L39-L80] |
 
-The delegated cable calculation emits a reference to DNV-RP-0360, *Subsea power cables in shallow water*, revision 2016, clause title “Dynamic cable minimum bend radius (MBR)”; clause text not checked against the licensed copy. [src/digitalmodel/orcaflex/mooring_design_fowt.py:L61-L69] [src/digitalmodel/orcaflex/mooring_design_fowt.py:L277-L285]
+The delegated cable calculation emits a reference to DNV-ST-0359, *Subsea power cables for wind power plants*, edition 2025-12, section “Scope (public product page)”; dynamic applicability, MBR clauses and design factors are not established by that page. [src/digitalmodel/orcaflex/mooring_design_fowt.py:L61-L69] [src/digitalmodel/orcaflex/mooring_design_fowt.py:L277-L285]
 Its `Citation` carries `source_sibling="generic"` and is validated before return when a wiki is configured; a missing page raises `CitationResolutionError`. [src/digitalmodel/orcaflex/mooring_design_fowt.py:L277-L304]
 No standards-derived coefficient is introduced by the harness: its local arithmetic comprises factorial counts, a response quotient and rounding, while numerical physics is delegated. [src/digitalmodel/parametrics/sweep.py:L24-L43] [src/digitalmodel/parametrics/atlas_bridge.py:L50-L80] [src/digitalmodel/parametrics/pilots.py:L164-L177]
 
@@ -65,7 +65,7 @@ Validated physical examples: 0; all 12 executable examples below are regression 
 
 Offline command: `PYTHONPATH=src uv run --no-sources python -m pytest tests/parametrics/ -q -rA -p no:cacheprovider --basetemp=<scratch>`, at the code pin on the uncommitted tree; BASE: 12 run, 4 PASS, 8 FAIL, 0 SKIP, 0 NOT_RUN. Results after documentation changes are recorded in section 10.
 
-The FOWT runner records `CitationResolutionError` for `DNV-RP-0360`, reason `page_missing`; the bridge then reports `ValueError: response 'max_utilisation' not in result columns` because no completed response survives filtering. This is the configured missing-page path, not a solver requirement. [src/digitalmodel/orcaflex/mooring_design_fowt.py:L277-L304] [src/digitalmodel/parametrics/sweep.py:L33-L43] [src/digitalmodel/parametrics/atlas_bridge.py:L39-L48]
+The FOWT runner records `CitationResolutionError` for `DNV-ST-0359`, reason `page_missing`; the bridge then reports `ValueError: response 'max_utilisation' not in result columns` because no completed response survives filtering. This is the configured missing-page path, not a solver requirement. [src/digitalmodel/orcaflex/mooring_design_fowt.py:L277-L304] [src/digitalmodel/parametrics/sweep.py:L33-L43] [src/digitalmodel/parametrics/atlas_bridge.py:L39-L48]
 
 | Case / test node ID | Input and oracle; tolerance basis | Kind | Offline result BASE / AFTER |
 |---|---|---|---|

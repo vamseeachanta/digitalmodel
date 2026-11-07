@@ -41,7 +41,8 @@ STANDARDS: dict[str, list[dict[str, str]]] = {
     "rao_tabulation": [],
     "free_span": [{"id": "DNV-RP-F105", "edition": "2017-06"}],
     "span_rectification": [{"id": "DNV-RP-F105", "edition": "2017-06"}],
-    "fowt_mooring": [{"id": "DNV-RP-0360", "edition": "2021-09"}],
+    # Public wind-cable scope reference; no MBR factor or clause is established.
+    "fowt_mooring": [{"id": "DNV-ST-0359", "edition": "2025-12"}],
     "lifting_lug": [{"id": "AISC-360-ASD", "edition": "2016"}],
     "pile_capacity": [{"id": "API-RP-2GEO", "edition": "2011"}],
     "anchor_capacity": [{"id": "DNV-RP-E303", "edition": "2005"}],

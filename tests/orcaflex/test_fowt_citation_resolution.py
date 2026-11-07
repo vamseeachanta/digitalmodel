@@ -16,7 +16,7 @@ from digitalmodel.orcaflex.mooring_design_fowt import (
     check_watch_circle_vs_cable,
 )
 
-WIKI_PATH = "wikis/engineering-standards/wiki/standards/dnv-rp-0360.md"
+WIKI_PATH = "wikis/engineering-standards/wiki/standards/dnv-st-0359.md"
 
 
 def cable() -> DynamicCableConfig:
@@ -35,17 +35,18 @@ def test_emitted_citation_resolves(tmp_path: Path, layout: str) -> None:
     page = tmp_path / layout / WIKI_PATH
     page.parent.mkdir(parents=True)
     page.write_text(
-        "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
+        "---\ncode_id: DNV-ST-0359\npublisher: DNV\nrevision: 2025-12\n---\n",
         encoding="utf-8",
     )
     result = check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
     assert len(result.citations) == 1
     citation = result.citations[0]
     assert citation.wiki_path == WIKI_PATH
-    assert citation.revision == "2016"
-    assert citation.section == "Dynamic cable minimum bend radius (MBR)"
+    assert citation.revision == "2025-12"
+    assert citation.section == "Scope (public product page)"
     assert citation.source_sibling == "generic"
-    assert citation.note == "MBR limit is a cable-specific design input supplied by caller"
+    assert "MBR limit is a cable-specific design input supplied by caller" in citation.note
+    assert "dynamic applicability and MBR criteria not established" in citation.note
     validate_citation(citation, repo_root=tmp_path)
 
 
@@ -56,7 +57,7 @@ def test_missing_page_fails_at_call_site(tmp_path: Path, layout: str) -> None:
     for _ in range(2):
         with pytest.raises(CitationResolutionError) as caught:
             check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
-        assert caught.value.code_id == "DNV-RP-0360"
+        assert caught.value.code_id == "DNV-ST-0359"
         assert caught.value.wiki_path == WIKI_PATH
         assert caught.value.reason == "page_missing"
 
@@ -90,7 +91,7 @@ def test_removed_page_fails_after_success(tmp_path: Path, layout: str) -> None:
     page = tmp_path / layout / WIKI_PATH
     page.parent.mkdir(parents=True)
     page.write_text(
-        "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
+        "---\ncode_id: DNV-ST-0359\npublisher: DNV\nrevision: 2025-12\n---\n",
         encoding="utf-8",
     )
     assert check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path).citations
@@ -114,7 +115,7 @@ def test_invalid_frontmatter_fails_at_calc_time(
     """Reject mismatched or missing metadata before returning the result."""
     page = tmp_path / WIKI_PATH
     page.parent.mkdir(parents=True)
-    metadata = "---\ncode_id: DNV-RP-0360\npublisher: DNV\n"
+    metadata = "---\ncode_id: DNV-ST-0359\npublisher: DNV\n"
     if revision is not None:
         metadata += f"revision: {revision}\n"
     page.write_text(metadata + "---\n", encoding="utf-8")
@@ -153,7 +154,7 @@ def test_unreadable_page_fails_with_citation_identity(
 
     with pytest.raises(CitationResolutionError) as caught:
         check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
-    assert caught.value.code_id == "DNV-RP-0360"
+    assert caught.value.code_id == "DNV-ST-0359"
     assert caught.value.wiki_path == WIKI_PATH
     assert caught.value.reason == f"page_unreadable:{error_type}"
     assert caught.value.__suppress_context__
@@ -176,7 +177,7 @@ def test_directory_permission_failure_has_citation_identity(
     page = tmp_path / layout / WIKI_PATH
     page.parent.mkdir(parents=True)
     page.write_text(
-        "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
+        "---\ncode_id: DNV-ST-0359\npublisher: DNV\nrevision: 2025-12\n---\n",
         encoding="utf-8",
     )
     original_stat = Path.stat
@@ -196,7 +197,7 @@ def test_directory_permission_failure_has_citation_identity(
     with pytest.raises(CitationResolutionError) as caught:
         check_watch_circle_vs_cable(20.0, cable(), repo_root=tmp_path)
     assert page_stats == (1 if failure_at == "lookup" else 2)
-    assert caught.value.code_id == "DNV-RP-0360"
+    assert caught.value.code_id == "DNV-ST-0359"
     assert caught.value.wiki_path == WIKI_PATH
     assert caught.value.reason == "page_unreadable:PermissionError"
     assert caught.value.__suppress_context__

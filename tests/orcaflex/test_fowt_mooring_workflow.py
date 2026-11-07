@@ -18,23 +18,19 @@ from digitalmodel.engine import engine
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 INPUT_YML = REPO_ROOT / "examples" / "workflows" / "fowt-mooring" / "input.yml"
-SUMMARY_JSON = (
-    REPO_ROOT
-    / "examples"
-    / "workflows"
-    / "fowt-mooring"
-    / "results"
-    / "fowt_mooring_summary.json"
-)
 
 
 def test_fowt_mooring_workflow_offline(tmp_path, monkeypatch):
     assert INPUT_YML.exists(), f"missing example input: {INPUT_YML}"
+    input_path = tmp_path / INPUT_YML.relative_to(REPO_ROOT)
+    input_path.parent.mkdir(parents=True)
+    input_path.write_bytes(INPUT_YML.read_bytes())
+    monkeypatch.chdir(tmp_path)
 
-    page = tmp_path / "wikis/engineering-standards/wiki/standards/dnv-rp-0360.md"
+    page = tmp_path / "wikis/engineering-standards/wiki/standards/dnv-st-0359.md"
     page.parent.mkdir(parents=True)
     page.write_text(
-        "---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
+        "---\ncode_id: DNV-ST-0359\npublisher: DNV\nrevision: 2025-12\n---\n",
         encoding="utf-8",
     )
     monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))
@@ -43,14 +39,14 @@ def test_fowt_mooring_workflow_offline(tmp_path, monkeypatch):
         if isinstance(handler, logging.FileHandler):
             logging.root.removeHandler(handler)
             handler.close()
-    cfg = engine(inputfile=str(INPUT_YML))
+    cfg = engine(inputfile=str(input_path))
 
     assert isinstance(cfg, dict)
     assert cfg["basename"] == "fowt_mooring"
 
     result = cfg["fowt_mooring"]["result"]
     assert len(result["citations"]) == 1
-    assert result["citations"][0]["code_id"] == "DNV-RP-0360"
+    assert result["citations"][0]["code_id"] == "DNV-ST-0359"
     # Healthy feasibility screen: governing bend radius well above the MBR limit.
     assert result["passes"] is True
     assert result["governing_bend_radius_m"] == pytest.approx(136.554, abs=1e-2)
@@ -65,7 +61,7 @@ def test_fowt_mooring_workflow_offline(tmp_path, monkeypatch):
     assert result["mooring_type"] == "hybrid"
     assert result["floater_type"] == "semi"
 
-    # Summary JSON written to the committed results dir.
-    assert SUMMARY_JSON.exists()
-    written = json.loads(SUMMARY_JSON.read_text())
+    summary_json = tmp_path / "examples/workflows/fowt-mooring/results/fowt_mooring_summary.json"
+    assert summary_json.exists()
+    written = json.loads(summary_json.read_text())
     assert written["result"]["passes"] is True

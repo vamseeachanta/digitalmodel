@@ -58,16 +58,17 @@ Assumptions / limitations
 
 Standards references
 --------------------
-* DNV-RP-0360 ("Subsea power cables in shallow water" / dynamic cable design):
-  the minimum bend radius (MBR) is a cable-supplier / standard-derived storage
-  and dynamic curvature limit. The numeric MBR is a **cable-specific input** to
-  this check (typically the manufacturer MBR with the RP-0360 design factor
-  applied); no universal numeric MBR is hard-coded here — the caller supplies
-  ``mbr_limit_m``. See issue #574 for the DNV-RP-0360 wiki page that backs the
-  citation emitted by this module. The title recorded here is "Subsea power
-  cables in shallow water"; the existing emission records edition 2016 and
-  clause title "Dynamic cable minimum bend radius (MBR)". These repository
-  labels are retained pending the authoritative standards page.
+* DNV-RP-0360, "Subsea power cables in shallow water", edition 2016-03,
+  amended 2021-10: the public product page states a focus on static service in shallow water.
+  It is not used here as the authority for a dynamic cable MBR requirement.
+* DNV-ST-0359, "Subsea power cables for wind power plants", edition 2025-12:
+  the public product page covers offshore wind power plant inter-array and
+  export cable systems, including components and interfaces. It does not
+  distinguish static from dynamic service. The emitted citation identifies
+  that public scope only; dynamic applicability, MBR clauses and design factors
+  are not established. The caller supplies the cable-specific ``mbr_limit_m``.
+  Public source links and historical metadata corrections are recorded in
+  ``docs/domains/orcaflex/wind/cable-standards.md``.
 
 Citation posture
 ----------------
@@ -96,10 +97,10 @@ from pydantic import BaseModel, Field
 from digitalmodel.citations import Citation, validate_citation
 
 
-# DNV-RP-0360 wiki page backing the MBR citation (depends on #574). Emitted only
+# DNV-ST-0359 wiki page backing the wind-cable scope reference. Emitted only
 # when a live wiki tree is available; a missing page or missing or mismatched
 # metadata fails closed.
-_DNV_RP_0360_WIKI_PATH = "wikis/engineering-standards/wiki/standards/dnv-rp-0360.md"
+_DNV_ST_0359_WIKI_PATH = "wikis/engineering-standards/wiki/standards/dnv-st-0359.md"
 _CITATION_EMITTED_CACHE: dict[str, bool] = {}
 
 
@@ -145,7 +146,7 @@ class DynamicCableConfig(BaseModel):
         ...,
         gt=0.0,
         description=(
-            "Minimum bend radius limit (m), DNV-RP-0360 design-factored cable MBR"
+            "Minimum bend radius limit (m), cable-specific input supplied by caller"
         ),
     )
     mooring_type: MooringType = MooringType.CATENARY
@@ -183,7 +184,7 @@ class WatchCircleConstraint(BaseModel):
 
     Couples a platform watch-circle radius (max horizontal offset under
     environmental loading) to a dynamic-cable configuration and verifies, in
-    closed form, that the cable's curvature stays within its DNV-RP-0360 MBR
+    closed form, that the cable's curvature stays within its caller-supplied MBR
     limit across the watch circle.
 
     Example:
@@ -247,7 +248,7 @@ class WatchCircleConstraint(BaseModel):
         )
 
     def _emit_citation(self, repo_root: Optional[Path]) -> List[Citation]:
-        """Emit a DNV-RP-0360 MBR citation when a live wiki tree is available.
+        """Emit a DNV-ST-0359 scope reference when a live wiki tree is available.
 
         Configured wikis fail closed on missing pages or invalid metadata.
         Unconfigured installations warn once and omit citations.
@@ -265,7 +266,7 @@ class WatchCircleConstraint(BaseModel):
         if wiki_base is None:
             if "standalone" not in _CITATION_EMITTED_CACHE:
                 warnings.warn(
-                    "digitalmodel standalone mode: DNV-RP-0360 citation "
+                    "digitalmodel standalone mode: DNV-ST-0359 citation "
                     "unavailable (no wiki tree found; set DIGITALMODEL_REPO_ROOT "
                     "or LLM_WIKI_PATH to enable). Watch-circle check proceeds.",
                     RuntimeWarning,
@@ -275,13 +276,17 @@ class WatchCircleConstraint(BaseModel):
             return []
 
         citation = Citation(
-            code_id="DNV-RP-0360",
+            code_id="DNV-ST-0359",
             publisher="DNV",
-            revision="2016",
-            section="Dynamic cable minimum bend radius (MBR)",
-            wiki_path=_DNV_RP_0360_WIKI_PATH,
+            revision="2025-12",
+            section="Scope (public product page)",
+            wiki_path=_DNV_ST_0359_WIKI_PATH,
             source_sibling="generic",
-            note="MBR limit is a cable-specific design input supplied by caller",
+            note=(
+                "Public scope reference only; dynamic applicability and MBR criteria "
+                "not established; MBR limit is a cable-specific design input "
+                "supplied by caller"
+            ),
         )
         try:
             page = resolve_wiki_path(citation.wiki_path, override=wiki_base)

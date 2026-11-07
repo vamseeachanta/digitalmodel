@@ -31,9 +31,9 @@ def _basename(wid: str) -> str:
 def test_every_response_evaluates_a_registered_point(basename, tmp_path, monkeypatch):
     # Supply citation metadata as in the watch-circle workflow tests; no
     # standard values or numerical responses are replaced by this fixture.
-    page = tmp_path / "wikis/engineering-standards/wiki/standards/dnv-rp-0360.md"
+    page = tmp_path / "wikis/engineering-standards/wiki/standards/dnv-st-0359.md"
     page.parent.mkdir(parents=True)
-    page.write_text("---\ncode_id: DNV-RP-0360\npublisher: DNV\nrevision: 2016\n---\n",
+    page.write_text("---\ncode_id: DNV-ST-0359\npublisher: DNV\nrevision: 2025-12\n---\n",
                     encoding="utf-8", newline="\n")
     monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))
     row = next(row for row in refresh._registry_rows() if row["basename"] == basename)
