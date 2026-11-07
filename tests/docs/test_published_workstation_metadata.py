@@ -26,15 +26,33 @@ INTERNAL_HOSTS = (
     "-".join(("gpu", "claw")),
 )
 PUBLISHED_SUFFIXES = (".html", ".htm", ".md", ".json", ".yaml", ".yml")
+DOCUMENTATION_HOSTS = INTERNAL_HOSTS + tuple("-".join(parts) for parts in (
+    ("ace", "linux", "1"), ("ace", "linux", "2"),
+    ("a", "l", "1"), ("dev", "gpu"),
+))
+ISSUE_DOCUMENTATION = (
+    "examples/blender/cube-render/README.md",
+    "examples/reporting/calculix-beam-validation-wrk-1341.yaml",
+    "examples/reporting/calculix-beam-validation-wrk-1341.html",
+    "docs/plans/2026-05-05-issue-285-gis-skill-cross-application.md",
+    "docs/plans/2026-05-05-issue-464-capytaine-bem-module.md",
+    "docs/plans/2026-05-05-issue-470-openfoam-seakeeping.md",
+    "docs/api/cfd/cfd-runtime-estimator.html",
+    "docs/api/cfd/sloshing-cfd-study.html",
+    "docs/api/cfd/sloshing-compute.json",
+    "docs/api/cfd/sloshing-3d-benchmark.json",
+)
 
 
 def assert_no_internal_host(root: Path, aliases=INTERNAL_HOSTS) -> None:
-    pages = sorted(path for path in root.rglob("*")
+    candidates = [root] if root.is_file() else root.rglob("*")
+    base = root.parent if root.is_file() else root
+    pages = sorted(path for path in candidates
                    if path.is_file() and path.suffix.lower() in PUBLISHED_SUFFIXES)
     assert pages, "No published documentation was scanned"
     offenders = []
     for path in pages:
-        relative = path.relative_to(root).as_posix()
+        relative = path.relative_to(base).as_posix()
         text = path.read_text(encoding="utf-8", errors="replace")
         if any(alias in (relative + "\n" + text).casefold() for alias in aliases):
             offenders.append(relative)
@@ -77,6 +95,37 @@ def test_scan_rejects_an_alias_in_legacy_encoded_documentation(tmp_path, alias):
 def test_scan_rejects_an_empty_census(tmp_path):
     with pytest.raises(AssertionError, match="No published documentation"):
         assert_no_internal_host(tmp_path)
+
+
+@pytest.mark.parametrize("relative", ISSUE_DOCUMENTATION)
+def test_issue_documentation_has_no_internal_host(relative):
+    assert_no_internal_host(ROOT / relative, DOCUMENTATION_HOSTS)
+
+
+def test_issue_documentation_census_is_complete():
+    assert len(ISSUE_DOCUMENTATION) == len(set(ISSUE_DOCUMENTATION)) == 10
+
+
+@pytest.mark.parametrize("case", (str.lower, str.upper, str.capitalize),
+                         ids=("lowercase", "uppercase", "mixed-case"))
+@pytest.mark.parametrize("alias", DOCUMENTATION_HOSTS,
+                         ids=tuple(f"alias-{i}" for i in range(len(DOCUMENTATION_HOSTS))))
+def test_scan_rejects_an_alias_in_a_single_document(tmp_path, alias, case):
+    page = tmp_path / "study.md"
+    page.write_text(f"Compute: {case(alias)}", encoding="utf-8")
+    with pytest.raises(AssertionError, match=r"study\.md"):
+        assert_no_internal_host(page, DOCUMENTATION_HOSTS)
+
+
+def test_scan_accepts_a_single_document_with_workstation_roles(tmp_path):
+    page = tmp_path / "study.md"
+    page.write_text("Dedicated CFD workstation; general-purpose workstation", encoding="utf-8")
+    assert_no_internal_host(page, DOCUMENTATION_HOSTS)
+
+
+def test_scan_rejects_a_missing_document(tmp_path):
+    with pytest.raises(AssertionError, match="No published documentation was scanned"):
+        assert_no_internal_host(tmp_path / "missing.md", DOCUMENTATION_HOSTS)
 
 
 def test_published_documentation_has_no_internal_host():
@@ -172,12 +221,8 @@ def test_benchmark_refresh_does_not_supply_a_hostname_label():
     "scripts/setup/verify-cfd-box.sh",
 ])
 def test_setup_publication_files_have_no_internal_aliases(relative):
-    aliases = INTERNAL_HOSTS + tuple("-".join(parts) for parts in (
-        ("ace", "linux", "1"), ("ace", "linux", "2"),
-        ("a", "l", "1"), ("dev", "gpu"),
-    ))
     text = (ROOT / relative).read_text(encoding="utf-8").casefold()
-    assert not any(alias in text for alias in aliases), relative
+    assert not any(alias in text for alias in DOCUMENTATION_HOSTS), relative
 
 
 def test_published_benchmark_uses_capacity_filename():

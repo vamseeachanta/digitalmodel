@@ -4,7 +4,7 @@
 **Status:** plan-approved
 **Tier:** T3 (multi-phase capability addition)
 **Related:** #154, #139, #155, #464
-**Machine assignment (2026-05-06 user directive):** **`ace-linux-2`** — CFD computational constraints make this unsuitable for `dev-primary`. All Phase 2+ runs (`interDyMFoam`/`overInterDyMFoam` + wave library) execute on ace-linux-2. Phase 1 literature survey + tooling map can run anywhere; Phase 2 spike onward is ace-linux-2-only.
+**Machine assignment (2026-05-06 user directive):** **dedicated CFD workstation** — CFD computational constraints make this unsuitable for a general-purpose workstation. All Phase 2+ runs (`interDyMFoam`/`overInterDyMFoam` + wave library) execute on the dedicated CFD workstation. Phase 1 literature survey + tooling map can run anywhere; Phase 2 spike onward is restricted to the dedicated CFD workstation.
 
 ## Context
 
