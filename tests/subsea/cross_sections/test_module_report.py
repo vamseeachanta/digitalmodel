@@ -135,6 +135,18 @@ def test_report_inputs_preserve_entered_moduli():
         assert f"<td>{value}</td>" in html
 
 
+@pytest.mark.parametrize("water_density,gravity", [(1000, 10), (1025.5, 9.81)])
+def test_report_environment_inputs_preserve_entered_values(water_density, gravity):
+    module = builder()
+    data = module["calculate"]()
+    data["environment"] = {
+        "water_density_kg_m3": water_density, "gravity_m_s2": gravity,
+    }
+    html = module["render"](data)
+    assert f"Water density is {water_density:,} kg/m³" in html
+    assert f"Gravity is {gravity:,} m/s²" in html
+
+
 def test_worked_modulus_provenance_distinguishes_reference_and_assumptions(monkeypatch):
     module = builder()
     captured = []
@@ -147,11 +159,17 @@ def test_worked_modulus_provenance_distinguishes_reference_and_assumptions(monke
     monkeypatch.setitem(module["calculate"].__globals__, "calculate_elastic_section", capture)
     module["calculate"]()
     steel, coating, insulation = [item.modulus_provenance for item in captured]
-    assert steel.source_type != "project_assumption"
+    assert steel.source_type == "reference"
+    assert steel.derived_from == []
     assert steel.citation == module["SOURCES"]["elasticity"][0]
     assert steel.url_or_path == module["SOURCES"]["elasticity"][1]
     assert "Table 12.1" in steel.note
-    assert "no public textbook category" in steel.note
+    records = [item.layer.provenance for item in captured] + [
+        item.modulus_provenance for item in captured
+    ]
+    source_ids = {record.source_id for record in records}
+    for record in records:
+        assert set(record.derived_from) <= source_ids
     for source in (coating, insulation):
         assert source.source_type == "project_assumption"
         assert source.note == "assumed, based on previous experience"
@@ -287,7 +305,7 @@ def test_rebuild_matches_committed_artifacts_and_is_repeatable(tmp_path):
         relative = str((REPORT / name).relative_to(ROOT))
         assert subprocess.run(["git", "check-ignore", "-q", relative], cwd=ROOT).returncode == 1
     changes = json.loads(first["changes.json"])
-    assert changes["revision"] == 2
+    assert changes["revision"] == 3
     assert changes["changes"]
 
 

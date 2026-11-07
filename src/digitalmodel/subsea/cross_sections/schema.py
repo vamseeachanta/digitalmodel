@@ -27,6 +27,7 @@ SourceType = Literal[
     "wiki",
     "standard",
     "vendor_catalogue",
+    "reference",
     "project_assumption",
     "calculation",
 ]

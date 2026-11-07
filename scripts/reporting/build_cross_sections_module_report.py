@@ -63,7 +63,7 @@ class DocumentChanges(TypedDict):
 
 
 CHANGES: DocumentChanges = {
-    "document": "cross-section-module-analysis", "revision": 2, "date": DATE,
+    "document": "cross-section-module-analysis", "revision": 3, "date": DATE,
     "changes": [
         "Document per-layer mass, explicit bore buoyancy and bonded elastic stiffness.",
         "Separate assumed example inputs from public material reference values.",
@@ -73,6 +73,7 @@ CHANGES: DocumentChanges = {
         "Require explicit Pa units and separate provenance for each bonded modulus.",
         "Preserve four significant figures, validate fixture units and write LF artifacts.",
         "Separate reference and assumed modulus records and retain readable numerical precision.",
+        "Classify public table lookups as references and preserve entered environmental values.",
     ],
 }
 
@@ -116,13 +117,11 @@ def calculate() -> dict:
         layer=layer, youngs_modulus_pa=modulus, modulus_unit="Pa",
         modulus_provenance=Provenance(
             source_id="worked-modulus-" + layer.name,
-            source_type="calculation" if layer.role == "steel" else "project_assumption",
+            source_type="reference" if layer.role == "steel" else "project_assumption",
             citation=SOURCES["elasticity"][0] if layer.role == "steel" else None,
             url_or_path=SOURCES["elasticity"][1] if layer.role == "steel" else None,
-            derived_from=["openstax-table-12-1"] if layer.role == "steel" else [],
             note=(
                 "Public textbook reference: OpenStax Table 12.1, steel E = 20 × 10¹⁰ Pa. "
-                "SourceType has no public textbook category; calculation records the table value in Pa."
                 if layer.role == "steel" else "assumed, based on previous experience"
             ),
         ),
@@ -243,6 +242,7 @@ results under declared assumptions; no design acceptance is established.</p></se
     ['0', '2026-10-22', 'Initial issue: document computed section properties and distinguish missing fixture material data.'],
     ['1', '2026-11-06', 'Require documented moduli, check inventory units and preserve numerical and file precision.'],
     ['2', DATE, 'Distinguish referenced and assumed moduli and make computed values readable without losing precision.'],
+    ['3', DATE, 'Classify public table lookups as references and retain entered environmental precision.'],
 ])}
 </section>
 <section id="inputs"><h2>Inputs</h2>
@@ -255,8 +255,8 @@ and chosen for transparent hand arithmetic; they are not a proposed pipe design.
 Steel density is from {source('steel')}; steel E is from {source('elasticity')}.
 Neither value qualifies a specific grade, temperature or product. Geometry is assumed for all layers.</p>
 {table(['Layer', 'ID (mm)', 'OD (mm)', 'Density (kg/m³)', 'E (Pa)', 'Material basis'], input_rows)}
-<p>Water density is {format_number(data['environment']['water_density_kg_m3'])} kg/m³,
-using fresh water from {source('mass')}. Gravity is {format_number(data['environment']['gravity_m_s2'])} m/s²,
+<p>Water density is {data['environment']['water_density_kg_m3']:,} kg/m³,
+using fresh water from {source('mass')}. Gravity is {data['environment']['gravity_m_s2']:,} m/s²,
 assumed, based on previous experience, rounded for arithmetic. Neither is a seawater-site default.
 The bore is empty and sealed for the primary result; the flooded comparison excludes bore displacement.</p>
 </section>
