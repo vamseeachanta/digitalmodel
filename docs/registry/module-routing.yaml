@@ -445,6 +445,9 @@ modules:
   - module: signal_processing
     entry_point: src/digitalmodel/signal_processing/
     submodules:
+      time_series:
+        agent_pack: src/digitalmodel/signal_processing/time_series/docs/agent-pack.md
+        qa_family: EC
       signal_analysis:
         agent_pack: src/digitalmodel/signal_processing/signal_analysis/docs/agent-pack.md
         qa_family: EC
