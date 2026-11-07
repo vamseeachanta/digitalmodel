@@ -29,7 +29,8 @@ SOURCE_PLACEHOLDERS = frozenset(re.sub(r"[\W_]+", "", value) for value in {
     "to be determined", "tbc", "null", "nil",
 })
 SOURCE_PLACEHOLDER_SEQUENCE = re.compile(
-    "(?:" + "|".join(re.escape(value) for value in sorted(SOURCE_PLACEHOLDERS)) + ")+"
+    "(?:" + "|".join(re.escape(value) for value in sorted(SOURCE_PLACEHOLDERS)
+                     if len(value) >= 2) + ")+"
 )
 
 
@@ -42,7 +43,8 @@ def _validate_source(source: dict) -> None:
         value = nonempty(source[field], "acceptance source " + field)
         # Punctuation-only values also normalize to empty and refuse below.
         normalized = re.sub(r"[\W_]+", "", unicodedata.normalize("NFKC", value).casefold())
-        if not normalized or SOURCE_PLACEHOLDER_SEQUENCE.fullmatch(normalized):
+        if (not normalized or normalized in SOURCE_PLACEHOLDERS
+                or SOURCE_PLACEHOLDER_SEQUENCE.fullmatch(normalized)):
             raise ValueError("placeholder acceptance source " + field)
 
 

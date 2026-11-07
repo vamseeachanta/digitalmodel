@@ -196,12 +196,13 @@ def test_demand_only_retains_explicit_unobserved_strength(criteria):
     assert result["strength"]["status"] == "NOT_EVALUATED"
 
 
+@pytest.mark.parametrize("field", ["document", "edition", "clause"])
 @pytest.mark.parametrize("value", [
     "TBD appendix", "Pending methods", "X-ray method", "Unknown edition",
-    "ISO 19901-2", "Rev 1", "AC-07",
+    "ISO 19901-2", "Rev 1", "AC-07", "XX", "XXX", "ⅩⅩ",
 ])
-def test_source_placeholder_prefix_with_substantive_text_is_not_rejected(criteria, value):
+def test_source_placeholder_prefix_with_substantive_text_is_not_rejected(criteria, field, value):
     """Lexical validation does not determine source adequacy."""
     matrix, resolver = criteria
-    matrix["strength"]["source"]["document"] = value
+    matrix["strength"]["source"][field] = value
     assert evaluate_criteria(matrix, resolver)["strength"] == "PASS"
