@@ -1,15 +1,15 @@
 {
-  "sha256": "53e6b2cc3d7e4ea3ed596d7dee3b5dd39733f558c11c25bebff679e11f031c1a",
-  "size_bytes": 322714,
+  "sha256": "2d2dd92fe2d95db341d0bfd52df87cd95a8fffecb39150279499601359a27350",
+  "size_bytes": 321411,
   "source_sha256": {
     "reviewed_payload": "9f9b135b93c274d4f8c8c2b8451e3ae9e7dece077b51b4fce4756d3e3f600e1c",
     "reviewed_config": "9581aa9fcf6c1930aa3fafb749c1ed10f249e0e693fd44c2702a1a683df3bd9a"
   },
   "numerical_basis": {
-    "revision": 5,
+    "revision": 4,
     "status": "provisional; no basis recorded",
     "kN_per_Te": 9.81,
-    "conversion_convention": "9.81 kN/Te is a rounded demonstration convention. The exact reference conversion is 9.806 65 kN/Te, derived from standard gravity: BIPM, 3rd CGPM (1901), Declaration 2, Declaration on the unit of mass and on the definition of weight; conventional value of standard gravity. The rounded conversion increases the load limits by less than 0.1 %. The published demonstration limits and series are retained.",
+    "kN_per_Te_source": "NIST standard acceleration of gravity (https://physics.nist.gov/cgi-bin/cuu/Value?gn): 9.80665 m/s^2, rounded to 9.81 for the retained conversion.",
     "load_limits_Te": {
       "Master-link load-path proxy: TopRigging End B": 17.7,
       "Sling2 End B tension": 10.89
@@ -22,11 +22,12 @@
       "order": 40,
       "ridge": 0.001,
       "sample_interval_s": 0.5,
+      "horizon_s": 120,
       "stride_samples": 10,
       "min_calibration_windows": 10,
-      "horizon_s": 120,
-      "time_origin_s": 0
+      "trace_start_s": 0
     },
+    "calibration_count_rule": "N = floor((NOW / 0.5 - 359) / 10) + 1",
     "alert_probability": 0.2,
     "load_limit_rule": "limit_kN = assumed_limit_Te * kN_per_Te",
     "probability_rule": "p = count(max(forecast + error_trajectory) > limit) / window_count",
@@ -108,12 +109,5 @@
     ]
   },
   "reduction": "Selected history-only scenario; chart arrays and alert values only.",
-  "provenance_carry_over": {
-    "fields": [
-      "source_sha256",
-      "sanitization"
-    ],
-    "prior_page_sha256": "144d12e76c81cc6dadb74d1f228d39d8e800939488cca17aa1b4f36c9feb441b",
-    "reason": "The original reviewed payload, configuration and scan terms were not re-read; source digests and fingerprint metadata are retained from the prior page. The retained fingerprints are checked against the revised page and manifest."
-  }
+  "provenance_note": "Source digests and sanitization fingerprints are carried over from revision 0; source digests are not revalidated against external inputs. This revision is rendered from the retained embedded scenario. The current page and manifest are rescanned using the retained fingerprints."
 }
