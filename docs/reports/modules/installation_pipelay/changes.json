@@ -1,0 +1,37 @@
+[
+  {
+    "change": "Initial synthetic stress and route-equilibrium analysis, public-method inventory and explicit qualification gaps are provided to make the arithmetic reproducible without implying design compliance.",
+    "date": "2026-10-28",
+    "revision": "A"
+  },
+  {
+    "change": "Input provenance is corrected to locally selected illustrative arithmetic controls because no external input specification is identified; maintainer acceptance of this basis remains pending and the inputs and calculated results are unchanged.",
+    "date": "2026-10-28",
+    "revision": "B"
+  },
+  {
+    "change": "Output validation protects unrelated checkout files and symlink targets; the function inventory explicitly excludes module constants and exported comment downloads retain their object URL until a later task.",
+    "date": "2026-11-06",
+    "revision": "C"
+  },
+  {
+    "change": "Source digests are refreshed after retention tests were added and isolated from caller Git settings; calculated results are unchanged.",
+    "date": "2026-11-06",
+    "revision": "D"
+  },
+  {
+    "change": "External output directories must be absent, empty or contain only recognised report files, protecting unrelated workspace content before calculation and publication; regression tests and source digests are refreshed, with calculated results unchanged.",
+    "date": "2026-11-06",
+    "revision": "E"
+  },
+  {
+    "change": "Scratch paths equal to or inside the resolved output directory and directory-junction deliverables are rejected before calculation or writes; textbook clauses identify the arithmetic basis and regression tests and source digests are refreshed, with calculated results unchanged.",
+    "date": "2026-11-06",
+    "revision": "F"
+  },
+  {
+    "change": "Methodology statements are bound directly to the cited textbook clauses and the source-digest description is limited to repository sources; regression tests and source digests are refreshed without changing the inputs or calculated results.",
+    "date": "2026-11-06",
+    "revision": "G"
+  }
+]

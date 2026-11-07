@@ -63,6 +63,10 @@ Raw inventory surfaces are discovery aids only. Broad generated indexes, histori
 reports, logs, cached outputs, and large extracted inventories can help locate
 candidate files, but they do not replace the curated routing surfaces above.
 
+## Module reports
+
+- [Pipelay stress and integrity analysis](reports/modules/installation_pipelay/index.html) — Pure calculation methods, independent synthetic examples and unresolved qualification evidence.
+
 ## Knowledge pack review evidence
 
 Use the [Python source locator convention](standards/python-source-locators.md)

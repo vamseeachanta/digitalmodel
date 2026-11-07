@@ -198,6 +198,10 @@ Current Tier 1 priorities:
 - [CHANGELOG.md](CHANGELOG.md) -- Release history
 - [Demonstration pack retirement](docs/maintenance/demo-pack-retirement.md) -- Regression scope, report compatibility and a worked scan example
 
+### Module reports
+
+- [Pipelay stress and integrity analysis](docs/reports/modules/installation_pipelay/README.md) — Synthetic worked values, reproducible builder and method qualification limits.
+
 ## CLI Tools
 
 digitalmodel registers 27 CLI entry points. Run `digitalmodel --help` for the full list.

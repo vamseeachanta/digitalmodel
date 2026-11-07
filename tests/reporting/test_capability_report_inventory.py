@@ -6,6 +6,7 @@ import copy
 import hashlib
 import importlib.util
 import json
+from datetime import datetime
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -342,3 +343,12 @@ def test_output_symlink_cannot_overwrite_other_files(sample, tmp_path):
     with pytest.raises(inv.InventoryError, match='symlink'):
         inv.write_outputs(inv.build_inventory(root, observations), output)
     assert protected.read_text() == 'preserve'
+
+
+def test_saved_observation_time_covers_latest_revision():
+    """A refreshed evidence record cannot retain an earlier observation date."""
+    observations = inv.read_observations(ROOT / 'docs/audits/capability-report-inventory.json')
+    observed = datetime.fromisoformat(observations['observed_at'].replace('Z', '+00:00'))
+    latest_revision = max(datetime.fromisoformat(row['date']).date()
+                          for row in observations['revision_history'])
+    assert observed.date() >= latest_revision

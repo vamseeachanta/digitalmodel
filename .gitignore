@@ -289,6 +289,14 @@ docs/reports/*
 !/docs/reports/modules/passing_ship/build_worked_example.py
 !/docs/reports/modules/passing_ship/README.md
 
+# Retain the four published pipelay deliverables only.
+!/docs/reports/modules/installation_pipelay/
+/docs/reports/modules/installation_pipelay/*
+!/docs/reports/modules/installation_pipelay/index.html
+!/docs/reports/modules/installation_pipelay/changes.json
+!/docs/reports/modules/installation_pipelay/manifest.json
+!/docs/reports/modules/installation_pipelay/README.md
+
 !/docs/reports/modules/pipe_capacity/
 /docs/reports/modules/pipe_capacity/*
 !/docs/reports/modules/pipe_capacity/build_worked_example.py
@@ -628,8 +636,9 @@ docs/reports/abstracted-hulls/*
 !data/cfd/calm_water_study/raw/
 !data/cfd/calm_water_study/raw/*
 
-# Reproducible vessel seakeeping module documentation
+# Retain the named module report builders.
 !/scripts/reports/
 /scripts/reports/*
+!/scripts/reports/build_installation_pipelay_module_report.py
 !/scripts/reports/build_vessel_seakeeping_module_report.py
 !/docs/reports/
