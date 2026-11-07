@@ -5,6 +5,7 @@ from a relocated manifest must reach the same fixture file. SHA-256 compares
 bytes retained on rejection; there are no engineering acceptance limits.
 """
 
+import errno
 from hashlib import sha256
 import json
 from pathlib import Path, PureWindowsPath
@@ -78,7 +79,12 @@ def test_incompatible_figure_roots_use_file_uri_and_keep_pack(
     configured_figure = figure if figure_location == "absolute" else Path(figure.name)
     if figure_location == "symlink":
         configured_figure = Path(f"linked{suffix}")
-        configured_figure.symlink_to(figure)
+        try:
+            configured_figure.symlink_to(figure)
+        except OSError as exc:
+            if exc.errno not in (errno.EPERM, errno.EACCES) and getattr(exc, "winerror", None) != 1314:
+                raise
+            pytest.skip("Symlink creation is unavailable")
     cfg["report_pack"]["results"] = {
         "figures": [{"title": "Fixture", "path": str(configured_figure)}],
     }
@@ -172,7 +178,12 @@ def test_collision_preserves_all_bytes_before_rendering(tmp_path, monkeypatch, a
     for name in pair:
         path = directory / name
         if alias == "symlink":
-            path.symlink_to(retained)
+            try:
+                path.symlink_to(retained)
+            except OSError as exc:
+                if exc.errno not in (errno.EPERM, errno.EACCES) and getattr(exc, "winerror", None) != 1314:
+                    raise
+                pytest.skip("Symlink creation is unavailable")
         else:
             path.hardlink_to(retained)
 
@@ -192,7 +203,12 @@ def test_disabled_pdf_is_excluded_and_suffix_text_directory_is_preserved(tmp_pat
     cfg = _cfg(tmp_path)
     directory = tmp_path / "results.html.json"
     directory.mkdir()
-    (directory / "analysis_report.pdf").symlink_to("analysis_report.html")
+    try:
+        (directory / "analysis_report.pdf").symlink_to("analysis_report.html")
+    except OSError as exc:
+        if exc.errno not in (errno.EPERM, errno.EACCES) and getattr(exc, "winerror", None) != 1314:
+            raise
+        pytest.skip("Symlink creation is unavailable")
     workflow.router(cfg)
     manifest = json.loads((directory / "analysis_manifest.json").read_text(encoding="utf-8"))
     assert manifest["pdf_report"] is None
@@ -217,7 +233,12 @@ def test_relocated_manifests_and_markdown_figure_links_resolve(tmp_path):
             continue
         target = tmp_path / name / "artifact"
         target.parent.mkdir()
-        (directory / name).symlink_to(target)
+        try:
+            (directory / name).symlink_to(target)
+        except OSError as exc:
+            if exc.errno not in (errno.EPERM, errno.EACCES) and getattr(exc, "winerror", None) != 1314:
+                raise
+            pytest.skip("Symlink creation is unavailable")
         targets[name] = target
     workflow.router(cfg)
 

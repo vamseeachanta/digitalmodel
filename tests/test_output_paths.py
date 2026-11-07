@@ -82,6 +82,19 @@ def test_case_only_destinations_are_rejected(tmp_path, existing):
      "test_all_destinations_validated_before_first_export", {"pair": ("html", "json")}, 1),
     ("visualization/test_export_destinations.py",
      "test_unselected_formats_do_not_create_false_collisions", {}, 1),
+    *[("report_pack/test_output_destinations.py",
+       "test_incompatible_figure_roots_use_file_uri_and_keep_pack",
+       {"suffix": suffix, "figure_location": "symlink"}, 1)
+      for suffix in (".svg", ".png")],
+    *[("report_pack/test_output_destinations.py",
+       "test_collision_preserves_all_bytes_before_rendering",
+       {"alias": "symlink", "pair": ("analysis_report.md", "analysis_report.html")}, fail_on)
+      for fail_on in (1, 2)],
+    ("report_pack/test_output_destinations.py",
+     "test_disabled_pdf_is_excluded_and_suffix_text_directory_is_preserved", {}, 1),
+    *[("report_pack/test_output_destinations.py",
+       "test_relocated_manifests_and_markdown_figure_links_resolve", {}, fail_on)
+      for fail_on in range(1, 6)],
 ])
 @pytest.mark.parametrize("error_number,windows_error,should_skip", [
     (errno.EPERM, None, True),
@@ -111,7 +124,11 @@ def test_symlink_fixture_skips_only_privilege_errors(
 
     monkeypatch.setattr(Path, "symlink_to", fail_symlink)
     arguments = {"tmp_path": tmp_path, **kwargs}
-    if function == "test_colliding_bundle_outputs_preserve_all_files":
+    if function in (
+        "test_colliding_bundle_outputs_preserve_all_files",
+        "test_incompatible_figure_roots_use_file_uri_and_keep_pack",
+        "test_collision_preserves_all_bytes_before_rendering",
+    ):
         arguments["monkeypatch"] = monkeypatch
     if should_skip:
         with pytest.raises(pytest.skip.Exception, match="Symlink creation is unavailable"):
