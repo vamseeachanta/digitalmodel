@@ -529,6 +529,9 @@ modules:
     key_tests: [tests/structural/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#structural
     submodules:
+      ovality:
+        agent_pack: src/digitalmodel/structural/ovality/docs/agent-pack.md
+        qa_family: EC
       top_level:
         agent_pack: src/digitalmodel/structural/docs/agent-pack.md
         qa_family: EC
