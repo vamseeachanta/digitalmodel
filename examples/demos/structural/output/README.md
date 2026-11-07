@@ -4,18 +4,18 @@ Generated artifacts for the ship plate/panel buckling demos. Small curated
 deliverables are committed; large regenerable files are gitignored (see
 `.gitignore` in this directory).
 
-Regenerate commands are run **from the repo root** using the project venv
-interpreter (not `uv run`):
+Regenerate commands are run **from the repo root** using an environment with
+the required dependencies installed:
 
 ```
-/mnt/local-analysis/digitalmodel/.venv/bin/python <script>
+PYTHONPATH=src python <script>
 ```
 
 | File | What it is | Status | Regenerate command |
 |------|------------|--------|--------------------|
-| `ship_plate_buckling_report.html` | Plate buckling parametric report (curated lookup deliverable) | committed | `.venv/bin/python examples/demos/structural/ship_plate_buckling_parametric.py` |
-| `results.json` | Plate buckling result records | committed | `.venv/bin/python examples/demos/structural/ship_plate_buckling_parametric.py` |
-| `cases.csv` | Plate buckling case matrix | committed | `.venv/bin/python examples/demos/structural/ship_plate_buckling_parametric.py` |
+| `ship_plate_buckling_report.html` | Plate buckling parametric report (curated lookup deliverable) | committed | `PYTHONPATH=src python examples/demos/structural/ship_plate_buckling_parametric.py` |
+| `results.json` | Plate buckling result records | committed | `PYTHONPATH=src python examples/demos/structural/ship_plate_buckling_parametric.py` |
+| `cases.csv` | Plate buckling case matrix | committed | `PYTHONPATH=src python examples/demos/structural/ship_plate_buckling_parametric.py` |
 | `ship_panel_buckling_report.html` | Panel buckling parametric report (curated lookup deliverable) | committed | `.venv/bin/python examples/demos/structural/ship_panel_buckling_parametric.py` |
 | `panel_results.json` | Panel buckling result records | committed | `.venv/bin/python examples/demos/structural/ship_panel_buckling_parametric.py` |
 | `panel_cases.csv` | Panel buckling case matrix | committed | `.venv/bin/python examples/demos/structural/ship_panel_buckling_parametric.py` |

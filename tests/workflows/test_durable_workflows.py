@@ -1807,7 +1807,8 @@ def test_wellpath_minimum_curvature_textbook_case(tmp_path):
                 },
             }
         ),
-        encoding="utf-8", newline="\n",
+        encoding="utf-8",
+        newline="\n",
     )
 
     cfg = engine(inputfile=str(input_path))
@@ -1844,7 +1845,8 @@ def test_wave_spectrum_pierson_moskowitz_engine_textbook_check(tmp_path):
                 },
             }
         ),
-        encoding="utf-8", newline="\n",
+        encoding="utf-8",
+        newline="\n",
     )
 
     cfg = engine(inputfile=str(input_path))
@@ -1909,7 +1911,8 @@ def test_synthetic_rope_tn_curve_matches_dnv_os_e301_table_f3(tmp_path):
                 },
             }
         ),
-        encoding="utf-8", newline="\n",
+        encoding="utf-8",
+        newline="\n",
     )
 
     engine(inputfile=str(input_path))
@@ -1972,7 +1975,8 @@ def test_spectral_fatigue_workflow_matches_narrow_band_closed_form(tmp_path):
                 },
             }
         ),
-        encoding="utf-8", newline="\n",
+        encoding="utf-8",
+        newline="\n",
     )
 
     cfg = engine(inputfile=str(input_path))
@@ -2035,7 +2039,8 @@ def test_rao_spectral_fatigue_constant_rao_matches_fixed_gain_screening(tmp_path
                 },
             }
         ),
-        encoding="utf-8", newline="\n",
+        encoding="utf-8",
+        newline="\n",
     )
 
     cfg = engine(inputfile=str(input_path))
@@ -2104,7 +2109,8 @@ def test_vessel_seakeeping_significant_amplitude_matches_library(tmp_path):
                 },
             }
         ),
-        encoding="utf-8", newline="\n",
+        encoding="utf-8",
+        newline="\n",
     )
 
     cfg = engine(inputfile=str(input_path))

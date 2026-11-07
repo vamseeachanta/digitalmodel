@@ -116,6 +116,16 @@ def test_beam_payload_matches_hand_equilibrium(tmp_path):
     assert "∫" in page and "N/mm² = MPa" in page
 
 
+def test_report_styles_have_standalone_fallbacks(tmp_path):
+    """A copied report retains its styling without the documentation assets."""
+    page = builder().render(tmp_path)
+    style = re.search(r"<style>(.*?)</style>", page, re.S)[1]
+    variables = re.findall(r"var\(([^)]+)\)", style)
+    assert variables
+    assert all("," in variable and variable.split(",", 1)[1].strip()
+               for variable in variables)
+
+
 def test_column_payload_matches_eigenfunction(tmp_path):
     """Pin-ended sine mode: EI*pi⁴/L⁴ - P*pi²/L² = 0."""
     build = builder()

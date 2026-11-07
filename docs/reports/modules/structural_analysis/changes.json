@@ -13,5 +13,10 @@
     "change": "Workflow reference hashes, test citations and retained demo outputs are aligned with supported loads. Unsupported CLI transverse stress gives an option error. Source bindings cover the calculation and dedicated evidence; shared presentation and registry files are referenced without byte bindings.",
     "date": "2026-11-06",
     "revision": "C"
+  },
+  {
+    "change": "Standalone style fallbacks preserve report readability when the documentation stylesheet is unavailable. Demo import-path isolation is checked without changing the calculation basis.",
+    "date": "2026-11-06",
+    "revision": "D"
   }
 ]
