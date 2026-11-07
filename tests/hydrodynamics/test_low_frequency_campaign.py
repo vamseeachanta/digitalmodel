@@ -211,6 +211,85 @@ def test_matching_nonpositive_loading_cannot_issue(inputs, field):
     assert not inputs[2].exists()
 
 
+@pytest.mark.parametrize(
+    "field,key,value",
+    [
+        ("mass_kg", "mass", "119052930"),
+        ("centre_of_gravity_m", "centre_of_gravity", ["115.5", 0, 8.0]),
+        ("centre_of_gravity_m", "centre_of_gravity", [115.5, "0", 8.0]),
+        ("centre_of_gravity_m", "centre_of_gravity", [115.5, 0, "8.0"]),
+        ("radii_of_gyration_m", "radii_of_gyration", ["17.15", 57.75, 60.06]),
+        ("radii_of_gyration_m", "radii_of_gyration", [17.15, "57.75", 60.06]),
+        ("radii_of_gyration_m", "radii_of_gyration", [17.15, 57.75, "60.06"]),
+    ],
+)
+@pytest.mark.parametrize("side", ["request", "base"])
+def test_loading_components_reject_numeric_strings(inputs, field, key, value, side):
+    if side == "request":
+        inputs[4]["base_values"][field] = value
+        inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
+        diagnostic = rf"base_values\.{field}.*numeric"
+    else:
+        inputs[3]["vessel"]["inertia"][key] = value
+        inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8")
+        diagnostic = rf"base-spec inertia\.{key}.*numeric"
+    with pytest.raises(ValueError, match=diagnostic):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize("side", ["request", "base"])
+def test_loading_components_reject_boolean_coordinates(inputs, side):
+    # False equals the valid transverse coordinate numerically, but is not one.
+    centre = [115.5, False, 8.0]
+    if side == "request":
+        inputs[4]["base_values"]["centre_of_gravity_m"] = centre
+        inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
+        diagnostic = r"base_values\.centre_of_gravity_m.*numeric"
+    else:
+        inputs[3]["vessel"]["inertia"]["centre_of_gravity"] = centre
+        inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8")
+        diagnostic = r"base-spec inertia\.centre_of_gravity.*numeric"
+    with pytest.raises(ValueError, match=diagnostic):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+def test_gyradii_size_diagnostic_requires_components(inputs):
+    inputs[4]["base_values"]["radii_of_gyration_m"] = [17.15, 57.75]
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
+    with pytest.raises(
+        ValueError, match=r"base_values\.radii_of_gyration_m: three components required"
+    ):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize("gyradii", ["present", "omitted"])
+def test_base_spec_inertia_tensor_is_unsupported(inputs, gyradii):
+    inertia = inputs[3]["vessel"]["inertia"]
+    inertia["inertia_tensor"] = {
+        component: inertia["mass"] * radius**2
+        for component, radius in zip(
+            ("Ixx", "Iyy", "Izz"), inertia["radii_of_gyration"]
+        )
+    }
+    if gyradii == "omitted":
+        inertia.pop("radii_of_gyration")
+    inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8")
+    with pytest.raises(ValueError, match="base-spec inertia.*inertia_tensor"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+def test_base_spec_requires_explicit_gyradii(inputs):
+    inputs[3]["vessel"]["inertia"].pop("radii_of_gyration")
+    inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8")
+    with pytest.raises(ValueError, match="base-spec inertia.*radii_of_gyration"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
 def test_missing_loading_basis_uses_missing_input_diagnostic(inputs):
     inputs[4]["base_values"]["centre_of_gravity_basis"] = None
     inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
@@ -258,11 +337,34 @@ def test_loading_basis_cannot_be_omitted(inputs, field):
     assert not inputs[2].exists()
 
 
-def test_template_loading_stays_blocked_with_weight_report(inputs):
+def test_template_basis_stays_blocked_with_weight_report(inputs):
     template = SCRIPT.parents[2] / "examples/hydrodynamics/low-frequency-campaign.json"
     inputs[4]["base_values"] = json.loads(template.read_bytes())["base_values"]
     inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
     with pytest.raises(ValueError, match="centre_of_gravity_basis"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize("loading", ["fixture", "template"])
+def test_consistently_declared_placeholder_loading_cannot_issue(inputs, loading):
+    if loading == "template":
+        template = (
+            SCRIPT.parents[2] / "examples/hydrodynamics/low-frequency-campaign.json"
+        )
+        inputs[4]["base_values"] = json.loads(template.read_bytes())["base_values"]
+    values = inputs[4]["base_values"]
+    values["centre_of_gravity_m"] = list(campaign.mesh_geometry.CENTRE_OF_GRAVITY)
+    values["centre_of_gravity_basis"] = f"WEIGHT_REPORT: {inputs[4]['weight_report']}"
+    inertia = inputs[3]["vessel"]["inertia"]
+    inertia.update(
+        mass=values["mass_kg"],
+        centre_of_gravity=values["centre_of_gravity_m"],
+        radii_of_gyration=values["radii_of_gyration_m"],
+    )
+    inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8")
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
+    with pytest.raises(ValueError, match="centre_of_gravity.*placeholder"):
         prepare(inputs)
     assert not inputs[2].exists()
 

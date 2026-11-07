@@ -176,6 +176,10 @@ def require_evidence(request, headings):
 
 def require_matching_loading(request, inertia):
     """Bind the request loading evidence to the inertia used in every case."""
+    if "inertia_tensor" in inertia:
+        raise ValueError("base-spec inertia.inertia_tensor is unsupported; use gyradii")
+    if "radii_of_gyration" not in inertia:
+        raise ValueError("base-spec inertia.radii_of_gyration is required")
     for field, key, size, positive in (
         ("mass_kg", "mass", None, True),
         ("centre_of_gravity_m", "centre_of_gravity", 3, False),
@@ -186,9 +190,14 @@ def require_matching_loading(request, inertia):
             if size is None:
                 values = [value]
             elif not isinstance(value, list) or len(value) != size:
-                raise ValueError("three coordinates required")
+                raise ValueError("three components required")
             else:
                 values = value
+            if any(
+                not isinstance(item, (int, float)) or isinstance(item, bool)
+                for item in values
+            ):
+                raise ValueError("numeric components required; strings are unsupported")
             parsed = [number(item) for item in values]
             if positive and any(item <= 0 for item in parsed):
                 raise ValueError("positive values required")
@@ -196,11 +205,20 @@ def require_matching_loading(request, inertia):
 
         try:
             requested = components(request["base_values"].get(field))
-            supplied = components(inertia.get(key))
         except ValueError as exc:
             raise ValueError(f"base_values.{field}: {exc}") from exc
+        try:
+            supplied = components(inertia.get(key))
+        except ValueError as exc:
+            raise ValueError(f"base-spec inertia.{key}: {exc}") from exc
         if requested != supplied:
             raise ValueError(f"base_values.{field} must match base-spec inertia.{key}")
+    # A matching reference string cannot qualify the constructed loading.
+    if tuple(inertia["centre_of_gravity"]) == mesh_geometry.CENTRE_OF_GRAVITY:
+        raise ValueError(
+            "base-spec inertia.centre_of_gravity: reconstructed buoyancy-centre "
+            "placeholder loading is unsupported"
+        )
 
 
 def local_mesh(root, value):
