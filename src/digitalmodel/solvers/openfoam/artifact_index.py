@@ -24,13 +24,35 @@ ARTIFACT_KINDS = (
 )
 
 _TIME_NAME = re.compile(r"[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\Z")
-_DIRECTORY_FLAGS = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
-_FILE_FLAGS = os.O_RDONLY | os.O_NOFOLLOW
 _UINT64_MAX = (1 << 64) - 1
 
 
 class ArtifactIndexError(ValueError):
     """Raised when an artifact tree or index value is unsafe or unstable."""
+
+
+def descriptor_walk_supported() -> bool:
+    """Return whether no-follow, descriptor-relative tree walks are supported.
+
+    Python 3.11 Library Reference, os: open constants, supports_dir_fd,
+    supports_fd and supports_follow_symlinks define these platform capabilities.
+    """
+    return (
+        hasattr(os, "O_DIRECTORY")
+        and hasattr(os, "O_NOFOLLOW")
+        and {os.open, os.stat} <= os.supports_dir_fd
+        and os.listdir in os.supports_fd
+        and os.stat in os.supports_follow_symlinks
+    )
+
+
+def _directory_flags() -> int:
+    if not descriptor_walk_supported():
+        raise ArtifactIndexError(
+            "artifact snapshots require no-follow descriptor-relative filesystem "
+            "support; this platform is unsupported"
+        )
+    return os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
 
 
 def _uint64(value: int, label: str) -> bytes:
@@ -183,7 +205,7 @@ def _stat_identity(value: os.stat_result) -> tuple[int, int, int, int, int]:
 
 
 def _hash_open_file(parent_fd: int, name: str, listed: os.stat_result) -> FileRecord:
-    descriptor = os.open(name, _FILE_FLAGS, dir_fd=parent_fd)
+    descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=parent_fd)
     try:
         before = os.fstat(descriptor)
         if not stat.S_ISREG(before.st_mode) or _stat_identity(before) != _stat_identity(listed):
@@ -209,7 +231,7 @@ def _walk_directory(directory_fd: int, prefix: str) -> list[FileRecord]:
             record = _hash_open_file(directory_fd, name, listed)
             records.append(FileRecord(relative, record.size_bytes, record.sha256))
         elif stat.S_ISDIR(listed.st_mode):
-            child_fd = os.open(name, _DIRECTORY_FLAGS, dir_fd=directory_fd)
+            child_fd = os.open(name, _directory_flags(), dir_fd=directory_fd)
             try:
                 if _stat_identity(os.fstat(child_fd)) != _stat_identity(listed):
                     raise ArtifactIndexError(f"directory changed before walk: {relative}")
@@ -222,9 +244,9 @@ def _walk_directory(directory_fd: int, prefix: str) -> list[FileRecord]:
 
 
 def snapshot_tree(root: Path) -> list[FileRecord]:
-    """Snapshot a tree through no-follow descriptors and hash opened files."""
+    """Snapshot through no-follow descriptors, or reject unsupported platforms."""
     try:
-        root_fd = os.open(root, _DIRECTORY_FLAGS)
+        root_fd = os.open(root, _directory_flags())
         try:
             records = _walk_directory(root_fd, "")
         finally:
@@ -252,7 +274,7 @@ def _candidate_has_files(case_root: Path, relative: str) -> bool:
 
 def _time_roots(case_root: Path) -> list[str]:
     try:
-        root_fd = os.open(case_root, _DIRECTORY_FLAGS)
+        root_fd = os.open(case_root, _directory_flags())
         try:
             names = os.listdir(root_fd)
             entries = [(name, os.stat(name, dir_fd=root_fd, follow_symlinks=False)) for name in names]

@@ -13,6 +13,7 @@ from digitalmodel.solvers.openfoam.artifact_index import (
     FileRecord,
     artifact_id,
     build_index,
+    descriptor_walk_supported,
     frame,
     host_local_locator,
     is_numeric_time_name,
@@ -20,6 +21,11 @@ from digitalmodel.solvers.openfoam.artifact_index import (
     snapshot_tree,
     tree_digest,
     verify_unchanged,
+)
+
+requires_descriptor_walk = pytest.mark.skipif(
+    not descriptor_walk_supported(),
+    reason="requires no-follow descriptor-relative filesystem support",
 )
 
 
@@ -148,6 +154,7 @@ def test_numeric_time_name_rejects_invalid_values() -> None:
         assert is_numeric_time_name(name) is False
 
 
+@requires_descriptor_walk
 def test_select_roots_returns_disjoint_completed_selections(tmp_path: Path) -> None:
     _write_case_tree(tmp_path)
     selected = select_roots(tmp_path)
@@ -168,12 +175,14 @@ def test_select_roots_returns_disjoint_completed_selections(tmp_path: Path) -> N
     assert excluded == set()
 
 
+@requires_descriptor_walk
 def test_field_tree_contains_only_numeric_time_roots(tmp_path: Path) -> None:
     _write_case_tree(tmp_path)
 
     assert sorted(select_roots(tmp_path)["field_tree"]) == ["0", "0.5"]
 
 
+@requires_descriptor_walk
 def test_select_roots_rejects_duplicate_numeric_time_spellings(
     tmp_path: Path,
 ) -> None:
@@ -190,6 +199,7 @@ def test_select_roots_rejects_duplicate_numeric_time_spellings(
         select_roots(zero_case)
 
 
+@requires_descriptor_walk
 def test_snapshot_tree_rejects_symlink(tmp_path: Path) -> None:
     target = tmp_path / "target"
     target.write_bytes(b"x")
@@ -200,6 +210,7 @@ def test_snapshot_tree_rejects_symlink(tmp_path: Path) -> None:
 
 
 @pytest.mark.skipif(not hasattr(os, "mkfifo"), reason="os.mkfifo unavailable")
+@requires_descriptor_walk
 def test_snapshot_tree_rejects_fifo(tmp_path: Path) -> None:
     os.mkfifo(tmp_path / "pipe")
 
@@ -207,6 +218,7 @@ def test_snapshot_tree_rejects_fifo(tmp_path: Path) -> None:
         snapshot_tree(tmp_path)
 
 
+@requires_descriptor_walk
 def test_snapshot_tree_returns_exact_sorted_records(tmp_path: Path) -> None:
     nested = tmp_path / "a"
     nested.mkdir()
@@ -219,6 +231,7 @@ def test_snapshot_tree_returns_exact_sorted_records(tmp_path: Path) -> None:
     ]
 
 
+@requires_descriptor_walk
 def test_verify_unchanged_detects_same_size_modification(tmp_path: Path) -> None:
     path = tmp_path / "field"
     path.write_bytes(b"aa")
@@ -229,6 +242,7 @@ def test_verify_unchanged_detects_same_size_modification(tmp_path: Path) -> None
         verify_unchanged(tmp_path, expected)
 
 
+@requires_descriptor_walk
 def test_verify_unchanged_detects_added_file(tmp_path: Path) -> None:
     (tmp_path / "field").write_bytes(b"x")
     expected = snapshot_tree(tmp_path)
@@ -238,6 +252,7 @@ def test_verify_unchanged_detects_added_file(tmp_path: Path) -> None:
         verify_unchanged(tmp_path, expected)
 
 
+@requires_descriptor_walk
 def test_verify_unchanged_detects_removed_file(tmp_path: Path) -> None:
     path = tmp_path / "field"
     path.write_bytes(b"x")
@@ -248,6 +263,7 @@ def test_verify_unchanged_detects_removed_file(tmp_path: Path) -> None:
         verify_unchanged(tmp_path, expected)
 
 
+@requires_descriptor_walk
 def test_verify_unchanged_detects_rename(tmp_path: Path) -> None:
     path = tmp_path / "field"
     path.write_bytes(b"x")
@@ -258,6 +274,7 @@ def test_verify_unchanged_detects_rename(tmp_path: Path) -> None:
         verify_unchanged(tmp_path, expected)
 
 
+@requires_descriptor_walk
 def test_build_index_emits_no_absolute_host_path(tmp_path: Path) -> None:
     _write_case_tree(tmp_path)
     emitted_index = [record.as_dict() for record in _build_test_index(tmp_path).values()]
@@ -265,6 +282,7 @@ def test_build_index_emits_no_absolute_host_path(tmp_path: Path) -> None:
     assert str(tmp_path) not in json.dumps(emitted_index, sort_keys=True)
 
 
+@requires_descriptor_walk
 def test_completed_index_excludes_processor_and_diagnostic_roots(
     tmp_path: Path,
 ) -> None:
