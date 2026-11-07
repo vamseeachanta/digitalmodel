@@ -122,3 +122,64 @@ path through the engine end to end.
 
 Config schema and field-level docs: module docstring of
 `src/digitalmodel/report_pack/workflow.py`. Tests: `tests/report_pack/`.
+
+## Wide tables and a worked layout example
+
+Every standard HTML table has a separate `.tbl-wrap` with `overflow-x: auto`
+and `max-width: 100%`. Result and appendix tables retain their columns, units,
+values and source text; document-control tables use the same containment.
+Wide tables scroll horizontally inside their block. A narrow table does not
+acquire a horizontal scrollbar when it fits the available width.
+
+The method follows [W3C CSS Overflow Level 3, section 3.1](https://www.w3.org/TR/2025/WD-css-overflow-3-20251007/#overflow-properties)
+(7 October 2025 working draft): `auto` provides scrolling when content overflows.
+The containing-block width supplies the percentage limit; no engineering
+coefficient or acceptance limit is introduced.
+
+Worked example inputs are a synthetic CSV with thirty columns named
+`result_0` through `result_29` and one row containing `value` in each column.
+The column count and desktop/mobile viewports follow
+[issue 1625](https://github.com/vamseeachanta/digitalmodel/issues/1625).
+To construct this input without introducing engineering data:
+
+```python
+import csv
+from pathlib import Path
+
+csv_path = Path("wide-results.csv")
+with csv_path.open("w", newline="", encoding="utf-8") as stream:
+    writer = csv.writer(stream)
+    writer.writerow([f"result_{index}" for index in range(30)])
+    writer.writerow(["value"] * 30)
+```
+
+Declare the file under the pack's results, relative to the input YAML:
+
+```yaml
+results:
+  tables:
+    - title: Synthetic wide results
+      csv: wide-results.csv
+```
+
+Method: render the pack through the existing workflow, then measure the document
+and the result table's wrapper in a browser. The expected answer is
+`documentElement.scrollWidth - documentElement.clientWidth == 0`, while the
+wide table has `wrapper.scrollWidth > wrapper.clientWidth`. Scrolling the
+wrapper to its end exposes `result_29` and its unchanged value. This checks
+containment rather than hiding overflow on the page.
+
+The automated worked case also covers a narrow CSV, an unbroken cell, and the
+same table in an engine appendix at the issue's desktop and mobile viewport
+sizes, with screen and print CSS:
+
+```bash
+PYTHONPATH=src uv run python -m pytest tests/report_pack/test_report_pack.py -k 'scroll_container or scroll_locally'
+```
+
+Browser checks require Playwright and an installed Chromium, Chrome or Edge;
+their absence is reported as a skip. Print emulation checks HTML layout only;
+pagination of all wide-table columns in PDF is not established. Standard-chip
+masthead wrapping is a separate limitation: a long chip can still widen a mobile
+page independently of its tables. The synthetic layout case has no standard
+chips so that it isolates table containment.
