@@ -2,27 +2,27 @@
  "schema_version": "1.0",
  "report_id": "issue-001-hull-roll-screening",
  "mode": "rebuild",
- "started_utc": "2026-11-07T03:59:09Z",
- "finished_utc": "2026-11-07T03:59:12Z",
+ "started_utc": "2026-11-07T04:50:03Z",
+ "finished_utc": "2026-11-07T04:50:06Z",
  "grade": "PASS",
  "pinned_commit": "8d08ea24198dcb99217df82325688a331f8aefce",
  "artifacts": {
   "results.json": "5dc4cfa727f1894c168a9603223d5552789ab419971861fba9f4227d1e16202f",
   "eval.py": "5cb0633cfa1f7004b5b479ef4a8f4be941a5e1a6ecf0388bb2d6897fc8dda024",
-  "../evalkit.py": "5993133e4d58514b587cece30cb850a487ffcd4032e6fb34142f2b0bbab31a7e"
+  "../evalkit.py": "e52cd0ff12cd869c4e2f55ee6a5777800a4278828d28d8fc546cc7b69efe2eb3"
  },
  "python": "3.12.10",
  "platform": "Windows",
  "context": {
   "revision": "candidate",
   "repo_root": "dm-evals",
-  "repo_head": "741142375857153fcaa20d0c988f754b17ce6989",
+  "repo_head": "e54e49a362b0ad5af75903e26426bb3fe0ba3626",
   "sha256": {
    "scripts/capabilities/build_generic_hull_screening.py": "ae325a7f24b2aac91ca81d1729023e38f575f0cba95f6f476cc785e0f46b293c",
    "src/digitalmodel/hydrodynamics/utube_tank.py": "17e535267435fde2573da70042c9d53f5980da5b0bcefcebb1c26792148987cf",
    "docs/api/cfd/data/generic_hull_roll_screening.json": "209cfe10038c3233b071d8e9b5ceb47c16eeb52beaed83ec804df99bf97d864b"
   },
-  "artifacts_repo_head": "741142375857153fcaa20d0c988f754b17ce6989",
+  "artifacts_repo_head": "e54e49a362b0ad5af75903e26426bb3fe0ba3626",
   "artifacts_dirty": false,
   "code_mode": "candidate"
  },
