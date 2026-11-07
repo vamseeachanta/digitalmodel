@@ -35,7 +35,11 @@ def inputs(tmp_path):
                 "mesh_format": "gdf",
                 "symmetry": "none",
             },
-            "inertia": {"mass": 119052930, "centre_of_gravity": [115.5, 0, -5.5]},
+            "inertia": {
+                "mass": 119052930,
+                "centre_of_gravity": [115.5, 0, 8.0],
+                "radii_of_gyration": [17.15, 57.75, 60.06],
+            },
         },
         "environment": {"water_depth": 1000.0, "water_density": 1025},
         "frequencies": {"input_type": "frequency", "values": [0.2, 0.5]},
@@ -54,7 +58,10 @@ def inputs(tmp_path):
         "heading_convention": "synthetic heading convention",
         "weight_report": "synthetic reviewed weight report",
         "base_values": {
-            "centre_of_gravity_basis": "synthetic loading evidence from weight report",
+            "mass_kg": 119052930,
+            "centre_of_gravity_m": [115.5, 0, 8.0],
+            "radii_of_gyration_m": [17.15, 57.75, 60.06],
+            "centre_of_gravity_basis": "WEIGHT_REPORT: synthetic reviewed weight report",
         },
         "final_frequency_list": "synthetic reviewed sampling reference",
         "approvals": {
@@ -140,6 +147,7 @@ def test_preparation_preserves_physical_inputs_and_sources(inputs):
     for case in manifest["cases"]:
         spec = yaml.safe_load((inputs[2] / case["spec"]).read_text(encoding="utf-8"))
         assert spec["vessel"]["inertia"] == inputs[3]["vessel"]["inertia"]
+        assert spec["vessel"]["inertia"]["centre_of_gravity"][2] == 8.0
         assert spec["environment"] == inputs[3]["environment"]
         assert spec["solver_options"]["precision"] == "double"
         assert "remove_irregular_frequencies" not in spec["solver_options"]
@@ -149,9 +157,71 @@ def test_preparation_preserves_physical_inputs_and_sources(inputs):
 
 
 @pytest.mark.parametrize(
+    "field,value",
+    [
+        ("mass_kg", 119052931),
+        ("centre_of_gravity_m", [115.5, 0, -5.5]),
+        ("centre_of_gravity_m", [115.5, 0, 9.0]),
+        ("radii_of_gyration_m", [17.15, 57.75, 60.07]),
+    ],
+)
+@pytest.mark.parametrize("side", ["request", "base"])
+def test_request_loading_must_match_issued_inertia(inputs, field, value, side):
+    if side == "request":
+        inputs[4]["base_values"][field] = value
+    else:
+        key = {
+            "mass_kg": "mass",
+            "centre_of_gravity_m": "centre_of_gravity",
+            "radii_of_gyration_m": "radii_of_gyration",
+        }[field]
+        inputs[3]["vessel"]["inertia"][key] = value
+        inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8")
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
+    with pytest.raises(ValueError, match=rf"base_values\.{field}.*match"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize(
+    "field", ["mass_kg", "centre_of_gravity_m", "radii_of_gyration_m"]
+)
+@pytest.mark.parametrize("fault", ["omitted", [], True, "nan"])
+def test_request_loading_requires_finite_complete_values(inputs, field, fault):
+    if fault == "omitted":
+        inputs[4]["base_values"].pop(field)
+    else:
+        inputs[4]["base_values"][field] = fault
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
+    with pytest.raises(ValueError, match=rf"base_values\.{field}"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize("field", ["mass_kg", "radii_of_gyration_m"])
+def test_matching_nonpositive_loading_cannot_issue(inputs, field):
+    key = {"mass_kg": "mass", "radii_of_gyration_m": "radii_of_gyration"}[field]
+    value = 0 if field == "mass_kg" else [17.15, 0, 60.06]
+    inputs[3]["vessel"]["inertia"][key] = value
+    inputs[4]["base_values"][field] = value
+    inputs[0].write_text(yaml.safe_dump(inputs[3]), encoding="utf-8")
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
+    with pytest.raises(ValueError, match=rf"base_values\.{field}"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+def test_missing_loading_basis_uses_missing_input_diagnostic(inputs):
+    inputs[4]["base_values"]["centre_of_gravity_basis"] = None
+    inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
+    with pytest.raises(ValueError, match="MISSING"):
+        prepare(inputs)
+    assert not inputs[2].exists()
+
+
+@pytest.mark.parametrize(
     "basis",
     [
-        None,
         "",
         "   ",
         42,
@@ -159,12 +229,19 @@ def test_preparation_preserves_physical_inputs_and_sources(inputs):
         "set at reconstructed centre of buoyancy",
         "  PLACEHOLDER from weight report  ",
         "Set at Reconstructed Centre of Buoyancy; weight report supplied",
+        "assumed equal to the buoyancy centre pending weight report",
+        "TBD",
+        "estimate",
+        "set at reconstructed center of buoyancy",
+        "set at reconstructed centre-of-buoyancy",
+        "WEIGHT_REPORT:",
+        "WEIGHT_REPORT: a different reference",
     ],
 )
 def test_weight_report_does_not_approve_placeholder_loading(inputs, basis):
     inputs[4]["base_values"]["centre_of_gravity_basis"] = basis
     inputs[1].write_text(json.dumps(inputs[4]), encoding="utf-8")
-    with pytest.raises(ValueError, match="centre_of_gravity_basis|MISSING"):
+    with pytest.raises(ValueError, match="centre_of_gravity_basis"):
         prepare(inputs)
     assert not inputs[2].exists()
 
@@ -535,6 +612,8 @@ def test_half_mesh_with_cleared_flags_cannot_issue(inputs):
 
 def test_mass_mismatch_blocks_all_cases(inputs):
     inputs[3]["vessel"]["inertia"]["mass"] /= 2
+    inputs[4]["base_values"]["mass_kg"] = inputs[3]["vessel"]["inertia"]["mass"]
+    inputs[1].write_text(json.dumps(inputs[4]))
     inputs[0].write_text(yaml.safe_dump(inputs[3]))
     with pytest.raises(ValueError, match="DF2"):
         prepare(inputs)
@@ -569,6 +648,8 @@ def test_missing_or_invalid_centre_of_gravity_blocks_all_cases(inputs, centre):
 @pytest.mark.parametrize("centre", [[0, 0, 0], [115.5, 1, -5.5]])
 def test_horizontal_loading_imbalance_blocks_all_cases(inputs, centre):
     inputs[3]["vessel"]["inertia"]["centre_of_gravity"] = centre
+    inputs[4]["base_values"]["centre_of_gravity_m"] = centre
+    inputs[1].write_text(json.dumps(inputs[4]))
     inputs[0].write_text(yaml.safe_dump(inputs[3]))
     with pytest.raises(ValueError, match="DF2"):
         prepare(inputs)
@@ -583,7 +664,9 @@ def test_balanced_translated_hull_can_issue(inputs):
             campaign.mesh_geometry.encode_gdf(panels)
         )
     refresh_mesh_reference(inputs)
-    inputs[3]["vessel"]["inertia"]["centre_of_gravity"] = [125.5, 0.1, -5.5]
+    inputs[3]["vessel"]["inertia"]["centre_of_gravity"] = [125.5, 0.1, 8.0]
+    inputs[4]["base_values"]["centre_of_gravity_m"] = [125.5, 0.1, 8.0]
+    inputs[1].write_text(json.dumps(inputs[4]))
     inputs[0].write_text(yaml.safe_dump(inputs[3]))
     manifest = prepare(inputs)
     assert len(manifest["cases"]) == 12

@@ -26,6 +26,7 @@ and physical qualification are not established; no solver is run by these tools.
 <tr><td>3</td><td>2026-11-06</td><td>Required horizontal buoyancy alignment with the supplied centre of gravity before preparation and clarified the constructed mass-balance result.</td></tr>
 <tr><td>4</td><td>2026-11-06</td><td>Clarified that the assumed centre of gravity equals reconstructed buoyancy, so horizontal alignment checks integration and vertical loading awaits a weight report.</td></tr>
 <tr><td>5</td><td>2026-11-06</td><td>Required a loading basis without placeholder or reconstructed-buoyancy wording before preparation, because a weight-report reference alone does not establish loading.</td></tr>
+<tr><td>6</td><td>2026-11-07</td><td>Bound requested mass, centre of gravity and gyradii to the issued base-spec inertia and replaced the wording filter with an exact weight-report reference.</td></tr>
 </tbody>
 <caption>Retained issue history.</caption>
 </table>
@@ -80,12 +81,17 @@ recorded as <code>APPROVED: reference</code>, and each comparison criterion must
 These strings record evidence; they do not authenticate an approval.</p>
 <p>The required evidence fields <code>base_spec</code>, <code>heading_convention</code>,
 <code>weight_report</code> and <code>final_frequency_list</code> require nonblank reference strings.
-The <code>base_values.centre_of_gravity_basis</code> field also requires a nonblank string.
-Preparation rejects it if it contains <code>placeholder</code> or
-<code>reconstructed centre of buoyancy</code>, regardless of letter case, even when a weight-report
-reference and approvals are supplied. The template loading therefore remains blocked until its basis
-is replaced with reviewed loading evidence. This text check does not authenticate the weight report
-or independently verify the supplied centre of gravity.
+The <code>base_values.centre_of_gravity_basis</code> field must equal
+<code>WEIGHT_REPORT: </code> followed by the exact <code>weight_report</code> reference.
+This positive reference form replaces the rejected-word list. The issued centre of gravity comes from
+the base spec's <code>vessel.inertia.centre_of_gravity</code>, not from the request.
+Before any case is issued, <code>base_values.mass_kg</code>, <code>centre_of_gravity_m</code>
+and <code>radii_of_gyration_m</code> must match the base spec's <code>vessel.inertia.mass</code>,
+<code>centre_of_gravity</code> and <code>radii_of_gyration</code> respectively, by exact numeric equality.
+All values must be finite; mass and gyradii must be positive, and both vectors require three components.
+The template loading remains blocked until reviewed loading evidence replaces its assumed basis.
+The reference form records a declaration that the weight report supplies the matched loading;
+it does not authenticate that report or independently verify its contents or the supplied centre of gravity.
 Within <code>criteria.asymptotic_max_rad_s</code>, <code>heave_natural_frequency_rad_s</code>
 requires a positive finite corrected frequency, and <code>heading_justification</code> requires an object
 mapping each requested heading in degrees to a nonblank evidence reference or rationale. Numeric heading

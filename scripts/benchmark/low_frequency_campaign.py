@@ -147,16 +147,10 @@ def require_evidence(request, headings):
         if isinstance(base_values, dict)
         else None
     )
-    if (
-        not isinstance(basis, str)
-        or not basis.strip()
-        or any(
-            marker in basis.casefold()
-            for marker in ("placeholder", "reconstructed centre of buoyancy")
-        )
-    ):
+    if basis != f"WEIGHT_REPORT: {request['weight_report']}":
         raise ValueError(
-            "reviewed centre_of_gravity_basis required; placeholder loading cannot issue"
+            "centre_of_gravity_basis must be WEIGHT_REPORT: followed by the exact "
+            "weight_report reference"
         )
     asymptote = request["criteria"]["asymptotic_max_rad_s"]
     corrected = number(asymptote.get("heave_natural_frequency_rad_s"))
@@ -178,6 +172,35 @@ def require_evidence(request, headings):
             "heading justification evidence must cover each requested heading"
         )
     return corrected
+
+
+def require_matching_loading(request, inertia):
+    """Bind the request loading evidence to the inertia used in every case."""
+    for field, key, size, positive in (
+        ("mass_kg", "mass", None, True),
+        ("centre_of_gravity_m", "centre_of_gravity", 3, False),
+        ("radii_of_gyration_m", "radii_of_gyration", 3, True),
+    ):
+
+        def components(value):
+            if size is None:
+                values = [value]
+            elif not isinstance(value, list) or len(value) != size:
+                raise ValueError("three coordinates required")
+            else:
+                values = value
+            parsed = [number(item) for item in values]
+            if positive and any(item <= 0 for item in parsed):
+                raise ValueError("positive values required")
+            return parsed
+
+        try:
+            requested = components(request["base_values"].get(field))
+            supplied = components(inertia.get(key))
+        except ValueError as exc:
+            raise ValueError(f"base_values.{field}: {exc}") from exc
+        if requested != supplied:
+            raise ValueError(f"base_values.{field} must match base-spec inertia.{key}")
 
 
 def local_mesh(root, value):
@@ -300,6 +323,7 @@ def build(base_path, request_path, output):
         raise ValueError("DF2 requires explicit mass")
     if "centre_of_gravity" not in inertia:
         raise ValueError("DF2 requires explicit centre_of_gravity")
+    require_matching_loading(request, inertia)
     environment = base["environment"]
     # Use the EnvironmentSpec default when gravity is omitted.
     gravity = number(environment.get("gravity", 9.80665))
