@@ -465,7 +465,7 @@ def test_flags_keep_interface_cached_during_stand_in_lifetime(tmp_path):
 
 
 def _check_flags_after_interface_teardown(read_before_teardown, tmp_path):
-    """Check the two access orders in separate interpreters."""
+    """Check one access order in a fresh interpreter."""
     _run_guarded(
         f"""
         import importlib
