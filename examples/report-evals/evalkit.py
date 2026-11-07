@@ -408,6 +408,18 @@ def evaluate(results: list[dict[str, Any]], values: dict[str, Any],
     return rows
 
 
+def json_safe(value: Any) -> Any:
+    """Copy of value for a strict JSON record: a non-finite float becomes the string
+    "inf", "-inf" or "nan", so the record never holds Infinity or NaN."""
+    if isinstance(value, float) and not math.isfinite(value):
+        return repr(value)
+    if isinstance(value, dict):
+        return {k: json_safe(v) for k, v in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [json_safe(v) for v in value]
+    return value
+
+
 def print_table(report_id: str, rows: list[dict[str, Any]], verdict: str,
                 errors: list[str]) -> None:
     print(f"report: {report_id}")
@@ -595,7 +607,7 @@ def main(results_path: Path,
         "errors": structural,
         "results": rows,
     }
-    text = json.dumps(record, indent=1, default=str) + "\n"
+    text = json.dumps(json_safe(record), indent=1, default=str, allow_nan=False) + "\n"
     if args.out:  # an explicit destination is replaced on purpose
         out = args.out
         out.parent.mkdir(parents=True, exist_ok=True)

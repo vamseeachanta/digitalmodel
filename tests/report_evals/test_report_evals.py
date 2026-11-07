@@ -391,7 +391,7 @@ def test_git_calls_ignore_caller_bindings(tmp_path, monkeypatch):
     _git("init", "-q", str(fixture), check=True)
     (fixture / "a.txt").write_bytes(b"a\n")
     _git("-C", str(fixture), "add", "a.txt", check=True)
-    _git("-C", str(fixture), "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid",
+    _git("-C", str(fixture), "-c", "user.name=fixture", "-c", "user.email=fixture-identity",
          "-c", "commit.gpgsign=false", "commit", "-q", "-m", "fixture", check=True)
     head = kit.git_head(fixture)
     assert head is not None
@@ -419,7 +419,7 @@ def _commit_all(repo):
         "-c",
         "user.name=fixture",
         "-c",
-        "user.email=fixture@example.invalid",
+        "user.email=fixture-identity",
         "-c",
         "commit.gpgsign=false",
         "commit",
@@ -484,3 +484,32 @@ def test_scratch_directory_is_removed(tmp_path, monkeypatch):
         work / "results.json", compute, argv=["--revision", "pinned", "--out", str(out)]
     )
     assert seen and not seen[0].exists() and not seen[0].parent.parent.exists()
+
+def test_non_finite_reader_value_keeps_record_strict_json(tmp_path):
+    """A reader value of 1e400 grades FAIL and the record parses as strict JSON."""
+    folder = ALL[0]
+    numeric = next(
+        r
+        for r in _manifest(folder)["results"]
+        if r.get("scope", "both") == "both"
+        and isinstance(r["value"], (int, float))
+        and not isinstance(r["value"], bool)
+    )
+    reader = tmp_path / "inf.json"
+    reader.write_text(
+        '{"results": [{"id": "%s", "value": 1e400}]}' % numeric["id"], encoding="utf-8"
+    )
+    out = tmp_path / "inf-run.json"
+    run = _run(folder, "--compare", str(reader), "--out", str(out))
+    assert run.returncode == 1, run.stderr
+
+    def reject(token):
+        raise ValueError(f"non-standard JSON constant {token}")
+
+    record = json.loads(out.read_text(encoding="utf-8"), parse_constant=reject)
+    row = next(r for r in record["results"] if r["id"] == numeric["id"])
+    assert record["grade"] == "FAIL"
+    assert row["status"] == "MISMATCH" and row["got"] == "inf"
+    assert _kit().json_safe({"a": [float("nan"), float("-inf"), 1.5]}) == {
+        "a": ["nan", "-inf", 1.5]
+    }

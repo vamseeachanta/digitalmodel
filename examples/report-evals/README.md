@@ -53,7 +53,7 @@ Each result gets one status:
 
 Tolerance: `abs` t passes when |got - expected| <= t; `rel_pct` r passes when |got - expected| <= r/100 x |expected|. Both bounds are inclusive. Two integers compare exactly; otherwise an allowance of 1e-9 x |expected| covers binary representation, so a zero reference is exact.
 
-The report grade is FAIL when any result is MISMATCH or ERROR, or when the rebuild raised an unexpected error, PARTIAL when any result is DRIFT or NOT_EVALUATED, and PASS otherwise. Scope `both` (default) is graded in every mode, `rebuild` only when the eval rebuilds, and `pinned` only in a `--revision pinned` rebuild. A reader file that cannot be read, or that has an unknown or repeated id, grades FAIL; so does a number too large to compare.
+The report grade is FAIL when any result is MISMATCH or ERROR, or when the rebuild raised an unexpected error, PARTIAL when any result is DRIFT or NOT_EVALUATED, and PASS otherwise. Scope `both` (default) is graded in every mode, `rebuild` only when the eval rebuilds, and `pinned` only in a `--revision pinned` rebuild. A reader file that cannot be read, or that has an unknown or repeated id, grades FAIL; so does a number too large to compare. A record is strict JSON: a non-finite value (for example a reader's 1e400) is stored as the string "inf", "-inf" or "nan" and grades MISMATCH.
 
 ## Schema changes
 
