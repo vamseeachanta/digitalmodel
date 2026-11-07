@@ -127,7 +127,7 @@ fowt = [
     "shapely==2.1.2",
     "matplotlib==3.10.9",
 ]
-drawings = ["ezdxf>=1.3,<2"]
+drawings = ["ezdxf>=1.3,<2", "defusedxml>=0.7.1,<1"]
 cad = [
     # Optional CAD readers for client geometry ingestion (#2023).
     #
