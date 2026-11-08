@@ -34,6 +34,30 @@ def sat_steps():
     return CommissioningSequenceGenerator({}).generate_sequence(CommissioningPhase.SAT)
 
 
+@pytest.mark.parametrize(
+    ("phase", "step_id"),
+    [(CommissioningPhase.FAT, "FAT-001"), (CommissioningPhase.SAT, "SAT-002")],
+)
+@pytest.mark.parametrize("reading", ["", "   ", "\t\n"])
+def test_blank_not_run_reading_preserves_incomplete_count(phase, step_id, reading):
+    steps = CommissioningSequenceGenerator({}).generate_sequence(phase)
+    validator = ResultsValidator(steps)
+    results = [
+        _result(step.step_id, reading, "not_run")
+        if step.step_id == step_id
+        else _result(step.step_id, "OK")
+        for step in steps
+    ]
+
+    assert validator.validate(results) == {
+        "passed": 4,
+        "failed": 0,
+        "not_run": 1,
+        "errors": [],
+    }
+    assert validator.generate_punch_list(results) == []
+
+
 def test_low_fat_reading_overrides_six_submitted_passes(fat_steps):
     validator = ResultsValidator(fat_steps)
     results = [_result(step.step_id, "0.5 MOhm") for step in fat_steps]

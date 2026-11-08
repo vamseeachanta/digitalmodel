@@ -185,6 +185,8 @@ class TestResultsValidator:
 
     def _meets_resistance_criterion(self, result: TestResult) -> bool | None:
         """Compare supported resistance readings; leave other criteria advisory."""
+        if result.status == "not_run" and not result.actual_value.strip():
+            return None
         criterion = self._step_map[result.step_id].acceptance_criteria
         criterion_match = _RESISTANCE_CRITERION.fullmatch(criterion)
         if criterion_match is None:
