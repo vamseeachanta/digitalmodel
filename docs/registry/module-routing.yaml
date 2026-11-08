@@ -523,6 +523,9 @@ modules:
       orcaflex/results_analysis:
         agent_pack: src/digitalmodel/solvers/orcaflex/results_analysis/docs/agent-pack.md
         qa_family: MR
+      orcaflex/utils:
+        agent_pack: src/digitalmodel/solvers/orcaflex/utils/docs/agent-pack.md
+        qa_family: MR
       orcawave:
         agent_pack: src/digitalmodel/solvers/orcawave/docs/agent-pack.md
         qa_family: DF
