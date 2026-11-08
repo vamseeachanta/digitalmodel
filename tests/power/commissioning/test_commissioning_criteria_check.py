@@ -201,3 +201,55 @@ def test_explicit_failure_stays_failed_when_reading_is_unparseable(fat_steps):
     assert summary["failed"] == 1
     assert len(summary["errors"]) == 1
     assert len(validator.generate_punch_list(results)) == 1
+
+
+@pytest.mark.parametrize("reading", ["", "   "])
+def test_not_run_fat_step_with_blank_reading_stays_not_run(reading):
+    steps = CommissioningSequenceGenerator({}).generate_sequence(CommissioningPhase.FAT)
+    validator = ResultsValidator(steps)
+    results = [_result(step.step_id, "OK") for step in steps]
+    results[0] = _result("FAT-001", reading, "not_run")
+
+    assert validator.validate(results) == {
+        "passed": 4,
+        "failed": 0,
+        "not_run": 1,
+        "errors": [],
+    }
+    assert validator.generate_punch_list(results) == []
+
+
+def test_not_run_fat_step_with_low_reading_still_fails():
+    steps = CommissioningSequenceGenerator({}).generate_sequence(CommissioningPhase.FAT)
+    validator = ResultsValidator(steps)
+    results = [_result(step.step_id, "OK") for step in steps]
+    results[0] = _result("FAT-001", "0.5 MOhm", "not_run")
+
+    assert validator.validate(results) == {
+        "passed": 4,
+        "failed": 1,
+        "not_run": 0,
+        "errors": [],
+    }
+    punch = validator.generate_punch_list(results)
+    assert len(punch) == 1
+    assert punch[0].step_id == "FAT-001"
+    assert punch[0].severity == "critical"
+    assert "0.5 MOhm" in punch[0].description
+    assert "R >= 100 MOhm" in punch[0].description
+
+
+def test_passed_fat_step_with_empty_reading_still_reports_error():
+    steps = CommissioningSequenceGenerator({}).generate_sequence(CommissioningPhase.FAT)
+    validator = ResultsValidator(steps)
+    results = [_result(step.step_id, "OK") for step in steps]
+    results[0] = _result("FAT-001", "")
+
+    summary = validator.validate(results)
+
+    assert summary["passed"] == 4
+    assert summary["failed"] == 0
+    assert summary["not_run"] == 0
+    assert summary["errors"] == [
+        "Step FAT-001: invalid resistance value '' for 'R >= 100 MOhm'"
+    ]
