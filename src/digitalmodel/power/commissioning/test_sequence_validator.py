@@ -235,6 +235,9 @@ class TestResultsValidator:
             if r.step_id not in self._step_map:
                 errors.append(f"Unknown step_id '{r.step_id}'")
                 continue
+            if r.status == "not_run" and not r.actual_value.strip():
+                not_run += 1
+                continue
             try:
                 criterion_met = self._meets_resistance_criterion(r)
             except ValueError as error:
@@ -267,6 +270,8 @@ class TestResultsValidator:
         for r in results:
             step = self._step_map.get(r.step_id)
             if step is None:
+                continue
+            if r.status == "not_run" and not r.actual_value.strip():
                 continue
             try:
                 criterion_met = self._meets_resistance_criterion(r)
