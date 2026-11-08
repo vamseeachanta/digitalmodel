@@ -289,7 +289,9 @@ class TestTestResultsValidator:
             TestResult(
                 step_id=s.step_id,
                 status="pass",
-                actual_value="OK",
+                actual_value=(
+                    "250 MOhm" if s.acceptance_criteria == "R >= 100 MOhm" else "OK"
+                ),
                 notes="",
                 timestamp="2026-03-13T10:00:00",
             )

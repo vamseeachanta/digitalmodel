@@ -6,8 +6,10 @@ validates results against expected sequences, and produces punch lists.
 """
 
 import csv
+import re
 from dataclasses import dataclass
 from enum import Enum
+from fractions import Fraction
 
 
 class CommissioningPhase(str, Enum):
@@ -169,6 +171,9 @@ class CommissioningSequenceGenerator:
 
 
 _REQUIRED_CSV_COLUMNS = {"step_id", "status", "actual_value", "notes", "timestamp"}
+_RESISTANCE_NUMBER = r"[+-]?(?:[0-9]+(?:\.[0-9]*)?|\.[0-9]+)(?:[eE][+-]?[0-9]+)?"
+_RESISTANCE_CRITERION = re.compile(rf"R (>=|<=) ({_RESISTANCE_NUMBER}) (MOhm|Ohm)")
+_RESISTANCE_VALUE = re.compile(rf"({_RESISTANCE_NUMBER}) (MOhm|Ohm)")
 
 
 class TestResultsValidator:
@@ -177,6 +182,23 @@ class TestResultsValidator:
     def __init__(self, sequence: list[TestStep]):
         self._sequence = sequence
         self._step_map = {s.step_id: s for s in sequence}
+
+    def _meets_resistance_criterion(self, result: TestResult) -> bool | None:
+        """Compare supported resistance readings; leave other criteria advisory."""
+        criterion = self._step_map[result.step_id].acceptance_criteria
+        criterion_match = _RESISTANCE_CRITERION.fullmatch(criterion)
+        if criterion_match is None:
+            return None
+        value_match = _RESISTANCE_VALUE.fullmatch(result.actual_value)
+        if value_match is None:
+            raise ValueError(
+                f"Step {result.step_id}: invalid resistance value "
+                f"{result.actual_value!r} for {criterion!r}"
+            )
+        # Rational arithmetic preserves decimal thresholds and unit conversion exactly.
+        actual = Fraction(value_match[1]) * (1_000_000 if value_match[2] == "MOhm" else 1)
+        limit = Fraction(criterion_match[2]) * (1_000_000 if criterion_match[3] == "MOhm" else 1)
+        return actual >= limit if criterion_match[1] == ">=" else actual <= limit
 
     def load_results_csv(self, filepath: str) -> list[TestResult]:
         """Load test results from a CSV file."""
@@ -213,10 +235,17 @@ class TestResultsValidator:
             if r.step_id not in self._step_map:
                 errors.append(f"Unknown step_id '{r.step_id}'")
                 continue
-            if r.status == "pass":
-                passed += 1
-            elif r.status == "fail":
+            try:
+                criterion_met = self._meets_resistance_criterion(r)
+            except ValueError as error:
+                errors.append(str(error))
+                if r.status != "fail":
+                    continue
+                criterion_met = None
+            if r.status == "fail" or criterion_met is False:
                 failed += 1
+            elif r.status == "pass":
+                passed += 1
             elif r.status == "not_run":
                 not_run += 1
 
@@ -236,15 +265,22 @@ class TestResultsValidator:
         """Generate punch list from failed test results."""
         punch_items = []
         for r in results:
-            if r.status != "fail":
-                continue
             step = self._step_map.get(r.step_id)
             if step is None:
                 continue
+            try:
+                criterion_met = self._meets_resistance_criterion(r)
+            except ValueError:
+                criterion_met = None
+            if r.status != "fail" and criterion_met is not False:
+                continue
+            description = f"{step.description}: {r.actual_value}"
+            if criterion_met is False:
+                description += f" (criterion: {step.acceptance_criteria})"
             punch_items.append(
                 PunchItem(
                     step_id=r.step_id,
-                    description=f"{step.description}: {r.actual_value}",
+                    description=description,
                     phase=step.phase,
                     severity="critical",
                     action_required=f"Investigate and retest: {r.notes}" if r.notes else "Investigate and retest",
