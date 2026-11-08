@@ -11,6 +11,29 @@ from pathlib import Path
 import pytest
 
 RECORD = Path(__file__).resolve().parents[2] / "docs/domains/mooring/screening"
+# Cross-runtime readback tolerances; the record's physical criteria stay separate.
+RECORD_FLOAT_REL_TOLERANCE = 1e-12
+RECORD_FLOAT_ABS_TOLERANCE = 1e-9
+
+
+def assert_record_matches(computed, recorded, path="record"):
+    """Allow float roundoff while requiring exact types, structure and metadata."""
+    assert type(computed) is type(recorded), f"{path}: types differ"
+    if isinstance(recorded, dict):
+        assert computed.keys() == recorded.keys(), f"{path}: key sets differ"
+        for key, value in recorded.items():
+            assert_record_matches(computed[key], value, f"{path}.{key}")
+    elif isinstance(recorded, list):
+        assert len(computed) == len(recorded), f"{path}: list lengths differ"
+        for index, (actual, expected) in enumerate(zip(computed, recorded)):
+            assert_record_matches(actual, expected, f"{path}[{index}]")
+    elif isinstance(recorded, float):
+        assert math.isclose(computed, recorded, rel_tol=RECORD_FLOAT_REL_TOLERANCE,
+                            abs_tol=RECORD_FLOAT_ABS_TOLERANCE), (
+            f"{path}: {computed!r} != {recorded!r}"
+        )
+    else:
+        assert computed == recorded, f"{path}: {computed!r} != {recorded!r}"
 
 
 @pytest.fixture(scope="module", autouse=True)
@@ -182,7 +205,7 @@ def test_record_rerun_and_two_builds_are_identical(run, builder, tmp_path, input
 def test_committed_native_output_and_manifest_readback(run, inputs):
     basis, criteria, _ = inputs
     computed = run.compute_record(basis, criteria)
-    assert computed == json.loads((RECORD / "results.json").read_text())
+    assert_record_matches(computed, json.loads((RECORD / "results.json").read_text()))
     manifest = json.loads((RECORD / "manifest.json").read_text())
     for name, expected in manifest["files"].items():
         assert run.digest(RECORD / name) == expected["sha256"]
@@ -221,18 +244,20 @@ def test_interpreter_patch_version_is_metadata_only(run, builder, inputs, tmp_pa
     basis, criteria, _ = inputs
     recorded = json.loads((RECORD / "results.json").read_text())
     manifests = []
+    native_outputs = []
     for version in ("3.11.17", "3.11.15"):
         monkeypatch.setattr(platform, "python_version", lambda version=version: version)
         computed = run.compute_record(basis, criteria)
-        assert computed == recorded
+        assert_record_matches(computed, recorded)
         assert "python_version" not in computed
         destination = tmp_path / version
         destination.mkdir()
         run.write_json(destination / "results.json", computed)
-        assert (destination / "results.json").read_bytes() == (RECORD / "results.json").read_bytes()
+        native_outputs.append((destination / "results.json").read_bytes())
         manifest = builder.build(destination)
         assert manifest["python_version"] == version
         manifests.append(manifest)
+    assert native_outputs[0] == native_outputs[1]
     assert manifests[0] != manifests[1]
     computed_manifests = [{key: value for key, value in manifest.items() if key != "python_version"}
                           for manifest in manifests]
