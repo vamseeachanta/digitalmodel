@@ -487,6 +487,9 @@ modules:
       calculix:
         agent_pack: src/digitalmodel/solvers/calculix/docs/agent-pack.md
         qa_family: FE
+      fea_model:
+        agent_pack: src/digitalmodel/solvers/fea_model/docs/agent-pack.md
+        qa_family: MR
       gmsh_meshing:
         agent_pack: src/digitalmodel/solvers/gmsh_meshing/docs/agent-pack.md
         qa_family: FE
