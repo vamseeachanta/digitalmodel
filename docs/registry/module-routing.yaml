@@ -702,6 +702,10 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#alt_fuel_ship_sizing
   - module: fatg_spectral_fatigue
     entry_point: src/digitalmodel/fatg_spectral_fatigue/
+    submodules:
+      fatg_spectral_fatigue:
+        agent_pack: src/digitalmodel/fatg_spectral_fatigue/docs/agent-pack.md
+        qa_family: EC
     maturity: development
     owner_wiki: docs/domains/fatigue/fatg-legacy-spectral-fatigue.md
     key_tests: [tests/fatigue/test_fatg.py, tests/fatigue/test_fatg_workflow.py]
