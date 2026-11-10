@@ -5,6 +5,7 @@ import hashlib
 import importlib.util
 import json
 import math
+import re
 import sys
 from pathlib import Path
 
@@ -96,16 +97,16 @@ def test_invalid_static_input_is_rejected(run, force, weight, depth):
 
 def test_source_tampering_is_rejected_without_modifying_caller(run, tmp_path):
     source = tmp_path / "source.json"
-    source.write_text("original\n")
+    source.write_text("original\n", encoding="utf-8", newline="\n")
     pin = run.digest(source)
     basis = {"source_files": {source.name: pin}}
     run.verify_sources(basis, root=tmp_path)
-    source.write_text("tampered\n")
+    source.write_text("tampered\n", encoding="utf-8", newline="\n")
     tampered = run.digest(source)
     with pytest.raises(ValueError, match="Source digest mismatch"):
         run.verify_sources(basis, root=tmp_path)
     assert run.digest(source) == tampered
-    source.write_text("original\n")
+    source.write_text("original\n", encoding="utf-8", newline="\n")
     assert run.digest(source) == pin
     run.write_json(tmp_path / "preservation.json", {"before": pin, "tampered": tampered, "restored": run.digest(source)})
 
@@ -113,12 +114,12 @@ def test_source_tampering_is_rejected_without_modifying_caller(run, tmp_path):
 @pytest.mark.parametrize("fault", ["digest", "order", "timezone"])
 def test_criteria_evidence_fails_closed(run, tmp_path, fault):
     path = tmp_path / "criteria.json"
-    path.write_text('{}\n')
+    path.write_text('{}\n', encoding="utf-8", newline="\n")
     receipt = {"criteria_sha256": run.digest(path), "criteria_recorded_at_utc": "2026-10-14T00:00:00+00:00",
                "first_run_started_at_utc": "2026-10-14T00:00:01+00:00"}
     run.validate_evidence(path, receipt)
     if fault == "digest":
-        path.write_text('{"changed":true}\n')
+        path.write_text('{"changed":true}\n', encoding="utf-8", newline="\n")
     elif fault == "order":
         receipt["first_run_started_at_utc"] = receipt["criteria_recorded_at_utc"]
     else:
@@ -194,7 +195,7 @@ def test_record_rerun_and_two_builds_are_identical(run, builder, tmp_path, input
     builder.build(b)
     for name in ("results.json", "report.html", "README.md", "comparison.md", "manifest.json"):
         assert (a / name).read_bytes() == (b / name).read_bytes()
-    manifest = json.loads((a / "manifest.json").read_text())
+    manifest = json.loads((a / "manifest.json").read_text(encoding="utf-8"))
     for name, expected in manifest["files"].items():
         assert run.digest(a / name) == expected["sha256"]
         assert (a / name).stat().st_size == expected["bytes"]
@@ -205,11 +206,13 @@ def test_record_rerun_and_two_builds_are_identical(run, builder, tmp_path, input
 def test_committed_native_output_and_manifest_readback(run, inputs):
     basis, criteria, _ = inputs
     computed = run.compute_record(basis, criteria)
-    assert_record_matches(computed, json.loads((RECORD / "results.json").read_text()))
-    manifest = json.loads((RECORD / "manifest.json").read_text())
+    assert_record_matches(computed, json.loads((RECORD / "results.json").read_text(encoding="utf-8")))
+    manifest = json.loads((RECORD / "manifest.json").read_text(encoding="utf-8"))
     for name, expected in manifest["files"].items():
-        assert run.digest(RECORD / name) == expected["sha256"]
-    receipt = json.loads((RECORD / "execution.json").read_text())
+        assert run.digest(RECORD / name) == expected["sha256"], (
+            f"manifest.files.{name}.sha256: digest differs"
+        )
+    receipt = json.loads((RECORD / "execution.json").read_text(encoding="utf-8"))
     run.validate_evidence(RECORD / "criteria.json", receipt)
 
 
@@ -224,7 +227,7 @@ def test_page_rejects_uncomputed_claim_outside_result_block(run, builder, inputs
 def test_imported_solver_origin_is_bound_to_the_record(run, inputs, tmp_path, monkeypatch):
     basis, criteria, _ = inputs
     imported = sys.modules[run.SimplifiedCatenarySolver.__module__]
-    monkeypatch.setattr(imported, "__file__", str(tmp_path / "other.py"))
+    monkeypatch.setattr(imported, "__file__", (tmp_path / "other.py").as_posix())
     with pytest.raises(ValueError, match="Imported module digest mismatch"):
         run.compute_record(basis, criteria)
 
@@ -238,13 +241,29 @@ def test_website_output_has_no_trailing_whitespace(run, builder, inputs):
 
 
 def test_interpreter_patch_version_is_metadata_only(run, builder, inputs, tmp_path, monkeypatch):
-    """Reproduce computed bytes across patch versions while retaining run metadata."""
+    """Check committed serialization and isolate substituted version metadata."""
     import platform
 
     basis, criteria, _ = inputs
-    recorded = json.loads((RECORD / "results.json").read_text())
+    recorded = json.loads((RECORD / "results.json").read_text(encoding="utf-8"))
+
+    def reverse_keys(value):
+        if isinstance(value, dict):
+            return {key: reverse_keys(item) for key, item in reversed(list(value.items()))}
+        if isinstance(value, list):
+            return [reverse_keys(item) for item in value]
+        return value
+
+    # Snapshot values round-trip exactly; reverse keys to also exercise sorting.
+    snapshot = tmp_path / "recorded-results.json"
+    run.write_json(snapshot, reverse_keys(recorded))
+    assert snapshot.read_bytes() == (RECORD / "results.json").read_bytes(), (
+        "committed JSON serialization differs; if a rebuild is authorized, run "
+        "PYTHONPATH=src uv run --no-sources python "
+        "docs/domains/mooring/screening/run_screening.py "
+        "--receipt docs/domains/mooring/screening/execution.json --output-dir <output>"
+    )
     manifests = []
-    native_outputs = []
     for version in ("3.11.17", "3.11.15"):
         monkeypatch.setattr(platform, "python_version", lambda version=version: version)
         computed = run.compute_record(basis, criteria)
@@ -253,15 +272,40 @@ def test_interpreter_patch_version_is_metadata_only(run, builder, inputs, tmp_pa
         destination = tmp_path / version
         destination.mkdir()
         run.write_json(destination / "results.json", computed)
-        native_outputs.append((destination / "results.json").read_bytes())
         manifest = builder.build(destination)
         assert manifest["python_version"] == version
         manifests.append(manifest)
-    assert native_outputs[0] == native_outputs[1]
     assert manifests[0] != manifests[1]
     computed_manifests = [{key: value for key, value in manifest.items() if key != "python_version"}
                           for manifest in manifests]
     assert computed_manifests[0] == computed_manifests[1]
+
+
+@pytest.mark.parametrize("fault", [
+    "indent", "key-order", "separators", "trailing-newline", "line-endings",
+])
+def test_readback_rejects_serializer_drift(run, builder, inputs, tmp_path, monkeypatch, fault):
+    """Deterministic formatting changes must still fail committed-byte readback."""
+    def changed_serializer(path, value):
+        options = {"indent": 2, "sort_keys": True, "allow_nan": False}
+        if fault == "indent":
+            options["indent"] = 4
+        elif fault == "key-order":
+            options["sort_keys"] = False
+        elif fault == "separators":
+            options["separators"] = (",", ":")
+        text = json.dumps(value, **options) + "\n"
+        if fault == "trailing-newline":
+            text = text.removesuffix("\n")
+        elif fault == "line-endings":
+            text = text.replace("\n", "\r\n")
+        path.write_text(text, encoding="utf-8", newline="\n")
+
+    monkeypatch.setattr(run, "write_json", changed_serializer)
+    with pytest.raises(AssertionError, match="committed JSON serialization differs"):
+        test_interpreter_patch_version_is_metadata_only(
+            run, builder, inputs, tmp_path, monkeypatch
+        )
 
 
 def test_website_export_includes_its_linked_run_record(run, builder, inputs, tmp_path, monkeypatch):
@@ -273,7 +317,8 @@ def test_website_export_includes_its_linked_run_record(run, builder, inputs, tmp
         if original.is_file():
             (record / original.name).write_bytes(original.read_bytes())
     source = tmp_path / "source.html"
-    source.write_text("<html><head><title>Old</title></head><body>Old</body></html>")
+    source.write_text("<html><head><title>Old</title></head><body>Old</body></html>",
+                      encoding="utf-8", newline="\n")
     basis["website_source_sha256"] = run.digest(source)
     run.write_json(record / "basis.json", basis)
     monkeypatch.setattr(builder, "RECORD", record)
@@ -283,16 +328,16 @@ def test_website_export_includes_its_linked_run_record(run, builder, inputs, tmp
     builder.build(output, source, website)
     page = website / "content/demos/mooring.html"
     relative = "mooring-screening/README.md"
-    assert f'href="{relative}"' in page.read_text()
+    assert f'href="{relative}"' in page.read_text(encoding="utf-8")
     bundle = page.parent / "mooring-screening"
     assert (bundle / "README.md").read_bytes() == (output / "README.md").read_bytes()
     assert (bundle / "manifest.json").read_bytes() == (output / "manifest.json").read_bytes()
-    native = json.loads((bundle / "manifest.json").read_text())
+    native = json.loads((bundle / "manifest.json").read_text(encoding="utf-8"))
     for name, expected in native["files"].items():
         assert run.digest(bundle / name) == expected["sha256"]
     for name, expected in native["record_inputs"].items():
         assert run.digest(bundle / name) == expected
-    exported = json.loads((website / "manifest.json").read_text())
+    exported = json.loads((website / "manifest.json").read_text(encoding="utf-8"))
     for path in bundle.iterdir():
         relative = path.relative_to(website).as_posix()
         assert exported["files"][relative]["sha256"] == run.digest(path)
@@ -301,7 +346,7 @@ def test_website_export_includes_its_linked_run_record(run, builder, inputs, tmp
 @pytest.fixture(params=["native", "patch-version"])
 def readback_case(request, run, builder, inputs, tmp_path, monkeypatch):
     """Exercise each real readback with a controlled computed record."""
-    computed = json.loads((RECORD / "results.json").read_text())
+    computed = json.loads((RECORD / "results.json").read_text(encoding="utf-8"))
     monkeypatch.setattr(run, "compute_record", lambda *_: computed)
 
     def check():
@@ -352,7 +397,7 @@ def test_readback_rejects_material_float_change_with_field(readback_case):
 def test_readback_rejects_float_outside_tolerance(readback_case, field, value):
     computed, check = readback_case
     computed["solutions"][0][field] = value
-    with pytest.raises(AssertionError):
+    with pytest.raises(AssertionError, match=rf"record\.solutions\[0\]\.{field}:"):
         check()
 
 
@@ -374,14 +419,19 @@ def test_readback_rejects_non_float_or_type_change(readback_case, path, value):
     for key in path[:-1]:
         target = target[key]
     target[path[-1]] = value
-    with pytest.raises(AssertionError):
+    field_path = "record" + "".join(f"[{key}]" if isinstance(key, int) else f".{key}" for key in path)
+    with pytest.raises(AssertionError, match=re.escape(field_path + ":")):
         check()
 
 
-@pytest.mark.parametrize("fault", [
-    "missing-key", "extra-key", "short-list", "long-list", "list-order",
-])
-def test_readback_rejects_structure_change(readback_case, fault):
+@pytest.mark.parametrize("fault,diagnostic", [
+    ("missing-key", r"record\.solutions\[0\]\.native: key sets differ"),
+    ("extra-key", r"record\.solutions\[0\]\.native: key sets differ"),
+    ("short-list", r"record\.solutions: list lengths differ"),
+    ("long-list", r"record\.solutions: list lengths differ"),
+    ("list-order", r"record\.solutions\[0\]\.anchor_radius_m:"),
+], ids=["missing-key", "extra-key", "short-list", "long-list", "list-order"])
+def test_readback_rejects_structure_change(readback_case, fault, diagnostic):
     computed, check = readback_case
     if fault == "missing-key":
         del computed["solutions"][0]["native"]["fairlead_tension_n"]
@@ -393,7 +443,7 @@ def test_readback_rejects_structure_change(readback_case, fault):
         computed["solutions"].append(computed["solutions"][0])
     else:
         computed["solutions"].reverse()
-    with pytest.raises(AssertionError):
+    with pytest.raises(AssertionError, match=diagnostic):
         check()
 
 
@@ -406,5 +456,5 @@ def test_committed_readback_still_rejects_manifest_digest_change(run, inputs, mo
         return original_digest(path)
 
     monkeypatch.setattr(run, "digest", changed_digest)
-    with pytest.raises(AssertionError):
+    with pytest.raises(AssertionError, match=r"manifest\.files\.results\.json\.sha256: digest differs"):
         test_committed_native_output_and_manifest_readback(run, inputs)
