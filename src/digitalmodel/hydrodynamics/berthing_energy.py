@@ -7,18 +7,26 @@ Design of Fender Systems: 2002*:
 * section 4.2.4  Ce = (K^2 + R^2 cos^2 phi) / (K^2 + R^2),  K = (0.19 Cb + 0.11) L
 * section 4.2.5  Cm from keel clearance: 1.8 at UKC <= 0.1 D, 1.5 at UKC >= 0.5 D,
                  linear between; the Ueda and Vasco Costa formulae for comparison
-* section 4.2.6  Cs (1.0 for soft fenders);  section 4.2.7  Cc (1.0 open berth,
-                 0.9 solid quay under parallel approach)
-* Table 4.2.5    factor for abnormal impact applied to the normal berthing energy
+* section 4.2.6  Cs (1.0 for soft fenders)
+* section 4.2.7  Cc. Cc and the added-mass method go together: with Cm from
+                 the keel-clearance rule (``added_mass_factor_ukc``) use
+                 Cc = 1.0. A lower Cc for a solid quay applies only with an
+                 added-mass method that does not already account for the
+                 confined water, and only under near-parallel approach. The
+                 caller chooses both; this module cannot infer how Cm was found.
+* section 4.2.8  a factor for abnormal impact multiplies the normal energy. The
+                 caller supplies it (PIANC 2002 Table 4.2.5 and section 4.2.8
+                 are the source to consult); no table values are embedded here.
 
-PIANC MarCom WG211 (2024) supersedes WG33 with a semi-probabilistic format: a
-characteristic energy multiplied by a partial energy factor, characteristic
-berthing velocities by navigation condition, and fender performance corrected
-by velocity, temperature, angular and multiple-contact factors and divided by
-partial resistance factors. This module does not tabulate WG211 values. A
-WG211 calculation supplies its own velocity and partial energy factor (in
-place of the abnormal impact factor) and its own fender correction factors.
-WG211 and WG33 inputs should not be mixed in one calculation.
+Scope of WG211 (PIANC MarCom WG211, 2024). WG211 supersedes WG33 with a
+semi-probabilistic format: characteristic energy times a partial energy
+factor, and fender base performance converted to characteristic and design
+performance with velocity, temperature, angular, multiple-contact and partial
+resistance factors. This module implements none of those factors. A caller may
+pass a WG211 velocity and partial energy factor as plain inputs, but fender
+screening against WG211 requires catalogue rows that the caller has already
+converted to design performance (energy, reaction and hull pressure), prepared
+and documented outside this module. WG211 and WG33 inputs should not be mixed.
 
 Fender candidates are read from a catalogue CSV at a caller-supplied path,
 with the columns in ``FENDER_CATALOGUE_COLUMNS``. No manufacturer data ship
@@ -34,15 +42,23 @@ from pathlib import Path
 
 SEAWATER_DENSITY_T_M3 = 1.025
 
-# PIANC 2002 Table 4.2.5, factor for abnormal impact (Cab).
-# (largest vessel, smallest vessel); single-valued rows repeat the value.
-_ABNORMAL_IMPACT = {
-    "tanker_bulk": (1.25, 1.75),
-    "container": (1.5, 2.0),
-    "general_cargo": (1.75, 1.75),
-    "ro_ro_ferry": (2.0, 2.0),  # "2.0 or higher"
-    "tug_workboat": (2.0, 2.0),
-}
+
+def _finite(name, value, *, positive=False, nonneg=False):
+    """Return ``value`` as float after checking it is finite and of the right sign."""
+    if isinstance(value, bool):
+        raise ValueError(f"{name} must be a number, not a boolean")
+    try:
+        x = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{name} must be a number") from exc
+    if not math.isfinite(x):
+        raise ValueError(f"{name} must be finite, got {value!r}")
+    if positive and x <= 0:
+        raise ValueError(f"{name} must be positive, got {value!r}")
+    if nonneg and x < 0:
+        raise ValueError(f"{name} must not be negative, got {value!r}")
+    return x
+
 
 FENDER_CATALOGUE_COLUMNS = (
     "fender_id",
@@ -78,31 +94,18 @@ def berthing_energy(
         displacement_t: ship displacement M, tonnes.
         velocity_m_s: approach velocity perpendicular to the berth, m/s.
         ce, cm, cs, cc: eccentricity, added mass, softness and berth
-            configuration factors.
+            configuration factors. ``cc`` must match the method used for
+            ``cm``: with the keel-clearance rule, Cc = 1.0 (see module notes).
+
+    The design energy is this value times a caller-supplied abnormal impact
+    factor (WG33) or partial energy factor (WG211).
     """
-    if displacement_t <= 0:
-        raise ValueError("displacement_t must be positive")
-    if velocity_m_s < 0:
-        raise ValueError("velocity_m_s must not be negative")
+    m = _finite("displacement_t", displacement_t, positive=True)
+    v = _finite("velocity_m_s", velocity_m_s, nonneg=True)
+    product = 1.0
     for name, value in (("ce", ce), ("cm", cm), ("cs", cs), ("cc", cc)):
-        if value <= 0:
-            raise ValueError(f"{name} must be positive")
-    return 0.5 * displacement_t * velocity_m_s**2 * ce * cm * cs * cc
-
-
-def abnormal_impact_factor(vessel_type: str, largest: bool = True) -> float:
-    """Factor for abnormal impact, PIANC 2002 Table 4.2.5.
-
-    ``vessel_type`` is one of: tanker_bulk, container, general_cargo,
-    ro_ro_ferry, tug_workboat. ``largest`` selects the value for the largest
-    (True) or smallest (False) vessel using the berth. PIANC 2002 section
-    4.2.8 bounds the derived factor between 1.1 and 2.0 except in exceptional
-    circumstances and asks for it to be modified for the berth (fender
-    redundancy, berthing frequency, very low design velocities, structure
-    vulnerability, vessel range, hazardous cargo).
-    """
-    largest_value, smallest_value = _ABNORMAL_IMPACT[vessel_type]
-    return largest_value if largest else smallest_value
+        product *= _finite(name, value, positive=True)
+    return 0.5 * m * v**2 * product
 
 
 # --------------------------------------------------------------------------
@@ -118,15 +121,18 @@ def block_coefficient(
     water_density_t_m3: float = SEAWATER_DENSITY_T_M3,
 ) -> float:
     """Cb = M / (rho * Lpp * B * T), PIANC 2002 section 4.2.4."""
-    if min(displacement_t, lbp_m, beam_m, draft_m, water_density_t_m3) <= 0:
-        raise ValueError("all inputs must be positive")
-    return displacement_t / (water_density_t_m3 * lbp_m * beam_m * draft_m)
+    m = _finite("displacement_t", displacement_t, positive=True)
+    lpp = _finite("lbp_m", lbp_m, positive=True)
+    b = _finite("beam_m", beam_m, positive=True)
+    t = _finite("draft_m", draft_m, positive=True)
+    rho = _finite("water_density_t_m3", water_density_t_m3, positive=True)
+    return m / (rho * lpp * b * t)
 
 
 def radius_of_gyration(cb: float, lbp_m: float) -> float:
     """K = (0.19 Cb + 0.11) L in metres, PIANC 2002 section 4.2.4."""
-    if cb <= 0 or lbp_m <= 0:
-        raise ValueError("cb and lbp_m must be positive")
+    cb = _finite("cb", cb, positive=True)
+    lbp_m = _finite("lbp_m", lbp_m, positive=True)
     return (0.19 * cb + 0.11) * lbp_m
 
 
@@ -140,8 +146,9 @@ def eccentricity_factor(k_m: float, r_m: float, phi_deg: float = 90.0) -> float:
             contact point to the centre of mass, degrees. 90 degrees (the
             default) gives Ce = K^2 / (K^2 + R^2).
     """
-    if k_m <= 0 or r_m < 0:
-        raise ValueError("k_m must be positive and r_m non-negative")
+    k_m = _finite("k_m", k_m, positive=True)
+    r_m = _finite("r_m", r_m, nonneg=True)
+    phi_deg = _finite("phi_deg", phi_deg)
     k2 = k_m**2
     r2 = r_m**2
     return (k2 + r2 * math.cos(math.radians(phi_deg)) ** 2) / (k2 + r2)
@@ -157,24 +164,30 @@ def contact_geometry(
 
     The centre of mass is taken at midships on the centreline. The contact is
     on the side facing the berth, ``x_from_bow_m`` aft of the forward
-    perpendicular, and the ship approaches bow-in at ``berthing_angle_deg``
-    to the berthing line with its velocity perpendicular to that line.
+    perpendicular. The velocity is perpendicular to the berthing line.
+    ``berthing_angle_deg`` is the angle between the centreline and the
+    berthing line: positive with the bow nearer the berth, negative with the
+    stern nearer. The signed longitudinal offset is kept, so forward and aft
+    contacts at the same orientation give different results.
 
     Returns:
         (R in m, phi in degrees) for :func:`eccentricity_factor`.
     """
-    if lbp_m <= 0 or beam_m < 0:
-        raise ValueError("lbp_m must be positive and beam_m non-negative")
+    lbp_m = _finite("lbp_m", lbp_m, positive=True)
+    beam_m = _finite("beam_m", beam_m, nonneg=True)
+    x_from_bow_m = _finite("x_from_bow_m", x_from_bow_m)
+    berthing_angle_deg = _finite("berthing_angle_deg", berthing_angle_deg)
     if not 0.0 <= x_from_bow_m <= lbp_m:
         raise ValueError("x_from_bow_m must lie on the ship")
-    xg = lbp_m / 2.0 - x_from_bow_m  # forward of midships, m
+    xg = lbp_m / 2.0 - x_from_bow_m  # + forward of midships, - aft, m
     half_beam = beam_m / 2.0
     r = math.hypot(xg, half_beam)
     if r == 0.0:
         return 0.0, 90.0
     a = math.radians(berthing_angle_deg)
-    # component of R along the velocity (perpendicular to the berthing line)
-    r_normal = abs(xg) * math.sin(a) + half_beam * math.cos(a)
+    # signed component of R along the velocity (perpendicular to the berth);
+    # only its square enters Ce, so the magnitude is taken after projecting
+    r_normal = abs(xg * math.sin(a) + half_beam * math.cos(a))
     phi = math.degrees(math.acos(min(1.0, r_normal / r)))
     return r, phi
 
@@ -188,10 +201,10 @@ def added_mass_factor_ukc(draft_m: float, water_depth_m: float) -> float:
     """Cm from under-keel clearance, PIANC 2002 section 4.2.5 recommendation.
 
     1.8 for UKC <= 0.1 D, 1.5 for UKC >= 0.5 D, linear in between
-    (transverse approach). WG211 keeps this method for alongside berthing.
+    (transverse approach). Use Cc = 1.0 with a Cm from this rule.
     """
-    if draft_m <= 0:
-        raise ValueError("draft_m must be positive")
+    draft_m = _finite("draft_m", draft_m, positive=True)
+    water_depth_m = _finite("water_depth_m", water_depth_m, positive=True)
     ukc = water_depth_m - draft_m
     if ukc <= 0:
         raise ValueError(
@@ -207,8 +220,9 @@ def added_mass_factor_ukc(draft_m: float, water_depth_m: float) -> float:
 
 def added_mass_factor_ueda(draft_m: float, beam_m: float, cb: float) -> float:
     """Cm = 1 + pi D / (2 Cb B) (Ueda 1981), PIANC 2002 section 4.2.5."""
-    if min(draft_m, beam_m, cb) <= 0:
-        raise ValueError("all inputs must be positive")
+    draft_m = _finite("draft_m", draft_m, positive=True)
+    beam_m = _finite("beam_m", beam_m, positive=True)
+    cb = _finite("cb", cb, positive=True)
     return 1.0 + math.pi * draft_m / (2.0 * cb * beam_m)
 
 
@@ -218,8 +232,8 @@ def added_mass_factor_vasco_costa(draft_m: float, beam_m: float) -> float:
     PIANC states validity for keel clearance above 0.1 D and velocity above
     0.08 m/s.
     """
-    if draft_m <= 0 or beam_m <= 0:
-        raise ValueError("all inputs must be positive")
+    draft_m = _finite("draft_m", draft_m, positive=True)
+    beam_m = _finite("beam_m", beam_m, positive=True)
     return 1.0 + 2.0 * draft_m / beam_m
 
 
@@ -230,7 +244,11 @@ def added_mass_factor_vasco_costa(draft_m: float, beam_m: float) -> float:
 
 @dataclass(frozen=True)
 class FenderRating:
-    """One catalogue row: rated (base) performance at the rated deflection."""
+    """One catalogue row: rated (base) performance at the rated deflection.
+
+    Numeric values must be finite and positive; optional values may be None.
+    Rated deflection, when given, must lie in (0, 100] percent.
+    """
 
     fender_id: str
     manufacturer: str
@@ -244,10 +262,33 @@ class FenderRating:
     rated_deflection_pct: float | None
     source: str
 
+    def __post_init__(self) -> None:
+        where = f"fender {self.fender_id!r}"
+        for name in ("rated_energy_knm", "reaction_kn"):
+            _finite(f"{where} {name}", getattr(self, name), positive=True)
+        for name in (
+            "diameter_mm",
+            "length_mm",
+            "internal_pressure_kpa",
+            "hull_pressure_kpa",
+            "rated_deflection_pct",
+        ):
+            value = getattr(self, name)
+            if value is not None:
+                _finite(f"{where} {name}", value, positive=True)
+        if self.rated_deflection_pct is not None and self.rated_deflection_pct > 100.0:
+            raise ValueError(f"{where} rated_deflection_pct must not exceed 100")
+
 
 @dataclass(frozen=True)
 class FenderCandidate:
-    """A catalogue fender that meets the energy demand and any limits."""
+    """A catalogue fender that meets the energy demand and any limits.
+
+    ``characteristic_energy_knm`` is the rated energy after the energy
+    tolerance and angular factor. ``reaction_kn`` and ``hull_pressure_kpa``
+    are the catalogue values raised by the reaction tolerance; the unadjusted
+    catalogue values remain on ``fender``.
+    """
 
     fender: FenderRating
     energy_per_fender_knm: float
@@ -278,21 +319,24 @@ def load_fender_catalogue(path: str | Path) -> list[FenderRating]:
             raise ValueError(f"{path.name}: missing columns {', '.join(missing)}")
         rows = []
         for row in reader:
-            rows.append(
-                FenderRating(
-                    fender_id=row["fender_id"].strip(),
+            fid = row["fender_id"].strip()
+            try:
+                rating = FenderRating(
+                    fender_id=fid,
                     manufacturer=row["manufacturer"].strip(),
                     fender_type=row["fender_type"].strip(),
                     diameter_mm=_optional_float(row["diameter_mm"]),
                     length_mm=_optional_float(row["length_mm"]),
                     internal_pressure_kpa=_optional_float(row["internal_pressure_kpa"]),
-                    rated_energy_knm=float(row["rated_energy_knm"]),
-                    reaction_kn=float(row["reaction_kn"]),
+                    rated_energy_knm=float(row["rated_energy_knm"].strip()),
+                    reaction_kn=float(row["reaction_kn"].strip()),
                     hull_pressure_kpa=_optional_float(row["hull_pressure_kpa"]),
                     rated_deflection_pct=_optional_float(row["rated_deflection_pct"]),
                     source=row["source"].strip(),
                 )
-            )
+            except ValueError as exc:
+                raise ValueError(f"{path.name}: row {fid!r}: {exc}") from exc
+            rows.append(rating)
     return rows
 
 
@@ -304,6 +348,7 @@ def select_fenders(
     angular_factor: float = 1.0,
     max_reaction_kn: float | None = None,
     max_hull_pressure_kpa: float | None = None,
+    reaction_tolerance: float = 0.0,
 ) -> list[FenderCandidate]:
     """Catalogue fenders that absorb the required energy, smallest margin first.
 
@@ -311,38 +356,60 @@ def select_fenders(
         catalogue: rows from :func:`load_fender_catalogue`.
         required_energy_knm: design energy to absorb (after any abnormal or
             partial energy factor).
-        fenders_in_contact: fenders sharing the energy equally. Reaction and
-            hull pressure are per fender and are not divided.
-        energy_tolerance: manufacturing tolerance on rated energy as a
+        fenders_in_contact: whole number of fenders sharing the energy
+            equally. Reaction and hull pressure are per fender and are not
+            divided.
+        energy_tolerance: lower manufacturing tolerance on rated energy as a
             fraction (0.10 for -10 %); the rated energy is reduced by it.
         angular_factor: reduction of rated energy for angular compression.
-        max_reaction_kn: per-fender reaction limit (reaction at rated energy).
-        max_hull_pressure_kpa: allowable hull pressure.
+        max_reaction_kn: per-fender reaction limit.
+        max_hull_pressure_kpa: allowable hull pressure. Rows without a hull
+            pressure are excluded when this limit is set, because compliance
+            cannot be shown.
+        reaction_tolerance: upper manufacturing tolerance on reaction as a
+            fraction (0.10 for +10 %), independent of the energy tolerance.
+            Reaction and hull pressure are both raised by it (pressure taken
+            as proportional to reaction over the same contact area) before the
+            limits are checked, and the raised values are returned.
+
+    These are the only fender adjustments applied. Velocity, temperature,
+    multiple-contact and partial resistance factors (WG211) are not applied;
+    supply rows already converted to design performance where they govern.
 
     Returns:
         Adequate candidates sorted by utilisation, highest (closest to 1) first.
     """
-    if required_energy_knm < 0:
-        raise ValueError("required_energy_knm must not be negative")
+    total = _finite("required_energy_knm", required_energy_knm, nonneg=True)
+    if isinstance(fenders_in_contact, bool) or not isinstance(fenders_in_contact, int):
+        raise ValueError("fenders_in_contact must be a whole number")
     if fenders_in_contact < 1:
         raise ValueError("fenders_in_contact must be at least 1")
-    if not 0.0 <= energy_tolerance < 1.0:
+    e_tol = _finite("energy_tolerance", energy_tolerance, nonneg=True)
+    if e_tol >= 1.0:
         raise ValueError("energy_tolerance must be in [0, 1)")
-    if not 0.0 < angular_factor <= 1.0:
+    ang = _finite("angular_factor", angular_factor, positive=True)
+    if ang > 1.0:
         raise ValueError("angular_factor must be in (0, 1]")
+    r_up = 1.0 + _finite("reaction_tolerance", reaction_tolerance, nonneg=True)
+    if max_reaction_kn is not None:
+        max_reaction_kn = _finite("max_reaction_kn", max_reaction_kn, positive=True)
+    if max_hull_pressure_kpa is not None:
+        max_hull_pressure_kpa = _finite(
+            "max_hull_pressure_kpa", max_hull_pressure_kpa, positive=True
+        )
 
-    demand = required_energy_knm / fenders_in_contact
+    demand = total / fenders_in_contact
     picks = []
     for f in catalogue:
-        capacity = f.rated_energy_knm * (1.0 - energy_tolerance) * angular_factor
-        if capacity <= 0 or demand > capacity:
+        capacity = f.rated_energy_knm * (1.0 - e_tol) * ang
+        if demand > capacity:
             continue
-        if max_reaction_kn is not None and f.reaction_kn > max_reaction_kn:
+        reaction = f.reaction_kn * r_up
+        pressure = None if f.hull_pressure_kpa is None else f.hull_pressure_kpa * r_up
+        if max_reaction_kn is not None and reaction > max_reaction_kn:
             continue
-        if (
-            max_hull_pressure_kpa is not None
-            and f.hull_pressure_kpa is not None
-            and f.hull_pressure_kpa > max_hull_pressure_kpa
+        if max_hull_pressure_kpa is not None and (
+            pressure is None or pressure > max_hull_pressure_kpa
         ):
             continue
         picks.append(
@@ -351,8 +418,8 @@ def select_fenders(
                 energy_per_fender_knm=demand,
                 characteristic_energy_knm=capacity,
                 utilisation=demand / capacity,
-                reaction_kn=f.reaction_kn,
-                hull_pressure_kpa=f.hull_pressure_kpa,
+                reaction_kn=reaction,
+                hull_pressure_kpa=pressure,
             )
         )
     picks.sort(key=lambda p: -p.utilisation)
@@ -376,11 +443,15 @@ ENERGY_INPUTS = (
 
 @dataclass(frozen=True)
 class EnergySensitivityRow:
-    """Design energy with one input changed from the base case."""
+    """Design energy with one input changed from the base case.
+
+    The first row of every table is the base case: parameter "base", value
+    and base_value None, change 0 %.
+    """
 
     parameter: str
-    value: float
-    base_value: float
+    value: float | None
+    base_value: float | None
     design_energy_knm: float
     base_design_energy_knm: float
     change_pct: float
@@ -388,6 +459,7 @@ class EnergySensitivityRow:
 
 
 def _design_energy(inputs: dict[str, float]) -> float:
+    factor = _finite("abnormal_factor", inputs["abnormal_factor"], positive=True)
     return (
         berthing_energy(
             inputs["displacement_t"],
@@ -397,7 +469,7 @@ def _design_energy(inputs: dict[str, float]) -> float:
             cs=inputs["cs"],
             cc=inputs["cc"],
         )
-        * inputs["abnormal_factor"]
+        * factor
     )
 
 
@@ -409,19 +481,35 @@ def energy_sensitivity(
 
     Args:
         base: values for every key in ``ENERGY_INPUTS``. ``abnormal_factor``
-            stands for the WG33 abnormal impact factor or a WG211 partial
-            energy factor.
+            stands for the caller-supplied WG33 abnormal impact factor or
+            WG211 partial energy factor and must be finite and positive.
         ranges: for each input to vary, a list of (value, source) pairs; the
             source states where the value comes from.
 
     Returns:
-        One row per (input, value), in the order given.
+        The base row (0 %), then one row per (input, value) in the order given.
+
+    Raises:
+        ValueError: if the base design energy is zero (zero velocity), since a
+            percentage change from it is undefined.
     """
     missing = [k for k in ENERGY_INPUTS if k not in base]
     if missing:
         raise KeyError(f"base is missing {', '.join(missing)}")
     e0 = _design_energy(base)
-    rows = []
+    if e0 == 0.0:
+        raise ValueError("base design energy is zero; percentage changes are undefined")
+    rows = [
+        EnergySensitivityRow(
+            parameter="base",
+            value=None,
+            base_value=None,
+            design_energy_knm=e0,
+            base_design_energy_knm=e0,
+            change_pct=0.0,
+            source="base case",
+        )
+    ]
     for name, values in ranges.items():
         if name not in ENERGY_INPUTS:
             raise KeyError(f"unknown input {name!r}")
@@ -481,12 +569,14 @@ def fender_size_sensitivity(
 
     Energy margin is rated energy / design energy - 1, in percent. Rated
     deflection for a pneumatic fender is taken as a fraction of its diameter.
+    The base fender is always the first row, whether or not ``fender_ids``
+    names it.
     """
-    if design_energy_knm <= 0:
-        raise ValueError("design_energy_knm must be positive")
+    design_energy_knm = _finite("design_energy_knm", design_energy_knm, positive=True)
     by_id = {f.fender_id: f for f in catalogue}
     base = by_id[base_id]
     ids = fender_ids if fender_ids is not None else [f.fender_id for f in catalogue]
+    ids = [base_id] + [i for i in ids if i != base_id]
     base_margin = (base.rated_energy_knm / design_energy_knm - 1.0) * 100.0
     rows = []
     for fid in ids:
