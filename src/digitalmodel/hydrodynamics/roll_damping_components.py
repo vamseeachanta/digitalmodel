@@ -643,9 +643,9 @@ def wave_damping_forward_speed(
 
     ``zero_speed_damping`` is the potential-flow roll damping from a
     diffraction solver at ``omega``. The correction is Ikeda's doublet model;
-    ITTC 7.5-02-07-04.5 (2024) eq. 31 prints the tanh argument as
-    ``20 Omega - 0.3``, the paper and earlier sources as ``20 (Omega - 0.3)``,
-    which is used here.
+    ITTC 7.5-02-07-04.5 (2011 eq. 2.8, 2024 eq. 31) prints the tanh argument
+    as ``20 Omega - 0.3``, which does not return the zero-speed value at
+    ``U = 0``; the paper's ``20 (Omega - 0.3)`` does, and is used here.
     """
     b_w0 = _non_negative("zero_speed_damping", zero_speed_damping)
     omega = _positive("omega", omega)
