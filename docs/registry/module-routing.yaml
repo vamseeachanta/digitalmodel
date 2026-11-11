@@ -600,6 +600,9 @@ modules:
       vertical_riser:
         agent_pack: src/digitalmodel/subsea/vertical_riser/docs/agent-pack.md
         qa_family: MR
+      cross_sections:
+        agent_pack: src/digitalmodel/subsea/cross_sections/docs/agent-pack.md
+        qa_family: EC
       manifolds:
         agent_pack: src/digitalmodel/subsea/manifolds/docs/agent-pack.md
         qa_family: EC
