@@ -15,7 +15,7 @@ import pytest
 
 from digitalmodel.hydrodynamics.berthing_energy import (
     FENDER_CATALOGUE_COLUMNS,
-    abnormal_impact_factor,
+    FenderRating,
     added_mass_factor_ueda,
     added_mass_factor_ukc,
     added_mass_factor_vasco_costa,
@@ -177,32 +177,6 @@ def test_added_mass_vasco_costa_hand_check():
 
 
 # --------------------------------------------------------------------------
-# Abnormal impact (PIANC 2002 Table 4.2.5)
-# --------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    "vessel_type, largest, expected",
-    [
-        ("tanker_bulk", True, 1.25),
-        ("tanker_bulk", False, 1.75),
-        ("container", True, 1.5),
-        ("container", False, 2.0),
-        ("general_cargo", True, 1.75),
-        ("ro_ro_ferry", True, 2.0),
-        ("tug_workboat", True, 2.0),
-    ],
-)
-def test_abnormal_impact_table(vessel_type, largest, expected):
-    assert abnormal_impact_factor(vessel_type, largest=largest) == expected
-
-
-def test_abnormal_impact_unknown_type():
-    with pytest.raises(KeyError):
-        abnormal_impact_factor("submarine")
-
-
-# --------------------------------------------------------------------------
 # Fender catalogue (read by path and schema) and selection
 # --------------------------------------------------------------------------
 
@@ -283,13 +257,13 @@ def test_select_returns_empty_when_nothing_adequate():
 
 def test_end_to_end_generic_supramax():
     # Cb from particulars, K, quarter-point Ce (phi = 90), Cm from UKC,
-    # abnormal factor for the largest bulk carrier, then select a fender.
+    # a caller-supplied design factor (1.25, assumed), then select a fender.
     cb = block_coefficient(DISPLACEMENT_T, LBP_M, BEAM_M, DRAFT_M)  # 0.846883
     k = radius_of_gyration(cb, LBP_M)  # (0.19 * 0.846883 + 0.11) * 180 = 48.763
     ce = eccentricity_factor(k, LBP_M / 4)
     cm = added_mass_factor_ukc(DRAFT_M, 13.8)  # UKC 1.8 = 0.15 D -> 1.7625
     e_normal = berthing_energy(DISPLACEMENT_T, 0.12, ce=ce, cm=cm)
-    e_design = e_normal * abnormal_impact_factor("tanker_bulk", largest=True)
+    e_design = e_normal * 1.25
     # hand: K = 48.76300; K^2 = 2377.830; Ce = 2377.830 / 4402.830 = 0.540070
     assert k == pytest.approx(48.76300, rel=1e-5)
     assert ce == pytest.approx(0.540070, rel=1e-5)
@@ -338,8 +312,11 @@ def test_energy_sensitivity_one_at_a_time():
     assert by[("abnormal_factor", 1.75)].change_pct == pytest.approx(40.0)
     assert by[("cc", 0.9)].design_energy_knm == pytest.approx(437.4)
     assert by[("cc", 0.9)].source == "solid quay"
-    # rows keep the order given
-    assert [r.parameter for r in rows][:2] == ["velocity_m_s", "velocity_m_s"]
+    # the base row comes first at 0 %, then rows keep the order given
+    assert rows[0].parameter == "base"
+    assert rows[0].change_pct == 0.0
+    assert rows[0].design_energy_knm == pytest.approx(486.0)
+    assert [r.parameter for r in rows][1:3] == ["velocity_m_s", "velocity_m_s"]
 
 
 def test_energy_sensitivity_rejects_unknown_input():
@@ -377,3 +354,192 @@ def test_fender_size_sensitivity_against_base():
 def test_fender_size_sensitivity_unknown_base():
     with pytest.raises(KeyError):
         fender_size_sensitivity(load_fender_catalogue(FIXTURE), "NOPE", 100.0)
+
+
+# --------------------------------------------------------------------------
+# Review fixes: input validation, unknown pressure, reaction tolerance,
+# signed contact offset, sensitivity domain, base rows
+# --------------------------------------------------------------------------
+
+
+def _rating(**over):
+    vals = dict(
+        fender_id="T-1",
+        manufacturer="generic",
+        fender_type="pneumatic",
+        diameter_mm=2200.0,
+        length_mm=4000.0,
+        internal_pressure_kpa=50.0,
+        rated_energy_knm=400.0,
+        reaction_kn=1100.0,
+        hull_pressure_kpa=135.0,
+        rated_deflection_pct=60.0,
+        source="fictional test row",
+    )
+    vals.update(over)
+    return FenderRating(**vals)
+
+
+@pytest.mark.parametrize(
+    "bad",
+    [
+        dict(displacement_t=math.nan),
+        dict(displacement_t=math.inf),
+        dict(velocity_m_s=math.nan),
+        dict(velocity_m_s=math.inf),
+        dict(ce=math.nan),
+        dict(cm=math.inf),
+        dict(cs=-0.9),
+        dict(cc=math.nan),
+    ],
+)
+def test_energy_rejects_non_finite_inputs(bad):
+    args = dict(displacement_t=DISPLACEMENT_T, velocity_m_s=0.12, ce=0.5, cm=1.5)
+    args.update(bad)
+    with pytest.raises(ValueError):
+        berthing_energy(**args)
+
+
+@pytest.mark.parametrize(
+    "over",
+    [
+        dict(rated_energy_knm=math.nan),
+        dict(rated_energy_knm=-400.0),
+        dict(reaction_kn=math.nan),
+        dict(reaction_kn=-1.0),
+        dict(hull_pressure_kpa=math.inf),
+        dict(hull_pressure_kpa=-5.0),
+        dict(diameter_mm=math.nan),
+        dict(rated_deflection_pct=0.0),
+    ],
+)
+def test_rating_rejects_non_finite_or_wrong_sign(over):
+    with pytest.raises(ValueError):
+        _rating(**over)
+
+
+@pytest.mark.parametrize("cell", ["nan", "inf", "-400"])
+def test_catalogue_rejects_bad_energy_cell(tmp_path, cell):
+    lines = FIXTURE.read_text(encoding="utf-8").splitlines()
+    head = lines[0]
+    row = lines[3].split(",")
+    row[FENDER_CATALOGUE_COLUMNS.index("rated_energy_knm")] = cell
+    bad = tmp_path / "bad.csv"
+    bad.write_text(head + "\n" + ",".join(row) + "\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="GEN-PN-3"):
+        load_fender_catalogue(bad)
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        dict(required_energy_knm=math.nan),
+        dict(required_energy_knm=math.inf),
+        dict(required_energy_knm=-1.0),
+        dict(required_energy_knm=500.0, fenders_in_contact=1.5),
+        dict(required_energy_knm=500.0, fenders_in_contact=0),
+        dict(required_energy_knm=500.0, fenders_in_contact=True),
+        dict(required_energy_knm=500.0, energy_tolerance=math.nan),
+        dict(required_energy_knm=500.0, angular_factor=math.nan),
+        dict(required_energy_knm=500.0, reaction_tolerance=-0.1),
+        dict(required_energy_knm=500.0, reaction_tolerance=math.inf),
+        dict(required_energy_knm=500.0, max_reaction_kn=math.nan),
+        dict(required_energy_knm=500.0, max_reaction_kn=-1.0),
+        dict(required_energy_knm=500.0, max_hull_pressure_kpa=math.nan),
+    ],
+)
+def test_select_rejects_invalid_arguments(kwargs):
+    with pytest.raises(ValueError):
+        select_fenders(load_fender_catalogue(FIXTURE), **kwargs)
+
+
+def test_unknown_hull_pressure_excluded_when_limit_set():
+    row = _rating(hull_pressure_kpa=None)
+    # no pressure limit: the row is screened on energy alone
+    assert len(select_fenders([row], 388.8)) == 1
+    # a pressure limit cannot be shown to be met, so the row is excluded
+    assert select_fenders([row], 388.8, max_hull_pressure_kpa=1000.0) == []
+
+
+def test_reaction_tolerance_applies_to_check_and_returned_values():
+    row = _rating()
+    # demand 350; capacity 400 * 0.9 = 360 -> energy passes
+    # base reaction 1100 <= 1150 passes without a reaction tolerance
+    assert (
+        len(select_fenders([row], 350.0, energy_tolerance=0.10, max_reaction_kn=1150.0))
+        == 1
+    )
+    # +10 %: 1100 * 1.10 = 1210 kN > 1150 -> excluded
+    assert (
+        select_fenders(
+            [row],
+            350.0,
+            energy_tolerance=0.10,
+            reaction_tolerance=0.10,
+            max_reaction_kn=1150.0,
+        )
+        == []
+    )
+    # returned values carry the tolerance: 1210 kN and 135 * 1.10 = 148.5 kPa
+    pick = select_fenders([row], 350.0, reaction_tolerance=0.10)[0]
+    assert pick.reaction_kn == pytest.approx(1210.0)
+    assert pick.hull_pressure_kpa == pytest.approx(148.5)
+    assert pick.fender.reaction_kn == pytest.approx(1100.0)
+    # the pressure check uses the raised pressure: 148.5 > 140 -> excluded
+    assert (
+        select_fenders(
+            [row], 350.0, reaction_tolerance=0.10, max_hull_pressure_kpa=140.0
+        )
+        == []
+    )
+
+
+@pytest.mark.parametrize(
+    "x_from_bow, angle, expected_ce",
+    [
+        # forward contact (45 m fwd of midships), bow in: see the hand check above
+        (45.0, 6.0, 0.588025),
+        # aft contact, 45 m aft of midships, same orientation:
+        # R cos(phi) = -45 sin 6 + 16 cos 6 = -4.703764 + 15.912350 = 11.208586
+        # Ce = (2224.0656 + 125.6324) / 4505.0656 = 0.521568
+        (135.0, 6.0, 0.521568),
+        # the reverse angle swaps the two
+        (135.0, -6.0, 0.588025),
+        (45.0, -6.0, 0.521568),
+    ],
+)
+def test_contact_geometry_keeps_sign_of_offset(x_from_bow, angle, expected_ce):
+    r, phi = contact_geometry(
+        LBP_M, BEAM_M, x_from_bow_m=x_from_bow, berthing_angle_deg=angle
+    )
+    assert r == pytest.approx(47.759816, rel=1e-6)
+    assert eccentricity_factor(47.16, r, phi) == pytest.approx(expected_ce, rel=1e-5)
+
+
+def test_energy_sensitivity_rejects_zero_base():
+    base = dict(BASE_INPUTS, velocity_m_s=0.0)
+    with pytest.raises(ValueError, match="zero"):
+        energy_sensitivity(base, {"cc": [(0.9, "x")]})
+
+
+@pytest.mark.parametrize("factor", [-1.0, 0.0, math.nan, math.inf])
+def test_energy_sensitivity_rejects_bad_design_factor(factor):
+    with pytest.raises(ValueError):
+        energy_sensitivity(BASE_INPUTS, {"abnormal_factor": [(factor, "x")]})
+    with pytest.raises(ValueError):
+        energy_sensitivity(dict(BASE_INPUTS, abnormal_factor=factor), {})
+
+
+def test_energy_sensitivity_base_row_only():
+    rows = energy_sensitivity(BASE_INPUTS, {})
+    assert len(rows) == 1
+    assert rows[0].parameter == "base"
+    assert rows[0].change_pct == 0.0
+    assert rows[0].source == "base case"
+
+
+def test_fender_size_sensitivity_always_includes_base_first():
+    cat = load_fender_catalogue(FIXTURE)
+    rows = fender_size_sensitivity(cat, "GEN-PN-3", 388.8, fender_ids=["GEN-PN-4"])
+    assert [r.fender.fender_id for r in rows] == ["GEN-PN-3", "GEN-PN-4"]
+    assert rows[0].is_base
