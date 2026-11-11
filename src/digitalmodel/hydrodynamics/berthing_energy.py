@@ -402,7 +402,8 @@ def select_fenders(
     picks = []
     for f in catalogue:
         capacity = f.rated_energy_knm * (1.0 - e_tol) * ang
-        if demand > capacity:
+        # skip a capacity that underflows to zero as well as one below demand
+        if capacity <= 0.0 or demand > capacity:
             continue
         reaction = f.reaction_kn * r_up
         pressure = None if f.hull_pressure_kpa is None else f.hull_pressure_kpa * r_up
