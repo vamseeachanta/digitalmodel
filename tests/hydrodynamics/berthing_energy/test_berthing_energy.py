@@ -543,3 +543,16 @@ def test_fender_size_sensitivity_always_includes_base_first():
     rows = fender_size_sensitivity(cat, "GEN-PN-3", 388.8, fender_ids=["GEN-PN-4"])
     assert [r.fender.fender_id for r in rows] == ["GEN-PN-3", "GEN-PN-4"]
     assert rows[0].is_base
+
+
+def test_select_skips_capacity_that_underflows_to_zero():
+    # Finite positive factors can underflow the adjusted capacity to 0.0;
+    # with zero demand that row must be skipped, not divided by.
+    row = load_fender_catalogue(FIXTURE)[2]
+    picks = select_fenders(
+        [row],
+        0.0,
+        energy_tolerance=math.nextafter(1.0, 0.0),
+        angular_factor=math.ulp(0.0),
+    )
+    assert picks == []
