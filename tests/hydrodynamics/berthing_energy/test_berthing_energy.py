@@ -23,6 +23,8 @@ from digitalmodel.hydrodynamics.berthing_energy import (
     block_coefficient,
     contact_geometry,
     eccentricity_factor,
+    energy_sensitivity,
+    fender_size_sensitivity,
     load_fender_catalogue,
     radius_of_gyration,
     select_fenders,
@@ -298,3 +300,80 @@ def test_end_to_end_generic_supramax():
     picks = select_fenders(load_fender_catalogue(FIXTURE), required_energy_knm=e_design)
     assert picks[0].fender.fender_id == "GEN-PN-4"
     assert math.isclose(picks[0].utilisation, e_design / 700.0)
+
+
+# --------------------------------------------------------------------------
+# Sensitivity tables: one input at a time, and fender sizes against a base
+# --------------------------------------------------------------------------
+
+BASE_INPUTS = dict(
+    displacement_t=DISPLACEMENT_T,
+    velocity_m_s=0.12,
+    ce=0.5,
+    cm=1.8,
+    cs=1.0,
+    cc=1.0,
+    abnormal_factor=1.25,
+)
+
+
+def test_energy_sensitivity_one_at_a_time():
+    # base design energy: 0.5 * 60000 * 0.0144 * 0.5 * 1.8 * 1.25 = 486.0 kNm
+    rows = energy_sensitivity(
+        BASE_INPUTS,
+        {
+            "velocity_m_s": [(0.20, "moderate"), (0.08, "favourable")],
+            "displacement_t": [(45_000.0, "part load")],
+            "abnormal_factor": [(1.75, "smallest vessel")],
+            "cc": [(0.9, "solid quay")],
+        },
+    )
+    by = {(r.parameter, r.value): r for r in rows}
+    assert by[("velocity_m_s", 0.20)].base_design_energy_knm == pytest.approx(486.0)
+    # (0.20 / 0.12)^2 = 2.777778 -> +177.7778 %
+    assert by[("velocity_m_s", 0.20)].change_pct == pytest.approx(177.7778, rel=1e-6)
+    # (0.08 / 0.12)^2 = 0.444444 -> -55.5556 %
+    assert by[("velocity_m_s", 0.08)].change_pct == pytest.approx(-55.5556, rel=1e-5)
+    assert by[("displacement_t", 45_000.0)].change_pct == pytest.approx(-25.0)
+    assert by[("abnormal_factor", 1.75)].change_pct == pytest.approx(40.0)
+    assert by[("cc", 0.9)].design_energy_knm == pytest.approx(437.4)
+    assert by[("cc", 0.9)].source == "solid quay"
+    # rows keep the order given
+    assert [r.parameter for r in rows][:2] == ["velocity_m_s", "velocity_m_s"]
+
+
+def test_energy_sensitivity_rejects_unknown_input():
+    with pytest.raises(KeyError):
+        energy_sensitivity(BASE_INPUTS, {"tide": [(1.0, "x")]})
+    with pytest.raises(KeyError):
+        energy_sensitivity({"displacement_t": 1.0}, {})
+
+
+def test_fender_size_sensitivity_against_base():
+    # base GEN-PN-3: 400 kNm, 1100 kN, 135 kPa, 60 % of 2200 mm = 1320 mm
+    # design energy 388.8 kNm -> base margin 400 / 388.8 - 1 = 2.880658 %
+    cat = load_fender_catalogue(FIXTURE)
+    rows = fender_size_sensitivity(
+        cat,
+        base_id="GEN-PN-3",
+        design_energy_knm=388.8,
+        fender_ids=["GEN-PN-3", "GEN-PN-4"],
+    )
+    base, big = rows
+    assert base.is_base and not big.is_base
+    assert base.energy_margin_pct == pytest.approx(2.880658, rel=1e-5)
+    assert base.change_pct["rated_energy"] == pytest.approx(0.0)
+    assert base.deflection_mm == pytest.approx(1320.0)
+    # GEN-PN-4: 700 kNm, 1450 kN, 210 kPa, 60 % of 2600 = 1560 mm
+    assert big.change_pct["rated_energy"] == pytest.approx(75.0)
+    assert big.change_pct["reaction"] == pytest.approx(31.81818, rel=1e-6)
+    assert big.change_pct["hull_pressure"] == pytest.approx(55.55556, rel=1e-6)
+    assert big.change_pct["deflection"] == pytest.approx(18.18182, rel=1e-6)
+    # margin 700 / 388.8 - 1 = 80.04115 %; change in percentage points 77.16049
+    assert big.energy_margin_pct == pytest.approx(80.04115, rel=1e-6)
+    assert big.change_pct["energy_margin_pp"] == pytest.approx(77.16049, rel=1e-6)
+
+
+def test_fender_size_sensitivity_unknown_base():
+    with pytest.raises(KeyError):
+        fender_size_sensitivity(load_fender_catalogue(FIXTURE), "NOPE", 100.0)
