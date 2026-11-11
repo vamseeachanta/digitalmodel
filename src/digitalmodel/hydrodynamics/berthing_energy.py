@@ -357,3 +357,154 @@ def select_fenders(
         )
     picks.sort(key=lambda p: -p.utilisation)
     return picks
+
+
+# --------------------------------------------------------------------------
+# Sensitivity tables
+# --------------------------------------------------------------------------
+
+ENERGY_INPUTS = (
+    "displacement_t",
+    "velocity_m_s",
+    "ce",
+    "cm",
+    "cs",
+    "cc",
+    "abnormal_factor",
+)
+
+
+@dataclass(frozen=True)
+class EnergySensitivityRow:
+    """Design energy with one input changed from the base case."""
+
+    parameter: str
+    value: float
+    base_value: float
+    design_energy_knm: float
+    base_design_energy_knm: float
+    change_pct: float
+    source: str
+
+
+def _design_energy(inputs: dict[str, float]) -> float:
+    return (
+        berthing_energy(
+            inputs["displacement_t"],
+            inputs["velocity_m_s"],
+            ce=inputs["ce"],
+            cm=inputs["cm"],
+            cs=inputs["cs"],
+            cc=inputs["cc"],
+        )
+        * inputs["abnormal_factor"]
+    )
+
+
+def energy_sensitivity(
+    base: dict[str, float],
+    ranges: dict[str, list[tuple[float, str]]],
+) -> list[EnergySensitivityRow]:
+    """Change in design energy when each input moves alone over its range.
+
+    Args:
+        base: values for every key in ``ENERGY_INPUTS``. ``abnormal_factor``
+            stands for the WG33 abnormal impact factor or a WG211 partial
+            energy factor.
+        ranges: for each input to vary, a list of (value, source) pairs; the
+            source states where the value comes from.
+
+    Returns:
+        One row per (input, value), in the order given.
+    """
+    missing = [k for k in ENERGY_INPUTS if k not in base]
+    if missing:
+        raise KeyError(f"base is missing {', '.join(missing)}")
+    e0 = _design_energy(base)
+    rows = []
+    for name, values in ranges.items():
+        if name not in ENERGY_INPUTS:
+            raise KeyError(f"unknown input {name!r}")
+        for value, source in values:
+            case = dict(base, **{name: value})
+            e = _design_energy(case)
+            rows.append(
+                EnergySensitivityRow(
+                    parameter=name,
+                    value=value,
+                    base_value=base[name],
+                    design_energy_knm=e,
+                    base_design_energy_knm=e0,
+                    change_pct=(e / e0 - 1.0) * 100.0,
+                    source=source,
+                )
+            )
+    return rows
+
+
+@dataclass(frozen=True)
+class FenderComparisonRow:
+    """A catalogue fender compared with the base choice.
+
+    ``change_pct`` holds the percentage change from the base for
+    rated_energy, reaction, deflection (absolute, mm) and hull_pressure, and
+    the change of energy margin in percentage points (energy_margin_pp).
+    A value is None where either fender lacks the datum.
+    """
+
+    fender: FenderRating
+    is_base: bool
+    deflection_mm: float | None
+    energy_margin_pct: float
+    change_pct: dict[str, float | None]
+
+
+def _deflection_mm(f: FenderRating) -> float | None:
+    if f.rated_deflection_pct is None or f.diameter_mm is None:
+        return None
+    return f.rated_deflection_pct / 100.0 * f.diameter_mm
+
+
+def _pct(value: float | None, ref: float | None) -> float | None:
+    if value is None or ref is None or ref == 0:
+        return None
+    return (value / ref - 1.0) * 100.0
+
+
+def fender_size_sensitivity(
+    catalogue: list[FenderRating],
+    base_id: str,
+    design_energy_knm: float,
+    fender_ids: list[str] | None = None,
+) -> list[FenderComparisonRow]:
+    """Compare catalogue fenders with the base choice at one design energy.
+
+    Energy margin is rated energy / design energy - 1, in percent. Rated
+    deflection for a pneumatic fender is taken as a fraction of its diameter.
+    """
+    if design_energy_knm <= 0:
+        raise ValueError("design_energy_knm must be positive")
+    by_id = {f.fender_id: f for f in catalogue}
+    base = by_id[base_id]
+    ids = fender_ids if fender_ids is not None else [f.fender_id for f in catalogue]
+    base_margin = (base.rated_energy_knm / design_energy_knm - 1.0) * 100.0
+    rows = []
+    for fid in ids:
+        f = by_id[fid]
+        margin = (f.rated_energy_knm / design_energy_knm - 1.0) * 100.0
+        rows.append(
+            FenderComparisonRow(
+                fender=f,
+                is_base=fid == base_id,
+                deflection_mm=_deflection_mm(f),
+                energy_margin_pct=margin,
+                change_pct={
+                    "rated_energy": _pct(f.rated_energy_knm, base.rated_energy_knm),
+                    "reaction": _pct(f.reaction_kn, base.reaction_kn),
+                    "deflection": _pct(_deflection_mm(f), _deflection_mm(base)),
+                    "hull_pressure": _pct(f.hull_pressure_kpa, base.hull_pressure_kpa),
+                    "energy_margin_pp": margin - base_margin,
+                },
+            )
+        )
+    return rows
