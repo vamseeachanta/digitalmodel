@@ -112,6 +112,12 @@ modules:
     operator_map_row: docs/maps/digitalmodel-operator-map.md#data_models
   - module: data_systems
     submodules:
+      data_quality:
+        agent_pack: src/digitalmodel/data_systems/data_quality/docs/agent-pack.md
+        qa_family: EC
+      data_manager:
+        agent_pack: src/digitalmodel/data_systems/data_manager/docs/agent-pack.md
+        qa_family: EC
       data_procurement:
         agent_pack: src/digitalmodel/data_systems/data_procurement/docs/agent-pack.md
         qa_family: EC
@@ -209,6 +215,9 @@ modules:
       planing_hull:
         agent_pack: src/digitalmodel/hydrodynamics/planing_hull/docs/agent-pack.md
         qa_family: EC
+      rao_analysis:
+        agent_pack: src/digitalmodel/hydrodynamics/rao_analysis/docs/agent-pack.md
+        qa_family: DF
   - module: infrastructure
     entry_point: src/digitalmodel/infrastructure/
     maturity: beta
@@ -337,6 +346,9 @@ modules:
       nde:
         agent_pack: src/digitalmodel/nde/docs/agent-pack.md
         qa_family: EC
+      well_acoustic:
+        agent_pack: src/digitalmodel/nde/well_acoustic/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/nde/
     maturity: development
     owner_wiki: docs/domains/README.md
@@ -369,6 +381,9 @@ modules:
     key_tests: [tests/power/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#power
     submodules:
+      commissioning:
+        agent_pack: src/digitalmodel/power/commissioning/docs/agent-pack.md
+        qa_family: EC
       analysis:
         agent_pack: src/digitalmodel/power/analysis/docs/agent-pack.md
         qa_family: EC
@@ -385,6 +400,10 @@ modules:
         agent_pack: src/digitalmodel/power/protection/docs/agent-pack.md
         qa_family: EC
   - module: process_diagrams
+    submodules:
+      process_diagrams:
+        agent_pack: src/digitalmodel/process_diagrams/docs/agent-pack.md
+        qa_family: EC
     entry_point: src/digitalmodel/process_diagrams/
     maturity: beta
     owner_wiki: docs/domains/README.md
@@ -532,6 +551,9 @@ modules:
     key_tests: [tests/structural/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#structural
     submodules:
+      pipe_cross_section:
+        agent_pack: src/digitalmodel/structural/pipe_cross_section/docs/agent-pack.md
+        qa_family: EC
       parachute:
         agent_pack: src/digitalmodel/structural/parachute/docs/agent-pack.md
         qa_family: EC
@@ -565,6 +587,9 @@ modules:
       jacket_topside:
         agent_pack: src/digitalmodel/structural/jacket_topside/docs/agent-pack.md
         qa_family: EC
+      ovality:
+        agent_pack: src/digitalmodel/structural/ovality/docs/agent-pack.md
+        qa_family: EC
   - module: subsea
     entry_point: src/digitalmodel/subsea/
     maturity: stable
@@ -572,6 +597,9 @@ modules:
     key_tests: [tests/subsea/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#subsea
     submodules:
+      vertical_riser:
+        agent_pack: src/digitalmodel/subsea/vertical_riser/docs/agent-pack.md
+        qa_family: MR
       cross_sections:
         agent_pack: src/digitalmodel/subsea/cross_sections/docs/agent-pack.md
         qa_family: EC
@@ -635,6 +663,9 @@ modules:
         qa_family: EC
       well:
         agent_pack: src/digitalmodel/well/docs/agent-pack.md
+        qa_family: EC
+      wellpath:
+        agent_pack: src/digitalmodel/well/wellpath/docs/agent-pack.md
         qa_family: EC
     maturity: stable
     owner_wiki: docs/domains/README.md
