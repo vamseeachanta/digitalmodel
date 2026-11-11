@@ -9,9 +9,9 @@ the empirical component method collected by
     S. Chakrabarti, "Empirical calculation of roll damping for ships and
     barges", Ocean Engineering 28 (2001) 915-932,
 
-which restates Ikeda, Himeno and Tanaka (1978) as summarised by Himeno
-(1981), and adds the sharp-cornered barge eddy formula of Ikeda, Fujiwara and
-Katayama (1993). Equation numbers in docstrings are those of that paper. Where
+which restates Ikeda, Himeno and Tanaka (1978), citing Himeno (1981), and
+adds a sharp-cornered barge eddy formula (Ikeda 1984 in the paper; Ikeda,
+Fujiwara and Katayama 1993 in ITTC 7.5-02-07-04.5). Equation numbers in docstrings are those of that paper. Where
 the paper's print departs from its sources, the form in ITTC Recommended
 Procedure 7.5-02-07-04.5 (2011 and 2024 revisions) is implemented and the
 difference is stated at the function.
@@ -22,7 +22,7 @@ The total equivalent linear damping is the sum (eq. 5)
 
 of skin friction, eddy making, lift, wave and bilge keel parts. The split
 ignores interaction between the parts, and the coefficients come from model
-tests, mostly two-dimensional, at small roll amplitude (about 5 to 10 deg).
+tests, mostly two-dimensional, at small roll amplitude (about 5 deg, p. 924).
 
 Units: every formula is dimensionally homogeneous, so any consistent set may
 be used (SI: kg/m3, m, s, rad, giving N m s/rad). Angles are radians, roll
@@ -79,7 +79,7 @@ __all__ = [
 
 STANDARD_GRAVITY = 9.80665
 
-EddyVariant = Literal["himeno1981", "ittc2011", "ittc2024", "as_printed"]
+EddyVariant = Literal["chakrabarti2001", "ittc2011", "ittc2024", "as_printed"]
 
 
 class RollDampingComponentError(ValueError):
@@ -317,7 +317,7 @@ def eddy_pressure_ratio(
     sigma: float,
     og: float,
     bilge_radius: Optional[float] = None,
-    variant: EddyVariant = "himeno1981",
+    variant: EddyVariant = "chakrabarti2001",
 ) -> float:
     """Sectional eddy coefficient ``C_R`` of eq. 25, with ``C_p`` (eqs. 19-34).
 
@@ -325,8 +325,8 @@ def eddy_pressure_ratio(
 
     ``variant`` selects the printed forms that differ:
 
-    * ``"himeno1981"`` (default): ``k = 1``; the form of Himeno (1981) and of
-      Chakrabarti (2001) once its bracket is read as in its sources.
+    * ``"chakrabarti2001"`` (default): ``k = 1``; the paper's eq. 25 with the
+      whole-bracket reading of ITTC 7.5-02-07-04.5 (2011 and 2024).
     * ``"ittc2024"``: ``k = 3/2``, as printed in ITTC 7.5-02-07-04.5 rev. 02
       (2024), citing Katayama et al. (2022).
     * ``"ittc2011"``: second factor ``(1 - OG/d)`` without ``f1 R/d``, as
@@ -402,7 +402,7 @@ def eddy_pressure_ratio(
     rmax_d2 = (r_max / draft) ** 2
     bilge = f1 * radius_d
     second = f2 * (h0 - bilge) ** 2
-    if variant == "himeno1981":
+    if variant == "chakrabarti2001":
         first = (1.0 - bilge) * (1.0 - og_d - bilge)
     elif variant == "ittc2024":
         first = (1.0 - bilge) * (1.0 - 1.5 * og_d - bilge)
@@ -424,7 +424,7 @@ def eddy_damping_section(
     bilge_radius: Optional[float],
     amplitude: float,
     omega: float,
-    variant: EddyVariant = "himeno1981",
+    variant: EddyVariant = "chakrabarti2001",
 ) -> float:
     """Sectional eddy-making damping at zero speed, per unit length (eq. 18).
 
@@ -461,7 +461,7 @@ def eddy_damping_sections(
     omega: float,
     end_station_factor: float = 1.0,
     h0_cap: Optional[float] = None,
-    variant: EddyVariant = "himeno1981",
+    variant: EddyVariant = "chakrabarti2001",
 ) -> float:
     """Eddy-making damping of a hull by trapezoidal integration of eq. 18.
 
@@ -512,7 +512,8 @@ def barge_eddy_damping(
 
     ``B_E0 = (2/pi) rho L d**4 (H0**2 + 1 - k OG/d)(H0**2 + (1 - OG/d)**2) R0 omega``
 
-    from Ikeda, Fujiwara and Katayama (1993), recommended by the paper for a
+    attributed by the paper (p. 923) to Ikeda (1984) and by ITTC 7.5-02-07-04.5
+    to Ikeda, Fujiwara and Katayama (1993), recommended by the paper for a
     rectangular barge (p. 931). ``k = og_factor`` is 1 in the paper and in ITTC
     7.5-02-07-04.5 (2011); the 2024 revision prints 3/2. The two agree for a
     roll axis at the waterline. The formula has no bilge-radius term: the

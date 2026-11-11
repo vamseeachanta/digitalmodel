@@ -2,8 +2,9 @@
 
 The method is the one collected by Chakrabarti (2001), "Empirical calculation
 of roll damping for ships and barges", Ocean Engineering 28, 915-932, which
-restates Ikeda, Himeno and Tanaka (1978) and Himeno (1981), and adds the
-sharp-cornered barge eddy formula of Ikeda et al. (1993). Equation numbers in
+restates Ikeda, Himeno and Tanaka (1978), citing Himeno (1981), and adds a
+sharp-cornered barge eddy formula (Ikeda 1984 in the paper; Ikeda et al. 1993
+in ITTC 7.5-02-07-04.5). Equation numbers in
 the test names refer to that paper unless another source is named.
 
 Three kinds of check are made:
@@ -192,7 +193,7 @@ def test_eddy_section_reproduces_fig5_midbody_level():
 def test_eq25_as_printed_does_not_reproduce_fig5():
     """Eq. 25 as printed applies (r_max/D)**2 to the first product only.
 
-    Himeno (1981) and ITTC 7.5-02-07-04.5 apply it to the whole bracket. The
+    ITTC 7.5-02-07-04.5 (2011, 2024) applies it to the whole bracket. The
     printed bracketing gives a C_R near 19 for the barge, far from Fig. 5,
     which shows that the print is a typesetting error and not the method used.
     """
