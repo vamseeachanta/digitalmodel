@@ -25,7 +25,7 @@ MODE_LABELS = {
     'DELAYED_TV_CLOSURE': 'Delayed traveling valve closure',
 }
 VALIDATION = ('The coupled Gibbs transfer is checked against closed-form cases derived from '
-              'the cited equations and against the stored reference pump cards of five public '
+              'the cited equations and against the stored pump cards of five public '
               'example wells (median load nRMSE 1.3 %, maximum 2.0 %, 15 harmonics); no openly '
               'readable published worked example with tabulated card values was found, so a '
               'published-example check is NOT_EVALUATED.')
@@ -49,7 +49,7 @@ def assumptions(ctx, raw):
                                        rods.densities, ctx.pump.diameter * U.IN2M, 2.441 * U.IN2M, 0.01)
     rows = [
         ('vertical_well', 'Vertical cross-check; default uses supplied survey or vertical fallback',
-         'Deviation is not modelled in the frequency-domain cross-check.'),
+         'Deviation is not modelled in the frequency-domain cross-check. The public example well record gives a two-station survey with zero inclination.'),
         ('pump_boundary', {'rod_length_ft': ctx.rod_length, 'pump_depth_ft': ctx.pump.depth,
                            'unrepresented_length_ft': ctx.pump.depth - ctx.rod_length},
          'The supplied rod endpoint is identified with the pump boundary; qualification at the stated pump depth requires a reconciled as-run rod and completion tally.'),
@@ -83,6 +83,9 @@ def assumptions(ctx, raw):
             rows.append(('rod_material', 'steel', 'Unspecified material defaults to steel.'))
     elif not raw['equipmentData'].get('WellBore'):
         rows.append(('fluid_density_lb_ft3', ctx.fluid_density, 'No mixture basis was supplied; the legacy loader uses water density.'))
+    else:
+        rows.append(('fluid_density_lb_ft3', ctx.fluid_density,
+                     'Not measured: derived by the loader from the well-test water cut and the water and oil gravities in the well record.'))
     return [{'id': key, 'status': 'ASSUMED', 'value': value, 'why': why} for key, value, why in rows]
 
 

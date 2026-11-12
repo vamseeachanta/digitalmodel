@@ -8,6 +8,7 @@ OUTPUTS = ('pump_stroke_in', 'fluid_load_lbf', 'fillage_pct', 'maximum_pump_load
 # A response is reported as stepped when the +/-1 % and +/-5 % central factors
 # differ by more than this amount (% output per % input); a chosen display rule.
 STEPPED_FACTOR_DIFFERENCE = 0.10
+SAME_SIGN_FLOOR_PCT = 0.01
 STEPS = (-5, -1, 1, 5)
 
 
@@ -43,6 +44,21 @@ def perturb(ctx, name, change_pct):
     return changed
 
 
+def _stepped(changes, factor_1pct, factor_5pct):
+    """A response is stepped when it is not a usable slope.
+
+    Either the two central factors differ by more than the display rule, or the
+    result moves the same way for a decrease and an increase of the input at one
+    step size (a jump, not a slope). Changes below SAME_SIGN_FLOOR_PCT are noise.
+    """
+    if abs(factor_1pct - factor_5pct) > STEPPED_FACTOR_DIFFERENCE:
+        return True
+    for low, high in ((changes[1], changes[2]), (changes[0], changes[3])):
+        if low * high > 0 and min(abs(low), abs(high)) > SAME_SIGN_FLOOR_PCT:
+            return True
+    return False
+
+
 def sensitivity_table(ctx, base, solve_metrics):
     rows = []
     for name in INPUTS:
@@ -60,8 +76,8 @@ def sensitivity_table(ctx, base, solve_metrics):
                                     - steps[lo]['output_change_pct'][key]) / (2 * size)
                               for key in OUTPUTS}
                    for size, lo, hi in ((1, 1, 2), (5, 0, 3))}
-        stepped = sorted(key for key in OUTPUTS
-                         if abs(factors['1'][key] - factors['5'][key]) > STEPPED_FACTOR_DIFFERENCE)
+        stepped = sorted(key for key in OUTPUTS if _stepped(
+            [step['output_change_pct'][key] for step in steps], factors['1'][key], factors['5'][key]))
         rows.append({'input': name, 'steps': steps, 'factor_1pct': factors['1'],
                      'factor_5pct': factors['5'], 'stepped_outputs': stepped,
                      'depends_on': 'ASSUMED model inputs'})

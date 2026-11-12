@@ -51,7 +51,11 @@ def missing_data(sensitivity):
         if key not in rows:
             return 'The sensitivity table gives the affected results.'
         row = rows[key]
-        parts = [f"{label} {row['factor_1pct'][output]:.2f}"
+        def text(value):
+            if value != 0 and abs(value) < 0.005:
+                return '< 0.01 in magnitude'
+            return f'{value:.2f}'.replace('-', '−')
+        parts = [f"{label} {text(row['factor_1pct'][output])}"
                  + (' (stepped)' if output in row.get('stepped_outputs', ()) else '')
                  for output, label in FACTOR_OUTPUTS]
         return ('On the public example well a 1 % error in it changes: ' + ', '.join(parts)
@@ -90,7 +94,7 @@ def missing_data(sensitivity):
          'State anchored or unanchored, with the anchor depth.'),
         ('survey', 'Deviation survey',
          'In a deviated well, rod weight and friction act along the well path.',
-         'If not supplied, a vertical well is ASSUMED. The independent cross-check is always vertical. The effect of deviation is NOT_EVALUATED without a survey.',
+         'If not supplied, a vertical well is ASSUMED. The frequency-domain cross-check is always vertical. The effect of deviation is NOT_EVALUATED without a survey.',
          'Give measured depth, inclination and azimuth from surface to the pump.'),
         ('pressure', 'Tubing pressure',
          'It is used for pump intake pressure, which this report does not give.',

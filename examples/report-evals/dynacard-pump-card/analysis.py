@@ -23,7 +23,7 @@ from report_contract import missing_data, CANNOT_DO, PINNED_COMMIT
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 FIXTURE = ROOT / 'tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json'
-PUBLIC_SHA256 = '95ebcf892497e2a3f564151e81f89f78e1c5debdec274ce42da7b808cd33661a'
+PUBLIC_SHA256 = '6bb1139455b95d0f27ce254b1e10571d454f3fd0535de732bd73813b9a09adc5'
 
 
 def key_results(ctx, card):
@@ -64,7 +64,7 @@ def _cross_check(card, alternative, reference):
 
 
 def sources(root, card_path, public, commit):
-    rows = [('Public example surface card, rod string and stored reference' if public else 'Reader surface card and equipment',
+    rows = [('Public example surface card, rod string and stored pump card' if public else 'Reader surface card and equipment',
              'Repository field fixture' if public else 'Reader supplied',
              'MIT' if public else 'Reader supplied; rights not established',
              f'https://github.com/vamseeachanta/digitalmodel/blob/{commit}/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json' if public else '', Path(card_path)),

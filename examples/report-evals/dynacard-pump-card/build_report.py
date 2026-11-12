@@ -27,6 +27,13 @@ def number(value, decimals=2):
     return f'{value:.{decimals}f}'.replace('-', '−')
 
 
+def small(value, decimals=2):
+    """A nonzero value that rounds to zero is printed as below the resolution."""
+    if value != 0 and abs(value) < .5 * 10 ** -decimals:
+        return f'< {10 ** -decimals:.{decimals}f}'
+    return number(value, decimals)
+
+
 def table(headers, rows, caption):
     def line(row):
         return '| ' + ' | '.join(str(v).replace('|', '/') for v in row) + ' |'
@@ -77,8 +84,8 @@ def solver_table(data):
     cross = data['solver_cross_check']
     return table(('Actual card', 'Reference card', 'Load nRMSE (%)'), (
         ('Frequency domain', 'Default finite difference', number(cross['gibbs_default_load_nrmse_pct'], 3)),
-        ('Default finite difference', 'Stored reference', number(cross['default_reference_load_nrmse_pct'], 3)),
-        ('Frequency domain', 'Stored reference', number(cross['gibbs_reference_load_nrmse_pct'], 3))),
+        ('Default finite difference', 'Stored card, source finite difference', number(cross['default_reference_load_nrmse_pct'], 3)),
+        ('Frequency domain', 'Stored card, source finite difference', number(cross['gibbs_reference_load_nrmse_pct'], 3))),
         'Table 4. Card comparisons aligned by traversal and sample origin; each reference load range normalises its error.')
 
 
@@ -106,8 +113,8 @@ def sensitivity_section(data):
         by_step = {item['input_change_pct']: item['output_change_pct'] for item in row['steps']}
         for output, label in OUTPUT_LABELS.items():
             rows.append((INPUT_LABELS[row['input']], label,
-                         *(number(by_step[step][output]) for step in steps),
-                         number(row['factor_1pct'][output]), number(row['factor_5pct'][output]),
+                         *(small(by_step[step][output]) for step in steps),
+                         small(row['factor_1pct'][output]), small(row['factor_5pct'][output]),
                          'stepped' if output in row['stepped_outputs'] else 'smooth'))
     headers = ('Input', 'Output', *(f'{number(s, 0)} %' for s in steps),
                'Factor at ±1 %', 'Factor at ±5 %', 'Response')
@@ -118,7 +125,8 @@ def sensitivity_section(data):
             'The sensitivity factor is the difference of the positive and negative output changes '
             'divided by the difference of the input percentages. A zero is printed as 0.00; '
             'the wider central difference exposes nonlinearity. A response is marked stepped '
-            'where the two factors differ by more than 0.10. Such a result moves in jumps, '
+            'where the two factors differ by more than 0.10, or where the result moves the same way '
+            'for a decrease and an increase of the input. Such a result moves in jumps, '
             'because the corner points that define it shift between samples; its factor '
             'is not a reliable slope.\n\n' +
             table(headers, rows, 'Table A1. Output changes (%) and central sensitivity factors (% output per % input).'))
@@ -133,7 +141,7 @@ def source_table(data):
 
 def methodology(data):
     harmonics = data['settings']['harmonic_count']
-    return f'''Surface displacement and tensile load provide the boundary conditions for the damped axial rod wave equation. The default finite-difference adapter marches the displacement field through the tapered rod string and reconstructs pump load from strain, following Everitt and Jennings (1992), SPE-18189-PA. The independent coupled frequency-domain transfer propagates both displacement and force through each ordered taper, following the rod model of Gibbs (1963), [SPE-588-PA](https://doi.org/10.2118/588-PA), with {harmonics} harmonics.
+    return f'''Surface displacement and tensile load provide the boundary conditions for the damped axial rod wave equation. The default finite-difference adapter marches the displacement field through the tapered rod string and reconstructs pump load from strain, following Everitt and Jennings (1992), SPE-18189-PA. The coupled frequency-domain transfer is a separate numerical method: it propagates both displacement and force through each ordered taper as a frequency-domain solution of the rod model of Gibbs (1963), [SPE-588-PA](https://doi.org/10.2118/588-PA), with {harmonics} harmonics.
 
 The [package calculations](../../../src/digitalmodel/marine_ops/artificial_lift/dynacard/calculations.py) define gross plunger travel as the position range, effective travel as the bottom-right corner position relative to the minimum, and fillage as effective travel divided by gross travel, expressed as a percentage. Fluid load is the mean upstroke load minus the mean downstroke load between the detected corner phases. The figure marks these mean levels rather than substituting the extreme load range. The [card-area calculation](../../../src/digitalmodel/marine_ops/artificial_lift/dynacard/power_consumption.py) closes the polygon and converts its enclosed area to work per stroke.
 
@@ -160,7 +168,7 @@ A measured surface dynamometer card contains rod-string weight, elastic stretch 
 
 ### 1.2 Scope of work
 
-One public field card is converted by the default solver and independently by a coupled frequency-domain solver. Stroke, fluid load, fillage, displacement, work per stroke and input sensitivity are calculated. Public shape references provide a separate hypothesis ranking.
+One public field card is converted by the default solver and, as a cross-check by a different numerical method, by a coupled frequency-domain solver. Stroke, fluid load, fillage, displacement, work per stroke and input sensitivity are calculated. Public shape references provide a separate hypothesis ranking.
 
 ### 1.3 Limitations
 
@@ -171,6 +179,8 @@ The analysis cannot:
 {data['validation']['statement']}
 
 The wave solutions terminate at the supplied rod-string length of {number(geometry['rod_length_ft'], 0)} ft; the stated pump depth is {number(geometry['pump_depth_ft'], 0)} ft, leaving {number(geometry['unrepresented_length_ft'], 0)} ft unrepresented by the supplied taper inventory. Identification of the rod-string endpoint card as the pump card is ASSUMED; qualification at the stated pump depth requires a reconciled as-run rod and completion tally.
+
+The well record of the public example well carries two notes that bear on the results. Its own system reports that corner detection failed on this card, so the fillage and fluid load here rest on this package's corner detection alone. Its last well test gives a liquid rate below the displacement computed here at the stated basis; displacement from a card is not production.
 
 Model probabilities describe synthetic class separation and are not calibrated field probabilities. The public plate is dependent shape evidence because it also constrains the synthetic generators used for training.
 
@@ -190,7 +200,7 @@ def report_calculations(data):
 
 {key_table(data, 'Table 3. Public example well results from the default finite-difference solver, conditional on Table 2.')}
 {solver_table(data)}
-The measured surface card and the two computed pump cards are shown below with the stored reference. The reference shapes are displayed independently on normalised axes.
+The measured surface card and the two computed pump cards are shown below with the pump card stored in the well record. The stored card comes from the source system's own finite-difference calculation, with damping coefficients close to those of the default solver, so its agreement with the default solver is a regression check; only the frequency-domain solver is a different method. The reference shapes are displayed independently on normalised axes.
 
 ![Surface card and computed pump card, public example well](../../../examples/report-evals/dynacard-pump-card/figure-1-surface-and-pump-card.png)
 
@@ -259,14 +269,14 @@ def sensitivity_prompt(data):
     rows = []
     for row in data['sensitivity']:
         rows.append((INPUT_LABELS[row['input']],
-                     *(number(row['factor_1pct'][key])
+                     *(small(row['factor_1pct'][key])
                        + ('*' if key in row['stepped_outputs'] else '')
                        for key in OUTPUT_LABELS)))
     return table(('Input', 'Pump stroke', 'Fluid load', 'Fillage',
                   'Maximum pump load', 'Displacement'), rows,
                  'Sensitivity factors on the public example well: % change in the result per '
                  '1 % change in the input, from the ±1 % steps. * stepped response: the ±1 % '
-                 'and ±5 % factors differ by more than 0.10; use the full table in the report.')
+                 'and ±5 % factors differ by more than 0.10, or the result moves the same way for a decrease and an increase; use the full table in the report. < 0.01 marks a nonzero magnitude below the resolution.')
 
 
 def prompt_start(data):
@@ -296,7 +306,8 @@ Inputs (all public, no account needed):
   tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json in that
   repository. It is an anonymised field well: a measured surface card, a
   two-taper steel rod string, the pump depth and plunger diameter, the pumping
-  speed, and a stored pump card from an independent calculation for comparison.
+  speed, and the pump card stored by the source system's own finite-difference
+  calculation, for comparison.
 - Public reference card shapes: the ten load curves of the diagnostic plate at
   {plate['url']}, {plate['licence']}, retrieved {plate['date']}, kept in the
   repository under tests/marine_ops/artificial_lift/dynacard/testdata/mendeley_plate.
@@ -346,7 +357,7 @@ You cannot:
 {cannot}
 
 Output: report stroke, loads, fillage, effective travel, displacement basis and
-work per stroke; the independent solver cross-check; the complete assumptions
+work per stroke; the second-solver cross-check; the complete assumptions
 register; shape hypotheses with probabilities and recorded plate counts; input
 sensitivity; and one physical-card/reference-shape figure. For the public-case
 arithmetic comparison, write my-results.json using the numeric result ids in
