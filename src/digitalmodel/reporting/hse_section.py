@@ -11,13 +11,17 @@ the worldenergydata equipment failure table
 The appendix is generated, not written by hand. This module adds no words of its
 own to the incident text: it checks the generated section and places it. A
 cause appears only where the source data codes it or the cited investigation
-states it; that rule is enforced where the section is generated, and
-:func:`check_sidecar` refuses a section that still has open items or a number
-without a dated source.
+states it; that rule, and the correctness of every count and case statement,
+is enforced where the section is generated. The checks here are structural:
+:func:`check_sidecar` refuses a section with open items, an unanswered lesson
+or a data source without a public link and a real date read, and
+:func:`check_consistency` refuses text that does not print each source and
+reference listed in the sidecar.
 """
 
 from __future__ import annotations
 
+import datetime as dt
 import html
 import json
 import re
@@ -27,6 +31,7 @@ from typing import Dict, List, Optional
 from digitalmodel.reporting.skeleton import BlockSpec, ReportSkeleton, SectionSpec
 
 HSE_SECTION_KEY = "hse_safety"
+UNASSIGNED = "not yet assigned"  # placeholder the generator writes
 
 # Slot key -> (subsection number, heading). The headings are fixed.
 HSE_BLOCKS: Dict[str, tuple] = {
@@ -72,26 +77,83 @@ def check_sidecar(sidecar: dict, *, allow_open: bool = False) -> List[str]:
         name = src.get("source_id", "?")
         if not str(src.get("url", "")).startswith("https://"):
             problems.append(f"source {name}: no public link")
-        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(src.get("retrieved", ""))):
+        if not _is_date(src.get("retrieved")):
             problems.append(f"source {name}: no date read")
     if not sidecar.get("references"):
         problems.append("no references")
-    for lesson in sidecar.get("lessons") or []:
-        if not str(lesson.get("addressed_in", "")).strip():
-            problems.append(f"lesson {lesson.get('key', '?')}: no design response")
     if not allow_open:
+        for lesson in sidecar.get("lessons") or []:
+            if not _answered(lesson.get("addressed_in")):
+                problems.append(f"lesson {lesson.get('key', '?')}: no design response")
         problems.extend(f"open item: {x}" for x in sidecar.get("open_items") or [])
     return problems
 
 
+def _is_date(value: object) -> bool:
+    """True for a real calendar date written as YYYY-MM-DD."""
+    if not isinstance(value, str):
+        return False
+    try:
+        return dt.date.fromisoformat(value).isoformat() == value
+    except ValueError:
+        return False
+
+
+def _answered(value: object) -> bool:
+    """True when a lesson carries a design response the analyst wrote."""
+    return (
+        isinstance(value, str)
+        and bool(value.strip())
+        and value.strip().lower() != UNASSIGNED
+    )
+
+
+def check_consistency(markdown: str, sidecar: dict) -> List[str]:
+    """Structural agreement between the appendix text and its sidecar.
+
+    Each data source in the sidecar must appear in the text with its link and
+    the date it was read, and each reference must be printed. This does not
+    prove any number: the counts and case statements are checked where the
+    section is generated.
+    """
+    problems: List[str] = []
+    for src in sidecar.get("sources") or []:
+        name = src.get("source_id", "?")
+        url, read = str(src.get("url", "")), str(src.get("retrieved", ""))
+        if url and f"{url} (read {read})" not in markdown:
+            problems.append(
+                f"source {name}: its link and date read are not in the text"
+            )
+    for ref in sidecar.get("references") or []:
+        if str(ref) not in markdown:
+            problems.append("a reference in the sidecar is not in the text")
+    return problems
+
+
 _BOLD = re.compile(r"\*\*(.+?)\*\*")
-_LINK = re.compile(r"(https://[^\s<)]+)")
+# A link is plain https with URL-safe characters only: no quotes, brackets or
+# spaces, so nothing in the text can add an attribute to the anchor.
+_LINK = re.compile(r"https://[A-Za-z0-9\-._~:/?#@!$&*+,;=%]+")
+
+
+def _escape(text: str) -> str:
+    out = html.escape(text, quote=True)
+    return _BOLD.sub(r"<strong>\1</strong>", out)
 
 
 def _inline(text: str) -> str:
-    out = html.escape(text, quote=False)
-    out = _BOLD.sub(r"<strong>\1</strong>", out)
-    return _LINK.sub(r'<a href="\1">\1</a>', out)
+    """Escape ``text``; turn bold marks and plain https links into markup."""
+    parts: List[str] = []
+    last = 0
+    for match in _LINK.finditer(text):
+        url = match.group(0).rstrip(".,;:")
+        end = match.start() + len(url)
+        parts.append(_escape(text[last : match.start()]))
+        safe = html.escape(url, quote=True)
+        parts.append(f'<a href="{safe}">{safe}</a>')
+        last = end
+    parts.append(_escape(text[last:]))
+    return "".join(parts)
 
 
 def _cells(line: str) -> List[str]:
@@ -187,15 +249,18 @@ def load_hse_appendix(
         Path(sidecar_path) if sidecar_path else markdown_path.with_suffix(".json")
     )
     sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+    markdown = markdown_path.read_text(encoding="utf-8")
     problems = check_sidecar(sidecar, allow_open=allow_open)
+    problems += check_consistency(markdown, sidecar)
     if problems:
         raise ValueError("HSE appendix is not ready: " + "; ".join(problems))
-    return hse_content(markdown_path.read_text(encoding="utf-8"))
+    return hse_content(markdown)
 
 
 __all__ = [
     "HSE_BLOCKS",
     "HSE_SECTION_KEY",
+    "check_consistency",
     "check_sidecar",
     "hse_content",
     "hse_section_spec",

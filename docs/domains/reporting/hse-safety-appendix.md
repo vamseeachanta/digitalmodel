@@ -80,6 +80,15 @@ six slots as missing until the generated section is loaded.
 
 ## Checks made on the generated section
 
-`check_sidecar` returns a list of problems: no equipment class; no data source;
-a source without a public link or without a date read; no references; a lesson
-without a design response; any open item reported by the generator.
+The checks are structural. They do not prove a count or a case statement; that
+is done where the section is generated.
+
+- `check_sidecar` returns a list of problems: no equipment class; no data
+  source; a source without a public link or without a real calendar date read;
+  no references; a lesson whose design response is blank, not text, or still
+  the generator's placeholder; any open item reported by the generator. With
+  `allow_open=True` the lesson and open-item checks are skipped.
+- `check_consistency` returns a problem when the text does not print a source
+  with its link and date read, or a reference, that the sidecar lists.
+- Links are rendered only for plain `https` addresses made of URL characters.
+  All other text is escaped, including quotation marks.

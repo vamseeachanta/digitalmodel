@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import json
+from html.parser import HTMLParser
 
 import pytest
 
 from digitalmodel.reporting.hse_section import (
     HSE_BLOCKS,
+    check_consistency,
     check_sidecar,
     hse_content,
     hse_section_spec,
@@ -166,3 +168,74 @@ def test_load_appendix_reads_the_pair_of_files(tmp_path) -> None:
 def test_markdown_subset() -> None:
     assert markdown_to_html("- a\n- b") == "<ul><li>a</li><li>b</li></ul>"
     assert markdown_to_html("<script>") == "<p>&lt;script&gt;</p>"
+
+
+class _Anchors(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.attrs: list[dict] = []
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "a":
+            self.attrs.append(dict(attrs))
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        'https://example.org/a"onmouseover="alert(1) x',
+        "https://example.org/a'onmouseover='alert(1) x",
+        'see https://example.org/a"><script>alert(1)</script>',
+        "https://example.org/a<b onmouseover=x>",
+    ],
+)
+def test_link_text_cannot_add_attributes_or_tags(text) -> None:
+    out = markdown_to_html(text)
+    parser = _Anchors()
+    parser.feed(out)
+    assert parser.attrs == [{"href": "https://example.org/a"}]
+    assert "<script" not in out and "<b " not in out
+
+
+def test_link_keeps_query_and_drops_trailing_full_stop() -> None:
+    out = markdown_to_html("Read https://example.org/a?x=1&y=2 (read 2026-01-31).")
+    parser = _Anchors()
+    parser.feed(out)
+    assert parser.attrs == [{"href": "https://example.org/a?x=1&y=2"}]
+    assert out.endswith("(read 2026-01-31).</p>")
+
+
+@pytest.mark.parametrize(
+    "response", ["", "   ", None, 7, "not yet assigned", " Not Yet Assigned "]
+)
+def test_unanswered_lesson_blocks_issue_but_not_a_draft(response) -> None:
+    sidecar = _sidecar(lessons=[{"key": "c#1", "addressed_in": response}])
+    assert check_sidecar(sidecar) == ["lesson c#1: no design response"]
+    assert check_sidecar(sidecar, allow_open=True) == []
+
+
+@pytest.mark.parametrize(
+    "value", ["2026-02-30", "2026-13-01", "2026-1-31", "20260131", None, 20260131]
+)
+def test_impossible_or_malformed_date_read_is_refused(value) -> None:
+    src = {"source_id": "s", "url": "https://example.org/a.zip", "retrieved": value}
+    assert check_sidecar(_sidecar(sources=[src])) == ["source s: no date read"]
+
+
+def test_text_must_print_each_source_and_reference() -> None:
+    assert check_consistency(_markdown(), _sidecar()) == []
+    stripped = _markdown().replace("(read 2026-01-31)", "")
+    problems = check_consistency(stripped, _sidecar())
+    assert "source synthetic: its link and date read are not in the text" in problems
+    assert "a reference in the sidecar is not in the text" in problems
+
+
+def test_load_refuses_text_that_lost_its_citation(tmp_path) -> None:
+    md = tmp_path / "appendix.md"
+    md.write_text(
+        _markdown().replace("https://example.org/a.zip", "the data set"),
+        encoding="utf-8",
+    )
+    md.with_suffix(".json").write_text(json.dumps(_sidecar()), encoding="utf-8")
+    with pytest.raises(ValueError, match="not in the text"):
+        load_hse_appendix(md)
