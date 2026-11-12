@@ -7,7 +7,7 @@ tables:
     rows: 21
   sources:
     file: sources.csv
-    sha256: 1f616b0f1ab9b7504051669906abe09f76215c6cd64ccd57915a7731a1e541a8
+    sha256: 3853a93b310708e83b318f33aa938e4b598ab2beb3ea0d8652e39dd0550cdca0
     rows: 16
   method_matrix:
     file: method_matrix.csv
