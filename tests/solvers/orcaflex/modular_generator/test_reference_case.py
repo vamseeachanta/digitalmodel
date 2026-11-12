@@ -62,8 +62,9 @@ def _reference_model(route, target):
         )
     elif route in ("winch_vessel", "winch_line"):
         section, name = "Winches", "WinchUnderTest"
-        kind = "vessel" if route == "winch_vessel" else "line"
-        fields = {"Connection": [target] if kind == "vessel" else ["", target]}
+        # Winch hosts may be vessels, 6D buoys or 3D buoys (#3972).
+        kind = "vessel or buoy" if route == "winch_vessel" else "line"
+        fields = {"Connection": [target] if route == "winch_vessel" else ["", target]}
         message = f"Winch '{name}' references {kind} '{target}' which is not defined"
     elif route == "link":
         section, name = "Links", "LinkUnderTest"
