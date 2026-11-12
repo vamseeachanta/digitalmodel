@@ -1,5 +1,5 @@
 LineTypes:
-- Name: chain_76mm_R3
+- Name: chain_76mm_R4
   Category: General
   OD: 0.152
   ID: 0
@@ -23,7 +23,7 @@ LineTypes:
   - ~
   - ~
   CompressionIsLimited: 'No'
-  AllowableTension: 4884.278016
+  AllowableTension: 6001.310208000001
   SeabedLateralFrictionCoefficient: 1.0
   SeabedAxialFrictionCoefficient: ~
   RayleighDampingCoefficients: (no damping)
@@ -52,7 +52,7 @@ Lines:
   EndBZ: -10.0
   NumberOfSections: 1
   LineType, Length, NumberOfSegments:
-  - - chain_76mm_R3
+  - - chain_76mm_R4
     - 900.0
     - 90
   StaticsStep1: Catenary
@@ -67,7 +67,7 @@ Lines:
   EndBZ: -10.0
   NumberOfSections: 1
   LineType, Length, NumberOfSegments:
-  - - chain_76mm_R3
+  - - chain_76mm_R4
     - 900.0
     - 90
   StaticsStep1: Catenary
@@ -82,7 +82,7 @@ Lines:
   EndBZ: -10.0
   NumberOfSections: 1
   LineType, Length, NumberOfSegments:
-  - - chain_76mm_R3
+  - - chain_76mm_R4
     - 900.0
     - 90
   StaticsStep1: Catenary
@@ -97,7 +97,7 @@ Lines:
   EndBZ: -10.0
   NumberOfSections: 1
   LineType, Length, NumberOfSegments:
-  - - chain_76mm_R3
+  - - chain_76mm_R4
     - 900.0
     - 90
   StaticsStep1: Catenary

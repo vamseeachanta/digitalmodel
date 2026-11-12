@@ -2,7 +2,7 @@
 
 Validates that generated model components are internally consistent:
 - Lines reference existing vessels and line types
-- Winches reference valid vessel names
+- Winches reference valid vessel or buoy hosts and lines
 - Equipment (stinger/tensioner) is positioned coherently with vessel
 - No duplicate object names across builders
 - No OrcaFlex collection key is written in list style by more than one
@@ -419,9 +419,9 @@ class PostGenerationValidator:
         files: dict[str, Any],
         defined: dict[str, dict[str, str]],
     ) -> list[ValidationWarning]:
-        """Check that Winch vessel names reference existing Vessels.
+        """Check that Winch hosts reference existing vessels or buoys.
 
-        Winch ``Connection`` fields list [vessel_name, line_name].  This
+        Winch ``Connection`` fields list [host_name, line_name].  This
         method verifies both targets exist.
 
         Args:
@@ -432,7 +432,11 @@ class PostGenerationValidator:
             List of validation warnings for invalid winch references.
         """
         warnings: list[ValidationWarning] = []
-        defined_vessels = {_object_name_key(n) for n in defined.get("Vessels", {})}
+        defined_hosts = {
+            _object_name_key(name)
+            for section in ("Vessels", "6DBuoys", "3DBuoys")
+            for name in defined.get(section, {})
+        }
         defined_lines = {_object_name_key(n) for n in defined.get("Lines", {})}
 
         for file_name, data in files.items():
@@ -446,17 +450,17 @@ class PostGenerationValidator:
                 connection = winch_obj.get("Connection")
                 if not isinstance(connection, list):
                     continue
-                # Connection is typically [vessel_name, line_name]
+                # Connection is typically [host_name, line_name]
                 if len(connection) >= 1 and connection[0]:
-                    vessel_ref = connection[0]
-                    if _object_name_key(vessel_ref) not in defined_vessels:
+                    host_ref = connection[0]
+                    if _object_name_key(host_ref) not in defined_hosts:
                         warnings.append(
                             ValidationWarning(
                                 level="error",
                                 category="reference",
                                 message=(
                                     f"Winch '{winch_name}' references "
-                                    f"vessel '{vessel_ref}' which is "
+                                    f"vessel or buoy '{host_ref}' which is "
                                     f"not defined"
                                 ),
                                 file=file_name,
