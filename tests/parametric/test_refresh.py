@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -514,7 +515,10 @@ def test_failed_restore_keeps_backup_and_reports_it_on_next_run(
     assert not destination.exists()
     assert _file_digests(temporary / "previous") == originals[ids[0]]
     retained = _file_digests(temporary)
-    capsys.readouterr()
+    locator = os.path.relpath(temporary, refresh.REPO_ROOT)
+    assert capsys.readouterr().out.splitlines()[-1] == (
+        f"WARNING: refresh recovery directory {locator}; "
+        "previous atlas retained; restore before retrying")
     assert refresh.main([]) == 1
     assert capsys.readouterr().out.splitlines()[0] == (
         f"WARNING: leftover refresh directory: {temporary.name}")
@@ -539,11 +543,50 @@ def test_refresh_reports_leftover_temporary_folders_at_start(
 def test_refresh_temporary_folders_are_ignored():
     import subprocess
 
+    environment = {key: value for key, value in os.environ.items()
+                   if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}}
     result = subprocess.run(
-        ["git", "check-ignore", "--no-index", "atlases/.refresh-interrupted/previous/default.txt"],
-        cwd=refresh.REPO_ROOT, capture_output=True, text=True,
+        ["git", "check-ignore", "--no-index", "--stdin"],
+        cwd=refresh.REPO_ROOT, env=environment, capture_output=True,
+        input=(b"atlases/.refresh-interrupted/previous/default.txt\n"
+               b"atlases/real_atlas/default.txt\n"
+               b"atlases/sub/.refresh-interrupted/evidence.txt\n"
+               b"atlases/.refresh-file\n"
+               b"elsewhere/.refresh-interrupted/evidence.txt\n"),
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
     assert result.returncode == 0
+    assert result.stdout.splitlines() == [b"atlases/.refresh-interrupted/previous/default.txt"]
+
+
+@pytest.mark.parametrize("outcome", ["build-error", "invalid", "valid"])
+def test_cleanup_failure_preserves_build_outcome(
+    disk_refresh_builds, monkeypatch, capsys, outcome,
+):
+    """Cleanup failure preserves the build exception or validation status."""
+    record = (RuntimeError("build failed") if outcome == "build-error"
+              else {"passes": outcome == "valid"})
+    root, ids, originals, roots, _ = disk_refresh_builds([record])
+
+    def failing_cleanup(path):
+        assert path == roots[0].parent
+        raise OSError("cleanup unavailable")
+
+    monkeypatch.setattr(refresh.shutil, "rmtree", failing_cleanup)
+    if outcome == "build-error":
+        with pytest.raises(RuntimeError, match="build failed"):
+            refresh.main(["--apply"])
+    else:
+        assert refresh.main(["--apply"]) == (0 if outcome == "valid" else 2)
+    if outcome == "valid":
+        assert _file_digests(root / ids[0]) != originals[ids[0]]
+    else:
+        assert _file_digests(root / ids[0]) == originals[ids[0]]
+    temporary = roots[0].parent
+    assert temporary.exists()
+    locator = os.path.relpath(temporary, refresh.REPO_ROOT)
+    assert (f"WARNING: could not remove refresh directory {locator}; "
+            "inspect before removal") in capsys.readouterr().out
 
 
 def test_parametric_tests_have_a_hosted_job():
