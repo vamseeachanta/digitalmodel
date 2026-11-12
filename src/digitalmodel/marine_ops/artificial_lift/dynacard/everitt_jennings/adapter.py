@@ -125,14 +125,14 @@ def survey_from_context(ctx: DynacardAnalysisContext, rods: RodString) -> Survey
     )
 
 
-def solve_downhole_card(
+def _solve_downhole_card_si(
     ctx: DynacardAnalysisContext,
     tubing_id_in: float = DEFAULT_TUBING_ID_IN,
     viscosity_cp: float = 10.0,
     n_nodes: int = 100,
     damping: Optional[np.ndarray] = None,
-) -> CardData:
-    """Convert the context's surface card to a downhole card in oilfield units.
+) -> DownholeCard:
+    """Solve once in SI, retaining calculation and diagnostic loads.
 
     Args:
         ctx: Analysis context carrying the surface card, rod string, pump and
@@ -146,7 +146,7 @@ def solve_downhole_card(
         damping: Explicit damping coefficients, bypassing the estimator.
 
     Returns:
-        A :class:`CardData` with position in inches and load in pounds.
+        A :class:`DownholeCard` with position in metres and loads in newtons.
 
     Raises:
         ValueError: If required inputs are missing or physically inconsistent.
@@ -177,10 +177,33 @@ def solve_downhole_card(
         damping=damping,
     )
 
+    return card
+
+
+def _oilfield_card(position: np.ndarray, load: np.ndarray) -> CardData:
+    """Convert one SI solver card without modifying either input array."""
     return CardData(
-        position=(card.position * U.M2IN).tolist(),
-        load=(card.load * U.N2LB).tolist(),
+        position=(position * U.M2IN).tolist(),
+        load=(load * U.N2LB).tolist(),
     )
+
+
+def solve_downhole_card(
+    ctx: DynacardAnalysisContext,
+    tubing_id_in: float = DEFAULT_TUBING_ID_IN,
+    viscosity_cp: float = 10.0,
+    n_nodes: int = 100,
+    damping: Optional[np.ndarray] = None,
+) -> CardData:
+    """Return the historical smoothed calculation card, in inches and pounds.
+
+    Geometry, viscosity, grid and optional damping retain their existing
+    meanings. EverittJenningsContextSolver also uses this filtered card for
+    classification by default. Its explicit ``use_diagnostic_card=True``
+    option retains the unsmoothed diagnostic card from the same solve.
+    """
+    card = _solve_downhole_card_si(ctx, tubing_id_in, viscosity_cp, n_nodes, damping)
+    return _oilfield_card(card.position, card.load)
 
 
 class EverittJenningsContextSolver:
@@ -190,6 +213,10 @@ class EverittJenningsContextSolver:
     context, exposing ``solve()`` and ``detect_buckling()`` and returning an
     :class:`AnalysisResults`. This adapts the SI solver to that contract so it
     can be selected alongside the existing two.
+
+    ``use_diagnostic_card=True`` opts into unsmoothed classification input;
+    field accuracy and noise acceptance for that path are NOT_EVALUATED.
+    Results are reused between solves; copy them before retaining a snapshot.
     """
 
     def __init__(
@@ -198,23 +225,33 @@ class EverittJenningsContextSolver:
         tubing_id_in: float = DEFAULT_TUBING_ID_IN,
         viscosity_cp: float = 10.0,
         n_nodes: int = 200,
+        use_diagnostic_card: bool = False,
     ):
+        if type(use_diagnostic_card) is not bool:
+            raise ValueError("use_diagnostic_card must be a boolean")
         self.ctx = context
         self.tubing_id_in = tubing_id_in
         self.viscosity_cp = viscosity_cp
         self.n_nodes = n_nodes
+        self.use_diagnostic_card = use_diagnostic_card
         self.results = AnalysisResults()
 
     def solve(self) -> AnalysisResults:
         """Convert the surface card and populate the results object."""
-        downhole = solve_downhole_card(
+        if type(self.use_diagnostic_card) is not bool:
+            raise ValueError("use_diagnostic_card must be a boolean")
+        card = _solve_downhole_card_si(
             self.ctx,
             tubing_id_in=self.tubing_id_in,
             viscosity_cp=self.viscosity_cp,
             n_nodes=self.n_nodes,
         )
         surface_load = np.asarray(self.ctx.surface_card.load, dtype=np.float64)
-        self.results.downhole_card = downhole
+        self.results.downhole_card = _oilfield_card(card.position, card.load)
+        self.results.diagnostic_card = (
+            _oilfield_card(card.position, card.diagnostic_load)
+            if self.use_diagnostic_card else None
+        )
         self.results.peak_polished_rod_load = float(np.max(surface_load))
         self.results.minimum_polished_rod_load = float(np.min(surface_load))
         self.results.ctx = self.ctx
