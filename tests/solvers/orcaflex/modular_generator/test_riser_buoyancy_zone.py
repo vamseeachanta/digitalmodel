@@ -104,3 +104,19 @@ def test_example_matches_golden(example, tmp_path):
         got = yaml.safe_load((includes / name).read_text(encoding="utf-8"))
         want = yaml.safe_load((GOLDEN / name).read_text(encoding="utf-8"))
         assert got == want, name
+
+
+@pytest.mark.parametrize("start", [80.0, 50.0 + 2e-9])
+def test_close_interior_cuts_keep_positive_lengths(example, tmp_path, start):
+    """Distinct cuts must survive both section splitting and YAML emission."""
+    end = start + 1e-10
+    data = _zone(example, start, end)
+    rows = _table(data)
+    out = tmp_path / "close_cuts"
+    ModularModelGenerator.from_spec(ProjectInputSpec(**data)).generate(out)
+    emitted = yaml.safe_load((out / "includes/07_riser_lines.yml").read_text())
+    assert emitted["Lines"][0][SECTION_KEY] == rows
+    assert all(row[1] > 0 for row in rows)
+    buoyant_lengths = [row[1] for row in rows if row[0] == FLOATS]
+    assert buoyant_lengths == [end - start]
+    assert sum(row[1] for row in rows) == pytest.approx(190.0, abs=1e-12)

@@ -144,13 +144,21 @@ class RiserLinesBuilder(BaseBuilder):
         return segment_data
 
     @staticmethod
-    def _apply_buoyancy_zone(segment_data: list[list], zone) -> list[list]:
+    def _apply_buoyancy_zone(
+        segment_data: list[list], zone, *, line_type_column: int = 0,
+        length_column: int = 1,
+    ) -> list[list]:
         """Split the section table at the zone ends and assign the zone type.
 
         Arc lengths are measured from End A. Each piece keeps the target
         segment length of the section it came from; pieces fully inside the
         zone take the zone's (buoyant) line type. Cuts that coincide with a
         section boundary create no zero-length piece. Total length is unchanged.
+
+        Cuts within 1e-9 m of a section boundary use that boundary. Distinct
+        interior cuts retain their positive floating-point difference without
+        decimal rounding, even when their separation is less than 1e-9 m.
+        Unmapped cells and row widths are copied from the parent section.
         """
         if zone is None:
             return segment_data
@@ -158,13 +166,17 @@ class RiserLinesBuilder(BaseBuilder):
         start, end = zone.start_arc_length, zone.end_arc_length
         result: list[list] = []
         s0 = 0.0
-        for line_type, length, target in segment_data:
+        for row in segment_data:
+            line_type, length = row[line_type_column], row[length_column]
             s1 = s0 + length
             cuts = [s0] + [c for c in (start, end) if s0 + tol < c < s1 - tol] + [s1]
             for a, b in zip(cuts, cuts[1:]):
                 inside = a >= start - tol and b <= end + tol
-                piece = length if len(cuts) == 2 else round(b - a, 9)
-                result.append([zone.line_type if inside else line_type, piece, target])
+                piece = length if len(cuts) == 2 else b - a
+                entry = row.copy()
+                entry[line_type_column] = zone.line_type if inside else line_type
+                entry[length_column] = piece
+                result.append(entry)
             s0 = s1
         return result
 

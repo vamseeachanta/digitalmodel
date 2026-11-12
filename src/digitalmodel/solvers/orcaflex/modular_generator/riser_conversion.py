@@ -14,6 +14,7 @@ from __future__ import annotations
 from copy import deepcopy
 from typing import Any
 
+from .builders.riser_lines_builder import RiserLinesBuilder
 from .schema.generic import GenericModel, TYPED_FIELD_MAP
 from .schema.riser import EndConnection, Riser
 
@@ -176,7 +177,8 @@ def render_riser(riser: Riser, fallback: GenericModel) -> GenericModel:
 
     Native tables supply layout and unmapped values only. Section counts and
     line-type identities must remain compatible with the retained templates.
-    The supplied validated objects are not mutated.
+    Buoyancy splits copy each template row, retaining unmapped cells and column
+    order. The supplied validated objects are not mutated.
     """
     generic = deepcopy(fallback.model_dump(exclude_unset=True))
     lines = generic.get("lines") or []
@@ -197,12 +199,17 @@ def render_riser(riser: Riser, fallback: GenericModel) -> GenericModel:
     typed_line = riser.lines[0]
     line["name"] = typed_line.name
     props = line["properties"]
-    _, columns, rows = _table(props, set(_SECTION_FIELDS.values()))
+    section_key, columns, rows = _table(props, set(_SECTION_FIELDS.values()))
     if len(rows) != len(typed_line.sections):
         raise ValueError("Riser section count must match the generic fallback")
     for row, section in zip(rows, typed_line.sections, strict=True):
         for field, native in _SECTION_FIELDS.items():
             row[columns.index(native)] = getattr(section, field)
+    props[section_key] = RiserLinesBuilder._apply_buoyancy_zone(
+        rows, typed_line.buoyancy_zone,
+        line_type_column=columns.index("LineType"),
+        length_column=columns.index("Length"),
+    )
     _, columns, rows = _connection_table(props)
     if len(rows) != 2:
         raise ValueError("Riser fallback requires exactly two end connections")

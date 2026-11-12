@@ -349,3 +349,47 @@ def test_multiple_referenced_line_types_preserve_order(single_riser, tmp_path):
     upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
     assert [s["line_type"] for s in upgraded["riser"]["lines"][0]["sections"]] == [row[0] for row in rows]
     assert generated_mapping(upgraded, tmp_path / "after") == generated_mapping(single_riser, tmp_path / "before")
+
+
+@pytest.mark.parametrize("layout", ["original", "reordered", "short_row"])
+def test_buoyancy_zone_reaches_fallback_yaml(single_riser, tmp_path, layout):
+    """Split native rows while retaining their extra cells and column layout."""
+    bare, buoyant = "Flexible Riser", "Synthetic Buoyant"
+    extra_type = deepcopy(single_riser["generic"]["line_types"][0])
+    extra_type["name"] = buoyant
+    single_riser["generic"]["line_types"].append(extra_type)
+    props = single_riser["generic"]["lines"][0]["properties"]
+    key = SECTIONS
+    if layout == "reordered":
+        rows = props.pop(key)
+        key = "LineType, NumberOfSegments, TargetSegmentLength, Length"
+        props[key] = [[row[0], row[3], row[2], row[1]] for row in rows]
+    elif layout == "short_row":
+        props[key][1].pop()
+    upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
+    typed_type = deepcopy(upgraded["riser"]["line_types"][0])
+    typed_type["name"] = buoyant
+    upgraded["riser"]["line_types"].append(typed_type)
+    upgraded["riser"]["lines"][0]["buoyancy_zone"] = {
+        "start_arc_length": 30, "end_arc_length": 60, "line_type": buoyant,
+    }
+    original = deepcopy(upgraded)
+    objects = generated_mapping(upgraded, tmp_path / "zone")["includes/20_generic_objects.yml"]
+    expected = [
+        [bare, 30, 2, 60], [buoyant, 30, 2, 60],
+        [bare, 60, 2, 60], [bare, 45, 1.5, 30],
+    ]
+    if layout == "reordered":
+        expected = [[row[0], row[3], row[2], row[1]] for row in expected]
+    elif layout == "short_row":
+        expected[-1].pop()
+    line = objects["Lines"][0]
+    assert line[key] == expected
+    columns = key.split(", ")
+    rows = line[key]
+    assert sum(row[columns.index("Length")] for row in rows) == 165
+    assert sum(row[columns.index("Length")] for row in rows
+               if row[columns.index("LineType")] == buoyant) == 30
+    assert line["UnmappedSetting"] == props["UnmappedSetting"]
+    assert line[CONNECTIONS] == props[CONNECTIONS]
+    assert upgraded == original
