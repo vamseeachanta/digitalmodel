@@ -17,7 +17,9 @@ from typing import Optional
 import numpy as np
 
 from ..constants import BUCKLING_DETECTION_LOAD_THRESHOLD_LBS
-from ..models import AnalysisResults, CardData, DynacardAnalysisContext
+from ..models import (
+    AnalysisResults, CardData, DynacardAnalysisContext, effective_density_lb_ft3,
+)
 from ..solver_guards import annotate_results
 from . import units as U
 from .solver import (
@@ -37,29 +39,8 @@ STEEL_MODULUS_PSI = 30_000_000.0
 STEEL_DENSITY_LB_FT3 = 490.0
 
 
-def _effective_density_lb_ft3(section) -> float:
-    """Rod density including couplings, derived from measured weight per foot.
-
-    The wave speed the solver marches at is c = sqrt(E/rho), so density is not
-    a cosmetic input. Bare steel is 490 lb/ft3, but a real rod's catalogued
-    weight is coupling-inclusive and works out near 532 lb/ft3 -- couplings add
-    roughly 8% of mass to the same nominal cross-section.
-
-    Using 490 gave 14.01% median nRMSE against measured vendor downhole cards;
-    deriving density from weight gave 0.74% (dm#1897). The error is nearly a
-    pure load offset, so correlation stays above 0.999 either way and it does
-    not look like a defect on a shape comparison.
-
-    The corroboration is sharp: rod catalogues state a sonic velocity of
-    16,300 ft/s, which matches sqrt(E/rho) at 532 lb/ft3 to 0.07%, against
-    16,982 ft/s (+4.2%) at 490.
-    """
-    weight_per_foot = getattr(section, "weight_per_foot", 0.0) or 0.0
-    if weight_per_foot > 0.0 and section.diameter > 0.0:
-        # lb/ft divided by ft^2 of nominal steel area; 576 = 4 * 144 converts
-        # the in^2 area of a round rod to ft^2.
-        return weight_per_foot * 576.0 / (np.pi * section.diameter ** 2)
-    return section.density if section.density else STEEL_DENSITY_LB_FT3
+# Retain existing direct imports while both solvers use the shared public API.
+_effective_density_lb_ft3 = effective_density_lb_ft3
 
 
 def rod_string_from_context(ctx: DynacardAnalysisContext) -> RodString:
@@ -89,7 +70,7 @@ def rod_string_from_context(ctx: DynacardAnalysisContext) -> RodString:
         [s.length * U.FT2M for s in ctx.rod_string], dtype=np.float64
     )
     densities = np.array(
-        [_effective_density_lb_ft3(s) * U.LBPFT32KGPM3 for s in ctx.rod_string],
+        [effective_density_lb_ft3(s) * U.LBPFT32KGPM3 for s in ctx.rod_string],
         dtype=np.float64,
     )
     moduli = np.array(
