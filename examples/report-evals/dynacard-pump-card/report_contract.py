@@ -1,4 +1,7 @@
 """Display precision, reader data requests and fixed report scope."""
+import json
+from pathlib import Path
+
 TITLE = ('Sucker-rod pump dynamometer card analysis: surface card to pump card by the wave equation, '
          'with fillage, fluid load and input sensitivity')
 REPO = 'https://github.com/vamseeachanta/digitalmodel'
@@ -27,12 +30,13 @@ CANNOT_DO = [
 ]
 
 
-# Commit that holds the code and inputs behind the published values. It is a
-# recorded constant: commit the code, set this to that commit, then rebuild
-# results.json, PROMPT.md, the report and the run record.
-PINNED_COMMIT = '9328ec4f0a2a4578cf5a745fe13c40195caeed30'
-# Pull request whose head keeps the pinned commit fetchable before it reaches main.
-PULL_REQUEST = 0
+# pin.json names the commit that holds the code and inputs behind the published
+# values, and the pull request whose head keeps that commit fetchable before it
+# reaches main. It is data, not code: re-pinning changes no Python file, so a
+# pinned rebuild can verify every source file against the pinned commit.
+_PIN = json.loads((Path(__file__).resolve().parent / 'pin.json').read_text(encoding='utf-8'))
+PINNED_COMMIT = _PIN['commit']
+PULL_REQUEST = _PIN['pull_request']
 
 FACTOR_OUTPUTS = (('pump_stroke_in', 'pump stroke'), ('fluid_load_lbf', 'fluid load'),
                   ('fillage_pct', 'fillage'), ('maximum_pump_load_lbf', 'maximum pump load'),
