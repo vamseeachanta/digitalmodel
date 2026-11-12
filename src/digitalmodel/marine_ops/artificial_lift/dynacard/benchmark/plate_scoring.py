@@ -86,6 +86,10 @@ def _summarise(rows: list[dict], crosswalk_status: str) -> dict:
     count = len(rows)
     interval = list(wilson_interval(correct, count, confidence=0.95)) if count else None
     if interval is not None:
+        # Recorded to 12 decimals so the JSON is identical across Python
+        # runtimes whose floating-point results differ in the last bit.
+        interval = [round(bound, 12) for bound in interval]
+    if interval is not None:
         if correct == 0:
             interval[0] = 0.0  # Exact binomial boundary, not floating residue.
         if correct == count:

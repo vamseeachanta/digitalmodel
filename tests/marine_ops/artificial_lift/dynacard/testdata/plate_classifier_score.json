@@ -181,8 +181,8 @@
       "wrong": 3,
       "accuracy": 0.625,
       "interval": [
-        0.3057423946026274,
-        0.8631557141764026
+        0.305742394603,
+        0.863155714176
       ],
       "confidence": 0.95,
       "interval_method": "Wilson score",
@@ -276,8 +276,8 @@
       "wrong": 1,
       "accuracy": 0.5,
       "interval": [
-        0.09453120573423074,
-        0.9054687942657693
+        0.094531205734,
+        0.905468794266
       ],
       "confidence": 0.95,
       "interval_method": "Wilson score",
@@ -301,8 +301,8 @@
       "wrong": 4,
       "accuracy": 0.6,
       "interval": [
-        0.3126737697336583,
-        0.8318196702937637
+        0.312673769734,
+        0.831819670294
       ],
       "confidence": 0.95,
       "interval_method": "Wilson score",
@@ -527,8 +527,8 @@
           "wrong": 5,
           "accuracy": 0.375,
           "interval": [
-            0.13684428582359742,
-            0.6942576053973726
+            0.136844285824,
+            0.694257605397
           ],
           "confidence": 0.95,
           "interval_method": "Wilson score",
@@ -630,8 +630,8 @@
           "wrong": 1,
           "accuracy": 0.5,
           "interval": [
-            0.09453120573423074,
-            0.9054687942657693
+            0.094531205734,
+            0.905468794266
           ],
           "confidence": 0.95,
           "interval_method": "Wilson score",
@@ -655,8 +655,8 @@
           "wrong": 6,
           "accuracy": 0.4,
           "interval": [
-            0.1681803297062362,
-            0.6873262302663417
+            0.168180329706,
+            0.687326230266
           ],
           "confidence": 0.95,
           "interval_method": "Wilson score",
@@ -888,8 +888,8 @@
           "wrong": 4,
           "accuracy": 0.5,
           "interval": [
-            0.21521606221387762,
-            0.7847839377861223
+            0.215216062214,
+            0.784783937786
           ],
           "confidence": 0.95,
           "interval_method": "Wilson score",
@@ -991,8 +991,8 @@
           "wrong": 1,
           "accuracy": 0.5,
           "interval": [
-            0.09453120573423074,
-            0.9054687942657693
+            0.094531205734,
+            0.905468794266
           ],
           "confidence": 0.95,
           "interval_method": "Wilson score",
@@ -1016,8 +1016,8 @@
           "wrong": 5,
           "accuracy": 0.5,
           "interval": [
-            0.23659309051256405,
-            0.763406909487436
+            0.236593090513,
+            0.763406909487
           ],
           "confidence": 0.95,
           "interval_method": "Wilson score",
@@ -1249,8 +1249,8 @@
           "wrong": 4,
           "accuracy": 0.5,
           "interval": [
-            0.21521606221387762,
-            0.7847839377861223
+            0.215216062214,
+            0.784783937786
           ],
           "confidence": 0.95,
           "interval_method": "Wilson score",
@@ -1352,8 +1352,8 @@
           "wrong": 1,
           "accuracy": 0.5,
           "interval": [
-            0.09453120573423074,
-            0.9054687942657693
+            0.094531205734,
+            0.905468794266
           ],
           "confidence": 0.95,
           "interval_method": "Wilson score",
@@ -1377,8 +1377,8 @@
           "wrong": 5,
           "accuracy": 0.5,
           "interval": [
-            0.23659309051256405,
-            0.763406909487436
+            0.236593090513,
+            0.763406909487
           ],
           "confidence": 0.95,
           "interval_method": "Wilson score",
@@ -1611,7 +1611,7 @@
           "accuracy": 0.0,
           "interval": [
             0.0,
-            0.3244075648838801
+            0.324407564884
           ],
           "confidence": 0.95,
           "interval_method": "Wilson score",
@@ -1714,7 +1714,7 @@
           "accuracy": 0.0,
           "interval": [
             0.0,
-            0.6576197724933468
+            0.657619772493
           ],
           "confidence": 0.95,
           "interval_method": "Wilson score",
@@ -1739,7 +1739,7 @@
           "accuracy": 0.0,
           "interval": [
             0.0,
-            0.27753279986288915
+            0.277532799863
           ],
           "confidence": 0.95,
           "interval_method": "Wilson score",
