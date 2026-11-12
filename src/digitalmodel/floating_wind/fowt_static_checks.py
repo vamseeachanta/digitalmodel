@@ -93,6 +93,10 @@ def model_from_spec(spec: dict) -> Model:
     from digitalmodel.solvers.orcaflex.modular_generator.schema.fowt import FowtSpec
 
     fowt = FowtSpec(**spec["fowt"])
+    if fowt.representation != "rigid":
+        raise NotImplementedError(
+            "the checks treat the hull as the whole system; the flexible representation "
+            "carries tower and RNA mass outside the hull and is not supported")
     hull = fowt.hull
     rho = spec["environment"]["water"]["density"] * KILO
     depth = spec["environment"]["water"]["depth"]
