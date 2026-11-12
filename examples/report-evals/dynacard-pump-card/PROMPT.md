@@ -29,9 +29,10 @@ Inputs (all public, no account needed):
 Steps:
 1. git clone https://github.com/vamseeachanta/digitalmodel
    cd digitalmodel
-   git fetch origin c2a62ac98957044e6b34bf0c0b0c9d19900dd4fc || git fetch origin refs/pull/3969/head
-   git checkout c2a62ac98957044e6b34bf0c0b0c9d19900dd4fc
-   (The files at that commit can name an earlier pin; the values are the same.)
+   git fetch origin refs/pull/3969/head
+   git checkout FETCH_HEAD
+   (The recorded pin predates the endpoint correction. These corrected values
+   require the pull request head in candidate mode until a new pin is published.)
    uv sync --extra test
 2. Run the public example and keep its output and figure:
    PYTHONPATH=src uv run --no-sync python examples/report-evals/dynacard-pump-card/analysis.py --out analysis.json --figure figure.png
@@ -57,16 +58,16 @@ Expected public-case key results:
 | Surface stroke | 53.99 | in |
 | Peak polished-rod load | 12240 | lbf |
 | Minimum polished-rod load | 7296 | lbf |
-| Pump stroke, gross plunger travel | 39.58 | in |
+| Pump stroke, gross plunger travel | 39.57 | in |
 | Pump/surface stroke ratio | 0.733 | ratio |
-| Maximum pump load | 4660 | lbf |
-| Minimum pump load | 83 | lbf |
-| Fluid load, mean phase difference | 3309 | lbf |
+| Maximum pump load | 4661 | lbf |
+| Minimum pump load | 82 | lbf |
+| Fluid load, mean phase difference | 3310 | lbf |
 | Pump fillage | 60.08 | % |
-| Effective plunger travel | 23.78 | in |
-| Fillage-adjusted displacement | 40.03 | bbl/day |
-| Gross displacement | 66.62 | bbl/day |
-| Pump-card work per stroke | 7904.9 | ft-lbf |
+| Effective plunger travel | 23.77 | in |
+| Fillage-adjusted displacement | 40.01 | bbl/day |
+| Gross displacement | 66.60 | bbl/day |
+| Pump-card work per stroke | 7904.7 | ft-lbf |
 
 Basis, ASSUMED: 24 h/day and 100 % volumetric efficiency.
 
@@ -94,10 +95,10 @@ sample count is insufficient; source timing cannot be established from loop shap
 
 Ask me before you go on if:
 - The surface card: position and load samples over one full stroke, with units: The wave equation is solved from the measured polished-rod position and load. Without it there is no calculation; stop. The samples are ASSUMED evenly spaced in time. Supply: Export the card from the pump-off controller or dynamometer as position (in) and load (lbf) columns, in acquisition order.
-- The rod string as run: diameter, length and material of each taper, surface first: Rod stretch, wave travel time and buoyant rod weight come from the taper geometry. Without diameter or length there is no calculation; stop. A missing material is ASSUMED steel. Rod length: On the public example well a 1 % error in it changes: pump stroke −0.35, fluid load 0.87 (stepped), fillage 0.46, maximum pump load −1.64, displacement 0.11 (% per %). Rod diameter: On the public example well a 1 % error in it changes: pump stroke 0.58, fluid load −0.17 (stepped), fillage −0.94, maximum pump load −3.14, displacement −0.36 (% per %). Supply: Take it from the rod tally or the last workover ticket; a remembered string is weaker evidence than the tally.
+- The rod string as run: diameter, length and material of each taper, surface first: Rod stretch, wave travel time and buoyant rod weight come from the taper geometry. Without diameter or length there is no calculation; stop. A missing material is ASSUMED steel. Rod length: On the public example well a 1 % error in it changes: pump stroke −0.35, fluid load −0.29 (stepped), fillage 0.46, maximum pump load −1.64, displacement 0.11 (% per %). Rod diameter: On the public example well a 1 % error in it changes: pump stroke 0.58, fluid load −0.17 (stepped), fillage −0.94, maximum pump load −3.14, displacement −0.36 (% per %). Supply: Take it from the rod tally or the last workover ticket; a remembered string is weaker evidence than the tally.
 - Pump setting depth and plunger diameter: The pump depth closes the rod string; the plunger diameter converts plunger travel to volume. Without either there is no calculation; stop. Plunger diameter: On the public example well a 1 % error in it changes: pump stroke < 0.01 in magnitude, fluid load < 0.01 in magnitude, fillage < 0.01 in magnitude, maximum pump load < 0.01 in magnitude, displacement 2.00 (% per %). Supply: Take both from the pump or completion record.
-- Pumping speed in strokes per minute: Speed sets the time of one stroke and so the dynamic part of the rod load. Without it there is no calculation; stop. On the public example well a 1 % error in it changes: pump stroke −0.06, fluid load 0.93 (stepped), fillage < 0.01 in magnitude, maximum pump load 0.04, displacement 0.93 (% per %). Supply: Read it from the controller, or time ten strokes.
-- Load-cell calibration date and method: Every pump load is the surface load less the buoyant rod weight, so a load-cell error passes straight into it. If not supplied, the surface loads are ASSUMED correct as recorded. On the public example well a 1 % error in it changes: pump stroke −0.29, fluid load 0.94 (stepped), fillage 0.47, maximum pump load 2.57, displacement 0.18 (% per %). The effect of a zero offset is NOT_EVALUATED. Supply: Give the date of the last calibration and whether the cell was zeroed unloaded.
+- Pumping speed in strokes per minute: Speed sets the time of one stroke and so the dynamic part of the rod load. Without it there is no calculation; stop. On the public example well a 1 % error in it changes: pump stroke −0.06, fluid load −0.22 (stepped), fillage −0.01, maximum pump load 0.04, displacement 0.93 (% per %). Supply: Read it from the controller, or time ten strokes.
+- Load-cell calibration date and method: Every pump load is the surface load less the buoyant rod weight, so a load-cell error passes straight into it. If not supplied, the surface loads are ASSUMED correct as recorded. On the public example well a 1 % error in it changes: pump stroke −0.29, fluid load 1.24 (stepped), fillage 0.47, maximum pump load 2.57, displacement 0.18 (% per %). The effect of a zero offset is NOT_EVALUATED. Supply: Give the date of the last calibration and whether the cell was zeroed unloaded.
 - Fluid density, or water cut with oil and water densities: Fluid density sets the buoyancy of the rod string. If not supplied, fluid density is ASSUMED 62.4 lb/ft3 (fresh water). On the public example well a 1 % error in it changes: pump stroke 0.00, fluid load 0.00, fillage 0.00, maximum pump load 0.22, displacement 0.00 (% per %). Supply: Give the produced-fluid density or the water cut and the two phase densities.
 - Whether the tubing is anchored: Unanchored tubing stretches with the fluid load and shortens the plunger travel relative to the barrel. If not supplied, anchored tubing is ASSUMED; pump stroke, fillage and displacement rest on it. Unanchored tubing is not modelled and its effect is NOT_EVALUATED. Supply: State anchored or unanchored, with the anchor depth.
 - Deviation survey: In a deviated well, rod weight and friction act along the well path. If not supplied, a vertical well is ASSUMED. The frequency-domain cross-check is always vertical. The effect of deviation is NOT_EVALUATED without a survey. Supply: Give measured depth, inclination and azimuth from surface to the pump.
@@ -108,12 +109,12 @@ uncertain inputs weaken. Recalculate the factors on my own card; a local factor
 for the public example well is not an uncertainty bound for a different card.
 | Input | Pump stroke | Fluid load | Fillage | Maximum pump load | Displacement |
 | --- | --- | --- | --- | --- | --- |
-| Rod length and pump depth | −0.35 | 0.87* | 0.46 | −1.64 | 0.11 |
+| Rod length and pump depth | −0.35 | −0.29* | 0.46 | −1.64 | 0.11 |
 | Rod diameter | 0.58 | −0.17* | −0.94 | −3.14 | −0.36 |
-| Rod modulus | 0.32 | −0.27* | −0.47 | 0.03 | −0.14 |
-| Pumping speed | −0.06 | 0.93* | < 0.01 | 0.04 | 0.93 |
-| Surface load (load-cell gain) | −0.29 | 0.94* | 0.47 | 2.57 | 0.18 |
-| Surface position (stroke scale) | 1.29 | 0.06* | −0.47 | 0.05 | 0.82 |
+| Rod modulus | 0.32 | 0.03* | −0.47 | 0.03 | −0.14 |
+| Pumping speed | −0.06 | −0.22* | −0.01 | 0.04 | 0.93 |
+| Surface load (load-cell gain) | −0.29 | 1.24* | 0.47 | 2.57 | 0.18 |
+| Surface position (stroke scale) | 1.29 | −0.23* | −0.47 | 0.05 | 0.82 |
 | Fluid density | 0.00 | 0.00 | 0.00 | 0.22 | 0.00 |
 | Plunger diameter | < 0.01 | < 0.01 | < 0.01 | < 0.01 | 2.00 |
 
@@ -135,7 +136,7 @@ recorded plate counts; input
 sensitivity; and one figure of the surface and pump cards beside the reference
 shapes. Only if you computed the public-case results without running analysis.py:
 for the arithmetic comparison, write my-results.json using the numeric result ids in
-results.json, in the form {"results": [{"id": "pump_stroke_in", "value": 39.58}]}.
+results.json, in the form {"results": [{"id": "pump_stroke_in", "value": 39.57}]}.
 Include every graded result in that file, then run:
 PYTHONPATH=src uv run --no-sync python examples/report-evals/dynacard-pump-card/eval.py --compare my-results.json
 The comparison checks reproduction of the public example, not the validity of

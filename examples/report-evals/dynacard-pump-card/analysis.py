@@ -49,12 +49,44 @@ def key_results(ctx, card):
     }
 
 
+def unique_phases(card):
+    """Remove an exact closing pair; nearby measurements remain distinct phases."""
+    if card.position[0] == card.position[-1] and card.load[0] == card.load[-1]:
+        return card.model_copy(update={'position': card.position[:-1], 'load': card.load[:-1]})
+    return card
+
+
+def solve_default(ctx):
+    """Give the periodic finite-difference stencil its repeated endpoint.
+
+    Return unique phases so neither metrics nor comparison weight phase zero
+    twice. The frequency-domain solver consumes unique phases directly.
+    """
+    surface = unique_phases(ctx.surface_card)
+    closed = surface.model_copy(update={
+        'position': [*surface.position, surface.position[0]],
+        'load': [*surface.load, surface.load[0]],
+    })
+    closed_ctx = ctx.model_copy(update={'surface_card': closed})
+    return unique_phases(EverittJenningsContextSolver(closed_ctx).solve().downhole_card)
+
+
+def resample_phases(card, count):
+    """Interpolate a stored cycle periodically onto the comparison phase grid."""
+    card = unique_phases(card)
+    if len(card.position) == count:
+        return card
+    phases = np.arange(count) / count
+    source_phases = np.arange(len(card.position)) / len(card.position)
+    return card.model_copy(update={
+        name: np.interp(phases, source_phases, getattr(card, name), period=1).tolist()
+        for name in ('position', 'load')
+    })
+
+
 def _cross_check(card, alternative, reference):
     gibbs = alternative.downhole_card
-    aligned = card
-    if alternative.downhole_load_basis.closing_sample_dropped:
-        aligned = card.model_copy(update={'position': card.position[:-1], 'load': card.load[:-1]})
-    cross = {'gibbs_default_load_nrmse_pct': compare_cards(gibbs, aligned).load_nrmse_pct,
+    cross = {'gibbs_default_load_nrmse_pct': compare_cards(gibbs, card).load_nrmse_pct,
              'default_reference_load_nrmse_pct': None,
              'gibbs_reference_load_nrmse_pct': None}
     if reference is not None:
@@ -81,20 +113,21 @@ def sources(root, card_path, public, commit):
 def run(card_path=FIXTURE, *, include_sensitivity=True, resource_root=ROOT):
     """Analyse one card; resource_root supplies version-selected public plate evidence."""
     ctx, raw = load_card(card_path)
-    card = EverittJenningsContextSolver(ctx).solve().downhole_card
+    ctx = ctx.model_copy(update={'surface_card': unique_phases(ctx.surface_card)})
+    card = solve_default(ctx)
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='.*comparison only: not field validated.*')
         alternative = DynacardPhysicsSolver(ctx).solve_wave_equation(harmonic_count=15)
     gibbs = alternative.downhole_card
     public = hashlib.sha256(Path(card_path).read_bytes()).hexdigest() == PUBLIC_SHA256
-    reference = get_expected_downhole_card(raw) if public else None
+    reference = resample_phases(get_expected_downhole_card(raw), len(card.position)) if public else None
     key = key_results(ctx, card)
     table = sensitivity_table(ctx, key, lambda changed: key_results(
-        changed, EverittJenningsContextSolver(changed).solve().downhole_card)) if include_sensitivity else []
+        changed, solve_default(changed))) if include_sensitivity else []
     shapes, hypotheses = shape_evidence(card, Path(resource_root))
     fluid = calculate_fluid_load(card)
-    # The pin is a recorded constant, so a later commit does not change the
-    # published record; revision() reports the checkout for the eval context.
+    # The historical pin identifies retained sources. Candidate eval records
+    # hash the corrected code; refresh the pin after that revision is published.
     commit = PINNED_COMMIT
     cards = {'surface': ctx.surface_card, 'default': card, 'gibbs': gibbs, 'reference': reference}
     return {

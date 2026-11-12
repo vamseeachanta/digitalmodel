@@ -143,6 +143,8 @@ def methodology(data):
     harmonics = data['settings']['harmonic_count']
     return f'''Surface displacement and tensile load provide the boundary conditions for the damped axial rod wave equation. The default finite-difference adapter marches the displacement field through the tapered rod string and reconstructs pump load from strain, following Everitt and Jennings (1992), SPE-18189-PA. The coupled frequency-domain transfer is a separate numerical method: it propagates both displacement and force through each ordered taper as a frequency-domain solution of the rod model of Gibbs (1963), [SPE-588-PA](https://doi.org/10.2118/588-PA), with {harmonics} harmonics.
 
+The finite-difference solver receives a repeated closing position/load pair; the frequency-domain solver receives unique phases. Both computed cards use unique phases for metrics and comparison. An exact closing pair in the input is removed before either representation is constructed, so open and closed representations give identical results. The stored comparison card has a different unique-phase count and is interpolated periodically onto the measured card's uniform phase grid before comparison.
+
 The [package calculations](../../../src/digitalmodel/marine_ops/artificial_lift/dynacard/calculations.py) define gross plunger travel as the position range, effective travel as the bottom-right corner position relative to the minimum, and fillage as effective travel divided by gross travel, expressed as a percentage. Fluid load is the mean upstroke load minus the mean downstroke load between the detected corner phases. The figure marks these mean levels rather than substituting the extreme load range. The [card-area calculation](../../../src/digitalmodel/marine_ops/artificial_lift/dynacard/power_consumption.py) closes the polygon and converts its enclosed area to work per stroke.
 
 The package displacement calculation uses plunger area, travel and pumping speed. The fillage-adjusted and gross values below use {data['settings']['runtime_hours']} h/day and {data['settings']['volumetric_efficiency_pct']} % volumetric efficiency as an explicit calculation basis. Load nRMSE uses [compare_cards](../../../src/digitalmodel/marine_ops/artificial_lift/dynacard/comparison.py). Numerical reproduction checks depend on the ASSUMED inputs in Table 2.
@@ -159,6 +161,13 @@ def report_introduction(data):
 ## Summary
 
 The public example well gives a pump stroke of {number(key['pump_stroke_in'])} in from a measured surface stroke of {number(key['surface_stroke_in'])} in, a fluid load of {number(key['fluid_load_lbf'], 0)} lbf and a card-derived fillage of {number(key['fillage_pct'])} %. Effective plunger travel is {number(key['effective_travel_in'])} in. At {data['settings']['runtime_hours']} h/day and {data['settings']['volumetric_efficiency_pct']} % volumetric efficiency, fillage-adjusted displacement is {number(key['pump_displacement_bbl_day'])} bbl/day.
+
+## Revision history
+
+| Revision | Date | Change and reason |
+| --- | --- | --- |
+| 0 | 2026-11-12 | Initial calculation note with public-card results, assumptions and sensitivity. |
+| 1 | 2026-11-12 | Correct cycle endpoints, refresh derived results and declare metadata precision for reproducible comparison. |
 
 ## 1 Introduction
 
@@ -233,6 +242,10 @@ PYTHONPATH=src uv run --no-sync python examples/report-evals/dynacard-pump-card/
 ```
 
 The [last-run record](../../../examples/report-evals/dynacard-pump-card/last-run.json) grades **{grade}** against the printed results and their half-last-digit tolerances. This grade checks numerical reconstruction; ASSUMED inputs and HYPOTHESIS labels retain their separate statuses.
+
+The manifest rounds numeric calculation metadata to 12 decimal places to bound insignificant variation between numeric libraries. Identifiers, source digests and labels remain exact; graded result values retain their separately declared display tolerances.
+
+The recorded pin predates the endpoint correction. Corrected results are evaluated in candidate mode at the pull request head; pinned reproduction requires a new pin after the corrected revision is published. The legacy file named last-run-pinned.json is refreshed as candidate evidence and records this limitation explicitly.
 '''
 
 
@@ -315,9 +328,10 @@ Inputs (all public, no account needed):
 Steps:
 1. git clone {REPO}
    cd digitalmodel
-   git fetch origin {pin} || git fetch origin refs/pull/{PULL_REQUEST}/head
-   git checkout {pin}
-   (The files at that commit can name an earlier pin; the values are the same.)
+   git fetch origin refs/pull/{PULL_REQUEST}/head
+   git checkout FETCH_HEAD
+   (The recorded pin predates the endpoint correction. These corrected values
+   require the pull request head in candidate mode until a new pin is published.)
    uv sync --extra test
 2. Run the public example and keep its output and figure:
    PYTHONPATH=src uv run --no-sync python examples/report-evals/dynacard-pump-card/analysis.py --out analysis.json --figure figure.png

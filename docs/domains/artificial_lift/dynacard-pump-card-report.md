@@ -3,7 +3,14 @@
 
 ## Summary
 
-The public example well gives a pump stroke of 39.58 in from a measured surface stroke of 53.99 in, a fluid load of 3309 lbf and a card-derived fillage of 60.08 %. Effective plunger travel is 23.78 in. At 24 h/day and 100 % volumetric efficiency, fillage-adjusted displacement is 40.03 bbl/day.
+The public example well gives a pump stroke of 39.57 in from a measured surface stroke of 53.99 in, a fluid load of 3310 lbf and a card-derived fillage of 60.08 %. Effective plunger travel is 23.77 in. At 24 h/day and 100 % volumetric efficiency, fillage-adjusted displacement is 40.01 bbl/day.
+
+## Revision history
+
+| Revision | Date | Change and reason |
+| --- | --- | --- |
+| 0 | 2026-11-12 | Initial calculation note with public-card results, assumptions and sensitivity. |
+| 1 | 2026-11-12 | Correct cycle endpoints, refresh derived results and declare metadata precision for reproducible comparison. |
 
 ## 1 Introduction
 
@@ -84,6 +91,8 @@ Table 2. Assumptions retained by the calculation; ASSUMED is not a passing check
 
 Surface displacement and tensile load provide the boundary conditions for the damped axial rod wave equation. The default finite-difference adapter marches the displacement field through the tapered rod string and reconstructs pump load from strain, following Everitt and Jennings (1992), SPE-18189-PA. The coupled frequency-domain transfer is a separate numerical method: it propagates both displacement and force through each ordered taper as a frequency-domain solution of the rod model of Gibbs (1963), [SPE-588-PA](https://doi.org/10.2118/588-PA), with 15 harmonics.
 
+The finite-difference solver receives a repeated closing position/load pair; the frequency-domain solver receives unique phases. Both computed cards use unique phases for metrics and comparison. An exact closing pair in the input is removed before either representation is constructed, so open and closed representations give identical results. The stored comparison card has a different unique-phase count and is interpolated periodically onto the measured card's uniform phase grid before comparison.
+
 The [package calculations](../../../src/digitalmodel/marine_ops/artificial_lift/dynacard/calculations.py) define gross plunger travel as the position range, effective travel as the bottom-right corner position relative to the minimum, and fillage as effective travel divided by gross travel, expressed as a percentage. Fluid load is the mean upstroke load minus the mean downstroke load between the detected corner phases. The figure marks these mean levels rather than substituting the extreme load range. The [card-area calculation](../../../src/digitalmodel/marine_ops/artificial_lift/dynacard/power_consumption.py) closes the polygon and converts its enclosed area to work per stroke.
 
 The package displacement calculation uses plunger area, travel and pumping speed. The fillage-adjusted and gross values below use 24 h/day and 100 % volumetric efficiency as an explicit calculation basis. Load nRMSE uses [compare_cards](../../../src/digitalmodel/marine_ops/artificial_lift/dynacard/comparison.py). Numerical reproduction checks depend on the ASSUMED inputs in Table 2.
@@ -95,24 +104,24 @@ The package displacement calculation uses plunger area, travel and pumping speed
 | Surface stroke | 53.99 | in |
 | Peak polished-rod load | 12240 | lbf |
 | Minimum polished-rod load | 7296 | lbf |
-| Pump stroke, gross plunger travel | 39.58 | in |
+| Pump stroke, gross plunger travel | 39.57 | in |
 | Pump/surface stroke ratio | 0.733 | ratio |
-| Maximum pump load | 4660 | lbf |
-| Minimum pump load | 83 | lbf |
-| Fluid load, mean phase difference | 3309 | lbf |
+| Maximum pump load | 4661 | lbf |
+| Minimum pump load | 82 | lbf |
+| Fluid load, mean phase difference | 3310 | lbf |
 | Pump fillage | 60.08 | % |
-| Effective plunger travel | 23.78 | in |
-| Fillage-adjusted displacement | 40.03 | bbl/day |
-| Gross displacement | 66.62 | bbl/day |
-| Pump-card work per stroke | 7904.9 | ft-lbf |
+| Effective plunger travel | 23.77 | in |
+| Fillage-adjusted displacement | 40.01 | bbl/day |
+| Gross displacement | 66.60 | bbl/day |
+| Pump-card work per stroke | 7904.7 | ft-lbf |
 
 Table 3. Public example well results from the default finite-difference solver, conditional on Table 2.
 
 | Actual card | Reference card | Load nRMSE (%) |
 | --- | --- | --- |
-| Frequency domain | Default finite difference | 0.301 |
-| Default finite difference | Stored card, source finite difference | 0.454 |
-| Frequency domain | Stored card, source finite difference | 0.525 |
+| Frequency domain | Default finite difference | 0.258 |
+| Default finite difference | Stored card, source finite difference | 0.779 |
+| Frequency domain | Stored card, source finite difference | 0.737 |
 
 Table 4. Card comparisons aligned by traversal and sample origin; each reference load range normalises its error.
 
@@ -134,9 +143,9 @@ Table 5. Shape-only synthetic-model probabilities; classification is a hypothesi
 
 | Rank | Nearest public plate shape | Loop distance (dimensionless) | Status |
 | --- | --- | --- | --- |
-| 1 | Tagging up | 0.0976 | HYPOTHESIS |
-| 2 | Rod parting | 0.1139 | HYPOTHESIS |
-| 3 | Standing valve leakage | 0.1368 | HYPOTHESIS |
+| 1 | Tagging up | 0.0969 | HYPOTHESIS |
+| 2 | Rod parting | 0.1137 | HYPOTHESIS |
+| 3 | Standing valve leakage | 0.1366 | HYPOTHESIS |
 
 Table 6. Minimum mean distance after independent axis normalisation, resampling and traversal alignment.
 
@@ -152,36 +161,36 @@ Each input family is changed independently about the public example well. Rod le
 
 | Input | Output | −5 % | −1 % | 1 % | 5 % | Factor at ±1 % | Factor at ±5 % | Response |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| Rod length and pump depth | Pump stroke | 1.76 | 0.35 | −0.35 | −1.75 | −0.35 | −0.35 | smooth |
-| Rod length and pump depth | Fluid load | −5.15 | −1.72 | 0.01 | −0.12 | 0.87 | 0.50 | stepped |
-| Rod length and pump depth | Fillage | −2.28 | −0.46 | 0.46 | 2.32 | 0.46 | 0.46 | smooth |
+| Rod length and pump depth | Pump stroke | 1.84 | 0.35 | −0.35 | −1.75 | −0.35 | −0.36 | smooth |
+| Rod length and pump depth | Fluid load | −3.66 | 0.59 | 0.01 | −0.12 | −0.29 | 0.35 | stepped |
+| Rod length and pump depth | Fillage | −2.23 | −0.46 | 0.46 | 2.31 | 0.46 | 0.45 | smooth |
 | Rod length and pump depth | Maximum pump load | 8.18 | 1.64 | −1.64 | −8.19 | −1.64 | −1.64 | smooth |
-| Rod length and pump depth | Displacement | −0.56 | −0.11 | 0.11 | 0.53 | 0.11 | 0.11 | smooth |
-| Rod diameter | Pump stroke | −3.07 | −0.59 | 0.57 | 2.79 | 0.58 | 0.59 | smooth |
-| Rod diameter | Fluid load | 0.43 | 0.47 | 0.13 | −2.38 | −0.17 | −0.28 | stepped |
-| Rod diameter | Fillage | 5.25 | 0.96 | −0.92 | −4.17 | −0.94 | −0.94 | smooth |
-| Rod diameter | Maximum pump load | 15.32 | 3.13 | −3.16 | −16.11 | −3.14 | −3.14 | smooth |
-| Rod diameter | Displacement | 2.02 | 0.36 | −0.35 | −1.50 | −0.36 | −0.35 | smooth |
-| Rod modulus | Pump stroke | −1.68 | −0.32 | 0.32 | 1.54 | 0.32 | 0.32 | smooth |
-| Rod modulus | Fluid load | −0.23 | 0.57 | 0.03 | −2.87 | −0.27 | −0.26 | stepped |
-| Rod modulus | Fillage | 2.48 | 0.47 | −0.46 | −2.17 | −0.47 | −0.47 | smooth |
+| Rod length and pump depth | Displacement | −0.43 | −0.11 | 0.11 | 0.53 | 0.11 | 0.10 | smooth |
+| Rod diameter | Pump stroke | −3.07 | −0.59 | 0.57 | 2.95 | 0.58 | 0.60 | smooth |
+| Rod diameter | Fluid load | −0.27 | 0.47 | 0.13 | −2.37 | −0.17 | −0.21 | stepped |
+| Rod diameter | Fillage | 5.25 | 0.96 | −0.92 | −4.06 | −0.94 | −0.93 | smooth |
+| Rod diameter | Maximum pump load | 15.31 | 3.13 | −3.16 | −16.10 | −3.14 | −3.14 | smooth |
+| Rod diameter | Displacement | 2.02 | 0.36 | −0.35 | −1.24 | −0.36 | −0.33 | smooth |
+| Rod modulus | Pump stroke | −1.68 | −0.32 | 0.32 | 1.59 | 0.32 | 0.33 | smooth |
+| Rod modulus | Fluid load | 0.37 | −0.03 | 0.03 | −2.21 | 0.03 | −0.26 | stepped |
+| Rod modulus | Fillage | 2.47 | 0.47 | −0.46 | −2.14 | −0.47 | −0.46 | smooth |
 | Rod modulus | Maximum pump load | −0.17 | −0.03 | 0.03 | 0.16 | 0.03 | 0.03 | smooth |
-| Rod modulus | Displacement | 0.76 | 0.15 | −0.14 | −0.66 | −0.14 | −0.14 | smooth |
+| Rod modulus | Displacement | 0.75 | 0.15 | −0.14 | −0.59 | −0.14 | −0.13 | smooth |
 | Pumping speed | Pump stroke | 0.31 | 0.06 | −0.06 | −0.30 | −0.06 | −0.06 | smooth |
-| Pumping speed | Fluid load | −2.07 | −1.79 | 0.08 | −0.29 | 0.93 | 0.18 | stepped |
-| Pumping speed | Fillage | 0.02 | < 0.01 | < 0.01 | −0.05 | < 0.01 | −0.01 | smooth |
+| Pumping speed | Fluid load | −3.34 | 0.52 | 0.08 | −0.29 | −0.22 | 0.31 | stepped |
+| Pumping speed | Fillage | 0.02 | < 0.01 | −0.01 | −0.05 | −0.01 | −0.01 | smooth |
 | Pumping speed | Maximum pump load | −0.20 | −0.04 | 0.04 | 0.21 | 0.04 | 0.04 | smooth |
 | Pumping speed | Displacement | −4.68 | −0.93 | 0.93 | 4.63 | 0.93 | 0.93 | smooth |
-| Surface load (load-cell gain) | Pump stroke | 1.48 | 0.29 | −0.29 | −1.44 | −0.29 | −0.29 | smooth |
-| Surface load (load-cell gain) | Fluid load | −5.27 | −0.94 | 0.94 | 5.20 | 0.94 | 1.05 | stepped |
-| Surface load (load-cell gain) | Fillage | −2.28 | −0.47 | 0.47 | 2.38 | 0.47 | 0.47 | smooth |
-| Surface load (load-cell gain) | Maximum pump load | −12.86 | −2.57 | 2.57 | 12.86 | 2.57 | 2.57 | smooth |
-| Surface load (load-cell gain) | Displacement | −0.83 | −0.18 | 0.18 | 0.91 | 0.18 | 0.17 | smooth |
-| Surface position (stroke scale) | Pump stroke | −6.44 | −1.29 | 1.29 | 6.48 | 1.29 | 1.29 | smooth |
-| Surface position (stroke scale) | Fluid load | 0.18 | −0.06 | 0.06 | −0.31 | 0.06 | −0.05 | stepped |
-| Surface position (stroke scale) | Fillage | 2.51 | 0.47 | −0.46 | −2.18 | −0.47 | −0.47 | smooth |
-| Surface position (stroke scale) | Maximum pump load | −0.26 | −0.05 | 0.05 | 0.26 | 0.05 | 0.05 | smooth |
-| Surface position (stroke scale) | Displacement | −4.09 | −0.82 | 0.82 | 4.16 | 0.82 | 0.83 | smooth |
+| Surface load (load-cell gain) | Pump stroke | 1.51 | 0.29 | −0.29 | −1.44 | −0.29 | −0.29 | smooth |
+| Surface load (load-cell gain) | Fluid load | −5.27 | −0.93 | 1.54 | 5.20 | 1.24 | 1.05 | stepped |
+| Surface load (load-cell gain) | Fillage | −2.26 | −0.47 | 0.47 | 2.38 | 0.47 | 0.46 | smooth |
+| Surface load (load-cell gain) | Maximum pump load | −12.85 | −2.57 | 2.57 | 12.85 | 2.57 | 2.57 | smooth |
+| Surface load (load-cell gain) | Displacement | −0.79 | −0.18 | 0.18 | 0.91 | 0.18 | 0.17 | smooth |
+| Surface position (stroke scale) | Pump stroke | −6.44 | −1.29 | 1.29 | 6.50 | 1.29 | 1.29 | smooth |
+| Surface position (stroke scale) | Fluid load | 0.17 | 0.53 | 0.07 | −0.30 | −0.23 | −0.05 | stepped |
+| Surface position (stroke scale) | Fillage | 2.51 | 0.47 | −0.46 | −2.16 | −0.47 | −0.47 | smooth |
+| Surface position (stroke scale) | Maximum pump load | −0.27 | −0.05 | 0.05 | 0.27 | 0.05 | 0.05 | smooth |
+| Surface position (stroke scale) | Displacement | −4.09 | −0.82 | 0.82 | 4.20 | 0.82 | 0.83 | smooth |
 | Fluid density | Pump stroke | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | smooth |
 | Fluid density | Fluid load | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | smooth |
 | Fluid density | Fillage | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | smooth |
@@ -215,3 +224,7 @@ PYTHONPATH=src uv run --no-sync python examples/report-evals/dynacard-pump-card/
 ```
 
 The [last-run record](../../../examples/report-evals/dynacard-pump-card/last-run.json) grades **PASS** against the printed results and their half-last-digit tolerances. This grade checks numerical reconstruction; ASSUMED inputs and HYPOTHESIS labels retain their separate statuses.
+
+The manifest rounds numeric calculation metadata to 12 decimal places to bound insignificant variation between numeric libraries. Identifiers, source digests and labels remain exact; graded result values retain their separately declared display tolerances.
+
+The recorded pin predates the endpoint correction. Corrected results are evaluated in candidate mode at the pull request head; pinned reproduction requires a new pin after the corrected revision is published. The legacy file named last-run-pinned.json is refreshed as candidate evidence and records this limitation explicitly.

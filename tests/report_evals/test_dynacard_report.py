@@ -26,10 +26,9 @@ def analysis():
 
 def test_public_example_uses_package_results(analysis):
     from digitalmodel.marine_ops.artificial_lift.dynacard.data_loader import load_from_json_file
-    from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.adapter import EverittJenningsContextSolver
     from digitalmodel.marine_ops.artificial_lift.dynacard.calculations import calculate_pump_fillage
     ctx = load_from_json_file(FIXTURE)
-    card = EverittJenningsContextSolver(ctx).solve().downhole_card
+    card = module('analysis').solve_default(ctx)
     fillage = calculate_pump_fillage(card)
     assert analysis['key_results']['pump_stroke_in'] == pytest.approx(fillage.gross_stroke)
     assert analysis['key_results']['fillage_pct'] == pytest.approx(fillage.fillage)
@@ -91,13 +90,19 @@ def test_repeated_closing_pair_is_compared(tmp_path):
     path = tmp_path / 'closed.json'
     path.write_text(json.dumps(data))
     result = module('analysis').run(path, include_sensitivity=False)
-    assert result['solver_cross_check']['gibbs_default_load_nrmse_pct'] >= 0
+    opened = module('analysis').run(HERE / 'reader-card-template.json', include_sensitivity=False)
+    assert result['key_results'] == pytest.approx(opened['key_results'], rel=1e-12, abs=1e-10)
+    assert result['solver_cross_check'] == opened['solver_cross_check']
+    for name in ('surface', 'default', 'gibbs'):
+        assert result['cards'][name] == opened['cards'][name]
+        assert len(result['cards'][name]['position_in']) == 187
 
 
 def test_report_equals_fresh_build(analysis):
     builder = module('build_report')
     report = ROOT / 'docs/domains/artificial_lift/dynacard-pump-card-report.md'
     assert report.read_text() == builder.build_report(analysis)
+    assert report.read_text().split('## ')[1:3][1].startswith('Revision history\n')
     prompt = (HERE / 'PROMPT.md').read_text()
     assert prompt == builder.build_prompt(analysis)
     for row in analysis['missing_data']:
@@ -218,3 +223,81 @@ def test_pinned_eval_checks_consumed_shape_assets(monkeypatch):
     monkeypatch.setattr(evaluator.evalkit, 'git_blob', blob)
     with pytest.raises(ImportError, match='unmodified source and inputs'):
         evaluator.provenance(args, {})
+
+
+def test_manifest_metadata_precision_preserves_material_changes(analysis):
+    import copy
+    builder = module('build_results')
+    original = builder.manifest(analysis)
+    changed = copy.deepcopy(analysis)
+    distance = changed['shape_hypothesis']['nearest_three'][0]
+    distance['distance'] += 1e-15
+    assert builder.manifest(changed) == original
+    distance['distance'] += 1e-6
+    assert builder.manifest(changed) != original
+    changed = copy.deepcopy(analysis)
+    changed['sources'][0]['sha256'] = 'f' * 64
+    assert builder.manifest(changed) != original
+    changed = copy.deepcopy(analysis)
+    changed['shape_hypothesis']['nearest_three'][0]['label'] += ' changed'
+    assert builder.manifest(changed) != original
+    assert builder.METADATA_DECIMAL_PLACES == 12
+
+
+@pytest.mark.parametrize('positions,stroke,travel,fillage,work', [
+    ([2, 2, 14, 14], 12, 12, 100, 200),
+    ([2, 2, 12, 8], 10, 6, 60, 400 / 3),
+])
+def test_hand_calculated_card_metrics(positions, stroke, travel, fillage, work):
+    from math import pi
+    from digitalmodel.marine_ops.artificial_lift.dynacard.models import CardData
+    report = module('analysis')
+    ctx, _ = report.load_card(HERE / 'reader-card-template.json')
+    ctx.surface_card = CardData(position=[0, 0, 20, 20], load=[500, 900, 900, 500])
+    ctx.pump.diameter = 2
+    ctx.spm = 10
+    # Rectangle and trapezoid: upper/lower loads 300/100 lbf. The trapezoid
+    # has bases 10/6 in: area = (10 + 6) * 200 / 2 = 1600 in-lbf.
+    # A 2 in plunger has area pi in2; a barrel contains 9702 in3.
+    card = CardData(position=positions, load=[100, 300, 300, 100])
+    assert report.key_results(ctx, card) == pytest.approx({
+        'surface_stroke_in': 20, 'peak_polished_rod_load_lbf': 900,
+        'minimum_polished_rod_load_lbf': 500, 'pump_stroke_in': stroke,
+        'stroke_ratio': stroke / 20, 'maximum_pump_load_lbf': 300,
+        'minimum_pump_load_lbf': 100, 'fluid_load_lbf': 200,
+        'fillage_pct': fillage, 'effective_travel_in': travel,
+        'pump_displacement_bbl_day': pi * travel * 10 * 1440 / 9702,
+        'gross_displacement_bbl_day': pi * stroke * 10 * 1440 / 9702,
+        'pump_card_area_ft_lbf': work,
+    })
+
+
+def test_analytic_sensitivity_for_plunger_area():
+    report = module('analysis')
+    sensitivity = module('sensitivity')
+    ctx, _ = report.load_card(HERE / 'reader-card-template.json')
+    ctx.pump.diameter = 2
+    # Independent analytic model: only volume depends on diameter, as D squared.
+    # Other metrics are constant; no wave solver or report metric function runs.
+    base = dict(zip(sensitivity.OUTPUTS, (12, 200, 75, 300, 400)))
+    def analytic(changed):
+        return dict(base, pump_displacement_bbl_day=100 * changed.pump.diameter ** 2)
+    rows = sensitivity.sensitivity_table(ctx, base, analytic)
+    row = next(r for r in rows if r['input'] == 'pump_diameter')
+    for step, expected in zip(row['steps'], (-9.75, -1.99, 2.01, 10.25)):
+        assert step['output_change_pct']['pump_displacement_bbl_day'] == pytest.approx(expected)
+        for key in sensitivity.OUTPUTS[:-1]:
+            assert step['output_change_pct'][key] == 0
+    for size in (1, 5):
+        assert row[f'factor_{size}pct']['pump_displacement_bbl_day'] == pytest.approx(2)
+    assert row['stepped_outputs'] == []
+    assert all(all(v == 0 for v in r['factor_1pct'].values())
+               for r in rows if r['input'] != 'pump_diameter')
+
+
+def test_periodic_reference_resampling_by_hand():
+    from digitalmodel.marine_ops.artificial_lift.dynacard.models import CardData
+    source = CardData(position=[0, 6, 0, 0], load=[100, 100, 400, 100])
+    got = module('analysis').resample_phases(source, 6)
+    assert got.position == pytest.approx([0, 3, 6, 3, 0, 0])
+    assert got.load == pytest.approx([100, 100, 100, 250, 400, 250])

@@ -166,6 +166,9 @@ def render_figure(data: dict, path: Path) -> None:
                      'the fault they suggest is a hypothesis.',
                      ha='center', va='center', fontsize=7.5, color='#555555')
             fig.savefig(path, dpi=200)
-            fig.savefig(path.with_suffix('.svg'), metadata={'Date': None})
+            svg = path.with_suffix('.svg')
+            fig.savefig(svg, metadata={'Date': None})
+            svg.write_text('\n'.join(line.rstrip() for line in svg.read_text(encoding='utf-8').splitlines())
+                           + '\n', encoding='utf-8')
         finally:
             plt.close(fig)

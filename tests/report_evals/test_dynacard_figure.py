@@ -5,11 +5,19 @@ import xml.etree.ElementTree as ET
 
 import matplotlib.image as mpimg
 import numpy as np
+from matplotlib.figure import Figure
 
 HERE = Path(__file__).resolve().parents[2] / 'examples/report-evals/dynacard-pump-card'
 
 
-def test_figure_exports_physical_cards_and_ten_reference_shapes(tmp_path):
+def test_figure_exports_physical_cards_and_ten_reference_shapes(tmp_path, monkeypatch):
+    raw_svg = []
+    savefig = Figure.savefig
+    def capture_svg(figure, path, *args, **kwargs):
+        savefig(figure, path, *args, **kwargs)
+        if Path(path).suffix == '.svg':
+            raw_svg.append(Path(path).read_text())
+    monkeypatch.setattr(Figure, 'savefig', capture_svg)
     spec = importlib.util.spec_from_file_location('dynacard_plotting', HERE / 'plotting.py')
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -46,3 +54,8 @@ def test_figure_exports_physical_cards_and_ten_reference_shapes(tmp_path):
         assert phrase.lower() in text.lower()
     assert text.count('(label mapping assumed)') == 2
     assert '−' not in text  # The load axis is labelled from zero; no negative load is implied.
+    assert all(line == line.rstrip() for line in svg.read_text().splitlines())
+    def parsed(text):
+        return [(node.tag, {key: ' '.join(value.split()) for key, value in node.attrib.items()},
+                 ' '.join((node.text or '').split())) for node in ET.fromstring(text).iter()]
+    assert parsed(svg.read_text()) == parsed(raw_svg[0])
