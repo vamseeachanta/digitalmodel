@@ -234,5 +234,37 @@ def test_study_keeps_domain_flags():
     assert "amplitude_above_paper_examples" in by_amp[20]["barge_flags"]
     assert "amplitude_above_paper_examples" in by_amp[20]["ship_flags"]
     assert by_amp[10]["barge_flags"] == []
+    assert "strip_stations_excluded" in out["ship"]["base"]["flags"]
+    ship15 = [r for r in out["ship"]["rows"] if r["label"] == "Roll amplitude 15 deg"][0]
+    assert {"amplitude_above_paper_examples", "strip_stations_excluded"} <= set(ship15["flags"])
     flagged = [r for r in out["barge"]["rows"] if r["label"] == "Roll amplitude 15 deg"][0]
     assert "amplitude_above_paper_examples" in flagged["flags"]
+
+
+def test_one_sided_must_be_boolean(tmp_path: Path):
+    shutil.copytree(rb.DEFAULT_DATA_ROOT, tmp_path / "rd")
+    path = tmp_path / "rd" / "acceptance_criteria.yaml"
+    path.write_text(path.read_text(encoding="utf-8").replace("one_sided: true", 'one_sided: "false"'), encoding="utf-8")
+    with pytest.raises(rb.RollDampingDataError, match="boolean"):
+        rb.load_acceptance_criteria(tmp_path / "rd")
+    criteria = {"q": rb.Band(quantity="q", description="d", rationale="r", green_max_pct=1.0,
+                             amber_max_pct=2.0, one_sided="false")}
+    with pytest.raises(rb.RollDampingDataError, match="boolean"):
+        rb.verdict("q", 0.0, 100.0, criteria=criteria)
+
+
+@pytest.mark.parametrize("name, loader", [("method_matrix.csv", "load_method_matrix"), ("wiki_tables.csv", "load_wiki_tables")])
+def test_matrix_and_wiki_loaders_reject_truncated_rows(tmp_path: Path, name, loader):
+    shutil.copytree(rb.DEFAULT_DATA_ROOT, tmp_path / "rd")
+    path = tmp_path / "rd" / name
+    path.write_text(path.read_text(encoding="utf-8") + "truncated-row\n", encoding="utf-8")
+    with pytest.raises(rb.RollDampingDataError, match="missing or extra cells"):
+        getattr(rb, loader)(tmp_path / "rd")
+
+
+def test_wiki_tables_reject_unknown_source(tmp_path: Path):
+    shutil.copytree(rb.DEFAULT_DATA_ROOT, tmp_path / "rd")
+    path = tmp_path / "rd" / "wiki_tables.csv"
+    path.write_text(path.read_text(encoding="utf-8").replace("chakrabarti2001-c1,chakrabarti2001", "chakrabarti2001-c1,nosuch"), encoding="utf-8")
+    with pytest.raises(rb.RollDampingDataError, match="unknown source_id"):
+        rb.load_wiki_tables(tmp_path / "rd")

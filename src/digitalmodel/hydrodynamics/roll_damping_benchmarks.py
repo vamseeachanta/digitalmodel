@@ -165,6 +165,9 @@ def load_benchmark_cases(root: Path = DEFAULT_DATA_ROOT) -> list[BenchmarkCase]:
 
 
 def _check_band(band: Band) -> Band:
+    if not isinstance(band.one_sided, bool):
+        raise RollDampingDataError(table="acceptance_criteria.yaml",
+                                   reason=f"one_sided must be a boolean for {band.quantity}")
     finite = math.isfinite(band.green_max_pct) and math.isfinite(band.amber_max_pct)
     if not finite or not 0.0 < band.green_max_pct < band.amber_max_pct:
         raise RollDampingDataError(table="acceptance_criteria.yaml",
@@ -187,7 +190,7 @@ def load_acceptance_criteria(root: Path = DEFAULT_DATA_ROOT) -> dict[str, Band]:
                 green_max_pct=float(q["green_max_pct"]), amber_max_pct=float(q["amber_max_pct"]),
                 rationale=str(q["rationale"]),
                 abs_floor=float(q["abs_floor"]) if "abs_floor" in q else None,
-                one_sided=bool(q.get("one_sided", False)),
+                one_sided=q.get("one_sided", False),
             )
         except (KeyError, TypeError, ValueError) as exc:
             raise RollDampingDataError(table="acceptance_criteria.yaml", reason=f"bad entry {key}: {exc}") from exc
@@ -195,13 +198,36 @@ def load_acceptance_criteria(root: Path = DEFAULT_DATA_ROOT) -> dict[str, Band]:
     return out
 
 
+def _complete(table: str, rows: list[dict], key: str, required: tuple[str, ...]) -> list[dict]:
+    """Reject rows with missing or extra cells, empty required cells or duplicate keys."""
+    seen = set()
+    for r in rows:
+        if None in r.values() or None in r:
+            raise RollDampingDataError(table=table, reason=f"row with missing or extra cells: {r.get(key)}")
+        empty = [c for c in required if not r[c].strip()]
+        if empty:
+            raise RollDampingDataError(table=table, reason=f"empty {empty} in {r.get(key)}")
+        if r[key] in seen:
+            raise RollDampingDataError(table=table, reason=f"duplicate {key} {r[key]}")
+        seen.add(r[key])
+    return rows
+
+
 def load_method_matrix(root: Path = DEFAULT_DATA_ROOT) -> list[MethodRecommendation]:
     fields = tuple(MethodRecommendation.__dataclass_fields__)
-    return [MethodRecommendation(**{k: r[k] for k in fields}) for r in _rows(root, "method_matrix.csv", fields)]
+    rows = _complete("method_matrix.csv", _rows(root, "method_matrix.csv", fields), "scenario_id",
+                     ("scenario_id", "scenario", "primary_method", "screening_damping_pct", "basis"))
+    return [MethodRecommendation(**{k: r[k] for k in fields}) for r in rows]
 
 
 def load_wiki_tables(root: Path = DEFAULT_DATA_ROOT) -> list[dict[str, str]]:
-    return _rows(root, "wiki_tables.csv", ("table_id", "source_id", "wiki_path", "content"))
+    fields = ("table_id", "source_id", "wiki_path", "content")
+    rows = _complete("wiki_tables.csv", _rows(root, "wiki_tables.csv", fields), "table_id", fields)
+    sources = load_sources(root)
+    for r in rows:
+        if r["source_id"] not in sources:
+            raise RollDampingDataError(table="wiki_tables.csv", reason=f"unknown source_id {r['source_id']}")
+    return rows
 
 
 def verdict(

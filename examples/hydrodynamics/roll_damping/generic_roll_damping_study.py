@@ -113,7 +113,10 @@ def ship_case(p: dict, wiki_root=None):
     if p["bk"] > 0:
         bbk = p["bkl"] * rc.bilge_keel_damping_section(
             RHO, B, T, p["sig_mid"], og, p["bk"], amp, w, p["Rb"])
-    parts = rc.RollDampingComponents(bf, strip.damping, 0.0, 0.0, bbk)
+    flags = list(strip.flags)
+    if amp > rc.PAPER_EXAMPLE_AMPLITUDE:
+        flags.append(rc.FLAG_AMPLITUDE_ABOVE_PAPER_EXAMPLES)
+    parts = rc.RollDampingComponents(bf, strip.damping, 0.0, 0.0, bbk, tuple(flags))
     return parts, parts.percent_critical(stiff, inertia, added), dict(
         GM=gm, wn=wn, Tn=2 * math.pi / wn, cb=cb, I=inertia, A=added, C=stiff, m=m,
         eddy_excluded_length_share=strip.excluded_length_share,
@@ -300,11 +303,10 @@ def illustrative(wiki_root) -> dict:
     for a in amps:
         pb, zb, _ = barge_case(dict(b0, amp=a), wiki_root)
         pk, zk, _ = barge_case(dict(b0, amp=a, bk=0.3, bkl=0.5 * b0["L"]), wiki_root)
-        # the ship path assembles components itself; flag it the same way
-        ship_flags = [rc.FLAG_AMPLITUDE_ABOVE_PAPER_EXAMPLES] if math.radians(a) > rc.PAPER_EXAMPLE_AMPLITUDE else []
+        ps, zs, _ = ship_case(dict(s0, amp=a))
         sweep.append(dict(amp=a, barge=zb, barge_bk=zk,
-                          ship_no_bk=ship_case(dict(s0, amp=a, bk=0.0))[1], ship_bk=ship_case(dict(s0, amp=a))[1],
-                          barge_flags=list(pb.flags), barge_bk_flags=list(pk.flags), ship_flags=ship_flags))
+                          ship_no_bk=ship_case(dict(s0, amp=a, bk=0.0))[1], ship_bk=zs,
+                          barge_flags=list(pb.flags), barge_bk_flags=list(pk.flags), ship_flags=list(ps.flags)))
     out["amp_sweep"] = sweep
 
     # B/T sweep at 10 deg, G at the waterline: eq. 35 eddy against the

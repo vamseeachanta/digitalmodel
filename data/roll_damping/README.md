@@ -8,7 +8,7 @@ checks. Load them with `digitalmodel.hydrodynamics.roll_damping_benchmarks`.
 |---|---|---|
 | `benchmark_cases.csv` | Measured or fitted roll damping of barge-like hulls from the literature, one row per case and amplitude, with page and verification level | see `manifest.yaml` |
 | `sources.csv` | Citation and link for each `source_id` | see `manifest.yaml` |
-| `acceptance_criteria.yaml` | Three-colour benchmark bands (green, amber, red) per quantity, each with its rationale | 7 quantities |
+| `acceptance_criteria.yaml` | Three-colour benchmark bands (green, amber, red) per quantity, each with its rationale | 8 quantities |
 | `method_matrix.csv` | Recommended estimation route, cross-check and screening damping per scenario | see `manifest.yaml` |
 | `wiki_tables.csv` | Pointers to the copyrighted paper tables (C1, C2, Table 1) held in the private llm-wiki; no values | see `manifest.yaml` |
 
