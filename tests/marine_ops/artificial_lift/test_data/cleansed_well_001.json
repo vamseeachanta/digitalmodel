@@ -49,11 +49,11 @@
     "Api14": "API-CLEANSED-001",
     "CalculationMethod": "Finite Difference",
     "CalculationMethodReason": "Fluid Load analysis failed: Algorithm Error calculating corners; Error calculating simulated downhole card",
-    "CardTimeStamp": "2021-01-06T19:48:38",
+    "CardTimeStamp": "2018-01-02T19:48:38",
     "CardType": "Shutdown",
-    "CreatedTimeStamp": "2021-01-06T07:38:05.967000",
-    "ID": 11708328,
-    "UpdatedTimeStamp": "2021-01-06T23:37:54.893000",
+    "CreatedTimeStamp": "2018-01-02T07:38:05.967000",
+    "ID": 201,
+    "UpdatedTimeStamp": "2018-01-02T23:37:54.893000",
     "WellName": "Well-A"
   },
   "InputParameters": {
@@ -105,7 +105,7 @@
     "OilRate": 0.9,
     "WaterCut": 96,
     "WaterRate": 20,
-    "WellTestDate": "2020-11-11T00:00:00",
+    "WellTestDate": "2017-11-07T00:00:00",
     "WellTestRuntime": 24
   },
   "cardData": {
@@ -875,7 +875,7 @@
     "SPM": "6.42"
   },
   "dynaoutputData": {
-    "ApiNo14": "42115010230000",
+    "ApiNo14": "API-CLEANSED-001",
     "DampingCoefficient": [
       0.009484454594504305,
       0.010920379840925825,
@@ -885,7 +885,7 @@
     "Pump": {
       "Depth": 4844,
       "Diameter": 1.4999999999999998,
-      "InstallId": 47150
+      "InstallId": 1001
     },
     "RodPumpMotor": {
       "HP": 20,
@@ -902,7 +902,7 @@
         "Diameter": 0.875,
         "Grade": "D",
         "IndividualLength": 25,
-        "InstallId": 47150,
+        "InstallId": 1001,
         "K": 4,
         "M": 0.5625,
         "Manufacturer": "API",
@@ -928,7 +928,7 @@
         "Diameter": 0.7499999999999999,
         "Grade": "D",
         "IndividualLength": 25,
-        "InstallId": 47150,
+        "InstallId": 1001,
         "K": 4,
         "M": 0.5625,
         "Manufacturer": "API",
@@ -960,7 +960,7 @@
       "GearBoxRating": 140,
       "GearBoxStressTorque": "11",
       "GearboxSheaveSize": 0,
-      "InstallId": 47150,
+      "InstallId": 1001,
       "MaxStrokeLength": 54,
       "MotorSheaveSize": 0,
       "PhaseAngle": 0,
@@ -985,7 +985,7 @@
     "Pump": {
       "Depth": 4844,
       "Diameter": 1.4999999999999998,
-      "InstallId": 47150
+      "InstallId": 1001
     },
     "RodPumpMotor": {
       "HP": 20,
@@ -1002,7 +1002,7 @@
         "Diameter": 0.875,
         "Grade": "D",
         "IndividualLength": 25,
-        "InstallId": 47150,
+        "InstallId": 1001,
         "K": 4,
         "M": 0.5625,
         "Manufacturer": "API",
@@ -1028,7 +1028,7 @@
         "Diameter": 0.7499999999999999,
         "Grade": "D",
         "IndividualLength": 25,
-        "InstallId": 47150,
+        "InstallId": 1001,
         "K": 4,
         "M": 0.5625,
         "Manufacturer": "API",
@@ -1060,7 +1060,7 @@
       "GearBoxRating": 140,
       "GearBoxStressTorque": "11",
       "GearboxSheaveSize": 0,
-      "InstallId": 47150,
+      "InstallId": 1001,
       "MaxStrokeLength": 54,
       "MotorSheaveSize": 0,
       "PhaseAngle": 0,
