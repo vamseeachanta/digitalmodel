@@ -86,6 +86,7 @@ from .riser import (
     RiserLine,
     RiserLineType,
     RiserLink,
+    RiserTensioner,
     RiserSection,
     RiserVessel,
 )
@@ -132,6 +133,7 @@ __all__ = [
     "LinkType",
     "LinkConnection",
     "RiserLink",
+    "RiserTensioner",
     "RiserLineType",
     "RiserSection",
     "EndConnection",

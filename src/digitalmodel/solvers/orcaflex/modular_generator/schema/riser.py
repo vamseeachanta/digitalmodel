@@ -279,7 +279,8 @@ class RiserLink(BaseModel):
         link_type: Type of link (tether or spring_damper).
         connections: Exactly 2 connection points.
         unstretched_length: Unstretched length (m).
-        stiffness: Axial stiffness (kN).
+        stiffness: Tether axial stiffness EA (kN), or spring/damper
+            stiffness (kN/m), as in the OrcaFlex link data.
         release_stage: Optional release stage number.
     """
 
@@ -289,8 +290,52 @@ class RiserLink(BaseModel):
         ..., min_length=2, max_length=2, description="Exactly 2 connection points"
     )
     unstretched_length: float = Field(..., gt=0, description="Unstretched length (m)")
-    stiffness: float = Field(..., gt=0, description="Axial stiffness (kN)")
+    stiffness: float = Field(
+        ..., gt=0,
+        description="Tether: axial stiffness EA (kN); spring/damper: stiffness (kN/m)",
+    )
     release_stage: int | None = Field(default=None, ge=1, description="Release stage")
+
+
+class RiserTensioner(BaseModel):
+    """Top tensioner system for a top-tensioned or drilling riser (#3976).
+
+    ``count`` linear spring/damper links run from points on the vessel to the
+    riser at ``arc_length`` from End A. The vessel points lie on a circle of
+    ``radius`` about the riser top in plan, at height ``vessel_z``, in vessel
+    axes. The generator sets each unstretched length so that, in the initial
+    (generated) geometry, the vertical components of the link tensions sum
+    to ``total_tension``:
+
+        T_i = (total_tension / count) * L / dz,   L0 = L - T_i / stiffness
+
+    where L is the link length and dz its vertical extent. The tension is a
+    target for the initial geometry; static equilibrium changes it by
+    stiffness x (top displacement along the link).
+
+    Attributes:
+        name: Prefix for the link names (``<name>_1`` ... ``<name>_<count>``).
+        line: Riser line whose End A is supported. That end must be ``free``.
+        count: Number of tensioner units.
+        total_tension: Target total vertical tension (kN).
+        stiffness: Stiffness per unit (kN/m).
+        damping: Linear damping per unit (kN.s/m). 0 means no damper.
+        radius: Plan radius of the vessel points about the riser top (m).
+        vessel_z: Height of the vessel points in vessel axes (m).
+        start_angle: Plan angle of the first unit in vessel axes (deg).
+        arc_length: Riser attachment arc length from End A (m).
+    """
+
+    name: str = Field(..., min_length=1, description="Link name prefix")
+    line: str = Field(..., min_length=1, description="Supported riser line")
+    count: int = Field(..., ge=1, le=12, description="Number of units")
+    total_tension: float = Field(..., gt=0, description="Total vertical tension (kN)")
+    stiffness: float = Field(..., gt=0, description="Stiffness per unit (kN/m)")
+    damping: float = Field(default=0, ge=0, description="Damping per unit (kN.s/m)")
+    radius: float = Field(..., gt=0, description="Plan radius (m)")
+    vessel_z: float = Field(..., description="Vessel point height, vessel axes (m)")
+    start_angle: float = Field(default=0, description="First unit angle (deg)")
+    arc_length: float = Field(default=0, ge=0, description="Attachment arc length (m)")
 
 
 class RiserVessel(BaseModel):
@@ -382,6 +427,9 @@ class Riser(BaseModel):
     line_types: list[RiserLineType] = Field(..., min_length=1, description="Line types")
     clump_types: list[ClumpType] = Field(default_factory=list, description="Clump types")
     links: list[RiserLink] = Field(default_factory=list, description="Link/tether definitions")
+    tensioners: list[RiserTensioner] = Field(
+        default_factory=list, description="Top tensioner systems"
+    )
     lines: list[RiserLine] = Field(..., min_length=1, description="Riser lines")
 
     @model_validator(mode="after")
@@ -441,4 +489,28 @@ class Riser(BaseModel):
                         f"Link '{link.name}' references unknown object "
                         f"'{conn.object_name}'. Available: {valid_names}"
                     )
+        return self
+
+    @model_validator(mode="after")
+    def validate_tensioners(self) -> "Riser":
+        """Tensioners support the free End A of a defined line; names unique."""
+        lines = {line.name: line for line in self.lines}
+        names = [t.name for t in self.tensioners] + [link.name for link in self.links]
+        for tensioner in self.tensioners:
+            line = lines.get(tensioner.line)
+            if line is None:
+                raise ValueError(
+                    f"Tensioner '{tensioner.name}' references unknown line '{tensioner.line}'"
+                )
+            if line.end_a.type != ConnectionType.FREE:
+                raise ValueError(
+                    f"Tensioner '{tensioner.name}': End A of line '{line.name}' must be "
+                    f"'free' (got '{line.end_a.type.value}')"
+                )
+            if tensioner.arc_length > line.get_total_length():
+                raise ValueError(
+                    f"Tensioner '{tensioner.name}' arc_length beyond line '{line.name}'"
+                )
+        if len(names) != len(set(names)):
+            raise ValueError(f"Duplicate link or tensioner names: {names}")
         return self

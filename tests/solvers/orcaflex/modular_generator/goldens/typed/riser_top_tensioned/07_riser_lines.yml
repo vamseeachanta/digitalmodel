@@ -1,0 +1,52 @@
+Lines:
+- Name: TTR
+  IncludeTorsion: 'No'
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Bend angle
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
+    ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - Free
+      - 0.0
+      - 0.0
+      - 12.0
+      - 0
+      - 180.0
+      - 0
+      - ~
+    - - Anchored
+      - 0.0
+      - 0.0
+      - 0.0
+      - 0
+      - 180.0
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - 0
+    - ~
+    - ~
+  - - 0
+    - ~
+    - ~
+  LineType, Length, TargetSegmentLength:
+  - - ttr_10in
+    - 50.0
+    - 1.0
+  - - ttr_10in
+    - 412.0
+    - 5.0
+  - - ttr_10in
+    - 50.0
+    - 1.0
+  StaticsStep1: Catenary
+  LayAzimuth: 180
+  ContentsMethod: Uniform
+  ContentsDensity: 1.0
+  StaticsStep2: Full statics
