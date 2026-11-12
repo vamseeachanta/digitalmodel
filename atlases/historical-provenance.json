@@ -3043,6 +3043,667 @@
         "atlases/riser_fatigue/2629bee51367/surrogate.json": "9a04d391040d904faa8f54a23d8dbc67c9aab4cf425195f110529f3f5fd714ba",
         "atlases/riser_fatigue/2629bee51367/validation.json": "16d68d0a5a50b7aede0a00a63148ecb34f646c40c91c12e8bfd8caefcbedb478"
       }
+    },
+    {
+      "manifest": "atlases/anchor_capacity/597341b1f32b/manifest.yaml",
+      "workflow_id": "anchor-capacity",
+      "recorded_code_version": "2a9f5e4a9",
+      "source_revision": "11bfe02615573e50fba788ecefeb6d3e4f422b7d",
+      "algorithm": "legacy-raw-v1",
+      "content_fingerprint": "597341b1f32be700df0521627d5ff16cf7d91980ee4b785303179b2e5a1a295f",
+      "status": "VERIFIED",
+      "basis": {
+        "spec": {
+          "physics": "linear",
+          "response": "capacity_kN",
+          "axes": [
+            {
+              "name": "diameter_m",
+              "scale": "linear",
+              "grid": [
+                2.0,
+                3.5,
+                5.0,
+                6.5,
+                8.0
+              ]
+            },
+            {
+              "name": "length_m",
+              "scale": "linear",
+              "grid": [
+                10,
+                15,
+                20,
+                25,
+                30
+              ]
+            },
+            {
+              "name": "su_kpa",
+              "scale": "linear",
+              "grid": [
+                20,
+                40,
+                60,
+                80,
+                100
+              ]
+            }
+          ]
+        },
+        "response_kwargs": {},
+        "standards": [
+          {
+            "id": "DNV-RP-E303",
+            "edition": "2005"
+          }
+        ],
+        "input": "examples/workflows/anchor-capacity/input.yml",
+        "response_sources": [
+          "src/digitalmodel/geotechnical/anchors.py"
+        ]
+      },
+      "sources": {
+        "docs/registry/workflows.yaml": "ff084d8ff6178447f5dea320cbf48e9f92d1939a123c9e3cd18fa111bb4aa706",
+        "src/digitalmodel/parametric/refresh.py": "1b2d818583a56fe9c516d93ffc2b729dbc7e074fb54493bb1719afa2b1c526c3",
+        "src/digitalmodel/parametric/generate.py": "ee3cc03aba63f113758082a1edec61f422332f88fd53bc8f32bd6e5b7f842efa",
+        "examples/workflows/anchor-capacity/input.yml": "3b395a57b22dfe2ee3d6413aa17c8f9a4ed7f5f5b44d81b8444fa6b612447af0",
+        "src/digitalmodel/geotechnical/anchors.py": "81a46b8935d52bf19bcf53f3090e2366e7454a05f04b28aa11e626e90d115da8"
+      },
+      "artifacts": {
+        "atlases/anchor_capacity/597341b1f32b/manifest.yaml": "0890ef5dd623aeee6955e356e41cb9eeaca6569dd484f98d0a97ce21238b12df",
+        "atlases/anchor_capacity/597341b1f32b/grid.parquet": "500884e4b0fe8d21191cc8e06136ff784cdd15bd23693c4eda1f479017ce472c",
+        "atlases/anchor_capacity/597341b1f32b/surrogate.json": "d07a8ea51a32a56611cbc56faa16e4406d4a4ded8455f38e5c293ebdbec3476f",
+        "atlases/anchor_capacity/597341b1f32b/validation.json": "265efe0f397855604125bc41dbb0be79e43d1852079696cdcb4031a8929315cd"
+      }
+    },
+    {
+      "manifest": "atlases/fowt_mooring/1f1871cd817d/manifest.yaml",
+      "workflow_id": "fowt-mooring",
+      "recorded_code_version": "a1fed2cf0",
+      "source_revision": "5a927663dea997550b5ca38bde8b586b5a4e1115",
+      "algorithm": "legacy-raw-v1",
+      "content_fingerprint": "1f1871cd817dbe06cc657a6a754f0e8b0433d7fcd68406de9ce158482afde05e",
+      "status": "VERIFIED",
+      "basis": {
+        "spec": {
+          "physics": "utilization_threshold",
+          "response": "mbr_utilisation",
+          "axes": [
+            {
+              "name": "watch_circle_radius",
+              "scale": "linear",
+              "grid": [
+                5,
+                10,
+                15,
+                20,
+                25,
+                30
+              ]
+            },
+            {
+              "name": "mbr_limit_m",
+              "scale": "linear",
+              "grid": [
+                4.0,
+                5.0,
+                6.0
+              ]
+            }
+          ]
+        },
+        "response_kwargs": {},
+        "standards": [
+          {
+            "id": "DNV-RP-0360",
+            "edition": "2021-09"
+          }
+        ],
+        "input": "examples/workflows/fowt-mooring/input.yml",
+        "response_sources": [
+          "src/digitalmodel/orcaflex/mooring_design_fowt.py"
+        ]
+      },
+      "sources": {
+        "docs/registry/workflows.yaml": "7b473afe82ab9d078263e46e45e5841ce45c36efd3026871c584e965ec1ab896",
+        "src/digitalmodel/parametric/refresh.py": "ed4c78c55c3733d626e0d1bdbd307033872e7ca8528db7303e14a7a5d5ec33c7",
+        "src/digitalmodel/parametric/generate.py": "ee3cc03aba63f113758082a1edec61f422332f88fd53bc8f32bd6e5b7f842efa",
+        "examples/workflows/fowt-mooring/input.yml": "639a20abdd9024f1ff44cef4aa5257763c68eb2ddb9f5f24447c2b0393f8e115",
+        "src/digitalmodel/orcaflex/mooring_design_fowt.py": "7f21e909aaafe8e93080c7d4d8ecc65ed1cef684057fd43c1e73ae4c2072d125"
+      },
+      "artifacts": {
+        "atlases/fowt_mooring/1f1871cd817d/manifest.yaml": "566f30d25f1f4e1618e95e8f389478642fb87a7e5b324e2b65dfcb7c7c57150a",
+        "atlases/fowt_mooring/1f1871cd817d/grid.parquet": "0ceeab95f099a65e63d5b333f6e37bb2a934fce806586a96066ff0d281562076",
+        "atlases/fowt_mooring/1f1871cd817d/surrogate.json": "7d2a8cbe0667ec21b8dbf2697c974f8431c883063bef2b0e1d19b5ace98a11a5",
+        "atlases/fowt_mooring/1f1871cd817d/validation.json": "f36dc786baffe565fe045853545518bef66d6f04d02e3bdec020df61f5dbe37e"
+      }
+    },
+    {
+      "manifest": "atlases/fpso_mooring_full/a4f8b8069228/manifest.yaml",
+      "workflow_id": "fpso-mooring-full",
+      "recorded_code_version": "8d09f5c73",
+      "source_revision": "69762b045e36096da3fa799d77577a4aaa160d72",
+      "algorithm": "legacy-raw-v1",
+      "content_fingerprint": "a4f8b8069228abdf1884063e0ad20624ca5a132040200df767fe63371d152002",
+      "status": "VERIFIED",
+      "basis": {
+        "spec": {
+          "physics": "linear",
+          "response": "max_line_tension_N",
+          "axes": [
+            {
+              "name": "Hs",
+              "scale": "linear",
+              "grid": [
+                2.0,
+                3.0,
+                4.0,
+                5.0
+              ]
+            },
+            {
+              "name": "Tp",
+              "scale": "linear",
+              "grid": [
+                9.0,
+                11.0,
+                13.0
+              ]
+            },
+            {
+              "name": "water_depth_m",
+              "scale": "linear",
+              "grid": [
+                500.0,
+                1000.0,
+                1500.0
+              ]
+            }
+          ]
+        },
+        "response_kwargs": {},
+        "standards": [
+          {
+            "id": "DNV-OS-E301",
+            "edition": "2018-07"
+          }
+        ],
+        "input": "examples/workflows/fpso-mooring-full/input.yml",
+        "response_sources": [
+          "src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py"
+        ]
+      },
+      "sources": {
+        "docs/registry/workflows.yaml": "4dcaf1f00813cb8567341d0ae07fc4d7c9ea8101e5d0f543570b9bd6848b3680",
+        "src/digitalmodel/parametric/refresh.py": "24f4aeb7888fe4d994151f38412574e14eb72a0a8d828c84a711ccd403c731fb",
+        "src/digitalmodel/parametric/generate.py": "7d957b173df23131682559714a2ab12b0f6670b97ef11cbbaebcaa2c8e1f2e24",
+        "examples/workflows/fpso-mooring-full/input.yml": "667b6764c5fd2aafb036efc69e405c6d341e0669169900581aacf1ce8b9ae19b",
+        "src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py": "37fdc7edd05b1ac6b0c9df517a98095c5e14252af43e5afe9084441ade6d44da"
+      },
+      "artifacts": {
+        "atlases/fpso_mooring_full/a4f8b8069228/manifest.yaml": "df966af572ce271d0edbeeb0eb134214d80761b53153ceddf91a0cf60fc2da4d",
+        "atlases/fpso_mooring_full/a4f8b8069228/grid.parquet": "66f46dcb02dcc79adb1ff61bef42ad664119f2eae484650fb9ba832cc4135fce",
+        "atlases/fpso_mooring_full/a4f8b8069228/surrogate.json": "b24da5a4e8811390a969b2a0af7757c1dc97da89e47ec425096e7876bcd27483",
+        "atlases/fpso_mooring_full/a4f8b8069228/validation.json": "991d72f1cd82ea171411a9abd59226c86eb4f89d67543e63a085d1f1b2ed549e"
+      }
+    },
+    {
+      "manifest": "atlases/free_span/749c598d4e23/manifest.yaml",
+      "workflow_id": "free-span-f105",
+      "recorded_code_version": "09148c1c1",
+      "source_revision": "5eac4a3fdcf1adfcca5091f289d00748afae927b",
+      "algorithm": "legacy-raw-v1",
+      "content_fingerprint": "749c598d4e238a3e32dab888f1fd52cae5415bb29ab36fe40a4ea3d666b36bd2",
+      "status": "VERIFIED",
+      "basis": {
+        "spec": {
+          "physics": "utilization_threshold",
+          "response": "span_utilisation",
+          "axes": [
+            {
+              "name": "span_length_m",
+              "scale": "linear",
+              "grid": [
+                10,
+                20,
+                30,
+                40,
+                50,
+                60,
+                70
+              ]
+            },
+            {
+              "name": "od_m",
+              "scale": "linear",
+              "grid": [
+                0.2,
+                0.3,
+                0.4,
+                0.5,
+                0.6
+              ]
+            },
+            {
+              "name": "wt_m",
+              "scale": "linear",
+              "grid": [
+                0.012,
+                0.018,
+                0.024,
+                0.03
+              ]
+            },
+            {
+              "name": "current_velocity_ms",
+              "scale": "linear",
+              "grid": [
+                0.2,
+                0.5,
+                0.8,
+                1.1,
+                1.4
+              ]
+            }
+          ]
+        },
+        "response_kwargs": {},
+        "standards": [
+          {
+            "id": "DNV-RP-F105",
+            "edition": "2017-06"
+          }
+        ],
+        "input": "examples/workflows/free-span-f105/input.yml",
+        "response_sources": [
+          "src/digitalmodel/subsea/pipeline/free_span/__init__.py",
+          "src/digitalmodel/subsea/pipeline/free_span/models.py",
+          "src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py",
+          "src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py",
+          "src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py",
+          "src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py",
+          "src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py"
+        ]
+      },
+      "sources": {
+        "docs/registry/workflows.yaml": "ff084d8ff6178447f5dea320cbf48e9f92d1939a123c9e3cd18fa111bb4aa706",
+        "src/digitalmodel/parametric/refresh.py": "1b2d818583a56fe9c516d93ffc2b729dbc7e074fb54493bb1719afa2b1c526c3",
+        "src/digitalmodel/parametric/generate.py": "ee3cc03aba63f113758082a1edec61f422332f88fd53bc8f32bd6e5b7f842efa",
+        "examples/workflows/free-span-f105/input.yml": "66eff5cf59b0cbe6b3c624056bc6c09a015c7a79530911c912fa1d7dccdaf1fa",
+        "src/digitalmodel/subsea/pipeline/free_span/__init__.py": "9c4f80ce0f34e06c31d1e5289fd4f2cee145a57ed1e2af33885aad0cecfa40a1",
+        "src/digitalmodel/subsea/pipeline/free_span/models.py": "943d0268c69e10ae3ac3029436d05309d857fc42a0372b766d14e6064e6031fb",
+        "src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py": "5f5b58d8d61008f72e9945af9800148dfb308a06b8064544b95a75b5f54180af",
+        "src/digitalmodel/subsea/pipeline/free_span/span_natural_frequency.py": "6f99f2df379ef043f88a34b7e551e4c23b7169851b618f7da4f833a0c2f4c26c",
+        "src/digitalmodel/subsea/pipeline/free_span/span_onset_screening.py": "377026738acc19b88b0f4ebf1b4a7007c3442a5b91b907d4fad251d49509069a",
+        "src/digitalmodel/subsea/pipeline/free_span/span_viv_response.py": "b7638a660d5e7ef61f47c85ecb923358fdcd15fca7627715eadb158b30058e99",
+        "src/digitalmodel/subsea/pipeline/free_span/span_fatigue_damage.py": "ae562d8fda22b4e53b218852dece0089e62fe9ee3931f5a6eec6c723f6aee426"
+      },
+      "artifacts": {
+        "atlases/free_span/749c598d4e23/manifest.yaml": "477eedff49a4727320921ad24399b8b757b3bc423512dc0f2bc3d8c7439228a8",
+        "atlases/free_span/749c598d4e23/grid.parquet": "5b4ebf9be282b2413c05b89d3f16d0db57a06002c8a1ac5fa4e6dfe77cde1104",
+        "atlases/free_span/749c598d4e23/surrogate.json": "273aaba5440621d4cf8f0b4ca43767e0b75aca24b3beed06743e98612f75d0f3",
+        "atlases/free_span/749c598d4e23/validation.json": "daeafeba94641af19546238baa60c07a711d07c94a4bcd43344aa848c7304621"
+      }
+    },
+    {
+      "manifest": "atlases/lifting_lug/90e306065a25/manifest.yaml",
+      "workflow_id": "lifting-lug-design",
+      "recorded_code_version": "3554b14fd",
+      "source_revision": "44b88d703865cd5489ec95bf2a32ab750ce72dcf",
+      "algorithm": "legacy-raw-v1",
+      "content_fingerprint": "90e306065a25cf0bb78fe94ab87022c4196e2d27250f35907fa4e8d075024169",
+      "status": "VERIFIED",
+      "basis": {
+        "spec": {
+          "physics": "utilization_threshold",
+          "response": "governing_utilisation",
+          "axes": [
+            {
+              "name": "static_load_kN",
+              "scale": "linear",
+              "grid": [
+                200,
+                300,
+                400,
+                500,
+                600
+              ]
+            },
+            {
+              "name": "plate_thickness_mm",
+              "scale": "linear",
+              "grid": [
+                30,
+                40,
+                50,
+                60,
+                70
+              ]
+            }
+          ]
+        },
+        "response_kwargs": {},
+        "standards": [
+          {
+            "id": "AISC-360-ASD",
+            "edition": "2016"
+          }
+        ],
+        "input": "examples/workflows/lifting-lug-design/input.yml",
+        "response_sources": [
+          "src/digitalmodel/lifting_lug/workflow.py",
+          "src/digitalmodel/lifting_lug/mechanics.py"
+        ]
+      },
+      "sources": {
+        "docs/registry/workflows.yaml": "ff084d8ff6178447f5dea320cbf48e9f92d1939a123c9e3cd18fa111bb4aa706",
+        "src/digitalmodel/parametric/refresh.py": "1b2d818583a56fe9c516d93ffc2b729dbc7e074fb54493bb1719afa2b1c526c3",
+        "src/digitalmodel/parametric/generate.py": "ee3cc03aba63f113758082a1edec61f422332f88fd53bc8f32bd6e5b7f842efa",
+        "examples/workflows/lifting-lug-design/input.yml": "575705741d349b4ea63344f8b920baaf24725577ae33cf0b4ead9bd5d82d9680",
+        "src/digitalmodel/lifting_lug/workflow.py": "0149521e9ff3a065d7e29eda04c7343aa366540ac22f475e84a1a5352b4d233a",
+        "src/digitalmodel/lifting_lug/mechanics.py": "3988674059db877715ecc1dcde6287b67493fe843e8cc05d93155f01430fdb74"
+      },
+      "artifacts": {
+        "atlases/lifting_lug/90e306065a25/manifest.yaml": "5c47f8eddebabbc4fe6b25fbeee3829b82dfb7ab8cd601d003729c02f3bcaae0",
+        "atlases/lifting_lug/90e306065a25/grid.parquet": "4fe9e1ed7f9f6df3eecece136647fa0eb8c8a6a96be04988c4d0d8aeb9237e60",
+        "atlases/lifting_lug/90e306065a25/surrogate.json": "21de9a8a5ebced6bc99c480301af55eb8ec5663b2de518bf3bb009905dea41d9",
+        "atlases/lifting_lug/90e306065a25/validation.json": "5637c46bcdbc2a0470f97c1394bd512c40454800ec5c8dd8d01c34e33549fbc5"
+      }
+    },
+    {
+      "manifest": "atlases/span_rectification/5727560821e4/manifest.yaml",
+      "workflow_id": "span-rectification",
+      "recorded_code_version": "09148c1c1",
+      "source_revision": "5eac4a3fdcf1adfcca5091f289d00748afae927b",
+      "algorithm": "legacy-raw-v1",
+      "content_fingerprint": "5727560821e497f369e70887f8ec3b76940b6315059bf019507dfbffef74720a",
+      "status": "VERIFIED",
+      "basis": {
+        "spec": {
+          "physics": "utilization_threshold",
+          "response": "governing_utilisation",
+          "axes": [
+            {
+              "name": "actual_span_length_m",
+              "scale": "linear",
+              "grid": [
+                8,
+                10.5,
+                13,
+                15.5,
+                18
+              ]
+            },
+            {
+              "name": "current_velocity_ms",
+              "scale": "linear",
+              "grid": [
+                0.4,
+                0.6,
+                0.8,
+                1.0,
+                1.2
+              ]
+            }
+          ]
+        },
+        "response_kwargs": {},
+        "standards": [
+          {
+            "id": "DNV-RP-F105",
+            "edition": "2017-06"
+          }
+        ],
+        "input": "examples/workflows/span-rectification/input.yml",
+        "response_sources": [
+          "src/digitalmodel/subsea/pipeline/span_rectification.py",
+          "src/digitalmodel/subsea/pipeline/free_span/models.py",
+          "src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py"
+        ]
+      },
+      "sources": {
+        "docs/registry/workflows.yaml": "ff084d8ff6178447f5dea320cbf48e9f92d1939a123c9e3cd18fa111bb4aa706",
+        "src/digitalmodel/parametric/refresh.py": "1b2d818583a56fe9c516d93ffc2b729dbc7e074fb54493bb1719afa2b1c526c3",
+        "src/digitalmodel/parametric/generate.py": "ee3cc03aba63f113758082a1edec61f422332f88fd53bc8f32bd6e5b7f842efa",
+        "examples/workflows/span-rectification/input.yml": "6de0ad2b54becdf81e9e6efbfd8cbeaa3ee38b7af7eded41b21b7efaf36db078",
+        "src/digitalmodel/subsea/pipeline/span_rectification.py": "97801c385851eba1430d7ad0dc010ee0db8a62f4da471456d1af827be4c0ee02",
+        "src/digitalmodel/subsea/pipeline/free_span/models.py": "943d0268c69e10ae3ac3029436d05309d857fc42a0372b766d14e6064e6031fb",
+        "src/digitalmodel/subsea/pipeline/free_span/span_allowable_length.py": "5f5b58d8d61008f72e9945af9800148dfb308a06b8064544b95a75b5f54180af"
+      },
+      "artifacts": {
+        "atlases/span_rectification/5727560821e4/manifest.yaml": "eacc2cd31fd1656a1e468bf5c3b2a7f50277505300fe1ec3da6c1ea954ef76cb",
+        "atlases/span_rectification/5727560821e4/grid.parquet": "baae4dc165e72d69b37368cae7ffd8d640869804112075f6f4bdad293eff01da",
+        "atlases/span_rectification/5727560821e4/surrogate.json": "71021d818bfdc68fa12434aec98d67428b5b3c89eb68df84b96b8250bf612c1b",
+        "atlases/span_rectification/5727560821e4/validation.json": "1a36c4a6342068f841c50323a10bb3016641320156b12acc640c90561306d521"
+      }
+    },
+    {
+      "manifest": "atlases/spectral_fatigue/6840fbb96cb7/manifest.yaml",
+      "workflow_id": "spectral-fatigue",
+      "recorded_code_version": "578268eb0",
+      "source_revision": "89af6c4fccae1008941d2ccd1ddc0b6a5c01dbee",
+      "algorithm": "legacy-raw-v1",
+      "content_fingerprint": "6840fbb96cb7990eedf356a3774c8b0ada23431aec336deff40bf85970b9ae58",
+      "status": "VERIFIED",
+      "basis": {
+        "spec": {
+          "physics": "log_log",
+          "response": "annual_damage",
+          "axes": [
+            {
+              "name": "Hs",
+              "scale": "log",
+              "grid": [
+                1.0,
+                2.0,
+                3.0,
+                4.5,
+                6.0,
+                8.0
+              ]
+            },
+            {
+              "name": "Tp",
+              "scale": "linear",
+              "grid": [
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                16
+              ]
+            }
+          ]
+        },
+        "response_kwargs": {
+          "gamma": 3.3,
+          "stress_gain_MPa_per_m": 20.0,
+          "sn_slope": 3.0,
+          "sn_intercept": 12.164
+        },
+        "standards": [
+          {
+            "id": "DNV-RP-C203",
+            "edition": "2021-09"
+          },
+          {
+            "id": "DNV-RP-C205",
+            "edition": "2021-09"
+          }
+        ],
+        "input": "examples/workflows/spectral-fatigue/input.yml",
+        "response_sources": [
+          "src/digitalmodel/fatigue/spectral_fatigue.py",
+          "src/digitalmodel/hydrodynamics/wave_spectra.py"
+        ]
+      },
+      "sources": {
+        "docs/registry/workflows.yaml": "7b473afe82ab9d078263e46e45e5841ce45c36efd3026871c584e965ec1ab896",
+        "src/digitalmodel/parametric/refresh.py": "ed4c78c55c3733d626e0d1bdbd307033872e7ca8528db7303e14a7a5d5ec33c7",
+        "src/digitalmodel/parametric/generate.py": "ee3cc03aba63f113758082a1edec61f422332f88fd53bc8f32bd6e5b7f842efa",
+        "examples/workflows/spectral-fatigue/input.yml": "21dc2b6fb560c05baa6809b93902a195e8d8664af2d7f34a8c9e1300637b8960",
+        "src/digitalmodel/fatigue/spectral_fatigue.py": "05135f518c9237d04e470744a16491707e3517a413b190c3827518ef118d023b",
+        "src/digitalmodel/hydrodynamics/wave_spectra.py": "5229f65a8d04826c0b5726e0113a8dc1bdfbd18396169748977a96a2300e0290"
+      },
+      "artifacts": {
+        "atlases/spectral_fatigue/6840fbb96cb7/manifest.yaml": "e5213200d2e3b61a94a34a84b8f1b0b5e24d45202d077f5aaf43b37eac93fa5b",
+        "atlases/spectral_fatigue/6840fbb96cb7/grid.parquet": "3a27e2ed1b8289d748beb8f016faa1af576f2b96c33660c315816a0d3ffae195",
+        "atlases/spectral_fatigue/6840fbb96cb7/surrogate.json": "2f1af9db4ad31af87f071e91ee7023f1a65e32a50aee619c34064b9697f3c435",
+        "atlases/spectral_fatigue/6840fbb96cb7/validation.json": "cea13906419a8edbfbf3dedd5e0199d35f90311e4beea7d5f11541b9b4d8d78f"
+      }
+    },
+    {
+      "manifest": "atlases/synthetic_rope_mooring_fatigue/cfc09a9f7593/manifest.yaml",
+      "workflow_id": "synthetic-rope-mooring-fatigue",
+      "recorded_code_version": "2f9ac35d9",
+      "source_revision": "eda05e08c15298be1196a7828bd47a8957ea17b2",
+      "algorithm": "legacy-raw-v1",
+      "content_fingerprint": "cfc09a9f759314e4c39a14050442f15a0106448b3d615326ee7a50779fe449ed",
+      "status": "VERIFIED",
+      "basis": {
+        "spec": {
+          "physics": "log_log",
+          "response": "damage",
+          "axes": [
+            {
+              "name": "tension_range_kN",
+              "scale": "log",
+              "grid": [
+                200,
+                400,
+                700,
+                1200,
+                2000,
+                3000
+              ]
+            },
+            {
+              "name": "n_cycles",
+              "scale": "log",
+              "grid": [
+                10000,
+                100000,
+                1000000,
+                10000000
+              ]
+            },
+            {
+              "name": "MBL_kN",
+              "scale": "log",
+              "grid": [
+                5000,
+                10000,
+                20000,
+                35000,
+                50000
+              ]
+            }
+          ]
+        },
+        "response_kwargs": {
+          "tn_intercept": 0.259,
+          "tn_slope": 13.46,
+          "mean_load_knockdown": 0.0,
+          "load_ratio": 0.3
+        },
+        "standards": [
+          {
+            "id": "DNV-OS-E301",
+            "edition": "2018-07"
+          }
+        ],
+        "input": "examples/workflows/synthetic-rope-mooring-fatigue/input.yml",
+        "response_sources": [
+          "src/digitalmodel/synthetic_rope_mooring_fatigue/workflow.py"
+        ]
+      },
+      "sources": {
+        "docs/registry/workflows.yaml": "7b473afe82ab9d078263e46e45e5841ce45c36efd3026871c584e965ec1ab896",
+        "src/digitalmodel/parametric/refresh.py": "ed4c78c55c3733d626e0d1bdbd307033872e7ca8528db7303e14a7a5d5ec33c7",
+        "src/digitalmodel/parametric/generate.py": "ee3cc03aba63f113758082a1edec61f422332f88fd53bc8f32bd6e5b7f842efa",
+        "examples/workflows/synthetic-rope-mooring-fatigue/input.yml": "9bd61775831020a49058bf4949108932a48568e9b668811a6fef55b08c24f72d",
+        "src/digitalmodel/synthetic_rope_mooring_fatigue/workflow.py": "0c2331a75890966277f9f1a13fba3a28d6bda04e77db5e8d629b6cfc50e1ae60"
+      },
+      "artifacts": {
+        "atlases/synthetic_rope_mooring_fatigue/cfc09a9f7593/manifest.yaml": "443447fbd5c0bf9f5174a2b8047fa443f87b43ecd3f0c8a083dcd2c46d7eb291",
+        "atlases/synthetic_rope_mooring_fatigue/cfc09a9f7593/grid.parquet": "84bc4b9f65c700aa070c1a7838a36536c42af716313d923738d025ba476b2564",
+        "atlases/synthetic_rope_mooring_fatigue/cfc09a9f7593/surrogate.json": "5cc53fcb8e3157e3d88dda157bd7799c0f6213901f0c11930e3cb25f5bedc710",
+        "atlases/synthetic_rope_mooring_fatigue/cfc09a9f7593/validation.json": "dc4504fcab12b5270f4ab96508b29c35c457e07b9474be2cb8f105155dc5cc76"
+      }
+    },
+    {
+      "manifest": "atlases/weather_window/382bac9f91be/manifest.yaml",
+      "workflow_id": "weather-window",
+      "recorded_code_version": "66a5c8da4",
+      "source_revision": "72b1109a801ec356d848d841005d44baa15a63ae",
+      "algorithm": "legacy-raw-v1",
+      "content_fingerprint": "382bac9f91be7b85dd0880cf6016036012be3535d7de73fa4345e02bb86bb3d8",
+      "status": "VERIFIED",
+      "basis": {
+        "spec": {
+          "physics": "linear",
+          "response": "operability_pct",
+          "axes": [
+            {
+              "name": "hs_limit_m",
+              "scale": "linear",
+              "grid": [
+                2.0,
+                2.5,
+                3.0,
+                3.5,
+                4.0
+              ]
+            },
+            {
+              "name": "required_window_hours",
+              "scale": "linear",
+              "grid": [
+                12,
+                24,
+                36,
+                48,
+                72
+              ]
+            }
+          ]
+        },
+        "response_kwargs": {},
+        "standards": [
+          {
+            "id": "DNV-OS-H101",
+            "edition": "2011-10"
+          },
+          {
+            "id": "DNV-RP-H103",
+            "edition": "2014-04"
+          }
+        ],
+        "input": "examples/workflows/weather-window/input.yml",
+        "response_sources": [
+          "src/digitalmodel/orcaflex/weather_window.py"
+        ]
+      },
+      "sources": {
+        "docs/registry/workflows.yaml": "7b473afe82ab9d078263e46e45e5841ce45c36efd3026871c584e965ec1ab896",
+        "src/digitalmodel/parametric/refresh.py": "ed4c78c55c3733d626e0d1bdbd307033872e7ca8528db7303e14a7a5d5ec33c7",
+        "src/digitalmodel/parametric/generate.py": "ee3cc03aba63f113758082a1edec61f422332f88fd53bc8f32bd6e5b7f842efa",
+        "examples/workflows/weather-window/input.yml": "1ccdca559401cdf7c3d373bb8e8a53819511f19468dc8d6ec002fad82bccb2a7",
+        "src/digitalmodel/orcaflex/weather_window.py": "89fd1afd4dd44f07f2bb4b9340b2f026534504dbbe460d3d09348a707c3a10b6"
+      },
+      "artifacts": {
+        "atlases/weather_window/382bac9f91be/manifest.yaml": "56d5846f1b4f797264d375ed68e1beb62c89f44cb7be167e61e2b542faadcfd6",
+        "atlases/weather_window/382bac9f91be/grid.parquet": "073aea57617011fcd7c770e6e083850ded58a1edf9e9fc51fe9f3452607be28e",
+        "atlases/weather_window/382bac9f91be/surrogate.json": "7f19e42f3e61ff9a9fcadc7c643fdccd75fddaaaa33224f18e41fe408fa89b17",
+        "atlases/weather_window/382bac9f91be/validation.json": "fe81eebd9a5a72a1a03bf0c779c62f3b9f17591102a14bf9cf956937d0e2bb4b"
+      }
     }
   ]
 }
