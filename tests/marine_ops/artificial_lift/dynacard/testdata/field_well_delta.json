@@ -1,7 +1,7 @@
 {
   "CardDetails": {
-    "ID": 6679658,
-    "Api14": "42219026220000",
+    "ID": 104,
+    "Api14": "API-FIELD-DELTA",
     "CardType": "Current",
     "WellName": null,
     "CardTimeStamp": "2021-03-30T20:35:48",
@@ -42,7 +42,7 @@
     "WellTestRuntime": 20.15
   },
   "equipmentData": {
-    "ApiNo14": "42219026220000",
+    "ApiNo14": "API-FIELD-DELTA",
     "Rods": [
       {
         "InstallId": 52421,

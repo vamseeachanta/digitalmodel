@@ -46,15 +46,15 @@
   },
   "CalculationParameters": null,
   "CardDetails": {
-    "Api14": "42115010230000",
+    "Api14": "API-FIELD-ALPHA",
     "CalculationMethod": "Finite Difference",
     "CalculationMethodReason": "Fluid Load analysis failed: Algorithm Error calculating corners; Error calculating simulated downhole card",
     "CardTimeStamp": "2021-01-06T19:48:38",
     "CardType": "Shutdown",
     "CreatedTimeStamp": "2021-01-06T07:38:05.967000",
-    "ID": 11708328,
+    "ID": 101,
     "UpdatedTimeStamp": "2021-01-06T23:37:54.893000",
-    "WellName": "WW-0101"
+    "WellName": "Field well alpha"
   },
   "InputParameters": {
     "Brunt": 4,
@@ -875,7 +875,7 @@
     "SPM": "6.42"
   },
   "dynaoutputData": {
-    "ApiNo14": "42115010230000",
+    "ApiNo14": "API-FIELD-ALPHA",
     "DampingCoefficient": [
       0.009484454594504305,
       0.010920379840925825,
@@ -981,7 +981,7 @@
     }
   },
   "equipmentData": {
-    "ApiNo14": "42115010230000",
+    "ApiNo14": "API-FIELD-ALPHA",
     "Pump": {
       "Depth": 4844,
       "Diameter": 1.4999999999999998,

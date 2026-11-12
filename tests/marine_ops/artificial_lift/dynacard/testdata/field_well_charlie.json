@@ -1,8 +1,8 @@
 {
   "CardDetails": {
-    "ID": 5206267,
-    "Api14": "42263311890001",
-    "WellName": "SCFU-F216",
+    "ID": 103,
+    "Api14": "API-FIELD-CHARLIE",
+    "WellName": "Field well charlie",
     "CardTimeStamp": "2019-08-18T12:47:09",
     "CreatedTimeStamp": null,
     "UpdatedTimeStamp": null,
@@ -40,7 +40,7 @@
     "WellTestRuntime": 18.47
   },
   "equipmentData": {
-    "ApiNo14": "42263311890001",
+    "ApiNo14": "API-FIELD-CHARLIE",
     "Rods": [
       {
         "InstallId": 51049,

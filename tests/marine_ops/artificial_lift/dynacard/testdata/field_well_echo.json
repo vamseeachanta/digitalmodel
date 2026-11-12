@@ -1,15 +1,15 @@
 {
   "CalculationParameters": null,
   "CardDetails": {
-    "Api14": "30015410610000",
+    "Api14": "API-FIELD-ECHO",
     "CalculationMethod": "Finite Difference",
     "CalculationMethodReason": null,
     "CardTimeStamp": "2020-04-14T06:37:12",
     "CardType": "Startup",
     "CreatedTimeStamp": "2020-04-14T07:35:58.943000",
-    "ID": 7699227,
+    "ID": 105,
     "UpdatedTimeStamp": "2020-04-14T08:04:44.473000",
-    "WellName": "7RIVRS17-2H"
+    "WellName": "Field well echo"
   },
   "InputParameters": {
     "Brunt": 12,
@@ -918,7 +918,7 @@
     "SPM": "5.73"
   },
   "equipmentData": {
-    "ApiNo14": "30015410610000",
+    "ApiNo14": "API-FIELD-ECHO",
     "Pump": {
       "Depth": 2937,
       "Diameter": 1.75,

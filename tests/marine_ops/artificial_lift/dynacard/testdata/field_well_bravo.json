@@ -1,8 +1,8 @@
 {
   "CardDetails": {
-    "ID": 2223782,
-    "Api14": "42219017970000",
-    "WellName": "SUNDU-004",
+    "ID": 102,
+    "Api14": "API-FIELD-BRAVO",
+    "WellName": "Field well bravo",
     "CardTimeStamp": "2019-05-01T20:45:00",
     "CreatedTimeStamp": null,
     "UpdatedTimeStamp": null,
@@ -40,7 +40,7 @@
     "WellTestRuntime": 18.75
   },
   "equipmentData": {
-    "ApiNo14": "42219017970000",
+    "ApiNo14": "API-FIELD-BRAVO",
     "Rods": [
       {
         "InstallId": 45374,
