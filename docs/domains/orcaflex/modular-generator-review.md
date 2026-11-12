@@ -139,3 +139,25 @@ on `78179a8c2` (Windows, no licence): 1352 passed, 17 failed, 5 skipped, 34 erro
 
 Items needing a licensed OrcaFlex load are packaged separately; this review
 does not state that any generated model loads or converges.
+
+## 6. Addendum: findings after the first issue set
+
+- #4007. 24 of the 40 library line types under
+  `docs/domains/orcaflex/library/line_types/` (all riser, pipe, flexible,
+  hybrid and umbilical types) carry mass per unit length and EA about 1000
+  times the OrcaFlex SI values (te/m, kN). The SI templates include them, for
+  example `templates/risers/scr_hybrid/base/scr_base.yml:53`. After unit
+  conversion, the steel EA values still differ from the steel area of the
+  stated OD and ID by a factor of about 2.9 (10 in SCR: 785,000 kN against
+  2.28e6 kN), so the data is not established by a units correction alone.
+- Spring/damper links from `builders/riser_links_builder.py` carry
+  `UnstretchedLength` and `Stiffness` without `LinearSpring` or
+  `LinearDamper`. The native linear spring/damper in the public example
+  "H03 Floating and stowed lines" states both. The schema documented the
+  stiffness in kN for both link types; OrcaFlex spring/damper stiffness is
+  per metre (kN/m). Both points are addressed with the top-tensioner change
+  for #3976.
+- The A05 single-line risers (`a05_catenary_spar`,
+  `a05_lazy_wave_with_fpso`) use homogeneous-pipe line types. `RiserLineType`
+  represents the General category only, so these examples cannot be upgraded
+  to the typed route even after #3980.
