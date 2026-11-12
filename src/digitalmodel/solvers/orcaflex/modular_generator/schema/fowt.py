@@ -29,12 +29,17 @@ cases only; it carries no aerodynamic damping or rotor dynamics.
 
 from __future__ import annotations
 
+import math
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 Vector3 = list[float]
 Matrix3 = list[list[float]]
+
+
+# OrcaFlex default gravity (m/s2); the generated General section does not override it.
+ORCAFLEX_DEFAULT_GRAVITY = 9.80665
 
 
 def _check_vector(value: list[float], size: int, name: str) -> list[float]:
@@ -232,7 +237,11 @@ class FowtSpec(BaseModel):
     """Floating offshore wind turbine model."""
 
     representation: Literal["rigid", "flexible"] = Field(default="rigid")
-    gravity: float = Field(default=9.80665, gt=0, description="Gravity used by the model (m/s2)")
+    gravity: float = Field(
+        default=ORCAFLEX_DEFAULT_GRAVITY, gt=0,
+        description="Gravity used for the weight term of the hydrostatic matrix (m/s2); "
+                    "must equal the OrcaFlex default because the generated General "
+                    "section does not set gravity")
     hull: FowtHull
     tower: FowtTower | None = None
     rna: FowtRna | None = None
@@ -241,11 +250,26 @@ class FowtSpec(BaseModel):
     mooring_lines: list[FowtMooringLine] = Field(..., min_length=1)
     source_note: str = Field(default="", description="Where the values come from")
 
+    @field_validator("gravity")
+    @classmethod
+    def _default_gravity(cls, value: float) -> float:
+        if not math.isclose(value, ORCAFLEX_DEFAULT_GRAVITY, rel_tol=1e-9):
+            raise ValueError(
+                f"gravity {value} is not supported: the generated model uses the OrcaFlex "
+                f"default {ORCAFLEX_DEFAULT_GRAVITY} m/s2, and a different value would make "
+                "the hydrostatic weight term inconsistent with the solved model")
+        return value
+
     @model_validator(mode="after")
     def _consistency(self) -> "FowtSpec":
         if self.representation == "flexible":
             if self.tower is None or self.rna is None:
                 raise ValueError("flexible representation needs tower and rna")
+            if any(self.hull.initial_orientation[:2]):
+                raise ValueError(
+                    "flexible representation with a non-zero initial roll or pitch is not "
+                    "supported: the tower-top RNA position is not rotated with the hull; "
+                    "use the rigid representation for decay starts")
         elif self.tower is not None or self.rna is not None:
             raise ValueError("rigid representation carries tower and RNA mass in the hull; "
                              "omit tower and rna")
