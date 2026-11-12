@@ -63,7 +63,7 @@ def read_tabular(path: Path) -> tuple[dict, dict, list]:
 
 def read_hst(path: Path) -> list[list[float]]:
     matrix = [[0.0] * 6 for _ in range(6)]
-    for line in path.read_text().split("\n"):
+    for line in path.read_text(encoding="utf-8").split("\n"):
         parts = line.split()
         if len(parts) == 3:
             matrix[int(parts[0]) - 1][int(parts[1]) - 1] = float(parts[2])
@@ -77,7 +77,7 @@ def read_wamit1(path: Path) -> tuple[list, list, list]:
     frequency; positive periods carry added mass and damping.
     """
     blocks: dict[float, dict] = {}
-    for line in path.read_text().split("\n"):
+    for line in path.read_text(encoding="utf-8").split("\n"):
         parts = line.split()
         if len(parts) < 4:
             continue
@@ -98,13 +98,13 @@ def read_wamit1(path: Path) -> tuple[list, list, list]:
 
 
 def read_matrix_after(path: Path, label: str) -> list[list[float]]:
-    lines = path.read_text().split("\n")
+    lines = path.read_text(encoding="utf-8").split("\n")
     start = next(k for k, line in enumerate(lines) if label in line)
     return [[float(x) for x in lines[start + r].split()[:6]] for r in range(6)]
 
 
 def read_value(path: Path, label: str) -> float:
-    for line in path.read_text().split("\n"):
+    for line in path.read_text(encoding="utf-8").split("\n"):
         parts = line.split()
         if len(parts) > 1 and parts[1] == label:
             return float(parts[0])
