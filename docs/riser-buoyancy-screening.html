@@ -17,7 +17,8 @@ pre { padding: 1em; overflow-x: auto; }
 <body>
 <h1>SLWR buoyancy screening analysis</h1>
 <p>The analysis ranks exact atlas configurations by maximum touchdown-zone stress
-range across supplied near, far and cross excursions. Every configuration is retained,
+range across all supplied excursions; near, far and cross are required. Every
+configuration is retained,
 including constraint violations and missing evidence. Optional stress spectra are
 passed to the existing narrow-band fatigue engine. The worked example is synthetic;
 no qualified physical optimum or certified fatigue result is established.</p>
@@ -28,6 +29,9 @@ no qualified physical optimum or certified fatigue result is established.</p>
 and independent worked example to connect atlas candidates with excursion response.</td></tr>
 <tr><td>2</td><td>2026-10-25</td><td>Corrected the qualification follow-up link
 to reach the issue from documentation served at different locations.</td></tr>
+<tr><td>3</td><td>2026-11-12</td><td>Stated that every supplied excursion enters
+the envelope, that rank 1 is the smallest maximum TDZ stress range and that equal
+station ranges select the lowest arc station. The method is unchanged.</td></tr>
 <caption>Table 1. Revision record.</caption>
 </table>
 <h2>Validity and required evidence</h2>
@@ -82,12 +86,18 @@ visible as <code>NOT_EVALUATED</code>; no synthetic fallback is used.</p>
 <li>At each material station s, the excursion envelope is defined as
 <code>R(s) = max_case stress(s) − min_case stress(s)</code>. The screening objective
 is <code>max_s_in_TDZ R(s)</code>. This is a defined proxy, not a fatigue equation.
-The complete R(s) profile, governing interval and controlling station are returned.</li>
+Every supplied excursion enters the envelope. Near, far and cross are required;
+an additional excursion, for example a mean or intermediate offset, can widen R(s)
+and so raise the objective and the scalar-transfer gain in item 3.
+The complete R(s) profile, governing interval and controlling station are returned.
+When TDZ stations have equal ranges, the lowest arc station is reported as the
+controlling station.</li>
 <li>Each observation is compared to its caller-supplied limit in every excursion.
 Any violation gives <code>VIOLATED</code>. Otherwise missing evidence gives
-<code>NOT_EVALUATED</code>. Only complete feasible nodes receive ordinal ranks;
-ties sort by case identifier. All excluded rows remain in the result with observations,
-limits and comparators.</li>
+<code>NOT_EVALUATED</code>. Only complete feasible nodes receive ordinal ranks,
+in ascending order of the objective: rank 1 is the smallest maximum TDZ stress range.
+Equal objectives sort by case identifier. All excluded rows remain in the result
+with observations, limits and comparators.</li>
 <li>The optional scalar secant helper assumes
 <code>H(s) = R(s)/reference_excursion_range</code> and
 <code>G_stress(s,f) = H(s)² G_excursion(f)</code>. This is the variance scaling

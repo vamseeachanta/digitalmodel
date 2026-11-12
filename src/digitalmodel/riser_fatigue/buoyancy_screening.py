@@ -22,6 +22,8 @@ import numpy as np
 from digitalmodel.fatigue.spectral_fatigue import SpectralMoments, narrow_band_damage
 from digitalmodel.parametric.atlas import Atlas
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 VALIDITY_BOUNDARY = (
     "SCREEN: static excursion stress range is a proxy; supplied stress spectra "
     "and any scalar transfer give screening estimates only, not validated dynamic "
@@ -275,7 +277,8 @@ class ScreeningResult:
 
 
 def _envelope(response: CandidateResponse) -> tuple[float, ...]:
-    # Definition of excursion envelope, not a fatigue-damage equation.
+    # Definition of excursion envelope, not a fatigue-damage equation. Every
+    # supplied excursion enters max - min, including any beyond near/far/cross.
     return tuple(
         max(v) - min(v) for v in zip(*(e.stress_MPa for e in response.excursions))
     )
@@ -293,6 +296,9 @@ def stress_spectra_from_excursions(
     Linear PSD scaling follows the variance scaling of a scalar linear map;
     crossing-rate and narrow-band assumptions follow the 1985 source above.
     This envelope secant is an assumed transfer, not a dynamic response model.
+    The stress range is the envelope over every supplied excursion: near, far
+    and cross are required, and any additional excursion (for example a mean or
+    intermediate offset) can widen the range and so raise the gain.
     The caller shall supply a positive excursion span matching its case envelope.
     """
     _finite((reference_excursion_range_m,), "reference excursion range")
@@ -352,7 +358,7 @@ def _spectral_damage(spectrum: StressSpectrum, basis: SpectralBasis) -> float:
     # Application of computers in fatigue analysis (1985), §3.3.1, eqs 3.16-17:
     # rate = sqrt(M2/M0)/(2*pi) for ANGULAR moments. Integrate on Hz, convert
     # moment order n by (2*pi)**n; M0 stays variance, avoiding a second Jacobian.
-    moments = [float(np.trapz(psd * (2 * math.pi * f) ** n, f)) for n in (0, 1, 2, 4)]
+    moments = [float(_trapezoid(psd * (2 * math.pi * f) ** n, f)) for n in (0, 1, 2, 4)]
     if moments[0] == 0:
         return 0.0  # Zero variance => zero alternating stress; no crossing rate.
     if moments[2] <= 0 or moments[3] <= 0:
@@ -414,6 +420,7 @@ def _evaluate(case_id, layout, response, limits, basis) -> dict:
     _finite(ranges, "stress envelope")
     lo, hi = response.touchdown_interval_m
     indices = [i for i, s in enumerate(response.arc_length_m) if lo <= s <= hi]
+    # max() keeps the first maximum: equal ranges select the lowest arc station.
     critical = max(indices, key=lambda i: ranges[i])
     row.update(
         screen_status="EVALUATED",
@@ -447,6 +454,13 @@ def rank_buoyancy_candidates(
     spectral_basis: SpectralBasis | None = None,
 ) -> ScreeningResult:
     """Rank feasible exact nodes by maximum TDZ stress range, retaining all rows.
+
+    The station stress range is max - min over every supplied excursion. Near,
+    far and cross are required; any additional excursion also enters the
+    envelope and can raise the objective. The objective is the largest station
+    range inside the touchdown interval. Ranking is ascending: rank 1 is the
+    smallest maximum TDZ stress range. When TDZ stations have equal ranges, the
+    lowest arc station is reported as the critical station.
 
     Uses the existing atlas grid as the candidate set; no new sweep or surrogate
     is created. Missing data and violations remain unranked. The atlas response

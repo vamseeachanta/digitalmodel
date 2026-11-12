@@ -447,3 +447,81 @@ def test_off_unit_frequency_and_noninteger_slope_hand_calculation(
         if r.case_id == "a"
     )
     assert row.screen_spectral_damage == pytest.approx((expected, expected))
+
+
+def _with_extra_excursion(response, stress):
+    """Append a fourth, caller-named excursion with otherwise passing metrics."""
+    extra = ExcursionResponse("intermediate", stress, 100.0, 20.0, 25.0, 40.0, 3.0)
+    return replace(response, excursions=response.excursions + (extra,))
+
+
+def test_every_supplied_excursion_enters_envelope_objective_and_transfer(
+    atlas, responses, limits
+):
+    """All supplied excursions, not only near/far/cross, set R(s).
+
+    A's near/far/cross stresses are near=(10,10,10), far=(14,12,16) and
+    cross=(12,11,13) MPa, so R=(4,2,6) MPa and the TDZ objective is 6 MPa.
+    An invented fourth excursion (7,10,10) MPa lowers the station-0 minimum
+    from 10 to 7: R=(7,2,6). The TDZ (50-100 m) objective stays max(2,6)=6.
+    A fourth excursion (10,10,18) MPa raises the station-100 maximum from 16
+    to 18: R=(4,2,8). The TDZ objective becomes max(2,8)=8 > B's 3 MPa.
+    Scalar transfer with a 2 m span and motion PSD (0,1,0) at (0,1,2) Hz,
+    variance 1 m², gives stress variance (R/2)² at each station: (4,1,16).
+    """
+    outside_tdz = _with_extra_excursion(responses["a"], (7.0, 10.0, 10.0))
+    inside_tdz = _with_extra_excursion(responses["a"], (10.0, 10.0, 18.0))
+
+    responses["a"] = outside_tdz
+    row = next(
+        r
+        for r in rank_buoyancy_candidates(atlas, responses, limits).candidates
+        if r.case_id == "a"
+    )
+    assert row.stress_range_MPa == (7.0, 2.0, 6.0)
+    assert row.objective_MPa == 6.0
+    assert row.rank == 2
+
+    responses["a"] = inside_tdz
+    result = rank_buoyancy_candidates(atlas, responses, limits)
+    a = next(r for r in result.candidates if r.case_id == "a")
+    assert a.stress_range_MPa == (4.0, 2.0, 8.0)
+    assert a.objective_MPa == 8.0
+    assert a.critical_arc_length_m == 100.0
+    assert [r.case_id for r in result.candidates] == ["b", "a"]
+    assert {c.excursion for c in a.constraints} == {
+        "near",
+        "far",
+        "cross",
+        "intermediate",
+    }
+
+    spectra = stress_spectra_from_excursions(
+        inside_tdz, (0.0, 1.0, 2.0), (0.0, 1.0, 0.0), 2.0, "synthetic transfer"
+    )
+    assert [s.psd_MPa2_per_Hz[1] for s in spectra] == pytest.approx([4.0, 1.0, 16.0])
+
+
+def test_equal_station_ranges_select_lowest_arc_station(atlas, responses, limits):
+    """Equal TDZ ranges at 50 m and 100 m: R=(4,6,6); the 50 m station governs."""
+    a = responses["a"]
+    far = replace(a.excursions[1], stress_MPa=(14.0, 16.0, 16.0))
+    responses["a"] = replace(a, excursions=(a.excursions[0], far, a.excursions[2]))
+    row = next(
+        r
+        for r in rank_buoyancy_candidates(atlas, responses, limits).candidates
+        if r.case_id == "a"
+    )
+    assert row.stress_range_MPa == (4.0, 6.0, 6.0)
+    assert row.objective_MPa == 6.0
+    assert row.critical_arc_length_m == 50.0
+
+
+def test_public_docstrings_state_envelope_rank_and_station_rules():
+    """The public contract names the ranking direction and the envelope scope."""
+    rank_doc = " ".join(rank_buoyancy_candidates.__doc__.split())
+    assert "rank 1 is the smallest maximum TDZ stress range" in rank_doc
+    assert "lowest arc station" in rank_doc
+    assert "every supplied excursion" in rank_doc
+    transfer_doc = " ".join(stress_spectra_from_excursions.__doc__.split())
+    assert "every supplied excursion" in transfer_doc
