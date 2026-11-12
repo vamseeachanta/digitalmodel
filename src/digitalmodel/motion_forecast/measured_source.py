@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Measured-motion ingest (digitalmodel #1367).
 
 Sensing-agnostic sources that yield a :class:`MeasuredMotion`. A
@@ -37,6 +40,8 @@ class SyntheticMMS:
     DOF) adds seeded Gaussian sensor noise; 0 reproduces the truth exactly.
     """
 
+    LIVE_INPUT = False
+
     def __init__(self, truth, noise_std: float = 0.0, seed: int = 20260704):
         self._t = np.asarray(truth.t, dtype=float)
         self._dof = {d: np.asarray(truth.dof[d], dtype=float) for d in DOF_NAMES}
@@ -70,3 +75,6 @@ def from_csv(path: str) -> MeasuredMotion:
     t = np.atleast_1d(data["t"]).astype(float)
     dof = {d: np.atleast_1d(data[d]).astype(float) for d in DOF_NAMES}
     return MeasuredMotion(t=t, dof=dof, metadata={"source": f"csv:{path}"})
+
+
+from_csv.LIVE_INPUT = False  # type: ignore[attr-defined]

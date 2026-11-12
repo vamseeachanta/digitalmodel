@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Build a deterministic synthetic assessment using the existing numerical methods.
 
 Run with the package source on PYTHONPATH. No external process is launched.
@@ -139,28 +142,103 @@ def evaluate(root):
     return serialise({"sources": sources, "sections": output})
 
 
-def local_loss_limit_wall(frame, component, reference_wall, uncorroded_rating):
-    """Invert the existing rating numerically with fixed flaw extent/background."""
-    trial = frame.copy()
+def _local_loss_projection(frame, component, reference_wall, uncorroded_rating):
+    """Return a lambda-range domain and evaluator, preserving the received grid."""
+    trial = frame.astype(float).copy()
     minimum = float(frame.min().min())
     mask = frame == minimum
-    low, high = 0.0, minimum
     local = Level2Engine("LML", component.nominal_od_in, component.nominal_wt_in,
                          reference_wall, component.rsf_a)
-    while math.nextafter(low, high) < high:
-        middle = (low + high) / 2
-        trial[mask] = middle
+    domain = local.local_loss_projection_domain(frame)
+
+    def evaluate(wall):
+        trial[mask] = wall
         result = local.evaluate(trial)
         if not result["applicability"].ok:
-            raise ValueError("Projected local-loss geometry is outside applicability")
+            raise ValueError("Lambda-range qualification disagrees with the engine")
+        # At M=1, RSF=1 for every positive wall. Use its right-hand limit at
+        # zero instead of the engine's 0/0 fallback (legacy Part 5 relation).
+        right_hand_limit = wall == 0 and result["folias_factor"] == 1
+        rsf = 1.0 if right_hand_limit else result["rsf"]
         rating = reduced_mawp(Q_(uncorroded_rating, "psi"))(
-            result["rsf"], component.rsf_a,
+            rsf, component.rsf_a,
         ).value.to("psi").magnitude
-        if rating < component.design_pressure_psi:
+        if not math.isfinite(rating):
+            raise ValueError("Projected pressure is not finite")
+        applicability = result["applicability"].to_dict()
+        if wall == 0:
+            applicability = Applicability(
+                ok=False, flags=["ZERO_WALL_UNQUALIFIED"],
+                notes=["A zero-wall mathematical endpoint does not qualify a perforated wall"],
+            ).to_dict()
+        return {"wall_in": wall, "pressure_psi": float(rating),
+                "flaw_length_in": result["flaw_length_in"],
+                "applicability": applicability,
+                "endpoint_kind": "right-hand limit" if right_hand_limit else "evaluated"}
+    return domain, evaluate
+
+
+def local_loss_limit_wall(frame, component, reference_wall, uncorroded_rating):
+    """Bracket a pressure crossing within lambda-range applicability only.
+
+    Remaining-thickness ratio, minimum remaining wall and the other Part 5
+    prerequisites are not checked here; full applicability is not established.
+
+    Bisection requires opposite-sign endpoint residuals: NIST DLMF 3.8(iii),
+    https://dlmf.nist.gov/3.8#iii (Bisection Method). Engineering coefficients
+    remain in the existing API 579-1/ASME FFS-1 (2021) implementation.
+    """
+    target = component.design_pressure_psi
+    if not all(math.isfinite(v) and v > 0 for v in
+               (target, uncorroded_rating, component.rsf_a)):
+        raise ValueError("Pressures and allowable RSF must be positive finite inputs")
+    domain, evaluate = _local_loss_projection(frame, component, reference_wall, uncorroded_rating)
+    evidence = {"domain_wall_in": domain, "target_pressure_psi": target,
+                "qualification_scope": "lambda-range only",
+                "initial_bracket": [], "final_bracket": [], "monotonic": False}
+
+    def finish(status, wall, reason):
+        return {**evidence, "status": status, "wall_in": wall, "reason": reason}
+
+    if domain is None:
+        return finish("INAPPLICABLE", None, "Current geometry has no lambda-range depletion interval")
+    low, high = [evaluate(wall) for wall in domain]
+    evidence["initial_bracket"] = [low, high]
+    evidence["final_bracket"] = [low, high]
+    # For fixed M>=1, d(RSF)/d(Rt)=M(M-1)/(M-1+Rt)^2 >= 0.
+    # As wall increases, degraded rows can only disappear, also increasing RSF.
+    # Check sampled ordering as well; tolerate only one pressure ULP of rounding.
+    if low["pressure_psi"] > high["pressure_psi"]:
+        return finish("NON_MONOTONIC", None, "Endpoint pressures decrease with wall")
+    evidence["monotonic"] = True
+    if high["pressure_psi"] < target:
+        return finish("TARGET_UNREACHABLE", high["wall_in"], "Current rating is already below demand")
+    if low["pressure_psi"] >= target:
+        if not low["applicability"]["ok"]:
+            return finish("INAPPLICABLE", None,
+                          "Life is not established: no pressure crossing before the unqualified zero-wall endpoint")
+        status = "BOUNDARY" if low["pressure_psi"] == target else "BOUNDED"
+        return finish(status, low["wall_in"], "No failing pressure endpoint inside the lambda range; life is censored")
+    return _bisect_local_loss(evaluate, evidence, finish, low, high, target)
+
+
+def _bisect_local_loss(evaluate, evidence, finish, low, high, target):
+    """Retain a lambda-range failing/passing bracket, checking every sample."""
+    while math.nextafter(low["wall_in"], high["wall_in"]) < high["wall_in"]:
+        middle = evaluate((low["wall_in"] + high["wall_in"]) / 2)
+        if not (math.nextafter(low["pressure_psi"], -math.inf) <= middle["pressure_psi"]
+                <= math.nextafter(high["pressure_psi"], math.inf)):
+            evidence["monotonic"] = False
+            return finish("NON_MONOTONIC", None, "Interior pressure violates bracket ordering")
+        if middle["pressure_psi"] < target:
             low = middle
         else:
             high = middle
-    return high
+        evidence["final_bracket"] = [low, high]
+    if low["flaw_length_in"] != high["flaw_length_in"]:
+        return finish("BOUNDED", high["wall_in"], "Flaw-extent boundary censors the crossing; no continuous root is established")
+    status = "BOUNDARY" if high["wall_in"] == evidence["domain_wall_in"][1] else "CROSSING"
+    return finish(status, high["wall_in"], "Passing wall retained with adjacent failing wall")
 
 
 def evaluate_section(data, component, cfg):
@@ -192,9 +270,15 @@ def evaluate_section(data, component, cfg):
     # engine relation is called directly; no standard equation is duplicated.
     life_limit = detailed.t_min_in
     life_basis = "point-minimum pressure wall"
+    life_search = None
     if detailed.t_measured_min_in < detailed.t_min_in:
-        life_limit = local_loss_limit_wall(frame, component, reference_wall, uncorroded_rating)
-        life_basis = "fixed-geometry reduced local-loss rating"
+        life_search = local_loss_limit_wall(frame, component, reference_wall, uncorroded_rating)
+        life_limit = life_search["wall_in"]
+        if life_limit is None:
+            raise ValueError(f"Local-loss life is not established: {life_search['status']}")
+        life_basis = "fixed-geometry reduced local-loss rating; lambda-range applicability only"
+        if life_search["status"] in {"BOUNDED", "BOUNDARY"}:
+            life_basis += "; censored at the supported boundary"
     life_rows = []
     for factor in cfg["sensitivity_multipliers"]:
         current_rate = rate * factor
@@ -233,7 +317,7 @@ def evaluate_section(data, component, cfg):
         "reference_wall_in": reference_wall,
         "uncorroded_rating_psi": uncorroded_rating, "local_loss_rating_psi": local_rating,
         "sufficiency": asdict(sufficiency), "applicability": app.to_dict(),
-        "life_limit_wall_in": life_limit, "life_basis": life_basis,
+        "life_limit_wall_in": life_limit, "life_basis": life_basis, "life_search": life_search,
         "remaining_life_yr": life, "interval_yr": interval, "life_sensitivity": life_rows,
         "strength_decision": decision.to_dict(), "decision": final,
         "pressure_rating_psi": rating,
@@ -463,7 +547,7 @@ def design_blocks(result):
         text("# 3.3 Environmental data\n\nNot applicable. Internal pressure and separate tensile axial membrane stress only.\n\n"
              "# 3.4 Vessel data\n\nNot applicable."),
         text("# 3.5 Criteria\n\nAllowable-to-demand ratio ≥ 1 (100.0%) with no applicability flag is the current-strength criterion. "
-             "The method applicability limits are applied without reproducing their licensed values (References 1–3). "
+             "The implemented method applicability checks are applied without reproducing their licensed values (References 1–3). "
              f"The assessment defaults require at least {MeasurementSufficiency().min_readings} valid readings and a "
              f"minimum of {MeasurementSufficiency().min_lml_profile_cells} degraded cells resolving a local flaw. "
              "These are configurable engineering criteria informed by inspection practice, not code mandates. "
@@ -474,7 +558,12 @@ def design_blocks(result):
              "it does not establish a complete Part 5 Level 2 evaluation. "
              "Section A life is projected to the wall at which its reduced local-loss rating reaches design pressure. "
              "The flaw length, background wall, bulging factor, material and loads are held fixed; lateral growth is not modelled. "
-             "Applicability is checked along this projection. Other failure modes or six-method ratings may limit life earlier. "
+             "The pressure projection checks lambda-range applicability only. "
+             "Remaining-thickness ratio and minimum-wall limits are not checked; full Part 5 applicability is not established. "
+             "A passing and failing pressure bracket is established within that range before searching. "
+             "A positive supported boundary without a pressure crossing gives a censored life bound; "
+             "an unqualified zero-wall endpoint or inapplicable geometry does not establish life. "
+             "Other failure modes or six-method ratings may limit life earlier. "
              "Section B retains the point-minimum pressure-wall projection. Neither projection is operating authorization. "
              "Re-inspection at half the projected life is an assessment assumption; zero means immediate action. "
              "Interim operation is a decision for the maintainer of the pipeline record when measurements are inadequate."),
@@ -635,13 +724,13 @@ def report_spec(root, result):
 
 
 def build(root, output=None):
+    """Publish the site pair and legacy copies, or only an explicit output folder."""
     root = Path(root).resolve()
-    output = Path(output) if output is not None else root / "docs/reports"
+    directories = ((Path(output),) if output is not None else
+                   (root / "docs/api/ffs", root / "docs/reports"))
     source_digests = {name: digest(root / name) for name in CALCULATION_SOURCES}
     result = evaluate(root)
     page = render_html(report_spec(root, result), assessment_presentation=True)
-    html_path = output / "pipeline-ffs-assessment.html"
-    manifest_path = output / "pipeline-ffs-assessment.manifest.json"
     manifest = {
         "schema_version": 1, "data_status": "synthetic, for demonstration",
         "intended_use": "worked example; no actual operating asset qualification",
@@ -657,15 +746,20 @@ def build(root, output=None):
     }
     if source_digests != {name: digest(root / name) for name in CALCULATION_SOURCES}:
         raise ValueError("Calculation source changed during build")
-    output.mkdir(parents=True, exist_ok=True)
-    html_path.write_text(page, encoding="utf-8", newline="\n")
-    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True,
-                                        allow_nan=False) + "\n", encoding="utf-8", newline="\n")
-    if hashlib.sha256(html_path.read_bytes()).hexdigest() != manifest["report_sha256"]:
-        raise ValueError("Report readback mismatch")
-    if json.loads(manifest_path.read_text(encoding="utf-8")) != manifest:
-        raise ValueError("Manifest readback mismatch")
-    return html_path, manifest_path
+    manifest_text = json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True,
+                               allow_nan=False) + "\n"
+    for directory in directories:
+        directory.mkdir(parents=True, exist_ok=True)
+        html_path = directory / "pipeline-ffs-assessment.html"
+        manifest_path = directory / "pipeline-ffs-assessment.manifest.json"
+        html_path.write_text(page, encoding="utf-8", newline="\n")
+        manifest_path.write_text(manifest_text, encoding="utf-8", newline="\n")
+        if hashlib.sha256(html_path.read_bytes()).hexdigest() != manifest["report_sha256"]:
+            raise ValueError("Report readback mismatch")
+        if json.loads(manifest_path.read_text(encoding="utf-8")) != manifest:
+            raise ValueError("Manifest readback mismatch")
+    return (directories[0] / "pipeline-ffs-assessment.html",
+            directories[0] / "pipeline-ffs-assessment.manifest.json")
 
 
 if __name__ == "__main__":

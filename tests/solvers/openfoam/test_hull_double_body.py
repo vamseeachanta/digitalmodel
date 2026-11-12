@@ -605,14 +605,25 @@ def test_the_surface_is_copied_and_named_consistently(case, config) -> None:
 #  The two trees, held together
 # --------------------------------------------------------------------------- #
 
+@pytest.mark.parametrize("line_ending", [b"\n", b"\r\n"])
 @pytest.mark.parametrize("rel", SHARED_DICTS)
-def test_the_shared_dictionaries_are_byte_identical(rel: str) -> None:
-    """The cost of a sibling tree is duplication, and this is the interest
-    payment. These files carry no free-surface content, so a change to one and
-    not the other is drift -- the mesh the two cases are compared on would
-    stop being the same mesh."""
+def test_the_shared_dictionaries_are_byte_identical(rel: str, line_ending: bytes) -> None:
+    """Shared content stays identical except the optional wave action slot.
+
+    Double-body cases have no wave extent. Only the free-surface tree needs
+    that placeholder; existing hull selections stay shared after LF normalisation.
+    """
     vof = (hull_case_templates_dir() / rel).read_bytes()
     double_body = (double_body_templates_dir() / rel).read_bytes()
+    # Exercise both checkout styles independently of the current git settings.
+    vof = vof.replace(b"\r\n", b"\n").replace(b"\n", line_ending)
+    double_body = double_body.replace(b"\r\n", b"\n").replace(b"\n", line_ending)
+    vof = vof.replace(b"\r\n", b"\n")
+    double_body = double_body.replace(b"\r\n", b"\n")
+    if match := re.fullmatch(r"system/topoSetDict\.([1-6])", rel):
+        slot = f"@WAVE{match[1]}@\n".encode()
+        assert vof.count(slot) == 1
+        vof = vof.replace(slot, b"")
     assert vof == double_body, f"{rel} has drifted between the two trees"
 
 

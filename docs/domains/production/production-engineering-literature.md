@@ -5,7 +5,9 @@
 Fourteen paper and book records are reviewed for inflow, vertical lift, nodal
 analysis and artificial lift. The publisher-deposited DOI records and book
 catalogue records were opened on 2026-10-14. Paper full texts and textbook
-contents were not read. The records support conditional method screening;
+contents for those fourteen sources were not read. Additional equation passages
+in an open thesis were read on 2026-10-18, as recorded below.
+The records support conditional method screening;
 they do not establish published-example validation or complete equation
 lineage. The existing VLP implementation is a simplified traverse, not either
 published correlation whose name survives as a deprecated alias.
@@ -15,12 +17,14 @@ published correlation whose name survives as a deprecated alias.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-14 | Record accessible literature, reconcile implementation descriptions and identify evidence required for numerical qualification. |
+| 2 | 2026-10-18 | Add opened IPR equation passages, a composite join derivation and explicit selection qualification gaps. |
 
 ## Parameter and equation convention
 
 The equations in this section describe the repository implementation in
-`src/digitalmodel/production_engineering/ipr_models.py`; they are not transcribed
-from unread papers. Pressure `Pr` is reservoir pressure, `Pwf` is flowing
+`src/digitalmodel/production_engineering/ipr_models.py`. The new passage ledger
+below verifies the IPR forms through an open thesis; original defining-paper
+equations remain unread. Pressure `Pr` is reservoir pressure, `Pwf` is flowing
 bottomhole pressure, and `Pb` is bubble-point pressure, all in psi. Rate `q`
 and absolute-open-flow rate `qmax` are in bbl/d. `J` is productivity index in
 bbl/d/psi. `C` is a fitted coefficient with units (bbl/d)/psi^(2n), and `n` is a
@@ -38,6 +42,39 @@ temperature in °F and pressure in psi. The published methods additionally
 depend on holdup, friction and fluid-property definitions that cannot be
 reconstructed from their bibliographic records alone.
 
+## Open IPR equation passage ledger
+
+Nass, M.A. (2010), *Inflow Performance Relationships (IPR) for Solution Gas
+Drive Reservoirs — a Semi-Analytical Approach*, MS thesis, Texas A&M University.
+[Public university PDF](https://blasingame.engr.tamu.edu/0_TAB_Grad/TAB_Grad_Thesis_Archive/MS_044_NASS%2CMaria_Thesis_TAMU_%28May_2010%29.pdf).
+Read sections 1.2.1–1.2.2 on 2026-10-18. This is secondary equation evidence
+for the earlier methods, not inspection of their original papers.
+
+| Method | Opened passage, printed page | Equation and implementation |
+| --- | --- | --- |
+| Linear PI | Eq. (1.7), p. 3 | `q=J*(Pr-Pwf)`; `ipr_models.LinearIpr`. |
+| Vogel | Eq. (1.12), p. 5, attributed to Vogel (1968) | `q/qmax=1-0.2*r-0.8*r²`, `r=Pwf/Pr`; `ipr_models.VogelIpr`. |
+| Fetkovich | Eq. (1.16), p. 6, attributed to Fetkovich (1973) | `q/qmax=[1-(Pwf/Pr)²]^n`; algebraically the existing `C*(Pr²-Pwf²)^n` with `C=qmax/Pr^(2*n)`; `ipr_models.FetkovichIpr`. |
+
+These passages establish forms and parameter meaning, not universal numerical
+applicability envelopes. `C`, `n`, `J` and `qmax` remain supplied or fitted.
+
+### Composite join derivation
+
+This is an independent derivation of the existing composite, not a new claim
+about its historical attribution. Write `f(r)=1-a*r-b*r²`, using `a=0.2`,
+`b=0.8` from Eq. (1.12) above. Then `f(1)=0` and `f'(1)=-(a+2*b)=-1.8`.
+Join the linear segment at `qb=J*(Pr-Pb)` to `q=qb+A*f(Pwf/Pb)`.
+Matching slopes gives `-A*1.8/Pb=-J`, hence `A=J*Pb/1.8`.
+Rate and first derivative are continuous at `Pb` for positive `J`, `Pb` and
+`Pr>Pb`. This does not supply evidence about field accuracy.
+
+`test_selection_assessment.py` writes out synthetic hand calculations for the
+selected models: linear 1000, Vogel 700, Fetkovich 3000 and composite 1900
+bbl/d, plus the composite boundary rate 1200 bbl/d. Exact comparisons use
+these arithmetic results; they introduce no empirical acceptance tolerance.
+They are not original-paper or measured-data validation fixtures.
+
 ## Defining papers and texts
 
 ### 1. Vogel — normalized solution-gas-drive inflow
@@ -51,7 +88,8 @@ reservoirs and the limitations of a constant PI for two-phase reservoir flow.
 The model parameters are `Pr`, `Pwf` and `qmax`. The source calls for field
 verification; a universal pressure or rate validity interval is not established.
 `ipr_models.VogelIpr` implements the normalized polynomial above. Its detailed
-equation lineage and original worked-example values remain unverified here.
+original equation passage and original worked-example values remain unverified;
+the open thesis passage above verifies the polynomial as a secondary source.
 
 ### 2. Fetkovich — measured multirate inflow
 
@@ -64,7 +102,8 @@ saturated and depleted states, with test interpretation depending on the
 state. The observed exponent range is 0.568–1.000. Parameters are `Pr`, `Pwf`,
 fitted `C` and fitted `n`. `ipr_models.FetkovichIpr` implements the back-pressure
 form. The record does not expose its equation or a numeric worked example;
-the implementation's theoretical exponent discussion is not an observed-data
+the thesis ledger above supplies secondary equation evidence. The
+implementation's theoretical exponent discussion is not an observed-data
 validity guarantee.
 
 ### 3. Hagedorn and Brown — vertical two-phase pressure gradient

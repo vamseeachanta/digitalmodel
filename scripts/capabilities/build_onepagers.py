@@ -1,5 +1,6 @@
-# Copyright (c) 2024 Digital Model Project
-# Licensed under the MIT License. See LICENSE file for details.
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Build one deterministic capability-card file using only the standard library.
 
 The website remains the human capability surface. Missing source key figures
@@ -307,14 +308,14 @@ SPECS: list[dict] = [
                               "GREEN / AMBER / RED / ESCALATE traffic-light per case"]),
     dict(id="short-horizon-motion-forecast", kind="work",
          title="Short-horizon motion forecast",
-         std="MMS / MRU feed · DNV-ST-N001 · DNV-ST-0358 / Walk2Work · CAP 437",
+         std="Synthetic motion demo · DNV-ST-N001 · DNV-ST-0358 / Walk2Work · CAP 437",
          path="hydro/short-horizon-motion-forecast.html",
-         blurb="Live vessel & structure motions from an onboard MMS / MRU, plus a phase-resolved "
-               "wave forecast transferred through the asset RAO to predict the next few motions — "
-               "a rolling go / no-go with lead time for crane lifts, walk-to-work gangways and "
-               "helideck landings, bounded honestly by the predictable zone.",
-         figures=[], bullets=["Two data modes: measured (MMS/MRU) 'now' + predicted forecast",
-                              "6-DOF vessel & structure-interface motion via AQWA / OrcaFlex RAOs",
+         blurb="Illustrative synthetic sea and simplified analytic RAOs demonstrate a "
+               "phase-resolved motion forecast and rolling go / no-go with lead time. "
+               "Measured-motion input from MMS / MRU instruments is planned; "
+               "the Python layer provides a synthetic stub and CSV reader.",
+         figures=[], bullets=["Synthetic measured history and predicted forecast",
+                              "Designed for OrcaFlex / AQWA RAO files; AQWA phase sign pending validation",
                               "Rolling GO / CAUTION / NO-GO with lead-time to first breach"]),
     dict(id="sec-artificial-lift", kind="section", title="Artificial lift — rod-pump diagnostics",
          std="Gibbs wave equation · Bezerra projections + scale features", path="capabilities/#artificial-lift",
@@ -420,6 +421,17 @@ SPECS: list[dict] = [
          bullets=["Burst / pressure-containment, collapse (solved from the cubic), propagation-buckling and combined-loading utilizations per code",
                   "Edition-aware factors (DNV-OS-F101 2007 vs DNV-ST-F101 2021; API RP 1111 3rd vs 4th edition)",
                   "Propagation buckling governs the pipeline codes (~19.5 mm needed) while DNV-ST-F201 riser LRFD passes at 8 mm"]),
+    dict(id="wall-thickness-load-explorer", kind="work", title="Wall-thickness tension and bending explorer",
+         std="DNV-ST-F101 · API RP 1111 · ASME B31.4/8 · PD 8010-2 · ISO 13623",
+         path="structural/wall-thickness-3d-explorer.html",
+         blurb="Wall thickness, effective tension and bending moment swept across nine design codes. "
+               "A fetched, bounded snapshot shows utilisation and governing check as a 3D surface "
+               "with a 2D fallback. Inputs are assumed, based on previous experience; "
+               "design qualification is not evaluated.",
+         figures=[("9", "design codes"), ("354,609", "study rows"), ("22,869", "display points")],
+         bullets=["Wall thickness, effective tension and bending moment span a 354,609-row study",
+                  "A bounded 22,869-point display retains utilisation and governing check",
+                  "Inputs are assumed, based on previous experience; design qualification is not evaluated"]),
     dict(id="sloshing-explorer", kind="work", title="Tank sloshing natural-period & resonance explorer",
          std="Faltinsen linear potential theory · McIver · API 650 Annex E",
          path="structural/sloshing-explorer.html",
@@ -570,7 +582,7 @@ SPECS: list[dict] = [
                   "Drag-anchor holding from empirical efficiency factors (DNV-RP-E302, API RP 2SK) live across soft clay / stiff clay / sand; suction-caisson capacity (DNV-RP-E303) in the same engine",
                   "Mudmat bearing capacity (DNV-RP-C212 / Brinch Hansen) with shape, depth and effective-area corrections, plus base sliding",
                   "Seed-Idriss / NCEER per-layer liquefaction factor of safety with magnitude scaling",
-                  "DNV-RP-F107 equilibrium scour for pipelines and monopiles and rock-armour thickness"]),
+                  "Scour screening: sediment-motion threshold (FHWA-RD-03-052 eq. 3) and supplied-limit armour comparison; depth NOT_EVALUATED"]),
     dict(id="sec-production-engineering", kind="section",
          title="Production engineering — nodal analysis & well deliverability",
          std="Vogel · Fetkovich · simplified homogeneous lift traverse (published methods not yet implemented) · Brent-method operating point",

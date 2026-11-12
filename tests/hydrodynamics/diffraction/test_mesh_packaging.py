@@ -61,7 +61,7 @@ def _multibody_spec_data(mesh_a: str, mesh_b: str) -> dict:
 
 
 
-@pytest.mark.parametrize("route", ["runner", "converter", "programmatic"])
+@pytest.mark.parametrize("route", ["runner", "implicit_runner", "converter", "programmatic", "loaded"])
 @pytest.mark.parametrize("partial", [False, True])
 def test_symmetric_packaged_mesh_resolves_from_caller_folder(tmp_path, route, partial):
     """A decoy beside the spec must never replace the packaged mesh check."""
@@ -88,7 +88,7 @@ def test_symmetric_packaged_mesh_resolves_from_caller_folder(tmp_path, route, pa
     lines[2] = "0 0" if partial else "1 1"
     (case / "hull.gdf").write_text("\n".join(lines) + "\n", encoding="utf-8")
     data = _spec_data("meshes/hull.gdf")
-    data["vessel"]["geometry"]["symmetry"] = "xz"
+    data["vessel"]["geometry"]["symmetry"] = "yz" if partial else "none"
     spec_path = case / "spec.yml"
     spec_path.write_text(yaml.safe_dump(data), encoding="utf-8")
     output = tmp_path / "out"
@@ -96,31 +96,35 @@ def test_symmetric_packaged_mesh_resolves_from_caller_folder(tmp_path, route, pa
     def generate():
         if route == "converter":
             return SpecConverter(spec_path).convert(solver="orcawave", output_dir=output)
-        if route == "runner":
+        if route in {"runner", "implicit_runner"}:
             runner = OrcaWaveRunner(RunConfig(output_dir=output, generate_modular=True))
-            result = runner.prepare(DiffractionSpec.from_yaml(spec_path), spec_path=spec_path)
+            result = runner.prepare(
+                DiffractionSpec.from_yaml(spec_path),
+                spec_path=spec_path if route == "runner" else None,
+            )
             assert result.modular_files
             return result.input_file
+        if route == "loaded":
+            spec = DiffractionSpec.from_yaml(spec_path)
+            packaged, _, _ = package_spec_meshes(spec, output)
+            return OrcaWaveBackend().generate_single(packaged, output)
         spec = DiffractionSpec.model_validate(data)
         assert spec._source_dir is None
         packaged, _, _ = package_spec_meshes(spec, output, spec_dir=case)
         assert spec._source_dir is None
         return OrcaWaveBackend().generate_single(packaged, output)
 
-    if partial:
-        with pytest.raises(ValueError, match="Partial GDF mesh"):
-            generate()
-    else:
-        emitted = yaml.safe_load(generate().read_text(encoding="utf-8"))
-        assert emitted["Bodies"][0]["BodyMeshSymmetry"] == "None"
-        assert emitted["Bodies"][0]["BodyMeshFileName"] == "hull.gdf"
+    emitted = yaml.safe_load(generate().read_text(encoding="utf-8"))
+    assert emitted["Bodies"][0]["BodyMeshSymmetry"] == ("yz plane" if partial else "None")
+    assert emitted["Bodies"][0]["BodyMeshFileName"] == "hull.gdf"
 
 
 class TestCsfControlSurfacePassthrough:
     def test_csf_control_surface_packages_unchanged(self, tmp_path: Path):
         """A .csf control surface is a valid native OrcaWave input and must
         package (previously hard-rejected with 'Unsupported mesh format')."""
-        (tmp_path / "hull.gdf").write_text("hull")
+        source = Path(__file__).parent.parent / "bemrosetta/fixtures/sample_box.gdf"
+        (tmp_path / "hull.gdf").write_bytes(source.read_bytes())
         (tmp_path / "cs.csf").write_text("csf data")
         data = _spec_data()
         data["vessel"]["control_surface"] = {
@@ -162,7 +166,8 @@ class TestControlSurfaceFormatRewrite:
         """Packaging a .gdf control surface must record mesh_format='gdf' on
         the packaged spec (previously left None, so the backend emitted
         'Wamit csf' for GDF content)."""
-        (tmp_path / "hull.gdf").write_text("hull")
+        source = Path(__file__).parent.parent / "bemrosetta/fixtures/sample_box.gdf"
+        (tmp_path / "hull.gdf").write_bytes(source.read_bytes())
         (tmp_path / "cs.gdf").write_text("cs")
         data = _spec_data()
         data["vessel"]["control_surface"] = {
@@ -191,7 +196,8 @@ class TestControlSurfaceFormatRewrite:
             OrcaWaveBackend,
         )
 
-        (tmp_path / "hull.gdf").write_text("hull")
+        source = Path(__file__).parent.parent / "bemrosetta/fixtures/sample_box.gdf"
+        (tmp_path / "hull.gdf").write_bytes(source.read_bytes())
         (tmp_path / "cs.gdf").write_text("cs")
         data = _spec_data()
         data["vessel"]["control_surface"] = {
@@ -247,3 +253,106 @@ class TestDestinationCollisions:
             quality_gates=False,
         )
         assert (tmp_path / "out" / "mesh.gdf").read_text() == "shared"
+
+
+def test_auxiliary_mesh_roles_with_same_basename_keep_distinct_bytes(tmp_path: Path):
+    """Issue #609: distinct sources keep their bytes across all mesh roles."""
+    # Synthetic ASCII sentinels are the byte-copy oracle, independent of mesh
+    # parsing. All panel roles deliberately claim the same ready-format basename.
+    expected_payloads = {
+        "body_a": b"body a panels\n",
+        "body_b": b"body b panels\n",
+        "control_a": b"body a control surface\n",
+        "control_b": b"body b control surface\n",
+        "lid": b"damping lid panels\n",
+        "zone": b"free surface zone panels\n",
+    }
+    sources = {}
+    for role, payload in expected_payloads.items():
+        source = tmp_path / role / ("mesh.fdf" if role == "zone" else "mesh.gdf")
+        source.parent.mkdir()
+        source.write_bytes(payload)
+        sources[role] = source.relative_to(tmp_path).as_posix()
+
+    data = _multibody_spec_data(sources["body_a"], sources["body_b"])
+    body_a, body_b = data["bodies"]
+    body_a["control_surface"] = {"type": "mesh", "mesh_file": sources["control_a"]}
+    body_b["vessel"]["control_surface"] = {
+        "type": "mesh", "mesh_file": sources["control_b"]
+    }
+    data["damping_lid"] = {
+        "mesh_file": sources["lid"],
+        # Schema-only input: DampingLidSpec requires a positive damping factor;
+        # unity is the multiplicative identity, not a physical calibration.
+        "damping_factor": 1.0,
+    }
+    data["free_surface_zone"] = {"mesh_file": sources["zone"]}
+    spec = DiffractionSpec.model_validate(data)
+    out = tmp_path / "out"
+
+    packaged_spec, packaged, _ = package_spec_meshes(
+        spec, out, spec_dir=tmp_path, solver="orcawave", quality_gates=False
+    )
+
+    packaged_a, packaged_b = packaged_spec.bodies
+    destinations = {
+        "body_a": packaged_a.vessel.geometry.mesh_file,
+        "body_b": packaged_b.vessel.geometry.mesh_file,
+        "control_a": packaged_a.control_surface.mesh_file,
+        "control_b": packaged_b.vessel.control_surface.mesh_file,
+        "lid": packaged_spec.damping_lid.mesh_file,
+        "zone": packaged_spec.free_surface_zone.mesh_file,
+    }
+    assert len(set(destinations.values())) == len(expected_payloads)
+    assert set(packaged) == {out / name for name in destinations.values()}
+    assert {
+        role: (out / name).read_bytes() for role, name in destinations.items()
+    } == expected_payloads
+
+
+def test_shared_auxiliary_mesh_resolves_to_one_destination(tmp_path: Path):
+    """Issue #609: a source shared across roles reuses its collision-safe name."""
+    # Literal ASCII payloads distinguish the separate body from the shared file.
+    body_payload = b"separate body panels\n"
+    shared_payload = b"shared auxiliary panels\n"
+    for folder, payload in (("body", body_payload), ("shared", shared_payload)):
+        source = tmp_path / folder / "mesh.gdf"
+        source.parent.mkdir()
+        source.write_bytes(payload)
+
+    data = _multibody_spec_data("body/mesh.gdf", "shared/mesh.gdf")
+    body_a, body_b = data["bodies"]
+    body_a["control_surface"] = {
+        "type": "mesh", "mesh_file": "shared/./mesh.gdf"
+    }
+    body_b["vessel"]["control_surface"] = {
+        "type": "mesh", "mesh_file": str(tmp_path / "shared" / "mesh.gdf")
+    }
+    data["damping_lid"] = {
+        "mesh_file": "shared/mesh.gdf",
+        # Same schema-only unit coefficient as the distinct-source case above.
+        "damping_factor": 1.0,
+    }
+    data["free_surface_zone"] = {"mesh_file": "shared/./mesh.gdf"}
+    spec = DiffractionSpec.model_validate(data)
+    out = tmp_path / "out"
+
+    packaged_spec, packaged, _ = package_spec_meshes(
+        spec, out, spec_dir=tmp_path, solver="orcawave", quality_gates=False
+    )
+
+    packaged_a, packaged_b = packaged_spec.bodies
+    separate_name = packaged_a.vessel.geometry.mesh_file
+    shared_name = packaged_b.vessel.geometry.mesh_file
+    assert separate_name != shared_name
+    assert {
+        packaged_a.control_surface.mesh_file,
+        packaged_b.vessel.control_surface.mesh_file,
+        packaged_spec.damping_lid.mesh_file,
+        packaged_spec.free_surface_zone.mesh_file,
+    } == {shared_name}
+    assert (out / separate_name).read_bytes() == body_payload
+    assert (out / shared_name).read_bytes() == shared_payload
+    expected_destinations = {out / separate_name, out / shared_name}
+    assert set(packaged) == expected_destinations
+    assert set(out.iterdir()) == expected_destinations

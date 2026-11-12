@@ -1,0 +1,25 @@
+# Synthetic dimensionless test inputs, not extracted literature values.
+# All coefficients, stations and spacings are arbitrary synthetic choices.
+# Ordinates are direct polynomial evaluations; exact integrals are derived in
+# TestEN400Ch2HullFormGeometry.test_simpsons_first_rule_polynomial in
+# tests/naval_architecture/test_en400_worked_examples.py.
+# Method reference: src/digitalmodel/naval_architecture/integration.py,
+# simpsons_first_rule docstring (equally spaced stations and odd count).
+- id: translated_quadratic
+  # f(x) = (x - 2)^2 + 1; F(5) - F(1) = 14 - 2/3.
+  stations: [1.0, 2.0, 3.0, 4.0, 5.0]
+  ordinates: [2.0, 1.0, 2.0, 5.0, 10.0]
+  spacing: 1.0
+  integral: "40/3"
+- id: mixed_sign_cubic
+  # f(x) = x^3 - 2*x + 1; F(1) - F(-2) = 1/4 - (-2).
+  stations: [-2.0, -1.5, -1.0, -0.5, 0.0, 0.5, 1.0]
+  ordinates: [-3.0, 0.625, 2.0, 1.875, 1.0, 0.125, 0.0]
+  spacing: 0.5
+  integral: "9/4"
+- id: affine_rescaled_quadratic
+  # u = 3*x + 5; g(u) = (u - 11)^2/9 + 1; G(20) - G(8) = 47 - 7.
+  stations: [8.0, 11.0, 14.0, 17.0, 20.0]
+  ordinates: [2.0, 1.0, 2.0, 5.0, 10.0]
+  spacing: 3.0
+  integral: "40"

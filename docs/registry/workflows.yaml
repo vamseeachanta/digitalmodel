@@ -9,6 +9,19 @@
 schema_version: 2
 invocation: "uv run python -m digitalmodel {input}"
 workflows:
+  - id: api653-tank-settlement-screen
+    basename: tank_settlement_screen
+    title: Tank settlement diagnostic analysis with unresolved Annex B criteria
+    version: 1
+    status: experimental
+    latest: false
+    input: examples/workflows/api653-tank-settlement-screen/input.yml
+    invocation: "uv run python -m digitalmodel.asset_integrity.tank_settlement_workflow {input}"
+    outputs:
+      - examples/workflows/api653-tank-settlement-screen/results/settlement-summary.json
+      - examples/workflows/api653-tank-settlement-screen/results/settlement-report.html
+    test: tests/asset_integrity/test_tank_settlement.py::test_workflow_cli_and_registry
+    runtime: standalone
   - id: four-point-skew
     basename: four_point_skew
     title: Four-point single-hook axial-spring skew screening
@@ -911,7 +924,7 @@ workflows:
     runtime: offline
   - id: scour-assessment
     basename: scour
-    title: DNV-RP-F107 pipeline, monopile, and rock armour scour assessment
+    title: Scour screening with explicit sediment motion and armour criteria
     input: examples/workflows/scour-assessment/input.yml
     outputs:
       - examples/workflows/scour-assessment/results/input.yml
@@ -1284,6 +1297,18 @@ workflows:
       kind: in_memory
       key: mooring_mbl
 
+  - id: api579-part9-crack-fad
+    basename: api579_part9_crack_fad
+    title: Part 9 inspection readiness with explicit calculation blockers
+    input: examples/workflows/api579-part9-crack-fad/input.yml
+    outputs:
+      - examples/workflows/api579-part9-crack-fad/results/part9-report.html
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[api579-part9-crack-fad]
+    runtime: offline
+    result:
+      kind: in_memory
+      key: api579_part9_crack_fad
+
   - id: api579-pitting-screen
     basename: api579_pitting_screen
     title: Offline api579-pitting-screen geometric screening and FFS report
@@ -1295,6 +1320,17 @@ workflows:
     result:
       kind: in_memory
       key: api579_pitting_screen
+
+  - id: api579-coverage-screen
+    basename: api579_coverage_screen
+    title: API 579 Parts 8, 11, 13 and 14 evidence intake (NOT_EVALUATED)
+    input: examples/workflows/api579-coverage-screen/input.yml
+    outputs: []
+    test: tests/asset_integrity/test_api579_coverage.py::test_router_and_committed_example
+    runtime: offline
+    result:
+      kind: in_memory
+      key: api579_coverage_screen
 
   - id: api579-dent-screen
     basename: api579_dent_screen
@@ -1349,3 +1385,16 @@ workflows:
     result:
       kind: in_memory
       key: on_bottom_stability_e305_result
+
+  - id: hull-wastage-screen
+    basename: hull_wastage_screen
+    title: Hull-structure wastage analysis from representative thickness inputs
+    input: examples/workflows/hull-wastage-screen/input.yml
+    outputs:
+      - examples/workflows/hull-wastage-screen/results/hull-wastage.json
+      - examples/workflows/hull-wastage-screen/results/hull-wastage.html
+    test: tests/asset_integrity/hull_wastage_screen/test_workflow.py::test_example_workflow
+    runtime: offline
+    result:
+      kind: in_memory
+      key: hull_wastage_screen

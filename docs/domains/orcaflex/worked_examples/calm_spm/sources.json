@@ -1,0 +1,31 @@
+{
+  "public_references": [
+    {
+      "title": "Line results: Forces, Normalised tension",
+      "edition": "Public web help",
+      "url": "https://www.orcina.com/webhelp/OrcaFlex/Content/html/Lineresults,Forces.htm",
+      "retrieved_at": "2026-10-20T07:16:30Z",
+      "http_status": 200,
+      "sha256": "3fe043000be4d476036f81056be5e4bf951232dfcdae6319e26ec08d0a6d2720",
+      "raw_response": "Retained outside the repository; no vendor text reproduced"
+    },
+    {
+      "title": "Line results: Moments, Normalised curvature and Bend radius",
+      "edition": "Public web help",
+      "url": "https://www.orcina.com/webhelp/OrcaFlex/Content/html/Lineresults,Moments.htm",
+      "retrieved_at": "2026-10-20T07:17:13Z",
+      "http_status": 200,
+      "sha256": "a42d12df47f6a1d97c7e0deec7b5b264d98b6bffffe7d3b6ce320e7d21d12763",
+      "raw_response": "Retained outside the repository; no vendor text reproduced"
+    }
+  ],
+  "generic_source_digests": {
+    "docs/domains/orcaflex/templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml": "dddc8ac4b7847c1907fd308310a72a17165c6d5714a0ff6d5f42fae9c43a114c",
+    "docs/domains/orcaflex/library/line_types/chain_84mm_r4.yml": "39e4080d2c804f9f8ea4b9896e377cb32a5602a204c4e2986a1d00bc9d2fa58a",
+    "docs/domains/orcaflex/library/line_types/hawser_hmpe_80mm.yml": "56947369756d8847cf19a1c0b2bbef299280d233653b8682a7a6c18f122308bd",
+    "docs/domains/orcaflex/library/buoy_types/calm_12m_100m.yml": "c25bb19c1e2a1f73e6c794fc6b4a807d4ceda9132f400886e5bcfd73c817ff71",
+    "docs/domains/orcaflex/templates/mooring_systems/calm_buoy/includes/04_vessel_types.yml": "9cc597fe3c9271be18b74b6277e03820da6afdf24af14cb42eacefa20318bcfe",
+    "docs/domains/orcaflex/templates/mooring_systems/calm_buoy/includes/06_vessels.yml": "7cbd3ee256431e99f8741c61eb952aa3f753095958e47ce4c7bc8d78ad29e6ef"
+  },
+  "vendor_derivatives": "Reviewed for scope only; no model data copied"
+}

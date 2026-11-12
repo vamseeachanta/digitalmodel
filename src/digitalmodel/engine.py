@@ -319,6 +319,10 @@ def engine(
     elif basename == "fatigue_analysis":
         fatigue_analysis = FatigueAnalysis()
         cfg_base = fatigue_analysis.router(cfg_base)
+    elif basename == "mooring_chain_degradation":
+        from digitalmodel.asset_integrity.mooring_chain_degradation import router
+
+        cfg_base = router(cfg_base)
     elif basename == "mooring_fatigue":
         from digitalmodel.mooring_fatigue.workflow import router as mooring_fatigue
 
@@ -510,6 +514,10 @@ def engine(
         )
 
         cfg_base = passing_ship_forces(cfg_base)
+    elif basename == "hull_wastage_screen":
+        from digitalmodel.hull_wastage_screen.workflow import router as hull_wastage_screen
+
+        cfg_base = hull_wastage_screen(cfg_base)
     elif basename == "hull_girder_screening":
         from digitalmodel.hull_girder_screening.workflow import (
             router as hull_girder_screening,
@@ -815,8 +823,16 @@ def engine(
         from digitalmodel.asset_integrity.assessment.ffs_workflow import FFSWorkflow
 
         cfg_base = FFSWorkflow().router(cfg_base)
+    elif basename == "api579_part9_crack_fad":
+        from digitalmodel.asset_integrity.part9_workflow import router
+
+        cfg_base = router(cfg_base)
     elif basename == "api579_pitting_screen":
         from digitalmodel.asset_integrity.assessment.pitting import router
+
+        cfg_base = router(cfg_base)
+    elif basename == "api579_coverage_screen":
+        from digitalmodel.asset_integrity.api579_coverage import router
 
         cfg_base = router(cfg_base)
     elif basename == "api579_dent_screen":

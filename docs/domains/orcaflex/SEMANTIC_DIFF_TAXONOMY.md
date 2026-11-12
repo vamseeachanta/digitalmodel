@@ -453,3 +453,12 @@ The `values_equal()` function does not currently equate `true`↔`Yes` or
 | Roundtrip fidelity tests | `tests/.../test_roundtrip_fidelity.py` | Property merge verification |
 | Parent issue | #515 | Semantic-equivalence gap closure |
 | This issue | #517 | Taxonomy definition |
+
+## Executable synthetic subset
+
+The standalone `semantic_diff` package implements a deliberately bounded subset
+for #517. Its [comparison policy](SEMANTIC_DIFF_COMPARISON_POLICY.md) defines the
+synthetic registry, exact normalization, directional omission entries and offline
+mapping example. The legacy comparison behavior above remains compatibility
+evidence; the new package does not migrate model claims or assert physical
+equivalence. Consumer integration and fidelity work remain with #518 and #519.

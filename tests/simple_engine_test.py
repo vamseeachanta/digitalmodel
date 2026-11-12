@@ -1,159 +1,95 @@
-"""
-Simple test for engine module coverage analysis.
-"""
+"""Engine routing smoke tests with scoped, explicitly configured handlers."""
 
-import sys
-from pathlib import Path
-from unittest.mock import patch, MagicMock
+import pytest
 
-# Mock all problematic imports first
-import unittest.mock
+from tests.engine_test_support import MockAttributeDict, engine
+from tests.engine_test_support import mocked_engine as mocked_engine
 
-# Create comprehensive mocks
-mock_modules = {
-    'tabulate': MagicMock(),
-    'assetutilities.common.ApplicationManager': MagicMock(),
-    'assetutilities.common.data': MagicMock(),
-    'assetutilities.common.file_management': MagicMock(),
-    'assetutilities.common.update_deep': MagicMock(),
-    'assetutilities.common.yml_utilities': MagicMock(),
-    'digitalmodel.aqwa': MagicMock(),
-    'digitalmodel.hydrodynamics.aqwa.mes_files': MagicMock(),
-    'digitalmodel.infrastructure.common.cathodic_protection': MagicMock(),
-    'digitalmodel.infrastructure.common.code_dnvrph103_hydrodynamics_circular': MagicMock(),
-    'digitalmodel.infrastructure.common.code_dnvrph103_hydrodynamics_rectangular': MagicMock(),
-    'digitalmodel.signal_processing.signal_analysis.fatigue': MagicMock(),
-    'digitalmodel.infrastructure.common.ship_design': MagicMock(),
-    # New canonical paths (Phase 2D)
-    'digitalmodel.infrastructure.base_solvers.hydrodynamics.cathodic_protection': MagicMock(),
-    'digitalmodel.infrastructure.base_solvers.hydrodynamics.code_dnvrph103_hydrodynamics_circular': MagicMock(),
-    'digitalmodel.infrastructure.base_solvers.hydrodynamics.code_dnvrph103_hydrodynamics_rectangular': MagicMock(),
-    'digitalmodel.infrastructure.base_solvers.marine.ship.ship_design': MagicMock(),
-    'digitalmodel.infrastructure.base_solvers.structural.plate_buckling': MagicMock(),
-    'digitalmodel.modules.mooring.mooring': MagicMock(),
-    'digitalmodel.solvers.orcaflex.orcaflex': MagicMock(),
-    'digitalmodel.solvers.orcaflex.orcaflex_file_management': MagicMock(),
-    'digitalmodel.solvers.orcaflex.orcaflex_installation': MagicMock(),
-    'digitalmodel.solvers.orcaflex.orcaflex_modal_analysis': MagicMock(),
-    'digitalmodel.solvers.orcaflex.umbilical_analysis_components': MagicMock(),
-    'digitalmodel.structural.pipe_capacity.pipe_capacity': MagicMock(),
-    'digitalmodel.subsea.pipeline.pipeline': MagicMock(),
-    'digitalmodel.hydrodynamics.rao_analysis.rao_analysis': MagicMock(),
-    'digitalmodel.signal_processing.time_series.time_series_analysis': MagicMock(),
-    'digitalmodel.infrastructure.transformation.transformation': MagicMock(),
-    'digitalmodel.subsea.vertical_riser.vertical_riser': MagicMock(),
-    'digitalmodel.subsea.viv_analysis.viv_analysis': MagicMock(),
-    'digitalmodel.infrastructure.common.plate_buckling': MagicMock(),
-    'digitalmodel.infrastructure.base_solvers.marine.pipe_properties': MagicMock(),
-    'loguru': MagicMock(),
-    'digitalmodel.solvers.orcaflex.output_control': MagicMock(),
-}
 
-# Apply mocks
-for module_name, mock_obj in mock_modules.items():
-    sys.modules[module_name] = mock_obj
+pytestmark = pytest.mark.usefixtures("mocked_engine")
 
-# Mock AttributeDict
-class MockAttributeDict(dict):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.__dict__ = self
 
-sys.modules['assetutilities.common.update_deep'].AttributeDict = MockAttributeDict
-
-# Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
-
-# Now import engine
-from digitalmodel.engine import engine
-
-def test_engine_basic():
-    """Test basic engine functionality."""
+def test_engine_basic(mocked_engine):
+    """The configured handler returns the original configuration object."""
     cfg = MockAttributeDict({"basename": "transformation"})
+    router = mocked_engine.Transformation.return_value.router
+    router.return_value = cfg
 
-    with patch('digitalmodel.engine.logger'):
-        result = engine(cfg=cfg, config_flag=False)
+    assert engine(cfg=cfg, config_flag=False) is cfg
+    router.assert_called_once_with(cfg)
+    mocked_engine.app_manager.save_cfg.assert_called_once_with(cfg_base=cfg)
 
-    assert result is not None
-    print("Basic engine test passed")
 
 def test_engine_error_case():
-    """Test engine error handling."""
-    cfg = MockAttributeDict({"basename": "unsupported_module"})
+    """Unsupported routes retain the engine's error contract."""
+    with pytest.raises(
+        Exception, match="Analysis for basename: unsupported_module not found"
+    ):
+        engine(cfg={"basename": "unsupported_module"}, config_flag=False)
 
-    try:
-        with patch('digitalmodel.engine.logger'):
-            engine(cfg=cfg, config_flag=False)
-        assert False, "Should have raised exception"
-    except Exception as e:
-        assert "not found" in str(e)
-        print("Error handling test passed")
 
 def test_engine_missing_basename():
-    """Test missing basename error."""
-    cfg = MockAttributeDict({"inputs": {"test": "value"}})
+    """A configuration without a route fails before dispatch."""
+    with pytest.raises(ValueError, match="basename not found"):
+        engine(cfg={"inputs": {"test": "value"}}, config_flag=False)
 
-    try:
-        with patch('digitalmodel.engine.logger'):
-            engine(cfg=cfg, config_flag=False)
-        assert False, "Should have raised ValueError"
-    except ValueError as e:
-        assert "basename not found" in str(e)
-        print("Missing basename test passed")
 
-def test_engine_all_basenames():
-    """Test multiple basenames to increase coverage."""
-    test_basenames = [
-        "vertical_riser", "orcaflex", "aqwa", "modal_analysis",
-        "fatigue_analysis", "pipeline", "mooring", "transformation",
-        "cathodic_protection", "plate_buckling", "viv_analysis",
-        "time_series", "pipe_capacity", "ship_design"
-    ]
+@pytest.mark.parametrize(
+    "basename,handler,method",
+    [
+        ("vertical_riser", "vertical_riser", None),
+        ("orcaflex", "OrcaFlex", "router"),
+        ("aqwa", "Aqwa", "router"),
+        ("modal_analysis", "OrcModalAnalysis", "run_modal_analysis"),
+        ("fatigue_analysis", "FatigueAnalysis", "router"),
+        ("pipeline", "Pipeline", "router"),
+        ("transformation", "Transformation", "router"),
+        ("cathodic_protection", "run_cathodic_protection", None),
+        ("plate_buckling", "PlateBuckling", "router"),
+        ("viv_analysis", "VIVAnalysis", "router"),
+        ("time_series", "TimeSeriesAnalysis", "router"),
+        ("pipe_capacity", "PipeCapacity", "router"),
+        ("ship_design", "ShipDesign", "router"),
+    ],
+)
+def test_engine_all_basenames(basename, handler, method, mocked_engine):
+    """Expected handler names are read from engine.py's dispatch branches."""
+    cfg = MockAttributeDict({"basename": basename})
+    target = getattr(mocked_engine, handler)
+    call = getattr(target.return_value, method) if method else target
+    call.return_value = cfg
 
-    for basename in test_basenames:
-        cfg = MockAttributeDict({"basename": basename})
-        try:
-            with patch('digitalmodel.engine.logger'):
-                result = engine(cfg=cfg, config_flag=False)
-            print(f"✓ {basename} routing test passed")
-        except Exception as e:
-            # Some may fail due to missing setup, that's OK for coverage
-            print(f"△ {basename} routing test failed (expected): {e}")
+    assert engine(cfg=cfg, config_flag=False) is cfg
+    call.assert_called_once_with(cfg)
 
-def test_code_dnvrph103_shapes():
-    """Test code_dnvrph103 with different shapes."""
-    for shape in ["rectangular", "circular"]:
-        cfg = MockAttributeDict({
-            "basename": "code_dnvrph103",
-            "inputs": {"shape": shape}
-        })
-        try:
-            with patch('digitalmodel.engine.logger'):
-                result = engine(cfg=cfg, config_flag=False)
-            print(f"✓ code_dnvrph103 {shape} test passed")
-        except Exception as e:
-            print(f"△ code_dnvrph103 {shape} test failed: {e}")
 
-def test_installation_with_flags():
-    """Test installation with different structure flags."""
-    for flag in [True, False]:
-        cfg = MockAttributeDict({
-            "basename": "installation",
-            "structure": {"flag": flag}
-        })
-        try:
-            with patch('digitalmodel.engine.logger'):
-                result = engine(cfg=cfg, config_flag=False)
-            print(f"✓ installation flag={flag} test passed")
-        except Exception as e:
-            print(f"△ installation flag={flag} test failed: {e}")
+def test_engine_mooring_requires_cli():
+    """The legacy mooring route explicitly directs callers to its CLI."""
+    with pytest.raises(NotImplementedError, match="mooring_analysis CLI"):
+        engine(cfg={"basename": "mooring"}, config_flag=False)
 
-if __name__ == "__main__":
-    print("Running simple engine tests for coverage analysis...")
-    test_engine_basic()
-    test_engine_error_case()
-    test_engine_missing_basename()
-    test_engine_all_basenames()
-    test_code_dnvrph103_shapes()
-    test_installation_with_flags()
-    print("All tests completed!")
+
+@pytest.mark.parametrize("shape", ["rectangular", "circular"])
+def test_code_dnvrph103_shapes(shape, mocked_engine):
+    """Check routing only; no hydrodynamic equation is evaluated."""
+    cfg = MockAttributeDict({"basename": "code_dnvrph103", "inputs": {"shape": shape}})
+    handler = getattr(mocked_engine, f"DNVRPH103_hydrodynamics_{shape}")
+    call = handler.return_value.get_orcaflex_6dbuoy
+    call.return_value = cfg
+
+    assert engine(cfg=cfg, config_flag=False) is cfg
+    call.assert_called_once_with(cfg)
+
+
+@pytest.mark.parametrize("flag", [True, False])
+def test_installation_with_flags(flag, mocked_engine):
+    """The structure flag alone controls dispatch to the installation handler."""
+    cfg = MockAttributeDict({"basename": "installation", "structure": {"flag": flag}})
+    call = mocked_engine.OrcInstallation.return_value.create_model_for_water_depth
+    call.return_value = cfg
+
+    assert engine(cfg=cfg, config_flag=False) is cfg
+    if flag:
+        call.assert_called_once_with(cfg)
+    else:
+        call.assert_not_called()

@@ -13,6 +13,7 @@ import time
 import uuid
 
 from digitalmodel.ansys.runner import ANSYSRunner
+from digitalmodel.ansys.runner_process import _CLEANUP_SECONDS, _POLL_SECONDS
 from digitalmodel.ansys.cylinder_process import supervisor_factory as _factory
 
 _UNSETTLED = {}
@@ -46,14 +47,14 @@ def _poll_settlement(supervisor, remaining, deadline):
         allowance = deadline - time.monotonic()
         if allowance <= 0:
             break
-        time.sleep(min(0.01, allowance))
+        time.sleep(min(_POLL_SECONDS, allowance))
         remaining = supervisor.active()
     return remaining
 
 
 def _settle(supervisor, result):
     try:
-        deadline = time.monotonic() + 5
+        deadline = time.monotonic() + _CLEANUP_SECONDS
         remaining = supervisor.active()
         clean_exit = (result.get("return_code") == 0 and not result["error"]
                       and not result["timed_out"])

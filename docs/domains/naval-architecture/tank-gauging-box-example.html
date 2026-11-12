@@ -33,7 +33,9 @@ overall stability criterion and real tank calibration are not established.</p>
 <table>
 <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
 <tbody><tr><td>1</td><td>2026-10-19</td><td>Initial synthetic hand calculation
-to qualify the bounded tank-gauging helpers.</td></tr></tbody>
+to qualify the bounded tank-gauging helpers.</td></tr>
+<tr><td>2</td><td>2026-10-21</td><td>Add fixed-attitude correction columns
+and a hand check of their sounding and ullage signs.</td></tr></tbody>
 <caption>Table 1. The initial issue establishes the calculation basis.</caption>
 </table>
 
@@ -95,6 +97,23 @@ significant figures. Effective GM = 1 − 16/375 = 359/375 m, or 0.957 m.
 No stability acceptance follows without a governing criterion.</li>
 </ol>
 
+<h2>Fixed-attitude table correction</h2>
+<p>The same one-degree trim case can be represented by a correction column.
+For this unclipped box, every sounding row carries the additive correction
+c = −2 tan(1°) = −0.0349 m to three significant figures
+<a href="#source-trig">[2]</a>. The table is qualified at trim +1° and list 0°;
+it provides no correction for another attitude. At raw sounding 1.50 m,
+the corrected sounding is 1.47 m and the reference-table volume is 58.6 m³.
+For an ullage table the correction has the opposite sign, +0.0349 m,
+because u = H − h. The corrected ullage is 1.53 m and gives the same
+58.6 m³ volume. The executable example below checks both signs.</p>
+<p>Correction columns are interpolated at the raw gauge reading using the
+two-point line <a href="#source-linear">[1]</a>, then added to that reading.
+Both the raw reading and the corrected volume lookup remain bounded by the
+calibration rows. A missing column contributes zero. Table and geometric
+corrections are alternative calculation routes for this example; applying
+both to one reading would count the same attitude twice.</p>
+
 <h2>Code result against hand calculation</h2>
 <table>
 <thead><tr><th>Quantity</th><th>Hand result</th><th>Code result</th></tr></thead>
@@ -113,7 +132,9 @@ No stability acceptance follows without a governing criterion.</li>
 <caption>Table 3. Results are shown to three significant figures;
 automated checks use unrounded independent values and floating-point tolerances.</caption>
 </table>
-<pre><code>from digitalmodel.naval_architecture.tank_gauging import (
+<pre><code>import math
+
+from digitalmodel.naval_architecture.tank_gauging import (
     CalibrationTable, centre_sounding, density_at_temperature,
     gm_loss_m, liquid_mass_kg, rectangular_free_surface_moment_kg_m,
     sounding_to_ullage,
@@ -135,6 +156,24 @@ results = {
     "gm_loss_m": gm_loss_m(fsm, 1000000),
     "effective_gm_m": 1 - gm_loss_m(fsm, 1000000),
 }
+# Synthetic offset from the same tangent geometry: OpenStax (2021), §5.4.
+offset = 2 * math.tan(math.radians(1))
+corrected_table = CalibrationTable(
+    table.points, "sounding", 3,
+    trim_corrections_m=(-offset,) * len(table.points),
+    correction_attitude_deg=(1, 0),
+)
+table_corrected_volume = corrected_table.volume_at_gauge(
+    1.5, trim_deg=1, list_deg=0,
+)
+ullage_table = CalibrationTable(
+    ((0, 120), (3, 0)), "ullage", 3,
+    trim_corrections_m=(offset, offset),
+    correction_attitude_deg=(1, 0),
+)
+ullage_corrected_volume = ullage_table.volume_at_gauge(
+    1.5, trim_deg=1, list_deg=0,
+)
 for name, value in results.items():
     print(name, format(value, ".3g"))</code></pre>
 
@@ -147,9 +186,10 @@ rectangular surface. Empty and pressed-full states have zero free surface;
 nearly full slack tanks do not. Baffles, subdivisions, sloshing and a full
 stability assessment are not evaluated. The thermal coefficient and its
 qualified range require a fluid-specific source before engineering use.</p>
-<p>Later work will add attitude-indexed calibration tables with an explicit
-correction convention and clipping qualification. Correction columns are
-currently refused. Real calibration data and custody-transfer procedures
+<p>Fixed-attitude correction columns require their qualified trim/list pair
+and signed additions to the declared reading. Interpolation between attitude
+cases and inversion of corrected tables remain deferred. Clipping qualification
+and real calibration data require additional evidence. Custody-transfer procedures
 remain outside this example.</p>
 
 <h2>Sources and reproducibility</h2>

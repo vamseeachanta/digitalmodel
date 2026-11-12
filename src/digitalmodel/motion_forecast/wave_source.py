@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Fallback synthetic phased-sea generator (digitalmodel #1358).
 
 Produces a :class:`WaveForecast` of discrete phased components from a JONSWAP
@@ -16,6 +19,8 @@ from typing import Optional, Tuple
 import numpy as np
 
 from .models import WaveComponent, WaveForecast
+
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
 
 def jonswap_spectrum(
@@ -39,8 +44,7 @@ def jonswap_spectrum(
         s = pm * gamma**r
     s = np.where(np.isfinite(s) & (omega > 0), s, 0.0)
     # renormalise to the requested Hs
-    _trapz = np.trapezoid if hasattr(np, "trapezoid") else np.trapz
-    m0 = float(_trapz(s, omega))
+    m0 = float(_trapezoid(s, omega))
     if m0 > 0:
         s = s * (hs / (4.0 * np.sqrt(m0))) ** 2
     return s
@@ -100,3 +104,6 @@ def synthesize_forecast(
         phase_reference_location=phase_reference_location,
         water_depth=water_depth,
     )
+
+
+synthesize_forecast.LIVE_INPUT = False  # type: ignore[attr-defined]

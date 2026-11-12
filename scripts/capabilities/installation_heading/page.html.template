@@ -8,7 +8,7 @@
 <style>
 :root{color-scheme:light;--paper:#f5f7fa;--panel:#fff;--text:#172b42;--muted:#536478;--grid:#cbd5df;--focus:#075cba;--warning:#825100;--warning-bg:#fff0c9;--band:#b89c5a}
 [data-theme="dark"]{color-scheme:dark;--paper:#111b28;--panel:#1b2a3c;--text:#edf3fa;--muted:#b3c3d5;--grid:#52657a;--focus:#86c2ff;--warning:#ffd178;--warning-bg:#49391d;--band:#dfbd70}
-*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--text);font:16px/1.55 system-ui,sans-serif}main{max-width:1240px;margin:auto;padding:24px}h1{font-size:clamp(1.6rem,4vw,2.6rem);line-height:1.15;margin:.4em 0}h2{font-size:1.1rem;margin:0 0 12px}p{margin:.6em 0}.muted,small{color:var(--muted)}.eyebrow{letter-spacing:.12em;font-size:.75rem;font-weight:750}.badge{display:inline-block;padding:4px 10px;background:var(--warning-bg);color:var(--warning);border-radius:6px;font-weight:750}.top{display:flex;justify-content:space-between;gap:16px;align-items:start}.card{background:var(--panel);border:1px solid var(--grid);border-radius:12px;padding:18px;margin:18px 0}.layout{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(230px,1fr);gap:20px}.layout .card{margin:0}.controls{display:flex;flex-wrap:wrap;gap:18px;align-items:end}.field{display:grid;gap:6px;flex:1;min-width:160px}button,select{font:inherit;border:1px solid var(--grid);background:var(--panel);color:var(--text);border-radius:7px;padding:9px 12px;min-height:44px}button{cursor:pointer}:focus-visible{outline:3px solid var(--focus);outline-offset:3px}input[type="range"]{width:100%;min-height:44px;accent-color:var(--focus)}.readout{font-size:1.15rem;font-weight:700;padding:14px;border:1px solid var(--grid);border-radius:8px}svg{width:100%;height:auto;display:block;overflow:visible}svg text{fill:var(--muted);font:13px system-ui,sans-serif}.grid{fill:none;stroke:var(--grid);stroke-width:1}.axis{stroke-dasharray:3 5}.envelope{fill-opacity:.09;stroke-width:1.5;stroke-linejoin:round}.envelope.selected{fill-opacity:.22;stroke-width:3}.band{fill:var(--band);fill-opacity:.19}.legend{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}.legend span{display:flex;align-items:center;gap:6px}.swatch{width:14px;height:14px;border-radius:3px;border:1px solid var(--text)}table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;border-bottom:1px solid var(--grid);padding:8px;vertical-align:top}.scroll{overflow:auto}caption{text-align:left;color:var(--muted);padding-top:8px;caption-side:bottom}.sample{font-variant-numeric:tabular-nums}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}footer{margin-top:24px;font-size:.9rem}@media(max-width:700px){main{padding:14px}.layout{grid-template-columns:1fr}.top{flex-wrap:wrap}.card{padding:14px}th,td{padding:6px}.controls .field{min-width:130px}}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--text);font:16px/1.55 system-ui,sans-serif}main{max-width:1240px;margin:auto;padding:24px}h1{font-size:clamp(1.6rem,4vw,2.6rem);line-height:1.15;margin:.4em 0}h2{font-size:1.1rem;margin:0 0 12px}p{margin:.6em 0}.muted,small{color:var(--muted)}.eyebrow{letter-spacing:.12em;font-size:.75rem;font-weight:750}.badge{display:inline-block;padding:4px 10px;background:var(--warning-bg);color:var(--warning);border-radius:6px;font-weight:750}.top{display:flex;justify-content:space-between;gap:16px;align-items:start}.card{background:var(--panel);border:1px solid var(--grid);border-radius:12px;padding:18px;margin:18px 0}.layout{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(230px,1fr);gap:20px}.layout .card{margin:0}.controls{display:flex;flex-wrap:wrap;gap:18px;align-items:end}.field{display:grid;gap:6px;flex:1;min-width:160px}button,select{font:inherit;border:1px solid var(--grid);background:var(--panel);color:var(--text);border-radius:7px;padding:9px 12px;min-height:44px}button{cursor:pointer}:focus-visible{outline:3px solid var(--focus);outline-offset:3px}input[type="range"]{width:100%;min-height:44px;accent-color:var(--focus)}.readout.outside{background:var(--warning-bg);color:var(--warning)}.readout{font-size:1.15rem;font-weight:700;padding:14px;border:1px solid var(--grid);border-radius:8px}svg{width:100%;height:auto;display:block;overflow:visible}svg text{fill:var(--muted);font:13px system-ui,sans-serif}.grid{fill:none;stroke:var(--grid);stroke-width:1}.axis{stroke-dasharray:3 5}.envelope{fill-opacity:.09;stroke-width:1.5;stroke-linejoin:round}.envelope.selected{fill-opacity:.22;stroke-width:3}.band{fill:var(--band);fill-opacity:.19}.legend{display:flex;flex-wrap:wrap;gap:10px;margin:12px 0}.legend span{display:flex;align-items:center;gap:6px}.swatch{width:14px;height:14px;border-radius:3px;border:1px solid var(--text)}table{width:100%;border-collapse:collapse;font-size:.9rem}th,td{text-align:left;border-bottom:1px solid var(--grid);padding:8px;vertical-align:top}.scroll{overflow:auto}caption{text-align:left;color:var(--muted);padding-top:8px;caption-side:bottom}.sample{font-variant-numeric:tabular-nums}.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)}footer{margin-top:24px;font-size:.9rem}@media(max-width:700px){main{padding:14px}.layout{grid-template-columns:1fr}.top{flex-wrap:wrap}.card{padding:14px}th,td{padding:6px}.controls .field{min-width:130px}}
 </style>
 </head>
 <body>
@@ -17,7 +17,7 @@
 <div class="top"><div><div class="eyebrow">INSTALLATION · DISCRETE LIMITS</div><h1>Heading and allowable wave height</h1></div><button id="theme" type="button" aria-pressed="false">Dark theme</button></div>
 <p>Explore the allowable significant wave height (Hs) against heading relative to the waves, for each installation stage and structure size.</p>
 <p><span class="badge">@@BADGE@@</span> Revision @@REVISION@@</p>
-<p>@@NOTICE@@</p>
+<p>@@NOTICE@@ Status: <strong>illustrative until heading-resolved results land</strong>.</p>
 </header>
 <section class="card" id="revision-history" aria-labelledby="revision-title">
 <h2 id="revision-title">Revision history</h2>
@@ -28,15 +28,15 @@
 <section class="card controls" id="controls" aria-label="Chart controls">
 <div class="field"><label for="stage">Installation stage</label><select id="stage"></select></div>
 <div class="field"><label for="size">Structure size</label><select id="size"></select></div>
-<div class="field"><label for="heading">Heading: <output id="heading-value" for="heading">0°</output></label><input id="heading" type="range" min="0" max="180" step="15" value="0" aria-describedby="keyboard-help"><small id="keyboard-help">Arrow keys: 15° steps. Home: 0°. End: 180°.</small></div>
+<div class="field"><label for="heading">Heading: <output id="heading-value" for="heading">0°</output></label><input id="heading" type="range" min="-180" max="180" step="15" value="0" aria-describedby="keyboard-help"><small id="keyboard-help">Arrow keys: 15° steps. Home: −180°. End: 180°.</small></div>
 </section>
 <div class="layout">
 <section class="card" aria-labelledby="polar-title">
 <h2 id="polar-title">Allowable Hs envelope <span class="muted">· metres</span></h2>
-<svg id="polar" viewBox="-280 -285 560 590" role="img" aria-labelledby="plot-title plot-desc"><title id="plot-title">Installation heading limits</title><desc id="plot-desc">Head seas at the top. Radius is allowable significant wave height in metres. Filled envelopes show each stage. The shaded sector spans minus 15 to plus 15 degrees. The dot selects a supplied sample.</desc><g id="grid"></g><path id="head-seas-sector" class="band"></path><g id="envelopes"></g><line id="heading-ray" class="grid axis" x1="0" y1="0"></line><circle id="dot" r="6" fill="var(--text)" stroke="var(--panel)" stroke-width="2"></circle></svg>
+<svg id="polar" viewBox="-280 -285 560 590" role="img" aria-labelledby="plot-title plot-desc"><title id="plot-title">Installation heading limits</title><desc id="plot-desc">Head seas at the top. Radius is allowable significant wave height in metres. Filled envelopes show each stage. The shaded sector spans minus 15 to plus 15 degrees. Negative headings are port; positive headings are starboard. Missing samples have no envelope or dot.</desc><g id="grid"></g><path id="head-seas-sector" class="band"></path><g id="envelopes"></g><line id="heading-ray" class="grid axis" x1="0" y1="0"></line><circle id="dot" r="6" fill="var(--text)" stroke="var(--panel)" stroke-width="2"></circle></svg>
 <div class="legend" id="legend" aria-label="Stage colours"></div>
-<p class="muted">Shaded sector: <strong>head-seas sector ±15°</strong>. Head seas = 0°, beam seas = 90°, following seas = 180°. The left half mirrors the absolute heading samples; port/starboard symmetry is assumed.</p>
-<p class="muted">Edges join discrete samples for display. Selection uses only supplied 15° headings; no intermediate limit is calculated.</p>
+<p class="muted">Shaded sector: <strong>station-keeping tolerance ±15°</strong>, on both sides of zero. This is the premise in issue #2696 (2026), not an operational approval. Head seas = 0°, beam seas = ±90°, following seas = ±180°. Negative headings: port; positive headings: starboard, measured as wave approach relative to the bow. No symmetry is assumed.</p>
+<p class="muted">Edges join adjacent supplied samples for display only; gaps remain open. Selection uses only supplied 15° headings; no interpolation or extrapolation is performed. Unsampled headings: no data.</p>
 </section>
 <section class="card" aria-labelledby="selection-title">
 <h2 id="selection-title">Selected heading</h2>
@@ -47,19 +47,45 @@
 <div class="scroll"><table class="sample"><thead><tr><th>Heading (°)</th><th>Allowable Hs (m)</th></tr></thead><tbody id="samples"></tbody><caption>Selected stage and size. Hs is shown to one decimal place.</caption></table></div>
 </section>
 </div>
-<footer><p><strong>Data source:</strong> @@SOURCE@@</p><p>Replace the limits JSON and rebuild to use heading-resolved results. The source and illustrative status are carried in the data.</p></footer>
+<footer><p><strong>Data source:</strong> @@SOURCE@@</p>
+<p id="coverage"></p><p><strong>Condition basis:</strong> @@CONDITION_BASIS@@</p>
+<p>Units: allowable significant wave height Hs in metres; relative wave heading in degrees. Status: <strong>illustrative until heading-resolved results land</strong>.</p>
+<p>Real-data replacement is deferred: heading-resolved stage limits, a documented period Tp/condition basis, provenance and maintainer review are required. Motion response operators alone do not establish allowable Hs.</p>
+<p>Geometry: OpenStax, Precalculus 2e (2021), §8.3 Polar Coordinates. Percentage: OpenStax, Prealgebra 2e (2020), §6.1 Understand Percent. The grid and station-keeping premise are specified in issue #2696 (2026).</p></footer>
 <noscript><p>JavaScript is required for selection. The embedded data remain available in the page source.</p></noscript>
 </main>
 <script id="limits-data" type="application/json">@@DATA@@</script>
 <script id="chart-script">
 "use strict";
-function selectedLimit(values, heading) { return values[heading / 15]; }
+function selectedLimit(headings, values, heading) {
+  const index = headings.indexOf(heading);
+  return index < 0 ? null : values[index];
+}
+function sampleSegments(headings, values) {
+  const segments = []; let run = [];
+  headings.forEach((heading, index) => {
+    if (values[index] === null) {
+      if (run.length) segments.push(run);
+      run = [];
+    } else run.push([heading, values[index]]);
+  });
+  if (run.length) segments.push(run);
+  return segments;
+}
 function polarPoint(heading, hs, scale) {
+  // OpenStax, Precalculus 2e (2021), §8.3: x=r cos θ, y=r sin θ.
+  // Rotate to zero at the top and reverse SVG y: x=r sin h, y=-r cos h.
+  // A half turn is 180 degrees; π radians (same textbook, §5.1 Angles).
   const angle = heading * Math.PI / 180;
   return [Math.sin(angle) * hs * scale, -Math.cos(angle) * hs * scale];
 }
+// Issue #2696 (2026), Deliverable: inclusive ±15-degree station-keeping premise.
 function outsideBand(heading) { return Math.abs(heading) > 15; }
 function readout(hs, headLimit) {
+  if (hs === null) return "allowable Hs: no data; head-seas percentage unavailable.";
+  if (headLimit === null || headLimit === 0) return `allowable Hs ${hs.toFixed(1)} m, head-seas percentage unavailable.`;
+  // OpenStax, Prealgebra 2e (2020), §6.1: percent is a ratio per hundred.
+  // One decimal place is the display requirement in issue #2696 (2026).
   return `allowable Hs ${hs.toFixed(1)} m, ${(100 * hs / headLimit).toFixed(1)} % of the head-seas limit`;
 }
 // DOM wiring
@@ -78,7 +104,8 @@ function option(text, value) {
 }
 data.stages.forEach((stage, i) => byId("stage").append(option(stage.name, i)));
 data.sizes.forEach(size => byId("size").append(option(size, size)));
-const maxHs = Math.ceil(Math.max(...data.stages.flatMap(stage => Object.values(stage.limits_m).flat())));
+// The SVG radius and fallback 1 m axis are display choices, not allowable Hs.
+const maxHs = Math.ceil(Math.max(...data.stages.flatMap(stage => Object.values(stage.limits_m).flat()))) || 1;
 const scale = 210 / maxHs;
 for (let hs = 1; hs <= maxHs; hs++) {
   byId("grid").append(element("circle", {cx:0, cy:0, r:hs * scale, class:"grid"}));
@@ -88,38 +115,54 @@ for (const angle of [0, 45, 90, 135, 180, -45, -90, -135]) {
   const [x,y] = polarPoint(angle, maxHs, scale);
   const [tx,ty] = polarPoint(angle, maxHs, scale * 1.12);
   byId("grid").append(element("line", {x1:0,y1:0,x2:x,y2:y,class:"grid axis"}));
-  byId("grid").append(element("text", {x:tx,y:ty,"text-anchor":"middle","dominant-baseline":"middle"}, `${Math.abs(angle)}°`));
+  byId("grid").append(element("text", {x:tx,y:ty,"text-anchor":"middle","dominant-baseline":"middle"}, `${angle}°`));
 }
 const [bx,by] = polarPoint(15, maxHs, scale);
 byId("head-seas-sector").setAttribute("d", `M 0,0 L${-bx},${by} A 210,210 0 0 1 ${bx},${by} Z`);
 function render() {
   const stageIndex = Number(byId("stage").value), size = byId("size").value;
   const heading = Number(byId("heading").value), stage = data.stages[stageIndex];
-  const values = stage.limits_m[size], hs = selectedLimit(values, heading);
+  const values = stage.limits_m[size], hs = selectedLimit(data.headings_deg, values, heading);
   byId("heading-value").textContent = `${heading}°`;
   byId("heading").setAttribute("aria-valuetext", `${heading} degrees`);
   byId("selection").textContent = `${stage.name} · ${size} · ${heading}°`;
-  byId("readout").textContent = readout(hs, values[0]);
-  byId("band-status").textContent = outsideBand(heading) ? "Outside the head-seas sector ±15°." : "Within the head-seas sector ±15°.";
+  byId("readout").textContent = readout(hs, selectedLimit(data.headings_deg, values, 0));
+  byId("readout").classList.toggle("outside", outsideBand(heading));
+  byId("band-status").textContent = (outsideBand(heading) ? "Outside" : "Within") + " the station-keeping tolerance ±15°. No operational approval is implied.";
+  const supplied = data.headings_deg.filter((angle, index) => values[index] !== null);
+  byId("coverage").textContent = `${stage.name} · ${size} · supplied angular coverage: ${supplied.map(angle => `${angle}°`).join(", ")}. All other headings: no data.`;
   byId("envelopes").replaceChildren(); byId("legend").replaceChildren();
   data.stages.forEach((item, index) => {
     const curve = item.limits_m[size];
-    const angles = [...data.headings_deg, ...data.headings_deg.slice(1,-1).reverse().map(angle => -angle)];
-    const points = angles.map(angle => polarPoint(angle, selectedLimit(curve, Math.abs(angle)), scale).join(","));
-    const path = element("path", {d:`M${points.join(" L")} Z`, fill:colours[index % colours.length], stroke:colours[index % colours.length], class:`envelope${index === stageIndex ? " selected" : ""}`});
-    path.append(element("title", {}, item.name)); byId("envelopes").append(path);
+    const colour = colours[index % colours.length];
+    for (const run of sampleSegments(data.headings_deg, curve)) {
+      const points = run.map(([angle, limit]) => polarPoint(angle, limit, scale).join(","));
+      // Fill only adjacent supplied sectors; never close across a missing run.
+      if (run.length > 1) {
+        const path = element("path", {d:`M0,0 L${points.join(" L")} Z`, fill:colour, stroke:colour, class:`envelope${index === stageIndex ? " selected" : ""}`});
+        path.append(element("title", {}, item.name)); byId("envelopes").append(path);
+      }
+      run.forEach(([angle, limit]) => {
+        const [cx, cy] = polarPoint(angle, limit, scale);
+        byId("envelopes").append(element("circle", {cx, cy, r:2, fill:colour}));
+      });
+    }
     const label = document.createElement("span"), swatch = document.createElement("i");
     swatch.className = "swatch"; swatch.style.background = colours[index % colours.length];
     label.append(swatch, document.createTextNode(item.name + (index === stageIndex ? " (selected)" : ""))); byId("legend").append(label);
   });
-  const [x,y] = polarPoint(heading, hs, scale);
-  byId("dot").setAttribute("cx", x); byId("dot").setAttribute("cy", y);
-  byId("heading-ray").setAttribute("x2", x); byId("heading-ray").setAttribute("y2", y);
+  byId("dot").setAttribute("visibility", hs === null ? "hidden" : "visible");
+  if (hs !== null) {
+    const [x,y] = polarPoint(heading, hs, scale);
+    byId("dot").setAttribute("cx", x); byId("dot").setAttribute("cy", y);
+  }
+  const [rx, ry] = polarPoint(heading, maxHs, scale);
+  byId("heading-ray").setAttribute("x2", rx); byId("heading-ray").setAttribute("y2", ry);
   byId("samples").replaceChildren();
   data.headings_deg.forEach((angle, index) => {
     const row = document.createElement("tr");
     if (angle === heading) { row.style.fontWeight = "bold"; row.setAttribute("aria-current", "true"); }
-    for (const text of [angle, values[index].toFixed(1)]) { const cell = document.createElement("td"); cell.textContent = text; row.append(cell); }
+    for (const text of [angle, values[index] === null ? "no data" : values[index].toFixed(1)]) { const cell = document.createElement("td"); cell.textContent = text; row.append(cell); }
     byId("samples").append(row);
   });
 }

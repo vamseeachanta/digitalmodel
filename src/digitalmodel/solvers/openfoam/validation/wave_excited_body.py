@@ -49,6 +49,10 @@ from typing import Any, Dict, List, Tuple
 
 from .wave_tank import GRAVITY, dispersion_wavenumber
 
+import numpy as np
+
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 RHO_WATER = 1000.0  # matches the verified #1170 tank transportProperties
 
 # Gates (#1302). RAO band reflects the long-wave limit, not a digitized
@@ -864,7 +868,7 @@ def incident_wave_split(
         mean_level = float(lvl.mean())
         healthy = abs(mean_level - config.depth) <= level_tolerance * config.depth
         e = lvl - mean_level
-        amp = np.trapz(e * np.exp(-1j * om * t), t) * 2 / (t[-1] - t[0])
+        amp = _trapezoid(e * np.exp(-1j * om * t), t) * 2 / (t[-1] - t[0])
         gauges.append({
             "x": xg, "mean_level": mean_level, "healthy": healthy,
             "H": float(2.0 * abs(amp)), "amp": complex(amp),

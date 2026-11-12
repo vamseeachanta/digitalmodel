@@ -238,13 +238,10 @@ class TestGenerateDiffractionSpec:
         profile = _make_barge_profile()
         spec = generate_diffraction_spec(profile, tmp_path, config)
         assert spec._source_dir == tmp_path.resolve()
-        if symmetry:
-            with pytest.raises(ValueError, match="Partial GDF mesh"):
-                OrcaWaveBackend().generate_single(spec, tmp_path)
-            return
         deck_path = OrcaWaveBackend().generate_single(spec, tmp_path)
 
         body = yaml.safe_load(deck_path.read_text())["Bodies"][0]
+        assert body["BodyMeshSymmetry"] == ("xz plane" if symmetry else "None")
         assert body["BodyMass"] == pytest.approx(5.0e7 / 1000.0)  # kg -> t
         assert body["BodyCentreOfMass"] == pytest.approx([10.0, 0.0, -3.0])
 

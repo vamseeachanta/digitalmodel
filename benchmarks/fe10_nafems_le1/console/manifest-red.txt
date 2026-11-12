@@ -1,0 +1,17 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.1.1, pluggy-1.7.0
+[path removed]
+configfile: pytest.ini (WARNING: ignoring pytest config in pyproject.toml!)
+collected 22 items / 21 deselected / 1 selected
+
+tests/solvers/mystran/test_fe10_benchmark.py F                           [100%]
+
+=================================== FAILURES ===================================
+____________________ test_retained_artifacts_match_manifest ____________________
+tests/solvers/mystran/test_fe10_benchmark.py:84: in test_retained_artifacts_match_manifest
+    documentation = set(manifest["documentation"])
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   KeyError: 'documentation'
+=========================== short test summary info ============================
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_retained_artifacts_match_manifest
+======================= 1 failed, 21 deselected in 0.12s =======================

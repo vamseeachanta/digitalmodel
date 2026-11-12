@@ -13,8 +13,7 @@ import json
 
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     DOF,
-    DiffractionResults, RAOSet, AddedMassSet, DampingSet,
-    validate_rao_completeness, validate_matrix_set,
+    DiffractionResults,
     validate_diffraction_results
 )
 
@@ -470,18 +469,26 @@ class OutputValidator:
 
 # Convenience function
 
-def validate_results(results: DiffractionResults, output_file: Optional[Path] = None) -> Dict:
+def validate_results(
+    results: DiffractionResults,
+    output_file: Optional[Path] = None,
+    *,
+    equilibrium_inputs: Optional[Dict] = None,
+) -> Dict:
     """
     Run validation and optionally export report
 
     Args:
         results: Diffraction results to validate
         output_file: Optional path for JSON report export
+        equilibrium_inputs: Optional explicit evidence and caller-selected
+            tolerances for the equilibrium rules. Uses the same mapping as
+            OutputValidator; omitted rules remain NOT_EVALUATED.
 
     Returns:
         Validation report dictionary
     """
-    validator = OutputValidator(results)
+    validator = OutputValidator(results, equilibrium_inputs=equilibrium_inputs)
     report = validator.run_all_validations()
 
     if output_file:

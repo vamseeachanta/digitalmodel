@@ -429,22 +429,23 @@ class DNVRPH103_hydrodynamics_circular:
         return mass_added_with_perforation
 
     def get_mass_moment_of_inertia(self):
+        """Estimate uniform-cylinder inertia through CoM in kg.m^2.
+
+        Preserve the existing radius convention R = r/2. Integrating squared
+        distance from each centred axis gives m*(R^2/4+h^2/12) transversely
+        and m*R^2/2 axially. CoG locates CoM relative to the buoy origin;
+        the exported intrinsic moments require no parallel-axis shift.
+        """
         inputs = self.cfg["inputs"]
         m_air = inputs["m_air"]
         r = inputs["r"]
         h = inputs["h"]
 
-        term_1 = 1 / 12 * m_air * (3 * (r / 2) ** 2 + h**2)
-        term_2 = m_air * (inputs["cog"]["y"] ** 2 + inputs["cog"]["z"] ** 2)
-        Ix = term_1 + term_2
+        Ix = 1 / 12 * m_air * (3 * (r / 2) ** 2 + h**2)
 
-        term_1 = 1 / 12 * m_air * (h**2 + 3 * (r / 2) ** 2)
-        term_2 = m_air * (inputs["cog"]["x"] ** 2 + inputs["cog"]["z"] ** 2)
-        Iy = term_1 + term_2
+        Iy = 1 / 12 * m_air * (h**2 + 3 * (r / 2) ** 2)
 
-        term_1 = 1 / 2 * m_air * (r / 2) ** 2
-        term_2 = m_air * (inputs["cog"]["y"] ** 2 + inputs["cog"]["x"] ** 2)
-        Iz = term_1 + term_2
+        Iz = 1 / 2 * m_air * (r / 2) ** 2
 
         I = {"Ix": Ix, "Iy": Iy, "Iz": Iz}
 

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OrcaFlex parallel helper evidence</title>
+  <style>
+    body { max-width: 76rem; margin: 2rem auto; padding: 0 1rem; font: 1rem/1.6 sans-serif; color: #172d3d; }
+    table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+    td, th { padding: .5rem; border: 1px solid #b8c8d2; text-align: left; vertical-align: top; }
+    code { overflow-wrap: anywhere; }
+    caption { caption-side: bottom; text-align: left; }
+  </style>
+</head>
+<body>
+<h1>OrcaFlex parallel helper evidence</h1>
+<h2>Summary</h2>
+<p>The parent solvers group has beta maturity. The optimized parallel helper
+selects dynamic allocation when its worker count is absent; a fixed optimal
+worker count and the earlier throughput claims remain <strong>UNVERIFIED</strong>.
+Performance qualification is <strong>NOT_EVALUATED</strong>. This supplement
+resolves a documentation discrepancy and establishes bounded source contracts;
+it does not qualify native analyses or the full helper package.</p>
+
+<h2>Revision history</h2>
+<table>
+  <caption>Revision history for this evidence supplement.</caption>
+  <tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr>
+  <tr><td>1</td><td>2026-10-19</td><td>Maturity and parallel configuration are reconciled with source because the previous guidance prescribed unsupported defaults.</td></tr>
+  <tr><td>2</td><td>2026-10-25</td><td>Remaining maturity, thread-safety and benchmark claims are qualified; recursive patterns are distinguished from the default; captions precede rows to satisfy the HTML table content model.</td></tr>
+</table>
+
+<h2>Source basis and reading boundary</h2>
+<p>Source observations below refer to revision
+<code>fb8a214bdb622ed04f0b6473a9311695c9a5a314</code>, the existing
+<a href="agent-pack.md">knowledge-pack</a> pin. The parallel and performance
+helper files are byte-identical at the implementation base
+<code>6476218e8f5af3fa7d16c3dafc60b6a9084c6e6c</code>.
+The registry retains beta maturity at both revisions. Symbol locators are used
+because registry line numbers have moved. No engineering equation, empirical
+coefficient or acceptance limit is introduced.</p>
+<table>
+  <caption>Bounded source review; no source import or solver query is performed.</caption>
+  <tr><th>Source and locator</th><th>Observed behavior</th><th>Qualification boundary</th></tr>
+  <tr><td><a href="../../../../../docs/registry/module-routing.yaml">Routing registry</a>, module <code>solvers</code></td><td>Parent group maturity is beta.</td><td>The compatibility module's separate maturity does not qualify this package.</td></tr>
+  <tr><td><a href="../orcaflex_optimized_parallel_v2.py">Optimized parallel helper</a>, <code>OrcaFlexOptimizedParallelAnalysis.__init__</code></td><td>Absent count enables dynamic allocation; explicit count is retained. Process execution is the default executor mode.</td><td>Constructor state alone establishes neither worker execution nor resource sufficiency.</td></tr>
+  <tr><td>Same file, <code>process_files_parallel</code>, <code>process_directory</code></td><td>An empty batch returns before resource probing. Missing directory and unmatched pattern have distinct statuses. Matching paths and configuration are delegated.</td><td>Nonempty processing probes resources and can invoke native workers; it is not exercised here.</td></tr>
+  <tr><td>Same file, <code>SimpleResourceManager.calculate_optimal_threads</code></td><td>Allocation depends on file sizes, available memory and CPU count.</td><td>Size bands and memory allowance are source heuristics; independent optimality evidence is absent.</td></tr>
+  <tr><td>Same file, <code>process_single_file_worker</code></td><td>The unavailable-interface branch reports implicit mock output without writing the named simulation.</td><td>Tracked by issue #2521; no result from this branch qualifies native completion.</td></tr>
+  <tr><td><a href="../performance_monitor.py">Performance helper</a>, <code>ResourceManager.calculate_optimal_threads</code></td><td>A separate allocator has different size branches and is not selected by the optimized parallel helper.</td><td>Reading its logging, memory and batching utilities is not a runtime or benchmark qualification.</td></tr>
+</table>
+<p>SHA-256 of the pinned optimized parallel source:
+<code>169c6ceb806ac0629bae99522f452ee10b55fdd19f6426e05b3267e767670718</code>.
+SHA-256 of the pinned performance helper:
+<code>e76e46f5fbf65e60bccd9a826d3cde96fc22d82cec3242e5d91cb8a9f855b4f5</code>.</p>
+
+<h2>Focused test matrix</h2>
+<p>All entries belong to
+<a href="../../../../../tests/docs/test_orcaflex_helper_evidence.py">test_orcaflex_helper_evidence.py</a>.
+Expected results are hand-traced constructor assignments and early-return
+dictionaries, signature binding, registry text and local link resolution.
+The class body is extracted through the Python AST; module-level imports are
+excluded. Filesystem cases use temporary synthetic text, not engineering inputs.
+Conditional skips: none. Parameter variants are included in the listed entry.</p>
+<table>
+  <caption>Focused offline contracts; passing entries do not establish native runtime behavior.</caption>
+  <tr><th>Test entry</th><th>Dependency status</th><th>Expected-value basis</th></tr>
+  <tr data-test="test_constructor_selects_dynamic_allocation" data-status="offline"><td><code>test_constructor_selects_dynamic_allocation</code></td><td>offline</td><td>Constructor assignments; both executor-mode flags retain a None count and enable dynamic allocation.</td></tr>
+  <tr data-test="test_constructor_preserves_explicit_count" data-status="offline"><td><code>test_constructor_preserves_explicit_count</code></td><td>offline</td><td>The synthetic caller count is retained and dynamic allocation is disabled.</td></tr>
+  <tr data-test="test_empty_batch_returns_before_resource_probes" data-status="offline"><td><code>test_empty_batch_returns_before_resource_probes</code></td><td>offline</td><td>First branch returns no_files with empty results.</td></tr>
+  <tr data-test="test_directory_early_returns" data-status="offline"><td><code>test_directory_early_returns</code></td><td>offline</td><td>Missing directory and existing empty directory select their respective return dictionaries.</td></tr>
+  <tr data-test="test_directory_delegates_matching_paths_and_config" data-status="offline"><td><code>test_directory_delegates_matching_paths_and_config</code></td><td>offline</td><td>The default pattern selects only the local synthetic file; a recursive pattern also selects the nested file. A spy records unchanged configuration; the guide distinguishes the patterns.</td></tr>
+  <tr data-test="test_readme_maturity_matches_parent_registry" data-status="offline"><td><code>test_readme_maturity_matches_parent_registry</code></td><td>offline</td><td>The parent solvers registry supplies the expected maturity; a case-insensitive pattern excludes production maturity claims with spaces or hyphens.</td></tr>
+  <tr data-test="test_guideline_examples_match_constructor_and_methods" data-status="offline"><td><code>test_guideline_examples_match_constructor_and_methods</code></td><td>offline</td><td>Documented calls bind to the source class signatures; invalid constructor keywords fail.</td></tr>
+  <tr data-test="test_performance_guidance_exposes_evidence_boundary" data-status="offline"><td><code>test_performance_guidance_exposes_evidence_boundary</code></td><td>offline</td><td>The guide declares unverified performance and points to this evidence boundary.</td></tr>
+  <tr data-test="test_readme_parallel_claims_expose_evidence_boundary" data-status="offline"><td><code>test_readme_parallel_claims_expose_evidence_boundary</code></td><td>offline</td><td>The README qualifies worker recommendations and benchmarks as unverified and thread safety as not evaluated.</td></tr>
+  <tr data-test="test_evidence_page_classifies_every_new_test" data-status="offline"><td><code>test_evidence_page_classifies_every_new_test</code></td><td>offline</td><td>AST test names match the matrix; dependency statuses use the declared vocabulary.</td></tr>
+  <tr data-test="test_evidence_page_links_resolve" data-status="offline"><td><code>test_evidence_page_links_resolve</code></td><td>offline</td><td>Each relative evidence link resolves to a repository file.</td></tr>
+  <tr data-test="test_evidence_table_captions_are_first_children" data-status="offline"><td><code>test_evidence_table_captions_are_first_children</code></td><td>offline</td><td>Parsed table children contain exactly one caption, before any rows or row groups. CSS retains caption placement below the table.</td></tr>
+</table>
+
+<h2>Existing harness boundaries</h2>
+<table>
+  <caption>Inspected harnesses are classified separately from the executed test matrix.</caption>
+  <tr><th>Harness</th><th>Dependency status</th><th>Guard and evidence gap</th></tr>
+  <tr><td><a href="../../../../../tests/solvers/orcaflex/test_production_optimization.py">test_production_optimization.py</a>, <code>test_production_files</code></td><td>offline, fixture-dependent</td><td>No pytest skip protects absent inputs: the function returns when no simulation files are found. It writes a report directory before that return. A passing invocation without fixtures supplies no performance evidence; this harness is not executed here.</td></tr>
+  <tr><td><a href="../../../../../tests/solvers/orcaflex/baseline_performance_test.py">baseline_performance_test.py</a>, <code>BaselinePerformanceTest</code></td><td>interface-dependent</td><td>This is a command-line benchmark harness, not a collected pytest test class. Its transitive imports attempt a licensed-interface import, and its processing branch loads native models when available. No native call is authorized or run here.</td></tr>
+</table>
+
+<h2>Remaining evidence</h2>
+<p>Independent repeated benchmarks and native output readback remain absent.
+Worker execution, resource-manager boundary behavior, Windows process setup,
+other directly contained helpers and subpackage interfaces remain outside these
+slices. This supplement does not replace the existing pack's skip inventory.
+Dependency-inventory revisions, deputy designation and a shared lesson-log
+reference remain unverified; source code cannot establish those assignments.
+No external service is required by the focused matrix. Separate provider review
+remains pending before merge.</p>
+</body>
+</html>

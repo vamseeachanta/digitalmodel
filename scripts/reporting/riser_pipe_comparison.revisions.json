@@ -1,5 +1,5 @@
 {
-  "revision": "3",
+  "revision": "4",
   "history": [
     {
       "revision": "0",
@@ -20,6 +20,11 @@
       "revision": "3",
       "date": "2026-10-16",
       "change": "Disclose fixed implementation factors and empty-pipe screening, distinguish wall-search criteria, and retain input precision to prevent design interpretations beyond the module basis."
+    },
+    {
+      "revision": "4",
+      "date": "2026-10-18",
+      "change": "Separate module coverage from standard qualification for every comparison limit state; record unevaluated source gaps and the evidence needed to resolve them."
     }
   ],
   "criteria_sha256": "644f15e3d4f459a52c01a4a528ed424a5683a4424de1d9069708771ec597f527",

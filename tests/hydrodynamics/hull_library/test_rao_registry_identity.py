@@ -267,3 +267,167 @@ def test_caller_uses_newest_retained_revision(registry, inputs):
     )
     assert available
     np.testing.assert_array_equal(data["amplitudes"], inputs["amplitudes"] * 2)
+
+
+@pytest.mark.parametrize(
+    "filters,expected_labels",
+    [
+        ({"loading_condition": "condition-A"}, ["ar", "a"]),
+        ({"benchmark_revision": "revision-A"}, ["b", "a"]),
+        (
+            {
+                "loading_condition": "condition-A",
+                "benchmark_revision": "revision-A",
+            },
+            ["a"],
+        ),
+        (
+            {
+                "loading_condition": "condition-B",
+                "benchmark_revision": "revision-B",
+            },
+            [],
+        ),
+        ({"loading_condition": "condition-a"}, []),
+        ({"benchmark_revision": "revision-a"}, []),
+        ({"loading_condition": " condition-A "}, []),
+        ({"benchmark_revision": " revision-A "}, []),
+        ({"loading_condition": ""}, ["empty"]),
+        ({"benchmark_revision": ""}, ["empty"]),
+        (
+            {"loading_condition": None, "benchmark_revision": None},
+            ["empty", "ar", "b", "a"],
+        ),
+    ],
+)
+def test_lookup_selects_exact_condition_and_revision(
+    registry, inputs, filters, expected_labels
+):
+    """Issue #2079: enumerate expected matches independently of the lookup.
+
+    Register (A,A), (B,A), (A,B), then ('',''). A condition-A query must
+    return (A,B),(A,A); a revision-A query (B,A),(A,A); their intersection
+    only (A,A). Empty strings match only ('',''); None omits a filter.
+    Lowercase or space-padded labels match nothing. (B,B) does not exist.
+    Order reverses first registration order.
+    All numeric fixture inputs are the synthetic issue reproduction's values.
+    """
+    refs = {
+        "a": registry.register_rao(**inputs),
+        "b": registry.register_rao(**(inputs | {"loading_condition": "condition-B"})),
+        "ar": registry.register_rao(
+            **(inputs | {"benchmark_revision": "revision-B"})
+        ),
+        "empty": registry.register_rao(
+            **(inputs | {"loading_condition": "", "benchmark_revision": ""})
+        ),
+    }
+    reopened = RaoRegistry(registry.index_path.parent)
+    selected = reopened.get_raos(inputs["hull_id"], **filters)
+    assert selected == [refs[label] for label in expected_labels]
+    for ref in selected:
+        assert reopened.load_rao_data(ref)["loading_condition"] == ref.loading_condition
+
+
+def test_condition_filters_intersect_solver_and_draft(registry, inputs):
+    """Independent set intersection: only the original record matches all fields.
+
+    The other records differ in solver or have twice the issue fixture's draft:
+    5 * 2 - 5 = 5 metres, outside the existing lookup rule documented in
+    rao_registry.py. No new engineering acceptance limit is introduced.
+    """
+    first = registry.register_rao(**inputs)
+    registry.register_rao(**(inputs | {"solver": "other-synthetic"}))
+    registry.register_rao(**(inputs | {"draft_m": inputs["draft_m"] * 2}))
+    assert registry.get_raos(
+        inputs["hull_id"],
+        inputs["solver"],
+        inputs["draft_m"],
+        loading_condition=inputs["loading_condition"],
+        benchmark_revision=inputs["benchmark_revision"],
+    ) == [first]
+
+
+def test_filtered_history_preserves_corrections_and_bytes(registry, inputs):
+    """Issue #2079: changed content retains both revisions in the same condition.
+
+    The correction doubles the synthetic amplitude. Hand calculation: every
+    element is 1 * 2 = 2; the original remains 1. Repeating the original must
+    neither reorder history nor rewrite any stored bytes.
+    """
+    original = registry.register_rao(**inputs)
+    corrected = registry.register_rao(
+        **(inputs | {"amplitudes": inputs["amplitudes"] * 2})
+    )
+    registry.register_rao(**(inputs | {"loading_condition": "condition-B"}))
+    before = {
+        p: p.read_bytes() for p in registry.index_path.parent.rglob("*") if p.is_file()
+    }
+    assert registry.register_rao(**inputs) == original
+    assert registry.get_raos(
+        inputs["hull_id"],
+        loading_condition=inputs["loading_condition"],
+        benchmark_revision=inputs["benchmark_revision"],
+    ) == [corrected, original]
+    np.testing.assert_array_equal(
+        registry.load_rao_data(corrected)["amplitudes"], inputs["amplitudes"] * 2
+    )
+    np.testing.assert_array_equal(
+        registry.load_rao_data(original)["amplitudes"], inputs["amplitudes"]
+    )
+    assert {p: p.read_bytes() for p in before} == before
+
+
+def test_filtered_legacy_lookup_does_not_imply_integrity(registry, inputs):
+    """Issue #2079: matching legacy labels do not supply a missing content digest.
+
+    Expected matches are enumerated: A selects only the legacy A entry, B only
+    the newly registered B entry. Loading A must still fail explicitly.
+    """
+    legacy, path, original_bytes = _write_legacy_index(registry, inputs)
+    reopened = RaoRegistry(registry.index_path.parent)
+    fresh = reopened.register_rao(**(inputs | {"loading_condition": "condition-B"}))
+    assert reopened.get_raos(
+        inputs["hull_id"],
+        loading_condition=inputs["loading_condition"],
+        benchmark_revision=inputs["benchmark_revision"],
+    ) == [legacy]
+    assert reopened.get_raos(
+        inputs["hull_id"],
+        loading_condition="condition-B",
+        benchmark_revision=inputs["benchmark_revision"],
+    ) == [fresh]
+    with pytest.raises(ValueError, match="integrity.*legacy"):
+        reopened.load_rao_data(legacy)
+    assert path.read_bytes() == original_bytes
+
+
+@pytest.mark.parametrize("include_null_labels", [False, True])
+def test_unlabelled_legacy_metadata_is_not_a_label_match(
+    registry, inputs, include_null_labels
+):
+    """Enumerated legacy expectation: absent or null labels match no string.
+
+    Both unlabelled forms remain visible with omitted filters or explicit None.
+    Empty strings are labels, so neither unlabelled form may match them.
+    """
+    legacy, _, _ = _write_legacy_index(registry, inputs)
+    index = yaml.safe_load(registry.index_path.read_text(encoding="utf-8"))
+    entry, = index["hulls"][inputs["hull_id"]]
+    for field in ("loading_condition", "benchmark_revision"):
+        if include_null_labels:
+            entry[field] = None
+        else:
+            del entry[field]
+    registry.index_path.write_text(yaml.safe_dump(index), encoding="utf-8")
+    reopened = RaoRegistry(registry.index_path.parent)
+    expected = legacy.model_copy(
+        update={"loading_condition": None, "benchmark_revision": None}
+    )
+    assert reopened.get_raos(inputs["hull_id"]) == [expected]
+    assert reopened.get_raos(
+        inputs["hull_id"], loading_condition=None, benchmark_revision=None
+    ) == [expected]
+    for field in ("loading_condition", "benchmark_revision"):
+        assert reopened.get_raos(inputs["hull_id"], **{field: inputs[field]}) == []
+        assert reopened.get_raos(inputs["hull_id"], **{field: ""}) == []

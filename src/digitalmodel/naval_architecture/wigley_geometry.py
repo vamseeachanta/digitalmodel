@@ -32,6 +32,8 @@ from typing import Iterator
 
 import numpy as np
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 __all__ = [
     "WigleyHull",
     "wigley_offsets",
@@ -75,7 +77,7 @@ class WigleyHull:
         dydx = np.gradient(Y, x, axis=0)
         dydz = np.gradient(Y, z, axis=1)
         integrand = np.sqrt(1.0 + dydx**2 + dydz**2)
-        return 2.0 * float(np.trapz(np.trapz(integrand, z, axis=1), x))
+        return 2.0 * float(_trapezoid(_trapezoid(integrand, z, axis=1), x))
 
     @property
     def displacement(self) -> float:

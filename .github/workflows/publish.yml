@@ -11,7 +11,7 @@ jobs:
   publish:
     name: Build and Publish
     if: github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     # The pypi GitHub environment must have the owner as a REQUIRED REVIEWER.
     # No PyPI publish may occur without a later owner decision card.
     # Configure required reviewers in GitHub; this comment does not enforce it.

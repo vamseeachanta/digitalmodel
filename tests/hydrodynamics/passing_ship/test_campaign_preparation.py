@@ -229,14 +229,158 @@ def test_track_over_anchor_refused():
         api().validate_model(model)
 
 
+def assert_campaign_matches(actual, expected):
+    """Allow only catenary libm roundoff; retain exact inputs and structure."""
+    actual = copy.deepcopy(actual)
+    assert len(actual["cases"]) == len(expected["cases"])
+    for case, reference in zip(actual["cases"], expected["cases"]):
+        lines = case["moored_vessel"]["mooring_lines"]
+        reference_lines = reference["moored_vessel"]["mooring_lines"]
+        assert len(lines) == len(reference_lines)
+        for line, reference_line in zip(lines, reference_lines):
+            for field in ("length", "anchor_x"):
+                value, target = line[field], reference_line[field]
+                assert type(value) is type(target) is float
+                assert math.isfinite(value) and math.isfinite(target)
+                assert abs(value - target) <= 8 * math.ulp(target), field
+                line[field] = target
+    assert json.dumps(actual, sort_keys=True, allow_nan=False) == json.dumps(
+        expected, sort_keys=True, allow_nan=False)
+
+
 def assert_committed_outputs(fresh, committed):
-    """Compare every delivered byte, including the manifest and its digest."""
-    for name in ("report.html", "force_samples.json", "campaign.json",
-                 "manifest.template.json", "manifest.sha256"):
+    """Check every artifact and digest, with scoped native-geometry roundoff."""
+    for name in ("report.html", "force_samples.json"):
         assert (fresh / name).read_bytes() == (committed / name).read_bytes(), name
+    assert_campaign_matches(json.loads((fresh / "campaign.json").read_bytes()),
+                            json.loads((committed / "campaign.json").read_bytes()))
+    manifests = []
+    for directory in (fresh, committed):
+        campaign_bytes = (directory / "campaign.json").read_bytes()
+        assert campaign_bytes == (json.dumps(json.loads(campaign_bytes), sort_keys=True,
+                                             indent=2, allow_nan=False) + "\n").encode("utf-8")
+        path = directory / "manifest.template.json"
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        assert (directory / "manifest.sha256").read_bytes() == (
+            digest + "  manifest.template.json\n").encode("ascii")
+        manifest = json.loads(path.read_bytes())
+        assert path.read_bytes() == (json.dumps(manifest, sort_keys=True, indent=2,
+                                               allow_nan=False) + "\n").encode("utf-8")
+        assert set(manifest["outputs"]) == {"report.html", "force_samples.json", "campaign.json"}
+        for name, expected in manifest["outputs"].items():
+            assert hashlib.sha256((directory / name).read_bytes()).hexdigest() == expected, name
+        manifests.append(manifest)
+    # Each campaign digest is already verified against its own retained bytes.
+    manifests[0]["outputs"]["campaign.json"] = manifests[1]["outputs"]["campaign.json"]
+    assert json.dumps(manifests[0], sort_keys=True, allow_nan=False) == json.dumps(
+        manifests[1], sort_keys=True, allow_nan=False)
 
 
 def test_fresh_build_matches_committed_outputs(tmp_path):
     from digitalmodel.hydrodynamics.passing_ship.preparation_report import build
     build(DATA, tmp_path)
     assert_committed_outputs(tmp_path, DATA)
+
+
+@pytest.mark.parametrize("direction", [-math.inf, math.inf])
+def test_campaign_bytes_ignore_last_bit_catenary_roundoff(tmp_path, monkeypatch, direction):
+    """Platform libm differences must not change the recorded geometry bytes."""
+    from digitalmodel.hydrodynamics.passing_ship.preparation_report import build
+    from digitalmodel.marine_ops.marine_analysis.catenary.simplified import SimplifiedCatenarySolver
+
+    original = SimplifiedCatenarySolver.solve_from_force
+    first, second = tmp_path / "first", tmp_path / "second"
+    build(DATA, first)
+
+    def perturbed(self, *args, **kwargs):
+        result = original(self, *args, **kwargs)
+        for _ in range(4):
+            result.arc_length = math.nextafter(result.arc_length, direction)
+            result.horizontal_distance = math.nextafter(result.horizontal_distance, direction)
+        return result
+
+    monkeypatch.setattr(SimplifiedCatenarySolver, "solve_from_force", perturbed)
+    build(DATA, second)
+    assert (second / "campaign.json").read_bytes() != (first / "campaign.json").read_bytes()
+    assert_committed_outputs(second, first)
+
+
+def test_preparation_artifacts_use_utf8_lf_and_posix_paths(tmp_path):
+    from digitalmodel.hydrodynamics.passing_ship.preparation_report import build
+
+    manifest = build(DATA, tmp_path)
+    for path in tmp_path.iterdir():
+        assert b"\r" not in path.read_bytes(), path.name
+        path.read_bytes().decode("utf-8")
+    assert all("\\" not in name for name in manifest["inputs"])
+
+
+@pytest.mark.parametrize("fault", ["geometry", "input", "extra", "nan", "type",
+                                   "input_type", "bool_type", "zero_sign"])
+def test_campaign_comparison_rejects_drift(fault):
+    expected = json.loads((DATA / "campaign.json").read_bytes())
+    actual = copy.deepcopy(expected)
+    line = actual["cases"][0]["moored_vessel"]["mooring_lines"][0]
+    if fault == "geometry":
+        for _ in range(9):
+            line["length"] = math.nextafter(line["length"], math.inf)
+    elif fault == "input":
+        line["pretension"] = math.nextafter(line["pretension"], math.inf)
+    elif fault == "extra":
+        line["extra"] = True
+    elif fault == "nan":
+        line["length"] = math.nan
+    elif fault == "input_type":
+        line["pretension"] = int(line["pretension"])
+    elif fault == "bool_type":
+        actual["cases"][0]["outputs"]["line_tensions"] = 1
+    elif fault == "zero_sign":
+        actual["cases"][0]["passing_ship"]["track"]["angle_deg"] = -0.0
+    else:
+        line["length"] = str(line["length"])
+    with pytest.raises(AssertionError):
+        assert_campaign_matches(actual, expected)
+
+
+def test_linux_ci_campaign_matches_committed_geometry():
+    """Replay all three layouts in the complete 18-case Linux CI byte diff."""
+    # https://github.com/vamseeachanta/digitalmodel/actions/runs/43111878898/job/130833128462
+    expected = json.loads((DATA / "campaign.json").read_bytes())
+    actual = copy.deepcopy(expected)
+    geometry = {
+        6.836360000000001: (335.9526049364175, 286.3382338807559),
+        8.169080000000001: (362.59378352752947, 312.9891789374765),
+        24.18023: (587.2525721154692, 538.1245919646806),
+    }
+    assert len(actual["cases"]) == 18
+    for case in actual["cases"]:
+        anchor, length = geometry[case["environment"]["water_depth"]]
+        for line in case["moored_vessel"]["mooring_lines"]:
+            line["anchor_x"] = math.copysign(anchor, line["fairlead_x"])
+            line["length"] = length
+    assert_campaign_matches(actual, expected)
+
+
+@pytest.mark.parametrize("field", ["anchor_x", "length"])
+def test_campaign_comparison_roundoff_boundary(field):
+    expected = json.loads((DATA / "campaign.json").read_bytes())
+    actual = copy.deepcopy(expected)
+    line = actual["cases"][0]["moored_vessel"]["mooring_lines"][0]
+    target = line[field]
+    line[field] = target + 8 * math.ulp(target)
+    assert_campaign_matches(actual, expected)
+    line[field] = target + 9 * math.ulp(target)
+    with pytest.raises(AssertionError):
+        assert_campaign_matches(actual, expected)
+
+
+@pytest.mark.parametrize("name", ["report.html", "force_samples.json", "campaign.json",
+                                  "manifest.template.json", "manifest.sha256"])
+def test_preparation_readback_rejects_tampered_bytes(tmp_path, name):
+    from digitalmodel.hydrodynamics.passing_ship.preparation_report import build
+
+    build(DATA, tmp_path)
+    with (tmp_path / name).open("ab") as stream:
+        stream.write(b" ")
+    with pytest.raises(AssertionError):
+        assert_committed_outputs(tmp_path, DATA)

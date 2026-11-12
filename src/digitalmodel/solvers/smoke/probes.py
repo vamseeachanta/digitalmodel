@@ -39,7 +39,7 @@ def _result(solver: str, ok: bool, **detail) -> dict:
 
 
 def check_orcaflex(work_dir: Path) -> dict:
-    """Import OrcFxAPI, solve statics, run a short dynamic sim, round-trip files."""
+    """Prove a solve and file round trip; existing smoke artifacts are refused."""
     detail: dict = {"thread_count_requested": 1}
     start = time.monotonic()
     try:
@@ -107,6 +107,8 @@ def _history_proof(line, api, detail: dict, prefix: str = "") -> int:
 def _solve_orcaflex(api, work_dir: Path, detail: dict) -> None:
     model = line = None
     try:
+        detail["stage"] = "prepare"
+        _prepare_orcaflex_output(work_dir)
         detail["stage"] = "construct"
         model = api.Model(threadCount=1)
         line = model.CreateObject(api.otLine, "SmokeTestLine")
@@ -132,6 +134,21 @@ def _solve_orcaflex(api, work_dir: Path, detail: dict) -> None:
     finally:
         line = None
         model = None
+
+
+def _prepare_orcaflex_output(work_dir: Path) -> None:
+    """Require fresh artifact names without deleting previous evidence.
+
+    The caller must exclusively own this directory during the probe. This
+    preflight does not arbitrate concurrent writers.
+    """
+    work_dir.mkdir(parents=True, exist_ok=True)
+    for name in ("smoke.dat", "smoke.sim"):
+        path = work_dir / name
+        if path.exists() or path.is_symlink():
+            raise FileExistsError(
+                f"smoke output already exists: {name}; choose a fresh output directory"
+            )
 
 
 def _saved_proof(model, api, work_dir: Path, detail: dict) -> None:

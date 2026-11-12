@@ -329,3 +329,221 @@ def test_batch_counts_only_native_success_as_successful(
         for result in summary["results"]
         for path in result["output_files"]
     )
+
+
+def test_refusal_does_not_adopt_or_modify_existing_native_outputs(runner, tmp_path):
+    """Issue #2521: an older file cannot establish a completion for this call.
+
+    Hand calculation: one unavailable-interface request produces one failure,
+    no successes and no output paths, even when both native filenames exist.
+    """
+    model = tmp_path / "model.dat"
+    model.write_text("regression input\n")
+    output = tmp_path / "out"
+    output.mkdir()
+    previous = [output / "model.sim", output / "model_processed.dat"]
+    for path in previous:
+        path.write_bytes(b"previous output\n")
+
+    result = runner.process_single_file_worker(
+        {
+            "file_path": str(model),
+            "config": {"save_dat": True, "output_dir": str(output)},
+        }
+    )
+
+    assert result["status"] == "failed"
+    assert result["is_mock"] is False
+    assert result["output_files"] == []
+    assert all(path.read_bytes() == b"previous output\n" for path in previous)
+    assert model.read_text() == "regression input\n"
+
+
+def test_mock_preserves_existing_native_outputs(runner, tmp_path):
+    """The repository mock-artifact contract isolates both output save types."""
+    model = tmp_path / "model.dat"
+    model.write_text("regression input\n")
+    output = tmp_path / "out"
+    output.mkdir()
+    previous = [output / "model.sim", output / "model_processed.dat"]
+    for path in previous:
+        path.write_bytes(b"previous output\n")
+
+    result = runner.process_single_file_worker(
+        {
+            "file_path": str(model),
+            "config": {
+                "mock_mode": True, "save_dat": True, "output_dir": str(output)
+            },
+        }
+    )
+
+    assert result["status"] == "mock_success"
+    assert result["is_mock"] is True
+    assert result["output_files"] == [
+        str(tmp_path / "out_mock" / "model.mock.sim"),
+        str(tmp_path / "out_mock" / "model_processed.mock.dat"),
+    ]
+    assert all(path.read_bytes() == b"previous output\n" for path in previous)
+    assert all(Path(path).is_file() for path in result["output_files"])
+    assert model.read_text() == "regression input\n"
+
+
+def test_failed_second_mock_write_reports_only_first_artifact(
+    runner, monkeypatch, tmp_path
+):
+    """Issue #2521: one completed write plus one failed write yields one path.
+
+    Expected paths follow core/mock_artifacts.py; the injected second-write
+    failure is independent of the worker and does not emulate a solver.
+    """
+    from digitalmodel.solvers.orcaflex.core import mock_artifacts
+
+    model = tmp_path / "model.dat"
+    model.write_text("regression input\n")
+    writer = mock_artifacts.write_mock_artifact
+
+    def fail_data_write(path, name, detail):
+        if path.suffix == ".dat":
+            raise OSError("injected data artifact write failure")
+        return writer(path, name, detail)
+
+    monkeypatch.setattr(mock_artifacts, "write_mock_artifact", fail_data_write)
+    result = runner.process_single_file_worker(
+        {
+            "file_path": str(model),
+            "config": {
+                "mock_mode": True,
+                "save_dat": True,
+                "output_dir": str(tmp_path / "out"),
+            },
+        }
+    )
+
+    artifact = tmp_path / "out_mock" / "model.mock.sim"
+    assert result["status"] == "failed"
+    assert result["is_mock"] is True
+    assert "injected data artifact write failure" in result["error"]
+    assert result["output_files"] == [str(artifact)]
+    assert artifact.read_text().startswith("Mock simulation for model.dat")
+    assert not (artifact.parent / "model_processed.mock.dat").exists()
+
+
+def test_worked_example_matches_independent_hand_count(tmp_path):
+    """Issue #2521 (2026): hand-count the example's two synthetic inputs.
+
+    Without opt-in, two unavailable requests give (native, mock, failed) =
+    (0, 0, 2). With opt-in, the same two requests give (0, 2, 0); saving both
+    types produces 2 inputs * 2 artifacts = 4 marked files. The CLI blocks
+    OrcFxAPI before any worker import and performs no numerical analysis.
+    """
+    import json
+    import os
+    import subprocess
+
+    root = Path(__file__).resolve().parents[3]
+    example = root / "examples/orcaflex/optimized_worker_contract.py"
+    work_dir = tmp_path / "walkthrough"
+    env = dict(os.environ, PYTHONPATH=str(root / "src"))
+    completed = subprocess.run(
+        [sys.executable, str(example), str(work_dir)],
+        capture_output=True, text=True, env=env, check=True,
+    )
+    payload = next(
+        line.removeprefix("RESULT: ")
+        for line in completed.stdout.splitlines()
+        if line.startswith("RESULT: ")
+    )
+    result = json.loads(payload)
+
+    assert result["refused"] == {"successful": 0, "mock_successful": 0, "failed": 2}
+    assert result["regression"] == {"successful": 0, "mock_successful": 2, "failed": 0}
+    assert result["artifacts"] == [
+        "results_mock/first.mock.sim", "results_mock/first_processed.mock.dat",
+        "results_mock/second.mock.sim", "results_mock/second_processed.mock.dat",
+    ]
+    for relative in result["artifacts"]:
+        artifact = work_dir / relative
+        assert artifact.is_file()
+        assert artifact.read_text().startswith("Mock simulation for ")
+    assert not (work_dir / "results").exists()
+    for name in ("first", "second"):
+        assert (work_dir / f"{name}.dat").read_text() == (
+            "Synthetic regression input; not a native model.\n"
+        )
+
+
+def test_worked_example_documented_answer():
+    """The HTML answer is the independent hand count from issue #2521.
+
+    Two refused requests give two failures and no outputs. Two explicit mock
+    requests each save a simulation and data artifact, giving four files.
+    """
+    import json
+    import xml.etree.ElementTree as element_tree
+
+    root = Path(__file__).resolve().parents[3]
+    page = element_tree.parse(
+        root / "docs/domains/orcaflex/optimized-worker-output-contract.html"
+    )
+    answer = json.loads(page.find(".//pre[@id='expected-answer']").text)
+
+    assert answer == {
+        "refused": {"successful": 0, "mock_successful": 0, "failed": 2},
+        "regression": {"successful": 0, "mock_successful": 2, "failed": 0},
+        "artifacts": [
+            "results_mock/first.mock.sim", "results_mock/first_processed.mock.dat",
+            "results_mock/second.mock.sim", "results_mock/second_processed.mock.dat",
+        ],
+    }
+
+
+def test_example_refuses_existing_directory_without_overwriting(tmp_path):
+    """A walkthrough must preserve existing data rather than reuse a case."""
+    import os
+    import subprocess
+
+    root = Path(__file__).resolve().parents[3]
+    model = tmp_path / "first.dat"
+    model.write_text("existing input\n")
+    completed = subprocess.run(
+        [
+            sys.executable, str(root / "examples/orcaflex/optimized_worker_contract.py"),
+            str(tmp_path),
+        ],
+        capture_output=True, text=True,
+        env=dict(os.environ, PYTHONPATH=str(root / "src")),
+    )
+
+    assert completed.returncode != 0
+    assert "FileExistsError" in completed.stderr
+    assert "RESULT: " not in completed.stdout
+    assert model.read_text() == "existing input\n"
+    assert list(tmp_path.iterdir()) == [model]
+
+
+def test_example_refuses_a_preloaded_native_worker(monkeypatch, tmp_path):
+    """An imported example must never reuse a cached native-enabled worker."""
+    from types import SimpleNamespace
+
+    root = Path(__file__).resolve().parents[3]
+    spec = importlib.util.spec_from_file_location(
+        "contract_example", root / "examples/orcaflex/optimized_worker_contract.py"
+    )
+    example = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(example)
+
+    def forbidden_native_call(*args, **kwargs):
+        pytest.fail("A native-enabled worker must not be constructed")
+
+    monkeypatch.setitem(
+        sys.modules,
+        "digitalmodel.solvers.orcaflex.orcaflex_optimized_parallel_v2",
+        SimpleNamespace(
+            ORCAFLEX_AVAILABLE=True,
+            OrcaFlexOptimizedParallelAnalysis=forbidden_native_call,
+        ),
+    )
+    with pytest.raises(RuntimeError, match="isolated interpreter"):
+        example.run_example(tmp_path / "walkthrough")
+    assert list(tmp_path.iterdir()) == []

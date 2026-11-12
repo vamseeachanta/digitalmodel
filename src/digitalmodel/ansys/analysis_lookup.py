@@ -7,7 +7,8 @@ controlling both those inputs and the dataset is outside this local trust model.
 from __future__ import annotations
 
 import copy
-from decimal import Decimal, localcontext
+from decimal import Decimal
+from fractions import Fraction
 from pathlib import Path
 
 from digitalmodel.ansys.analysis_evidence import validate_package
@@ -15,6 +16,8 @@ from digitalmodel.ansys.analysis_records import (
     canonical_bytes, decimal_text, digest_bytes, nonempty, require_fields,
     verify_reference, parse_json,
 )
+
+_PLACEHOLDER_IDENTITIES = {"unknown", "unverified", "historical-neutral-capture"}
 
 
 def create_ledger(dataset_id: str) -> tuple[dict, dict]:
@@ -136,6 +139,10 @@ def _verification(package: dict, case: dict, response: dict, authority: dict,
             nonempty(value, field)
     for field in ("checker", "competence", "authority", "date", "criterion_id"):
         nonempty(entry[field], field)
+    # Analysis criteria revision 1 (2026), AC-07: a placeholder cannot identify
+    # an independent checker. Apply the same sentinel policy as capture authors.
+    if entry["checker"].strip().casefold() in _PLACEHOLDER_IDENTITIES:
+        raise ValueError("verification checker identity is unknown")
     if entry["checker"].strip().casefold() == case["author"].strip().casefold() or entry["row_hash"] != case["row_hash"]:
         raise ValueError("verification is not independent or bound to this row")
     for ref in entry["reference_evidence"]:
@@ -172,19 +179,21 @@ def _qualify(package: dict, case: dict, response: dict, intended_use: str,
         raise ValueError("verification not qualified for intended use")
     if not set(response["limitations"]).issubset(entry["allowed_limitations"]):
         raise ValueError("disqualifying readiness limitation")
-    expected = Decimal(decimal_text(entry["expected"]))
-    tolerance = Decimal(decimal_text(entry["absolute_tolerance"]))
-    # Decimal input bounds are 128 characters and adjusted exponents +/-100.
-    # 512 digits cover their exact subtraction without ambient-context rounding.
-    with localcontext() as context:
-        context.prec = 512
-        if tolerance < 0 or abs(Decimal(response["value"]) - expected) > tolerance:
-            raise ValueError("independent comparison criterion failed")
+    # Analysis criteria revision 1 (2026), AC-07: use the supplied absolute
+    # tolerance, with zero as its mathematical lower bound, never a default.
+    # Python 3.11 Library Reference, fractions.Fraction(Decimal): conversion is
+    # exact. Rational subtraction/abs also avoid ambient exponent limits/traps.
+    # https://docs.python.org/3.11/library/fractions.html#fractions.Fraction
+    expected = Fraction(Decimal(decimal_text(entry["expected"])))
+    tolerance = Fraction(Decimal(decimal_text(entry["absolute_tolerance"])))
+    actual = Fraction(Decimal(response["value"]))
+    if tolerance < 0 or abs(actual - expected) > tolerance:
+        raise ValueError("independent comparison criterion failed")
     return entry
 
 
 def _check_provenance(package: dict, case: dict, response: dict, authority: dict, resolver: dict) -> None:
-    if case["author_status"] != "recorded" or case["author"].strip().casefold() in {"unknown", "unverified", "historical-neutral-capture"}:
+    if case["author_status"] != "recorded" or case["author"].strip().casefold() in _PLACEHOLDER_IDENTITIES:
         raise ValueError("capture author is unknown; independent verification cannot be established")
     if case["superseded_by"]:
         raise ValueError("superseded capture cannot qualify")

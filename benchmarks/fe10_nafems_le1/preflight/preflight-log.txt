@@ -1,0 +1,103 @@
+FE10 NAFEMS LE1 and patch test, MYSTRAN (gate FE10) offline pre-flight, 2026-10-15T11:43:14Z UTC, Python 3.12.13
+
+### build expected.json
+$ python -I tools/build_expected.py <pkg>
+exit 0
+expected.json: LE1 92.7 MPa; patch sigma_xx 300.000, sigma_yy 300.000, tau_xy 80.769 MPa
+
+### build decks
+$ python -I tools/build_decks.py <pkg>
+exit 0
+wrote inputs/le1_8x24.bdf: 225 grids, 192 CQUAD4, point D = grid 1
+wrote inputs/le1_16x48.bdf: 833 grids, 768 CQUAD4, point D = grid 1
+wrote inputs/le1_32x96.bdf: 3201 grids, 3072 CQUAD4, point D = grid 1
+wrote inputs/patch.bdf: 8 grids, 5 CQUAD4
+
+### check deck le1_8x24
+$ python -I tools/check_bdf.py inputs/le1_8x24.bdf --kind le1
+exit 0
+ASCII; SOL 101, CEND, BEGIN BULK, ENDDATA PASS  503 lines
+case control                         PASS  []
+unique ids                           PASS  225 GRID, 192 CQUAD4; duplicates none
+references resolve                   PASS  0 elements with a bad reference
+G0.5 material and thickness          PASS  MAT1 (210000.0, 0.3); PSHELL t 100.0 mm (units N, mm, MPa)
+element signed area > 0 (normal +z)  PASS  0 elements with area <= 0; total area 5.44481e+06 mm^2
+FE2 aspect <= 5, angles 45-135 deg   PASS  largest aspect 2.39; interior angles 81.2 to 102.3 deg
+edges shared by > 2 elements: 0      PASS  0
+3456 constrained at every grid       PASS
+area against exact quarter annulus   PASS  mesh 5444810.5, exact 5448699.8 mm^2, difference -0.07 %
+edge grids on their ellipses         PASS  25 grids on the inner ellipse, 25 on the outer; every free-edge grid on an ellipse or a symmetry line
+symmetry: u_y = 0 on y = 0, u_x = 0 on x = 0 PASS  9 grids on y = 0, 9 on x = 0
+point D grid at (2000, 0)            PASS  grid [1]
+load resultant = p t (BO, AO)        PASS  sum Fx 2.75e+06 N (expected 2.75e+06), sum Fy 3.25e+06 N (expected 3.25e+06); 25 loaded grids, all on the outer ellipse
+RESULT PASS: 14 checks, 0 fail
+
+### check deck le1_16x48
+$ python -I tools/check_bdf.py inputs/le1_16x48.bdf --kind le1
+exit 0
+ASCII; SOL 101, CEND, BEGIN BULK, ENDDATA PASS  1814 lines
+case control                         PASS  []
+unique ids                           PASS  833 GRID, 768 CQUAD4; duplicates none
+references resolve                   PASS  0 elements with a bad reference
+G0.5 material and thickness          PASS  MAT1 (210000.0, 0.3); PSHELL t 100.0 mm (units N, mm, MPa)
+element signed area > 0 (normal +z)  PASS  0 elements with area <= 0; total area 5.44773e+06 mm^2
+FE2 aspect <= 5, angles 45-135 deg   PASS  largest aspect 2.39; interior angles 80.6 to 101.2 deg
+edges shared by > 2 elements: 0      PASS  0
+3456 constrained at every grid       PASS
+area against exact quarter annulus   PASS  mesh 5447727.3, exact 5448699.8 mm^2, difference -0.02 %
+edge grids on their ellipses         PASS  49 grids on the inner ellipse, 49 on the outer; every free-edge grid on an ellipse or a symmetry line
+symmetry: u_y = 0 on y = 0, u_x = 0 on x = 0 PASS  17 grids on y = 0, 17 on x = 0
+point D grid at (2000, 0)            PASS  grid [1]
+load resultant = p t (BO, AO)        PASS  sum Fx 2.75e+06 N (expected 2.75e+06), sum Fy 3.25e+06 N (expected 3.25e+06); 49 loaded grids, all on the outer ellipse
+RESULT PASS: 14 checks, 0 fail
+
+### check deck le1_32x96
+$ python -I tools/check_bdf.py inputs/le1_32x96.bdf --kind le1
+exit 0
+ASCII; SOL 101, CEND, BEGIN BULK, ENDDATA PASS  6935 lines
+case control                         PASS  []
+unique ids                           PASS  3201 GRID, 3072 CQUAD4; duplicates none
+references resolve                   PASS  0 elements with a bad reference
+G0.5 material and thickness          PASS  MAT1 (210000.0, 0.3); PSHELL t 100.0 mm (units N, mm, MPa)
+element signed area > 0 (normal +z)  PASS  0 elements with area <= 0; total area 5.44846e+06 mm^2
+FE2 aspect <= 5, angles 45-135 deg   PASS  largest aspect 2.39; interior angles 80.3 to 100.7 deg
+edges shared by > 2 elements: 0      PASS  0
+3456 constrained at every grid       PASS
+area against exact quarter annulus   PASS  mesh 5448456.6, exact 5448699.8 mm^2, difference -0.00 %
+edge grids on their ellipses         PASS  97 grids on the inner ellipse, 97 on the outer; every free-edge grid on an ellipse or a symmetry line
+symmetry: u_y = 0 on y = 0, u_x = 0 on x = 0 PASS  33 grids on y = 0, 33 on x = 0
+point D grid at (2000, 0)            PASS  grid [1]
+load resultant = p t (BO, AO)        PASS  sum Fx 2.75e+06 N (expected 2.75e+06), sum Fy 3.25e+06 N (expected 3.25e+06); 97 loaded grids, all on the outer ellipse
+RESULT PASS: 14 checks, 0 fail
+
+### check deck patch
+$ python -I tools/check_bdf.py inputs/patch.bdf --kind patch
+exit 0
+ASCII; SOL 101, CEND, BEGIN BULK, ENDDATA PASS  40 lines
+case control                         PASS  []
+unique ids                           PASS  8 GRID, 5 CQUAD4; duplicates none
+references resolve                   PASS  0 elements with a bad reference
+G0.5 material and thickness          PASS  MAT1 (210000.0, 0.3); PSHELL t 100.0 mm (units N, mm, MPa)
+element signed area > 0 (normal +z)  PASS  0 elements with area <= 0; total area 2 mm^2
+FE2 quality (information, patch)     INFO  largest aspect 5.55; interior angles 26.6 to 159.1 deg (distortion intended)
+edges shared by > 2 elements: 0      PASS  0
+3456 constrained at every grid       PASS
+patch: boundary displacements = linear field PASS  corners 1-4 prescribed; interior grids 5-8 free in-plane
+patch: area 2.0 mm^2                 PASS  2
+RESULT PASS: 10 checks, 0 fail
+
+### compare.py self-test
+$ python -I compare.py --selftest
+exit 0
+selftest: patch exact PASS, +0.2 % FAIL, +0.09 % PASS; LE1 +4.9 % PASS, +6 % FAIL, exact (extrapolated) PASS (want PASS/FAIL/PASS/PASS/FAIL/PASS) -> SELFTEST PASS
+
+### negative probes
+$ python -I tools/negative_probes.py <pkg> <scratch>/negative-probes
+exit 0
+deck probe force removed            exit 1; failing checks ['load resultant = p t (BO, AO)']
+deck probe modulus changed          exit 1; failing checks ['G0.5 material and thickness']
+deck probe element reversed         exit 1; failing checks ['element signed area > 0 (normal +z)']
+deck probe symmetry dropped         exit 1; failing checks ['symmetry: u_y = 0 on y = 0, u_x = 0 on x = 0 FAIL']
+deck probe boundary value changed   exit 1; failing checks ['patch: boundary displacements = linear field FAIL']
+package decks unchanged by the probes: True
+NEGATIVE PROBES PASS: every tampered copy failed

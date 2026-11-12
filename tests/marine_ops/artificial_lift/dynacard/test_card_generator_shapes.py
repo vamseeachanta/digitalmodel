@@ -29,14 +29,15 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from digitalmodel.marine_ops.artificial_lift.dynacard.benchmark.shape_comparison import (
+    loop_distance,
+    prepare,
+)
 from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
     ALL_GENERATORS,
 )
 
 _FIXTURE = Path(__file__).parent / "testdata" / "plate_reference_cards.json"
-
-# Points to resample each closed loop to before comparing.
-_LOOP_POINTS = 128
 
 # Seeds drawn from each generator; the reported distance is their median, so a
 # single unlucky noise draw cannot move the verdict.
@@ -50,50 +51,6 @@ _PLATE_MEDIAN_SEPARATION = 0.117
 # ---------------------------------------------------------------------------
 # Shape metric
 # ---------------------------------------------------------------------------
-
-
-def _normalise(a: np.ndarray) -> np.ndarray:
-    """Scale one axis onto 0-1. The plate carries no engineering units."""
-    lo, hi = float(np.min(a)), float(np.max(a))
-    return (a - lo) / (hi - lo) if hi > lo else np.zeros_like(a)
-
-
-def _resample_loop(x: np.ndarray, y: np.ndarray, m: int = _LOOP_POINTS) -> np.ndarray:
-    """Resample a closed loop to ``m`` points at uniform arc length."""
-    px = np.append(x, x[0])
-    py = np.append(y, y[0])
-    step = np.hypot(np.diff(px), np.diff(py))
-    s = np.concatenate([[0.0], np.cumsum(step)])
-    if s[-1] == 0:
-        return np.zeros((m, 2))
-    t = np.linspace(0, s[-1], m, endpoint=False)
-    return np.stack([np.interp(t, s, px), np.interp(t, s, py)], axis=1)
-
-
-def prepare(position, load) -> np.ndarray:
-    """Per-axis 0-1 normalised, arc-length resampled closed loop."""
-    return _resample_loop(
-        _normalise(np.asarray(position, dtype=float)),
-        _normalise(np.asarray(load, dtype=float)),
-    )
-
-
-def loop_distance(a: np.ndarray, b: np.ndarray) -> float:
-    """Phase-invariant distance between two closed loops.
-
-    Minimum mean point-to-point distance over every circular shift of ``b``
-    and both traversal directions. A card has no canonical start sample and no
-    canonical direction, so a metric that cared about either would be measuring
-    the recorder rather than the pump.
-    """
-    best = np.inf
-    for oriented in (b, b[::-1]):
-        for shift in range(len(oriented)):
-            d = float(
-                np.linalg.norm(a - np.roll(oriented, shift, axis=0), axis=1).mean()
-            )
-            best = min(best, d)
-    return best
 
 
 def jaggedness(loop: np.ndarray) -> float:
@@ -300,7 +257,7 @@ def test_fluid_pound_holds_load_into_the_downstroke_then_collapses():
         return float(np.polyfit(low[:, 0], low[:, 1], 1)[0])
 
     assert lower_branch_slope(PREPARED_PLATE["insufficient_supply_fluid_pound"]) > 0.3
-    ours = np.median([lower_branch_slope(l) for l in _generator_loops("FLUID_POUND")])
+    ours = np.median([lower_branch_slope(loop) for loop in _generator_loops("FLUID_POUND")])
     assert ours > 0.3, f"fluid pound lower branch slope {ours:.3f}, expected > 0.3"
 
 

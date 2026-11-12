@@ -1,6 +1,6 @@
 {
   "source_revision": "6476218e8f5af3fa7d16c3dafc60b6a9084c6e6c",
-  "scope": "Public extraction top-level keys, fixed series keys and producer return maps; nested W5 and modal leaves remain outside this inventory.",
+  "scope": "Public extraction top-level keys, fixed series keys, producer return maps and nested modal and fatigue fields; other nested W5 fields remain outside this inventory.",
   "unit_basis": "Units describe the implementation contract, not verified solver settings or consumer units. See the cited source functions and w5_channels.UNITS.",
   "external_consumer_completeness": "NOT_EVALUATED",
   "campaign_qualification": "NOT_EVALUATED",
@@ -352,6 +352,91 @@
       "consumer_evidence_ref": null,
       "lesson_ref": null,
       "status": "NOT_EVALUATED"
+    }
+  },
+  "nested_interfaces": {
+    "modes": {
+      "source": "src/digitalmodel/drilling_riser/global_model/orcaflex_run.py",
+      "source_revision": "84628b8cc2854af6883bfa6610b2133df7537803",
+      "symbols": [
+        "riser_modal_periods",
+        "_dof_shares"
+      ],
+      "conditions": "modes[] in drilling_statics and open_water_statics only when params.modal_modes is truthy; paired_mode_number exists only for a selected degenerate pair.",
+      "required_units": {
+        "mode_number": "count",
+        "period_s": "s",
+        "share_x": "dimensionless",
+        "share_y": "dimensionless",
+        "share_z": "dimensionless",
+        "classification": "text"
+      },
+      "conditional_units": {
+        "paired_mode_number": "count"
+      },
+      "limitations": "Rows contain selected transverse modes, not every system mode. Shares describe squared translational displacement on the selected line in global axes; they are not modal mass participation. An empty list does not establish absence of system modes. Selection thresholds are implementation behavior, not acceptance criteria.",
+      "consumer_evidence_ref": null,
+      "status": "NOT_EVALUATED"
+    },
+    "fatigue": {
+      "source": "src/digitalmodel/drilling_riser/global_model/fatigue_channels.py",
+      "source_revision": "84628b8cc2854af6883bfa6610b2133df7537803",
+      "symbols": [
+        "extract",
+        "half_cycle_histogram"
+      ],
+      "conditions": "w5.fatigue in drilling_dynamics and open_water_dynamics only when params.fatigue is truthy; absent from hang-off adapter returns.",
+      "stress_unit": "kPa",
+      "document_units": {
+        "variable": "text",
+        "radial_position": "text",
+        "thetas_deg": "array of deg",
+        "units": "unit label",
+        "counts": "counting convention text",
+        "counter": "implementation identifier text",
+        "binning": "bin convention text",
+        "stations": "array of station records",
+        "invariant_failures": "count",
+        "out_of_range": "count",
+        "orcaflex_invariant_failures": "count"
+      },
+      "station_units": {
+        "line": "object identifier text",
+        "arc_m": "m from End A",
+        "label": "station label text",
+        "points": "array of point records"
+      },
+      "histogram_units": {
+        "n_bins": "count",
+        "bin_width": "kPa",
+        "max_range": "kPa",
+        "half_cycles": "count",
+        "counts": "array of half-cycle counts",
+        "out_of_range": "count"
+      },
+      "point_addition_units": {
+        "orcaflex_max_range": "kPa",
+        "orcaflex_invariant_ok": "boolean",
+        "theta_deg": "deg",
+        "span": "kPa",
+        "mean_stress": "kPa",
+        "invariant_ok": "boolean"
+      },
+      "limitations": "Histogram fields and point additions share one point record. Document counts is descriptive text whereas point counts is an array. Diagnostics describe counting invariants, not fatigue damage, service life or acceptance. Solver-counter diagnostics are informational. Units reflect the producer declaration; solver settings and consumer conversions are unverified. Station labels and object identifiers are runtime data, not public evidence references.",
+      "consumer_evidence_ref": null,
+      "status": "NOT_EVALUATED"
+    },
+    "worked_example": {
+      "inputs": [
+        "modes[].period_s",
+        "w5.fatigue.stations[].points[].mean_stress"
+      ],
+      "method": "Resolve the modal row in required_units. Resolve the fatigue station point by combining histogram_units with point_addition_units. Read the implementation unit for each field; retain the pending evidence status.",
+      "answer": {
+        "modes[].period_s": "s",
+        "w5.fatigue.stations[].points[].mean_stress": "kPa"
+      },
+      "qualification": "NOT_EVALUATED"
     }
   }
 }

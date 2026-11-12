@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Well intervention screening</title>
+<style>
+body{font:16px/1.55 system-ui,sans-serif;max-width:960px;margin:40px auto;padding:0 24px;color:#172b3a}
+h1,h2{line-height:1.2} table{border-collapse:collapse;width:100%;margin:16px 0}
+td,th{border:1px solid #b9c7d0;padding:8px;text-align:left} th{background:#edf3f6}
+caption{caption-side:bottom;text-align:left;font-size:14px;padding:8px 0}
+pre{overflow-x:auto;background:#edf3f6;padding:18px} code{font-size:14px}
+.limit{border-left:4px solid #ae6800;padding:12px 18px;background:#fff6e6}
+</style>
+<h1>Well intervention screening</h1>
+<p><code>digitalmodel.well.intervention</code> connects problem types to intervention
+options, compares supplied decline fits with measured oil rates, and bounds
+constant-uplift payback including deferred production. Outputs support candidate
+investigation. They do not approve a treatment or establish well integrity.</p>
+
+<h2>Revision history</h2>
+<table>
+<tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>1</td><td>2026-11-03</td><td>Remove unverified duration defaults and require scenario inputs to prevent unsupported estimates.</td></tr>
+<tr><td>2</td><td>2026-11-06</td><td>Rename the reference cost product as a unit-hire sensitivity to distinguish it from a total-job budget.</td></tr>
+</table>
+
+<h2>Method and access</h2>
+<p><code>method_options(Problem.SAND, subsea=True)</code> returns slickline bailing,
+qualified powered e-line cleaning, and coiled-tubing circulation options. Each option
+contains its purpose, diagnostic status, separate access classes and public sources.
+Tubing failure maps to HWU or rig workover. A valve is assumed tubing-retrievable
+unless <code>wireline_retrievable_valve=True</code> is supplied. Declining rate and
+integrity include diagnostics; no uplift is assigned to logging by default.</p>
+<p>Subsea wireline options include riserless light well intervention vessels,
+riser-based intervention and rigs. CT requires riser-based or rig access in this
+generic screen. Special open-water CT and tubing-pull systems require separate
+capability checks. Sources: <a href="https://www.offshore-mag.com/production/article/16755400/well-intervention-using-rigless-techniques">2003 technical study, method and access sections</a>
+and <a href="https://edx.netl.doe.gov/dataset/coiled-tubing-drilling-and-intervention-systems-using-cost-effective-vessel/resource/7268bc40-e7ec-4743-9b39-012b107490f0/download">RPSEA 08121-1502 Task 2 (2010), Tables 5–6</a>.</p>
+
+<h2>Public reference ranges</h2>
+<p><code>reference_estimate(method)</code> provides the following sensitivity inputs.
+Duration bounds span different published tasks or cases. Unit day rates describe
+the cited supplier's 2026 US onshore reference. Their product is a derived unit-hire
+sensitivity envelope; it is not an observed total-job cost range. Typical duration
+for a particular scope is not established by these cross-case bounds.</p>
+<table>
+<caption>Reference inputs only. The supplier groups slickline and wireline rates;
+no independent e-line rate is claimed. Rig rate refers to Eagle Ford heavy mast,
+while the duration evidence refers to subsea tasks. These contexts are not interchangeable.</caption>
+<tr><th>Method</th><th>Case/task duration [day]</th><th>Unit day rate [USD/day]</th><th>Duration evidence</th></tr>
+<tr><td>Slickline</td><td>Required caller input</td><td>3,500–8,000</td><td>No default duration: comparison endpoint unverified</td></tr>
+<tr><td>E-line</td><td>4–7</td><td>3,500–8,000</td><td>RPSEA Table 6 survey; IATMI22-187 powered cleanout</td></tr>
+<tr><td>Coiled tubing</td><td>4–14</td><td>12,000–25,000</td><td>RPSEA Table 6 sand wash; IATMI22-187</td></tr>
+<tr><td>HWU</td><td>Required caller input</td><td>20,000–38,000</td><td>No default duration: comparison endpoint unverified</td></tr>
+<tr><td>Rig workover</td><td>20–30</td><td>18,000–28,000</td><td>RPSEA Table 6 tubing repair to casing-leak repair</td></tr>
+</table>
+<p>Retained duration sources:
+<a href="https://journal.iatmi.or.id/index.php/ojs/article/download/309/316">IATMI22-187 (2022), Table 1</a>;
+RPSEA Table 6 above. Rate source:
+<a href="https://www.sdbeyondpetro.com/workover-rigs-explained-types-uses-buyer-s-guide-2026">Workover Rigs Explained (23 July 2026), selected Table 1 rate facts and heavy-mast paragraph</a>.
+The rate source is a supplier's budget guidance, not an independently validated market dataset.
+Source links and exclusions travel with each returned estimate; no currency conversion or escalation is applied.
+The earlier duration-comparison endpoints could not be independently verified and
+are no longer returned. Slickline and HWU calls without both
+<code>duration_days=Band(low_days, high_days)</code> and a nonblank
+<code>duration_basis</code> raise an error. Other methods accept the same override.
+Returned <code>duration_basis</code> and <code>duration_readiness</code> distinguish
+<code>caller_supplied_scenario</code> from <code>public_reference_only</code>.
+Caller-supplied durations are not independently verified; their source links
+contain only the retained rate citation. Neither status establishes an actual
+job estimate or suitability for economics without qualification.</p>
+<p><code>ReferenceEstimate.unit_hire_sensitivity_usd</code> is a USD band formed
+from duration [day] times unit-hire rate [USD/day] at the supplied bounds.
+It is not a derivative or a total-job budget. The former reference field
+<code>cost_usd</code> is removed; callers must use the new field name.
+The separate <code>screen_economics(cost_usd=...)</code> input still requires
+a qualified total-job cost band.</p>
+<p class="limit">Subsea total cost and duration bands require explicit project inputs.
+A transferable primary-source cost range for each subsea access class has not been
+established. Calling <code>reference_estimate</code> for RLWI, riser-based intervention
+or a subsea rig raises an error. Supply reviewed total-job ranges directly to
+<code>screen_economics</code>. Onshore unit-hire bands exclude mobilization,
+offshore spread, support, services, materials, weather and contingency, and shall
+not be used as Gulf of Mexico job budgets.</p>
+
+<h2>Decline and economics inputs</h2>
+<p><code>DeclineFit(qi_bopd, di_per_day, b, start_date, basis)</code> accepts supplied
+Arps parameters. <code>RatePoint(date, rate_bopd, source)</code> accepts measured history.
+Quantity rates and decline constants use the shared Pint registry; bare values
+are bbl/day and nominal 1/day. The supported classical Arps range is 0 ≤ b ≤ 1.
+Exponential, hyperbolic and harmonic evaluation follows
+<a href="https://blasingame.engr.tamu.edu/z_zCourse_Archive/P613_23A/P613_23A_Lectures/P613_23A_Lec_08_%28DCA_Gas_Wells%29_%5B600_dpi%5D_%28v20230228%29_%28pdf%29.pdf">Texas A&amp;M PETE 613 Lecture 8 (2023), Appendix B</a>.</p>
+<p><code>candidate_screen</code> requires a shortfall threshold, consecutive-point
+count, assessment date, maximum data age and maximum sample gap. Every point in
+the qualifying tail must be positive and strictly below the threshold-adjusted fit.
+Unsorted, duplicate, future and pre-fit dates are rejected. Empty, stale, gapped,
+insufficient and zero-rate histories are distinguished from positive candidate evidence.
+Use one well/completion and fluid stream with a consistent producing-day or
+calendar-day rate basis. A rate below fit does not distinguish depletion, choke
+changes, water breakthrough, allocation errors or removable damage.</p>
+<p><code>uplift_from_shortfall(candidate, recovery_fraction)</code> converts a
+positive fit-to-measurement gap to the supplied recovered-share band. Recovery
+fractions are required scenario inputs in [0,1], not success probabilities or
+treatment coefficients. No recovered fraction is supplied by this module.
+Alternatively supply incremental oil directly as below. Every variable in this
+snippet must be supplied with a qualified basis; no numerical default is implied.</p>
+<pre><code>from digitalmodel.well.intervention import screen_economics
+
+result = screen_economics(
+    baseline_bopd=measured_oil_rate,
+    uplift_bopd=incremental_oil_band,
+    cost_usd=total_job_cost_band,
+    duration_days=full_outage_days_band,
+    net_price_usd_per_bbl=net_realized_margin,
+    horizon_days=elapsed_days_from_job_start,
+    basis=scenario_basis,
+)
+print(result.payback_from_start_days)</code></pre>
+<p>The oil balance is u·max(H−d,0) − q₀·min(d,H), relative to continued baseline
+production. Deferred oil is q₀·d; restart payback is (C + p·q₀·d)/(p·u).
+Elapsed payback adds d. Cost, duration and uplift endpoints are enumerated to bound
+the scenarios. These are explicitly defined accounting identities using the
+<a href="https://www1.eere.energy.gov/solar/pdfs/simple_pv_economic_calculations_mi.pdf">DOE Simple Photovoltaic Economic Calculations (31 March 2010), item 1</a>.
+No discount, uplift decline, success probability or later recovery of deferred oil
+is assumed. A <code>None</code> payback bound denotes no finite recovery under that
+constant-uplift case. Finite extrapolated payback beyond the horizon is reported,
+but <code>pays_out_in_all_cases</code> is false. Oil and net-cash pairs are ordered
+(minimum, maximum) and can be negative; input <code>Band</code> limits cannot.</p>
+
+<h2>Wireline conveyance hook</h2>
+<p>For deviated or horizontal slickline/e-line options, supply
+<code>method_options(..., wireline_inputs=conveyance_inputs)</code>, or call
+<code>wireline_conveyance</code> directly, with measured drift, casing ID, tool OD, required
+clearance, pump rate, fluid density, buoyed weights, lateral length, inclination,
+friction, eccentricity and restriction coefficient. Physical inputs accept Pint
+quantities or bare SI; bare inclination is in degrees from vertical, and angle
+quantities are converted to degrees before the 0–180 degree check. The adapter calls the existing
+<code>completion.pump_down</code> clearance, resistance and solved-speed functions.
+It returns a clearance failure, stall, pump-down screen pass, or a gravity-assisted
+branch needing review. A positive speed does not establish retrieval, tension,
+weak-point, pressure, trajectory or barrier qualification. No default pump-down
+coefficients are introduced. Supplied wireline inputs are evaluated once and the
+result is attached to each line option; failed options remain visible with their
+status. Without these inputs, <code>option.conveyance is None</code> means not
+evaluated. <code>method_options</code> alone does not establish access.</p>
+
+<h2>Public BSEE worked example</h2>
+<p><a href="../../../examples/workflows/well-intervention-screening/example.py">Runnable example</a>
+and <a href="../../../tests/well/intervention/test_screening.py">hand-checked tests</a> use
+<a href="https://www.data.bsee.gov/Production/Files/Production-A-2023.pdf">BSEE OGOR-A Report 4081 (2023), issued 3 March 2026, pages 1–4</a>:
+API 177194065600, completion D02, E018D, lease 00016, WD030.
+The source PDF was read back on 2 November 2026. Its SHA-256 is
+<code>9d148eeb9927e73f396e2e50777202b1317ae24e79d73e98f49ccabd883689b6</code>.
+Only four small federal-data records are retained as literals; no source PDF is committed.</p>
+<table>
+<caption>One completion's reported oil and producing days, at the reported monthly conditions.
+The API's other completion records are excluded. Rates are volume divided by producing days.</caption>
+<tr><th>Month [2023]</th><th>Oil [bbl]</th><th>Producing time [day]</th><th>Producing-day oil rate [bbl/day]</th></tr>
+<tr><td>January</td><td>1,820</td><td>30</td><td>60.7</td></tr>
+<tr><td>February</td><td>1,504</td><td>27</td><td>55.7</td></tr>
+<tr><td>March</td><td>1,685</td><td>30</td><td>56.2</td></tr>
+<tr><td>April</td><td>41</td><td>2</td><td>20.5</td></tr>
+</table>
+<p>The runnable example requires <code>--scenario scenario.json</code> and has
+no default scenario. The JSON object must contain <code>observation_dates</code>
+(four ISO dates in the four source months), <code>as_of</code> (ISO date),
+<code>shortfall_fraction</code>, <code>consecutive_points</code>,
+<code>max_age_days</code>, <code>max_gap_days</code>, <code>uplift_bopd</code>,
+<code>cost_usd</code>, <code>duration_days</code>,
+<code>net_price_usd_per_bbl</code>, <code>horizon_days</code> and
+<code>basis</code>. Bands are two-element arrays. The basis must explain the
+representative dates and screening/economic assumptions. The exponential fit
+uses the first and third reported rates and elapsed days between supplied dates;
+it does not impose a midpoint date. Output carries
+<code>scenario_readiness="caller_supplied_scenario"</code> and the supplied basis.
+The CLI and Python function both reject missing required inputs.</p>
+<pre><code>PYTHONPATH=src python examples/workflows/well-intervention-screening/example.py --scenario scenario.json</code></pre>
+<p>The <a href="../../../tests/well/intervention/test_screening.py">synthetic
+regression case</a> explicitly supplies monthly day-16 dates, an assessment date
+of 30 April 2023, a 20.0% threshold, one qualifying point, a 31-day maximum age
+and a 40-day maximum gap. These are test assumptions, not source observations or
+recommended screening criteria. Under those inputs the fitted April rate is
+53.9 bbl/day against 20.5 bbl/day measured, a 62.0% shortfall. Monthly representative
+dates and April's two producing days limit representativeness. The same report
+(pages 5–11) shows 0 bbl and 0 producing days from May to December 2023;
+zero-day months are not rate observations and are excluded from history.</p>
+<p>The same synthetic test explicitly supplies uplift of 10–20 bbl/day,
+cost of USD20,000–40,000, outage of 2–4 days, net margin of USD50/bbl and a
+180-day horizon. Conditional hand calculations give 41–82 bbl deferred oil,
+24.1–92.2 days elapsed payback and USD43,900–155,950 net cash over 180 days.
+These values are regression evidence only; the runnable example requires the
+caller to supply all scenario values. The BSEE records do not establish any
+intervention, treatment outcome, cost, uplift or removable production loss.
+A candidate flag therefore does not establish that the actual well will pay out.</p>
+
+<h2>Integration limits and follow-ups</h2>
+<p>The external decline pipeline can pass qi, nominal Di, b, fit start and measured
+rate history directly; no sibling repository is read. Project-specific subsea
+spread ranges, historical analog uplift, success probability and decline-dependent
+cash-flow forecasting remain follow-ups. Explorer and website integration belong
+in their owning repositories. The unit day-rate source is unreviewed supplier
+guidance; replacing it with a stronger public cost basis is a follow-up.</p>
+</html>
