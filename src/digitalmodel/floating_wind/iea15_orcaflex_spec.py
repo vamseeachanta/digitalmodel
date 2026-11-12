@@ -148,7 +148,13 @@ def build_spec(basis: dict, data: dict, *, thrust_kN: float | None = None,
             "WAMIT 22, 44, 24 completed by three-fold symmetry; AddBQuad off-diagonals "
             "dropped (OrcaFlex other damping is diagonal). Mooring Cd 2.0/0.4 and Ca "
             "0.82/0.27 from the MoorDyn input LINE TYPES at the same revision. "
-            f"Nominal chain diameter {nominal} m is not used for hydrodynamics."
+            f"Nominal chain diameter {nominal} m is not used for hydrodynamics. "
+            f"Basis readiness {basis['qualification']['readiness']}; "
+            f"use for analysis {basis['qualification']['use_for_analysis']}. "
+            "System inertia assumes the RNA tensor is about tower top with CG tensor F-P. "
+            "Retaining F24:K24 as trusted endpoint is an additional assumption; L24:Q24 "
+            "remains the independent published comparator. The tensor-reference "
+            "discrepancy remains unresolved."
         ),
     }
     if thrust_kN is not None:

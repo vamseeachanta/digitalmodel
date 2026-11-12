@@ -67,8 +67,8 @@ def _flexible(spec_dict: dict) -> dict:
         {"length": 69.386, "outer_diameter": 8.0, "mass_per_length": 10.0,
          "bending_stiffness": 5.0e8, "axial_stiffness": 6.0e7, "torsional_stiffness": 3.5e8}]}
     fowt["rna"] = {"mass": 945.77, "centre_of_mass_from_tower_top": [-7.32, -0.1, 4.6],
-                   "inertia_about_centre_of_mass": [[4.0e5, 0, -1.2e4], [0, 3.4e5, 0],
-                                                    [-1.2e4, 0, 3.4e5]]}
+                   "inertia_about_centre_of_mass": [[4.0e5, 0, 0], [0, 3.4e5, 0],
+                                                    [0, 0, 3.4e5]]}
     fowt["rotor_thrust"] = {"thrust": 2457.2, "hub_position": [-12.0313, 0.0, 150.0],
                             "shaft_tilt": 6.0}
     return fowt
@@ -403,12 +403,11 @@ def test_decay_start_controls_reach_the_vessel(spec_dict):
     fowt["hull"]["initial_position"] = [10.0, 0.0, -0.4]
     fowt["hull"]["initial_orientation"] = [0.0, 3.5, 0.0]
     fowt["hull"]["included_in_statics"] = "None"
-    fowt["hull"]["include_wave_load_first_order"] = True
     vessel = FowtRouter().route(FowtSpec(**fowt))["vessels"][0]["properties"]
     assert vessel["InitialPosition"] == [10.0, 0.0, -0.4]
     assert vessel["Orientation"] == [0.0, 3.5, 0.0]
     assert vessel["IncludedInStatics"] == "None"
-    assert vessel["IncludeWaveLoad1stOrder"] == "Yes"
+    assert vessel["IncludeWaveLoad1stOrder"] == "No"
 
 
 def test_included_in_statics_rejects_other_values(spec_dict):
@@ -416,3 +415,127 @@ def test_included_in_statics_rejects_other_values(spec_dict):
     fowt["hull"]["included_in_statics"] = "3 DOF"
     with pytest.raises(ValidationError):
         FowtSpec(**fowt)
+
+
+# ------------------------------------------------------- routing safeguards
+MASS_KEY = ("AddedMassMatrixX, AddedMassMatrixY, AddedMassMatrixZ, "
+            "AddedMassMatrixRx, AddedMassMatrixRy, AddedMassMatrixRz")
+DAMPING_KEY = "DampingX, DampingY, DampingZ, DampingRx, DampingRy, DampingRz"
+
+
+def _radiation(fowt):
+    spec = fowt if isinstance(fowt, FowtSpec) else FowtSpec(**fowt)
+    routed = FowtRouter().route(spec)
+    return routed["vessel_types"][0]["properties"]["Draughts"][0][
+        "FrequencyDependentAddedMassAndDamping"]
+
+
+def test_emitted_radiation_is_exactly_symmetric_without_mutating_source(spec_dict):
+    fowt = FowtSpec(**spec_dict["fowt"])
+    original = fowt.model_dump()
+    entries = _radiation(fowt)
+    for source, emitted in zip(fowt.hull.radiation, entries, strict=True):
+        for matrix, key in ((source.added_mass, MASS_KEY), (source.damping, DAMPING_KEY)):
+            for i in range(6):
+                assert emitted[key][i][i] == matrix[i][i]
+                for j in range(i + 1, 6):
+                    assert emitted[key][i][j] == emitted[key][j][i]
+                    assert emitted[key][i][j] == (matrix[i][j] + matrix[j][i]) / 2
+    assert fowt.model_dump() == original
+
+
+@pytest.mark.parametrize("matrix_name,key", [("added_mass", MASS_KEY), ("damping", DAMPING_KEY)])
+def test_radiation_symmetry_tolerance_accepts_boundary_and_rejects_excess(
+        spec_dict, matrix_name, key):
+    fowt = copy.deepcopy(spec_dict["fowt"])
+    matrix = [[0.0] * 6 for _ in range(6)]
+    for i in range(6):
+        matrix[i][i] = 100.0
+    matrix[0][1], matrix[1][0] = 2.0, 3.0
+    fowt["hull"]["radiation"][0][matrix_name] = matrix
+    assert _radiation(fowt)[0][key][0][1] == 2.5
+    matrix[1][0] = 3.01  # Exceeds 1 % of sqrt(diagonal_i * diagonal_j).
+    with pytest.raises(ValueError, match="symmetry tolerance"):
+        _radiation(fowt)
+
+
+@pytest.mark.parametrize("matrix_name", ["added_mass", "damping"])
+def test_radiation_zero_diagonal_does_not_hide_asymmetry(spec_dict, matrix_name):
+    fowt = copy.deepcopy(spec_dict["fowt"])
+    matrix = [[0.0] * 6 for _ in range(6)]
+    matrix[0][1] = 1.0
+    fowt["hull"]["radiation"][0][matrix_name] = matrix
+    with pytest.raises(ValueError, match="symmetry tolerance"):
+        _radiation(fowt)
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf")])
+@pytest.mark.parametrize("matrix_name", ["added_mass", "damping"])
+def test_radiation_nonfinite_entries_rejected(spec_dict, matrix_name, value):
+    fowt = copy.deepcopy(spec_dict["fowt"])
+    fowt["hull"]["radiation"][0][matrix_name][0][1] = value
+    with pytest.raises(ValueError, match="finite"):
+        _radiation(fowt)
+
+
+def test_first_order_wave_load_rejected_without_sourced_raos(spec_dict):
+    fowt = copy.deepcopy(spec_dict["fowt"])
+    fowt["hull"]["include_wave_load_first_order"] = True
+    with pytest.raises(ValidationError, match="sourced load RAOs"):
+        FowtSpec(**fowt)
+
+
+@pytest.mark.parametrize("i,j", [(0, 1), (0, 2), (1, 0), (1, 2), (2, 0), (2, 1)])
+def test_rna_products_of_inertia_rejected(spec_dict, i, j):
+    fowt = _flexible(spec_dict)
+    fowt["rna"]["inertia_about_centre_of_mass"][i][j] = -1.2e4
+    with pytest.raises(ValidationError, match="principal axes"):
+        FowtSpec(**fowt)
+
+
+def test_generated_source_note_preserves_inertia_qualification(spec_dict, sources):
+    basis, _ = sources
+    note = spec_dict["fowt"]["source_note"]
+    assert f"Basis readiness {basis['qualification']['readiness']}" in note
+    assert f"use for analysis {basis['qualification']['use_for_analysis']}" in note
+    assert "System inertia assumes the RNA tensor is about tower top with CG tensor F-P" in note
+    assert "Retaining F24:K24 as trusted endpoint is an additional assumption" in note
+    assert "L24:Q24 remains the independent published comparator" in note
+    assert "tensor-reference discrepancy remains unresolved" in note
+
+
+@pytest.mark.parametrize("representation", ["rigid", "flexible"])
+@pytest.mark.parametrize("method", ["generate", "generate_with_overrides"])
+@pytest.mark.parametrize("from_file", [False, True])
+def test_repeated_generation_preserves_bundle_and_domain_spec(
+        spec_dict, tmp_path, representation, method, from_file):
+    data = copy.deepcopy(spec_dict)
+    if representation == "flexible":
+        data["fowt"] = _flexible(spec_dict)
+    source = ProjectInputSpec(**data)
+    original = source.model_dump()
+    if from_file:
+        path = tmp_path / "spec.yml"
+        path.write_text(yaml.safe_dump(data), encoding="utf-8")
+        generator = ModularModelGenerator(path)
+    else:
+        generator = ModularModelGenerator.from_spec(source)
+    outputs = []
+    for name in ("first", "second"):
+        out = tmp_path / name
+        getattr(generator, method)(out)
+        outputs.append({p.relative_to(out): p.read_bytes() for p in out.rglob("*") if p.is_file()})
+    assert outputs[0] == outputs[1]
+    assert source.model_dump() == original
+    assert generator.spec.fowt == source.fowt
+    assert len(generator.spec.generic.vessels) == 1
+    assert len(generator.spec.generic.lines) == (4 if representation == "flexible" else 3)
+
+
+def test_repeat_routing_reflects_domain_edits(spec_dict):
+    generator = ModularModelGenerator.from_spec(ProjectInputSpec(**spec_dict))
+    generator._run_routers()
+    generator.spec.fowt.hull.initial_position[0] = 5.0
+    generator._run_routers()
+    assert len(generator.spec.generic.vessels) == 1
+    assert generator.spec.generic.vessels[0].properties["InitialPosition"][0] == 5.0

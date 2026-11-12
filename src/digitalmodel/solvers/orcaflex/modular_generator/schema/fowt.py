@@ -107,7 +107,14 @@ class FowtHull(BaseModel):
     included_in_statics: Literal["6 DOF", "None"] = Field(
         default="6 DOF", description="'None' holds the initial position for decay tests")
     include_wave_load_first_order: bool = Field(
-        default=False, description="Needs load RAOs in the VesselType; none are emitted")
+        default=False, description="Must remain false until sourced load RAOs are supported")
+
+    @field_validator("include_wave_load_first_order")
+    @classmethod
+    def _sourced_wave_loads_only(cls, value: bool) -> bool:
+        if value:
+            raise ValueError("first-order wave loading requires sourced load RAOs; not supported")
+        return value
 
     @field_validator("centre_of_mass", "centre_of_buoyancy", "initial_position",
                      "initial_orientation")
@@ -158,7 +165,11 @@ class FowtTower(BaseModel):
 
 
 class FowtRna(BaseModel):
-    """Rotor-nacelle assembly as a lumped mass (flexible representation)."""
+    """Rotor-nacelle assembly in principal axes (flexible representation).
+
+    The lumped buoy takes diagonal moments only. Nonzero products of inertia
+    require an axes transformation of the full model and are not supported.
+    """
 
     name: str = Field(default="RNA", min_length=1)
     mass: float = Field(..., gt=0, description="Mass (te)")
@@ -173,7 +184,10 @@ class FowtRna(BaseModel):
     @field_validator("inertia_about_centre_of_mass")
     @classmethod
     def _three_by_three(cls, value: list[list[float]]) -> list[list[float]]:
-        return _check_square(value, 3, "matrix")
+        _check_square(value, 3, "matrix")
+        if any(value[i][j] != 0 for i in range(3) for j in range(3) if i != j):
+            raise ValueError("RNA inertia must be in principal axes with zero products of inertia")
+        return value
 
 
 class FowtRotorThrust(BaseModel):
