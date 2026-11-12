@@ -140,3 +140,48 @@ def test_example_matches_golden(example, tmp_path):
     assert golden_files == sorted(p.name for p in includes.glob("*.yml"))
     for name in golden_files:
         assert _load(includes / name) == _load(GOLDEN / name), name
+
+
+def test_example_header_hand_checks(example):
+    """Recompute the example header values from the spec inputs.
+
+    The buoy is treated as a solid uniform cylinder 9.21 m x 6 m; the SCR
+    catenary is inextensible with the schema default contents density. These
+    are arithmetic checks of the header, not a licensed statics result.
+    """
+    import math
+
+    g, rho = 9.80665, 1.025
+    spec = ProjectInputSpec(**example).riser
+    buoy = spec.buoys[0]
+    r, h = 9.21 / 2, buoy.height
+    assert math.pi * r**2 * h == pytest.approx(buoy.volume, rel=1e-3)
+    ixx, iyy, izz = buoy.moments_of_inertia
+    assert ixx == iyy == pytest.approx(buoy.mass * (3 * r**2 + h**2) / 12, abs=0.1)
+    assert izz == pytest.approx(buoy.mass * r**2 / 2, abs=0.1)
+    assert buoy.drag_area == pytest.approx([2 * r * h, 2 * r * h, math.pi * r**2], abs=0.05)
+
+    scr_type = next(lt for lt in spec.line_types if lt.name == "scr_10in")
+    scr = next(line for line in spec.lines if line.name == "SCR")
+    od, idia = scr_type.outer_diameter, scr_type.inner_diameter
+    w = (scr_type.mass_per_length + scr.contents.density * math.pi * idia**2 / 4
+         - rho * math.pi * od**2 / 4) * g
+    assert w == pytest.approx(1.314, abs=0.001)
+    height, horizontal = 397.0, 150.0
+    a = horizontal / w
+    suspended = math.sqrt(height**2 + 2 * height * a)
+    vertical = w * suspended
+    span = a * math.asinh(suspended / a)
+    length = sum(s.length for s in scr.sections)
+    assert suspended == pytest.approx(498.3, abs=0.1)
+    assert vertical == pytest.approx(654.5, abs=0.2)
+    assert length - suspended + span == pytest.approx(1050.6, abs=0.1)
+    anchor_x = scr.end_b.position[0]
+    assert buoy.position[0] - anchor_x == pytest.approx(length - suspended + span, abs=0.1)
+
+    tether_each = ((rho * buoy.volume - buoy.mass) * g - vertical - 101.2) / 2
+    assert tether_each == pytest.approx(897.0, abs=0.2)
+    for link in spec.links:
+        assert link.unstretched_length == pytest.approx(
+            397 / (1 + tether_each / link.stiffness), abs=1e-3
+        )

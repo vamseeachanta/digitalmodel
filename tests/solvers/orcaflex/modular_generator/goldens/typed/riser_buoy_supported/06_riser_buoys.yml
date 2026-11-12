@@ -12,9 +12,9 @@
   - 0
   Mass: 150.0
   MomentsOfInertia:
-  - 1245.8
-  - 1245.8
-  - 1591.5
+  - 1245.2
+  - 1245.2
+  - 1590.5
   CentreOfMass:
   - 0
   - 0
@@ -28,7 +28,7 @@
   DragArea:
   - 55.3
   - 55.3
-  - 66.7
+  - 66.6
   DragForceCoefficient:
   - 1.0
   - 1.0

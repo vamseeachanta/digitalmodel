@@ -7,18 +7,26 @@
 #
 # Hand checks (inextensible catenaries, seawater 1.025 te/m3, g 9.80665 m/s2):
 #   Buoy: mass 150 te, volume 400 m3; net upthrust (1.025 x 400 - 150) g
-#     = 2549.7 kN. Cylinder 9.21 m diameter x 6 m: Ixx = Iyy = 1245.8,
-#     Izz = 1591.5 te.m2; drag areas 55.3 m2 (side) and 66.7 m2 (end).
-#   SCR: OD 0.2731 m, ID 0.2223 m, steel 7.85 te/m3 -> 0.1552 te/m,
-#     EI 31,709 kN.m2, EA 4.091e6 kN; seawater contents; submerged
-#     w = 1.313 kN/m. Hang-off 397 m above the seabed, H = 150 kN assumed:
-#     suspended 498.3 m, top vertical 654.5 kN, 12.9 deg from vertical,
-#     horizontal span 248.9 m, grounded 801.7 m; anchor 1050.6 m from buoy.
-#   Jumper: 250 m of the template 10 in flexible, w = 1.305 kN/m between the
-#     vessel (-40, 0, -10) and the buoy top (-200, 0, -97): H = 66.5 kN,
-#     vertical at the buoy 101.2 kN.
+#     = 2549.7 kN. Solid uniform cylinder 9.21 m diameter x 6 m (399.7 m3):
+#     Ixx = Iyy = m (3 r^2 + h^2) / 12 = 1245.2, Izz = m r^2 / 2 = 1590.5 te.m2;
+#     drag areas 55.3 m2 (side, D x h) and 66.6 m2 (end, pi D^2 / 4).
+#   SCR: OD 0.2731 m, ID 0.2223 m, steel 7.85 te/m3 -> 0.1552 te/m.
+#     E = 207 GPa and Poisson ratio 0.3 are assumed, based on previous
+#     experience, not taken from a cited material source: EI 31,709 kN.m2,
+#     EA 4.091e6 kN, GJ 24,392 kN.m2. Contents use the schema default
+#     density 1.0 te/m3 (the riser has no contents block); submerged
+#     w = (0.1552 + 1.0 x pi ID^2 / 4 - 1.025 x pi OD^2 / 4) g = 1.314 kN/m.
+#     Hang-off 397 m above the seabed, H = 150 kN assumed: suspended
+#     498.3 m, top vertical 654.5 kN, 12.9 deg from vertical, horizontal
+#     span 248.9 m, grounded 801.7 m; anchor 1050.6 m from buoy.
+#   Jumper: 250 m of the template 10 in flexible (contents 1.0 te/m3),
+#     w = 1.305 kN/m, between the vessel (-40, 0, -10) and the buoy top
+#     (-200, 0, -97): H = 66.5 kN, vertical at the buoy 101.2 kN.
 #   Tethers: vertical sum 2549.7 - 654.5 - 101.2 = 1794.0 kN, 897.0 kN each;
-#     EA 780,000 kN (0.78e8 d^2, d = 0.1 m); geometric length 397 m;
+#     EA 780,000 kN (0.78e8 d^2, d = 0.1 m; an assumed illustrative value,
+#     not a sourced tether property); geometric length 397 m from the buoy
+#     underside (z -103 m) to the seabed (z -500 m), assuming the Anchored
+#     link z is measured from the seabed (to be confirmed by a licensed load);
 #     unstretched 397 / (1 + 897.0 / 780000) = 396.544 m.
 #   Net horizontal load on the buoy 150 - 66.5 = 83.5 kN towards -x is
 #     resisted by tether inclination (about 4.5 kN/m), so the buoy is expected
@@ -61,10 +69,10 @@ riser:
       connection: "Free"
       position: [-200, 0, -100]
       mass: 150
-      moments_of_inertia: [1245.8, 1245.8, 1591.5]
+      moments_of_inertia: [1245.2, 1245.2, 1590.5]
       volume: 400
       height: 6
-      drag_area: [55.3, 55.3, 66.7]
+      drag_area: [55.3, 55.3, 66.6]
       drag_coefficient: [1.0, 1.0, 1.0]
       added_mass_coefficient: [1.0, 1.0, 1.0]
 

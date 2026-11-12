@@ -185,6 +185,10 @@ def render_riser(riser: Riser, fallback: GenericModel) -> GenericModel:
         raise ValueError("Riser fallback requires one line and one vessel")
     if riser.links or riser.clump_types:
         raise ValueError("Typed links and clumps are not supported by riser fallback")
+    if riser.buoys:
+        # No generic template carries a typed buoy here; emitting the line
+        # without it would drop the buoy silently (#3974).
+        raise ValueError("Typed buoys are not supported by riser fallback")
     type_templates = {obj["name"]: obj for obj in generic.get("line_types", [])}
     if len(type_templates) != len(generic.get("line_types", [])) or not {
         obj.name for obj in riser.line_types
