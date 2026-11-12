@@ -31,6 +31,7 @@ dependencies = [
     # Verified by AST scan; enforced by tests/contracts/test_runtime_dependencies.py.
     "assetutilities>=0.0.7,<1.0.0",
     "beautifulsoup4>=4.13.0,<5.0.0",
+    "html5lib>=1.1,<2.0",
     "click>=8.0.0,<9.0.0",
     "colorama>=0.4.6,<1.0.0",
     "deepdiff>=6.7.0,<8.0.0",
@@ -312,6 +313,7 @@ digitalmodel = [
     "data_systems/data/steel_shapes*.json",
     "data_systems/data/steel_shapes_provenance.yaml",
     "foam_system/data/*.yml",
+    "code_checks/storage_tanks/wikis/engineering-standards/*.md",
     "technical_safety/data/*.yml",
     "orcaflex/data/*.yml",
     "subsea/cross_sections/fixtures/*.yml",
@@ -327,6 +329,8 @@ digitalmodel = [
     "reporting/assets/*.j2",
     "reporting/assets/*.css",
     "asset_integrity/data/*.yml",
+    "well/barriers/basis/wikis/well_integrity/*.md",
+    "well/barriers/docs/*.html",
     # Frozen OpenFOAM case templates ported verbatim from the shipped
     # tutorials. These have no file extension by OpenFOAM convention
     # (system/controlDict, 0.orig/U, ...), so they are listed by directory.
@@ -475,7 +479,8 @@ no-cache = false
 pre = false
 
 [tool.uv.sources]
-assetutilities = { path = "../assetutilities", editable = true }
+# Public pin: PyPI assetutilities 0.1.0 lacks workflow_api; 0.1.1 is on GitHub only.
+assetutilities = { git = "https://github.com/vamseeachanta/assetutilities", rev = "a283574dd00d6050c480d487c3d6f1c89c3d00e8" }
 
 [tool.uv.workspace]
 members = []

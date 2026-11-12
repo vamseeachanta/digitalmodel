@@ -101,6 +101,26 @@ def test_operator_map_rows_match_live_source_tree() -> None:
     assert operator_map_domains() == package_domains()
 
 
+def test_aqg_routing_links_offline_api_tests_and_guide() -> None:
+    data = yaml.safe_load(REGISTRY.read_text(encoding="utf-8"))
+    entries = [row for row in data["modules"] if row["module"] == "aqg"]
+    assert len(entries) == 1
+    entry = entries[0]
+    api = "src/digitalmodel/aqg/diffraction.py"
+    tests = "tests/unit/hydrodynamics/test_aqg_diffraction.py"
+    guide = "docs/domains/diffraction/g4-evidence.html"
+    assert entry["entry_point"] == "src/digitalmodel/aqg/"
+    assert entry["key_tests"] == [tests]
+    assert entry["owner_wiki"] == guide
+    row = next(
+        line for line in OPERATOR_MAP.read_text(encoding="utf-8").splitlines()
+        if line.startswith("| `aqg` |")
+    )
+    for path in (api, tests, guide):
+        assert (ROOT / path).is_file()
+        assert f"`{path}`" in row
+
+
 def test_operator_map_has_required_columns_and_slice_link() -> None:
     header = next(
         line for line in OPERATOR_MAP.read_text(encoding="utf-8").splitlines()

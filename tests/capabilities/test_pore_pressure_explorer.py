@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Regression checks for the synthetic pore-pressure explorer.
 
 Input basis: synthetic illustrative inputs defined in the builder, assumed
@@ -19,6 +22,8 @@ Synthetic, uncalibrated inputs do not qualify an engineering prediction.
 
 import importlib.util
 import json
+import re
+from html import unescape
 from pathlib import Path
 
 import pytest
@@ -201,13 +206,62 @@ def test_committed_outputs_match_builder(builder, non_utf8_default):
     )
 
 
-def test_page_labels_band_as_illustrative(builder):
-    """The display supplies no evaluated fracture or stability boundary."""
+def test_page_does_not_draw_an_unsupported_window(builder):
+    """Overburden supplies no evaluated fracture or stability boundary."""
     page = builder._HTML
     assert 'Mud-weight indicator<b id="rM"' in page
-    assert "Shaded: illustrative band" in page
-    assert "assumed 0.3 ppg margin" in page
-    assert "no fracture or stability criterion is evaluated" in page
-    assert "safe band" not in page
-    assert "ceiling" not in page
+    assert 'id="win"' not in page
+    assert "win.style" not in page
+    assert ".win{" not in page
+    assert "Shaded:" not in page
+    assert re.search(r"\bsafe\b", page, re.IGNORECASE) is None
     assert "Min. mud weight" not in page
+
+
+@pytest.fixture
+def generated_explorer(builder, monkeypatch, tmp_path):
+    """Read actual generated files, keeping page disclosures separate from JSON."""
+    monkeypatch.setattr(builder, "_REPO", tmp_path)
+    monkeypatch.setattr(builder, "_OUT_DIR", tmp_path)
+    builder.main()
+    study = json.loads((tmp_path / "pore-pressure-explorer.json").read_text(encoding="utf-8"))
+    page = (tmp_path / "pore-pressure-explorer.html").read_text(encoding="utf-8")
+    visible = unescape(re.sub(r"<[^>]+>", " ", page.split("<script>", 1)[0]))
+    return study, page, " ".join(visible.split())
+
+
+def test_missing_fracture_ceiling_is_disclosed(generated_explorer):
+    """No supplied fracture gradient means no established window ceiling."""
+    study, _, visible = generated_explorer
+    assert study["meta"]["drilling_window_status"] == "NOT_EVALUATED"
+    assert "no fracture gradient" in study["meta"]["drilling_window_reason"].lower()
+    assert "NOT_EVALUATED" in visible
+    assert "no window ceiling is established" in visible.lower()
+    assert "no fracture gradient is supplied or calculated" in visible.lower()
+    assert "overburden is a vertical-stress reference" in visible.lower()
+    assert "assumed 0.3 ppg margin" in visible
+    assert "no mud-weight recommendation" in visible.lower()
+
+
+@pytest.mark.parametrize("exclusion", [
+    "collapse (shear failure)",
+    "weak bedding planes",
+    "natural fractures",
+    "chemical or time-dependent effects",
+])
+def test_window_exclusions_are_visible(generated_explorer, exclusion):
+    """Exclusions must appear to readers as well as in machine-readable output."""
+    study, _, visible = generated_explorer
+    assert exclusion in study["meta"]["not_covered"]
+    assert exclusion in visible
+
+
+def test_page_links_existing_stability_screen(generated_explorer):
+    """The screen link targets the local public workflow and states its limit."""
+    _, page, visible = generated_explorer
+    target = "examples/workflows/wellbore-stability/README.md"
+    assert (ROOT / target).is_file()
+    assert "NOT_VALIDATED" in (ROOT / target).read_text(encoding="utf-8")
+    assert f'href="https://github.com/vamseeachanta/digitalmodel/blob/main/{target}"' in page
+    assert "wellbore stability screen" in visible.lower()
+    assert "NOT_VALIDATED" in visible

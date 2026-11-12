@@ -17,16 +17,16 @@
       "sha256": "d97d7f5a618ef55216e43829af10b3f0298ddd5257d8b00f441990b159774b50"
     },
     "src/digitalmodel/naval_architecture/hull_girder_screening.py": {
-      "bytes": 38111,
-      "sha256": "6e6526f0880a7abf97e5717984f60dcebde70c7e9ab3ea37ac02da9317e5d04b"
+      "bytes": 38497,
+      "sha256": "e3feb924e50ad6b0e5deedd36e78f0403aa7b2dd3383dddfad307ea152cf0846"
     },
     "src/digitalmodel/naval_architecture/hull_girder_strength.py": {
       "bytes": 15589,
       "sha256": "a91b9702a35eace0f760fcbfeb23708137021ddc7fdf82d5ab171dd2c99a943a"
     },
     "tests/naval_architecture/test_hull_girder_screening.py": {
-      "bytes": 18481,
-      "sha256": "24e73c7072dd5b0d5225f980fcfd11bbf0c98d5e04224ed6398e8261734f1448"
+      "bytes": 20449,
+      "sha256": "575dfc7e654656cf6872dbdab14521e40f63631d51b7dc60fef3b9624f63ec3f"
     }
   },
   "outputs": {

@@ -19,6 +19,7 @@
 /requirements-*.txt
 
 # Prevent temporary files in root
+/atlases/.refresh-*/
 /tmp*
 /temp*
 /*.tmp

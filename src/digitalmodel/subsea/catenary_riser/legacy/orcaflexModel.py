@@ -9,11 +9,9 @@ from collections import OrderedDict
 
 import yaml
 
-from digitalmodel.units import Q_
-from assetutilities.common.saveData import saveDataYaml
-
 
 def orcaflexModel(data, FEAType, LoadingIndex=0):
+    from digitalmodel.units import Q_
     model1 = OrderedDict()
     model2 = OrderedDict()
 
@@ -633,6 +631,7 @@ def lineTypes(data):
 
 
 def lines(data, FEAType, LoadingIndex):
+    from digitalmodel.units import Q_
 
     model = {}
     if data["default"]["Analysis"]["SLWR"]:
@@ -1262,6 +1261,7 @@ def build_model(FEAType, cfg):
                         cfg,
                     )
 
+        from assetutilities.common.saveData import saveDataYaml
         saveDataYaml(
             cfg, cfg["Analysis"]["result_folder"] + cfg["Analysis"]["file_name"], False
         )
@@ -1293,6 +1293,7 @@ def build_model(FEAType, cfg):
                     )
                     WriteOrcaflexModel([FEAmodel1, fatigue_data, FEAmodel2], cfg)
 
+        from assetutilities.common.saveData import saveDataYaml
         saveDataYaml(
             cfg, cfg["Analysis"]["result_folder"] + cfg["Analysis"]["file_name"]
         )

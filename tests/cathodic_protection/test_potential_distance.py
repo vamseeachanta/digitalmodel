@@ -190,7 +190,116 @@ def test_regeneration_matches_committed_data(tmp_path):
         "point-source.csv", "finite-line-source.csv", "values.csv", "basis.json"
     }
     for path in paths:
-        assert path.read_bytes() == (committed / path.name).read_bytes()
+        golden = committed / path.name
+        if path.suffix == ".csv":
+            value_column = "value" if path.name == "values.csv" else "potential_shift_mv"
+            _assert_csv_matches_golden(path, golden, value_column)
+        else:
+            # Compare all metadata exactly, independent of JSON line endings.
+            assert json.loads(path.read_text(encoding="utf-8")) == json.loads(
+                golden.read_text(encoding="utf-8")
+            )
+
+
+def _assert_csv_matches_golden(actual_path, golden_path, value_column):
+    """Allow only potential roundoff; preserve schema, grid and provenance.
+
+    Relative tolerance 1e-12 matches the independent P/L checks below;
+    zero absolute tolerance keeps a zero potential exact. This is a numerical
+    reproduction criterion, not a protection or model-accuracy criterion.
+    See potential-distance-derivation.md, Portable golden verification, and
+    Python 3.12 math.isclose: https://docs.python.org/3.12/library/math.html#math.isclose
+    """
+    with actual_path.open(encoding="utf-8", newline="") as stream:
+        actual_rows = list(csv.reader(stream, strict=True))
+    with golden_path.open(encoding="utf-8", newline="") as stream:
+        golden_rows = list(csv.reader(stream, strict=True))
+    assert len(actual_rows) == len(golden_rows), f"{actual_path.name}: row count"
+    columns = golden_rows[0]
+    assert actual_rows[0] == columns, f"{actual_path.name}: header"
+    assert value_column in columns
+    for row_number, (actual_row, golden_row) in enumerate(
+        zip(actual_rows[1:], golden_rows[1:], strict=True), start=2
+    ):
+        location = f"{actual_path.name}: row {row_number}"
+        assert len(actual_row) == len(columns), f"{location}: column count"
+        for column, actual, expected in zip(columns, actual_row, golden_row, strict=True):
+            if column == value_column:
+                actual_value, expected_value = float(actual), float(expected)
+                assert math.isfinite(actual_value) and math.isfinite(expected_value), location
+                assert math.isclose(actual_value, expected_value, rel_tol=1e-12, abs_tol=0), (
+                    f"{location}, {column}: {actual_value} != {expected_value} (rel_tol=1e-12)"
+                )
+            else:
+                assert actual == expected, f"{location}, {column}: {actual!r} != {expected!r}"
+
+
+@pytest.fixture
+def golden_csv_pair(tmp_path):
+    """Synthetic P examples: 1000*1*4pi/(4pi*1)=1000 mV, then 250 mV.
+
+    These values reuse the hand calculations above, not environmental inputs.
+    """
+    text = (
+        "distance_from_surface_m,potential_shift_mv,model_label\n"
+        "1,1000,screening\n4,250,screening\n"
+    )
+    actual, golden = tmp_path / "actual.csv", tmp_path / "golden.csv"
+    actual.write_bytes(text.encode("utf-8"))
+    golden.write_bytes(text.encode("utf-8"))
+    return actual, golden
+
+
+@pytest.mark.parametrize("newline", ["\n", "\r\n"])
+@pytest.mark.parametrize("value", ["1000", "1e3", repr(math.nextafter(1000.0, math.inf)), "1000.0000000005"])
+def test_golden_csv_accepts_equivalent_numeric_output(golden_csv_pair, newline, value):
+    """At 1000 mV, 1e-12 relative permits 1e-9 mV; 5e-10 mV is inside."""
+    actual, golden = golden_csv_pair
+    text = golden.read_text(encoding="utf-8").replace("1,1000,", f"1,{value},")
+    actual.write_bytes(text.replace("\n", newline).encode("utf-8"))
+    _assert_csv_matches_golden(actual, golden, "potential_shift_mv")
+
+
+@pytest.mark.parametrize("value", ["1000.000000002", "999.999999998", "nan", "inf", "-inf", "", "invalid"])
+def test_golden_csv_rejects_changed_or_invalid_potential(golden_csv_pair, value):
+    """A 2e-9 mV shift exceeds 1000*1e-12; non-finite/missing data fail."""
+    actual, golden = golden_csv_pair
+    text = golden.read_text(encoding="utf-8").replace("1,1000,", f"1,{value},")
+    actual.write_bytes(text.encode("utf-8"))
+    with pytest.raises((AssertionError, ValueError)):
+        _assert_csv_matches_golden(actual, golden, "potential_shift_mv")
+
+
+@pytest.mark.parametrize("before,after", [
+    ("distance_from_surface_m", "distance_m"),  # renamed header
+    ("potential_shift_mv,model_label", "model_label,potential_shift_mv"),
+    ("potential_shift_mv,model_label", "potential_shift_mv,potential_shift_mv"),
+    (",model_label", ""),  # missing column
+    (",model_label", ",model_label,extra"),
+    ("4,250,screening\n", ""),  # missing row
+    ("4,250,screening\n", "4,250,screening\n4,250,screening\n"),
+    ("1,1000,screening\n4,250,screening", "4,250,screening\n1,1000,screening"),
+    ("1,1000,screening", "1,1000"),  # short row
+    ("1,1000,screening", "1,1000,screening,extra"),
+    ("1,1000,screening", "1,1000,design"),  # changed label
+    ("1,1000,screening", "2,1000,screening"),  # changed coordinate
+])
+def test_golden_csv_rejects_schema_grid_and_text_changes(golden_csv_pair, before, after):
+    actual, golden = golden_csv_pair
+    text = golden.read_text(encoding="utf-8")
+    assert before in text
+    actual.write_bytes(text.replace(before, after).encode("utf-8"))
+    with pytest.raises(AssertionError):
+        _assert_csv_matches_golden(actual, golden, "potential_shift_mv")
+
+
+def test_golden_csv_has_no_absolute_allowance_at_zero(golden_csv_pair):
+    actual, golden = golden_csv_pair
+    text = golden.read_text(encoding="utf-8").replace("1,1000,", "1,0,")
+    golden.write_bytes(text.encode("utf-8"))
+    actual.write_bytes(text.replace("1,0,", "1,1e-300,").encode("utf-8"))
+    with pytest.raises(AssertionError):
+        _assert_csv_matches_golden(actual, golden, "potential_shift_mv")
 
 
 def test_every_csv_and_manifest_row_matches_independent_equations(tmp_path):

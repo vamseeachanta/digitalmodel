@@ -65,6 +65,10 @@ candidate files, but they do not replace the curated routing surfaces above.
 
 ## Knowledge pack review evidence
 
+Use the [Python source locator convention](standards/python-source-locators.md)
+for citations in pack prose and tables. It documents formatter-stable inline
+code and the existing document-scoped citation check.
+
 The [pipelay review and clearance index](registry/pipelay-review-clearance.json)
 links durable lesson entries, review responsibilities and C01–C07 evidence to
 the analytical knowledge pack. Assignments and clearance remain

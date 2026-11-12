@@ -1,0 +1,7 @@
+basename: api579_part9_crack_fad
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+part9_inspection: {}

@@ -40,6 +40,7 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field, field_validator
 
+from digitalmodel.hydrodynamics.diffraction.mesh_preflight import write_preflight_reports
 from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 from digitalmodel.hydrodynamics.diffraction.output_schemas import DiffractionResults
@@ -160,6 +161,7 @@ class AQWARunResult:
     input_file: Path | None = None
     output_dir: Path | None = None
     mesh_files: list[Path] = field(default_factory=list)
+    preflight_reports: list[dict] = field(default_factory=list)
     log_file: Path | None = None
     lis_file: Path | None = None
     ah1_file: Path | None = None
@@ -309,6 +311,10 @@ class AQWARunner:
         # Generate single .dat input file via AQWABackend
         input_file = self._generate_input_file(spec, output_dir, spec_dir=spec_dir)
         self._result.input_file = input_file
+        self._result.preflight_reports = [
+            dict(report) for report in self._backend.preflight_reports
+        ]
+        write_preflight_reports(self._result.preflight_reports, output_dir)
 
         # Copy mesh files
         if self._config.copy_mesh_files:

@@ -3,7 +3,7 @@
 The historical evidence index inventories every committed computed atlas with a
 recorded code revision and content fingerprint. It preserves the existing
 manifests, grids, surrogate specifications, validation evidence and default
-pointers. Of the 34 inventoried bases, 30 reconstruct from retained history;
+pointers. Of the 49 inventoried bases, 45 reconstruct from retained history;
 four remain `NOT_EVALUATED`. These are fingerprint reconstruction results, not
 qualification of the engineering methods or proof of a historical execution.
 
@@ -19,6 +19,7 @@ qualification of the engineering methods or proof of a historical execution.
 | 5 | 2026-10-25 | Reject branch-only source retention unless live destination settings establish merge-only integration, preventing acceptance before a squash or rebase can orphan the source. |
 | 6 | 2026-10-25 | Bind CI ancestry and inventory comparisons to destination base evidence so a contributor fork's default ref cannot bypass integration policy. |
 | 3 | 2026-10-25 | Bind regenerated source and artifact bytes before publication, resolving the first matching committed publication without replacing historical entries. |
+| 7 | 2026-11-12 | Add retained publication evidence for nine omitted computed atlases and reconcile the inventory totals. |
 
 ## Inventory and interpretation
 

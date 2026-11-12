@@ -325,7 +325,7 @@ function govAt(t){
 }
 
 /* ---------- canvas helpers ---------- */
-function fitCanvas(cv){const dpr=Math.min(window.devicePixelRatio||1,2); const w=cv.clientWidth, h=cv.getAttribute("height")*1;
+function fitCanvas(cv){const dpr=Math.min(window.devicePixelRatio||1,2); const w=cv.clientWidth; if(!cv.dataset.cssH) cv.dataset.cssH=cv.getAttribute("height"); const h=cv.dataset.cssH*1; /* CSS height; cv.height holds the h*dpr bitmap */ cv.style.height=h+"px";
   cv.width=w*dpr; cv.height=h*dpr; const ctx=cv.getContext("2d"); ctx.setTransform(dpr,0,0,dpr,0,0); return {ctx,w,h};}
 function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim();}
 
@@ -461,9 +461,9 @@ function sizePanels(){
   let avail=window.innerHeight - nonTrace - 10;           // 10px breathing room
   avail=Math.max(150, Math.min(avail, 560));              // total height shared by the 3 trace canvases
   const wave=Math.round(avail*0.30), motion=Math.round(avail*0.40), gov=avail-wave-motion;
-  el("cvWave").setAttribute("height", wave);
-  el("cvMotion").setAttribute("height", motion);
-  el("cvGov").setAttribute("height", gov);
+  el("cvWave").dataset.cssH=wave;
+  el("cvMotion").dataset.cssH=motion;
+  el("cvGov").dataset.cssH=gov;
 }
 
 function render(){

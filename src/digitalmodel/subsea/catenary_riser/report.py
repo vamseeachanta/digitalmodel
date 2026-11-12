@@ -160,9 +160,15 @@ class FatigueResult:
 
 @dataclass
 class Provenance:
-    """Provenance stamp for the deliverable of record."""
-    workflow: str = "riser-analysis"
-    workflow_version: str = "0.0.0"
+    """Supplied calculation provenance, never a certification record.
+
+    Evidence requires nonblank workflow, workflow_version and run_id identity,
+    a standard_revision containing a year token, and generated_utc as an
+    ISO-8601 calculation timestamp with an explicit zero UTC offset. Rendering
+    supplies none of these fields and does not authenticate their contents.
+    """
+    workflow: str = ""
+    workflow_version: str = ""
     standard_revision: str = ""
     #: "atlas" == screening; "custom" describes supplied calculation data only.
     mode: str = "atlas"
@@ -181,7 +187,7 @@ class Provenance:
         Render time cannot replace a missing calculation timestamp.
         """
         missing = []
-        for name in ("standard_revision", "run_id", "generated_utc"):
+        for name in ("workflow", "workflow_version", "standard_revision", "run_id", "generated_utc"):
             value = getattr(self, name)
             if not isinstance(value, str) or not value.strip():
                 missing.append(name)
@@ -231,11 +237,18 @@ class RiserReportData:
 
     @property
     def evidence_issues(self) -> list[str]:
-        """Missing groups and provenance prevent complete-evidence claims."""
-        return self.provenance.missing_fields + [
-            name for name in ("strength_results", "fatigue_results", "code_checks", "revision_history")
-            if not getattr(self, name)
-        ]
+        """List provenance gaps, then missing groups and unavailable rows."""
+        issues = self.provenance.missing_fields
+        for name in ("strength_results", "fatigue_results", "code_checks"):
+            rows = getattr(self, name)
+            if not rows:
+                issues.append(name)
+            for index, row in enumerate(rows):
+                if row.status == "N/A":
+                    issues.append(f"{name}[{index}] ({row.location}: N/A)")
+        if not self.revision_history:
+            issues.append("revision_history")
+        return issues
 
     @property
     def evidence_label(self) -> str:
@@ -394,7 +407,7 @@ def sample_riser_report_data() -> RiserReportData:
             standard_revision="DNV-OS-F201:2010 / DNVGL-RP-C203:2016 §2.2 eq (2.2.1)",
             mode="atlas",
             run_id="screen-0001",
-            generated_utc="",  # filled at render time if blank
+            generated_utc="",  # calculation time remains unknown in this sample
         ),
         revision_history=[{
             "revision": "DRAFT", "date": "2026-10-22",
@@ -535,13 +548,21 @@ def _status_span(status: str) -> str:
     return f'<span class="{cls}">{status}</span>' if cls else status
 
 
+def _workflow_text(p: Provenance) -> str:
+    """Display missing identity fields without manufacturing defaults."""
+    return " v".join(
+        value.strip() if isinstance(value, str) and value.strip() else "—"
+        for value in (p.workflow, p.workflow_version)
+    )
+
+
 def _provenance_html(p: Provenance) -> str:
     mapping = {
-        "Workflow": f"{p.workflow} v{p.workflow_version}",
+        "Workflow": _workflow_text(p),
         "Standard revision": p.standard_revision or "—",
         "Mode": p.mode_label,
         "Run ID": p.run_id or "—",
-        "Generated (UTC)": p.generated_utc or "—",
+        "Calculation generated (UTC)": p.generated_utc or "—",
     }
     return _kv_table_html(mapping)
 
@@ -568,7 +589,7 @@ def _build_sections(d: RiserReportData) -> list[tuple[str, str]]:
         "Riser": d.riser_name,
         "Type": d.riser_type,
         "Water depth": f"{d.water_depth_m:.0f} m",
-        "Overall status": _status_span(d.overall_status),
+        "Overall status": d.overall_status,
         "Max strength utilisation": _strength_kpi_text(d),
         "Min fatigue life": (
             f"{d.min_fatigue_life_years:.1f} yr"
@@ -644,6 +665,18 @@ margin:0 auto;font-size:.8rem;color:#718096;}
 """
 
 
+_SUPPLIED_RESULTS_NOTICE = (
+    "Supplied result rows are displayed; no solver analysis is run by this renderer. "
+    "Calculation time is supplied separately in Provenance. All outputs require "
+    "review by a qualified engineer before use in design or operational decisions."
+)
+
+
+def _supplied_rows_text(d: RiserReportData) -> str:
+    count = len(d.strength_results) + len(d.fatigue_results) + len(d.code_checks)
+    return f"Supplied result rows: {count:,}"
+
+
 def _render_fallback_html(d: RiserReportData, sections: list[tuple[str, str]],
                           timestamp: str) -> str:
     body = ""
@@ -659,13 +692,13 @@ def _render_fallback_html(d: RiserReportData, sections: list[tuple[str, str]],
   <div class="brand">digitalmodel — Engineering Intelligence</div>
   <h1>{_esc(d.riser_name)} — Riser Analysis Report</h1>
   <div class="subtitle">{_esc(d.riser_type)} · {_esc(d.project)}</div>
-  <div class="meta">Generated {timestamp} · {_esc(d.provenance.mode_label)}</div>
+  <div class="case-badge">{_esc(_supplied_rows_text(d))}</div>
+  <div class="meta">Rendered {timestamp} · {_esc(d.provenance.mode_label)}</div>
 </div>
 <div class="report-body">
 {body}</div>
 <div class="report-footer">
-  <p class="disclaimer"><em>Preliminary engineering estimates. All outputs require
-  review by a qualified engineer before use in design or operational decisions.</em></p>
+  <p class="disclaimer"><em>{_esc(_SUPPLIED_RESULTS_NOTICE)}</em></p>
   <p>References: {_esc(' · '.join(d.standards))}</p>
   <p>&copy; {datetime.now().year} digitalmodel · aceengineer.com</p>
 </div>
@@ -685,9 +718,12 @@ def render_html(data: Union[RiserReportData, dict[str, Any]]) -> str:
             report = Builder(
                 title=f"{d.riser_name} — Riser Analysis Report",
                 subtitle=f"{d.riser_type} · {d.project}",
-                demo_id=d.provenance.run_id or "riser-report",
-                case_count=len(d.strength_results) + len(d.fatigue_results),
+                demo_id=d.provenance.run_id or "—",
+                case_count=len(d.strength_results) + len(d.fatigue_results) + len(d.code_checks),
                 code_refs=list(d.standards),
+                case_description=_supplied_rows_text(d),
+                timestamp_label="Rendered",
+                disclaimer=_SUPPLIED_RESULTS_NOTICE,
             )
             for title, content in sections:
                 report.add_section(title, content)
@@ -715,7 +751,10 @@ def render_markdown(data: Union[RiserReportData, dict[str, Any]]) -> str:
     lines.append(f"# {d.riser_name} — Riser Analysis Report")
     lines.append("")
     lines.append(f"*{d.riser_type} · {d.project}*  ")
-    lines.append(f"*Generated {timestamp} · {d.provenance.mode_label}*")
+    lines.append(f"*Rendered {timestamp} · {d.provenance.mode_label}*")
+    lines.append(f"*{_supplied_rows_text(d)}*")
+    lines.append("")
+    lines.append(_SUPPLIED_RESULTS_NOTICE)
     lines.append("")
 
     lines.append("## Executive Summary")
@@ -830,11 +869,11 @@ def render_markdown(data: Union[RiserReportData, dict[str, Any]]) -> str:
     lines.append("## Provenance")
     lines.append("")
     p = d.provenance
-    lines.append(f"- **Workflow:** {p.workflow} v{p.workflow_version}")
+    lines.append(f"- **Workflow:** {_workflow_text(p)}")
     lines.append(f"- **Standard revision:** {p.standard_revision or '—'}")
     lines.append(f"- **Mode:** {p.mode_label}")
     lines.append(f"- **Run ID:** {p.run_id or '—'}")
-    lines.append(f"- **Generated (UTC):** {p.generated_utc or '—'}")
+    lines.append(f"- **Calculation generated (UTC):** {p.generated_utc or '—'}")
     lines.append("")
 
     return "\n".join(lines)
@@ -870,11 +909,11 @@ def generate_riser_report(
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
     html_str = render_html(data)
-    output_path.write_text(html_str, encoding="utf-8")
+    output_path.write_text(html_str, encoding="utf-8", newline="\n")
     written = {"html": output_path}
 
     if md_path is not None:
-        md_path.write_text(render_markdown(data), encoding="utf-8")
+        md_path.write_text(render_markdown(data), encoding="utf-8", newline="\n")
         written["markdown"] = md_path
 
     return written
