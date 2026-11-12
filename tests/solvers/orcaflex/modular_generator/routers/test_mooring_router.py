@@ -5,7 +5,10 @@ All tests are pure dict assertions, no OrcFxAPI or solver required.
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
+import yaml
 
 from digitalmodel.solvers.orcaflex.modular_generator.schema.mooring import (
     ChainGrade,
@@ -355,3 +358,39 @@ class TestMooringRouter:
         gm = GenericModel(**gm_input)
         assert len(gm.line_types) == 2  # chain + wire
         assert len(gm.lines) == 1
+
+
+# ---------------------------------------------------------------------------
+# Rope mass per unit length against the curated library components (#3981)
+# ---------------------------------------------------------------------------
+
+_LIBRARY_LINE_TYPES = (
+    Path(__file__).resolve().parents[5] / "docs/domains/orcaflex/library/line_types"
+)
+
+
+@pytest.mark.parametrize(
+    ("seg_type", "library_file", "diameter"),
+    [
+        (MooringSegmentType.WIRE_ROPE, "wire_rope_64mm.yml", 0.064),
+        (MooringSegmentType.WIRE_ROPE, "wire_rope_76mm.yml", 0.076),
+        (MooringSegmentType.WIRE_ROPE, "wire_rope_84mm.yml", 0.084),
+        (MooringSegmentType.POLYESTER, "polyester_rope_120mm.yml", 0.120),
+        (MooringSegmentType.POLYESTER, "polyester_rope_140mm.yml", 0.140),
+        (MooringSegmentType.POLYESTER, "polyester_rope_160mm.yml", 0.160),
+    ],
+)
+def test_rope_mass_matches_curated_library_component(seg_type, library_file, diameter):
+    """Mass per unit length within 2 % of the library file the code cites.
+
+    Regression: the wire and polyester coefficients gave 0.196 te/m for 76 mm
+    wire (library 0.025 te/m) and 0.115 te/m for 120 mm polyester (library
+    0.008 te/m). The comparator is read from the library YAML, not from the
+    router constants.
+    """
+    library = yaml.safe_load((_LIBRARY_LINE_TYPES / library_file).read_text(encoding="utf-8"))
+    seg = MooringSegment(type=seg_type, diameter=diameter, length=100)
+    lt = MooringRouter()._segment_to_linetype(seg)
+    assert lt["properties"]["MassPerUnitLength"] == pytest.approx(
+        library["MassPerUnitLength"], rel=0.02
+    )
