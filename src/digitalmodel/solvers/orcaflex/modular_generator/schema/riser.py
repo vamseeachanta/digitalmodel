@@ -301,7 +301,8 @@ class RiserVessel(BaseModel):
         name: Vessel name for OrcaFlex.
         type_name: Vessel type reference.
         position: Initial position [x, y, z] (m).
-        orientation: Initial orientation [heading, pitch, roll] (deg).
+        orientation: Initial orientation [rx, ry, rz] (deg). The builder
+            emits rz as InitialHeading; rx and ry must be 0 (#3986).
         length: Optional vessel length (m).
         primary_motion: Primary motion mode. Default 'none'.
         superimposed_motion: Superimposed motion. Default 'raos_harmonics'.

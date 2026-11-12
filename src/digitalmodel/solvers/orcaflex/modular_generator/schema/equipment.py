@@ -301,7 +301,7 @@ class Vessel(BaseModel):
         default=[0, 0, 0], min_length=3, max_length=3, description="Initial position [x, y, z] (m)"
     )
     orientation: list[float] = Field(
-        default=[0, 0, 0], min_length=3, max_length=3, description="Initial orientation [rx, ry, rz] (deg)"
+        default=[0, 0, 0], min_length=3, max_length=3, description="Initial orientation [rx, ry, rz] (deg); rz is the heading, rx and ry must be 0"
     )
 
     @field_validator("position", "orientation")
