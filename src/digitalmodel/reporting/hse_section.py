@@ -139,7 +139,7 @@ def markdown_to_html(text: str) -> str:
     return "".join(out)
 
 
-_HEADING = re.compile(r"^### [A-Z]\.(\d) (.+)$", re.MULTILINE)
+_HEADING = re.compile(r"^### ([A-Z])\.(\d) (.+)$", re.MULTILINE)
 
 
 def hse_content(markdown: str) -> Dict[str, str]:
@@ -150,13 +150,14 @@ def hse_content(markdown: str) -> Dict[str, str]:
     """
     marks = list(_HEADING.finditer(markdown))
     found = {
-        int(m.group(1)): (m.group(2).strip(), m.end(), i) for i, m in enumerate(marks)
+        int(m.group(2)): (m.group(3).strip(), m.end(), i, m.group(1))
+        for i, m in enumerate(marks)
     }
     content: Dict[str, str] = {}
     for key, (n, heading) in HSE_BLOCKS.items():
         if n not in found:
             raise ValueError(f"HSE appendix: subsection {n} ({heading}) is missing")
-        got, start, idx = found[n]
+        got, start, idx, letter = found[n]
         if got != heading:
             raise ValueError(
                 f"HSE appendix: subsection {n} is {got!r}, not {heading!r}"
@@ -165,7 +166,9 @@ def hse_content(markdown: str) -> Dict[str, str]:
         body = markdown[start:end].strip()
         if not body:
             raise ValueError(f"HSE appendix: subsection {n} ({heading}) is empty")
-        content[key] = f"<h3>{html.escape(got)}</h3>" + markdown_to_html(body)
+        content[key] = f"<h3>{letter}.{n} {html.escape(got)}</h3>" + markdown_to_html(
+            body
+        )
     return content
 
 

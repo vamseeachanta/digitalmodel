@@ -96,6 +96,10 @@ def test_with_hse_section_appends_once_and_report_is_incomplete_without_it() -> 
 def test_content_is_split_by_subsection_and_escaped() -> None:
     content = hse_content(_markdown())
     assert list(content) == list(HSE_BLOCKS)
+    assert content["hse_data_used"].startswith("<h3>F.1 Data used</h3>")
+    assert content["hse_references"].startswith(
+        "<h3>F.6 References for this appendix</h3>"
+    )
     assert "<td>Synthetic set</td><td>7</td>" in content["hse_data_used"]
     assert (
         "<strong>part 2</strong> with &lt;angle&gt; brackets"
