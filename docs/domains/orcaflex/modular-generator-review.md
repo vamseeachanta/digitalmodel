@@ -13,6 +13,12 @@ Each item states what was checked and which check remains open.
 
 Tracker: #3990.
 
+## Revision history
+
+| Revision | Date | Change and reason |
+| --- | --- | --- |
+| 1 | 2026-11-12 | State the stiffness calculation and assumptions, correct the inventory denominator and normalize line endings to make the comparison reproducible and satisfy the LF requirement. |
+
 ## 1. How the generator builds a model
 
 The root schema `ProjectInputSpec` (`schema/root.py`) accepts exactly one
@@ -142,14 +148,24 @@ does not state that any generated model loads or converges.
 
 ## 6. Addendum: findings after the first issue set
 
-- #4007. 24 of the 40 library line types under
-  `docs/domains/orcaflex/library/line_types/` (all riser, pipe, flexible,
-  hybrid and umbilical types) carry mass per unit length and EA about 1000
-  times the OrcaFlex SI values (te/m, kN). The SI templates include them, for
-  example `templates/risers/scr_hybrid/base/scr_base.yml:53`. After unit
-  conversion, the steel EA values still differ from the steel area of the
-  stated OD and ID by a factor of about 2.9 (10 in SCR: 785,000 kN against
-  2.28e6 kN), so the data is not established by a units correction alone.
+- #4007. 24 of the 41 library line-type files counted by
+  `docs/domains/orcaflex/library/line_types/*.yml` at `e2e2d30e` (all riser,
+  pipe, flexible, hybrid and umbilical types) carry mass per unit length and
+  EA about 1000 times the OrcaFlex SI values (te/m, kN). The SI templates
+  include them, for example
+  `templates/risers/scr_hybrid/base/scr_base.yml:53`. For the 10 in steel SCR,
+  `library/line_types/scr_10inch_x65.yml:6`-`9` supplies OD = 0.2731 m,
+  ID = 0.2461 m and EA = 785,000,000 before the proposed unit conversion
+  (785,000 kN after conversion). The component description identifies steel
+  but supplies no elastic modulus or material qualification. E = 207 GPa
+  (207 million kN/m²) is assumed, based on previous experience, solely for
+  this arithmetic comparison. Independently calculated,
+  `EA = E*pi*(OD^2-ID^2)/4`, giving
+  `207e6*pi*(0.2731^2-0.2461^2)/4` kN, or about 2.3 million kN.
+  The calculated EA divided by the converted library EA is 2.9 (rounded
+  from the unrounded calculation). A units correction alone therefore does
+  not establish the data; reproducing this arithmetic provides no
+  engineering qualification of the component or its material properties.
 - Spring/damper links from `builders/riser_links_builder.py` carry
   `UnstretchedLength` and `Stiffness` without `LinearSpring` or
   `LinearDamper`. The native linear spring/damper in the public example
