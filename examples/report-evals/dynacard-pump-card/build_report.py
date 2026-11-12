@@ -11,8 +11,8 @@ METRICS = tuple((key, *spec) for key, spec in DISPLAY_METRICS.items())
 INPUT_LABELS = {
     'rod_length_depth': 'Rod length and pump depth', 'rod_diameter': 'Rod diameter',
     'rod_modulus': 'Rod modulus', 'pumping_speed': 'Pumping speed',
-    'surface_load_scale': 'Surface load scale', 'surface_position_scale': 'Surface position scale',
-    'fluid_density': 'Fluid density', 'pump_diameter': 'Pump diameter',
+    'surface_load_scale': 'Surface load (load-cell gain)', 'surface_position_scale': 'Surface position (stroke scale)',
+    'fluid_density': 'Fluid density', 'pump_diameter': 'Plunger diameter',
 }
 OUTPUT_LABELS = {'pump_stroke_in': 'Pump stroke', 'fluid_load_lbf': 'Fluid load',
                  'fillage_pct': 'Fillage', 'maximum_pump_load_lbf': 'Maximum pump load',
@@ -345,7 +345,7 @@ def prompt_results(data):
                           + row['effect'] + ' Supply: ' + row['how_to_supply']
                           for row in data['missing_data'])
     cannot = '\n'.join('- ' + text for text in data['cannot_do'])
-    basis = (f"Basis: {data['settings']['runtime_hours']} h/day and "
+    basis = (f"Basis, ASSUMED: {data['settings']['runtime_hours']} h/day and "
              f"{data['settings']['volumetric_efficiency_pct']} % volumetric efficiency.")
     return f'''Expected public-case key results:
 {key_table(data, basis)}
@@ -362,7 +362,8 @@ You cannot:
 
 Output: report stroke, loads, fillage, effective travel, displacement basis and
 work per stroke; the second-solver cross-check; the complete assumptions
-register; shape hypotheses with probabilities and recorded plate counts; input
+register; shape hypotheses with model scores (not field probabilities) and
+recorded plate counts; input
 sensitivity; and one figure of the surface and pump cards beside the reference
 shapes. Only if you computed the public-case results without running analysis.py:
 for the arithmetic comparison, write my-results.json using the numeric result ids in
