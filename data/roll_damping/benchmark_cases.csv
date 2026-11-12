@@ -1,0 +1,22 @@
+case_id,source_id,hull,b_over_t,bilge,bilge_keel,scale,amplitude_deg,damping_pct,damping_basis,source_page,verification,note
+kim2015-k0-05deg,kim2015,box barge model L 1.00 m B 0.25 m T 0.08 m,3.125,R 0.025 m (R/B 0.10),none,model,5,1.0,total decay (includes wave part),Table 3 p. 466,derived from table coefficients,zeta = r + s*phi_a with r 0.00846 and s 0.00031 per deg
+kim2015-k0-10deg,kim2015,box barge model L 1.00 m B 0.25 m T 0.08 m,3.125,R 0.025 m (R/B 0.10),none,model,10,1.2,total decay (includes wave part),Table 3 p. 466,derived from table coefficients,as above
+kim2015-k0-15deg,kim2015,box barge model L 1.00 m B 0.25 m T 0.08 m,3.125,R 0.025 m (R/B 0.10),none,model,15,1.3,total decay (includes wave part),Table 3 p. 466,derived from table coefficients,as above
+kim2015-k1-05deg,kim2015,box barge model,3.125,R/B 0.10,K1 (smallest),model,5,2.6,total decay (includes wave part),Table 4 p. 466,derived from table coefficients,r 0.01362 s 0.00242 per deg
+kim2015-k1-10deg,kim2015,box barge model,3.125,R/B 0.10,K1 (smallest),model,10,3.8,total decay (includes wave part),Table 4 p. 466,derived from table coefficients,as above
+kim2015-k1-15deg,kim2015,box barge model,3.125,R/B 0.10,K1 (smallest),model,15,5.0,total decay (includes wave part),Table 4 p. 466,derived from table coefficients,as above
+kim2015-k2-05deg,kim2015,box barge model,3.125,R/B 0.10,K2,model,5,4.1,total decay (includes wave part),Table 5 p. 467,derived from table coefficients,r 0.01634 s 0.00484 per deg
+kim2015-k2-10deg,kim2015,box barge model,3.125,R/B 0.10,K2,model,10,6.5,total decay (includes wave part),Table 5 p. 467,derived from table coefficients,as above
+kim2015-k2-15deg,kim2015,box barge model,3.125,R/B 0.10,K2,model,15,8.9,total decay (includes wave part),Table 5 p. 467,derived from table coefficients,as above
+kim2015-k3-05deg,kim2015,box barge model,3.125,R/B 0.10,K3 (largest),model,5,6.8,total decay (includes wave part),Table 6 p. 467,derived from table coefficients,r 0.02737 s 0.00809 per deg
+kim2015-k3-10deg,kim2015,box barge model,3.125,R/B 0.10,K3 (largest),model,10,10.8,total decay (includes wave part),Table 6 p. 467,derived from table coefficients,as above
+kim2015-k3-15deg,kim2015,box barge model,3.125,R/B 0.10,K3 (largest),model,15,14.9,total decay (includes wave part),Table 6 p. 467,derived from table coefficients,as above
+gu-day2015-rect-15deg,gu-day2015,2-D rectangle B 0.30 m T 0.05 m (Jung et al. 2006 model),6.0,sharp,none,model 2-D,15,10.6,total decay (includes wave part),p. 5,full text read,experiment b 0.519 kg m s; I 0.364 kg m2; omega 6.746 rad/s; zeta = b/(2 I omega); released from 15 deg
+gu-day2015-rect-15deg-cfd,gu-day2015,2-D rectangle B 0.30 m T 0.05 m,6.0,sharp,none,model 2-D CFD,15,10.3,total decay (includes wave part),p. 5,full text read,CFD b 0.503 kg m s; 3.16 % below the experiment
+kjaer2024-lcog2-07deg,kjaer2024,barge-like WTIV L 160 m B 49 m T 6.0 m at 1:80,8.17,not given,none,model CFD,7,5.3,total decay (includes wave part),Table 5 p. 6,full text read,2nd cycle of the lowest-KG condition LCOG2; base and high-KG conditions lower (p. 7)
+journee1991-bt4-05deg,journee-massie2001,rectangular barge G at the waterline,4.0,sharp,none,model fit,5,6.4,total decay (includes wave part),eq. 7.174 p. 7-47,derived from the published fit,kappa = 0.00130 (B/T)^2 + 0.500 phi_a with phi_a in rad (our reading)
+journee1991-bt4-10deg,journee-massie2001,rectangular barge G at the waterline,4.0,sharp,none,model fit,10,10.8,total decay (includes wave part),eq. 7.174 p. 7-47,derived from the published fit,as above
+journee1991-bt6-05deg,journee-massie2001,rectangular barge G at the waterline,6.0,sharp,none,model fit,5,9.0,total decay (includes wave part),eq. 7.174 p. 7-47,derived from the published fit,as above
+journee1991-bt6-10deg,journee-massie2001,rectangular barge G at the waterline,6.0,sharp,none,model fit,10,13.4,total decay (includes wave part),eq. 7.174 p. 7-47,derived from the published fit,as above
+journee1991-bt8-05deg,journee-massie2001,rectangular barge G at the waterline,8.0,sharp,none,model fit,5,12.7,total decay (includes wave part),eq. 7.174 p. 7-47,derived from the published fit,as above
+journee1991-bt8-10deg,journee-massie2001,rectangular barge G at the waterline,8.0,sharp,none,model fit,10,17.0,total decay (includes wave part),eq. 7.174 p. 7-47,derived from the published fit,as above
