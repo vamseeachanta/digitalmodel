@@ -105,6 +105,38 @@ def test_flexible_without_rna_rejected(spec_dict):
         FowtSpec(**fowt)
 
 
+def test_non_default_gravity_rejected(spec_dict):
+    """The General section does not set gravity, so the weight term must use the default."""
+    fowt = copy.deepcopy(spec_dict["fowt"])
+    fowt["gravity"] = 9.81
+    with pytest.raises(ValidationError, match="gravity 9.81 is not supported"):
+        FowtSpec(**fowt)
+    fowt["gravity"] = 9.80665
+    assert FowtSpec(**fowt).gravity == 9.80665
+
+
+@pytest.mark.parametrize("orientation", [[2.0, 0.0, 0.0], [0.0, 3.0, 0.0]])
+def test_flexible_with_initial_roll_or_pitch_rejected(spec_dict, orientation):
+    """The tower-top RNA offset is not rotated with the hull, so a tilted start is refused."""
+    fowt = _flexible(spec_dict)
+    fowt["hull"]["initial_orientation"] = orientation
+    with pytest.raises(ValidationError, match="non-zero initial roll or pitch"):
+        FowtSpec(**fowt)
+
+
+def test_flexible_with_heading_only_accepted(spec_dict):
+    fowt = _flexible(spec_dict)
+    fowt["hull"]["initial_orientation"] = [0.0, 0.0, 30.0]
+    assert FowtSpec(**fowt).hull.initial_orientation == [0.0, 0.0, 30.0]
+
+
+def test_rigid_with_initial_pitch_accepted(spec_dict):
+    fowt = copy.deepcopy(spec_dict["fowt"])
+    fowt["hull"]["initial_orientation"] = [0.0, 3.0, 0.0]
+    fowt["hull"]["included_in_statics"] = "None"
+    assert FowtSpec(**fowt).hull.initial_orientation[1] == 3.0
+
+
 def test_unknown_mooring_line_type_rejected(spec_dict):
     fowt = copy.deepcopy(spec_dict["fowt"])
     fowt["mooring_lines"][0]["line_type"] = "missing"
