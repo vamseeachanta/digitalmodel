@@ -324,9 +324,12 @@ Steps:
 3. Rebuild every key result and grade it against results.json:
    PYTHONPATH=src uv run --no-sync python examples/report-evals/dynacard-pump-card/eval.py
 4. For my card: ask me for the items listed under "Ask me before you go on if".
-   Write them into a copy of reader-card-template.json and run analysis.py with
-   that file as its argument. Keep every ASSUMED input, the sensitivity table
-   and the HYPOTHESIS label on every shape output in what you report.
+   Write them into my-card.json, a copy of
+   examples/report-evals/dynacard-pump-card/reader-card-template.json, with
+   positions in inches and loads in lbf (convert a metric card first), and run:
+   PYTHONPATH=src uv run --no-sync python examples/report-evals/dynacard-pump-card/analysis.py my-card.json --out my-analysis.json --figure my-figure.png
+   Keep every ASSUMED input, the sensitivity table and the HYPOTHESIS label on
+   every shape output in what you report.
 
 What the shape label is worth: the shape-only model labelled {literal['correct']} of {literal['count']} public
 plate shapes with a literal label, and {total['correct']} of {total['count']} when the two assumed label
@@ -360,8 +363,9 @@ You cannot:
 Output: report stroke, loads, fillage, effective travel, displacement basis and
 work per stroke; the second-solver cross-check; the complete assumptions
 register; shape hypotheses with probabilities and recorded plate counts; input
-sensitivity; and one physical-card/reference-shape figure. For the public-case
-arithmetic comparison, write my-results.json using the numeric result ids in
+sensitivity; and one figure of the surface and pump cards beside the reference
+shapes. Only if you computed the public-case results without running analysis.py:
+for the arithmetic comparison, write my-results.json using the numeric result ids in
 results.json, in the form {{"results": [{{"id": "pump_stroke_in", "value": {number(data['key_results']['pump_stroke_in'])}}}]}}.
 Include every graded result in that file, then run:
 PYTHONPATH=src uv run --no-sync python examples/report-evals/dynacard-pump-card/eval.py --compare my-results.json

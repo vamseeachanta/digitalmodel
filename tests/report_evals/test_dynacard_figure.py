@@ -41,8 +41,8 @@ def test_figure_exports_physical_cards_and_ten_reference_shapes(tmp_path):
     svg = target.with_suffix('.svg')
     assert svg.stat().st_size > 20000
     text = ' '.join(ET.parse(svg).getroot().itertext())
-    for phrase in ('Position (in)', 'Load (lbf)', 'Public reference shapes (CC0 plate)',
-                   'nearest shapes (hypothesis)', 'ASSUMED', 'fluid load', 'fillage'):
+    for phrase in ('Position (in)', 'Load (lbf)', 'Public reference card shapes',
+                   'nearest by shape distance', 'hypothesis', 'assumed inputs', 'fluid load', 'fillage'):
         assert phrase.lower() in text.lower()
-    assert text.count('(assumed)') == 2
+    assert text.count('(label mapping assumed)') == 2
     assert '−' in text  # True minus signs on the physical axes.

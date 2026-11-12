@@ -26,6 +26,8 @@ CANNOT_DO = [
     'Analyse a deviated well as vertical without saying so; the frequency-domain cross-check is vertical.',
     'Correct a mis-calibrated load cell without independent calibration evidence.',
     'Give production from a card alone: operating runtime and plunger/valve slip are needed.',
+    'Analyse a well with unanchored tubing: tubing movement is not modelled and a card marked unanchored is rejected.',
+    'Analyse rod materials other than steel: this reader rejects them.',
     'Establish a published-example check without an openly readable worked example with tabulated card values; it is NOT_EVALUATED.',
 ]
 
@@ -97,7 +99,7 @@ def missing_data(sensitivity):
          'If not supplied, a vertical well is ASSUMED. The frequency-domain cross-check is always vertical. The effect of deviation is NOT_EVALUATED without a survey.',
          'Give measured depth, inclination and azimuth from surface to the pump.'),
         ('pressure', 'Tubing pressure',
-         'It is used for pump intake pressure, which this report does not give.',
+         'Optional. It is used for pump intake pressure, which this report does not give.',
          'If not supplied, 100 psi is ASSUMED; none of the reported card results uses it.',
          'Read it at the wellhead.'),
     ]

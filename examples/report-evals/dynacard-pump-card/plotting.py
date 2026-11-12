@@ -13,6 +13,7 @@ ORANGE = '#D55E00'
 GREEN = '#009E73'
 GREY = '#8a8a8a'
 INK = '#333333'
+MARK = '#1a1a1a'
 
 
 def _closed(card, shift=0.0):
@@ -60,6 +61,7 @@ def _draw_cards(ax, data):
            ylabel='Load (lbf)')
     ax.xaxis.set_major_formatter(FuncFormatter(lambda value, _: _number(value)))
     ax.yaxis.set_major_formatter(FuncFormatter(lambda value, _: _number(value)))
+    ax.set_yticks([tick for tick in ax.get_yticks() if 0 <= tick <= surface_y.max() + .12 * y_span])
     ax.grid(color='#e3e3e3', lw=.5, zorder=0)
     ax.axhline(0, color='#b0b0b0', lw=.7, zorder=1)
     ax.spines[['top', 'right']].set_visible(False)
@@ -70,7 +72,7 @@ def _draw_cards(ax, data):
             fontweight='bold', va='center', ha='left')
     ax.text(label_x, pump_y.max() + .035 * y_span, 'Pump card\ncomputed by the\nwave equation',
             color=ORANGE, fontsize=10, fontweight='bold', va='bottom', ha='left')
-    notes = ['green dashes: second solver,\nfrequency domain']
+    notes = ['orange: finite-difference solver', 'green dashes: second solver,\nfrequency domain']
     if cards.get('reference') is not None:
         notes.append('grey band: card stored in\nthe well record')
     ax.text(label_x, pump_y.max() + .02 * y_span, '\n'.join(notes), color='#555555',
@@ -119,20 +121,20 @@ def _draw_plate(fig, grid, data):
         x = (x - x.min()) / np.ptp(x)
         y = (y - y.min()) / np.ptp(y)
         rank = ranks.get(shape['label'])
-        ax.plot(np.r_[x, x[0]], np.r_[y, y[0]], color=ORANGE if rank else '#4d4d4d',
-                lw=1.6 if rank else 1.0)
-        title = textwrap.fill(shape['label'], width=24)
+        ax.plot(np.r_[x, x[0]], np.r_[y, y[0]], color=MARK if rank else '#8a8a8a',
+                lw=1.8 if rank else 1.0)
+        title = textwrap.fill(shape['label'].replace('Traveling', 'Travelling'), width=24)
         if shape['crosswalk_status'] == 'ASSUMED':
-            title += ' (assumed)'
+            title += '\n(label mapping assumed)'
         ax.set_title(title, fontsize=7.5, pad=3, color=INK)
         ax.set(xlim=(-.1, 1.1), ylim=(-.12, 1.12), xticks=[], yticks=[])
         ax.set_box_aspect(.55)
         for spine in ax.spines.values():
-            spine.set_color(ORANGE if rank else '#d9d9d9')
+            spine.set_color(MARK if rank else '#d9d9d9')
             spine.set_linewidth(1.8 if rank else .6)
         if rank:
             ax.text(.04, .93, str(rank), transform=ax.transAxes, va='top',
-                    color=ORANGE, fontsize=11, fontweight='bold')
+                    color=MARK, fontsize=11, fontweight='bold')
 
 
 def render_figure(data: dict, path: Path) -> None:
@@ -153,15 +155,15 @@ def render_figure(data: dict, path: Path) -> None:
             fig.suptitle('Surface card and computed pump card, ' + condition,
                          x=.07, y=.965, ha='left', fontsize=14, fontweight='bold')
             fig.text(.07, .915, 'The wave equation removes rod weight, rod stretch and rod '
-                     'dynamics from the surface card.\nThe pump card rests on the ASSUMED '
-                     'inputs listed in the report.', ha='left', va='top', fontsize=9,
+                     'dynamics from the surface card.\nThe pump card rests on the assumed '
+                     'inputs listed with the results.', ha='left', va='top', fontsize=9,
                      color='#555555')
-            fig.text(.862, .93, 'Public reference shapes (CC0 plate)',
+            fig.text(.862, .93, 'Public reference card shapes',
                      ha='center', fontsize=10, color=INK)
-            fig.text(.862, .895, '1, 2, 3: nearest shapes (hypothesis)',
-                     ha='center', color=ORANGE, fontsize=9)
+            fig.text(.862, .895, '1, 2, 3: nearest by shape distance',
+                     ha='center', color=MARK, fontsize=9)
             fig.text(.862, .045, 'Shapes are normalised. Rank is shape distance only;\n'
-                     'accuracy on field cards is NOT_EVALUATED.',
+                     'the fault they suggest is a hypothesis.',
                      ha='center', va='center', fontsize=7.5, color='#555555')
             fig.savefig(path, dpi=200)
             fig.savefig(path.with_suffix('.svg'), metadata={'Date': None})
