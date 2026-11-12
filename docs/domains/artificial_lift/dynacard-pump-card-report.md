@@ -23,6 +23,8 @@ The analysis cannot:
 - Analyse a deviated well as vertical without saying so; the frequency-domain cross-check is vertical.
 - Correct a mis-calibrated load cell without independent calibration evidence.
 - Give production from a card alone: operating runtime and plunger/valve slip are needed.
+- Analyse a well with unanchored tubing: tubing movement is not modelled and a card marked unanchored is rejected.
+- Analyse rod materials other than steel: this reader rejects them.
 
 The coupled Gibbs transfer is checked against closed-form cases derived from the cited equations and against the stored pump cards of five public example wells (median load nRMSE 1.3 %, maximum 2.0 %, 15 harmonics); no openly readable published worked example with tabulated card values was found, so a published-example check is NOT_EVALUATED.
 
@@ -199,9 +201,9 @@ The [reusable prompt](../../../examples/report-evals/dynacard-pump-card/PROMPT.m
 
 | Data | Source | Licence | Version or date | Link |
 | --- | --- | --- | --- | --- |
-| Public example surface card, rod string and stored pump card | Repository field fixture | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/b0c6503e483a95a0bbc67665d03f9044e7cb6fcd/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json) |
+| Public example surface card, rod string and stored pump card | Repository field fixture | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/2b6c475a8145f5f5f967a9d3a08d995847953734/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json) |
 | Public reference shapes | Public diagnostic plate | CC0 1.0 | 2026-10-11 | [Source](https://doi.org/10.17632/hnfwm9mjs6.1) |
-| Recorded shape-only plate score | Repository benchmark | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/b0c6503e483a95a0bbc67665d03f9044e7cb6fcd/tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json) |
+| Recorded shape-only plate score | Repository benchmark | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/2b6c475a8145f5f5f967a9d3a08d995847953734/tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json) |
 
 Table B1. Retained data sources; input and source digests are recorded by the analysis and eval.
 

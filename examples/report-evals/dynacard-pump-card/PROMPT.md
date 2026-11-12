@@ -15,7 +15,7 @@ fillage from it. Do it first on the public example well, then on my card.
 
 Inputs (all public, no account needed):
 - Code and data: https://github.com/vamseeachanta/digitalmodel at commit
-  b0c6503e483a95a0bbc67665d03f9044e7cb6fcd, MIT licence.
+  2b6c475a8145f5f5f967a9d3a08d995847953734, MIT licence.
 - The public example well:
   tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json in that
   repository. It is an anonymised field well: a measured surface card, a
@@ -29,8 +29,8 @@ Inputs (all public, no account needed):
 Steps:
 1. git clone https://github.com/vamseeachanta/digitalmodel
    cd digitalmodel
-   git fetch origin b0c6503e483a95a0bbc67665d03f9044e7cb6fcd || git fetch origin refs/pull/3969/head
-   git checkout b0c6503e483a95a0bbc67665d03f9044e7cb6fcd
+   git fetch origin 2b6c475a8145f5f5f967a9d3a08d995847953734 || git fetch origin refs/pull/3969/head
+   git checkout 2b6c475a8145f5f5f967a9d3a08d995847953734
    (The files at that commit can name an earlier pin; the values are the same.)
    uv sync --extra test
 2. Run the public example and keep its output and figure:
@@ -38,9 +38,12 @@ Steps:
 3. Rebuild every key result and grade it against results.json:
    PYTHONPATH=src uv run --no-sync python examples/report-evals/dynacard-pump-card/eval.py
 4. For my card: ask me for the items listed under "Ask me before you go on if".
-   Write them into a copy of reader-card-template.json and run analysis.py with
-   that file as its argument. Keep every ASSUMED input, the sensitivity table
-   and the HYPOTHESIS label on every shape output in what you report.
+   Write them into my-card.json, a copy of
+   examples/report-evals/dynacard-pump-card/reader-card-template.json, with
+   positions in inches and loads in lbf (convert a metric card first), and run:
+   PYTHONPATH=src uv run --no-sync python examples/report-evals/dynacard-pump-card/analysis.py my-card.json --out my-analysis.json --figure my-figure.png
+   Keep every ASSUMED input, the sensitivity table and the HYPOTHESIS label on
+   every shape output in what you report.
 
 What the shape label is worth: the shape-only model labelled 5 of 8 public
 plate shapes with a literal label, and 6 of 10 when the two assumed label
@@ -98,7 +101,7 @@ Ask me before you go on if:
 - Fluid density, or water cut with oil and water densities: Fluid density sets the buoyancy of the rod string. If not supplied, fluid density is ASSUMED 62.4 lb/ft3 (fresh water). On the public example well a 1 % error in it changes: pump stroke 0.00, fluid load 0.00, fillage 0.00, maximum pump load 0.22, displacement 0.00 (% per %). Supply: Give the produced-fluid density or the water cut and the two phase densities.
 - Whether the tubing is anchored: Unanchored tubing stretches with the fluid load and shortens the plunger travel relative to the barrel. If not supplied, anchored tubing is ASSUMED; pump stroke, fillage and displacement rest on it. Unanchored tubing is not modelled and its effect is NOT_EVALUATED. Supply: State anchored or unanchored, with the anchor depth.
 - Deviation survey: In a deviated well, rod weight and friction act along the well path. If not supplied, a vertical well is ASSUMED. The frequency-domain cross-check is always vertical. The effect of deviation is NOT_EVALUATED without a survey. Supply: Give measured depth, inclination and azimuth from surface to the pump.
-- Tubing pressure: It is used for pump intake pressure, which this report does not give. If not supplied, 100 psi is ASSUMED; none of the reported card results uses it. Supply: Read it at the wellhead.
+- Tubing pressure: Optional. It is used for pump intake pressure, which this report does not give. If not supplied, 100 psi is ASSUMED; none of the reported card results uses it. Supply: Read it at the wellhead.
 
 Use these public-case sensitivity factors to explain which results missing or
 uncertain inputs weaken. Recalculate the factors on my own card; a local factor
@@ -121,13 +124,16 @@ You cannot:
 - Analyse a deviated well as vertical without saying so; the frequency-domain cross-check is vertical.
 - Correct a mis-calibrated load cell without independent calibration evidence.
 - Give production from a card alone: operating runtime and plunger/valve slip are needed.
+- Analyse a well with unanchored tubing: tubing movement is not modelled and a card marked unanchored is rejected.
+- Analyse rod materials other than steel: this reader rejects them.
 - Establish a published-example check without an openly readable worked example with tabulated card values; it is NOT_EVALUATED.
 
 Output: report stroke, loads, fillage, effective travel, displacement basis and
 work per stroke; the second-solver cross-check; the complete assumptions
 register; shape hypotheses with probabilities and recorded plate counts; input
-sensitivity; and one physical-card/reference-shape figure. For the public-case
-arithmetic comparison, write my-results.json using the numeric result ids in
+sensitivity; and one figure of the surface and pump cards beside the reference
+shapes. Only if you computed the public-case results without running analysis.py:
+for the arithmetic comparison, write my-results.json using the numeric result ids in
 results.json, in the form {"results": [{"id": "pump_stroke_in", "value": 39.58}]}.
 Include every graded result in that file, then run:
 PYTHONPATH=src uv run --no-sync python examples/report-evals/dynacard-pump-card/eval.py --compare my-results.json
