@@ -25,7 +25,9 @@ from digitalmodel.floating_wind.iea15_orcaflex_spec import (
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 from digitalmodel.solvers.orcaflex.modular_generator.routers.fowt_router import (
     FowtRouter,
+    buoy_attitude,
     full_hydrostatic_stiffness,
+    vessel_rotation,
 )
 from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
 from digitalmodel.solvers.orcaflex.modular_generator.schema.fowt import FowtSpec
@@ -115,13 +117,51 @@ def test_non_default_gravity_rejected(spec_dict):
     assert FowtSpec(**fowt).gravity == 9.80665
 
 
-@pytest.mark.parametrize("orientation", [[2.0, 0.0, 0.0], [0.0, 3.0, 0.0]])
-def test_flexible_with_initial_roll_or_pitch_rejected(spec_dict, orientation):
-    """The tower-top RNA offset is not rotated with the hull, so a tilted start is refused."""
+def _rna(fowt: dict) -> dict:
+    routed = FowtRouter().route(FowtSpec(**fowt))
+    return next(b for b in routed["buoys_6d"] if b["name"] == "RNA")["properties"]
+
+
+def test_flexible_pitched_start_carries_tower_top_with_hull(spec_dict):
+    """Pure trim: the tower top moves to (top sin t, 0, top cos t) and the RNA pitches by t."""
     fowt = _flexible(spec_dict)
-    fowt["hull"]["initial_orientation"] = orientation
-    with pytest.raises(ValidationError, match="non-zero initial roll or pitch"):
-        FowtSpec(**fowt)
+    fowt["hull"]["initial_position"] = [10.0, 0.0, -0.4]
+    fowt["hull"]["initial_orientation"] = [0.0, 5.0, 0.0]
+    top = FowtSpec(**fowt).tower.top_elevation
+    rna = _rna(fowt)
+    t = math.radians(5.0)
+    assert rna["InitialPosition"] == pytest.approx(
+        [10.0 + top * math.sin(t), 0.0, -0.4 + top * math.cos(t)], abs=1e-9)
+    assert rna["InitialAttitude"] == pytest.approx([0.0, 5.0, 0.0], abs=1e-9)
+
+
+def test_flexible_rolled_start_moves_tower_top_to_negative_y(spec_dict):
+    """Positive heel is right-handed about x: the tower top moves toward -y."""
+    fowt = _flexible(spec_dict)
+    fowt["hull"]["initial_orientation"] = [4.0, 0.0, 0.0]
+    rna = _rna(fowt)
+    assert rna["InitialPosition"][1] < 0.0
+    assert rna["InitialAttitude"] == pytest.approx([4.0, 0.0, 0.0], abs=1e-9)
+
+
+def test_buoy_attitude_reproduces_vessel_rotation():
+    """Vessel order Rz Ry Rx and buoy order Rx Ry Rz describe the same attitude."""
+    def axis(angle, k):
+        c, s = math.cos(math.radians(angle)), math.sin(math.radians(angle))
+        return {0: [[1, 0, 0], [0, c, -s], [0, s, c]], 1: [[c, 0, s], [0, 1, 0], [-s, 0, c]],
+                2: [[c, -s, 0], [s, c, 0], [0, 0, 1]]}[k]
+
+    def mul(a, b):
+        return [[sum(a[i][k] * b[k][j] for k in range(3)) for j in range(3)] for i in range(3)]
+
+    for heel, trim, heading in [(3.0, -5.0, 30.0), (-8.0, 4.0, 200.0), (0.0, 0.0, -45.0)]:
+        r = vessel_rotation(heel, trim, heading)
+        for row, want in zip(r, mul(axis(heading, 2), mul(axis(trim, 1), axis(heel, 0)))):
+            assert row == pytest.approx(want, abs=1e-12)
+        r1, r2, r3 = buoy_attitude(r)
+        rebuilt = mul(axis(r1, 0), mul(axis(r2, 1), axis(r3, 2)))
+        for row, want in zip(rebuilt, r):
+            assert row == pytest.approx(want, abs=1e-12)
 
 
 def test_flexible_with_heading_only_accepted(spec_dict):

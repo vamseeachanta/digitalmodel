@@ -37,6 +37,34 @@ def full_hydrostatic_stiffness(spec: FowtSpec) -> list[list[float]]:
     return k
 
 
+def vessel_rotation(heel: float, trim: float, heading: float) -> list[list[float]]:
+    """Vessel-to-global rotation for an OrcaFlex vessel orientation (degrees).
+
+    OrcaFlex applies heading about Z, then trim about the new y, then heel
+    about the new x (Orcina, OrcaFlex help, Vessel data), so R = Rz Ry Rx.
+    Positive angles are right-handed about each axis.
+    """
+    cx, sx = math.cos(math.radians(heel)), math.sin(math.radians(heel))
+    cy, sy = math.cos(math.radians(trim)), math.sin(math.radians(trim))
+    cz, sz = math.cos(math.radians(heading)), math.sin(math.radians(heading))
+    return [[cz * cy, cz * sy * sx - sz * cx, cz * sy * cx + sz * sx],
+            [sz * cy, sz * sy * sx + cz * cx, sz * sy * cx - cz * sx],
+            [-sy, cy * sx, cy * cx]]
+
+
+def buoy_attitude(r: list[list[float]]) -> list[float]:
+    """6D buoy rotations 1, 2, 3 (degrees) that reproduce the rotation ``r``.
+
+    A 6D buoy applies rotation 1 about x, then rotation 2 about the new y,
+    then rotation 3 about the new z (Orcina, OrcaFlex help, 6D buoys: common
+    data), so R = Rx Ry Rz; rotation 2 lies in [-90, 90] degrees.
+    """
+    r2 = math.asin(max(-1.0, min(1.0, r[0][2])))
+    r1 = math.atan2(-r[1][2], r[2][2])
+    r3 = math.atan2(-r[0][1], r[0][0])
+    return [math.degrees(r1), math.degrees(r2), math.degrees(r3)]
+
+
 class FowtRouter(BaseRouter):
     """Route a FowtSpec to vessel types, vessels, line types, lines and 6D buoys."""
 
@@ -241,15 +269,23 @@ class FowtRouter(BaseRouter):
         rna, hull = spec.rna, spec.hull
         top = spec.tower.top_elevation
         inertia = rna.inertia_about_centre_of_mass
+        if any(hull.initial_orientation[:2]):
+            # Tilted start: carry the tower top with the hull attitude.
+            r = vessel_rotation(*hull.initial_orientation)
+            position = [p + r[i][2] * top for i, p in enumerate(hull.initial_position)]
+            attitude = buoy_attitude(r)
+        else:
+            position = [hull.initial_position[0], hull.initial_position[1],
+                        hull.initial_position[2] + top]
+            attitude = [0, 0, hull.initial_orientation[2]]
         return {
             "name": rna.name,
             "properties": {
                 "BuoyType": "Lumped buoy",
                 "Connection": "Free",
                 "DegreesOfFreedomInStatics": "All",
-                "InitialPosition": [hull.initial_position[0], hull.initial_position[1],
-                                    hull.initial_position[2] + top],
-                "InitialAttitude": [0, 0, hull.initial_orientation[2]],
+                "InitialPosition": position,
+                "InitialAttitude": attitude,
                 "Mass": rna.mass,
                 # Lumped buoys take principal moments only; products of
                 # inertia of the RNA tensor are not represented.
