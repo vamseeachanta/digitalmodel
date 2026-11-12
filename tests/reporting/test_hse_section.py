@@ -29,7 +29,10 @@ def _markdown(skip: int = 0) -> str:
         if n == 1:
             parts += ["| Source | Records |", "|---|---|", "| Synthetic set | 7 |", ""]
         elif n == 6:
-            parts += ["- [H1] Synthetic set. https://example.org/a.zip (read 2026-01-31).", ""]
+            parts += [
+                "- [H1] Synthetic set. https://example.org/a.zip (read 2026-01-31).",
+                "",
+            ]
         else:
             parts += [f"Text of **part {n}** with <angle> brackets.", ""]
     return "\n".join(parts)
@@ -39,7 +42,11 @@ def _sidecar(**over) -> dict:
     base = {
         "equipment_class": "mooring_line",
         "sources": [
-            {"source_id": "synthetic", "url": "https://example.org/a.zip", "retrieved": "2026-01-31"}
+            {
+                "source_id": "synthetic",
+                "url": "https://example.org/a.zip",
+                "retrieved": "2026-01-31",
+            }
         ],
         "references": ["Synthetic set. https://example.org/a.zip (read 2026-01-31)."],
         "lessons": [{"key": "case#1", "addressed_in": "Section 6.3"}],
@@ -55,7 +62,11 @@ def _skeleton() -> ReportSkeleton:
             "title": "Mooring analysis",
             "require_provenance": False,
             "sections": [
-                {"key": "summary", "label": "Summary", "blocks": [{"key": "scope", "label": "Scope"}]}
+                {
+                    "key": "summary",
+                    "label": "Summary",
+                    "blocks": [{"key": "scope", "label": "Scope"}],
+                }
             ],
         }
     )
@@ -86,7 +97,10 @@ def test_content_is_split_by_subsection_and_escaped() -> None:
     content = hse_content(_markdown())
     assert list(content) == list(HSE_BLOCKS)
     assert "<td>Synthetic set</td><td>7</td>" in content["hse_data_used"]
-    assert "<strong>part 2</strong> with &lt;angle&gt; brackets" in content["hse_incident_history"]
+    assert (
+        "<strong>part 2</strong> with &lt;angle&gt; brackets"
+        in content["hse_incident_history"]
+    )
     assert '<a href="https://example.org/a.zip">' in content["hse_references"]
 
 
@@ -101,8 +115,22 @@ def test_missing_or_renamed_subsection_is_refused() -> None:
     "change,expected",
     [
         ({"sources": []}, "no data source listed"),
-        ({"sources": [{"source_id": "s", "url": "http://x", "retrieved": "2026-01-31"}]}, "no public link"),
-        ({"sources": [{"source_id": "s", "url": "https://x", "retrieved": "Jan 2026"}]}, "no date read"),
+        (
+            {
+                "sources": [
+                    {"source_id": "s", "url": "http://x", "retrieved": "2026-01-31"}
+                ]
+            },
+            "no public link",
+        ),
+        (
+            {
+                "sources": [
+                    {"source_id": "s", "url": "https://x", "retrieved": "Jan 2026"}
+                ]
+            },
+            "no date read",
+        ),
         ({"references": []}, "no references"),
         ({"lessons": [{"key": "c#1", "addressed_in": ""}]}, "no design response"),
         ({"open_items": ["lesson c#1 has no design response"]}, "open item"),
@@ -123,7 +151,9 @@ def test_load_appendix_reads_the_pair_of_files(tmp_path) -> None:
     md.write_text(_markdown(), encoding="utf-8")
     md.with_suffix(".json").write_text(json.dumps(_sidecar()), encoding="utf-8")
     assert set(load_hse_appendix(md)) == set(HSE_BLOCKS)
-    md.with_suffix(".json").write_text(json.dumps(_sidecar(open_items=["x"])), encoding="utf-8")
+    md.with_suffix(".json").write_text(
+        json.dumps(_sidecar(open_items=["x"])), encoding="utf-8"
+    )
     with pytest.raises(ValueError, match="not ready"):
         load_hse_appendix(md)
     assert load_hse_appendix(md, allow_open=True)

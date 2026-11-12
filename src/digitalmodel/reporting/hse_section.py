@@ -122,7 +122,9 @@ def markdown_to_html(text: str) -> str:
             out.append("</tr></thead><tbody>")
             for row in body:
                 out.append(
-                    "<tr>" + "".join(f"<td>{_inline(c)}</td>" for c in _cells(row)) + "</tr>"
+                    "<tr>"
+                    + "".join(f"<td>{_inline(c)}</td>" for c in _cells(row))
+                    + "</tr>"
                 )
             out.append("</tbody></table>")
         elif line.startswith("- "):
@@ -147,14 +149,18 @@ def hse_content(markdown: str) -> Dict[str, str]:
     from the fixed one.
     """
     marks = list(_HEADING.finditer(markdown))
-    found = {int(m.group(1)): (m.group(2).strip(), m.end(), i) for i, m in enumerate(marks)}
+    found = {
+        int(m.group(1)): (m.group(2).strip(), m.end(), i) for i, m in enumerate(marks)
+    }
     content: Dict[str, str] = {}
     for key, (n, heading) in HSE_BLOCKS.items():
         if n not in found:
             raise ValueError(f"HSE appendix: subsection {n} ({heading}) is missing")
         got, start, idx = found[n]
         if got != heading:
-            raise ValueError(f"HSE appendix: subsection {n} is {got!r}, not {heading!r}")
+            raise ValueError(
+                f"HSE appendix: subsection {n} is {got!r}, not {heading!r}"
+            )
         end = marks[idx + 1].start() if idx + 1 < len(marks) else len(markdown)
         body = markdown[start:end].strip()
         if not body:
@@ -174,7 +180,9 @@ def load_hse_appendix(
     ``sidecar_path`` defaults to the ``.json`` file beside the Markdown file.
     """
     markdown_path = Path(markdown_path)
-    sidecar_path = Path(sidecar_path) if sidecar_path else markdown_path.with_suffix(".json")
+    sidecar_path = (
+        Path(sidecar_path) if sidecar_path else markdown_path.with_suffix(".json")
+    )
     sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
     problems = check_sidecar(sidecar, allow_open=allow_open)
     if problems:
