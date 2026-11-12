@@ -45,3 +45,5 @@ Lines:
   - - X65_12in
     - 3000.0
     - 5.0
+  ContentsMethod: Uniform
+  ContentsDensity: 0

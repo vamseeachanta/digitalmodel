@@ -118,3 +118,14 @@ def test_example_matches_golden(example, tmp_path):
         got = yaml.safe_load((includes / name).read_text(encoding="utf-8"))
         want = yaml.safe_load((GOLDEN / name).read_text(encoding="utf-8"))
         assert got == want, name
+
+
+def test_pipeline_contents_stated_empty_as_seeded(example):
+    """The seed takes the pipe empty, so the emitted line states empty contents.
+
+    Without these data the loaded model would take the solver's default
+    contents, which the offline seed cannot confirm.
+    """
+    line = _pipeline(example)
+    assert line["ContentsMethod"] == "Uniform"
+    assert line["ContentsDensity"] == 0

@@ -138,6 +138,12 @@ class LinesBuilder(BaseBuilder):
             "LineType, Length, TargetSegmentLength": segment_data,
         }
 
+        if self.spec.equipment.jlay is not None:
+            # The J-lay End B seed takes the pipe empty (jlay_seed); state it
+            # rather than rely on the solver's default contents (#3978).
+            line_def["ContentsMethod"] = "Uniform"
+            line_def["ContentsDensity"] = 0
+
         # Add attachments if present
         if attachments:
             line_def["Attachments"] = attachments

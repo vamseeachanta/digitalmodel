@@ -7,7 +7,9 @@
 # calculation pack), #2431 (pipelay workflow).
 #
 # Hand check (inextensible catenary, pipe empty, g 9.80665 m/s2, seawater
-# 1.025 te/m3):
+# 1.025 te/m3). The generated line states ContentsDensity 0 to match the
+# empty-pipe seed. Steel density 7.85 te/m3 is the generator's X65 material
+# value; the coating density is an illustrative input, not a sourced product:
 #   steel 7.85 x pi/4 x (0.3239^2 - 0.2827^2) = 0.15408 te/m; coating
 #   0.00293 te/m; displaced 1.025 x pi/4 x 0.3299^2 = 0.08762 te/m;
 #   submerged w = 0.6805 kN/m.
