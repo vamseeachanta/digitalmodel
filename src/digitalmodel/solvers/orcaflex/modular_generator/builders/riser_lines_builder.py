@@ -68,8 +68,10 @@ class RiserLinesBuilder(BaseBuilder):
         Returns:
             Dictionary representing an OrcaFlex Line definition.
         """
-        # Build segment table entries
-        segment_data = self._build_segment_data(riser_line.sections)
+        # Build segment table entries, with the buoyancy zone (if any) applied
+        segment_data = self._apply_buoyancy_zone(
+            self._build_segment_data(riser_line.sections), riser_line.buoyancy_zone
+        )
 
         # Build connection data
         connection_data = self._build_connection_data(riser_line)
@@ -140,6 +142,31 @@ class RiserLinesBuilder(BaseBuilder):
             segment_data.append(entry)
 
         return segment_data
+
+    @staticmethod
+    def _apply_buoyancy_zone(segment_data: list[list], zone) -> list[list]:
+        """Split the section table at the zone ends and assign the zone type.
+
+        Arc lengths are measured from End A. Each piece keeps the target
+        segment length of the section it came from; pieces fully inside the
+        zone take the zone's (buoyant) line type. Cuts that coincide with a
+        section boundary create no zero-length piece. Total length is unchanged.
+        """
+        if zone is None:
+            return segment_data
+        tol = 1e-9
+        start, end = zone.start_arc_length, zone.end_arc_length
+        result: list[list] = []
+        s0 = 0.0
+        for line_type, length, target in segment_data:
+            s1 = s0 + length
+            cuts = [s0] + [c for c in (start, end) if s0 + tol < c < s1 - tol] + [s1]
+            for a, b in zip(cuts, cuts[1:]):
+                inside = a >= start - tol and b <= end + tol
+                piece = length if len(cuts) == 2 else round(b - a, 9)
+                result.append([zone.line_type if inside else line_type, piece, target])
+            s0 = s1
+        return result
 
     def _build_connection_data(self, riser_line) -> dict[str, list]:
         """Build connection specification data for End A and End B.

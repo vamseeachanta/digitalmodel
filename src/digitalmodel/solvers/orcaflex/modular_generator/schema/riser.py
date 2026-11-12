@@ -362,6 +362,18 @@ class RiserLine(BaseModel):
     statics_step2: str | None = Field(default=None, description="Statics step 2 method (e.g. 'Full statics')")
     include_torsion: bool = Field(default=False, description="Include torsion in analysis")
 
+    @model_validator(mode="after")
+    def validate_buoyancy_zone_within_line(self) -> "RiserLine":
+        """The buoyancy zone must lie on the line (arc length from End A)."""
+        zone = self.buoyancy_zone
+        total = self.get_total_length()
+        if zone is not None and zone.end_arc_length > total + 1e-9:
+            raise ValueError(
+                f"Line '{self.name}' buoyancy_zone ends at {zone.end_arc_length} m, "
+                f"beyond the line length {total} m"
+            )
+        return self
+
     def get_total_length(self) -> float:
         """Calculate total line length from sections."""
         return sum(s.length for s in self.sections)
@@ -395,6 +407,12 @@ class Riser(BaseModel):
                         f"Line '{line.name}' references unknown line_type "
                         f"'{section.line_type}'. Available: {type_names}"
                     )
+            zone = line.buoyancy_zone
+            if zone is not None and zone.line_type not in type_names:
+                raise ValueError(
+                    f"Line '{line.name}' references unknown buoyancy_zone line_type "
+                    f"'{zone.line_type}'. Available: {type_names}"
+                )
         return self
 
     @model_validator(mode="after")

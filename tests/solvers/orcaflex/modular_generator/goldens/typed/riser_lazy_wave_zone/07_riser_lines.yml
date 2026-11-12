@@ -1,0 +1,58 @@
+Lines:
+- Name: 10in Lazy Wave Distributed
+  IncludeTorsion: 'No'
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Bend angle
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
+    ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - FPSO
+      - 36.0
+      - 1.732
+      - -7.5
+      - 60.0
+      - 170.0
+      - 0
+      - ~
+    - - Anchored
+      - 89.5
+      - -35.0
+      - 0.178
+      - 0.0
+      - 90.0
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - 0.0
+    - ~
+    - ~
+  - - 0.0
+    - ~
+    - ~
+  LineType, Length, TargetSegmentLength:
+  - - 10in_flexible
+    - 50.0
+    - 4.0
+  - - 10in_flexible
+    - 30.0
+    - 1.0
+  - - 10in_flexible_with_floats
+    - 50.0
+    - 1.0
+  - - 10in_flexible
+    - 40.0
+    - 1.0
+  - - 10in_flexible
+    - 20.0
+    - 4.0
+  StaticsStep1: Catenary
+  LayAzimuth: 180.5
+  ContentsMethod: Uniform
+  ContentsDensity: 1.0
+  StaticsStep2: Full statics
