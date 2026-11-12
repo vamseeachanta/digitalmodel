@@ -253,7 +253,7 @@ class FowtRouter(BaseRouter):
                     "CompressionIsLimited": "No",
                     "EI": [section.bending_stiffness, None],
                     "EA": section.axial_stiffness,
-                    "PoissonRatio": 0.5,
+                    "PoissonRatio": section.poisson_ratio,
                     "GJ": section.torsional_stiffness,
                     "Ca": [0, None, 0],
                     "Cd": [0, None, 0],

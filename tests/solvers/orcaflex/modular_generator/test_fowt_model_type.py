@@ -63,9 +63,11 @@ def _flexible(spec_dict: dict) -> dict:
     fowt["hull"]["centre_of_mass"] = [0.0, 0.0, -14.4]
     fowt["tower"] = {"base_elevation": 15.0, "target_segment_length": 5.0, "sections": [
         {"length": 60.0, "outer_diameter": 10.0, "mass_per_length": 20.0,
-         "bending_stiffness": 1.0e9, "axial_stiffness": 1.0e8, "torsional_stiffness": 7.0e8},
+         "bending_stiffness": 1.0e9, "axial_stiffness": 1.0e8, "torsional_stiffness": 7.0e8,
+         "poisson_ratio": 0.3},
         {"length": 69.386, "outer_diameter": 8.0, "mass_per_length": 10.0,
-         "bending_stiffness": 5.0e8, "axial_stiffness": 6.0e7, "torsional_stiffness": 3.5e8}]}
+         "bending_stiffness": 5.0e8, "axial_stiffness": 6.0e7, "torsional_stiffness": 3.5e8,
+         "poisson_ratio": 0.25}]}
     fowt["rna"] = {"mass": 945.77, "centre_of_mass_from_tower_top": [-7.32, -0.1, 4.6],
                    "inertia_about_centre_of_mass": [[4.0e5, 0, 0], [0, 3.4e5, 0],
                                                     [0, 0, 3.4e5]]}
@@ -75,6 +77,62 @@ def _flexible(spec_dict: dict) -> dict:
 
 
 # ----------------------------------------------------------------- schema
+@pytest.mark.parametrize("field", ["normal_drag_coefficient", "axial_drag_coefficient",
+                                   "normal_added_mass_coefficient", "axial_added_mass_coefficient"])
+def test_mooring_hydrodynamic_coefficients_require_explicit_inputs(spec_dict, field):
+    fowt = copy.deepcopy(spec_dict["fowt"])
+    del fowt["mooring_line_types"][0][field]
+    with pytest.raises(ValidationError, match=field):
+        FowtSpec(**fowt)
+
+
+def test_tower_poisson_ratio_requires_explicit_input(spec_dict):
+    fowt = _flexible(spec_dict)
+    del fowt["tower"]["sections"][0]["poisson_ratio"]
+    with pytest.raises(ValidationError, match="poisson_ratio"):
+        FowtSpec(**fowt)
+
+
+def test_tower_poisson_ratio_reaches_each_line_type(spec_dict):
+    routed = FowtRouter().route(FowtSpec(**_flexible(spec_dict)))
+    tower_types = [t for t in routed["line_types"] if t["name"].startswith("Tower section")]
+    assert [t["properties"]["PoissonRatio"] for t in tower_types] == [0.3, 0.25]
+
+
+def test_shaft_tilt_requires_explicit_input(spec_dict):
+    fowt = _flexible(spec_dict)
+    del fowt["rotor_thrust"]["shaft_tilt"]
+    with pytest.raises(ValidationError, match="shaft_tilt"):
+        FowtSpec(**fowt)
+
+
+@pytest.mark.parametrize("tilt", [-25.0, 25.0])
+def test_shaft_tilt_has_no_reference_design_cap(spec_dict, tilt):
+    fowt = _flexible(spec_dict)
+    fowt["rotor_thrust"]["shaft_tilt"] = tilt
+    routed = FowtRouter().route(FowtSpec(**fowt))
+    hub = next(b for b in routed["buoys_6d"] if b["name"] == "Hub load point")
+    force = hub["properties"]["LocalAppliedLoads"][0]["Force"]
+    assert force == pytest.approx([2457.2 * math.cos(math.radians(tilt)), 0.0,
+                                   -2457.2 * math.sin(math.radians(tilt))])
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), -float("inf")])
+@pytest.mark.parametrize("field", ["shaft_tilt", "poisson_ratio", "normal_drag_coefficient",
+                                   "axial_drag_coefficient", "normal_added_mass_coefficient",
+                                   "axial_added_mass_coefficient"])
+def test_engineering_inputs_must_be_finite(spec_dict, field, value):
+    fowt = _flexible(spec_dict)
+    if field == "shaft_tilt":
+        fowt["rotor_thrust"][field] = value
+    elif field == "poisson_ratio":
+        fowt["tower"]["sections"][0][field] = value
+    else:
+        fowt["mooring_line_types"][0][field] = value
+    with pytest.raises(ValidationError, match=field):
+        FowtSpec(**fowt)
+
+
 def test_example_spec_file_matches_builder(spec_dict):
     committed = yaml.safe_load(SPEC_FILE.read_text(encoding="utf-8"))
     assert committed == spec_dict

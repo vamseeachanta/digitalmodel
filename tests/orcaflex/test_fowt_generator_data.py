@@ -57,6 +57,13 @@ def test_source_digests_recorded(data):
     assert all(len(v) == 64 for v in digests.values())
 
 
+@pytest.mark.parametrize("key", ["rotor_center_of_mass_from_tower_top",
+                                 "rna_component_centre_discrepancy"])
+def test_derived_centres_have_twelve_decimal_place_precision(data, key):
+    """Derived geometry uses a fixed precision for byte reproduction."""
+    assert all(value == round(value, 12) for value in data["turbine"][key]["value"])
+
+
 def test_rotor_plus_nacelle_equals_rna_and_basis(data, basis):
     turbine = data["turbine"]
     total = turbine["rotor_mass"]["value"] + turbine["nacelle_mass"]["value"]

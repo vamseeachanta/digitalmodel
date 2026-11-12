@@ -29,6 +29,36 @@ The raw files are not committed; their SHA-256 digests are recorded in
 `generator_data.yml`, and the extraction test reproduces the committed file
 byte for byte when the raw folder is supplied through `DIGITALMODEL_IEA15_RAW`.
 
+Derived mass-weighted centres use `math.fsum` for mass and moment sums so
+that the changed float-summation algorithm in Python 3.12 does not alter the
+extraction. Only the final reported centres and centre discrepancies are
+rounded to 12 decimal places in metres, using Python's nearest, ties-to-even
+rounding. Intermediate combined centres remain unrounded before subtraction.
+This is a serialization convention, not a claim of source accuracy. Source
+values, hydrodynamic matrices, and raw-file digests retain their precision.
+The byte-comparison test covers extraction on Python 3.11 and 3.12.
+
+## Engineering input basis
+
+The schema requires explicit normal and axial drag and added-mass
+coefficients for every mooring line type. Their sources, coefficient
+conventions and any assumptions belong in `source_note`; the example's
+explicit coefficients are reference inputs, not general defaults.
+
+Flexible tower sections require an explicit material `poisson_ratio`, passed
+unchanged to the line type. No incompressible-material assumption is supplied.
+The flexible test fixture uses illustrative material properties solely to
+check routing; it does not qualify a flexible reference model. Material
+properties must be supported by the chosen material basis in `source_note`.
+
+Steady thrust requires an explicit finite signed `shaft_tilt` in degrees.
+The force rotation accepts either sign without a reference-design angle cap;
+the angle must come from the chosen geometry basis in `source_note`.
+These fields are physical inputs. Segment lengths remain numerical
+discretization settings and require a convergence check for analysis use.
+Schema validation checks required values and finiteness; it does not
+authenticate the cited sources or establish solver acceptance.
+
 The workbook's RNA row centre of mass is not the mass-weighted combination of
 its own nacelle, blade and hub rows: the component rows place it 0.533 m further
 downwind and 0.056 m lower. The difference is recorded in the data file; the

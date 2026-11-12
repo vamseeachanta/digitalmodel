@@ -18,6 +18,7 @@ Usage::
 from __future__ import annotations
 
 import hashlib
+import math
 import sys
 from pathlib import Path
 
@@ -31,6 +32,12 @@ FILES = {
     "hst": "OpenFAST/IEA-15-240-RWT-UMaineSemi/HydroData/IEA-15-240-RWT-UMaineSemi.hst",
     "hydrodyn": "OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_HydroDyn.dat",
 }
+
+# Derived centres and centre differences are serialized to 12 decimal places
+# in metres. Use fsum rather than sum (whose float algorithm changed in Python
+# 3.12), and round only the final reported quantity, not intermediate centres.
+# Source values, matrices and digests retain their original precision.
+DERIVED_DECIMAL_PLACES = 12
 
 
 def src(key: str, where: str) -> str:
@@ -115,11 +122,13 @@ def build(raw: Path) -> dict:
     names = {key: raw / Path(rel).name for key, rel in FILES.items()}
     overview, nacelle, performance = read_tabular(names["tabular"])
     rotor_rows = [nacelle["Blades"], nacelle["Hub_System"]]
-    rotor_mass = sum(float(r[1]) for r in rotor_rows)
-    rotor_cm = [sum(float(r[1]) * float(r[c]) for r in rotor_rows) / rotor_mass
+    rotor_mass = math.fsum(float(r[1]) for r in rotor_rows)
+    rotor_cm = [round(math.fsum(float(r[1]) * float(r[c]) for r in rotor_rows) / rotor_mass,
+                      DERIVED_DECIMAL_PLACES)
                 for c in (2, 3, 4)]
     parts = rotor_rows + [nacelle["nacelle"]]
-    combined = [sum(float(r[1]) * float(r[c]) for r in parts) / sum(float(r[1]) for r in parts)
+    total_mass = math.fsum(float(r[1]) for r in parts)
+    combined = [math.fsum(float(r[1]) * float(r[c]) for r in parts) / total_mass
                 for c in (2, 3, 4)]
     zero, infinite, rows = read_wamit1(names["wamit1"])
     hst = read_hst(names["hst"])
@@ -173,7 +182,8 @@ def build(raw: Path) -> dict:
                 [float(nacelle["RNA"][c]) for c in (2, 3, 4)], "m",
                 src("tabular", f"{nms} row RNA C:E")),
             "rna_component_centre_discrepancy": item(
-                [combined[k] - float(nacelle["RNA"][c]) for k, c in enumerate((2, 3, 4))], "m",
+                [round(combined[k] - float(nacelle["RNA"][c]), DERIVED_DECIMAL_PLACES)
+                 for k, c in enumerate((2, 3, 4))], "m",
                 src("tabular", f"{nms}; mass-weighted centre of rows nacelle, Blades and "
                                "Hub_System minus row RNA C:E. The RNA row is not the "
                                "mass-weighted combination of its component rows; the "

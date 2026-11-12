@@ -141,7 +141,12 @@ class FowtHull(BaseModel):
 
 
 class FowtTowerSection(BaseModel):
-    """One prismatic tower section, listed from the base upward."""
+    """One prismatic tower section, listed from the base upward.
+
+    Material properties, including Poisson ratio, must be supplied from the
+    chosen material basis and documented in ``FowtSpec.source_note``. There
+    is no assumed incompressible material or reference-design default.
+    """
 
     length: float = Field(..., gt=0, description="Section length (m)")
     outer_diameter: float = Field(..., gt=0, description="Outer diameter (m)")
@@ -149,6 +154,8 @@ class FowtTowerSection(BaseModel):
     bending_stiffness: float = Field(..., gt=0, description="EI (kN.m2)")
     axial_stiffness: float = Field(..., gt=0, description="EA (kN)")
     torsional_stiffness: float = Field(..., gt=0, description="GJ (kN.m2)")
+    poisson_ratio: float = Field(
+        ..., allow_inf_nan=False, description="Material Poisson ratio; document its basis in source_note")
 
 
 class FowtTower(BaseModel):
@@ -201,7 +208,10 @@ class FowtRotorThrust(BaseModel):
     name: str = Field(default="Hub load point", min_length=1)
     thrust: float = Field(..., ge=0, description="Thrust (kN)")
     hub_position: Vector3 = Field(..., description="Hub centre in hull axes (m)")
-    shaft_tilt: float = Field(default=0.0, ge=0, le=20, description="(deg)")
+    shaft_tilt: float = Field(
+        ..., allow_inf_nan=False,
+        description="Signed shaft tilt (deg); document its basis in source_note. "
+                    "No reference-design angle cap is imposed by the force rotation")
     wind_speed: float | None = Field(default=None, ge=0, description="Hub wind speed the thrust belongs to (m/s)")
 
     @field_validator("hub_position")
@@ -211,17 +221,22 @@ class FowtRotorThrust(BaseModel):
 
 
 class FowtMooringLineType(BaseModel):
-    """Mooring line type with directly specified properties."""
+    """Mooring line type with directly specified properties.
+
+    All hydrodynamic coefficients are required inputs. Record their source,
+    coefficient convention and any assumptions in ``FowtSpec.source_note``;
+    coefficients of one reference design are not generic line-type defaults.
+    """
 
     name: str = Field(..., min_length=1)
     outer_diameter: float = Field(..., gt=0, description="Volume-equivalent diameter (m)")
     mass_per_length: float = Field(..., gt=0, description="(te/m)")
     axial_stiffness: float = Field(..., gt=0, description="EA (kN)")
     minimum_breaking_load: float = Field(..., gt=0, description="(kN)")
-    normal_drag_coefficient: float = Field(default=2.4, ge=0)
-    axial_drag_coefficient: float = Field(default=1.15, ge=0)
-    normal_added_mass_coefficient: float = Field(default=1.0, ge=0)
-    axial_added_mass_coefficient: float = Field(default=0.5, ge=0)
+    normal_drag_coefficient: float = Field(..., ge=0, allow_inf_nan=False)
+    axial_drag_coefficient: float = Field(..., ge=0, allow_inf_nan=False)
+    normal_added_mass_coefficient: float = Field(..., ge=0, allow_inf_nan=False)
+    axial_added_mass_coefficient: float = Field(..., ge=0, allow_inf_nan=False)
 
 
 class FowtMooringLine(BaseModel):
