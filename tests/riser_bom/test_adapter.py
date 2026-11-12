@@ -3,15 +3,17 @@
 """Synthetic geometry and arithmetic; no licensed solver or real costs."""
 
 import json
+import os
+import subprocess
+import sys
 from dataclasses import asdict, replace
-from decimal import localcontext
+from decimal import Decimal, Inexact, Rounded, localcontext
+from pathlib import Path
+from textwrap import dedent
 from types import SimpleNamespace
 
 import pytest
 
-from digitalmodel.marine_ops.marine_analysis.catenary.lazy_wave import (
-    LazyWaveConfiguration,
-)
 from digitalmodel.riser_bom import (
     configuration_from_lazy_wave,
     cost_bom,
@@ -42,6 +44,10 @@ def test_solved_suspended_length_includes_supplied_grounded_length(tmp_path):
 
 def lazy_wave_configuration(vertical_distance=100):
     """Invented geometry with equal bare and buoyed weight magnitudes."""
+    from digitalmodel.marine_ops.marine_analysis.catenary.lazy_wave import (
+        LazyWaveConfiguration,
+    )
+
     return LazyWaveConfiguration(
         hangoff_angle=30,
         hangoff_below_msl=0,
@@ -51,6 +57,148 @@ def lazy_wave_configuration(vertical_distance=100):
         weight_with_buoyancy=-2,
         vertical_distance=vertical_distance,
     )
+
+
+def adapt_configuration(result):
+    """Supply invented quantities for geometry validation tests."""
+    return configuration_from_lazy_wave(
+        result,
+        grounded_length_m="5",
+        joint_length_m="100",
+        coated_length_m="25",
+        buoyancy_module_count=4,
+        ancillary_count=2,
+        installation_days="1.5",
+        citation=CITATION,
+    )
+
+
+@pytest.mark.parametrize("mutated", [False, True])
+@pytest.mark.parametrize(
+    "depth,hangoff,hog",
+    [(50, 0, 60), (60, 0, 60), (50, 10, 60), (50, 10, 61)],
+)
+def test_lazy_wave_rejects_hog_at_or_above_sea_level(depth, hangoff, hog, mutated):
+    config = lazy_wave_configuration()
+    changes = dict(
+        vertical_distance=depth,
+        hangoff_below_msl=hangoff,
+        hog_bend_above_seabed=hog,
+    )
+    if mutated:
+        for field, value in changes.items():
+            setattr(config, field, value)
+    else:
+        config = replace(config, **changes, hangoff_bend_radius=None)
+    with pytest.raises(
+        ValueError,
+        match="hog_bend_above_seabed.*vertical_distance.*hangoff_below_msl",
+    ):
+        adapt_configuration(config)
+
+
+@pytest.mark.parametrize(
+    "field", ["vertical_distance", "hangoff_below_msl", "hog_bend_above_seabed"]
+)
+@pytest.mark.parametrize(
+    "value",
+    [
+        None,
+        "invalid",
+        float("nan"),
+        float("inf"),
+        True,
+        Decimal("1E+100000"),
+        Decimal("1E-100000"),
+    ],
+)
+def test_lazy_wave_rejects_invalid_sea_level_inputs(field, value):
+    config = lazy_wave_configuration()
+    setattr(config, field, value)
+    reason = "representable" if isinstance(value, Decimal) else field
+    with pytest.raises(ValueError, match=reason):
+        adapt_configuration(config)
+
+
+@pytest.mark.parametrize("depth,installed", [(50, 240.884573), (100, 414.560753)])
+def test_lazy_wave_submerged_hog_uses_sea_level_datum(depth, installed):
+    """Numerical datum cases only; no structural qualification is asserted.
+
+    At depth 50: R=30, so 30*sqrt(3) + 2*40 + 2*sqrt(2700) + 5
+    = 240.884573 m. At depth 100 the existing hand sum is 414.560753 m.
+    """
+    config = replace(lazy_wave_configuration(depth), hangoff_below_msl=10.5)
+    with localcontext() as context:
+        context.prec = 1
+        context.traps[Inexact] = True
+        context.traps[Rounded] = True
+        result = adapt_configuration(config)
+    assert float(result.riser_length_m) == pytest.approx(installed, abs=1e-6)
+
+
+def test_lazy_wave_sea_level_guard_ignores_caller_exponent_limits():
+    config = lazy_wave_configuration(50)
+    with localcontext() as context:
+        context.Emax = 0
+        with pytest.raises(ValueError, match="hog_bend_above_seabed"):
+            adapt_configuration(config)
+
+
+def test_lazy_wave_rejects_stale_radius_after_depth_mutation():
+    config = lazy_wave_configuration()
+    config.vertical_distance = 110
+    with pytest.raises(ValueError, match="hangoff_bend_radius"):
+        adapt_configuration(config)
+
+
+@pytest.mark.parametrize("result", [None, object(), SimpleNamespace()])
+def test_adapter_rejects_unsupported_result_types(result):
+    with pytest.raises(TypeError, match="total_arc_length.*LazyWaveConfiguration"):
+        adapt_configuration(result)
+
+
+def test_solved_length_does_not_import_marine_package():
+    root = Path(__file__).resolve().parents[2]
+    env = os.environ.copy()
+    for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+        env.pop(name, None)
+    env["PYTHONPATH"] = (root / "src").as_posix()
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            dedent("""\
+                import sys
+                from pathlib import Path
+                from types import SimpleNamespace
+                from digitalmodel.riser_bom import adapters
+
+                root = Path.cwd()
+                assert Path(adapters.__file__).resolve() == (
+                    root / "src/digitalmodel/riser_bom/adapters.py"
+                )
+                result = adapters.configuration_from_lazy_wave(
+                    SimpleNamespace(total_arc_length=20),
+                    grounded_length_m=5, joint_length_m=10,
+                    coated_length_m=25, buoyancy_module_count=4,
+                    ancillary_count=2, installation_days=1.5, citation=None,
+                )
+                assert result.riser_length_m == 25
+                assert not any(
+                    name == "digitalmodel.marine_ops"
+                    or name.startswith("digitalmodel.marine_ops.")
+                    for name in sys.modules
+                )
+            """),
+        ],
+        cwd=root,
+        env=env,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+        timeout=30,
+    )
+    assert completed.returncode == 0, completed.stderr
 
 
 @pytest.mark.parametrize(
@@ -68,7 +216,9 @@ def test_lazy_wave_configuration_costs_external_synthetic_basis(
     """
     external = tmp_path / "basis.json"
     external.write_text(
-        json.dumps({"schema_version": 1, **asdict(basis())}), encoding="utf-8"
+        json.dumps({"schema_version": 1, **asdict(basis())}),
+        encoding="utf-8",
+        newline="\n",
     )
     config = configuration_from_lazy_wave(
         lazy_wave_configuration(depth),
