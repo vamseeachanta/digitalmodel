@@ -370,18 +370,20 @@ _LIBRARY_LINE_TYPES = (
 
 
 @pytest.mark.parametrize(
-    ("seg_type", "library_file", "diameter"),
+    ("seg_type", "library_file", "diameter", "relative_tolerance"),
     [
-        (MooringSegmentType.WIRE_ROPE, "wire_rope_64mm.yml", 0.064),
-        (MooringSegmentType.WIRE_ROPE, "wire_rope_76mm.yml", 0.076),
-        (MooringSegmentType.WIRE_ROPE, "wire_rope_84mm.yml", 0.084),
-        (MooringSegmentType.POLYESTER, "polyester_rope_120mm.yml", 0.120),
-        (MooringSegmentType.POLYESTER, "polyester_rope_140mm.yml", 0.140),
-        (MooringSegmentType.POLYESTER, "polyester_rope_160mm.yml", 0.160),
+        (MooringSegmentType.WIRE_ROPE, "wire_rope_64mm.yml", 0.064, 0.01),
+        (MooringSegmentType.WIRE_ROPE, "wire_rope_76mm.yml", 0.076, 0.01),
+        (MooringSegmentType.WIRE_ROPE, "wire_rope_84mm.yml", 0.084, 0.01),
+        (MooringSegmentType.POLYESTER, "polyester_rope_120mm.yml", 0.120, 0.02),
+        (MooringSegmentType.POLYESTER, "polyester_rope_140mm.yml", 0.140, 0.02),
+        (MooringSegmentType.POLYESTER, "polyester_rope_160mm.yml", 0.160, 0.02),
     ],
 )
-def test_rope_mass_matches_curated_library_component(seg_type, library_file, diameter):
-    """Mass per unit length within 2 % of the library file the code cites.
+def test_rope_mass_matches_curated_library_component(
+    seg_type, library_file, diameter, relative_tolerance
+):
+    """Library mass agreement within 1 % for wire rope and 2 % for polyester.
 
     Regression: the wire and polyester coefficients gave 0.196 te/m for 76 mm
     wire (library 0.025 te/m) and 0.115 te/m for 120 mm polyester (library
@@ -392,5 +394,5 @@ def test_rope_mass_matches_curated_library_component(seg_type, library_file, dia
     seg = MooringSegment(type=seg_type, diameter=diameter, length=100)
     lt = MooringRouter()._segment_to_linetype(seg)
     assert lt["properties"]["MassPerUnitLength"] == pytest.approx(
-        library["MassPerUnitLength"], rel=0.02
+        library["MassPerUnitLength"], rel=relative_tolerance
     )
