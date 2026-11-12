@@ -3,7 +3,8 @@
 """Invented topsides inputs test arithmetic only; no market cost basis is implied."""
 
 from dataclasses import asdict, replace
-from decimal import Decimal
+from datetime import date
+from decimal import Decimal, Inexact, ROUND_UP, localcontext
 from importlib import import_module
 
 import numpy as np
@@ -55,7 +56,7 @@ def test_price_base_year_is_required(inputs):
 
 
 @pytest.mark.parametrize(
-    "year", [1, 2014, 2024, 9999, pytest.param(np.int64(2024), id="integral-scalar")]
+    "year", [1, 2014, 2024, pytest.param(np.int64(2024), id="integral-scalar")]
 )
 def test_price_base_year_is_retained(inputs, year):
     inputs["price_base_year"] = year
@@ -63,12 +64,13 @@ def test_price_base_year_is_retained(inputs, year):
     assert result.price_base_year == year
     assert type(result.price_base_year) is int
     assert asdict(result)["price_base_year"] == year
-    assert result.total_usd == pytest.approx(300.0)
+    assert result.total_usd == Decimal("300.00")
 
 
 @pytest.mark.parametrize(
     "year",
-    [None, True, False, 0, -1, 10000, 2024.0, 2024.5, "2024",
+    [None, True, False, 0, -1, 9999, 10000, date.today().year + 1,
+     2024.0, 2024.5, "2024",
      float("nan"), float("inf"), Decimal("2024")],
 )
 def test_invalid_price_base_year_is_rejected(inputs, year):
@@ -77,22 +79,52 @@ def test_invalid_price_base_year_is_rejected(inputs, year):
         estimate(inputs)
 
 
+def test_price_base_year_uses_calculation_date(inputs):
+    inputs["today"] = date(2026, 1, 1)
+    inputs["price_base_year"] = 2026
+    assert estimate(inputs).price_base_year == 2026
+    inputs["price_base_year"] = 2027
+    with pytest.raises(ValueError, match="price_base_year"):
+        estimate(inputs)
+    inputs["today"] = date(2027, 1, 1)
+    assert estimate(inputs).price_base_year == 2027
+
+
+def test_price_base_year_defaults_to_current_date(inputs, monkeypatch):
+    module = import_module("digitalmodel.field_development.cost_estimation")
+
+    class FixedDate(date):
+        @classmethod
+        def today(cls):
+            return cls(2026, 12, 31)
+
+    monkeypatch.setattr(module, "date", FixedDate)
+    inputs["price_base_year"] = 2026
+    assert estimate(inputs).price_base_year == 2026
+    inputs["price_base_year"] = 2027
+    with pytest.raises(ValueError, match="price_base_year"):
+        estimate(inputs)
+
+
 @pytest.mark.parametrize(
     ("weight", "rate", "factor", "expected"),
     [(10, 20, 1.5, 300), (20, 20, 1.5, 600), (10, 40, 1.5, 600), (10, 20, 3, 600),
-     (12.5, 32.4, 1.2, 486.0), (7.25, 19.6, 1.1, 156.31), (0.125, 8.4, 2.5, 2.625)],
+     (12.5, 32.4, 1.2, 486.0), (7.25, 19.6, 1.1, 156.31),
+     (0.125, 8.4, 2.5, 2.62), (0.1, 0.2, 3, 0.06), (0.7, 0.1, 3, 0.21)],
 )
 def test_weight_rate_and_complexity_scaling(inputs, weight, rate, factor, expected):
     # Invented, independently calculated totals; each input acts linearly.
     # 12.5 * 32.4 = 405; 405 * 1.2 = 486.0.
     # 7.25 * 19.6 = 142.1; 142.1 * 1.1 = 156.31.
-    # 0.125 * 8.4 = 1.05; 1.05 * 2.5 = 2.625.
+    # 0.125 * 8.4 = 1.05; 1.05 * 2.5 = 2.625, half-even to cents = 2.62.
     inputs["weight_tonnes"] = weight
     inputs["usd_per_tonne"] = replace(inputs["usd_per_tonne"], value=rate)
     inputs["complexity_factor"] = replace(inputs["complexity_factor"], value=factor)
     result = estimate(inputs)
-    assert result.total_usd == pytest.approx(expected, rel=1e-12, abs=1e-12)
-    assert result.weight_tonnes == weight
+    assert isinstance(result.total_usd, Decimal)
+    assert result.total_usd == Decimal(str(expected))
+    assert result.total_usd.as_tuple().exponent == -2
+    assert result.weight_tonnes == Decimal(str(weight))
     assert result.usd_per_tonne is inputs["usd_per_tonne"]
     assert result.complexity_factor is inputs["complexity_factor"]
 
@@ -101,7 +133,7 @@ def test_weight_rate_and_complexity_scaling(inputs, weight, rate, factor, expect
 def test_dimensionless_complexity_units_are_accepted(inputs, units):
     inputs["complexity_factor"] = replace(inputs["complexity_factor"], units=units)
     result = estimate(inputs)
-    assert result.total_usd == pytest.approx(300.0)
+    assert result.total_usd == Decimal("300.00")
     assert result.complexity_factor is inputs["complexity_factor"]
     assert result.complexity_factor.units == units
 
@@ -164,7 +196,9 @@ def test_incompatible_units_are_rejected(inputs, name, units):
 
 @pytest.mark.parametrize("name", ["weight_tonnes", "usd_per_tonne", "complexity_factor"])
 @pytest.mark.parametrize(
-    "value", [0, -1, float("nan"), float("inf"), float("-inf"), True, "2", Decimal("2")]
+    "value", [0, -1, float("nan"), float("inf"), float("-inf"), True,
+              np.bool_(True), "2", Decimal("NaN"), Decimal("sNaN"),
+              Decimal("Infinity"), Decimal("-Infinity"), Decimal("0"), Decimal("-1")]
 )
 def test_invalid_numeric_inputs_are_rejected(inputs, name, value):
     if name == "weight_tonnes":
@@ -184,5 +218,55 @@ def test_overflow_is_rejected(inputs):
 def test_total_rounding_to_zero_is_rejected(inputs):
     inputs["weight_tonnes"] = 1e-200
     inputs["usd_per_tonne"] = replace(inputs["usd_per_tonne"], value=1e-200)
+    with pytest.raises(ValueError, match="total_usd"):
+        estimate(inputs)
+
+
+@pytest.mark.parametrize("scalar", [Decimal, np.float64, np.int64])
+def test_numeric_scalars_are_retained_without_float_conversion(inputs, scalar):
+    inputs["weight_tonnes"] = scalar(10)
+    inputs["usd_per_tonne"] = replace(inputs["usd_per_tonne"], value=scalar(20))
+    inputs["complexity_factor"] = replace(inputs["complexity_factor"], value=scalar(3))
+    result = estimate(inputs)
+    assert result.total_usd == Decimal("600.00")
+    assert isinstance(result.weight_tonnes, Decimal)
+    assert result.weight_tonnes == Decimal("10")
+    assert result.usd_per_tonne is inputs["usd_per_tonne"]
+    assert result.complexity_factor is inputs["complexity_factor"]
+
+
+@pytest.mark.parametrize(
+    ("weight", "expected"),
+    [("1.005", "1.00"), ("1.015", "1.02"),
+     ("1.004999999999999999999999999999999999", "1.00"),
+     ("1.005000000000000000000000000000000001", "1.01")],
+)
+def test_decimal_product_rounds_once_to_cents(inputs, weight, expected):
+    # A low-precision caller context must not round inputs or the product early.
+    inputs["weight_tonnes"] = Decimal(weight)
+    inputs["usd_per_tonne"] = replace(inputs["usd_per_tonne"], value=Decimal("0.1"))
+    inputs["complexity_factor"] = replace(inputs["complexity_factor"], value=Decimal("10"))
+    with localcontext() as context:
+        context.prec = 2
+        context.rounding = ROUND_UP
+        context.traps[Inexact] = True
+        result = estimate(inputs)
+    assert result.total_usd == Decimal(expected)
+    assert result.total_usd.as_tuple().exponent == -2
+    assert result.weight_tonnes == Decimal(weight)
+
+
+def test_large_decimal_product_preserves_all_digits(inputs):
+    inputs["weight_tonnes"] = Decimal("123456789012345678901234567890.125")
+    inputs["usd_per_tonne"] = replace(inputs["usd_per_tonne"], value=Decimal("8.4"))
+    inputs["complexity_factor"] = replace(inputs["complexity_factor"], value=Decimal("2.5"))
+    result = estimate(inputs)
+    assert result.total_usd == Decimal("2592592569259259256925925925692.62")
+
+
+def test_decimal_total_rounding_to_zero_is_rejected(inputs):
+    inputs["weight_tonnes"] = Decimal("0.0049")
+    inputs["usd_per_tonne"] = replace(inputs["usd_per_tonne"], value=Decimal("1"))
+    inputs["complexity_factor"] = replace(inputs["complexity_factor"], value=Decimal("1"))
     with pytest.raises(ValueError, match="total_usd"):
         estimate(inputs)

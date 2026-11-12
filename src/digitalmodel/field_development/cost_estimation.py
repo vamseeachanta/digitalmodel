@@ -11,9 +11,16 @@ particular value is supported by the cited section; that remains a basis review.
 """
 
 from dataclasses import dataclass
-from datetime import MAXYEAR, MINYEAR
-from math import isfinite
+from datetime import MINYEAR, date
+from decimal import (
+    ROUND_HALF_EVEN,
+    Context,
+    Decimal,
+    DecimalException,
+    localcontext,
+)
 from numbers import Integral, Real
+from sys import float_info
 
 from digitalmodel.citations.schema import (
     Citation,
@@ -27,8 +34,8 @@ from digitalmodel.citations.schema import (
 class TopsidesCostEstimate:
     """USD cost at the supplied base year, retaining weight and cited factors."""
 
-    total_usd: float
-    weight_tonnes: float
+    total_usd: Decimal
+    weight_tonnes: Decimal
     usd_per_tonne: CitedValue
     complexity_factor: CitedValue
     price_base_year: int
@@ -42,24 +49,25 @@ class TopsidesCostEstimate:
         }
 
 
-def _positive_number(name: str, value: float) -> float:
-    if isinstance(value, bool) or not isinstance(value, Real):
+def _positive_number(name: str, value: Real | Decimal) -> Decimal:
+    if isinstance(value, bool) or not isinstance(value, (Real, Decimal)):
         raise ValueError(f"{name} must be a positive finite number")
     try:
-        number = float(value)
-    except (ValueError, OverflowError) as exc:
+        number = Decimal(str(value))
+    except (DecimalException, ValueError, OverflowError) as exc:
         raise ValueError(f"{name} must be a positive finite number") from exc
-    if not isfinite(number) or number <= 0:
+    if not number.is_finite() or number <= 0:
         raise ValueError(f"{name} must be a positive finite number")
     return number
 
 
 def estimate_topsides_cost(
     *,
-    weight_tonnes: float,
+    weight_tonnes: Real | Decimal,
     usd_per_tonne: CitedValue,
     complexity_factor: CitedValue,
     price_base_year: int,
+    today: date | None = None,
 ) -> TopsidesCostEstimate:
     """Calculate weight × unit rate × complexity, with a fail-closed sidecar.
 
@@ -72,19 +80,30 @@ def estimate_topsides_cost(
 
     Weight is dry topsides mass excluding operating fluids; the supplied rate
     shall use the same dry basis. Basis correspondence is established by review,
-    not checked by this method. The price base year is a required integer within
-    Python's calendar representation limits. It is a caller assertion, not
-    checked against the rate citation. Cost boundaries require basis review.
+    not checked by this method. The price base year is a required integer from
+    year 1 through the calculation year (``today``, defaulting to the current
+    date). Year 1 is only Python's calendar lower limit: no historical cost
+    validity is implied. The year is a caller assertion, not checked against
+    the rate citation. Cost boundaries require basis review.
     No currency conversion, escalation, allowances or complete facility CAPEX
     are calculated. Existing aggregate estimators and DCF adapters are separate.
+
+    Each numeric input is converted once using ``Decimal(str(value))``. The
+    exact product is rounded once to USD cents with half-even rounding, in an
+    independent decimal context. The total and retained weight are Decimal;
+    cited input records are retained unchanged. Totals outside the finite float
+    range or rounding to zero cents are rejected, preserving the upper output
+    range of the original method.
     """
+    current_year = (date.today() if today is None else today).year
     if (
         isinstance(price_base_year, bool)
         or not isinstance(price_base_year, Integral)
-        or not MINYEAR <= price_base_year <= MAXYEAR
+        or not MINYEAR <= price_base_year <= current_year
     ):
         raise ValueError(
-            f"price_base_year must be an integer calendar year from {MINYEAR} to {MAXYEAR}"
+            "price_base_year must be an integer calendar year "
+            f"from {MINYEAR} to {current_year}"
         )
     weight = _positive_number("weight_tonnes", weight_tonnes)
     values = {}
@@ -101,8 +120,22 @@ def estimate_topsides_cost(
         values[name] = _positive_number(name, cited.value)
         validate_citation(cited.citation)
 
-    total = weight * values["usd_per_tonne"] * values["complexity_factor"]
-    if not isfinite(total) or total <= 0:
+    factors = [weight, values["usd_per_tonne"], values["complexity_factor"]]
+    # Products need at most the sum of coefficient lengths. Reserve enough
+    # digits to quantize any total in the supported range to cents as well.
+    precision = max(
+        sum(len(factor.as_tuple().digits) for factor in factors),
+        float_info.max_10_exp + 4,
+    )
+    try:
+        with localcontext(Context(prec=precision, rounding=ROUND_HALF_EVEN)):
+            total = factors[0] * factors[1] * factors[2]
+            if not total.is_finite() or total > Decimal(str(float_info.max)):
+                raise ValueError("total_usd must be a positive finite number")
+            total = total.quantize(Decimal("0.01"))
+    except DecimalException as exc:
+        raise ValueError("total_usd must be a positive finite number") from exc
+    if total <= 0:
         raise ValueError("total_usd must be a positive finite number")
     return TopsidesCostEstimate(
         total_usd=total,
