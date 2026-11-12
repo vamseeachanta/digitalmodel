@@ -5,6 +5,8 @@
 #   static_screen   an open-source static calculation with tests exists
 #   components_only calculation parts exist; no end-to-end configuration solver
 #   absent          no calculation exists in this repository
+# public_solver_examples lists public example models and, where committed, the
+# static solver readback (results.json) for the same public example.
 # worked_configurations lists committed, reproducible cases only. A planned case
 # appears under open_issues, never under worked_configurations.
 schema_version: 1
@@ -45,6 +47,7 @@ riser_types:
       - examples/workflows/tsj-sizing/input.yml
       - examples/workflows/drilling-riser-operability-query/input.yml
       - examples/workflows/rig-capability-assessment/input.yml
+      - examples/riser_input/riser_drilling.yml
     public_solver_examples:
       - docs/domains/orcaflex/examples/modular/B01/B01 Drilling riser/master.yml
       - docs/domains/orcaflex/examples/modular/B06/B06 Running BOP/master.yml
@@ -80,16 +83,19 @@ riser_types:
     status: components_only
     open_source_solver: >-
       The static tensioned beam-column of the drilling riser and the API STD
-      2RD load-case screen apply; no top-tensioned riser screen (tension
-      factor, stroke) exists.
+      2RD load-case screen apply; an empirical stroke and top-tension sizing
+      exists; no top-tensioned riser response screen exists.
     modules:
       - src/digitalmodel/drilling_riser/riser_response.py
       - src/digitalmodel/subsea/riser/riser_case_screening.py
+      - src/digitalmodel/orcaflex/riser_config.py
     tests:
       - tests/subsea/riser
+      - tests/orcaflex/test_riser_config.py
     example_inputs:
       - examples/workflows/riser-screening/input.yml
       - examples/workflows/api-rp-2rd-riser/input.yml
+      - examples/riser_input/riser_ttr.yml
     public_solver_examples: []
     databases: [config_catalog, material_sn_scf_dff]
     worked_configurations: []
@@ -108,6 +114,7 @@ riser_types:
     modules:
       - src/digitalmodel/riser_configuration_screen/static.py
       - src/digitalmodel/riser_configuration_screen/workflow.py
+      - src/digitalmodel/marine_ops/marine_analysis/catenary/solver.py
       - src/digitalmodel/subsea/catenary_riser/simple_catenary.py
       - src/digitalmodel/subsea/catenary_riser/effective_weight.py
       - src/digitalmodel/riser_fatigue/touchdown.py
@@ -120,10 +127,12 @@ riser_types:
       - examples/workflows/riser-configuration-screen/scr.yml
       - examples/workflows/catenary/input.yml
       - examples/workflows/riser-fatigue/input.yml
+      - examples/riser_input/riser_scr.yml
     public_solver_examples:
       - docs/domains/orcaflex/examples/modular/A01/A01 Catenary riser/master.yml
       - docs/domains/orcaflex/examples/modular/A05/A05 Catenary with semisub/master.yml
       - docs/domains/orcaflex/examples/modular/A05/A05 Catenary with spar/master.yml
+      - docs/domains/orcaflex/library/tier2_fast/a01_catenary_riser/validation/results.json
     databases: [config_catalog, material_sn_scf_dff, line_pipe, soil_stiffness]
     worked_configurations: []
     open_issues: [3943, 3951, 3952, 3957, 810]
@@ -141,6 +150,7 @@ riser_types:
     modules:
       - src/digitalmodel/riser_configuration_screen/static.py
       - src/digitalmodel/riser_configuration_screen/workflow.py
+      - src/digitalmodel/marine_ops/marine_analysis/catenary/lazy_wave.py
       - src/digitalmodel/subsea/catenary_riser/lazy_wave.py
       - src/digitalmodel/riser_bom/costing.py
     tests:
@@ -148,9 +158,11 @@ riser_types:
       - tests/subsea/catenary_riser
     example_inputs:
       - examples/workflows/riser-configuration-screen/slwr.yml
+      - examples/riser_input/riser_slwr.yml
     public_solver_examples:
       - docs/domains/orcaflex/examples/modular/A01/A01 Lazy wave riser/master.yml
       - docs/domains/orcaflex/examples/modular/A05/A05 Lazy wave with FPSO/master.yml
+      - docs/domains/orcaflex/library/tier2_fast/a01_lazy_wave_riser/validation/results.json
     databases: [config_catalog, material_sn_scf_dff, line_pipe]
     worked_configurations: []
     open_issues: [3943, 3951, 3957, 1947, 1948]
@@ -172,12 +184,15 @@ riser_types:
       - src/digitalmodel/subsea/flexible_pipes/cross_section.py
     tests:
       - tests/subsea/flexible_pipes
-    example_inputs: []
+    example_inputs:
+      - examples/riser_input/riser_flexible.yml
     public_solver_examples:
       - docs/domains/orcaflex/examples/modular/A01/A01 Steep wave riser/master.yml
       - docs/domains/orcaflex/examples/modular/A01/A01 Pliant wave riser/master.yml
       - docs/domains/orcaflex/examples/modular/A02/A02 Lazy S simple/master.yml
       - docs/domains/orcaflex/examples/modular/A02/A02 Lazy S detailed/master.yml
+      - docs/domains/orcaflex/library/tier2_fast/a01_steep_wave_riser/validation/results.json
+      - docs/domains/orcaflex/library/tier2_fast/a01_pliant_wave_riser/validation/results.json
     databases: [flexible_pipe]
     worked_configurations: []
     open_issues: [3948, 2429]
