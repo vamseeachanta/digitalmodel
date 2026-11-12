@@ -1,0 +1,297 @@
+# Riser capability inventory.
+#
+# One entry per riser type. Every path is repository relative and is checked by
+# tests/riser_capability/test_riser_inventory.py. Status vocabulary:
+#   static_screen   an open-source static calculation with tests exists
+#   components_only calculation parts exist; no end-to-end configuration solver
+#   absent          no calculation exists in this repository
+# public_solver_examples lists public example models and, where committed, the
+# static solver readback (results.json) for the same public example.
+# The public A01 examples use flexible-pipe line types and are listed under the
+# flexible riser only; the A05 examples use steel riser pipe.
+# worked_configurations lists committed, reproducible cases only. A planned case
+# appears under open_issues, never under worked_configurations.
+schema_version: 1
+tracker_issue: 3942
+excluded_model_folders:
+  reason: >-
+    The PROVENANCE.md file in each folder records the origin class, source
+    statement, date, basis and permitted use as not stated. These models are not
+    used as worked configurations or comparators until the origin is established
+    (issue 3956).
+  paths:
+    - docs/domains/orcaflex/risers/completion
+    - docs/domains/orcaflex/risers/disconnect
+    - docs/domains/orcaflex/risers/drilling
+    - docs/domains/orcaflex/risers/intervention
+    - docs/domains/orcaflex/risers/production
+riser_types:
+  - id: drilling
+    name: Marine drilling riser
+    family: drilling
+    status: static_screen
+    open_source_solver: >-
+      Closed-form static tensioned beam-column (offset and uniform current),
+      tension budget, finite-element tensioned-beam and WKB string periods.
+    modules:
+      - src/digitalmodel/drilling_riser/stackup.py
+      - src/digitalmodel/drilling_riser/riser_response.py
+      - src/digitalmodel/drilling_riser/operability_screening.py
+      - src/digitalmodel/drilling_riser/tsj_workflow.py
+      - src/digitalmodel/drilling_riser/global_model/hand_checks.py
+      - src/digitalmodel/drilling_riser/global_model/spec.py
+      - src/digitalmodel/drilling_riser/postprocess/checks.py
+    tests:
+      - tests/drilling_riser
+    example_inputs:
+      - examples/workflows/riser-stackup/input.yml
+      - examples/workflows/riser-stackup-drawing/input.yml
+      - examples/workflows/tsj-sizing/input.yml
+      - examples/workflows/drilling-riser-operability-query/input.yml
+      - examples/workflows/rig-capability-assessment/input.yml
+      - examples/riser_input/riser_drilling.yml
+    public_solver_examples:
+      - docs/domains/orcaflex/examples/modular/B01/B01 Drilling riser/master.yml
+      - docs/domains/orcaflex/examples/modular/B06/B06 Running BOP/master.yml
+    databases: [riser_stackup, rig_riser_interface, config_catalog, standards_crosswalk]
+    worked_configurations: []
+    open_issues: [3944, 3952, 3958]
+    not_established: >-
+      Dynamic response, recoil, hang-off and vortex-induced vibration fatigue
+      are not established by the static tier.
+  - id: completion_workover
+    name: Completion and workover riser (open water) and landing string
+    family: completion
+    status: components_only
+    open_source_solver: >-
+      Tension chain, tensioned-beam periods and emergency-disconnect release
+      references for an open-water riser. No landing-string calculation exists.
+    modules:
+      - src/digitalmodel/drilling_riser/global_model/open_water.py
+      - src/digitalmodel/drilling_riser/global_model/hand_checks.py
+    tests:
+      - tests/drilling_riser/global_model
+    example_inputs: []
+    public_solver_examples: []
+    databases: [riser_stackup, rig_riser_interface]
+    worked_configurations: []
+    open_issues: [3945, 3946]
+    not_established: >-
+      No example input, no worked configuration and no landing-string axial
+      load, stretch or stress calculation exists.
+  - id: ttr
+    name: Top-tensioned riser
+    family: production
+    status: components_only
+    open_source_solver: >-
+      The static tensioned beam-column of the drilling riser and the API STD
+      2RD load-case screen apply; an empirical stroke and top-tension sizing
+      exists; no top-tensioned riser response screen exists.
+    modules:
+      - src/digitalmodel/drilling_riser/riser_response.py
+      - src/digitalmodel/subsea/riser/riser_case_screening.py
+      - src/digitalmodel/orcaflex/riser_config.py
+    tests:
+      - tests/subsea/riser
+      - tests/orcaflex/test_riser_config.py
+    example_inputs:
+      - examples/workflows/riser-screening/input.yml
+      - examples/workflows/api-rp-2rd-riser/input.yml
+      - examples/riser_input/riser_ttr.yml
+    public_solver_examples: []
+    databases: [config_catalog, material_sn_scf_dff]
+    worked_configurations: []
+    open_issues: [3947, 3951, 3952]
+    not_established: >-
+      Tension factor, tensioner stroke demand, keel-joint contact and dynamic
+      response are not established.
+  - id: scr
+    name: Steel catenary riser
+    family: production
+    status: static_screen
+    open_source_solver: >-
+      Inextensible catenary with mobile touchdown under near, far and cross
+      offsets; static von Mises utilisation; touchdown fatigue screening from
+      supplied stress ranges.
+    modules:
+      - src/digitalmodel/riser_configuration_screen/static.py
+      - src/digitalmodel/riser_configuration_screen/workflow.py
+      - src/digitalmodel/marine_ops/marine_analysis/catenary/solver.py
+      - src/digitalmodel/subsea/catenary_riser/simple_catenary.py
+      - src/digitalmodel/subsea/catenary_riser/effective_weight.py
+      - src/digitalmodel/riser_fatigue/touchdown.py
+      - src/digitalmodel/riser_fatigue/workflow.py
+    tests:
+      - tests/riser_configuration_screen
+      - tests/subsea/catenary_riser
+      - tests/riser_fatigue
+    example_inputs:
+      - examples/workflows/riser-configuration-screen/scr.yml
+      - examples/workflows/catenary/input.yml
+      - examples/workflows/riser-fatigue/input.yml
+      - examples/riser_input/riser_scr.yml
+    public_solver_examples:
+      - docs/domains/orcaflex/examples/modular/A05/A05 Catenary with semisub/master.yml
+      - docs/domains/orcaflex/examples/modular/A05/A05 Catenary with spar/master.yml
+    databases: [config_catalog, material_sn_scf_dff, line_pipe, soil_stiffness]
+    worked_configurations: []
+    open_issues: [3943, 3951, 3952, 3957, 810]
+    not_established: >-
+      Dynamic response, touchdown soil interaction and compliance with a named
+      code edition are not established by the static screen.
+  - id: slwr
+    name: Steel lazy-wave riser
+    family: production
+    status: static_screen
+    open_source_solver: >-
+      Piecewise inextensible catenary with a buoyed section, fixed installed
+      buoyancy under offsets, hog clearance and static von Mises utilisation.
+      The older LazyWaveAnalyzer remains quarantined.
+    modules:
+      - src/digitalmodel/riser_configuration_screen/static.py
+      - src/digitalmodel/riser_configuration_screen/workflow.py
+      - src/digitalmodel/marine_ops/marine_analysis/catenary/lazy_wave.py
+      - src/digitalmodel/subsea/catenary_riser/lazy_wave.py
+      - src/digitalmodel/riser_bom/costing.py
+    tests:
+      - tests/riser_configuration_screen
+      - tests/subsea/catenary_riser
+    example_inputs:
+      - examples/workflows/riser-configuration-screen/slwr.yml
+      - examples/riser_input/riser_slwr.yml
+    public_solver_examples:
+      - docs/domains/orcaflex/examples/modular/A05/A05 Lazy wave with FPSO/master.yml
+    databases: [config_catalog, material_sn_scf_dff, line_pipe]
+    worked_configurations: []
+    open_issues: [3943, 3951, 3957, 1947, 1948]
+    not_established: >-
+      Dynamic response, buoyancy-module catalogue selection and touchdown
+      fatigue are not established by the static screen.
+  - id: flexible
+    name: Flexible riser (free-hanging, lazy-wave, lazy-S)
+    family: production
+    status: components_only
+    open_source_solver: >-
+      Armour stress checks, bend-stiffener sizing and a comparison of supplied
+      solver results against supplied limits. No static configuration solver
+      exists for a flexible riser.
+    modules:
+      - src/digitalmodel/subsea/flexible_pipes/configuration_comparison.py
+      - src/digitalmodel/subsea/flexible_pipes/design_checks_17J.py
+      - src/digitalmodel/subsea/flexible_pipes/bend_stiffener.py
+      - src/digitalmodel/subsea/flexible_pipes/cross_section.py
+    tests:
+      - tests/subsea/flexible_pipes
+    example_inputs:
+      - examples/riser_input/riser_flexible.yml
+    public_solver_examples:
+      - docs/domains/orcaflex/examples/modular/A01/A01 Catenary riser/master.yml
+      - docs/domains/orcaflex/examples/modular/A01/A01 Lazy wave riser/master.yml
+      - docs/domains/orcaflex/examples/modular/A01/A01 Steep wave riser/master.yml
+      - docs/domains/orcaflex/examples/modular/A01/A01 Pliant wave riser/master.yml
+      - docs/domains/orcaflex/examples/modular/A02/A02 Lazy S simple/master.yml
+      - docs/domains/orcaflex/examples/modular/A02/A02 Lazy S detailed/master.yml
+      - docs/domains/orcaflex/library/tier2_fast/a01_catenary_riser/validation/results.json
+      - docs/domains/orcaflex/library/tier2_fast/a01_lazy_wave_riser/validation/results.json
+      - docs/domains/orcaflex/library/tier2_fast/a01_steep_wave_riser/validation/results.json
+      - docs/domains/orcaflex/library/tier2_fast/a01_pliant_wave_riser/validation/results.json
+    databases: [flexible_pipe]
+    worked_configurations: []
+    open_issues: [3948, 2429]
+    not_established: >-
+      Static shape, minimum bend radius along the riser and clearances are not
+      established without a configuration solver; product properties have no
+      populated catalogue.
+  - id: hybrid_tower_slor
+    name: Hybrid riser tower and single-line offset riser
+    family: production
+    status: absent
+    open_source_solver: None.
+    modules: []
+    tests: []
+    example_inputs: []
+    public_solver_examples:
+      - docs/domains/orcaflex/examples/modular/A03/A03 Jumper to high tower/master.yml
+    databases: []
+    worked_configurations: []
+    open_issues: [3949]
+    not_established: >-
+      Buoyancy-can uplift, tower tension, inclination and jumper loads are not
+      established; no calculation exists.
+  - id: buoyancy_supported
+    name: Buoyancy-supported riser
+    family: production
+    status: absent
+    open_source_solver: None.
+    modules: []
+    tests: []
+    example_inputs: []
+    public_solver_examples: []
+    databases: []
+    worked_configurations: []
+    open_issues: [3950]
+    not_established: >-
+      Buoy equilibrium, tether tension and riser loads on the buoy are not
+      established; no calculation exists.
+databases:
+  - id: config_catalog
+    category: Line pipe and tubulars
+    path: data/riser_database/config_catalog.csv
+    provenance: source_path column (repository file per row)
+  - id: line_pipe
+    category: Line pipe and tubulars
+    path: data/line_pipe/data.json
+    provenance: citation_id per row resolved in sources.yml
+  - id: riser_stackup
+    category: Drilling and completion stack-ups
+    path: data/riser_database/riser_stackup.csv
+    provenance: wiki_path column
+  - id: rig_riser_interface
+    category: Tensioners and rig interface
+    path: data/riser_database/rig_riser_interface.csv
+    provenance: wiki_path column
+  - id: flexible_pipe
+    category: Flexible pipe
+    path: data/flexible_pipe/data.json
+    provenance: citation_id per row resolved in sources.yml
+  - id: structure_properties
+    category: Structural sections
+    path: data/riser_database/structure_properties/data.json
+    provenance: citation_id per row resolved in sources.yml
+  - id: soil_stiffness
+    category: Soil
+    path: data/soil_stiffness/data.json
+    provenance: citation_id per row resolved in sources.yml
+  - id: geotechnical
+    category: Soil
+    path: data/geotechnical/geotech_database.yaml
+    provenance: source_id, locator and licence per row
+  - id: material_sn_scf_dff
+    category: S-N curves, stress concentration and design fatigue factors
+    path: data/riser_database/material_sn_scf_dff.csv
+    provenance: code_id and wiki_path columns
+  - id: sn_curves
+    category: S-N curves, stress concentration and design fatigue factors
+    path: data/fatigue/sn_curves.yaml
+    provenance: file-level metadata.source only
+  - id: standards_crosswalk
+    category: Standards crosswalk
+    path: data/riser_database/standards_crosswalk.csv
+    provenance: wiki_path and registry_revision columns
+  - id: rao_database
+    category: Vessel response amplitude operators
+    path: data/rao_database.parquet
+    provenance: sources list in data/rao_database.manifest.json
+  - id: metocean_criteria
+    category: Metocean
+    path: data/vessels/processed/metocean_criteria.csv
+    provenance: n_citations column; citations in the raw JSON
+absent_database_categories:
+  - category: Buoyancy modules
+    issue: 3953
+  - category: Coatings, insulation and vortex-induced vibration suppression
+    issue: 3953
+  - category: Flex joints, stress joints and keel joints
+    issue: 3953
+  - category: Current profiles by region
+    issue: null

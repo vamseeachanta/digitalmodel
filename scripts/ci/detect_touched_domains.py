@@ -46,6 +46,21 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("data/bha_database/", ("subsea",)),
     ("data/bha_standards/", ("subsea",)),
     ("scripts/bha_database/", ("subsea",)),
+    ("data/riser_capability/", ("subsea",)),
+    ("scripts/riser_capability/", ("subsea",)),
+    # Inputs read by the inventory generator and its checks: the database files
+    # named in riser_types.yml (directories where they are dedicated, exact files
+    # where the folder is shared) and the excluded models' PROVENANCE.md files.
+    ("data/riser_database/", ("subsea",)),
+    ("data/line_pipe/", ("subsea",)),
+    ("data/flexible_pipe/", ("subsea",)),
+    ("data/soil_stiffness/", ("subsea",)),
+    ("data/geotechnical/", ("subsea",)),
+    ("data/fatigue/", ("subsea",)),
+    ("data/rao_database.parquet", ("subsea",)),
+    ("data/vessels/processed/metocean_criteria.csv", ("subsea",)),
+    ("docs/domains/orcaflex/risers/", ("contracts", "subsea")),
+    ("docs/domains/risers/riser-capability-inventory.md", ("contracts", "subsea")),
     ("scripts/risers/analytical_riser_regression.py", ("subsea",)),
     ("docs/audits/analytical-riser-regression.json", ("subsea",)),
     ("docs/audits/analytical-riser-regression.html", ("subsea",)),
