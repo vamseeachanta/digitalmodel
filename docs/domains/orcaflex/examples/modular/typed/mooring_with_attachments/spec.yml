@@ -9,12 +9,20 @@
 # polyester 160 mm, 100 m R3 76 mm chain. Attachments, arc length from the
 # anchor: clump weight at 250 m, submerged buoy at 300 m (chain-polyester
 # joint). All values are illustrative input data, not a design.
+# Chain and polyester line-type properties are the router defaults (see #3981
+# and #3982); they are not qualified by this example.
 #
 # Hand checks (seawater 1.025 te/m3, g 9.80665 m/s2):
-#   Clump20te: steel 20 te, volume 20 / 7.85 = 2.548 m3;
+#   Clump20te: steel 20 te, volume 20 / 7.85 = 2.548 m3 (steel density
+#     7.85 te/m3 assumed);
 #     submerged weight (20 - 1.025 x 2.548) g = 170.5 kN.
 #   SubBuoy: mass 5 te, volume 25 m3; net upthrust (1.025 x 25 - 5) g
 #     = 202.3 kN.
+#   Drag areas are the side and end areas of the stated cylinders. The drag
+#   and added-mass coefficients are assumed, based on previous experience,
+#   and are not cited to a source; they are serialization inputs only.
+#   Without #3972 the tests generate the model by placing the routed mooring
+#   in a generic-only specification with the host vessel below.
 #   Anchor positions are those of the mooring_spread_catenary example; the
 #   attachments change the static shape, so no anchor-radius check is claimed.
 #

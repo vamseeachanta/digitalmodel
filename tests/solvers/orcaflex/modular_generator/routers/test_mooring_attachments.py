@@ -4,8 +4,9 @@
 could not carry clump weights or submerged buoys. These tests cover the schema
 (``MooringSystem.clump_types``, ``MooringLine.attachments``), the router output
 and its golden. Native data names are those of the public example
-"A01 Lazy wave riser". Full-model generation of the example needs the generic
-host vessel from #3972 and is not exercised here. No OrcaFlex licence is used.
+"A01 Lazy wave riser". Generation of the example through the typed route needs
+the generic host vessel from #3972; the routed output is generated here through
+a generic-only specification instead. No OrcaFlex licence is used.
 """
 
 from __future__ import annotations
@@ -112,3 +113,39 @@ def test_router_output_matches_golden(mooring):
     out = _route(mooring)
     golden = yaml.safe_load(GOLDEN.read_text(encoding="utf-8"))
     assert {k: out[k] for k in ("clump_types", "lines", "winches") if k in out} == golden
+
+
+def test_router_output_generates_through_generic_route(tmp_path):
+    """Generator-level check that does not need #3972.
+
+    The routed mooring is placed in a generic-only specification together
+    with the example's host vessel. ClumpTypes must be written before the
+    Lines that reference them, with the native key order of the public
+    example "A01 Lazy wave riser".
+    """
+    from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
+    from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
+
+    spec = yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))
+    generic = spec.pop("generic")
+    generic.update(_route(spec.pop("mooring")))
+    spec["generic"] = generic
+    out = tmp_path / "out"
+    ModularModelGenerator.from_spec(ProjectInputSpec(**spec)).generate(out)
+    objects = yaml.safe_load((out / "includes/20_generic_objects.yml").read_text(encoding="utf-8"))
+    keys = list(objects)
+    assert keys.index("ClumpTypes") < keys.index("Lines")
+    native_clump = yaml.safe_load(
+        (NATIVE / "01_general.yml").read_text(encoding="utf-8")
+    )["ClumpTypes"][0]
+    native_order = [k for k in native_clump if k != "Name"]
+    for clump in objects["ClumpTypes"]:
+        emitted = [k for k in clump if k != "Name"]
+        assert emitted == [k for k in native_order if k in emitted]
+    assert [c["Name"] for c in objects["ClumpTypes"]] == ["Clump20te", "SubBuoy"]
+    for line in objects["Lines"]:
+        assert line[ATTACH_KEY] == [
+            ["Clump20te", 0, 0, 250, "End A"],
+            ["SubBuoy", 0, 0, 300, "End A"],
+        ]
+        assert line["EndAConnection"] == "Fixed" and line["EndBConnection"] == "FPSO"

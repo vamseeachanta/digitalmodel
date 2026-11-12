@@ -373,11 +373,12 @@ class MooringRouter(BaseRouter):
             "Volume": ct.volume,
             "Height": ct.height,
             "AlignWith": "Line axes",
-            "Cd": [ct.drag_coefficient[0], None, ct.drag_coefficient[1]],
-            "Ca": [ct.added_mass_coefficient[0], None, ct.added_mass_coefficient[1]],
         }
+        # Key order follows the native example: DragArea, Cd, Ca.
         if ct.drag_area:
             properties["DragArea"] = [ct.drag_area[0], None, ct.drag_area[1]]
+        properties["Cd"] = [ct.drag_coefficient[0], None, ct.drag_coefficient[1]]
+        properties["Ca"] = [ct.added_mass_coefficient[0], None, ct.added_mass_coefficient[1]]
         return {"name": ct.name, "properties": properties}
 
     @staticmethod
