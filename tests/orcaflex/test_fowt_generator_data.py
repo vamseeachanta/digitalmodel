@@ -168,4 +168,4 @@ def test_extraction_reproduces_committed_file(tmp_path):
     spec.loader.exec_module(module)
     out = tmp_path / "generator_data.yml"
     module.main(["x", os.environ["DIGITALMODEL_IEA15_RAW"], str(out)])
-    assert out.read_text(encoding="utf-8") == DATA.read_text(encoding="utf-8")
+    assert out.read_bytes() == DATA.read_bytes()

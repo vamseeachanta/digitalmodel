@@ -220,7 +220,7 @@ def build(raw: Path) -> dict:
 def main(argv: list[str]) -> int:
     raw, output = Path(argv[1]), Path(argv[2])
     text = yaml.safe_dump(build(raw), sort_keys=False, width=100)
-    output.write_text(text, encoding="utf-8")
+    output.write_text(text, encoding="utf-8", newline=chr(10))
     return 0
 
 
