@@ -38,18 +38,10 @@ class DynacardWorkflow:
         - 'finite_difference': Time-domain finite difference. Numerically
           unstable — see below.
 
-    Measured against the stored reference downhole cards on all five fixture
-    wells (phase-aligned, since a card is a closed loop):
-
-        method              med nRMSE   med |stroke err|   med corr
-        everitt_jennings         0.9%              0.0%      1.000
-        gibbs                   17.3%              2.7%      0.966
-        finite_difference     diverges           diverges     0.022
-
-    'gibbs' does not transform the load at all — it returns an affine rescale
-    of the surface card (issue #1857) — so it cannot resolve pump condition.
-    'finite_difference' overflows to ~1e45 and beyond on three of five wells.
-    Neither should be used for diagnosis.
+    The Gibbs path propagates displacement and force through ordered rod
+    sections. Its independent analytical tests do not qualify field diagnosis;
+    it remains a comparison path. The legacy finite-difference solver is also
+    unqualified. See gibbs-transfer.md for the equations and validation limits.
     """
 
     def __init__(
@@ -284,13 +276,12 @@ class DynacardWorkflow:
         outputs at opposite ends of that bound can differ by twice the bound.
         This stated engineering comparison envelope is not a guarantee of
         physical accuracy or an exact bound under changing normalization.
-        Stroke differences are reported separately. Only the empirical Gibbs
-        comparison path is restricted to the measured surface stroke; other
-        methods may exhibit plunger overtravel.
+        Stroke differences are reported separately; elastic plunger overtravel
+        is permitted by all methods.
 
         Invalid cards and load nRMSE above the envelope raise PhysicsError.
         ``allow_divergence=True`` returns the failed gate and its evidence for
-        inspection, without returning invalid cards or waiving stroke guards.
+        inspection, without returning invalid cards.
         The reference is always the default solver, even when this workflow
         explicitly selects a comparison-only alternative.
         """
@@ -368,10 +359,9 @@ def perform_well_troubleshooting(
     """
     Utility function for CLI or API integration.
 
-    Defaults to the same solver :class:`DynacardWorkflow` does. It used to
-    default to ``'gibbs'``, which does not transform the load at all (#1857),
-    so every caller that took the default was diagnosing a rescaled surface
-    card and calling it a pump card.
+    Defaults to the same solver :class:`DynacardWorkflow` does. Comparison
+    methods remain opt-in because analytical tests alone do not establish
+    field diagnostic validity.
     """
     ctx = DynacardAnalysisContext(**context_dict)
     workflow = DynacardWorkflow(ctx, solver_method=solver_method)
