@@ -132,15 +132,35 @@ def load_benchmark_cases(root: Path = DEFAULT_DATA_ROOT) -> list[BenchmarkCase]:
         damping = _float(r["damping_pct"], table="benchmark_cases.csv", column="damping_pct")
         if damping <= 0.0 or damping >= 100.0:
             raise RollDampingDataError(table="benchmark_cases.csv", reason=f"damping_pct out of range in {r['case_id']}")
+        amplitude = _float(r["amplitude_deg"], table="benchmark_cases.csv", column="amplitude_deg")
+        if not 0.0 < amplitude < 90.0:
+            raise RollDampingDataError(table="benchmark_cases.csv", reason=f"amplitude_deg out of range in {r['case_id']}")
+        b_over_t = _float(r["b_over_t"], table="benchmark_cases.csv", column="b_over_t", optional=True)
+        if b_over_t is not None and b_over_t <= 0.0:
+            raise RollDampingDataError(table="benchmark_cases.csv", reason=f"b_over_t must be positive in {r['case_id']}")
+        for column in ("source_page", "verification", "damping_basis"):
+            if not r[column].strip():
+                raise RollDampingDataError(table="benchmark_cases.csv", reason=f"empty {column} in {r['case_id']}")
         out.append(BenchmarkCase(
             case_id=r["case_id"], source_id=r["source_id"], hull=r["hull"],
-            b_over_t=_float(r["b_over_t"], table="benchmark_cases.csv", column="b_over_t", optional=True),
+            b_over_t=b_over_t,
             bilge=r["bilge"], bilge_keel=r["bilge_keel"], scale=r["scale"],
-            amplitude_deg=_float(r["amplitude_deg"], table="benchmark_cases.csv", column="amplitude_deg"),
+            amplitude_deg=amplitude,
             damping_pct=damping, damping_basis=r["damping_basis"], source_page=r["source_page"],
             verification=r["verification"], note=r["note"],
         ))
     return out
+
+
+def _check_band(band: Band) -> Band:
+    finite = math.isfinite(band.green_max_pct) and math.isfinite(band.amber_max_pct)
+    if not finite or not 0.0 < band.green_max_pct < band.amber_max_pct:
+        raise RollDampingDataError(table="acceptance_criteria.yaml",
+                                   reason=f"bands not finite and increasing for {band.quantity}")
+    if band.abs_floor is not None and not (math.isfinite(band.abs_floor) and band.abs_floor >= 0.0):
+        raise RollDampingDataError(table="acceptance_criteria.yaml",
+                                   reason=f"abs_floor must be finite and non-negative for {band.quantity}")
+    return band
 
 
 def load_acceptance_criteria(root: Path = DEFAULT_DATA_ROOT) -> dict[str, Band]:
@@ -158,9 +178,7 @@ def load_acceptance_criteria(root: Path = DEFAULT_DATA_ROOT) -> dict[str, Band]:
             )
         except (KeyError, TypeError, ValueError) as exc:
             raise RollDampingDataError(table="acceptance_criteria.yaml", reason=f"bad entry {key}: {exc}") from exc
-        if not 0.0 < band.green_max_pct < band.amber_max_pct:
-            raise RollDampingDataError(table="acceptance_criteria.yaml", reason=f"bands not increasing for {key}")
-        out[key] = band
+        out[key] = _check_band(band)
     return out
 
 
@@ -185,20 +203,27 @@ def verdict(
     Returns ``{"deviation_pct", "colour", "green_max_pct", "amber_max_pct"}``.
     The deviation is signed, ``100 (calculated / reference - 1)``; the colour
     uses its magnitude, unless ``|calculated - reference|`` is within the
-    quantity's ``abs_floor``, which grades green.
+    quantity's ``abs_floor``, which grades green. Band edges are inclusive,
+    with a relative round-off tolerance of 1e-9. Every graded quantity is a
+    positive magnitude (a damping, a coefficient, a period): a negative
+    calculated value or a non-positive reference raises.
     """
     bands = criteria if criteria is not None else load_acceptance_criteria()
     if quantity not in bands:
         raise RollDampingDataError(table="acceptance_criteria.yaml", reason=f"unknown quantity {quantity!r}")
-    band = bands[quantity]
-    if not (math.isfinite(calculated) and math.isfinite(reference)) or reference == 0.0:
-        raise RollDampingDataError(table="acceptance_criteria.yaml", reason="non-finite value or zero reference")
+    band = _check_band(bands[quantity])
+    if not (math.isfinite(calculated) and math.isfinite(reference)):
+        raise RollDampingDataError(table="acceptance_criteria.yaml", reason="non-finite value")
+    if reference <= 0.0 or calculated < 0.0:
+        raise RollDampingDataError(table="acceptance_criteria.yaml",
+                                   reason="graded quantities are positive: reference must be > 0, calculated >= 0")
     dev = 100.0 * (calculated / reference - 1.0)
-    if band.abs_floor is not None and abs(calculated - reference) <= band.abs_floor:
+    mag = abs(dev) * (1.0 - 1e-9)
+    if band.abs_floor is not None and abs(calculated - reference) <= band.abs_floor * (1.0 + 1e-9):
         colour = GREEN
-    elif abs(dev) <= band.green_max_pct:
+    elif mag <= band.green_max_pct:
         colour = GREEN
-    elif abs(dev) <= band.amber_max_pct:
+    elif mag <= band.amber_max_pct:
         colour = AMBER
     else:
         colour = RED

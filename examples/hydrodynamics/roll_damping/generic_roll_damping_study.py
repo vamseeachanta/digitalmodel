@@ -213,20 +213,31 @@ def literature() -> dict:
 
 
 def grade_benchmarks(lit: dict) -> list[dict]:
-    """Grade each calculated value against the measured benchmark rows."""
+    """Grade each calculated value against the measured benchmark rows.
+
+    Basis: the calculated value is the eddy part only; the measured value is
+    total decay damping, which also holds the wave (radiation) and friction
+    parts. A verdict is therefore given only where the condition matches the
+    test (amplitude and roll axis); other rows are kept as a bracket with
+    their deviation and ``graded`` False.
+    """
     cases = {c.case_id: c for c in load_benchmark_cases()}
+    basis = "calculated eddy part only; measured total decay damping"
     rows = []
     for r in lit["kim2015"]:
         meas = cases[f"kim2015-k0-{r['amp']:02d}deg"].damping_pct
         for method, key in (("sectional C_R (strip)", "sectional_pct"), ("eq. 35 sharp corner", "eq35_pct")):
             v = verdict("damping_ratio_vs_measured", r[key], meas)
-            rows.append(dict(case=f"Kim 2015 bare box, {r['amp']} deg", method=method,
-                             measured=meas, calculated=r[key], **v))
+            rows.append(dict(case=f"Kim 2015 bare box, {r['amp']} deg", method=method, graded=True,
+                             basis=basis, measured=meas, calculated=r[key], **v))
     meas_gd = cases["gu-day2015-rect-15deg"].damping_pct
     for r in lit["gu_day2015"]:
+        graded = r["amp"] == 15 and r["OG"] == 0.0  # release amplitude, axis at the waterline
         v = verdict("damping_ratio_vs_measured", r["zeta_pct"], meas_gd)
+        if not graded:
+            v["colour"] = "bracket"
         rows.append(dict(case=f"Gu and Day 2015 rectangle B/T 6, {r['amp']} deg, OG {r['OG']} m",
-                         method="eq. 35 sharp corner", measured=meas_gd,
+                         method="eq. 35 sharp corner", graded=graded, basis=basis, measured=meas_gd,
                          calculated=r["zeta_pct"], **v))
     return rows
 
@@ -342,7 +353,7 @@ def reproduction_verdicts(rep: dict) -> list[dict]:
         ("2", "Fig. 5 midbody C_R, derrick barge (about 120)", "figure_read", rep["CR"]["chakrabarti2001"], 120.0, "complete"),
         ("3", "Same, eq. 25 bracketed as printed", "figure_read", rep["CR"]["as_printed"], 120.0, "complete"),
         ("4", "Table 1 eq. 35 + end factor, reduced rakes (0.16)", "printed_table_value", rep["t1_eq35_end_factor"], 0.16, "partly (inertia, KG assumed)"),
-        ("5", "Table 1 eq. 35 + end factor, high rakes (0.20)", "printed_table_value", rep["t1_eq35_prismatic"], 0.20, "partly (rakes not modelled)"),
+        ("5", "Table 1 eq. 35 + end factor, high rakes (0.20)", "printed_table_value", rep["t1_eq35_end_factor"], 0.20, "partly (rakes not modelled)"),
         ("6", "Table 1 sectional formula, sigma 0.999, high rakes (0.59)", "printed_table_value", rep["t1_sectional_s0999"], 0.59, "no (raked ends dominate)"),
         ("7", "Table 1 sectional formula, sigma 0.99, reduced rakes (0.225)", "printed_table_value", rep["t1_sectional_s099_R197"], 0.225, "no (station data not printed)"),
         ("8", "Barge 16.9 ft, total factor, zero speed (text 14 %)", "printed_table_value", 100 * rep["d169_eddy"], 14.0, "no (inertia, KG not printed)"),

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import shutil
 from pathlib import Path
 
@@ -52,7 +53,7 @@ def test_acceptance_bands_are_ordered():
     [
         ("identity", 0.7873, 0.787, "green"),
         ("figure_read", 123.5, 120.0, "green"),
-        ("printed_table_value", 0.168, 0.20, "amber"),
+        ("printed_table_value", 0.166, 0.20, "amber"),
         ("figure_read", 21.3, 120.0, "red"),
         ("damping_ratio_vs_measured", 0.82, 1.2, "green"),   # within the 0.5 point floor
         ("damping_ratio_vs_measured", 0.41, 1.0, "red"),
@@ -70,6 +71,60 @@ def test_verdict_rejects_unknown_quantity_and_zero_reference():
         rb.verdict("not-a-quantity", 1.0, 1.0)
     with pytest.raises(rb.RollDampingDataError):
         rb.verdict("identity", 1.0, 0.0)
+
+
+def test_verdict_rejects_negative_values():
+    with pytest.raises(rb.RollDampingDataError):
+        rb.verdict("damping_ratio_vs_measured", -0.1, 0.1)
+    with pytest.raises(rb.RollDampingDataError):
+        rb.verdict("damping_ratio_vs_measured", 0.1, -0.1)
+
+
+@pytest.mark.parametrize(
+    "quantity, calc, colour",
+    [
+        ("figure_read", 110.0, "green"), ("figure_read", 90.0, "green"),
+        ("figure_read", 125.0, "amber"), ("figure_read", 75.0, "amber"),
+        ("solver_to_solver_damping", 101.0, "green"), ("solver_to_solver_damping", 105.0, "amber"),
+        ("solver_to_solver_damping", 95.0, "amber"), ("solver_to_solver_damping", 105.1, "red"),
+    ],
+)
+def test_verdict_band_edges_are_inclusive(quantity, calc, colour):
+    assert rb.verdict(quantity, calc, 100.0)["colour"] == colour
+
+
+@pytest.mark.parametrize(
+    "band",
+    [
+        dict(green_max_pct=10.0, amber_max_pct=math.inf),
+        dict(green_max_pct=10.0, amber_max_pct=20.0, abs_floor=math.inf),
+        dict(green_max_pct=10.0, amber_max_pct=20.0, abs_floor=-1.0),
+        dict(green_max_pct=10.0, amber_max_pct=20.0, abs_floor=math.nan),
+        dict(green_max_pct=20.0, amber_max_pct=10.0),
+    ],
+)
+def test_caller_bands_are_validated(band):
+    criteria = {"q": rb.Band(quantity="q", description="d", rationale="r", **band)}
+    with pytest.raises(rb.RollDampingDataError):
+        rb.verdict("q", 1.0, 1.0, criteria=criteria)
+
+
+@pytest.mark.parametrize(
+    "old, new, match",
+    [
+        ("kim2015-k0-05deg,kim2015,box barge model L 1.00 m B 0.25 m T 0.08 m,3.125", "kim2015-k0-05deg,kim2015,box barge model L 1.00 m B 0.25 m T 0.08 m,-3.125", "b_over_t"),
+        ("model,5,1.0,total decay", "model,-5,1.0,total decay", "amplitude_deg"),
+        ("Table 3 p. 466,derived from table coefficients,zeta", "Table 3 p. 466,,zeta", "verification"),
+    ],
+)
+def test_loader_rejects_bad_rows(tmp_path: Path, old, new, match):
+    shutil.copytree(rb.DEFAULT_DATA_ROOT, tmp_path / "rd")
+    path = tmp_path / "rd" / "benchmark_cases.csv"
+    text = path.read_text(encoding="utf-8")
+    assert old in text
+    path.write_text(text.replace(old, new, 1), encoding="utf-8")
+    with pytest.raises(rb.RollDampingDataError, match=match):
+        rb.load_benchmark_cases(tmp_path / "rd")
 
 
 def test_method_matrix_covers_core_scenarios():
@@ -127,8 +182,11 @@ def test_study_reproduction_rows_and_verdicts():
 def test_study_benchmarks_grade_eq35_against_sharp_and_rounded_barges():
     mod = _study()
     rows = mod.grade_benchmarks(mod.literature())
-    gu = [r for r in rows if r["case"].startswith("Gu and Day") and "10 deg, OG 0.0" in r["case"]][0]
-    assert gu["colour"] == "green"
+    gu = {r["case"]: r for r in rows if r["case"].startswith("Gu and Day")}
+    graded = [r for r in gu.values() if r["graded"]]
+    assert len(graded) == 1 and "15 deg, OG 0.0" in graded[0]["case"]
+    assert graded[0]["colour"] == "amber"  # +35 % at the release amplitude
+    assert all(r["colour"] == "bracket" for r in gu.values() if not r["graded"])
     kim_eq35 = [r for r in rows if r["case"].startswith("Kim") and "35" in r["method"]]
     assert all(r["colour"] == "red" for r in kim_eq35)
 

@@ -3,15 +3,15 @@ route: public
 tables:
   benchmark_cases:
     file: benchmark_cases.csv
-    sha256: a6e0ea6567797c1f71e3fd19bfd17b8178ea75fbb861a439c8c5f832ceb8463d
+    sha256: 019a9f310c5c780db0dcd84e2ef5337b7a2093cbf9e00a92598267388dd20ecf
     rows: 21
   sources:
     file: sources.csv
-    sha256: c2ab5fdce83dd8f1ca03467a332c83c78c7fce341f9d34b72001ded71ddc2dc3
-    rows: 7
+    sha256: 1f616b0f1ab9b7504051669906abe09f76215c6cd64ccd57915a7731a1e541a8
+    rows: 16
   method_matrix:
     file: method_matrix.csv
-    sha256: 468383401c60496d8ab884e6a8e22248835ac164e24254493c77847dcebc024d
+    sha256: 031ec20669e1c68f40cd1d1b26b0a5b6bc3592bd32eb8de08fe8c36cf17abaf5
     rows: 13
   wiki_tables:
     file: wiki_tables.csv
@@ -19,5 +19,5 @@ tables:
     rows: 4
   acceptance_criteria:
     file: acceptance_criteria.yaml
-    sha256: 86de111f3d26c3b83cbf50449cb380ffdf6f7dc8a4cfb9cdd2417697659282c9
+    sha256: 688e8e6c30a21fdfff98650673d1ce8ab3d54f02044b6add22b0ec95258ac5c8
     quantities: 7
