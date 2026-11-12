@@ -1,7 +1,8 @@
 """Generic viscous roll damping study: reproduction, benchmarks, sweeps, sensitivity.
 
-Regenerates every calculated number of the generic roll damping analysis report
-(living report, revision 5 onward) from public inputs only:
+Regenerates the calculated numbers of the generic roll damping analysis report
+(living report, revision 5 onward) from public study inputs, with source metadata
+and the Q6 coefficient table resolved from the private wiki for a complete run:
 
 * the printed numbers of Chakrabarti (2001), Ocean Engineering 28, 915-932;
 * the measured barge benchmarks in ``data/roll_damping/benchmark_cases.csv``;
@@ -17,8 +18,9 @@ Usage::
     python examples/hydrodynamics/roll_damping/generic_roll_damping_study.py \
         --out study.json [--wiki-root <llm-wiki clone>]
 
-``--wiki-root`` is passed to :func:`barge_roll_damping`, which resolves its
-citations fail-closed; without it the citation resolver's search order is used.
+``--wiki-root`` is used to resolve both hulls' citations fail-closed; without it
+the citation resolver's search order is used. Both sidecars are retained in the
+sensitivity and amplitude outputs.
 """
 
 from __future__ import annotations
@@ -28,6 +30,7 @@ import csv
 import json
 import math
 import warnings
+from dataclasses import asdict, replace
 from pathlib import Path
 
 from digitalmodel.hydrodynamics import roll_damping_components as rc
@@ -117,7 +120,16 @@ def ship_case(p: dict, wiki_root=None):
     flags = list(strip.flags)
     if amp > rc.PAPER_EXAMPLE_AMPLITUDE:
         flags.append(rc.FLAG_AMPLITUDE_ABOVE_PAPER_EXAMPLES)
-    parts = rc.RollDampingComponents(bf, strip.damping, 0.0, 0.0, bbk, tuple(flags))
+    sections = [
+        "eqs. 4-5, p. 918 (equivalent linearisation and component sum)",
+        "eqs. 8-10, pp. 919-920 (skin friction)",
+        "eqs. 18-34, pp. 920-923 (sectional eddy making and strip integration)",
+    ]
+    if p["bk"] > 0:
+        sections.append("eqs. 46-60, pp. 926-927 (bilge keel)")
+    citations = tuple(replace(rc.SOURCE_CITATION, section=s) for s in sections)
+    parts = rc.RollDampingComponents(bf, strip.damping, 0.0, 0.0, bbk, tuple(flags), citations)
+    rc.validate_citations(parts, wiki_root)
     return parts, parts.percent_critical(stiff, inertia, added), dict(
         GM=gm, wn=wn, Tn=2 * math.pi / wn, cb=cb, I=inertia, A=added, C=stiff, m=m,
         eddy_excluded_length_share=strip.excluded_length_share,
@@ -287,8 +299,10 @@ def oat(fn, base, variations, wiki_root):
         dz = 100 * (z / z0 - 1)
         rows.append(dict(label=label, dB=100 * (p.total / p0.total - 1), dz=dz, z=z,
                          Tn=info["Tn"], input_change_pct=input_change_pct, flags=list(p.flags),
+                         citations=[asdict(c) for c in p.citations],
                          factor=(dz / input_change_pct) if input_change_pct else None))
-    return dict(base=dict(parts=p0.as_dict(), z=z0, flags=list(p0.flags), **info0), rows=rows)
+    return dict(base=dict(parts=p0.as_dict(), z=z0, flags=list(p0.flags),
+                          citations=[asdict(c) for c in p0.citations], **info0), rows=rows)
 
 
 def illustrative(wiki_root) -> dict:
@@ -331,9 +345,14 @@ def illustrative(wiki_root) -> dict:
     for a in amps:
         pb, zb, _ = barge_case(dict(b0, amp=a), wiki_root)
         pk, zk, _ = barge_case(dict(b0, amp=a, bk=0.3, bkl=0.5 * b0["L"]), wiki_root)
-        ps, zs, _ = ship_case(dict(s0, amp=a))
+        ps, zs, _ = ship_case(dict(s0, amp=a), wiki_root)
+        ps0, zs0, _ = ship_case(dict(s0, amp=a, bk=0.0), wiki_root)
         sweep.append(dict(amp=a, barge=zb, barge_bk=zk,
-                          ship_no_bk=ship_case(dict(s0, amp=a, bk=0.0))[1], ship_bk=zs,
+                          ship_no_bk=zs0, ship_bk=zs,
+                          barge_citations=[asdict(c) for c in pb.citations],
+                          barge_bk_citations=[asdict(c) for c in pk.citations],
+                          ship_citations=[asdict(c) for c in ps.citations],
+                          ship_no_bk_citations=[asdict(c) for c in ps0.citations],
                           barge_flags=list(pb.flags), barge_bk_flags=list(pk.flags), ship_flags=list(ps.flags)))
     out["amp_sweep"] = sweep
 

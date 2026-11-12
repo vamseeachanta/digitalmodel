@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import math
+import json
 import shutil
+from dataclasses import asdict
 from pathlib import Path
 
 import pytest
@@ -192,11 +194,110 @@ def test_study_benchmarks_grade_eq35_against_sharp_and_rounded_barges():
 
 
 def test_study_generic_barge_base_case():
+    # Independent arithmetic and input basis: data/roll_damping/README.md.
+    # Synthetic geometry and inertia assumptions, not a measured benchmark.
+    rho, gravity, nu = 1025.0, 9.80665, 1.19e-6
+    length, beam, draft, kg = 100.0, 30.0, 5.0, 7.0
+    volume = length * beam * draft
+    mass = rho * volume
+    gm = draft / 2 + beam**2 / (12 * draft) - kg
+    stiffness = mass * gravity * gm
+    inertia = mass * (0.35 * beam)**2
+    added = 0.25 * inertia
+    omega = (stiffness / (inertia + added))**0.5
+    period = 2 * math.pi / omega
+    critical = 2 * (stiffness * (inertia + added))**0.5
+    amplitude, og = math.pi / 18, draft - kg
+    area = length * (1.7 * draft + beam)
+    radius = (1.032 * area / length - 2 * og) / math.pi
+    friction = (0.787 * rho * area * radius**2 * (omega * nu)**0.5
+                * (1 + 0.00814 * (radius**2 * amplitude**2 * omega / nu)**0.386))
+    h0 = beam / (2 * draft)
+    eddy = (2 / math.pi * rho * length * draft**4 * amplitude * omega
+            * (h0**2 + 1 - og / draft) * (h0**2 + (1 - og / draft)**2))
+    damping_pct = 100 * (friction + eddy) / critical
     mod = _study()
     citation_root = Path(__file__).resolve().parents[1] / "citations" / "fixtures"
     parts, z, info = mod.barge_case(mod.BARGE0, citation_root)
+    assert info == pytest.approx(dict(GM=gm, wn=omega, Tn=period, I=inertia,
+                                    A=added, C=stiffness, m=mass), rel=1e-12)
+    assert parts.friction == pytest.approx(friction, rel=1e-12)
+    assert parts.eddy == pytest.approx(eddy, rel=1e-12)
+    assert parts.lift == parts.wave == parts.bilge_keel == 0
+    assert z == pytest.approx(damping_pct, rel=1e-12)
     assert info["Tn"] == pytest.approx(7.27, abs=0.01)
     assert z == pytest.approx(19.21, abs=0.01)
+
+
+@pytest.mark.parametrize("case_name", ["barge", "ship"])
+def test_study_hulls_fail_closed_on_missing_source(tmp_path: Path, case_name):
+    from digitalmodel.citations.schema import CitationResolutionError
+
+    mod = _study()
+    with pytest.raises(CitationResolutionError, match="page_missing"):
+        getattr(mod, f"{case_name}_case")(getattr(mod, f"{case_name.upper()}0"), tmp_path / "missing")
+
+
+@pytest.mark.parametrize("field", ["code_id", "publisher", "revision"])
+def test_study_ship_rejects_mismatched_source(tmp_path: Path, field):
+    from digitalmodel.citations.schema import CitationResolutionError
+    from digitalmodel.hydrodynamics.roll_damping_components import SOURCE_CITATION
+
+    fixture = Path(__file__).resolve().parents[1] / "citations" / "fixtures"
+    page = tmp_path / SOURCE_CITATION.wiki_path
+    page.parent.mkdir(parents=True)
+    text = (fixture / "knowledge" / SOURCE_CITATION.wiki_path).read_text(encoding="utf-8")
+    lines = text.splitlines()
+    assert any(line.startswith(f"{field}:") for line in lines)
+    page.write_text("\n".join(f"{field}: mismatched" if line.startswith(f"{field}:") else line
+                              for line in lines) + "\n", encoding="utf-8")
+    mod = _study()
+    with pytest.raises(CitationResolutionError, match=f"frontmatter_mismatch:{field}"):
+        mod.ship_case(mod.SHIP0, tmp_path)
+
+
+@pytest.mark.parametrize("keel_breadth, count", [(0.0, 3), (0.45, 4)])
+def test_study_ship_resolves_component_citations(keel_breadth, count):
+    from digitalmodel.hydrodynamics import roll_damping_components as rc
+
+    mod = _study()
+    fixture = Path(__file__).resolve().parents[1] / "citations" / "fixtures"
+    parts, z, _ = mod.ship_case(dict(mod.SHIP0, bk=keel_breadth), fixture)
+    assert math.isfinite(z)
+    assert len(parts.citations) == count
+    assert any("sectional eddy" in c.section for c in parts.citations)
+    assert any("bilge keel" in c.section for c in parts.citations) == (keel_breadth > 0)
+    assert not any("sharp-cornered barge" in c.section for c in parts.citations)
+    rc.validate_citations(parts, fixture)
+
+
+def test_study_ship_uses_default_citation_resolver(monkeypatch):
+    mod = _study()
+    fixture = Path(__file__).resolve().parents[1] / "citations" / "fixtures"
+    monkeypatch.setenv("LLM_WIKI_PATH", str(fixture))
+    parts, _, _ = mod.ship_case(mod.SHIP0)
+    assert len(parts.citations) == 4
+
+
+def test_study_serialization_preserves_both_hull_sidecars(monkeypatch):
+    from digitalmodel.citations.schema import Citation, validate_citation
+
+    mod = _study()
+    fixture = Path(__file__).resolve().parents[1] / "citations" / "fixtures"
+    # A conflicting environment also detects sweep calls that drop wiki_root.
+    monkeypatch.setenv("LLM_WIKI_PATH", str(fixture / "missing"))
+    out = json.loads(json.dumps(mod.illustrative(fixture)))
+    for hull, count in (("barge", 5), ("ship", 4)):
+        parts, _, _ = getattr(mod, f"{hull}_case")(getattr(mod, f"{hull.upper()}0"), fixture)
+        assert out[hull]["base"]["citations"] == [asdict(c) for c in parts.citations]
+        assert len(out[hull]["base"]["citations"]) == count
+        for row in [out[hull]["base"], *out[hull]["rows"]]:
+            assert row["citations"]
+            for citation in row["citations"]:
+                validate_citation(Citation(**citation), repo_root=fixture)
+    for row in out["amp_sweep"]:
+        for hull, count in (("barge", 5), ("barge_bk", 6), ("ship", 4), ("ship_no_bk", 3)):
+            assert len(row[f"{hull}_citations"]) == count
 
 
 def test_manifest_matches_tables():
@@ -344,3 +445,22 @@ def test_container_rows_are_reported_with_and_without_the_wiki(tmp_path: Path):
     rows = [r for r in mod.reproduction_verdicts(rep) if r["row"] in ("9", "10")]
     assert len(rows) == 4
     assert all(r["colour"] in ("green", "amber", "red") for r in rows)
+
+
+def test_study_main_writes_both_citation_sidecars(tmp_path: Path, monkeypatch):
+    import sys
+
+    mod = _study()
+    # Synthetic Q6 values and identity metadata exercise output, not source validity.
+    wiki = _fake_q6_wiki(tmp_path, _Q6_HEADER + _Q6_ROWS)
+    fixture = Path(__file__).resolve().parents[1] / "citations" / "fixtures"
+    shutil.copytree(fixture / "knowledge", wiki / "knowledge")
+    output = tmp_path / "study.json"
+    monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path / "missing"))
+    monkeypatch.setattr(sys, "argv", ["study", "--out", str(output), "--wiki-root", str(wiki)])
+    mod.main()
+    saved = json.loads(output.read_text(encoding="utf-8"))
+    assert len(saved["illustrative"]["barge"]["base"]["citations"]) == 5
+    assert len(saved["illustrative"]["ship"]["base"]["citations"]) == 4
+    assert all(isinstance(c, dict) for hull in ("barge", "ship")
+               for c in saved["illustrative"][hull]["base"]["citations"])
