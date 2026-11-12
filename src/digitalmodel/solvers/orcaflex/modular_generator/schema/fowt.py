@@ -95,9 +95,17 @@ class FowtHull(BaseModel):
     other_quadratic_damping: list[float] = Field(default_factory=lambda: [0.0] * 6,
                                                  description="Diagonal quadratic damping (kN/(m/s)^2, kN.m/(rad/s)^2)")
     initial_position: Vector3 = Field(default_factory=lambda: [0.0, 0.0, 0.0])
-    initial_heading: float = Field(default=0.0)
+    initial_orientation: Vector3 = Field(
+        default_factory=lambda: [0.0, 0.0, 0.0],
+        description="Initial roll, pitch, heading (deg); a non-zero roll or pitch is "
+                    "used for free-decay starts with included_in_statics 'None'")
+    included_in_statics: Literal["6 DOF", "None"] = Field(
+        default="6 DOF", description="'None' holds the initial position for decay tests")
+    include_wave_load_first_order: bool = Field(
+        default=False, description="Needs load RAOs in the VesselType; none are emitted")
 
-    @field_validator("centre_of_mass", "centre_of_buoyancy", "initial_position")
+    @field_validator("centre_of_mass", "centre_of_buoyancy", "initial_position",
+                     "initial_orientation")
     @classmethod
     def _three(cls, value: list[float]) -> list[float]:
         return _check_vector(value, 3, "vector")

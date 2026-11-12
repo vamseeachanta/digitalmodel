@@ -7676,8 +7676,8 @@ Vessels:
   - 0.0
   - 0.0
   Orientation:
-  - 0
-  - 0
+  - 0.0
+  - 0.0
   - 0.0
   IncludedInStatics: 6 DOF
   PrimaryMotion: Calculated (6 DOF)

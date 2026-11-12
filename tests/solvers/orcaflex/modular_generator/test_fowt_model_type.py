@@ -313,3 +313,23 @@ def test_golden_lc0_model(tmp_path):
         got = (tmp_path / rel).read_text(encoding="utf-8").replace("\r\n", "\n")
         want = (GOLDEN / rel).read_text(encoding="utf-8").replace("\r\n", "\n")
         assert got == want, rel
+
+
+def test_decay_start_controls_reach_the_vessel(spec_dict):
+    fowt = copy.deepcopy(spec_dict["fowt"])
+    fowt["hull"]["initial_position"] = [10.0, 0.0, -0.4]
+    fowt["hull"]["initial_orientation"] = [0.0, 3.5, 0.0]
+    fowt["hull"]["included_in_statics"] = "None"
+    fowt["hull"]["include_wave_load_first_order"] = True
+    vessel = FowtRouter().route(FowtSpec(**fowt))["vessels"][0]["properties"]
+    assert vessel["InitialPosition"] == [10.0, 0.0, -0.4]
+    assert vessel["Orientation"] == [0.0, 3.5, 0.0]
+    assert vessel["IncludedInStatics"] == "None"
+    assert vessel["IncludeWaveLoad1stOrder"] == "Yes"
+
+
+def test_included_in_statics_rejects_other_values(spec_dict):
+    fowt = copy.deepcopy(spec_dict["fowt"])
+    fowt["hull"]["included_in_statics"] = "3 DOF"
+    with pytest.raises(ValidationError):
+        FowtSpec(**fowt)
