@@ -2,9 +2,11 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Invented topsides inputs test arithmetic only; no market cost basis is implied."""
 
-from dataclasses import replace
+from dataclasses import asdict, replace
+from decimal import Decimal
 from importlib import import_module
 
+import numpy as np
 import pytest
 
 from digitalmodel.citations.schema import Citation, CitationResolutionError, CitedValue
@@ -22,6 +24,7 @@ def inputs(tmp_path, monkeypatch):
             f"---\ncode_id: INVENTED-{name}\npublisher: Invented fixture\n"
             "revision: test-only\n---\nInvented values, not an industry source.\n",
             encoding="utf-8",
+            newline="\n",
         )
         citations[name] = Citation(
             code_id=f"INVENTED-{name}",
@@ -33,6 +36,7 @@ def inputs(tmp_path, monkeypatch):
         )
     return {
         "weight_tonnes": 10.0,
+        "price_base_year": 2024,
         "usd_per_tonne": CitedValue(20.0, citations["rate"], "USD/tonne"),
         "complexity_factor": CitedValue(1.5, citations["complexity"], "1"),
     }
@@ -44,16 +48,62 @@ def estimate(inputs):
     return module.estimate_topsides_cost(**inputs)
 
 
+def test_price_base_year_is_required(inputs):
+    inputs.pop("price_base_year")
+    with pytest.raises(TypeError, match="price_base_year"):
+        estimate(inputs)
+
+
+@pytest.mark.parametrize(
+    "year", [1, 2014, 2024, 9999, pytest.param(np.int64(2024), id="integral-scalar")]
+)
+def test_price_base_year_is_retained(inputs, year):
+    inputs["price_base_year"] = year
+    result = estimate(inputs)
+    assert result.price_base_year == year
+    assert type(result.price_base_year) is int
+    assert asdict(result)["price_base_year"] == year
+    assert result.total_usd == pytest.approx(300.0)
+
+
+@pytest.mark.parametrize(
+    "year",
+    [None, True, False, 0, -1, 10000, 2024.0, 2024.5, "2024",
+     float("nan"), float("inf"), Decimal("2024")],
+)
+def test_invalid_price_base_year_is_rejected(inputs, year):
+    inputs["price_base_year"] = year
+    with pytest.raises(ValueError, match="price_base_year"):
+        estimate(inputs)
+
+
 @pytest.mark.parametrize(
     ("weight", "rate", "factor", "expected"),
-    [(10, 20, 1.5, 300), (20, 20, 1.5, 600), (10, 40, 1.5, 600), (10, 20, 3, 600)],
+    [(10, 20, 1.5, 300), (20, 20, 1.5, 600), (10, 40, 1.5, 600), (10, 20, 3, 600),
+     (12.5, 32.4, 1.2, 486.0), (7.25, 19.6, 1.1, 156.31), (0.125, 8.4, 2.5, 2.625)],
 )
 def test_weight_rate_and_complexity_scaling(inputs, weight, rate, factor, expected):
     # Invented, independently calculated totals; each input acts linearly.
+    # 12.5 * 32.4 = 405; 405 * 1.2 = 486.0.
+    # 7.25 * 19.6 = 142.1; 142.1 * 1.1 = 156.31.
+    # 0.125 * 8.4 = 1.05; 1.05 * 2.5 = 2.625.
     inputs["weight_tonnes"] = weight
     inputs["usd_per_tonne"] = replace(inputs["usd_per_tonne"], value=rate)
     inputs["complexity_factor"] = replace(inputs["complexity_factor"], value=factor)
-    assert estimate(inputs).total_usd == pytest.approx(expected)
+    result = estimate(inputs)
+    assert result.total_usd == pytest.approx(expected, rel=1e-12, abs=1e-12)
+    assert result.weight_tonnes == weight
+    assert result.usd_per_tonne is inputs["usd_per_tonne"]
+    assert result.complexity_factor is inputs["complexity_factor"]
+
+
+@pytest.mark.parametrize("units", ["1", "dimensionless"])
+def test_dimensionless_complexity_units_are_accepted(inputs, units):
+    inputs["complexity_factor"] = replace(inputs["complexity_factor"], units=units)
+    result = estimate(inputs)
+    assert result.total_usd == pytest.approx(300.0)
+    assert result.complexity_factor is inputs["complexity_factor"]
+    assert result.complexity_factor.units == units
 
 
 def test_citation_sidecar_identifies_both_cost_inputs(inputs):
@@ -90,7 +140,11 @@ def test_citations_resolve_at_each_calculation(inputs, tmp_path, name, defect):
         )
     else:
         original = page.read_text(encoding="utf-8")
-        page.write_text(original.replace(f"{defect}:", "changed_field:"), encoding="utf-8")
+        page.write_text(
+            original.replace(f"{defect}:", "changed_field:"),
+            encoding="utf-8",
+            newline="\n",
+        )
     with pytest.raises(CitationResolutionError, match=citation.code_id):
         estimate(inputs)
 
@@ -98,7 +152,9 @@ def test_citations_resolve_at_each_calculation(inputs, tmp_path, name, defect):
 @pytest.mark.parametrize(
     ("name", "units"),
     [("usd_per_tonne", "USD/kg"), ("usd_per_tonne", ""),
-     ("complexity_factor", "%"), ("complexity_factor", "")],
+     ("complexity_factor", "%"), ("complexity_factor", ""),
+     ("complexity_factor", "Dimensionless"), ("complexity_factor", " 1"),
+     ("complexity_factor", "1 "), ("complexity_factor", "-")],
 )
 def test_incompatible_units_are_rejected(inputs, name, units):
     inputs[name] = replace(inputs[name], units=units)
@@ -107,7 +163,9 @@ def test_incompatible_units_are_rejected(inputs, name, units):
 
 
 @pytest.mark.parametrize("name", ["weight_tonnes", "usd_per_tonne", "complexity_factor"])
-@pytest.mark.parametrize("value", [0, -1, float("nan"), float("inf"), float("-inf"), True, "2"])
+@pytest.mark.parametrize(
+    "value", [0, -1, float("nan"), float("inf"), float("-inf"), True, "2", Decimal("2")]
+)
 def test_invalid_numeric_inputs_are_rejected(inputs, name, value):
     if name == "weight_tonnes":
         inputs[name] = value
@@ -119,5 +177,12 @@ def test_invalid_numeric_inputs_are_rejected(inputs, name, value):
 
 def test_overflow_is_rejected(inputs):
     inputs["weight_tonnes"] = 1e308
+    with pytest.raises(ValueError, match="total_usd"):
+        estimate(inputs)
+
+
+def test_total_rounding_to_zero_is_rejected(inputs):
+    inputs["weight_tonnes"] = 1e-200
+    inputs["usd_per_tonne"] = replace(inputs["usd_per_tonne"], value=1e-200)
     with pytest.raises(ValueError, match="total_usd"):
         estimate(inputs)
