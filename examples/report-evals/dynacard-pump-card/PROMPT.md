@@ -15,7 +15,7 @@ fillage from it. Do it first on the public example well, then on my card.
 
 Inputs (all public, no account needed):
 - Code and data: https://github.com/vamseeachanta/digitalmodel at commit
-  cfad19cd1f2cd1b2755479e733703a869b18e342, MIT licence.
+  484b674ade72817359dc135344dfd1f2411b488b, MIT licence.
 - The public example well:
   tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json in that
   repository. It is an anonymised field well: a measured surface card, a
@@ -29,8 +29,8 @@ Inputs (all public, no account needed):
 Steps:
 1. git clone https://github.com/vamseeachanta/digitalmodel
    cd digitalmodel
-   git fetch origin cfad19cd1f2cd1b2755479e733703a869b18e342 || git fetch origin refs/pull/3969/head
-   git checkout cfad19cd1f2cd1b2755479e733703a869b18e342
+   git fetch origin 484b674ade72817359dc135344dfd1f2411b488b || git fetch origin refs/pull/3969/head
+   git checkout 484b674ade72817359dc135344dfd1f2411b488b
    uv sync --extra test
 2. Run the public example and keep its output and figure:
    PYTHONPATH=src uv run --no-sync python examples/report-evals/dynacard-pump-card/analysis.py --out analysis.json --figure figure.png
