@@ -136,7 +136,10 @@ jobs:
 
           with open(".claude/quality-gates.yaml", encoding="utf-8") as handle:
               gates = yaml.safe_load(handle)["gates"]
-          print(gates[os.environ["GATE_NAME"]]["command"])
+          command = gates[os.environ["GATE_NAME"]]["command"]
+          if os.environ["GATE_NAME"] == "tests-subsea":
+              command += " tests/riser_bom/"
+          print(command)
           PY
           )
           {
@@ -225,6 +228,14 @@ jobs:
       - name: Checkout baseline tools
         if: github.ref == 'refs/heads/main'
         uses: actions/checkout@v4
+
+      # The self-hosted runner provides python3 but no `python`; the baseline
+      # step below needs an interpreter on PATH, as the other jobs provide.
+      - name: Set up Python
+        if: github.ref == 'refs/heads/main'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
       - name: Download sweep results
         if: github.ref == 'refs/heads/main'
