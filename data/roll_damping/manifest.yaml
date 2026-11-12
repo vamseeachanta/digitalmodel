@@ -11,7 +11,7 @@ tables:
     rows: 16
   method_matrix:
     file: method_matrix.csv
-    sha256: 031ec20669e1c68f40cd1d1b26b0a5b6bc3592bd32eb8de08fe8c36cf17abaf5
+    sha256: 7885f5e86b6f82a9038fb51e565a429f788fd61fc5b9762eb1d17ca7622f19e6
     rows: 13
   wiki_tables:
     file: wiki_tables.csv
@@ -19,5 +19,5 @@ tables:
     rows: 4
   acceptance_criteria:
     file: acceptance_criteria.yaml
-    sha256: 688e8e6c30a21fdfff98650673d1ce8ab3d54f02044b6add22b0ec95258ac5c8
-    quantities: 7
+    sha256: f58d26ad273c7c98ea7a454bfd39e6ad3249e3f92385f952005913ec85fb4719
+    quantities: 8

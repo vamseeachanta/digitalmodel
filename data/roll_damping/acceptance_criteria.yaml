@@ -7,6 +7,9 @@
 #   red    : deviation >  amber_max_pct     (not reproduced; do not use without a cause)
 # abs_floor (optional) is a difference in the quantity's own unit at or below
 # which the result is green whatever the percentage, for small reference values.
+# one_sided: true grades only a calculated value above the reference; a value
+# at or below it is green (consistent), because the reference is known to hold
+# parts the calculation leaves out.
 # The bands are proposed engineering bands (judgement), not code limits. Each
 # rationale says which part rests on a cited observation and which is proposed.
 version: 1
@@ -37,6 +40,16 @@ quantities:
       kjaer2024, -4.6 % to +14.2 %, p. 14). An empirical component method on a non-standard hull
       cannot be held tighter than the CFD spread, so 20 % is green. Beyond 50 % the method or its basis is
       wrong for the hull. The 0.5 point floor covers decay-fit scatter on lightly damped hulls (about 1 %).
+  partial_vs_measured_total:
+    description: A calculated viscous part (for example the eddy part only) against measured total decay damping, which also holds the wave and friction parts
+    green_max_pct: 20.0
+    amber_max_pct: 50.0
+    one_sided: true
+    rationale: >-
+      Proposed. The omitted parts are non-negative, so a calculated part at or below the measured total is
+      consistent and grades green; only an excess is evidence of overprediction. The excess bands are those of
+      damping_ratio_vs_measured. A low value is not confirmed by this check; the wave part from a solver is needed
+      for a two-sided comparison.
   cfd_vs_model_test:
     description: CFD damping against a model test of the same hull and condition
     green_max_pct: 10.0

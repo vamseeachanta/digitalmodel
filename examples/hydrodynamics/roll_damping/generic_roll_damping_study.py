@@ -217,9 +217,10 @@ def grade_benchmarks(lit: dict) -> list[dict]:
 
     Basis: the calculated value is the eddy part only; the measured value is
     total decay damping, which also holds the wave (radiation) and friction
-    parts. A verdict is therefore given only where the condition matches the
-    test (amplitude and roll axis); other rows are kept as a bracket with
-    their deviation and ``graded`` False.
+    parts. The quantity is therefore ``partial_vs_measured_total``, which
+    grades only an excess over the measurement. A verdict is given only where
+    the condition matches the test (amplitude and roll axis); other rows are
+    kept as a bracket with their deviation and ``graded`` False.
     """
     cases = {c.case_id: c for c in load_benchmark_cases()}
     basis = "calculated eddy part only; measured total decay damping"
@@ -227,13 +228,13 @@ def grade_benchmarks(lit: dict) -> list[dict]:
     for r in lit["kim2015"]:
         meas = cases[f"kim2015-k0-{r['amp']:02d}deg"].damping_pct
         for method, key in (("sectional C_R (strip)", "sectional_pct"), ("eq. 35 sharp corner", "eq35_pct")):
-            v = verdict("damping_ratio_vs_measured", r[key], meas)
+            v = verdict("partial_vs_measured_total", r[key], meas)
             rows.append(dict(case=f"Kim 2015 bare box, {r['amp']} deg", method=method, graded=True,
                              basis=basis, measured=meas, calculated=r[key], **v))
     meas_gd = cases["gu-day2015-rect-15deg"].damping_pct
     for r in lit["gu_day2015"]:
         graded = r["amp"] == 15 and r["OG"] == 0.0  # release amplitude, axis at the waterline
-        v = verdict("damping_ratio_vs_measured", r["zeta_pct"], meas_gd)
+        v = verdict("partial_vs_measured_total", r["zeta_pct"], meas_gd)
         if not graded:
             v["colour"] = "bracket"
         rows.append(dict(case=f"Gu and Day 2015 rectangle B/T 6, {r['amp']} deg, OG {r['OG']} m",
@@ -254,9 +255,9 @@ def oat(fn, base, variations, wiki_root):
         p, z, info = fn(q, wiki_root)
         dz = 100 * (z / z0 - 1)
         rows.append(dict(label=label, dB=100 * (p.total / p0.total - 1), dz=dz, z=z,
-                         Tn=info["Tn"], input_change_pct=input_change_pct,
+                         Tn=info["Tn"], input_change_pct=input_change_pct, flags=list(p.flags),
                          factor=(dz / input_change_pct) if input_change_pct else None))
-    return dict(base=dict(parts=p0.as_dict(), z=z0, **info0), rows=rows)
+    return dict(base=dict(parts=p0.as_dict(), z=z0, flags=list(p0.flags), **info0), rows=rows)
 
 
 def illustrative(wiki_root) -> dict:
@@ -295,13 +296,16 @@ def illustrative(wiki_root) -> dict:
            "ship": oat(ship_case, s0, ship_var, wiki_root)}
 
     amps = [2, 4, 6, 8, 10, 12, 15, 20]
-    out["amp_sweep"] = [dict(
-        amp=a,
-        barge=barge_case(dict(b0, amp=a), wiki_root)[1],
-        barge_bk=barge_case(dict(b0, amp=a, bk=0.3, bkl=0.5 * b0["L"]), wiki_root)[1],
-        ship_no_bk=ship_case(dict(s0, amp=a, bk=0.0))[1],
-        ship_bk=ship_case(dict(s0, amp=a))[1],
-    ) for a in amps]
+    sweep = []
+    for a in amps:
+        pb, zb, _ = barge_case(dict(b0, amp=a), wiki_root)
+        pk, zk, _ = barge_case(dict(b0, amp=a, bk=0.3, bkl=0.5 * b0["L"]), wiki_root)
+        # the ship path assembles components itself; flag it the same way
+        ship_flags = [rc.FLAG_AMPLITUDE_ABOVE_PAPER_EXAMPLES] if math.radians(a) > rc.PAPER_EXAMPLE_AMPLITUDE else []
+        sweep.append(dict(amp=a, barge=zb, barge_bk=zk,
+                          ship_no_bk=ship_case(dict(s0, amp=a, bk=0.0))[1], ship_bk=ship_case(dict(s0, amp=a))[1],
+                          barge_flags=list(pb.flags), barge_bk_flags=list(pk.flags), ship_flags=ship_flags))
+    out["amp_sweep"] = sweep
 
     # B/T sweep at 10 deg, G at the waterline: eq. 35 eddy against the
     # Journee and Massie (2001) eq. 7.174 decay fit (total damping).

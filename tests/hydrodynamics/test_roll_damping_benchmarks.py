@@ -185,7 +185,7 @@ def test_study_benchmarks_grade_eq35_against_sharp_and_rounded_barges():
     gu = {r["case"]: r for r in rows if r["case"].startswith("Gu and Day")}
     graded = [r for r in gu.values() if r["graded"]]
     assert len(graded) == 1 and "15 deg, OG 0.0" in graded[0]["case"]
-    assert graded[0]["colour"] == "amber"  # +35 % at the release amplitude
+    assert graded[0]["colour"] == "amber"  # +35 % above the measured total at the release amplitude
     assert all(r["colour"] == "bracket" for r in gu.values() if not r["graded"])
     kim_eq35 = [r for r in rows if r["case"].startswith("Kim") and "35" in r["method"]]
     assert all(r["colour"] == "red" for r in kim_eq35)
@@ -208,3 +208,31 @@ def test_manifest_matches_tables():
     for entry in manifest["tables"].values():
         raw = (rb.DEFAULT_DATA_ROOT / entry["file"]).read_bytes()
         assert hashlib.sha256(raw).hexdigest() == entry["sha256"], entry["file"]
+
+
+def test_partial_vs_total_is_one_sided():
+    # a calculated part below the measured total is consistent, not a disagreement
+    assert rb.verdict("partial_vs_measured_total", 0.41, 1.0)["colour"] == "green"
+    assert rb.verdict("partial_vs_measured_total", 14.3, 10.6)["colour"] == "amber"
+    assert rb.verdict("partial_vs_measured_total", 6.24, 1.0)["colour"] == "red"
+    assert rb.verdict("damping_ratio_vs_measured", 0.41, 1.0)["colour"] == "red"
+
+
+def test_sources_reject_truncated_rows(tmp_path: Path):
+    shutil.copytree(rb.DEFAULT_DATA_ROOT, tmp_path / "rd")
+    path = tmp_path / "rd" / "sources.csv"
+    path.write_text(path.read_text(encoding="utf-8") + "kim2015\n", encoding="utf-8")
+    with pytest.raises(rb.RollDampingDataError, match="missing or extra cells"):
+        rb.load_sources(tmp_path / "rd")
+
+
+def test_study_keeps_domain_flags():
+    mod = _study()
+    citation_root = Path(__file__).resolve().parents[1] / "citations" / "fixtures"
+    out = mod.illustrative(citation_root)
+    by_amp = {r["amp"]: r for r in out["amp_sweep"]}
+    assert "amplitude_above_paper_examples" in by_amp[20]["barge_flags"]
+    assert "amplitude_above_paper_examples" in by_amp[20]["ship_flags"]
+    assert by_amp[10]["barge_flags"] == []
+    flagged = [r for r in out["barge"]["rows"] if r["label"] == "Roll amplitude 15 deg"][0]
+    assert "amplitude_above_paper_examples" in flagged["flags"]

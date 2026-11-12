@@ -69,6 +69,7 @@ class Band:
     amber_max_pct: float
     rationale: str
     abs_floor: Optional[float] = None
+    one_sided: bool = False
 
 
 @dataclass(frozen=True)
@@ -114,7 +115,16 @@ def _float(value: str, *, table: str, column: str, optional: bool = False) -> Op
 
 def load_sources(root: Path = DEFAULT_DATA_ROOT) -> dict[str, dict[str, str]]:
     rows = _rows(root, "sources.csv", ("source_id", "citation", "link"))
-    return {r["source_id"]: r for r in rows}
+    out = {}
+    for r in rows:
+        if None in r.values() or None in r:
+            raise RollDampingDataError(table="sources.csv", reason=f"row with missing or extra cells: {r}")
+        if not r["source_id"].strip() or not r["citation"].strip():
+            raise RollDampingDataError(table="sources.csv", reason=f"empty source_id or citation: {r}")
+        if r["source_id"] in out:
+            raise RollDampingDataError(table="sources.csv", reason=f"duplicate source_id {r['source_id']}")
+        out[r["source_id"]] = r
+    return out
 
 
 def load_benchmark_cases(root: Path = DEFAULT_DATA_ROOT) -> list[BenchmarkCase]:
@@ -124,6 +134,8 @@ def load_benchmark_cases(root: Path = DEFAULT_DATA_ROOT) -> list[BenchmarkCase]:
     sources = load_sources(root)
     out, seen = [], set()
     for r in rows:
+        if None in r.values() or None in r:
+            raise RollDampingDataError(table="benchmark_cases.csv", reason=f"row with missing or extra cells: {r.get('case_id')}")
         if r["case_id"] in seen:
             raise RollDampingDataError(table="benchmark_cases.csv", reason=f"duplicate case_id {r['case_id']}")
         seen.add(r["case_id"])
@@ -175,6 +187,7 @@ def load_acceptance_criteria(root: Path = DEFAULT_DATA_ROOT) -> dict[str, Band]:
                 green_max_pct=float(q["green_max_pct"]), amber_max_pct=float(q["amber_max_pct"]),
                 rationale=str(q["rationale"]),
                 abs_floor=float(q["abs_floor"]) if "abs_floor" in q else None,
+                one_sided=bool(q.get("one_sided", False)),
             )
         except (KeyError, TypeError, ValueError) as exc:
             raise RollDampingDataError(table="acceptance_criteria.yaml", reason=f"bad entry {key}: {exc}") from exc
@@ -203,7 +216,9 @@ def verdict(
     Returns ``{"deviation_pct", "colour", "green_max_pct", "amber_max_pct"}``.
     The deviation is signed, ``100 (calculated / reference - 1)``; the colour
     uses its magnitude, unless ``|calculated - reference|`` is within the
-    quantity's ``abs_floor``, which grades green. Band edges are inclusive,
+    quantity's ``abs_floor``, which grades green. A ``one_sided`` quantity
+    grades only an excess over the reference; a value at or below it is
+    green (consistent, not confirmed). Band edges are inclusive,
     with a relative round-off tolerance of 1e-9. Every graded quantity is a
     positive magnitude (a damping, a coefficient, a period): a negative
     calculated value or a non-positive reference raises.
@@ -218,7 +233,7 @@ def verdict(
         raise RollDampingDataError(table="acceptance_criteria.yaml",
                                    reason="graded quantities are positive: reference must be > 0, calculated >= 0")
     dev = 100.0 * (calculated / reference - 1.0)
-    mag = abs(dev) * (1.0 - 1e-9)
+    mag = (max(dev, 0.0) if band.one_sided else abs(dev)) * (1.0 - 1e-9)
     if band.abs_floor is not None and abs(calculated - reference) <= band.abs_floor * (1.0 + 1e-9):
         colour = GREEN
     elif mag <= band.green_max_pct:
@@ -227,5 +242,5 @@ def verdict(
         colour = AMBER
     else:
         colour = RED
-    return dict(deviation_pct=dev, colour=colour,
+    return dict(deviation_pct=dev, colour=colour, one_sided=band.one_sided,
                 green_max_pct=band.green_max_pct, amber_max_pct=band.amber_max_pct)
