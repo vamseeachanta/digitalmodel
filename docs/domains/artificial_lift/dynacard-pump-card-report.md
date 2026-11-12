@@ -172,26 +172,26 @@ Each input family is changed independently about the public example well. Rod le
 | Pumping speed | Fillage | 0.02 | < 0.01 | < 0.01 | −0.05 | < 0.01 | −0.01 | smooth |
 | Pumping speed | Maximum pump load | −0.20 | −0.04 | 0.04 | 0.21 | 0.04 | 0.04 | smooth |
 | Pumping speed | Displacement | −4.68 | −0.93 | 0.93 | 4.63 | 0.93 | 0.93 | smooth |
-| Surface load scale | Pump stroke | 1.48 | 0.29 | −0.29 | −1.44 | −0.29 | −0.29 | smooth |
-| Surface load scale | Fluid load | −5.27 | −0.94 | 0.94 | 5.20 | 0.94 | 1.05 | stepped |
-| Surface load scale | Fillage | −2.28 | −0.47 | 0.47 | 2.38 | 0.47 | 0.47 | smooth |
-| Surface load scale | Maximum pump load | −12.86 | −2.57 | 2.57 | 12.86 | 2.57 | 2.57 | smooth |
-| Surface load scale | Displacement | −0.83 | −0.18 | 0.18 | 0.91 | 0.18 | 0.17 | smooth |
-| Surface position scale | Pump stroke | −6.44 | −1.29 | 1.29 | 6.48 | 1.29 | 1.29 | smooth |
-| Surface position scale | Fluid load | 0.18 | −0.06 | 0.06 | −0.31 | 0.06 | −0.05 | stepped |
-| Surface position scale | Fillage | 2.51 | 0.47 | −0.46 | −2.18 | −0.47 | −0.47 | smooth |
-| Surface position scale | Maximum pump load | −0.26 | −0.05 | 0.05 | 0.26 | 0.05 | 0.05 | smooth |
-| Surface position scale | Displacement | −4.09 | −0.82 | 0.82 | 4.16 | 0.82 | 0.83 | smooth |
+| Surface load (load-cell gain) | Pump stroke | 1.48 | 0.29 | −0.29 | −1.44 | −0.29 | −0.29 | smooth |
+| Surface load (load-cell gain) | Fluid load | −5.27 | −0.94 | 0.94 | 5.20 | 0.94 | 1.05 | stepped |
+| Surface load (load-cell gain) | Fillage | −2.28 | −0.47 | 0.47 | 2.38 | 0.47 | 0.47 | smooth |
+| Surface load (load-cell gain) | Maximum pump load | −12.86 | −2.57 | 2.57 | 12.86 | 2.57 | 2.57 | smooth |
+| Surface load (load-cell gain) | Displacement | −0.83 | −0.18 | 0.18 | 0.91 | 0.18 | 0.17 | smooth |
+| Surface position (stroke scale) | Pump stroke | −6.44 | −1.29 | 1.29 | 6.48 | 1.29 | 1.29 | smooth |
+| Surface position (stroke scale) | Fluid load | 0.18 | −0.06 | 0.06 | −0.31 | 0.06 | −0.05 | stepped |
+| Surface position (stroke scale) | Fillage | 2.51 | 0.47 | −0.46 | −2.18 | −0.47 | −0.47 | smooth |
+| Surface position (stroke scale) | Maximum pump load | −0.26 | −0.05 | 0.05 | 0.26 | 0.05 | 0.05 | smooth |
+| Surface position (stroke scale) | Displacement | −4.09 | −0.82 | 0.82 | 4.16 | 0.82 | 0.83 | smooth |
 | Fluid density | Pump stroke | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | smooth |
 | Fluid density | Fluid load | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | smooth |
 | Fluid density | Fillage | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | smooth |
 | Fluid density | Maximum pump load | −1.09 | −0.22 | 0.22 | 1.09 | 0.22 | 0.22 | smooth |
 | Fluid density | Displacement | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | smooth |
-| Pump diameter | Pump stroke | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | smooth |
-| Pump diameter | Fluid load | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | smooth |
-| Pump diameter | Fillage | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | smooth |
-| Pump diameter | Maximum pump load | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | smooth |
-| Pump diameter | Displacement | −9.75 | −1.99 | 2.01 | 10.25 | 2.00 | 2.00 | smooth |
+| Plunger diameter | Pump stroke | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | smooth |
+| Plunger diameter | Fluid load | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | smooth |
+| Plunger diameter | Fillage | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | smooth |
+| Plunger diameter | Maximum pump load | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | smooth |
+| Plunger diameter | Displacement | −9.75 | −1.99 | 2.01 | 10.25 | 2.00 | 2.00 | smooth |
 
 Table A1. Output changes (%) and central sensitivity factors (% output per % input).
 
@@ -201,9 +201,9 @@ The [reusable prompt](../../../examples/report-evals/dynacard-pump-card/PROMPT.m
 
 | Data | Source | Licence | Version or date | Link |
 | --- | --- | --- | --- | --- |
-| Public example surface card, rod string and stored pump card | Repository field fixture | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/793469a03e67d2cf141f4f5a865139375d581743/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json) |
+| Public example surface card, rod string and stored pump card | Repository field fixture | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/c2a62ac98957044e6b34bf0c0b0c9d19900dd4fc/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json) |
 | Public reference shapes | Public diagnostic plate | CC0 1.0 | 2026-10-11 | [Source](https://doi.org/10.17632/hnfwm9mjs6.1) |
-| Recorded shape-only plate score | Repository benchmark | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/793469a03e67d2cf141f4f5a865139375d581743/tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json) |
+| Recorded shape-only plate score | Repository benchmark | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/c2a62ac98957044e6b34bf0c0b0c9d19900dd4fc/tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json) |
 
 Table B1. Retained data sources; input and source digests are recorded by the analysis and eval.
 

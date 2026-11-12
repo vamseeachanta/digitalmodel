@@ -2,12 +2,12 @@
  "schema_version": "1.0",
  "report_id": "dynacard-pump-card",
  "mode": "rebuild",
- "started_utc": "2026-11-12T18:13:19Z",
- "finished_utc": "2026-11-12T18:13:26Z",
+ "started_utc": "2026-11-12T18:25:24Z",
+ "finished_utc": "2026-11-12T18:25:31Z",
  "grade": "PASS",
- "pinned_commit": "793469a03e67d2cf141f4f5a865139375d581743",
+ "pinned_commit": "c2a62ac98957044e6b34bf0c0b0c9d19900dd4fc",
  "artifacts": {
-  "results.json": "c486dfc803e926ff540796cc73969b3954af227e366013a1f3e6b5567743ed1e",
+  "results.json": "371861397d0449e0e7b6b79dea7f28791e5f28042cbbbb6d275e14a199113072",
   "eval.py": "50b0dd4a7f9fd21b736b4319ff2a2f100818fa9612c827c115ebe29e216b961b",
   "../evalkit.py": "e52cd0ff12cd869c4e2f55ee6a5777800a4278828d28d8fc546cc7b69efe2eb3"
  },
@@ -15,14 +15,14 @@
  "platform": "Windows",
  "context": {
   "revision": "candidate",
-  "repo_head": "793469a03e67d2cf141f4f5a865139375d581743",
-  "digitalmodel_head": "793469a03e67d2cf141f4f5a865139375d581743",
+  "repo_head": "c2a62ac98957044e6b34bf0c0b0c9d19900dd4fc",
+  "digitalmodel_head": "c2a62ac98957044e6b34bf0c0b0c9d19900dd4fc",
   "digitalmodel_file": "src/digitalmodel/__init__.py",
   "code_mode": "candidate",
   "sha256": {
    "tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json": "6bb1139455b95d0f27ce254b1e10571d454f3fd0535de732bd73813b9a09adc5",
    "examples/report-evals/dynacard-pump-card/analysis.py": "0e6b5f1367d505e4bcbebd127a0d5d38cc4c1dc51cab2ff0df228b4fe8b2a4a8",
-   "examples/report-evals/dynacard-pump-card/build_report.py": "dce30505581f250276be278aefedeb214e2e68ac22ceadd9eafa267a83b2b2c1",
+   "examples/report-evals/dynacard-pump-card/build_report.py": "aedb15f1c15299008df7584fb20d219b4ffd5216fbfe441d53738929fc111fbe",
    "examples/report-evals/dynacard-pump-card/build_results.py": "8bca995df17b74a88826839918efe30fb19cd5f8e3536648f08d40f9562f2c2c",
    "examples/report-evals/dynacard-pump-card/card_input.py": "3a9ffb092f11d0dd6b0b2c99ec821f3af3f09246d95c02dcac2252b00b66a6e4",
    "examples/report-evals/dynacard-pump-card/eval.py": "50b0dd4a7f9fd21b736b4319ff2a2f100818fa9612c827c115ebe29e216b961b",
@@ -110,7 +110,7 @@
   },
   "shape_hypothesis_status": "HYPOTHESIS",
   "published_example_status": "NOT_EVALUATED",
-  "artifacts_repo_head": "793469a03e67d2cf141f4f5a865139375d581743",
+  "artifacts_repo_head": "c2a62ac98957044e6b34bf0c0b0c9d19900dd4fc",
   "artifacts_dirty": true
  },
  "errors": [],

@@ -15,7 +15,7 @@ fillage from it. Do it first on the public example well, then on my card.
 
 Inputs (all public, no account needed):
 - Code and data: https://github.com/vamseeachanta/digitalmodel at commit
-  793469a03e67d2cf141f4f5a865139375d581743, MIT licence.
+  c2a62ac98957044e6b34bf0c0b0c9d19900dd4fc, MIT licence.
 - The public example well:
   tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json in that
   repository. It is an anonymised field well: a measured surface card, a
@@ -29,8 +29,8 @@ Inputs (all public, no account needed):
 Steps:
 1. git clone https://github.com/vamseeachanta/digitalmodel
    cd digitalmodel
-   git fetch origin 793469a03e67d2cf141f4f5a865139375d581743 || git fetch origin refs/pull/3969/head
-   git checkout 793469a03e67d2cf141f4f5a865139375d581743
+   git fetch origin c2a62ac98957044e6b34bf0c0b0c9d19900dd4fc || git fetch origin refs/pull/3969/head
+   git checkout c2a62ac98957044e6b34bf0c0b0c9d19900dd4fc
    (The files at that commit can name an earlier pin; the values are the same.)
    uv sync --extra test
 2. Run the public example and keep its output and figure:
@@ -68,7 +68,7 @@ Expected public-case key results:
 | Gross displacement | 66.62 | bbl/day |
 | Pump-card work per stroke | 7904.9 | ft-lbf |
 
-Basis: 24 h/day and 100 % volumetric efficiency.
+Basis, ASSUMED: 24 h/day and 100 % volumetric efficiency.
 
 Simple reader layout (see reader-card-template.json for the complete public card):
 - surface_card.position_in and surface_card.load_lbf: equal-length numeric arrays,
@@ -112,10 +112,10 @@ for the public example well is not an uncertainty bound for a different card.
 | Rod diameter | 0.58 | −0.17* | −0.94 | −3.14 | −0.36 |
 | Rod modulus | 0.32 | −0.27* | −0.47 | 0.03 | −0.14 |
 | Pumping speed | −0.06 | 0.93* | < 0.01 | 0.04 | 0.93 |
-| Surface load scale | −0.29 | 0.94* | 0.47 | 2.57 | 0.18 |
-| Surface position scale | 1.29 | 0.06* | −0.47 | 0.05 | 0.82 |
+| Surface load (load-cell gain) | −0.29 | 0.94* | 0.47 | 2.57 | 0.18 |
+| Surface position (stroke scale) | 1.29 | 0.06* | −0.47 | 0.05 | 0.82 |
 | Fluid density | 0.00 | 0.00 | 0.00 | 0.22 | 0.00 |
-| Pump diameter | < 0.01 | < 0.01 | < 0.01 | < 0.01 | 2.00 |
+| Plunger diameter | < 0.01 | < 0.01 | < 0.01 | < 0.01 | 2.00 |
 
 Sensitivity factors on the public example well: % change in the result per 1 % change in the input, from the ±1 % steps. * stepped response: the ±1 % and ±5 % factors differ by more than 0.10, or the result moves the same way, by more than 0.01 %, for a decrease and an increase; use the full table in the report. < 0.01 marks a nonzero magnitude below the resolution.
 
@@ -130,7 +130,8 @@ You cannot:
 
 Output: report stroke, loads, fillage, effective travel, displacement basis and
 work per stroke; the second-solver cross-check; the complete assumptions
-register; shape hypotheses with probabilities and recorded plate counts; input
+register; shape hypotheses with model scores (not field probabilities) and
+recorded plate counts; input
 sensitivity; and one figure of the surface and pump cards beside the reference
 shapes. Only if you computed the public-case results without running analysis.py:
 for the arithmetic comparison, write my-results.json using the numeric result ids in
