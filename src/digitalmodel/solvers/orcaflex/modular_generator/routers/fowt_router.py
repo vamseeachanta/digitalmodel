@@ -20,15 +20,19 @@ DRAUGHT_NAME = "Draught1"
 
 
 def symmetric_radiation_matrix(matrix: list[list[float]]) -> list[list[float]]:
-    """Average reciprocal entries only within the source acceptance tolerance.
+    """Mirror the upper triangle within the source acceptance tolerance.
 
     OrcaFlex requires exactly symmetric added mass and radiation damping
-    (Orcina help, Vessel types: stiffness, added mass and damping). Retain
-    diagonals and average each off-diagonal pair. Reject a pair difference
-    above 1 % of sqrt(abs(Mii)) * sqrt(abs(Mjj)), plus 1e-9 in that entry's
-    dimensional units for roundoff when a diagonal is zero. The 1 % policy
-    matches the source-data symmetry check; it is not a solver tolerance.
-    Inputs remain unchanged and nonfinite values are rejected.
+    (Orcina help, Vessel types: stiffness, added mass and damping). The
+    OrcaFlex WAMIT importer "imports only the upper right triangle of each
+    matrix and sets the lower left triangle values to match" (Orcina help,
+    Importing hydrodynamic data: WAMIT, read 2026-11-12); the same policy is
+    applied here so that generated and natively imported vessel types agree.
+    Reject a pair difference above 1 % of sqrt(abs(Mii)) * sqrt(abs(Mjj)),
+    plus 1e-9 in that entry's dimensional units for roundoff when a diagonal
+    is zero. The 1 % policy matches the source-data symmetry check; it is not
+    a solver tolerance. Inputs remain unchanged and nonfinite values are
+    rejected.
     """
     if any(not math.isfinite(value) for row in matrix for value in row):
         raise ValueError("radiation matrix entries must be finite")
@@ -39,8 +43,7 @@ def symmetric_radiation_matrix(matrix: list[list[float]]) -> list[list[float]]:
             if abs(matrix[i][j] - matrix[j][i]) > 0.01 * scale + 1e-9:
                 raise ValueError(
                     f"radiation matrix exceeds symmetry tolerance at ({i + 1}, {j + 1})")
-            mean = matrix[i][j] / 2 + matrix[j][i] / 2
-            result[i][j] = result[j][i] = mean
+            result[j][i] = matrix[i][j]
     return result
 
 

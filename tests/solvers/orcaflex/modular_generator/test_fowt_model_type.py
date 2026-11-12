@@ -497,8 +497,9 @@ def test_emitted_radiation_is_exactly_symmetric_without_mutating_source(spec_dic
             for i in range(6):
                 assert emitted[key][i][i] == matrix[i][i]
                 for j in range(i + 1, 6):
-                    assert emitted[key][i][j] == emitted[key][j][i]
-                    assert emitted[key][i][j] == (matrix[i][j] + matrix[j][i]) / 2
+                    # Orcina WAMIT importer policy: upper triangle mirrored.
+                    assert emitted[key][i][j] == matrix[i][j]
+                    assert emitted[key][j][i] == matrix[i][j]
     assert fowt.model_dump() == original
 
 
@@ -511,7 +512,8 @@ def test_radiation_symmetry_tolerance_accepts_boundary_and_rejects_excess(
         matrix[i][i] = 100.0
     matrix[0][1], matrix[1][0] = 2.0, 3.0
     fowt["hull"]["radiation"][0][matrix_name] = matrix
-    assert _radiation(fowt)[0][key][0][1] == 2.5
+    emitted = _radiation(fowt)[0][key]
+    assert emitted[0][1] == emitted[1][0] == 2.0
     matrix[1][0] = 3.01  # Exceeds 1 % of sqrt(diagonal_i * diagonal_j).
     with pytest.raises(ValueError, match="symmetry tolerance"):
         _radiation(fowt)
