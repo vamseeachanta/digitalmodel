@@ -168,7 +168,18 @@ def load_benchmark_cases(root: Path = DEFAULT_DATA_ROOT) -> list[BenchmarkCase]:
     return out
 
 
+def _number(value, name: str, quantity: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise RollDampingDataError(table="acceptance_criteria.yaml",
+                                   reason=f"{name} must be a number for {quantity}, got {value!r}")
+    return float(value)
+
+
 def _check_band(band: Band) -> Band:
+    for name in ("green_max_pct", "amber_max_pct"):
+        _number(getattr(band, name), name, band.quantity)
+    if band.abs_floor is not None:
+        _number(band.abs_floor, "abs_floor", band.quantity)
     if not isinstance(band.one_sided, bool):
         raise RollDampingDataError(table="acceptance_criteria.yaml",
                                    reason=f"one_sided must be a boolean for {band.quantity}")
@@ -208,9 +219,10 @@ def load_acceptance_criteria(root: Path = DEFAULT_DATA_ROOT) -> dict[str, Band]:
         try:
             band = Band(
                 quantity=key, description=str(q["description"]),
-                green_max_pct=float(q["green_max_pct"]), amber_max_pct=float(q["amber_max_pct"]),
+                green_max_pct=_number(q["green_max_pct"], "green_max_pct", key),
+                amber_max_pct=_number(q["amber_max_pct"], "amber_max_pct", key),
                 rationale=str(q["rationale"]),
-                abs_floor=float(q["abs_floor"]) if "abs_floor" in q else None,
+                abs_floor=_number(q["abs_floor"], "abs_floor", key) if "abs_floor" in q else None,
                 one_sided=q.get("one_sided", False),
             )
         except (KeyError, TypeError, ValueError) as exc:

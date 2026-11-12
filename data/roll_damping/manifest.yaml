@@ -15,8 +15,8 @@ tables:
     rows: 13
   wiki_tables:
     file: wiki_tables.csv
-    sha256: 8f29a28e3587c6cb067c43b5fab83d9255f7c36df8de7317d1a4c889e7fc8754
-    rows: 4
+    sha256: 65994837d4b2d6a3d3c782060d5cce4c0d4e484e90f58c9166724361e23cea08
+    rows: 5
   acceptance_criteria:
     file: acceptance_criteria.yaml
     sha256: f58d26ad273c7c98ea7a454bfd39e6ad3249e3f92385f952005913ec85fb4719

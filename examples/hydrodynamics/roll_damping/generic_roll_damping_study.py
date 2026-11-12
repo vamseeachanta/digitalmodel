@@ -24,6 +24,7 @@ citations fail-closed; without it the citation resolver's search order is used.
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import math
 import warnings
@@ -126,13 +127,15 @@ def ship_case(p: dict, wiki_root=None):
 # --------------------------------------------------------------------------
 # 1. Reproduction of the paper's printed numbers
 # --------------------------------------------------------------------------
-def reproduction() -> dict:
+def reproduction(wiki_root=None) -> dict:
     out = {}
     out["laminar_coef"] = 4 / (3 * math.pi) * 1.328 * math.sqrt(2 * math.pi / 3.22)
     B, D, RB, SIG = 120.0, 19.0, 1.97, 0.999
     out["CR"] = {v: rc.eddy_pressure_ratio(B, D, SIG, 0.0, RB, variant=v)
                  for v in ("chakrabarti2001", "ittc2011", "ittc2024", "as_printed")}
     out["CR_og"] = {og: rc.eddy_pressure_ratio(B, D, SIG, og, RB) for og in (-20.0, -10.0, 0.0, 5.0)}
+    out["CR_og_minus10_by_variant"] = {
+        v: rc.eddy_pressure_ratio(B, D, SIG, -10.0, RB, variant=v) for v in ("chakrabarti2001", "ittc2011", "ittc2024")}
     rho, L, CB, R0, w = 1.99, 400.0, 0.923, math.radians(10), 0.5
 
     def zeta(b, d):
@@ -153,34 +156,43 @@ def reproduction() -> dict:
     out["t1_sectional_s099_Rsigma"] = zeta(rc.eddy_damping_sections(st99e, rho, 0.0, R0, w), D)
     out["R_from_sigma_099"] = rc.bilge_radius_from_area_coefficient(B, D, 0.99)
     out["d169_eddy"] = zeta(rc.barge_eddy_damping(rho, L, B, 16.9, 0.0, R0, w), 16.9)
-    out["container"] = container_model()
+    out["container"] = container_model(wiki_root)
     return out
 
 
 # Simplified Ikeda C_R regression (Kawahara, Maekawa and Ikeda 2009, as restated
 # in ITTC 7.5-02-07-04.5 2024), used only to bracket the paper's Fig. 4 model.
-_Q = [[-79.414, 215.695, -215.883, 93.894, -14.848],
-      [0.9717, -1.55, 0.723, 0.04567, 0.9408],
-      [0.0, -219.2, 443.7, -283.3, 59.6]]
+# Its Q6 coefficient table is held in the private wiki (pointer in
+# data/roll_damping/wiki_tables.csv) and read from the wiki root at run time.
+def _load_q6(wiki_root: Path) -> list[list[float]]:
+    from digitalmodel.hydrodynamics.roll_damping_benchmarks import load_wiki_tables
+
+    rel = {r["table_id"]: r["wiki_path"] for r in load_wiki_tables()}["ittc2024-simplified-ikeda-q6"]
+    rows = {r["row"]: r for r in csv.DictReader((Path(wiki_root) / rel).read_text(encoding="utf-8").splitlines())}
+    cols = ("c4", "c3", "c2", "c1", "c0")
+    return [[float(rows[k][c]) for c in cols] for k in ("q6_ae", "q6_be1", "q6_be2")]
 
 
-def _simplified_cr(x1, x2, x3, x4):
-    ae = (-0.0182 * x2 + 0.0155) * (x1 - 1.8) ** 3 + sum(_Q[0][i] * x2 ** (4 - i) for i in range(5))
+def _simplified_cr(q, x1, x2, x3, x4):
+    ae = (-0.0182 * x2 + 0.0155) * (x1 - 1.8) ** 3 + sum(q[0][i] * x2 ** (4 - i) for i in range(5))
     be1 = ((-0.2 * x1 + 1.6) * (3.98 * x2 - 5.1525) * x4
-           * (x4 * sum(_Q[1][i] * x2 ** (2 - i) for i in range(3))
-              + sum(_Q[1][i + 3] * x2 ** (1 - i) for i in range(2))))
-    be2 = (0.25 * x4 + 0.95) * x4 + sum(_Q[2][i] * x2 ** (4 - i) for i in range(5))
+           * (x4 * sum(q[1][i] * x2 ** (2 - i) for i in range(3))
+              + sum(q[1][i + 3] * x2 ** (1 - i) for i in range(2))))
+    be2 = (0.25 * x4 + 0.95) * x4 + sum(q[2][i] * x2 ** (4 - i) for i in range(5))
     be3 = (46.5 - 15 * x1) * x2 + 11.2 * x1 - 28.6
     return ae * math.exp(be1 + be2 * x3**be3)
 
 
-def container_model() -> dict:
+def container_model(wiki_root) -> dict:
     """Fig. 4 container-ship model at Fn 0: eddy and bilge-keel parts (% critical)."""
     rho, L, B, d, cb, r0 = 1000.0, 1.75, 0.254, 0.095, 0.571, math.radians(10)
     inertia = 2 * rho * cb * L * B * d * (B**2 + d**2) / 12
     out = {}
+    if wiki_root is None:
+        return out  # rows 9 and 10 need the wiki table
+    q = _load_q6(wiki_root)
     for cm in (0.95, 0.97, 0.99):
-        cr = _simplified_cr(B / d, cb, cm, 0.0)
+        cr = _simplified_cr(q, B / d, cb, cm, 0.0)
         be = 4 / (3 * math.pi) * rho * L * d**4 * r0 * cr  # omega = 1
         bk = rc.bilge_keel_damping_section(rho, B, d, cm, 0.0, 0.0045, r0, 1.0)
         out[str(cm)] = dict(eddy_pct=100 * be / (2 * inertia),
@@ -339,6 +351,10 @@ def illustrative(wiki_root) -> dict:
 
     # Methods side by side for the base barge at 10 deg
     pw, zw, iw = barge_case(dict(b0, KG=b0["T"]), wiki_root)
+    p5 = barge_case(dict(b0, amp=5.0), wiki_root)[0]
+    out["barge_friction_5_10deg"] = dict(friction_5deg=p5.friction, friction_10deg=p.friction,
+                                         rise_pct=100 * (p.friction / p5.friction - 1),
+                                         share_of_total_pct=100 * p.friction / p.total)
     out["methods_base_barge"] = dict(
         eq35_viscous=z,
         eq35_eddy=100 * p.eddy / crit,
@@ -364,7 +380,7 @@ def reproduction_verdicts(rep: dict) -> list[dict]:
         ("7", "Table 1 sectional formula, sigma 0.99, reduced rakes (0.225)", "printed_table_value", rep["t1_sectional_s099_R197"], 0.225, "no (station data not printed)"),
         ("8", "Barge 16.9 ft, total factor, zero speed (text 14 %)", "printed_table_value", 100 * rep["d169_eddy"], 14.0, "no (inertia, KG not printed)"),
     ]
-    for cm in ("0.95", "0.99"):
+    for cm in [k for k in ("0.95", "0.99") if k in rep["container"]]:
         c = rep["container"][cm]
         rows.append(("9", f"Fig. 4 container-ship model, eddy part (about 2.7 %), C_M {cm}", "figure_read", c["eddy_pct"], 2.7, "no (sections, GM, inertia not printed)"))
         rows.append(("10", f"Fig. 4 container-ship model, bilge-keel part (about 2.1 %), C_M {cm}", "figure_read", c["bilge_keel_pct"], 2.1, "no (keel section not printed)"))
@@ -381,7 +397,7 @@ def main() -> None:
     ap.add_argument("--wiki-root", type=Path, default=None)
     args = ap.parse_args()
     warnings.filterwarnings("ignore")
-    rep = reproduction()
+    rep = reproduction(args.wiki_root)
     lit = literature()
     res = dict(
         reproduction=rep,

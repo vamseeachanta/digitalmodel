@@ -286,3 +286,22 @@ def test_duplicate_yaml_key_is_rejected(tmp_path: Path):
     path.write_text(path.read_text(encoding="utf-8").replace("    one_sided: true", "    one_sided: false\n    one_sided: true"), encoding="utf-8")
     with pytest.raises(rb.RollDampingDataError, match="duplicate key"):
         rb.load_acceptance_criteria(tmp_path / "rd")
+
+
+def test_boolean_numeric_band_fields_are_rejected(tmp_path: Path):
+    shutil.copytree(rb.DEFAULT_DATA_ROOT, tmp_path / "rd")
+    path = tmp_path / "rd" / "acceptance_criteria.yaml"
+    path.write_text(path.read_text(encoding="utf-8").replace("    abs_floor: 0.5", "    abs_floor: true"), encoding="utf-8")
+    with pytest.raises(rb.RollDampingDataError, match="must be a number"):
+        rb.load_acceptance_criteria(tmp_path / "rd")
+    criteria = {"q": rb.Band(quantity="q", description="d", rationale="r", green_max_pct=1.0,
+                             amber_max_pct=2.0, abs_floor=True)}
+    with pytest.raises(rb.RollDampingDataError, match="must be a number"):
+        rb.verdict("q", 0.1, 1.0, criteria=criteria)
+
+
+def test_no_published_coefficient_table_in_the_study():
+    text = (rb.REPO_ROOT / "examples" / "hydrodynamics" / "roll_damping" / "generic_roll_damping_study.py").read_text(encoding="utf-8")
+    assert "215.695" not in text  # Q6 values live in the private wiki
+    ids = {r["table_id"] for r in rb.load_wiki_tables()}
+    assert "ittc2024-simplified-ikeda-q6" in ids
