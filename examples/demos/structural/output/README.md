@@ -16,12 +16,12 @@ PYTHONPATH=src python <script>
 | `ship_plate_buckling_report.html` | Plate buckling parametric report (curated lookup deliverable) | committed | `PYTHONPATH=src python examples/demos/structural/ship_plate_buckling_parametric.py` |
 | `results.json` | Plate buckling result records | committed | `PYTHONPATH=src python examples/demos/structural/ship_plate_buckling_parametric.py` |
 | `cases.csv` | Plate buckling case matrix | committed | `PYTHONPATH=src python examples/demos/structural/ship_plate_buckling_parametric.py` |
-| `ship_panel_buckling_report.html` | Panel buckling parametric report (curated lookup deliverable) | committed | `.venv/bin/python examples/demos/structural/ship_panel_buckling_parametric.py` |
-| `panel_results.json` | Panel buckling result records | committed | `.venv/bin/python examples/demos/structural/ship_panel_buckling_parametric.py` |
-| `panel_cases.csv` | Panel buckling case matrix | committed | `.venv/bin/python examples/demos/structural/ship_panel_buckling_parametric.py` |
-| `ship_panel_design_explorer.html` | Interactive design-explorer dashboard (~8 MB) | generated / gitignored | `.venv/bin/python examples/demos/structural/ship_panel_design_explorer.py` |
-| `panel_design_grids.json` | Embedded grid data for the explorer (~5 MB) | generated / gitignored | `.venv/bin/python examples/demos/structural/ship_panel_design_explorer.py` |
-| `*_standalone.html` | Self-contained (Plotly-inlined) report variants (~3.5 MB each) | generated / gitignored | `.venv/bin/python examples/demos/structural/make_standalone_report.py` |
+| `ship_panel_buckling_report.html` | Panel buckling parametric report (curated lookup deliverable) | committed | `PYTHONPATH=src python examples/demos/structural/ship_panel_buckling_parametric.py` |
+| `panel_results.json` | Panel buckling result records | committed | `PYTHONPATH=src python examples/demos/structural/ship_panel_buckling_parametric.py` |
+| `panel_cases.csv` | Panel buckling case matrix | committed | `PYTHONPATH=src python examples/demos/structural/ship_panel_buckling_parametric.py` |
+| `ship_panel_design_explorer.html` | Interactive design-explorer dashboard (~8 MB) | generated / gitignored | `PYTHONPATH=src python examples/demos/structural/ship_panel_design_explorer.py` |
+| `panel_design_grids.json` | Embedded grid data for the explorer (~5 MB) | generated / gitignored | `PYTHONPATH=src python examples/demos/structural/ship_panel_design_explorer.py` |
+| `*_standalone.html` | Self-contained (Plotly-inlined) report variants (~3.5 MB each) | generated / gitignored | `PYTHONPATH=src python examples/demos/structural/make_standalone_report.py` |
 
 ## Viewing the interactive explorer
 
