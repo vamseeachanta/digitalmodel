@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Tests for the floating offshore wind turbine (fowt) model type.
 
 No licensed solver is used. The checks are: schema validation, the router's
@@ -249,6 +252,29 @@ def test_infinite_frequency_added_mass_against_k03(spec_dict):
         assert entry["added_mass"][i][i] == pytest.approx(float(k03[key][i][i]), rel=0.03)
 
 
+def test_emitted_radiation_matrices_are_symmetric(generated, sources):
+    """Native matrices mirror the upper triangle, following the WAMIT importer."""
+    basis, source_data = sources
+    data = copy.deepcopy(source_data)
+    original = copy.deepcopy(data)
+    build_spec(basis, data)
+    assert data == original
+    raw = data["hydrodynamics"]["added_mass_infinite_frequency_nondimensional"]["value"]
+    entries = generated["VesselTypes"][0]["Draughts"][0]["FrequencyDependentAddedMassAndDamping"]
+    mass_key = ("AddedMassMatrixX, AddedMassMatrixY, AddedMassMatrixZ, "
+                "AddedMassMatrixRx, AddedMassMatrixRy, AddedMassMatrixRz")
+    damping_key = "DampingX, DampingY, DampingZ, DampingRx, DampingRy, DampingRz"
+    assert entries[0]["AMDPeriodOrFrequency"] == 0
+    for entry in entries:
+        for key in (mass_key, damping_key):
+            matrix = entry[key]
+            assert matrix == [list(row) for row in zip(*matrix)]
+    for i in range(6):
+        for j in range(6):
+            assert entries[0][mass_key][i][j] == pytest.approx(
+                1.025 * raw[min(i, j)][max(i, j)])
+
+
 def test_symmetry_completion_holds_for_full_matrices(sources):
     """A22=A11, A44=A55, A24=-A15 hold for the matrices held in full."""
     _, data = sources
@@ -387,6 +413,39 @@ def test_section_order_puts_vessels_before_buoys(generated):
 
 
 # ----------------------------------------------------------------- golden
+@pytest.mark.parametrize("flexible", [False, True])
+@pytest.mark.parametrize("methods", [
+    ("generate", "generate"),
+    ("generate_with_overrides", "generate_with_overrides"),
+    ("generate", "generate_with_overrides"),
+    ("generate_with_overrides", "generate"),
+])
+def test_repeated_generation_keeps_one_copy_of_each_object(spec_dict, tmp_path, flexible, methods):
+    """Both entry points can reuse a generator without appending routed objects."""
+    if flexible:
+        data = copy.deepcopy(spec_dict)
+        data["fowt"] = _flexible(spec_dict)
+        generator = ModularModelGenerator.from_spec(ProjectInputSpec(**data))
+    else:
+        generator = ModularModelGenerator(SPEC_FILE)
+    first, second = tmp_path / "first", tmp_path / "second"
+    getattr(generator, methods[0])(first)
+    getattr(generator, methods[1])(second)
+
+    def contents(folder):
+        return {p.relative_to(folder).as_posix(): p.read_bytes()
+                for p in folder.rglob("*") if p.is_file()}
+
+    assert contents(first) == contents(second)
+    objects = yaml.safe_load((second / "includes" / "20_generic_objects.yml").read_text())
+    assert len(objects["Vessels"]) == 1
+    assert len(objects["Lines"]) == (4 if flexible else 3)
+    assert len(objects.get("6DBuoys", [])) == (2 if flexible else 0)
+    for collection in objects.values():
+        names = [obj["Name"] for obj in collection]
+        assert len(names) == len(set(names))
+
+
 def test_golden_lc0_model(tmp_path):
     ModularModelGenerator(SPEC_FILE).generate(tmp_path)
     expected = sorted(p.relative_to(GOLDEN).as_posix() for p in GOLDEN.rglob("*.yml"))

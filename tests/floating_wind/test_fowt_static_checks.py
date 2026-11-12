@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Licence-free checks of the generated IEA 15 MW / VolturnUS-S fowt model.
 
 Comparators: published values recorded in basis.yml (Allen et al. 2020,
@@ -271,3 +274,42 @@ def test_run_packages_written(tmp_path):
         text = (folder / "run.md").read_text()
         assert "## Expected" in text or "## Limitations" in text
         assert "validated" in text  # the do-not-overclaim instruction is present
+
+
+def test_wave_packages_include_wamit_import_output(tmp_path):
+    """The importer needs the first-order text output, with a selectable suffix."""
+    import importlib.util
+
+    script = ROOT / "scripts" / "fowt" / "write_iea15_run_packages.py"
+    spec = importlib.util.spec_from_file_location("packages", script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    source = tmp_path / "source"
+    source.mkdir()
+    stem = Path(module.WAMIT[0]).stem
+    output_name = f"{stem}_1stOrder.out.wamit"
+    import_name = Path(output_name).with_suffix("").name
+    files = {f"{stem}{suffix}": f"reference {suffix}\r\n".encode()
+             for suffix in (".1", ".3", ".hst")}
+    files[output_name] = b"first-order WAMIT output\r\n"
+    for name, content in files.items():
+        (source / name).write_bytes(content)
+
+    out = tmp_path / "packages"
+    assert module.main(["x", str(out), str(source)]) == 0
+    index = json.loads((out / "index.json").read_text())
+    wave_cases = [case for case in index["cases"] if case["needs_wamit_import"]]
+    assert len(wave_cases) == 2
+    for case in index["cases"]:
+        folder = out / case["case"]
+        if not case["needs_wamit_import"]:
+            assert not (folder / "hydro").exists()
+            continue
+        expected = {import_name if name == output_name else name: content
+                    for name, content in files.items()}
+        assert {p.name: p.read_bytes() for p in (folder / "hydro").iterdir()} == expected
+        instructions = (folder / "run.md").read_text()
+        assert f"`hydro/{import_name}`" in instructions
+        assert "requested data" in instructions
+        assert "centre of mass" in instructions
+        assert "phase origins" in instructions

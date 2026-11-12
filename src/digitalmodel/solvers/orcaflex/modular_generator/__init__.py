@@ -176,7 +176,10 @@ class ModularModelGenerator:
             router_outputs.append(mooring_result)
 
         # Route floating offshore wind turbine
-        if getattr(self.spec, 'fowt', None) is not None:
+        # Validated inputs cannot contain both fowt and generic. A populated
+        # generic therefore already holds the routed objects; retain the domain
+        # metadata without appending those objects on subsequent generations.
+        if getattr(self.spec, 'fowt', None) is not None and self.spec.generic is None:
             router_outputs.append(FowtRouter().route(self.spec.fowt))
 
         # Route vessel from equipment (if standalone vessel model)

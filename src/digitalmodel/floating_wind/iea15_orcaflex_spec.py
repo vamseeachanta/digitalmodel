@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """IEA 15 MW / VolturnUS-S spec for the OrcaFlex modular generator.
 
 Builds a ``ProjectInputSpec`` dictionary of model type ``fowt`` from the two
@@ -15,6 +18,9 @@ Conventions and simplifications, all stated in the returned ``source_note``:
   22, 44 and 24 are completed from the hull's three-fold symmetry
   (A22=A11, A44=A55, A24=-A15). The zero- and infinite-frequency matrices
   held in full show these relations to 0.1 % (tested).
+* Infinite-frequency added mass mirrors the source upper triangle into the
+  lower triangle, following the WAMIT importer's symmetry policy. Source
+  values are retained unchanged in the extracted data file.
 * OrcaFlex other-damping is diagonal; the HydroDyn surge-pitch coupling
   entries of ``AddBQuad`` are not represented.
 * Seabed contact stiffness and line hydrodynamic settings that are model
@@ -65,13 +71,19 @@ def _dimensional(matrix: list[list[float]], rho: float, factor: float = 1.0) -> 
     return [[rho * factor * value for value in row] for row in matrix]
 
 
+def _symmetric_upper(matrix: list[list[float]]) -> list[list[float]]:
+    """Mirror the upper triangle, matching Orcina's WAMIT import policy."""
+    return [[matrix[min(i, j)][max(i, j)] for j in range(6)] for i in range(6)]
+
+
 def radiation_entries(data: dict, rho: float) -> list[dict]:
     hydro = data["hydrodynamics"]
     if _v(hydro["wamit_length_scale"]) != 1.0:
         raise ValueError("conversion assumes WAMITULEN = 1 m")
     entries = [{
         "period": 0.0,
-        "added_mass": _dimensional(_v(hydro["added_mass_infinite_frequency_nondimensional"]), rho),
+        "added_mass": _dimensional(_symmetric_upper(
+            _v(hydro["added_mass_infinite_frequency_nondimensional"])), rho),
         "damping": [[0.0] * 6 for _ in range(6)],
     }]
     for row in hydro["radiation_by_period_nondimensional"]["value"]:
@@ -145,6 +157,8 @@ def build_spec(basis: dict, data: dict, *, thrust_kN: float | None = None,
             "basis.yml and generator_data.yml (IEA-15-240-RWT at "
             f"{data['reference_commit'][:7]}; Allen et al. 2020 NREL/TP-5000-76773). "
             "Hull mass properties are whole-system values (rigid representation). "
+            "Infinite-frequency added mass mirrors the source upper triangle "
+            "(WAMIT importer symmetry policy). "
             "WAMIT 22, 44, 24 completed by three-fold symmetry; AddBQuad off-diagonals "
             "dropped (OrcaFlex other damping is diagonal). Mooring Cd 2.0/0.4 and Ca "
             "0.82/0.27 from the MoorDyn input LINE TYPES at the same revision. "
