@@ -87,7 +87,7 @@ def _issue(number: int) -> str:
 
 
 def record_count(path: Path) -> int | None:
-    """Count data records; None where the file is not a row table here."""
+    """Count data records; None where this script has no counter for the format."""
     if path.suffix == ".csv":
         with path.open(encoding="utf-8", newline="") as handle:
             return max(0, sum(1 for _ in csv.reader(handle)) - 1)
@@ -99,7 +99,7 @@ def record_count(path: Path) -> int | None:
 def population(count: int | None) -> str:
     """Describe population from a computed count; zero is never populated."""
     if count is None:
-        return "not counted (non-tabular file)"
+        return "format not counted"
     return "empty (schema and citation contract only)" if count == 0 else "populated"
 
 

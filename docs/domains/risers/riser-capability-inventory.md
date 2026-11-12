@@ -108,11 +108,11 @@ Table 1. Capability status by riser type.
 | Flexible pipe | `data/flexible_pipe/data.json` | 0 | empty (schema and citation contract only) | citation_id per row resolved in sources.yml |
 | Structural sections | `data/riser_database/structure_properties/data.json` | 0 | empty (schema and citation contract only) | citation_id per row resolved in sources.yml |
 | Soil | `data/soil_stiffness/data.json` | 0 | empty (schema and citation contract only) | citation_id per row resolved in sources.yml |
-| Soil | `data/geotechnical/geotech_database.yaml` | - | not counted (non-tabular file) | source_id, locator and licence per row |
+| Soil | `data/geotechnical/geotech_database.yaml` | - | format not counted | source_id, locator and licence per row |
 | S-N curves, stress concentration and design fatigue factors | `data/riser_database/material_sn_scf_dff.csv` | 3 | populated | code_id and wiki_path columns |
-| S-N curves, stress concentration and design fatigue factors | `data/fatigue/sn_curves.yaml` | - | not counted (non-tabular file) | file-level metadata.source only |
+| S-N curves, stress concentration and design fatigue factors | `data/fatigue/sn_curves.yaml` | - | format not counted | file-level metadata.source only |
 | Standards crosswalk | `data/riser_database/standards_crosswalk.csv` | 5 | populated | wiki_path and registry_revision columns |
-| Vessel response amplitude operators | `data/rao_database.parquet` | - | not counted (non-tabular file) | sources list in data/rao_database.manifest.json |
+| Vessel response amplitude operators | `data/rao_database.parquet` | - | format not counted | sources list in data/rao_database.manifest.json |
 | Metocean | `data/vessels/processed/metocean_criteria.csv` | 7 | populated | n_citations column; citations in the raw JSON |
 | Buoyancy modules | none | - | absent (issue [#3953](https://github.com/vamseeachanta/digitalmodel/issues/3953)) | none |
 | Coatings, insulation and vortex-induced vibration suppression | none | - | absent (issue [#3953](https://github.com/vamseeachanta/digitalmodel/issues/3953)) | none |

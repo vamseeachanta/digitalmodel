@@ -59,7 +59,7 @@ def test_record_counts_agree_with_an_independent_recount(inventory):
 def test_an_empty_catalogue_is_not_reported_as_populated():
     assert builder.population(0).startswith("empty")
     assert builder.population(3) == "populated"
-    assert builder.population(None).startswith("not counted")
+    assert builder.population(None) == "format not counted"
 
 
 def test_a_missing_path_is_rejected(inventory, tmp_path):
@@ -102,6 +102,22 @@ def test_a_single_stated_provenance_field_is_detected(tmp_path):
     assert fields["Date"].startswith("not stated")
 
 
+@pytest.mark.parametrize("field", ["Origin class", "Source statement", "Date", "Basis", "Permitted use"])
+def test_load_inventory_rejects_any_stated_provenance_field(inventory, tmp_path, monkeypatch, field):
+    folder = tmp_path / "models"
+    folder.mkdir()
+    source = ROOT / "docs/domains/orcaflex/risers/production/PROVENANCE.md"
+    lines = source.read_text(encoding="utf-8").splitlines()
+    index = lines.index(f"## {field}")
+    body = next(i for i in range(index + 1, len(lines)) if lines[i].strip())
+    lines[body] = "public benchmark"
+    (folder / "PROVENANCE.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    changed = copy.deepcopy(inventory)
+    changed["excluded_model_folders"]["paths"] = [str(folder)]
+    with pytest.raises(ValueError, match=field):
+        builder.load_inventory(_write(changed, tmp_path))
+
+
 def test_flexible_line_type_examples_are_not_listed_under_steel_risers(inventory):
     entries = {entry["id"]: entry for entry in inventory["riser_types"]}
     for steel in ("scr", "slwr"):
@@ -124,3 +140,20 @@ def test_generated_page_is_current_and_carries_no_run_approval_wording(inventory
     lowered = text.lower()
     assert "cleared to run" not in lowered and "approved to run" not in lowered
     assert "## Reproduce" in text
+
+
+def test_inventory_paths_are_owned_and_executed_by_the_subsea_gate():
+    spec = importlib.util.spec_from_file_location(
+        "detect_touched_domains", ROOT / "scripts" / "ci" / "detect_touched_domains.py")
+    detector = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(detector)
+    domains = detector.parse_domains(ROOT / "tests" / "DOMAINS.md")
+    for path in ("tests/riser_capability/test_riser_inventory.py",
+                 "data/riser_capability/riser_types.yml",
+                 "scripts/riser_capability/build_riser_inventory.py",
+                 "docs/domains/risers/riser-capability-inventory.md"):
+        selected = detector.touched_domains([path], domains)
+        assert {domain.name for domain in selected} == {"subsea"}, path
+    gates = yaml.safe_load((ROOT / ".claude" / "quality-gates.yaml").read_text(encoding="utf-8"))["gates"]
+    assert "tests/riser_capability/" in gates["tests-subsea"]["test_roots"]
+    assert " tests/riser_capability/ " in gates["tests-subsea"]["command"]
