@@ -1,0 +1,1929 @@
+{
+  "schema_version": 1,
+  "source": {
+    "doi": "10.17632/hnfwm9mjs6.1",
+    "version": "1",
+    "licence": "CC0 1.0",
+    "sha256": "69723091c93269761a2fa79fc774a6ae7bf0eff786af439fb94c40171018058e",
+    "position_units": "dimensionless",
+    "load_units": "dimensionless",
+    "load_curve_count": 10
+  },
+  "preparation": {
+    "samples": 100,
+    "arc_length": "Euclidean after per-axis normalisation",
+    "closure": "Implicit closing segment; endpoint not duplicated",
+    "traversal": "Clockwise, negative signed area; first minimum position",
+    "scaling": "Resampled extrema renormalised to ASSUMED stroke and load range",
+    "card_space": "ASSUMED pump-card shapes; source does not specify surface or pump"
+  },
+  "models": {
+    "shape_only": {
+      "sha256": "4190590bd965267518f9e936ac3a315d3be9a68eac72e92b60f5b1e6bb38c94f",
+      "training_metadata": {
+        "n_features": 16,
+        "cv_accuracy": 0.9618518518518518,
+        "feature_names": [
+          "bezerra_0",
+          "bezerra_1",
+          "bezerra_2",
+          "bezerra_3",
+          "bezerra_4",
+          "bezerra_5",
+          "bezerra_6",
+          "bezerra_7",
+          "bezerra_8",
+          "bezerra_9",
+          "bezerra_10",
+          "bezerra_11",
+          "bezerra_12",
+          "bezerra_13",
+          "bezerra_14",
+          "bezerra_15"
+        ],
+        "cv_folds": 5,
+        "cv_std": 0.004513354669242186,
+        "cv_fold_accuracies": [
+          0.9601851851851851,
+          0.9629629629629629,
+          0.9694444444444444,
+          0.9611111111111111,
+          0.9555555555555556
+        ],
+        "samples_per_mode": 300,
+        "excluded_labels": {
+          "PLUNGER_UNDERTRAVEL": "Default cards duplicate NORMAL; a distinguishing matched-travel basis is required before synthetic training or benchmark scoring.",
+          "TUBING_MOVEMENT": "Default load differences from NORMAL are below the configured noise scale; a distinguishing basis is required before synthetic training or benchmark scoring."
+        },
+        "sklearn_version": "1.3.2",
+        "training_domain": "synthetic",
+        "scaling_basis": "Fixed [0, 1] normalised projection bounds",
+        "hyperparameters": {
+          "ccp_alpha": 0.0,
+          "criterion": "friedman_mse",
+          "init": null,
+          "learning_rate": 0.15,
+          "loss": "log_loss",
+          "max_depth": 4,
+          "max_features": null,
+          "max_leaf_nodes": null,
+          "min_impurity_decrease": 0.0,
+          "min_samples_leaf": 1,
+          "min_samples_split": 2,
+          "min_weight_fraction_leaf": 0.0,
+          "n_estimators": 100,
+          "n_iter_no_change": null,
+          "random_state": 42,
+          "subsample": 0.8,
+          "tol": 0.0001,
+          "validation_fraction": 0.1,
+          "verbose": 0,
+          "warm_start": false
+        }
+      }
+    },
+    "shipped": {
+      "sha256": "c3612e1f31aad740b4ebc5f81e34bf09ae7d21e42f1f18915c2a76c94337a40c",
+      "n_features": 19
+    }
+  },
+  "shape_only": {
+    "stroke_in": 100,
+    "load_range_lbf": 6000,
+    "minimum_load_lbf": 0.0,
+    "scale_status": "ASSUMED",
+    "rows": [
+      {
+        "source_label": "工况正常",
+        "english_gloss": "Normal operation",
+        "expected_mode": "NORMAL",
+        "crosswalk_kind": "literal",
+        "crosswalk_status": "LITERAL",
+        "predicted_mode": "NORMAL"
+      },
+      {
+        "source_label": "供液不足",
+        "english_gloss": "Insufficient supply",
+        "expected_mode": "FLUID_POUND",
+        "crosswalk_kind": "assumed",
+        "crosswalk_status": "ASSUMED",
+        "predicted_mode": "FLUID_POUND"
+      },
+      {
+        "source_label": "气体影响",
+        "english_gloss": "Gas interference",
+        "expected_mode": "GAS_INTERFERENCE",
+        "crosswalk_kind": "literal",
+        "crosswalk_status": "LITERAL",
+        "predicted_mode": "GAS_INTERFERENCE"
+      },
+      {
+        "source_label": "抽油杆断脱",
+        "english_gloss": "Rod parting",
+        "expected_mode": "ROD_PARTING",
+        "crosswalk_kind": "literal",
+        "crosswalk_status": "LITERAL",
+        "predicted_mode": "ROD_PARTING"
+      },
+      {
+        "source_label": "上碰泵",
+        "english_gloss": "Tagging up",
+        "expected_mode": "PUMP_TAGGING_UP",
+        "crosswalk_kind": "literal",
+        "crosswalk_status": "LITERAL",
+        "predicted_mode": "VALVE_LEAK_TV"
+      },
+      {
+        "source_label": "下碰泵",
+        "english_gloss": "Tagging down",
+        "expected_mode": "PUMP_TAGGING_DOWN",
+        "crosswalk_kind": "literal",
+        "crosswalk_status": "LITERAL",
+        "predicted_mode": "VALVE_LEAK_TV"
+      },
+      {
+        "source_label": "游动阀漏失",
+        "english_gloss": "Traveling valve leakage",
+        "expected_mode": "VALVE_LEAK_TV",
+        "crosswalk_kind": "literal",
+        "crosswalk_status": "LITERAL",
+        "predicted_mode": "VALVE_LEAK_TV"
+      },
+      {
+        "source_label": "固定阀漏失",
+        "english_gloss": "Standing valve leakage",
+        "expected_mode": "VALVE_LEAK_SV",
+        "crosswalk_kind": "literal",
+        "crosswalk_status": "LITERAL",
+        "predicted_mode": "VALVE_LEAK_SV"
+      },
+      {
+        "source_label": "活塞脱出工作筒",
+        "english_gloss": "Plunger out of barrel",
+        "expected_mode": "PLUNGER_OUT_OF_BARREL",
+        "crosswalk_kind": "literal",
+        "crosswalk_status": "LITERAL",
+        "predicted_mode": "VALVE_LEAK_TV"
+      },
+      {
+        "source_label": "出砂",
+        "english_gloss": "Sand production",
+        "expected_mode": "SAND_ABRASION",
+        "crosswalk_kind": "assumed",
+        "crosswalk_status": "ASSUMED",
+        "predicted_mode": "VALVE_LEAK_TV"
+      }
+    ],
+    "literal": {
+      "crosswalk_status": "LITERAL",
+      "count": 8,
+      "correct": 5,
+      "wrong": 3,
+      "accuracy": 0.625,
+      "interval": [
+        0.3057423946026274,
+        0.8631557141764026
+      ],
+      "confidence": 0.95,
+      "interval_method": "Wilson score",
+      "confusion_matrix": {
+        "GAS_INTERFERENCE": {
+          "GAS_INTERFERENCE": 1,
+          "NORMAL": 0,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 0,
+          "VALVE_LEAK_SV": 0,
+          "VALVE_LEAK_TV": 0
+        },
+        "NORMAL": {
+          "GAS_INTERFERENCE": 0,
+          "NORMAL": 1,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 0,
+          "VALVE_LEAK_SV": 0,
+          "VALVE_LEAK_TV": 0
+        },
+        "PLUNGER_OUT_OF_BARREL": {
+          "GAS_INTERFERENCE": 0,
+          "NORMAL": 0,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 0,
+          "VALVE_LEAK_SV": 0,
+          "VALVE_LEAK_TV": 1
+        },
+        "PUMP_TAGGING_DOWN": {
+          "GAS_INTERFERENCE": 0,
+          "NORMAL": 0,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 0,
+          "VALVE_LEAK_SV": 0,
+          "VALVE_LEAK_TV": 1
+        },
+        "PUMP_TAGGING_UP": {
+          "GAS_INTERFERENCE": 0,
+          "NORMAL": 0,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 0,
+          "VALVE_LEAK_SV": 0,
+          "VALVE_LEAK_TV": 1
+        },
+        "ROD_PARTING": {
+          "GAS_INTERFERENCE": 0,
+          "NORMAL": 0,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 1,
+          "VALVE_LEAK_SV": 0,
+          "VALVE_LEAK_TV": 0
+        },
+        "VALVE_LEAK_SV": {
+          "GAS_INTERFERENCE": 0,
+          "NORMAL": 0,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 0,
+          "VALVE_LEAK_SV": 1,
+          "VALVE_LEAK_TV": 0
+        },
+        "VALVE_LEAK_TV": {
+          "GAS_INTERFERENCE": 0,
+          "NORMAL": 0,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 0,
+          "VALVE_LEAK_SV": 0,
+          "VALVE_LEAK_TV": 1
+        }
+      }
+    },
+    "assumed": {
+      "crosswalk_status": "ASSUMED",
+      "count": 2,
+      "correct": 1,
+      "wrong": 1,
+      "accuracy": 0.5,
+      "interval": [
+        0.09453120573423074,
+        0.9054687942657693
+      ],
+      "confidence": 0.95,
+      "interval_method": "Wilson score",
+      "confusion_matrix": {
+        "FLUID_POUND": {
+          "FLUID_POUND": 1,
+          "SAND_ABRASION": 0,
+          "VALVE_LEAK_TV": 0
+        },
+        "SAND_ABRASION": {
+          "FLUID_POUND": 0,
+          "SAND_ABRASION": 0,
+          "VALVE_LEAK_TV": 1
+        }
+      }
+    },
+    "including_assumed": {
+      "crosswalk_status": "INCLUDES_ASSUMED",
+      "count": 10,
+      "correct": 6,
+      "wrong": 4,
+      "accuracy": 0.6,
+      "interval": [
+        0.3126737697336583,
+        0.8318196702937637
+      ],
+      "confidence": 0.95,
+      "interval_method": "Wilson score",
+      "confusion_matrix": {
+        "FLUID_POUND": {
+          "FLUID_POUND": 1,
+          "GAS_INTERFERENCE": 0,
+          "NORMAL": 0,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 0,
+          "SAND_ABRASION": 0,
+          "VALVE_LEAK_SV": 0,
+          "VALVE_LEAK_TV": 0
+        },
+        "GAS_INTERFERENCE": {
+          "FLUID_POUND": 0,
+          "GAS_INTERFERENCE": 1,
+          "NORMAL": 0,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 0,
+          "SAND_ABRASION": 0,
+          "VALVE_LEAK_SV": 0,
+          "VALVE_LEAK_TV": 0
+        },
+        "NORMAL": {
+          "FLUID_POUND": 0,
+          "GAS_INTERFERENCE": 0,
+          "NORMAL": 1,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 0,
+          "SAND_ABRASION": 0,
+          "VALVE_LEAK_SV": 0,
+          "VALVE_LEAK_TV": 0
+        },
+        "PLUNGER_OUT_OF_BARREL": {
+          "FLUID_POUND": 0,
+          "GAS_INTERFERENCE": 0,
+          "NORMAL": 0,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 0,
+          "SAND_ABRASION": 0,
+          "VALVE_LEAK_SV": 0,
+          "VALVE_LEAK_TV": 1
+        },
+        "PUMP_TAGGING_DOWN": {
+          "FLUID_POUND": 0,
+          "GAS_INTERFERENCE": 0,
+          "NORMAL": 0,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 0,
+          "SAND_ABRASION": 0,
+          "VALVE_LEAK_SV": 0,
+          "VALVE_LEAK_TV": 1
+        },
+        "PUMP_TAGGING_UP": {
+          "FLUID_POUND": 0,
+          "GAS_INTERFERENCE": 0,
+          "NORMAL": 0,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 0,
+          "SAND_ABRASION": 0,
+          "VALVE_LEAK_SV": 0,
+          "VALVE_LEAK_TV": 1
+        },
+        "ROD_PARTING": {
+          "FLUID_POUND": 0,
+          "GAS_INTERFERENCE": 0,
+          "NORMAL": 0,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 1,
+          "SAND_ABRASION": 0,
+          "VALVE_LEAK_SV": 0,
+          "VALVE_LEAK_TV": 0
+        },
+        "SAND_ABRASION": {
+          "FLUID_POUND": 0,
+          "GAS_INTERFERENCE": 0,
+          "NORMAL": 0,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 0,
+          "SAND_ABRASION": 0,
+          "VALVE_LEAK_SV": 0,
+          "VALVE_LEAK_TV": 1
+        },
+        "VALVE_LEAK_SV": {
+          "FLUID_POUND": 0,
+          "GAS_INTERFERENCE": 0,
+          "NORMAL": 0,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 0,
+          "SAND_ABRASION": 0,
+          "VALVE_LEAK_SV": 1,
+          "VALVE_LEAK_TV": 0
+        },
+        "VALVE_LEAK_TV": {
+          "FLUID_POUND": 0,
+          "GAS_INTERFERENCE": 0,
+          "NORMAL": 0,
+          "PLUNGER_OUT_OF_BARREL": 0,
+          "PUMP_TAGGING_DOWN": 0,
+          "PUMP_TAGGING_UP": 0,
+          "ROD_PARTING": 0,
+          "SAND_ABRASION": 0,
+          "VALVE_LEAK_SV": 0,
+          "VALVE_LEAK_TV": 1
+        }
+      }
+    }
+  },
+  "shipped_model_scale_sweep": {
+    "model_sha256": "c3612e1f31aad740b4ebc5f81e34bf09ae7d21e42f1f18915c2a76c94337a40c",
+    "scales": [
+      {
+        "stroke_in": 60,
+        "load_range_lbf": 4000,
+        "minimum_load_lbf": 0.0,
+        "scale_status": "ASSUMED",
+        "rows": [
+          {
+            "source_label": "工况正常",
+            "english_gloss": "Normal operation",
+            "expected_mode": "NORMAL",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "PLUNGER_UNDERTRAVEL"
+          },
+          {
+            "source_label": "供液不足",
+            "english_gloss": "Insufficient supply",
+            "expected_mode": "FLUID_POUND",
+            "crosswalk_kind": "assumed",
+            "crosswalk_status": "ASSUMED",
+            "predicted_mode": "FLUID_POUND"
+          },
+          {
+            "source_label": "气体影响",
+            "english_gloss": "Gas interference",
+            "expected_mode": "GAS_INTERFERENCE",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "VALVE_LEAK_TV"
+          },
+          {
+            "source_label": "抽油杆断脱",
+            "english_gloss": "Rod parting",
+            "expected_mode": "ROD_PARTING",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "PLUNGER_UNDERTRAVEL"
+          },
+          {
+            "source_label": "上碰泵",
+            "english_gloss": "Tagging up",
+            "expected_mode": "PUMP_TAGGING_UP",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "VALVE_LEAK_TV"
+          },
+          {
+            "source_label": "下碰泵",
+            "english_gloss": "Tagging down",
+            "expected_mode": "PUMP_TAGGING_DOWN",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "VALVE_LEAK_TV"
+          },
+          {
+            "source_label": "游动阀漏失",
+            "english_gloss": "Traveling valve leakage",
+            "expected_mode": "VALVE_LEAK_TV",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "VALVE_LEAK_TV"
+          },
+          {
+            "source_label": "固定阀漏失",
+            "english_gloss": "Standing valve leakage",
+            "expected_mode": "VALVE_LEAK_SV",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "VALVE_LEAK_SV"
+          },
+          {
+            "source_label": "活塞脱出工作筒",
+            "english_gloss": "Plunger out of barrel",
+            "expected_mode": "PLUNGER_OUT_OF_BARREL",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "PLUNGER_OUT_OF_BARREL"
+          },
+          {
+            "source_label": "出砂",
+            "english_gloss": "Sand production",
+            "expected_mode": "SAND_ABRASION",
+            "crosswalk_kind": "assumed",
+            "crosswalk_status": "ASSUMED",
+            "predicted_mode": "VALVE_LEAK_TV"
+          }
+        ],
+        "literal": {
+          "crosswalk_status": "LITERAL",
+          "count": 8,
+          "correct": 3,
+          "wrong": 5,
+          "accuracy": 0.375,
+          "interval": [
+            0.13684428582359742,
+            0.6942576053973726
+          ],
+          "confidence": 0.95,
+          "interval_method": "Wilson score",
+          "confusion_matrix": {
+            "GAS_INTERFERENCE": {
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PLUNGER_UNDERTRAVEL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "NORMAL": {
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PLUNGER_UNDERTRAVEL": 1,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PLUNGER_OUT_OF_BARREL": {
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 1,
+              "PLUNGER_UNDERTRAVEL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PUMP_TAGGING_DOWN": {
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PLUNGER_UNDERTRAVEL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "PUMP_TAGGING_UP": {
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PLUNGER_UNDERTRAVEL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "ROD_PARTING": {
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PLUNGER_UNDERTRAVEL": 1,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "VALVE_LEAK_SV": {
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PLUNGER_UNDERTRAVEL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 1,
+              "VALVE_LEAK_TV": 0
+            },
+            "VALVE_LEAK_TV": {
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PLUNGER_UNDERTRAVEL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            }
+          }
+        },
+        "assumed": {
+          "crosswalk_status": "ASSUMED",
+          "count": 2,
+          "correct": 1,
+          "wrong": 1,
+          "accuracy": 0.5,
+          "interval": [
+            0.09453120573423074,
+            0.9054687942657693
+          ],
+          "confidence": 0.95,
+          "interval_method": "Wilson score",
+          "confusion_matrix": {
+            "FLUID_POUND": {
+              "FLUID_POUND": 1,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "SAND_ABRASION": {
+              "FLUID_POUND": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_TV": 1
+            }
+          }
+        },
+        "including_assumed": {
+          "crosswalk_status": "INCLUDES_ASSUMED",
+          "count": 10,
+          "correct": 4,
+          "wrong": 6,
+          "accuracy": 0.4,
+          "interval": [
+            0.1681803297062362,
+            0.6873262302663417
+          ],
+          "confidence": 0.95,
+          "interval_method": "Wilson score",
+          "confusion_matrix": {
+            "FLUID_POUND": {
+              "FLUID_POUND": 1,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PLUNGER_UNDERTRAVEL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "GAS_INTERFERENCE": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PLUNGER_UNDERTRAVEL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "NORMAL": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PLUNGER_UNDERTRAVEL": 1,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PLUNGER_OUT_OF_BARREL": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 1,
+              "PLUNGER_UNDERTRAVEL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PUMP_TAGGING_DOWN": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PLUNGER_UNDERTRAVEL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "PUMP_TAGGING_UP": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PLUNGER_UNDERTRAVEL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "ROD_PARTING": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PLUNGER_UNDERTRAVEL": 1,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "SAND_ABRASION": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PLUNGER_UNDERTRAVEL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "VALVE_LEAK_SV": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PLUNGER_UNDERTRAVEL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 1,
+              "VALVE_LEAK_TV": 0
+            },
+            "VALVE_LEAK_TV": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PLUNGER_UNDERTRAVEL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            }
+          }
+        }
+      },
+      {
+        "stroke_in": 80,
+        "load_range_lbf": 12000,
+        "minimum_load_lbf": 0.0,
+        "scale_status": "ASSUMED",
+        "rows": [
+          {
+            "source_label": "工况正常",
+            "english_gloss": "Normal operation",
+            "expected_mode": "NORMAL",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "NORMAL"
+          },
+          {
+            "source_label": "供液不足",
+            "english_gloss": "Insufficient supply",
+            "expected_mode": "FLUID_POUND",
+            "crosswalk_kind": "assumed",
+            "crosswalk_status": "ASSUMED",
+            "predicted_mode": "FLUID_POUND"
+          },
+          {
+            "source_label": "气体影响",
+            "english_gloss": "Gas interference",
+            "expected_mode": "GAS_INTERFERENCE",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "VALVE_LEAK_TV"
+          },
+          {
+            "source_label": "抽油杆断脱",
+            "english_gloss": "Rod parting",
+            "expected_mode": "ROD_PARTING",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "BENT_BARREL"
+          },
+          {
+            "source_label": "上碰泵",
+            "english_gloss": "Tagging up",
+            "expected_mode": "PUMP_TAGGING_UP",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "VALVE_LEAK_TV"
+          },
+          {
+            "source_label": "下碰泵",
+            "english_gloss": "Tagging down",
+            "expected_mode": "PUMP_TAGGING_DOWN",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "VALVE_LEAK_TV"
+          },
+          {
+            "source_label": "游动阀漏失",
+            "english_gloss": "Traveling valve leakage",
+            "expected_mode": "VALVE_LEAK_TV",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "VALVE_LEAK_TV"
+          },
+          {
+            "source_label": "固定阀漏失",
+            "english_gloss": "Standing valve leakage",
+            "expected_mode": "VALVE_LEAK_SV",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "VALVE_LEAK_SV"
+          },
+          {
+            "source_label": "活塞脱出工作筒",
+            "english_gloss": "Plunger out of barrel",
+            "expected_mode": "PLUNGER_OUT_OF_BARREL",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "PLUNGER_OUT_OF_BARREL"
+          },
+          {
+            "source_label": "出砂",
+            "english_gloss": "Sand production",
+            "expected_mode": "SAND_ABRASION",
+            "crosswalk_kind": "assumed",
+            "crosswalk_status": "ASSUMED",
+            "predicted_mode": "VALVE_LEAK_TV"
+          }
+        ],
+        "literal": {
+          "crosswalk_status": "LITERAL",
+          "count": 8,
+          "correct": 4,
+          "wrong": 4,
+          "accuracy": 0.5,
+          "interval": [
+            0.21521606221387762,
+            0.7847839377861223
+          ],
+          "confidence": 0.95,
+          "interval_method": "Wilson score",
+          "confusion_matrix": {
+            "GAS_INTERFERENCE": {
+              "BENT_BARREL": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "NORMAL": {
+              "BENT_BARREL": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 1,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PLUNGER_OUT_OF_BARREL": {
+              "BENT_BARREL": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 1,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PUMP_TAGGING_DOWN": {
+              "BENT_BARREL": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "PUMP_TAGGING_UP": {
+              "BENT_BARREL": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "ROD_PARTING": {
+              "BENT_BARREL": 1,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "VALVE_LEAK_SV": {
+              "BENT_BARREL": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 1,
+              "VALVE_LEAK_TV": 0
+            },
+            "VALVE_LEAK_TV": {
+              "BENT_BARREL": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            }
+          }
+        },
+        "assumed": {
+          "crosswalk_status": "ASSUMED",
+          "count": 2,
+          "correct": 1,
+          "wrong": 1,
+          "accuracy": 0.5,
+          "interval": [
+            0.09453120573423074,
+            0.9054687942657693
+          ],
+          "confidence": 0.95,
+          "interval_method": "Wilson score",
+          "confusion_matrix": {
+            "FLUID_POUND": {
+              "FLUID_POUND": 1,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "SAND_ABRASION": {
+              "FLUID_POUND": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_TV": 1
+            }
+          }
+        },
+        "including_assumed": {
+          "crosswalk_status": "INCLUDES_ASSUMED",
+          "count": 10,
+          "correct": 5,
+          "wrong": 5,
+          "accuracy": 0.5,
+          "interval": [
+            0.23659309051256405,
+            0.763406909487436
+          ],
+          "confidence": 0.95,
+          "interval_method": "Wilson score",
+          "confusion_matrix": {
+            "FLUID_POUND": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 1,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "GAS_INTERFERENCE": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "NORMAL": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 1,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PLUNGER_OUT_OF_BARREL": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 1,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PUMP_TAGGING_DOWN": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "PUMP_TAGGING_UP": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "ROD_PARTING": {
+              "BENT_BARREL": 1,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "SAND_ABRASION": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "VALVE_LEAK_SV": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 1,
+              "VALVE_LEAK_TV": 0
+            },
+            "VALVE_LEAK_TV": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            }
+          }
+        }
+      },
+      {
+        "stroke_in": 100,
+        "load_range_lbf": 6000,
+        "minimum_load_lbf": 0.0,
+        "scale_status": "ASSUMED",
+        "rows": [
+          {
+            "source_label": "工况正常",
+            "english_gloss": "Normal operation",
+            "expected_mode": "NORMAL",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "NORMAL"
+          },
+          {
+            "source_label": "供液不足",
+            "english_gloss": "Insufficient supply",
+            "expected_mode": "FLUID_POUND",
+            "crosswalk_kind": "assumed",
+            "crosswalk_status": "ASSUMED",
+            "predicted_mode": "FLUID_POUND"
+          },
+          {
+            "source_label": "气体影响",
+            "english_gloss": "Gas interference",
+            "expected_mode": "GAS_INTERFERENCE",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "VALVE_LEAK_TV"
+          },
+          {
+            "source_label": "抽油杆断脱",
+            "english_gloss": "Rod parting",
+            "expected_mode": "ROD_PARTING",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "BENT_BARREL"
+          },
+          {
+            "source_label": "上碰泵",
+            "english_gloss": "Tagging up",
+            "expected_mode": "PUMP_TAGGING_UP",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "VALVE_LEAK_TV"
+          },
+          {
+            "source_label": "下碰泵",
+            "english_gloss": "Tagging down",
+            "expected_mode": "PUMP_TAGGING_DOWN",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "VALVE_LEAK_TV"
+          },
+          {
+            "source_label": "游动阀漏失",
+            "english_gloss": "Traveling valve leakage",
+            "expected_mode": "VALVE_LEAK_TV",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "VALVE_LEAK_TV"
+          },
+          {
+            "source_label": "固定阀漏失",
+            "english_gloss": "Standing valve leakage",
+            "expected_mode": "VALVE_LEAK_SV",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "VALVE_LEAK_SV"
+          },
+          {
+            "source_label": "活塞脱出工作筒",
+            "english_gloss": "Plunger out of barrel",
+            "expected_mode": "PLUNGER_OUT_OF_BARREL",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "PLUNGER_OUT_OF_BARREL"
+          },
+          {
+            "source_label": "出砂",
+            "english_gloss": "Sand production",
+            "expected_mode": "SAND_ABRASION",
+            "crosswalk_kind": "assumed",
+            "crosswalk_status": "ASSUMED",
+            "predicted_mode": "VALVE_LEAK_TV"
+          }
+        ],
+        "literal": {
+          "crosswalk_status": "LITERAL",
+          "count": 8,
+          "correct": 4,
+          "wrong": 4,
+          "accuracy": 0.5,
+          "interval": [
+            0.21521606221387762,
+            0.7847839377861223
+          ],
+          "confidence": 0.95,
+          "interval_method": "Wilson score",
+          "confusion_matrix": {
+            "GAS_INTERFERENCE": {
+              "BENT_BARREL": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "NORMAL": {
+              "BENT_BARREL": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 1,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PLUNGER_OUT_OF_BARREL": {
+              "BENT_BARREL": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 1,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PUMP_TAGGING_DOWN": {
+              "BENT_BARREL": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "PUMP_TAGGING_UP": {
+              "BENT_BARREL": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "ROD_PARTING": {
+              "BENT_BARREL": 1,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "VALVE_LEAK_SV": {
+              "BENT_BARREL": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 1,
+              "VALVE_LEAK_TV": 0
+            },
+            "VALVE_LEAK_TV": {
+              "BENT_BARREL": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            }
+          }
+        },
+        "assumed": {
+          "crosswalk_status": "ASSUMED",
+          "count": 2,
+          "correct": 1,
+          "wrong": 1,
+          "accuracy": 0.5,
+          "interval": [
+            0.09453120573423074,
+            0.9054687942657693
+          ],
+          "confidence": 0.95,
+          "interval_method": "Wilson score",
+          "confusion_matrix": {
+            "FLUID_POUND": {
+              "FLUID_POUND": 1,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "SAND_ABRASION": {
+              "FLUID_POUND": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_TV": 1
+            }
+          }
+        },
+        "including_assumed": {
+          "crosswalk_status": "INCLUDES_ASSUMED",
+          "count": 10,
+          "correct": 5,
+          "wrong": 5,
+          "accuracy": 0.5,
+          "interval": [
+            0.23659309051256405,
+            0.763406909487436
+          ],
+          "confidence": 0.95,
+          "interval_method": "Wilson score",
+          "confusion_matrix": {
+            "FLUID_POUND": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 1,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "GAS_INTERFERENCE": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "NORMAL": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 1,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PLUNGER_OUT_OF_BARREL": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 1,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PUMP_TAGGING_DOWN": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "PUMP_TAGGING_UP": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "ROD_PARTING": {
+              "BENT_BARREL": 1,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "SAND_ABRASION": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            },
+            "VALVE_LEAK_SV": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 1,
+              "VALVE_LEAK_TV": 0
+            },
+            "VALVE_LEAK_TV": {
+              "BENT_BARREL": 0,
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 1
+            }
+          }
+        }
+      },
+      {
+        "stroke_in": 140,
+        "load_range_lbf": 8000,
+        "minimum_load_lbf": 0.0,
+        "scale_status": "ASSUMED",
+        "rows": [
+          {
+            "source_label": "工况正常",
+            "english_gloss": "Normal operation",
+            "expected_mode": "NORMAL",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "TUBING_MOVEMENT"
+          },
+          {
+            "source_label": "供液不足",
+            "english_gloss": "Insufficient supply",
+            "expected_mode": "FLUID_POUND",
+            "crosswalk_kind": "assumed",
+            "crosswalk_status": "ASSUMED",
+            "predicted_mode": "TUBING_MOVEMENT"
+          },
+          {
+            "source_label": "气体影响",
+            "english_gloss": "Gas interference",
+            "expected_mode": "GAS_INTERFERENCE",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "TUBING_MOVEMENT"
+          },
+          {
+            "source_label": "抽油杆断脱",
+            "english_gloss": "Rod parting",
+            "expected_mode": "ROD_PARTING",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "TUBING_MOVEMENT"
+          },
+          {
+            "source_label": "上碰泵",
+            "english_gloss": "Tagging up",
+            "expected_mode": "PUMP_TAGGING_UP",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "TUBING_MOVEMENT"
+          },
+          {
+            "source_label": "下碰泵",
+            "english_gloss": "Tagging down",
+            "expected_mode": "PUMP_TAGGING_DOWN",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "TUBING_MOVEMENT"
+          },
+          {
+            "source_label": "游动阀漏失",
+            "english_gloss": "Traveling valve leakage",
+            "expected_mode": "VALVE_LEAK_TV",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "TUBING_MOVEMENT"
+          },
+          {
+            "source_label": "固定阀漏失",
+            "english_gloss": "Standing valve leakage",
+            "expected_mode": "VALVE_LEAK_SV",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "TUBING_MOVEMENT"
+          },
+          {
+            "source_label": "活塞脱出工作筒",
+            "english_gloss": "Plunger out of barrel",
+            "expected_mode": "PLUNGER_OUT_OF_BARREL",
+            "crosswalk_kind": "literal",
+            "crosswalk_status": "LITERAL",
+            "predicted_mode": "TUBING_MOVEMENT"
+          },
+          {
+            "source_label": "出砂",
+            "english_gloss": "Sand production",
+            "expected_mode": "SAND_ABRASION",
+            "crosswalk_kind": "assumed",
+            "crosswalk_status": "ASSUMED",
+            "predicted_mode": "TUBING_MOVEMENT"
+          }
+        ],
+        "literal": {
+          "crosswalk_status": "LITERAL",
+          "count": 8,
+          "correct": 0,
+          "wrong": 8,
+          "accuracy": 0.0,
+          "interval": [
+            0.0,
+            0.3244075648838801
+          ],
+          "confidence": 0.95,
+          "interval_method": "Wilson score",
+          "confusion_matrix": {
+            "GAS_INTERFERENCE": {
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "NORMAL": {
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PLUNGER_OUT_OF_BARREL": {
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PUMP_TAGGING_DOWN": {
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PUMP_TAGGING_UP": {
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "ROD_PARTING": {
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "VALVE_LEAK_SV": {
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "VALVE_LEAK_TV": {
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            }
+          }
+        },
+        "assumed": {
+          "crosswalk_status": "ASSUMED",
+          "count": 2,
+          "correct": 0,
+          "wrong": 2,
+          "accuracy": 0.0,
+          "interval": [
+            0.0,
+            0.6576197724933468
+          ],
+          "confidence": 0.95,
+          "interval_method": "Wilson score",
+          "confusion_matrix": {
+            "FLUID_POUND": {
+              "FLUID_POUND": 0,
+              "SAND_ABRASION": 0,
+              "TUBING_MOVEMENT": 1
+            },
+            "SAND_ABRASION": {
+              "FLUID_POUND": 0,
+              "SAND_ABRASION": 0,
+              "TUBING_MOVEMENT": 1
+            }
+          }
+        },
+        "including_assumed": {
+          "crosswalk_status": "INCLUDES_ASSUMED",
+          "count": 10,
+          "correct": 0,
+          "wrong": 10,
+          "accuracy": 0.0,
+          "interval": [
+            0.0,
+            0.27753279986288915
+          ],
+          "confidence": 0.95,
+          "interval_method": "Wilson score",
+          "confusion_matrix": {
+            "FLUID_POUND": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "GAS_INTERFERENCE": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "NORMAL": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PLUNGER_OUT_OF_BARREL": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PUMP_TAGGING_DOWN": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "PUMP_TAGGING_UP": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "ROD_PARTING": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "SAND_ABRASION": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "VALVE_LEAK_SV": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            },
+            "VALVE_LEAK_TV": {
+              "FLUID_POUND": 0,
+              "GAS_INTERFERENCE": 0,
+              "NORMAL": 0,
+              "PLUNGER_OUT_OF_BARREL": 0,
+              "PUMP_TAGGING_DOWN": 0,
+              "PUMP_TAGGING_UP": 0,
+              "ROD_PARTING": 0,
+              "SAND_ABRASION": 0,
+              "TUBING_MOVEMENT": 1,
+              "VALVE_LEAK_SV": 0,
+              "VALVE_LEAK_TV": 0
+            }
+          }
+        }
+      }
+    ],
+    "min_correct": 0,
+    "max_correct": 5,
+    "count": 10,
+    "crosswalk_status": "INCLUDES_ASSUMED"
+  },
+  "modes_without_plate_exemplar": [
+    "BENT_BARREL",
+    "DELAYED_TV_CLOSURE",
+    "EXCESSIVE_FRICTION",
+    "EXCESSIVE_VIBRATION",
+    "GAS_LOCK",
+    "PARAFFIN_RESTRICTION",
+    "PLUNGER_UNDERTRAVEL",
+    "STUCK_PUMP",
+    "TUBING_MOVEMENT",
+    "WORN_BARREL"
+  ],
+  "modes_without_literal_exemplar": [
+    "BENT_BARREL",
+    "DELAYED_TV_CLOSURE",
+    "EXCESSIVE_FRICTION",
+    "EXCESSIVE_VIBRATION",
+    "FLUID_POUND",
+    "GAS_LOCK",
+    "PARAFFIN_RESTRICTION",
+    "PLUNGER_UNDERTRAVEL",
+    "SAND_ABRASION",
+    "STUCK_PUMP",
+    "TUBING_MOVEMENT",
+    "WORN_BARREL"
+  ],
+  "field_accuracy": {
+    "status": "NOT_EVALUATED",
+    "reason": "Independent labelled, dimensioned field cards are unavailable",
+    "issues": [
+      "https://github.com/vamseeachanta/digitalmodel/issues/1864",
+      "https://github.com/vamseeachanta/digitalmodel/issues/1872"
+    ]
+  },
+  "limitations": [
+    "n = 10: eight literal plus two ASSUMED crosswalks; one exemplar per class.",
+    "Wilson 95 % intervals are wide; plate counts are not field accuracy.",
+    "The plate is NOT independent of training: test_card_generator_shapes.py constrains generators to it.",
+    "Consistency with dependent public shapes is an upper indication at best.",
+    "Normalised axes have no engineering units; all physical scales are ASSUMED.",
+    "Pump-card interpretation is ASSUMED; the source does not specify card space.",
+    "Modes without plate exemplars are unscored; synthetic CV is not field validation."
+  ]
+}
