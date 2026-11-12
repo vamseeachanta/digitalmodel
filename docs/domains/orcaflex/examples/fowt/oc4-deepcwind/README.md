@@ -85,6 +85,24 @@ value: surge 0.0088 Hz, heave 0.0579 Hz and pitch 0.0393 Hz.
 - Wave response. As in the IEA case, the VesselType carries no load RAOs.
 - Any line utilisation, because the report publishes no breaking load.
 
+## Licensed packages waiting
+
+Five packages, one per case, each holding `spec.yml`, the generated model
+(`model/master.yml`) and a `run.md` with the exact settings and the expected
+values with tolerances. The OC4 basis carries no rotor thrust and no sea state,
+so only still-water cases are prepared.
+`scripts/fowt/write_oc4_run_packages.py <output_dir>` regenerates them.
+
+| Package | Expected comparator |
+|---|---|
+| `LC0_statics` | Surge −0.002 m, heave 0.001 m, pitch −0.075°; fairlead tensions 1,098 to 1,099 kN (2 %) |
+| `LC1_surge_decay` | Period 113.7 s (10 %); OpenFAST linearisation 106.9 s (10 %); infinite-frequency value 107.9 s recorded for comparison |
+| `LC2_heave_decay` | Period 17.28 s (5 %); OpenFAST linearisation 17.28 s (5 %) |
+| `LC3_pitch_decay` | Period 25.43 s (5 %); OpenFAST linearisation 25.45 s (5 %) |
+| `LC6_yaw_decay` | Period 79.8 s (10 %); OpenFAST linearisation 80.2 s (10 %) |
+
+Table 3. Licensed run packages.
+
 ## Reproduce
 
 ```

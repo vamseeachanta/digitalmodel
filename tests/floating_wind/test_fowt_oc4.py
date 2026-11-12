@@ -152,3 +152,26 @@ def test_extraction_reproduces_committed_files(tmp_path):
     module.main(["x", os.environ["DIGITALMODEL_OC4_RAW"], str(tmp_path)])
     for name in ("basis.yml", "generator_data.yml"):
         assert (tmp_path / name).read_bytes() == (FOLDER / name).read_bytes(), name
+
+
+def test_run_packages_written(tmp_path):
+    """Licensed-run packages: statics plus four decays, each loadable spec and run.md."""
+    script = ROOT / "scripts" / "fowt" / "write_oc4_run_packages.py"
+    module_spec = importlib.util.spec_from_file_location("oc4_packages", script)
+    module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(module)
+    assert module.main(["x", str(tmp_path)]) == 0
+    index = json.loads((tmp_path / "index.json").read_text(encoding="utf-8"))
+    names = [case["case"] for case in index["cases"]]
+    assert names == ["LC0_statics", "LC1_surge_decay", "LC2_heave_decay", "LC3_pitch_decay",
+                     "LC6_yaw_decay"]
+    yaw = yaml.safe_load((tmp_path / "LC6_yaw_decay" / "spec.yml").read_text(encoding="utf-8"))
+    assert yaw["fowt"]["hull"]["initial_orientation"][2] == 8.0
+    assert yaw["fowt"]["hull"]["included_in_statics"] == "None"
+    for name in names:
+        FowtSpec(**yaml.safe_load((tmp_path / name / "spec.yml").read_text(encoding="utf-8"))["fowt"])
+        assert (tmp_path / name / "model" / "master.yml").exists()
+        text = (tmp_path / name / "run.md").read_text(encoding="utf-8")
+        assert "validated" in text and "Expected" in text
+    surge = (tmp_path / "LC1_surge_decay" / "run.md").read_text(encoding="utf-8")
+    assert "106.89 s" in surge and "10 %" in surge
