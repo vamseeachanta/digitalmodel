@@ -61,6 +61,15 @@ def read_tabular(path: Path) -> tuple[dict, dict, list]:
     return overview, nacelle, performance
 
 
+def read_floating_tower(path: Path) -> list[list[float]]:
+    """Floating Tower Properties rows 2:21, columns B:K, in sheet units."""
+    import openpyxl
+
+    book = openpyxl.load_workbook(path, data_only=True, read_only=True)
+    rows = list(book["Floating Tower Properties"].iter_rows(values_only=True))
+    return [[float(value) for value in row[1:11]] for row in rows[1:21]]
+
+
 def read_hst(path: Path) -> list[list[float]]:
     matrix = [[0.0] * 6 for _ in range(6)]
     for line in path.read_text(encoding="utf-8").split("\n"):
@@ -186,6 +195,17 @@ def build(raw: Path) -> dict:
             "value": performance,
             "source": src("tabular", "Rotor Performance rows 2:51 columns A,B,F,H,C; "
                                      "MN and MW converted to N and W; WISDEM steady-state values"),
+        },
+        "floating_tower": {
+            "columns": ["height above SWL m", "outer diameter m", "wall thickness mm",
+                        "mass per length kg/m", "fore-aft section inertia kg m",
+                        "side-side section inertia kg m", "fore-aft bending stiffness N m^2",
+                        "side-side bending stiffness N m^2", "torsional stiffness N m^2",
+                        "axial stiffness N"],
+            "unit": "per column",
+            "value": read_floating_tower(names["tabular"]),
+            "source": src("tabular", "Floating Tower Properties rows 2:21 columns B:K; "
+                                     "values between stations vary linearly"),
         },
         "hydrodynamics": {
             "wamit_length_scale": item(read_value(names["hydrodyn"], "WAMITULEN"), "m",

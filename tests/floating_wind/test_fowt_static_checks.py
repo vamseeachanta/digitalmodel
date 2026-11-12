@@ -250,10 +250,12 @@ def test_run_packages_written(tmp_path):
     spec.loader.exec_module(module)
     assert module.main(["x", str(tmp_path)]) == 0
     index = json.loads((tmp_path / "index.json").read_text())
-    assert len(index["cases"]) == 7
+    assert len(index["cases"]) == 8
     for case in index["cases"]:
         folder = tmp_path / case["case"]
         assert (folder / "model" / "master.yml").exists()
         text = (folder / "run.md").read_text()
         assert "## Expected" in text or "## Limitations" in text
         assert "validated" in text  # the do-not-overclaim instruction is present
+    flexible = (tmp_path / "LC0_flexible_statics" / "run.md").read_text(encoding="utf-8")
+    assert "#3971" in flexible and "-0.222 m" in flexible and "-0.389 deg" in flexible
