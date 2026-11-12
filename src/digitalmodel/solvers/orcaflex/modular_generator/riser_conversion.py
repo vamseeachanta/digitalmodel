@@ -28,11 +28,20 @@ _LINE_TYPE_FIELDS = {
     "poisson_ratio": "PoissonRatio",
     "drag_coefficient": "Cd",
     "added_mass_coefficient": "Ca",
-    "axial_drag_coefficient": "CdAxial",
+    "axial_drag_coefficient": "Cd",
     "contact_diameter": "OuterContactDiameter",
     "allowable_tension": "AllowableTension",
     "stress_od": "StressOD",
     "stress_id": "StressID",
+}
+# Native list-valued line-type data: field -> (data name, cell index, width).
+# Native saves carry EI as [x, ~] and Cd/Ca as [normal, ~, axial]; the list is
+# kept as a layout template and only the mapped cell is read or replaced.
+_CELL_FIELDS = {
+    "bending_stiffness": ("EI", 0, 2),
+    "drag_coefficient": ("Cd", 0, 3),
+    "axial_drag_coefficient": ("Cd", 2, 3),
+    "added_mass_coefficient": ("Ca", 0, 3),
 }
 _VESSEL_FIELDS = {
     "type_name": "VesselType",
@@ -78,7 +87,12 @@ def _table(properties: dict, required: set[str]) -> tuple[str, list[str], list]:
 
 
 def _extract_scalars(obj: dict, fields: dict[str, str]) -> dict[str, Any]:
-    """Move effective scalar properties, respecting generic typed precedence."""
+    """Move effective scalar properties, respecting generic typed precedence.
+
+    List-valued native data in ``_CELL_FIELDS`` stay in ``properties`` as a
+    layout template; only the mapped cell is extracted. An ``EI`` list must be
+    isotropic (second cell ``~`` or equal to the first).
+    """
     properties = obj.setdefault("properties", {})
     effective = dict(properties)
     for field, native in TYPED_FIELD_MAP.items():
@@ -88,8 +102,21 @@ def _extract_scalars(obj: dict, fields: dict[str, str]) -> dict[str, Any]:
     for field, native in fields.items():
         if native not in effective:
             continue
-        extracted[field] = effective[native]
-        properties.pop(native, None)
+        value = effective[native]
+        if field in _CELL_FIELDS and isinstance(value, list):
+            _, index, width = _CELL_FIELDS[field]
+            if len(value) > width:
+                raise ValueError(f"Invalid {native} list: {value}")
+            if native == "EI" and len(value) > 1 and value[1] not in (None, value[0]):
+                raise ValueError(f"Anisotropic EI {value} is not supported by the riser schema")
+            properties[native] = value  # layout template
+            if index < len(value) and value[index] is not None:
+                extracted[field] = value[index]
+        elif field in _CELL_FIELDS and _CELL_FIELDS[field][1] != 0:
+            continue  # no axial cell in a scalar native value
+        else:
+            extracted[field] = value
+            properties.pop(native, None)
         for generic_field, generic_native in TYPED_FIELD_MAP.items():
             if generic_native == native:
                 obj.pop(generic_field, None)
@@ -160,15 +187,29 @@ def extract_riser(generic: dict) -> Riser:
 
 
 def _restore_scalars(obj: dict, typed: Any, fields: dict[str, str]) -> None:
-    """Overlay authored typed fields only; schema defaults add no native keys."""
+    """Overlay authored typed fields only; schema defaults add no native keys.
+
+    Fields in ``_CELL_FIELDS`` replace their cell of a native list template.
+    An axial value without a list template becomes ``[normal, ~, axial]``.
+    """
     properties = obj.setdefault("properties", {})
     obj["name"] = typed.name
     for field, native in fields.items():
-        if field in typed.model_fields_set:
-            properties[native] = getattr(typed, field)
-            for generic_field, generic_native in TYPED_FIELD_MAP.items():
-                if generic_native == native:
-                    obj.pop(generic_field, None)
+        if field not in typed.model_fields_set:
+            continue
+        value = getattr(typed, field)
+        current = properties.get(native)
+        if field in _CELL_FIELDS and (isinstance(current, list) or _CELL_FIELDS[field][1]):
+            _, index, width = _CELL_FIELDS[field]
+            cells = list(current) if isinstance(current, list) else [current]
+            cells += [None] * (width - len(cells))
+            cells[index] = value
+            properties[native] = cells
+        else:
+            properties[native] = value
+        for generic_field, generic_native in TYPED_FIELD_MAP.items():
+            if generic_native == native:
+                obj.pop(generic_field, None)
 
 
 def render_riser(riser: Riser, fallback: GenericModel) -> GenericModel:

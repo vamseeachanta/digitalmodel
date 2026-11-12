@@ -321,7 +321,9 @@ def test_invalid_riser_data_is_rejected(single_riser, defect):
     elif defect == "unknown_line_type":
         props[SECTIONS][0][0] = "Unresolved"
     elif defect == "non_scalar_stiffness":
-        generic["line_types"][0]["bending_stiffness"] = [120, None]
+        # Isotropic native lists [EI, ~] are converted (#3980); an anisotropic
+        # pair has no representation in the riser schema.
+        generic["line_types"][0]["bending_stiffness"] = [120, 200]
     else:
         del generic["vessels"]
     original = deepcopy(single_riser)
