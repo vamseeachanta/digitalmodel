@@ -101,7 +101,9 @@ class RiserLinesBuilder(BaseBuilder):
             # Contents
             "ContentsMethod": "Uniform",
             "ContentsDensity": riser_line.contents.density,
-            # kPa in the OrcaFlex SI unit system (kN, m, te, s)
+            # kPa in the OrcaFlex SI unit system (kN, m, te, s). The pressure
+            # reference height (ContentsPressureRefZ) is left to the OrcaFlex
+            # default; which height that is has not been confirmed offline.
             "ContentsPressure": riser_line.contents.pressure,
         }
 

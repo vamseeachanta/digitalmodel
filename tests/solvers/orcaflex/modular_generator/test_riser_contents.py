@@ -1,4 +1,4 @@
-"""Riser contents pressure and flow rate reach the emitted line (#3983).
+"""Riser contents pressure reaches the emitted line; non-zero flow rate is refused (#3983).
 
 ``RiserContents.pressure`` and ``flow_rate`` were validated and then dropped:
 only ``ContentsDensity`` was emitted, so a pressurised riser was generated at
@@ -59,3 +59,15 @@ def test_nonzero_flow_rate_fails_closed():
     offline, so a non-zero value is refused rather than emitted or dropped."""
     with pytest.raises(ValueError, match="flow_rate"):
         _line(pressure=100.0, flow_rate=1.5)
+
+
+def test_pressure_reference_height_is_not_emitted():
+    """The reference height stays at the OrcaFlex default; the generator does
+    not invent one. Which height the default denotes needs a licensed load."""
+    line = _line(pressure=15000.0)
+    assert "ContentsPressureRefZ" not in line
+
+
+def test_zero_flow_rate_is_accepted_and_not_emitted():
+    line = _line(pressure=100.0, flow_rate=0.0)
+    assert "ContentsFlowRate" not in line

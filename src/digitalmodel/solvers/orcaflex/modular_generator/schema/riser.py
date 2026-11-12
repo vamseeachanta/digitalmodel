@@ -150,7 +150,10 @@ class RiserContents(BaseModel):
 
     Attributes:
         density: Contents density (te/m3). Default 1.0 (seawater).
-        pressure: Internal pressure (kPa). Default 0.
+        pressure: Internal pressure (kPa). Default 0. Emitted as
+            ``ContentsPressure``; the generator does not set
+            ``ContentsPressureRefZ``, so the reference height is the OrcaFlex
+            default, which is not established offline (#3983).
         flow_rate: Contents flow rate (m/s). Default 0.
     """
 
