@@ -83,3 +83,32 @@ def test_mooring_friction_default_and_override(seg_type, extra, default):
                          seabed_lateral_friction=0.7, **extra)
     lt = MooringRouter()._segment_to_linetype(seg)
     assert lt["properties"]["SeabedLateralFrictionCoefficient"] == 0.7
+
+
+def test_mooring_friction_override_is_not_merged_by_line_type_name():
+    """Two legs of the same chain with different friction keep both values.
+
+    Line types are de-duplicated by name; an override must not be dropped
+    because another leg already defined a line type of the same size and grade.
+    """
+    from digitalmodel.solvers.orcaflex.modular_generator.schema.mooring import MooringSystem
+
+    def leg(name, **seg_extra):
+        return {
+            "name": name,
+            "segments": [{"type": "chain", "diameter": 0.076, "length": 900,
+                          "grade": "R3", **seg_extra}],
+            "anchor": {"type": "anchor", "position": [800, 0, -200]},
+            "fairlead": {"type": "fairlead", "position": [40, 0, -10], "vessel": "V"},
+        }
+
+    out = MooringRouter().route(MooringSystem(lines=[
+        leg("Default"), leg("Override", seabed_lateral_friction=0.7), leg("Again"),
+    ]))
+    friction = {lt["name"]: lt["properties"]["SeabedLateralFrictionCoefficient"]
+                for lt in out["line_types"]}
+    assert len(friction) == 2
+    for line in out["lines"]:
+        (row,) = line["properties"]["LineType, Length, NumberOfSegments"]
+        expected = 0.7 if line["name"] == "Override" else 1.0
+        assert friction[row[0]] == expected

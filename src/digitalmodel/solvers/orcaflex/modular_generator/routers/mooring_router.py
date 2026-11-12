@@ -368,13 +368,18 @@ class MooringRouter(BaseRouter):
     def _linetype_name(seg: MooringSegment) -> str:
         """Generate a consistent line type name for deduplication.
 
-        Format: {type}_{diameter_mm}mm[_{grade}]
+        Format: {type}_{diameter_mm}mm[_{grade}][_mu{friction}]. A seabed
+        friction override is part of the name so that de-duplication by name
+        cannot merge it with the material default (#3989).
         """
         d_mm = round(seg.diameter * 1000)
         if seg.type == MooringSegmentType.CHAIN:
             grade = seg.grade.value if seg.grade else "R3"
-            return f"chain_{d_mm}mm_{grade}"
+            name = f"chain_{d_mm}mm_{grade}"
         elif seg.type == MooringSegmentType.WIRE_ROPE:
-            return f"wire_{d_mm}mm"
+            name = f"wire_{d_mm}mm"
         else:
-            return f"polyester_{d_mm}mm"
+            name = f"polyester_{d_mm}mm"
+        if seg.seabed_lateral_friction is not None:
+            name += f"_mu{seg.seabed_lateral_friction:g}"
+        return name
