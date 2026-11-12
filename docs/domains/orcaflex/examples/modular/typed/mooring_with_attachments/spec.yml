@@ -1,0 +1,110 @@
+# Typed mooring example: chain-polyester-chain legs with a clump weight and a
+# submerged buoy on each leg (digitalmodel #3975).
+#
+# Generating the full model needs the generic host vessel accepted next to a
+# typed mooring (digitalmodel #3972). The tests for #3975 exercise the schema
+# and the mooring router on the `mooring` section of this file.
+#
+# Leg (anchor = End A to fairlead = End B): 300 m R3 76 mm chain, 500 m
+# polyester 160 mm, 100 m R3 76 mm chain. Attachments, arc length from the
+# anchor: clump weight at 250 m, submerged buoy at 300 m (chain-polyester
+# joint). All values are illustrative input data, not a design.
+#
+# Hand checks (seawater 1.025 te/m3, g 9.80665 m/s2):
+#   Clump20te: steel 20 te, volume 20 / 7.85 = 2.548 m3;
+#     submerged weight (20 - 1.025 x 2.548) g = 170.5 kN.
+#   SubBuoy: mass 5 te, volume 25 m3; net upthrust (1.025 x 25 - 5) g
+#     = 202.3 kN.
+#   Anchor positions are those of the mooring_spread_catenary example; the
+#   attachments change the static shape, so no anchor-radius check is claimed.
+#
+# Generate (after #3972):
+#   python -m digitalmodel.solvers.orcaflex.modular_generator generate \
+#       --input spec.yml --output modular/
+
+metadata:
+  name: "mooring_with_attachments"
+  description: "Chain-polyester-chain legs with clump weights and submerged buoys"
+  structure: mooring
+  operation: inplace
+  project: "OrcaFlex typed examples"
+  version: "1.0"
+
+environment:
+  water:
+    depth: 200
+    density: 1.025
+  seabed:
+    stiffness:
+      normal: 100
+      shear: 100
+
+mooring:
+  clump_types:
+    - name: "Clump20te"
+      mass: 20
+      volume: 2.548
+      height: 1.5
+      drag_area: [2.2, 1.7]         # cylinder 1.47 m dia x 1.5 m: side, end (m2)
+      drag_coefficient: [1.2, 1.2]
+      added_mass_coefficient: [1.0, 1.0]
+    - name: "SubBuoy"
+      mass: 5
+      volume: 25
+      height: 3.6
+      drag_area: [10.7, 6.9]        # cylinder 2.97 m dia x 3.6 m: side, end (m2)
+      drag_coefficient: [1.0, 1.0]
+      added_mass_coefficient: [1.0, 1.0]
+  lines:
+    - name: "Leg1"
+      segments:
+        - {type: chain, diameter: 0.076, length: 300, grade: R3, segment_length: 10}
+        - {type: polyester, diameter: 0.160, length: 500, segment_length: 10}
+        - {type: chain, diameter: 0.076, length: 100, grade: R3, segment_length: 5}
+      anchor: {type: anchor, position: [848.0, 212.0, -200]}
+      fairlead: {type: fairlead, position: [40, 10, -10], vessel: "FPSO"}
+      attachments:
+        - {clump_type: "SubBuoy", arc_length: 300}
+        - {clump_type: "Clump20te", arc_length: 250}
+    - name: "Leg2"
+      segments:
+        - {type: chain, diameter: 0.076, length: 300, grade: R3, segment_length: 10}
+        - {type: polyester, diameter: 0.160, length: 500, segment_length: 10}
+        - {type: chain, diameter: 0.076, length: 100, grade: R3, segment_length: 5}
+      anchor: {type: anchor, position: [-848.0, 212.0, -200]}
+      fairlead: {type: fairlead, position: [-40, 10, -10], vessel: "FPSO"}
+      attachments:
+        - {clump_type: "Clump20te", arc_length: 250}
+        - {clump_type: "SubBuoy", arc_length: 300}
+    - name: "Leg3"
+      segments:
+        - {type: chain, diameter: 0.076, length: 300, grade: R3, segment_length: 10}
+        - {type: polyester, diameter: 0.160, length: 500, segment_length: 10}
+        - {type: chain, diameter: 0.076, length: 100, grade: R3, segment_length: 5}
+      anchor: {type: anchor, position: [-848.0, -212.0, -200]}
+      fairlead: {type: fairlead, position: [-40, -10, -10], vessel: "FPSO"}
+      attachments:
+        - {clump_type: "Clump20te", arc_length: 250}
+        - {clump_type: "SubBuoy", arc_length: 300}
+    - name: "Leg4"
+      segments:
+        - {type: chain, diameter: 0.076, length: 300, grade: R3, segment_length: 10}
+        - {type: polyester, diameter: 0.160, length: 500, segment_length: 10}
+        - {type: chain, diameter: 0.076, length: 100, grade: R3, segment_length: 5}
+      anchor: {type: anchor, position: [848.0, -212.0, -200]}
+      fairlead: {type: fairlead, position: [40, -10, -10], vessel: "FPSO"}
+      attachments:
+        - {clump_type: "Clump20te", arc_length: 250}
+        - {clump_type: "SubBuoy", arc_length: 300}
+
+generic:
+  vessels:
+    - name: "FPSO"
+      vessel_type: "Vessel Type1"
+      connection: "Free"
+      initial_position: [0, 0, 0]
+      properties:
+        InitialHeading: 0
+        PrimaryMotion: "None"
+        SuperimposedMotion: "None"
+        IncludedInStatics: "None"

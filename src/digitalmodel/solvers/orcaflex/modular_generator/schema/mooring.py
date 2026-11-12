@@ -7,6 +7,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from .riser import ClumpType
+
 
 class MooringSegmentType(str, Enum):
     """Mooring line segment material types."""
@@ -91,6 +93,19 @@ class MooringEndpoint(BaseModel):
         return self
 
 
+class MooringAttachment(BaseModel):
+    """Clump weight or submerged buoy attached to a mooring line (#3975).
+
+    Attributes:
+        clump_type: Name of a ``MooringSystem.clump_types`` entry. A clump
+            type whose displaced mass exceeds its mass acts as a buoy.
+        arc_length: Attachment position measured from the anchor (End A) (m).
+    """
+
+    clump_type: str = Field(..., min_length=1, description="Clump type name")
+    arc_length: float = Field(..., ge=0, description="Arc length from anchor (m)")
+
+
 class MooringLine(BaseModel):
     """Complete mooring line definition.
 
@@ -109,6 +124,9 @@ class MooringLine(BaseModel):
     fairlead: MooringEndpoint = Field(..., description="Fairlead endpoint")
     pretension: float | None = Field(default=None, gt=0, description="Target pretension (kN)")
     lay_azimuth: float | None = Field(default=None, ge=0, lt=360, description="Lay azimuth (deg)")
+    attachments: list[MooringAttachment] = Field(
+        default_factory=list, description="Clump weights and buoys along the line"
+    )
 
     @model_validator(mode="after")
     def validate_endpoints(self) -> "MooringLine":
@@ -117,6 +135,18 @@ class MooringLine(BaseModel):
             raise ValueError(f"Anchor endpoint must be 'anchor' or 'fixed', got '{self.anchor.type}'")
         if self.fairlead.type != "fairlead":
             raise ValueError(f"Fairlead endpoint must be 'fairlead', got '{self.fairlead.type}'")
+        return self
+
+    @model_validator(mode="after")
+    def validate_attachments_on_line(self) -> "MooringLine":
+        """Attachments must lie on the line."""
+        total = self.get_total_length()
+        for att in self.attachments:
+            if att.arc_length > total + 1e-9:
+                raise ValueError(
+                    f"Line '{self.name}' attachment at {att.arc_length} m lies "
+                    f"beyond the line length {total} m"
+                )
         return self
 
     def get_total_length(self) -> float:
@@ -132,6 +162,9 @@ class MooringSystem(BaseModel):
     """
 
     lines: list[MooringLine] = Field(..., min_length=1, description="Mooring lines")
+    clump_types: list[ClumpType] = Field(
+        default_factory=list, description="Clump weight and buoy types for attachments"
+    )
 
     @model_validator(mode="after")
     def validate_unique_names(self) -> "MooringSystem":
@@ -140,4 +173,19 @@ class MooringSystem(BaseModel):
         if len(names) != len(set(names)):
             dupes = [n for n in names if names.count(n) > 1]
             raise ValueError(f"Duplicate line names: {set(dupes)}")
+        return self
+
+    @model_validator(mode="after")
+    def validate_clump_types(self) -> "MooringSystem":
+        """Clump type names are unique and every attachment references one."""
+        names = [ct.name for ct in self.clump_types]
+        if len(names) != len(set(names)):
+            raise ValueError(f"Duplicate clump type names: {names}")
+        for line in self.lines:
+            for att in line.attachments:
+                if att.clump_type not in names:
+                    raise ValueError(
+                        f"Line '{line.name}' references unknown clump_type "
+                        f"'{att.clump_type}'. Available: {names}"
+                    )
         return self
