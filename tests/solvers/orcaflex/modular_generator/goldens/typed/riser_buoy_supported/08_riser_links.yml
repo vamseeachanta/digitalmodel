@@ -1,0 +1,27 @@
+Links:
+- Name: Tether1
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - SupportBuoy
+    - 0.0
+    - 3.0
+    - -3.0
+  - - Anchored
+    - -200.0
+    - 3.0
+    - 0.0
+  UnstretchedLength: 396.544
+  Stiffness: 780000.0
+- Name: Tether2
+  LinkType: Tether
+  Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
+  - - SupportBuoy
+    - 0.0
+    - -3.0
+    - -3.0
+  - - Anchored
+    - -200.0
+    - -3.0
+    - 0.0
+  UnstretchedLength: 396.544
+  Stiffness: 780000.0

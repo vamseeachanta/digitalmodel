@@ -1,0 +1,145 @@
+# Typed riser example: buoy-supported steel catenary riser (digitalmodel #3974).
+#
+# A subsurface lumped 6D buoy is held down by two tethers (OrcaFlex links).
+# A 10 in steel catenary riser hangs from the buoy to the seabed, and a flexible
+# jumper connects the vessel to the buoy top. All values are illustrative input
+# data, not a design. Related analysis issue: #3950 (buoyancy-supported riser).
+#
+# Hand checks (inextensible catenaries, seawater 1.025 te/m3, g 9.80665 m/s2):
+#   Buoy: mass 150 te, volume 400 m3; net upthrust (1.025 x 400 - 150) g
+#     = 2549.7 kN. Cylinder 9.21 m diameter x 6 m: Ixx = Iyy = 1245.8,
+#     Izz = 1591.5 te.m2; drag areas 55.3 m2 (side) and 66.7 m2 (end).
+#   SCR: OD 0.2731 m, ID 0.2223 m, steel 7.85 te/m3 -> 0.1552 te/m,
+#     EI 31,709 kN.m2, EA 4.091e6 kN; seawater contents; submerged
+#     w = 1.313 kN/m. Hang-off 397 m above the seabed, H = 150 kN assumed:
+#     suspended 498.3 m, top vertical 654.5 kN, 12.9 deg from vertical,
+#     horizontal span 248.9 m, grounded 801.7 m; anchor 1050.6 m from buoy.
+#   Jumper: 250 m of the template 10 in flexible, w = 1.305 kN/m between the
+#     vessel (-40, 0, -10) and the buoy top (-200, 0, -97): H = 66.5 kN,
+#     vertical at the buoy 101.2 kN.
+#   Tethers: vertical sum 2549.7 - 654.5 - 101.2 = 1794.0 kN, 897.0 kN each;
+#     EA 780,000 kN (0.78e8 d^2, d = 0.1 m); geometric length 397 m;
+#     unstretched 397 / (1 + 897.0 / 780000) = 396.544 m.
+#   Net horizontal load on the buoy 150 - 66.5 = 83.5 kN towards -x is
+#     resisted by tether inclination (about 4.5 kN/m), so the buoy is expected
+#     to move about 18 m towards -x in statics and to drop about 0.4 m.
+#
+# Generate:
+#   python -m digitalmodel.solvers.orcaflex.modular_generator generate \
+#       --input spec.yml --output modular/
+
+metadata:
+  name: "riser_buoy_supported"
+  description: "Buoy-supported SCR with tethered subsurface buoy and flexible jumper"
+  structure: riser
+  operation: production
+  project: "OrcaFlex typed examples"
+  version: "1.0"
+
+environment:
+  water:
+    depth: 500
+    density: 1.025
+  seabed:
+    type: flat
+    stiffness:
+      normal: 100
+      shear: 100
+
+riser:
+  vessel:
+    name: "FPSO"
+    type_name: "Vessel Type1"
+    position: [0, 0, 0]
+    orientation: [0, 0, 0]
+    primary_motion: "None"
+    superimposed_motion: "None"
+    included_in_statics: "None"
+
+  buoys:
+    - name: "SupportBuoy"
+      connection: "Free"
+      position: [-200, 0, -100]
+      mass: 150
+      moments_of_inertia: [1245.8, 1245.8, 1591.5]
+      volume: 400
+      height: 6
+      drag_area: [55.3, 55.3, 66.7]
+      drag_coefficient: [1.0, 1.0, 1.0]
+      added_mass_coefficient: [1.0, 1.0, 1.0]
+
+  line_types:
+    - name: "scr_10in"
+      description: "10 in steel riser, OD 0.2731 m, WT 0.0254 m"
+      outer_diameter: 0.2731
+      inner_diameter: 0.2223
+      mass_per_length: 0.1552
+      bending_stiffness: 31709
+      axial_stiffness: 4091000
+      torsional_stiffness: 24392
+      poisson_ratio: 0.3
+      drag_coefficient: 1.2
+      added_mass_coefficient: 1.0
+    - name: "flex_10in"
+      description: "10 in flexible jumper (template riser_lazy_wave line type)"
+      outer_diameter: 0.3556
+      inner_diameter: 0.254
+      mass_per_length: 0.1842262
+      bending_stiffness: 124.87
+      axial_stiffness: 711200
+      torsional_stiffness: 10
+      poisson_ratio: 0.5
+      drag_coefficient: 1.2
+      added_mass_coefficient: 1.0
+      min_bend_radius: 3.675
+
+  lines:
+    - name: "SCR"
+      configuration: catenary
+      end_a:
+        type: buoy
+        name: "SupportBuoy"
+        position: [0, 0, -3]
+        declination: 170
+      end_b:
+        type: anchor
+        position: [-1250.6, 0, 0]
+        declination: 90
+      sections:
+        - {line_type: "scr_10in", length: 100, segment_length: 2}
+        - {line_type: "scr_10in", length: 1100, segment_length: 10}
+        - {line_type: "scr_10in", length: 100, segment_length: 5}
+      statics_method: "Catenary"
+      statics_step2: "Full statics"
+    - name: "Jumper"
+      configuration: free_hanging
+      end_a:
+        type: vessel
+        name: "FPSO"
+        position: [-40, 0, -10]
+        declination: 170
+      end_b:
+        type: buoy
+        name: "SupportBuoy"
+        position: [0, 0, 3]
+        declination: 10
+      sections:
+        - {line_type: "flex_10in", length: 250, segment_length: 2}
+      statics_method: "Catenary"
+      statics_step2: "Full statics"
+
+  links:
+    - name: "Tether1"
+      link_type: tether
+      connections:
+        - {object_name: "SupportBuoy", x: 0, y: 3, z: -3}
+        - {object_name: "Anchored", x: -200, y: 3, z: 0}
+      unstretched_length: 396.544
+      stiffness: 780000
+    - name: "Tether2"
+      link_type: tether
+      connections:
+        - {object_name: "SupportBuoy", x: 0, y: -3, z: -3}
+        - {object_name: "Anchored", x: -200, y: -3, z: 0}
+      unstretched_length: 396.544
+      stiffness: 780000

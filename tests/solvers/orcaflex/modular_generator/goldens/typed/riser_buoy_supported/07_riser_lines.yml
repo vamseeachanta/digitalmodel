@@ -1,0 +1,97 @@
+Lines:
+- Name: SCR
+  IncludeTorsion: 'No'
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Bend angle
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
+    ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - SupportBuoy
+      - 0.0
+      - 0.0
+      - -3.0
+      - 0
+      - 170.0
+      - 0
+      - ~
+    - - Anchored
+      - -1250.6
+      - 0.0
+      - 0.0
+      - 0
+      - 90.0
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - 0
+    - ~
+    - ~
+  - - 0
+    - ~
+    - ~
+  LineType, Length, TargetSegmentLength:
+  - - scr_10in
+    - 100.0
+    - 2.0
+  - - scr_10in
+    - 1100.0
+    - 10.0
+  - - scr_10in
+    - 100.0
+    - 5.0
+  StaticsStep1: Catenary
+  LayAzimuth: 180
+  ContentsMethod: Uniform
+  ContentsDensity: 1.0
+  StaticsStep2: Full statics
+- Name: Jumper
+  IncludeTorsion: 'No'
+  TopEnd: End A
+  LengthAndEndOrientations: Explicit
+  Representation: Finite element
+  PyModel: (none)
+  PreBendSpecifiedBy: Bend angle
+  DragFormulation: Standard
+  StaticsVIV: None
+  DynamicsVIV: None
+  WaveCalculationMethod: Specified by environment
+  ? Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionAzimuth, ConnectionDeclination,
+    ConnectionGamma, ConnectionReleaseStage, ConnectionzRelativeTo
+  : - - FPSO
+      - -40.0
+      - 0.0
+      - -10.0
+      - 0
+      - 170.0
+      - 0
+      - ~
+    - - SupportBuoy
+      - 0.0
+      - 0.0
+      - 3.0
+      - 0
+      - 10.0
+      - 0
+      - ~
+  ConnectionxBendingStiffness, ConnectionyBendingStiffness, ConnectionTwistingStiffness, ConnectionDamping:
+  - - 0
+    - ~
+    - ~
+  - - 0
+    - ~
+    - ~
+  LineType, Length, TargetSegmentLength:
+  - - flex_10in
+    - 250.0
+    - 2.0
+  StaticsStep1: Catenary
+  LayAzimuth: 180
+  ContentsMethod: Uniform
+  ContentsDensity: 1.0
+  StaticsStep2: Full statics
