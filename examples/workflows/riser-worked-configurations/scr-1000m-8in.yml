@@ -1,0 +1,58 @@
+# Generic nominal 8.625 in OD, 18.263 mm wall
+# chosen for demonstration (assumed), not a design or vendor catalogue.
+# Steel E=207e9 Pa, density=7850 kg/m3, SMYS=448e6 Pa: src/digitalmodel/subsea/catenary_riser/models.py
+# STEEL_API_5L_X65 (MPa converted to Pa); repository nominal API 5L X65 values.
+# Oil=850 kg/m3; empty=0 kg/m3 gas-lift proxy (assumed) for 12 in cases.
+# Seawater=1025 kg/m3; g=9.80665 m/s2 (assumed); uncoated pipe.
+# Grounded bare tail=50% water depth (assumed); near/far/cross=5% depth.
+# Internal design pressure=20.0e6 Pa at hang-off; external=0 Pa at surface hang-off.
+# Limitation: screen applies this single hang-off pressure pair to the whole line.
+basename: riser_configuration_screen
+Analysis:
+  result_folder: results/riser-worked-configurations/scr-1000m-8in
+riser_configuration_screen:
+  riser_type: SCR
+  water_depth_m: 1000.0
+  # computed: w = g*(rho_steel*A_steel + rho_content*A_bore - rho_seawater*A_displaced)
+  submerged_weight_n_m: 726.2264466469273
+  data_basis: generic assumed values for a public worked configuration; no project
+    data
+  criteria_revision: worked-config-1
+  provisional: true
+  grounded_length_m: 500.0
+  offsets_m:
+  - -50.0
+  - 0.0
+  - 50.0
+  - x_m: 0.0
+    y_m: 50.0
+  weight_basis:
+    steel_density_kg_m3: 7850.0
+    content_density_kg_m3: 850.0
+    seawater_density_kg_m3: 1025.0
+    gravity_m_s2: 9.80665
+  pipe:
+    outer_diameter_m: 0.219075
+    wall_thickness_m: 0.018263
+    youngs_modulus_pa: 207000000000.0
+    yield_strength_pa: 448000000.0
+    internal_pressure_pa: 20000000.0
+    external_pressure_pa: 0.0
+  constraints:
+    # assumed: 0.6 * specified minimum yield strength * steel area
+    max_top_tension_n: 3096997.948984849
+    # assumed screening strain limit 0.2%; OD/(2*0.002), not a code value
+    min_bend_radius_m: 54.76875
+    # assumed minimum hog clearance of 50.0 m
+    min_hog_clearance_m: 50.0
+    # screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor
+    max_static_utilisation: 0.67
+  axes:
+    hangoff_angle_deg:
+    - 8.0
+    - 10.0
+    - 12.0
+    - 14.0
+    - 16.0
+    - 18.0
+    - 20.0
