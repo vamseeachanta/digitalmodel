@@ -75,6 +75,14 @@ class RiserLineType(BaseModel):
     added_mass_coefficient: float = Field(default=1.0, ge=0, description="Ca")
     axial_drag_coefficient: float = Field(default=0.008, ge=0, description="Axial Cd")
 
+    # Seabed friction (#3989); defaults reproduce the former hard-coded output
+    seabed_lateral_friction: float = Field(
+        default=0.5, ge=0, description="Seabed lateral friction coefficient"
+    )
+    seabed_axial_friction: float | None = Field(
+        default=None, ge=0, description="Seabed axial friction coefficient (~ = lateral)"
+    )
+
     # Stress calculation diameters (if different from geometry)
     stress_od: float | None = Field(default=None, gt=0, description="Stress calc OD (m)")
     stress_id: float | None = Field(default=None, ge=0, description="Stress calc ID (m)")

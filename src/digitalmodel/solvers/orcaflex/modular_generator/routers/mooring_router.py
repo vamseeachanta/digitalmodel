@@ -195,7 +195,7 @@ class MooringRouter(BaseRouter):
                 "Cm": [None, None, None],
                 "CompressionIsLimited": "No",
                 "AllowableTension": mbl,
-                "SeabedLateralFrictionCoefficient": 1.0,
+                "SeabedLateralFrictionCoefficient": self._friction(seg, 1.0),
                 "SeabedAxialFrictionCoefficient": None,
                 "RayleighDampingCoefficients": "(no damping)",
             },
@@ -230,7 +230,7 @@ class MooringRouter(BaseRouter):
                 "Cm": [None, None, None],
                 "CompressionIsLimited": "No",
                 "AllowableTension": mbl if mbl else None,
-                "SeabedLateralFrictionCoefficient": 0.5,
+                "SeabedLateralFrictionCoefficient": self._friction(seg, 0.5),
                 "SeabedAxialFrictionCoefficient": None,
                 "RayleighDampingCoefficients": "(no damping)",
             },
@@ -264,7 +264,7 @@ class MooringRouter(BaseRouter):
                 "Cm": [None, None, None],
                 "CompressionIsLimited": "No",
                 "AllowableTension": mbl if mbl else None,
-                "SeabedLateralFrictionCoefficient": 0.3,
+                "SeabedLateralFrictionCoefficient": self._friction(seg, 0.3),
                 "SeabedAxialFrictionCoefficient": None,
                 "RayleighDampingCoefficients": "(no damping)",
             },
@@ -347,6 +347,13 @@ class MooringRouter(BaseRouter):
                 "Tension": ml.pretension,
             },
         }
+
+    @staticmethod
+    def _friction(seg: MooringSegment, default: float) -> float:
+        """Segment seabed lateral friction, or the material default (#3989)."""
+        if seg.seabed_lateral_friction is None:
+            return default
+        return seg.seabed_lateral_friction
 
     @staticmethod
     def _endpoint_connection(endpoint) -> str:
