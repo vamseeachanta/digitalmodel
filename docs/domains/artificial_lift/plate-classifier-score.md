@@ -19,6 +19,7 @@ is **96.185 %**. This measures separation of the generator population only.
 | Revision | Date | Change |
 | --- | --- | --- |
 | 1 | 2026-11-12 | Recorded the public plate score, assumed-scale sweep and separate shape-only artefact. |
+| 2 | 2026-11-12 | Corrected the interval precision description to match the recorded score. |
 
 Table 1. Revision record.
 
@@ -43,7 +44,7 @@ Table 2. Exact source and model identities used for the recorded calculation.
 
 The complete [machine-readable score](../../../tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json)
 contains per-card predictions, three denominator groups, confusion matrices,
-unrounded Wilson intervals and model training metadata.
+Wilson intervals recorded to 12 decimal places and model training metadata.
 
 ## Method and reproduction
 
