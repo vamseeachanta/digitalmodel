@@ -2,12 +2,12 @@
  "schema_version": "1.0",
  "report_id": "dynacard-pump-card",
  "mode": "rebuild",
- "started_utc": "2026-11-12T17:16:47Z",
- "finished_utc": "2026-11-12T17:16:55Z",
+ "started_utc": "2026-11-12T17:20:36Z",
+ "finished_utc": "2026-11-12T17:20:43Z",
  "grade": "PASS",
- "pinned_commit": "9328ec4f0a2a4578cf5a745fe13c40195caeed30",
+ "pinned_commit": "0330daa76bebea18c5a6a5a8fe559b8f2e89b40c",
  "artifacts": {
-  "results.json": "bffc398d7cfdf97fe6011b7dd678a78f27265bbb96703d293fdb6e574d65e6e5",
+  "results.json": "07c9959a9199f69bdbabd9e8e2194001bda7a65390bf3258a76a8dc3c1eed5dc",
   "eval.py": "50b0dd4a7f9fd21b736b4319ff2a2f100818fa9612c827c115ebe29e216b961b",
   "../evalkit.py": "e52cd0ff12cd869c4e2f55ee6a5777800a4278828d28d8fc546cc7b69efe2eb3"
  },
@@ -15,8 +15,8 @@
  "platform": "Windows",
  "context": {
   "revision": "candidate",
-  "repo_head": "9328ec4f0a2a4578cf5a745fe13c40195caeed30",
-  "digitalmodel_head": "9328ec4f0a2a4578cf5a745fe13c40195caeed30",
+  "repo_head": "0330daa76bebea18c5a6a5a8fe559b8f2e89b40c",
+  "digitalmodel_head": "0330daa76bebea18c5a6a5a8fe559b8f2e89b40c",
   "digitalmodel_file": "src/digitalmodel/__init__.py",
   "code_mode": "candidate",
   "sha256": {
@@ -28,7 +28,7 @@
    "examples/report-evals/dynacard-pump-card/eval.py": "50b0dd4a7f9fd21b736b4319ff2a2f100818fa9612c827c115ebe29e216b961b",
    "examples/report-evals/dynacard-pump-card/model_basis.py": "9c506358eb97e802dee2671ac21a465c0bb43836bcb9ca0cdcbf4a63cea94dea",
    "examples/report-evals/dynacard-pump-card/plotting.py": "ad595e867b5eee9b33b0d2f4de8be05b40eef1defc29af50089bce748c477393",
-   "examples/report-evals/dynacard-pump-card/report_contract.py": "411cb522720208006e4842c644f63cad1830cf70f4e9aee9d68f0a5f1ced97c4",
+   "examples/report-evals/dynacard-pump-card/report_contract.py": "77bcc6f1163802d52319c2694349f875eff6559b7e3fe19374be42f441864424",
    "examples/report-evals/dynacard-pump-card/sensitivity.py": "62ac5a7d99ad2b0ac3c53b3d94b1e122a1fb7111b8f78080f3ad25a39ba8f623",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/__init__.py": "119761b3755c85b39f2c4b4fd0bd0e538fccc21232ed3cf726995d58adb38b4f",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/alarm_evidence.py": "d673ece4b22aa998deb93231efb130fb4cdf5f211c18da46900b575565372b37",
@@ -110,7 +110,7 @@
   },
   "shape_hypothesis_status": "HYPOTHESIS",
   "published_example_status": "NOT_EVALUATED",
-  "artifacts_repo_head": "9328ec4f0a2a4578cf5a745fe13c40195caeed30",
+  "artifacts_repo_head": "0330daa76bebea18c5a6a5a8fe559b8f2e89b40c",
   "artifacts_dirty": true
  },
  "errors": [],

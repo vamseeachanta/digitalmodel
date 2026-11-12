@@ -196,9 +196,9 @@ The [reusable prompt](../../../examples/report-evals/dynacard-pump-card/PROMPT.m
 
 | Data | Source | Licence | Version or date | Link |
 | --- | --- | --- | --- | --- |
-| Public example surface card, rod string and stored reference | Repository field fixture | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/9328ec4f0a2a4578cf5a745fe13c40195caeed30/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json) |
+| Public example surface card, rod string and stored reference | Repository field fixture | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/0330daa76bebea18c5a6a5a8fe559b8f2e89b40c/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json) |
 | Public reference shapes | Public diagnostic plate | CC0 1.0 | 2026-10-11 | [Source](https://doi.org/10.17632/hnfwm9mjs6.1) |
-| Recorded shape-only plate score | Repository benchmark | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/9328ec4f0a2a4578cf5a745fe13c40195caeed30/tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json) |
+| Recorded shape-only plate score | Repository benchmark | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/0330daa76bebea18c5a6a5a8fe559b8f2e89b40c/tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json) |
 
 Table B1. Retained data sources; input and source digests are recorded by the analysis and eval.
 
