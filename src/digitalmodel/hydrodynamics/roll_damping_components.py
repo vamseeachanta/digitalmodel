@@ -33,6 +33,32 @@ through the centre of gravity.
 Damping coefficients returned per unit length carry ``_section`` in the
 function name; the rest are whole-hull values.
 
+Edition selection. ``variant`` on the sectional eddy functions changes the
+C_R bracket only (``chakrabarti2001``, ``ittc2011``, ``ittc2021`` which prints
+the 2011 bracket, ``ittc2024``); every other formula follows the paper. Two
+further prints differ and are not selectable: ITTC 2011 eq. 2.20, 2021 eq. 44
+and 2024 eq. 44 print ``gamma`` with ``(r_max + 2M/H) sqrt(A**2 + B**2)``,
+whereas the paper's eq. 20 is ``r_max + (2M/H) sqrt(A**2 + B**2)``. The paper's
+reading is kept: it reproduces the midbody C_R of the paper's Fig. 5 (123.5
+against about 120), while the ITTC print gives 76 there and a negative C_R for
+a B/d 2.5, sigma 0.95 ship section. ITTC 2011 eq. 2.25 prints the bilge-keel
+normal force with ``f`` where the paper and ITTC 2024 have ``f**2``; ``f**2``
+is used.
+
+Domain. Inputs outside the formulas' physical domain raise
+:class:`RollDampingComponentError`: coefficients above one, explicit bilge
+radii larger than the section allows, roll amplitudes of 45 deg or more, and
+any input combination that drives a dissipation coefficient to zero or below.
+Inputs inside the domain but beyond the paper's evidence are returned with
+explicit flags on :class:`RollDampingComponents` (``FLAG_*`` constants). No
+universal B/T or amplitude cut-off is established by the sources; the paper
+states about 5 deg (p. 924) and its examples use 10 deg.
+
+Provenance. Whole-hull results carry a structured citation sidecar
+(:class:`digitalmodel.citations.schema.Citation`, one record per equation
+group) in ``RollDampingComponents.citations``. :func:`validate_citations`
+resolves them fail-closed against the wiki source page.
+
 Conversion to a percentage of critical uses
 :func:`digitalmodel.hydrodynamics.diffraction.roll_damping.damping_to_percent_critical`,
 so that the critical-damping basis (structural plus added inertia, stated at a
@@ -42,15 +68,24 @@ frequency) is the one the AQWA and OrcaWave conversion already uses.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass
+from dataclasses import dataclass, field, replace
+from pathlib import Path
 from typing import Literal, Optional, Sequence
+
+from digitalmodel.citations.schema import Citation, validate_citation
 
 from digitalmodel.hydrodynamics.diffraction.roll_damping import (
     damping_to_percent_critical,
 )
 
 __all__ = [
+    "FLAG_AMPLITUDE_ABOVE_PAPER_EXAMPLES",
+    "FLAG_EQ35_WITH_ROUNDED_BILGE",
+    "MAX_AMPLITUDE",
+    "PAPER_EXAMPLE_AMPLITUDE",
+    "SOURCE_CITATION",
     "HullSection",
+    "OutsideEmpiricalDomainError",
     "RollDampingComponentError",
     "RollDampingComponents",
     "barge_eddy_damping",
@@ -74,16 +109,47 @@ __all__ = [
     "lift_damping",
     "ship_wetted_area",
     "triangular_section_drag_coefficient",
+    "validate_citations",
     "wave_damping_forward_speed",
 ]
 
 STANDARD_GRAVITY = 9.80665
 
-EddyVariant = Literal["chakrabarti2001", "ittc2011", "ittc2024", "as_printed"]
+EddyVariant = Literal[
+    "chakrabarti2001", "ittc2011", "ittc2021", "ittc2024", "as_printed"
+]
+
+#: Roll amplitude at and above which no formula here is evaluated (rad).
+MAX_AMPLITUDE = math.pi / 4.0
+#: Largest amplitude the paper's worked examples use (10 deg, pp. 928-929).
+PAPER_EXAMPLE_AMPLITUDE = math.radians(10.0)
+
+FLAG_AMPLITUDE_ABOVE_PAPER_EXAMPLES = "amplitude_above_paper_examples"
+FLAG_EQ35_WITH_ROUNDED_BILGE = "eq35_with_rounded_bilge"
+
+#: The source of every formula in this module. The wiki page is the
+#: naval-architecture source page for the paper; resolution needs its
+#: frontmatter to carry these code_id, publisher and revision values.
+SOURCE_CITATION = Citation(
+    code_id="chakrabarti-2001-empirical-roll-damping-ships-barges",
+    publisher="Elsevier Science Ltd",
+    revision="2001",
+    section="Ocean Engineering 28 (2001) 915-932",
+    wiki_path=(
+        "wikis/naval-architecture/wiki/sources/"
+        "chakrabarti-2001-empirical-roll-damping-ships-barges.md"
+    ),
+    note="Equations restated after Ikeda, Himeno and Tanaka (1978); see module docstring",
+    source_sibling="generic",
+)
 
 
 class RollDampingComponentError(ValueError):
     """An input outside the range the empirical formulas accept."""
+
+
+class OutsideEmpiricalDomainError(RollDampingComponentError):
+    """Valid inputs for which a fitted formula gives no positive dissipation."""
 
 
 # --- validation helpers -------------------------------------------------------
@@ -121,6 +187,46 @@ def _area_coefficient(sigma: float) -> float:
             f"section area coefficient must lie in (0, 1], got {sigma!r}"
         )
     return float(sigma)
+
+
+def _fraction(name: str, value: float) -> float:
+    """A hull form coefficient: finite, positive and not above one."""
+    value = _positive(name, value)
+    if value > 1.0:
+        raise RollDampingComponentError(f"{name} must not exceed 1, got {value!r}")
+    return value
+
+
+def _amplitude(value: float, *, positive: bool = False) -> float:
+    value = (
+        _positive("amplitude", value) if positive else _non_negative("amplitude", value)
+    )
+    if value >= MAX_AMPLITUDE:
+        raise RollDampingComponentError(
+            f"roll amplitude {value!r} rad is at or above {MAX_AMPLITUDE!r} rad (45 deg); "
+            "no formula here has a basis there"
+        )
+    return value
+
+
+def _section_radius(radius: float, beam: float, draft: float) -> float:
+    """An explicit bilge radius: non-negative and within min(d, B/2) (eqs. 29, 59)."""
+    radius = _non_negative("bilge_radius", radius)
+    limit = min(draft, beam / 2.0)
+    if radius > limit * (1.0 + 1e-12):
+        raise RollDampingComponentError(
+            f"bilge radius {radius!r} exceeds the section limit min(d, B/2) = {limit!r}"
+        )
+    return radius
+
+
+def _dissipative(name: str, value: float) -> float:
+    if not math.isfinite(value) or value <= 0.0:
+        raise OutsideEmpiricalDomainError(
+            f"{name} evaluates to {value!r}; the inputs are outside the empirical "
+            "domain of the formula (a dissipation coefficient must be positive)"
+        )
+    return value
 
 
 def _og_ratio(og: float, draft: float) -> float:
@@ -161,7 +267,7 @@ def ship_wetted_area(
     """Approximate wetted area of a ship hull, ``L (1.7 D + C_B B)`` (eq. 9)."""
     return _positive("length", length) * (
         1.7 * _positive("draft", draft)
-        + _positive("block_coefficient", block_coefficient) * _positive("beam", beam)
+        + _fraction("block_coefficient", block_coefficient) * _positive("beam", beam)
     )
 
 
@@ -174,7 +280,7 @@ def friction_radius(
     ship forms; ITTC 7.5-02-07-04.5 (2024) eq. 39.1 writes the same expression
     with ``S / L`` expanded as eq. 9.
     """
-    cb = _positive("block_coefficient", block_coefficient)
+    cb = _fraction("block_coefficient", block_coefficient)
     s_per_l = _positive("wetted_area", wetted_area) / _positive("length", length)
     radius = ((0.887 + 0.145 * cb) * s_per_l - 2.0 * _finite("og", og)) / math.pi
     if radius <= 0.0:
@@ -330,10 +436,16 @@ def eddy_pressure_ratio(
     * ``"ittc2024"``: ``k = 3/2``, as printed in ITTC 7.5-02-07-04.5 rev. 02
       (2024), citing Katayama et al. (2022).
     * ``"ittc2011"``: second factor ``(1 - OG/d)`` without ``f1 R/d``, as
-      printed in the 2011 revision.
+      printed in the 2011 revision; ``"ittc2021"`` is the same bracket, as
+      printed in the 2021 revision (eq. 43).
     * ``"as_printed"``: Chakrabarti eq. 25 bracketed as typeset, with
-      ``(r_max/d)**2`` on the first product only. It is kept to show that the
-      print does not reproduce the paper's own Fig. 5; it is not a method.
+      ``(r_max/d)**2`` on the first product only and ``C_p`` (eq. 18) on the
+      whole. It is kept to show that the print does not reproduce the paper's
+      own Fig. 5; it is not a method.
+
+    ``gamma`` follows the paper's eq. 20; see the module docstring for the
+    ITTC print. A result at or below zero raises
+    :class:`RollDampingComponentError` (outside the empirical domain).
 
     The paper prints the third term of ``A1`` and ``B1`` (eqs. 22-23) with a
     minus sign and ``a2`` for ``a3`` in ``B1``; the signs and indices here are
@@ -347,7 +459,7 @@ def eddy_pressure_ratio(
     og_d = _og_ratio(og, draft)
     if bilge_radius is None:
         bilge_radius = bilge_radius_from_area_coefficient(beam, draft, sigma)
-    radius_d = _non_negative("bilge_radius", bilge_radius) / draft
+    radius_d = _section_radius(bilge_radius, beam, draft) / draft
     h0 = beam / (2.0 * draft)
 
     a1, a3 = lewis_coefficients(h0, sigma)
@@ -406,13 +518,14 @@ def eddy_pressure_ratio(
         first = (1.0 - bilge) * (1.0 - og_d - bilge)
     elif variant == "ittc2024":
         first = (1.0 - bilge) * (1.0 - 1.5 * og_d - bilge)
-    elif variant == "ittc2011":
+    elif variant in ("ittc2011", "ittc2021"):
         first = (1.0 - bilge) * (1.0 - og_d)
     elif variant == "as_printed":
-        return cp * rmax_d2 * (1.0 - bilge) * (1.0 - og_d - bilge) + second
+        printed = cp * (rmax_d2 * (1.0 - bilge) * (1.0 - og_d - bilge) + second)
+        return _dissipative("C_R (as printed)", printed)
     else:
         raise RollDampingComponentError(f"unknown eddy variant {variant!r}")
-    return cp * rmax_d2 * (first + second)
+    return _dissipative("C_R", cp * rmax_d2 * (first + second))
 
 
 def eddy_damping_section(
@@ -432,7 +545,7 @@ def eddy_damping_section(
     """
     rho = _positive("rho", rho)
     draft = _positive("draft", draft)
-    amplitude = _non_negative("amplitude", amplitude)
+    amplitude = _amplitude(amplitude)
     omega = _positive("omega", omega)
     cr = eddy_pressure_ratio(beam, draft, sigma, og, bilge_radius, variant)
     return 4.0 / (3.0 * math.pi) * rho * draft**4 * amplitude * omega * cr
@@ -462,6 +575,7 @@ def eddy_damping_sections(
     end_station_factor: float = 1.0,
     h0_cap: Optional[float] = None,
     variant: EddyVariant = "chakrabarti2001",
+    exclude_non_positive: bool = False,
 ) -> float:
     """Eddy-making damping of a hull by trapezoidal integration of eq. 18.
 
@@ -472,6 +586,12 @@ def eddy_damping_sections(
     station by reducing the beam used there (the paper's optional ULHO, 4 or
     5); how the paper applies the cap is not printed, so this reading is an
     assumption.
+
+    A station whose C_R is zero or negative raises by default. The C_R fit
+    passes through zero for some full, rounded sections (H0 near 1, sigma
+    near 0.76); ``exclude_non_positive=True`` lets such stations contribute
+    zero instead. It is an explicit choice by the caller, not a method from
+    the paper, and it should be reported with the result.
     """
     if len(sections) < 2:
         raise RollDampingComponentError("at least two stations are needed to integrate")
@@ -486,9 +606,22 @@ def eddy_damping_sections(
         beam = s.beam
         if h0_cap is not None:
             beam = min(beam, 2.0 * _positive("h0_cap", h0_cap) * s.draft)
-        value = eddy_damping_section(
-            rho, beam, s.draft, s.sigma, og, s.bilge_radius, amplitude, omega, variant
-        )
+        try:
+            value = eddy_damping_section(
+                rho,
+                beam,
+                s.draft,
+                s.sigma,
+                og,
+                s.bilge_radius,
+                amplitude,
+                omega,
+                variant,
+            )
+        except OutsideEmpiricalDomainError:
+            if not exclude_non_positive:
+                raise
+            value = 0.0
         if i in (0, len(sections) - 1):
             value *= end_station_factor
         values.append(value)
@@ -517,24 +650,26 @@ def barge_eddy_damping(
     rectangular barge (p. 931). ``k = og_factor`` is 1 in the paper and in ITTC
     7.5-02-07-04.5 (2011); the 2024 revision prints 3/2. The two agree for a
     roll axis at the waterline. The formula has no bilge-radius term: the
-    corner is taken as sharp.
+    corner is taken as sharp. Inputs that make the first bracket zero or
+    negative (small B/T with a deep roll axis and the 3/2 factor) raise.
     """
     rho = _positive("rho", rho)
     length = _positive("length", length)
     beam = _positive("beam", beam)
     draft = _positive("draft", draft)
     og_d = _og_ratio(og, draft)
-    amplitude = _non_negative("amplitude", amplitude)
+    amplitude = _amplitude(amplitude)
     omega = _positive("omega", omega)
     og_factor = _positive("og_factor", og_factor)
     h0 = beam / (2.0 * draft)
+    first = _dissipative("eq. 35 first bracket", h0**2 + 1.0 - og_factor * og_d)
     return (
         2.0
         / math.pi
         * rho
         * length
         * draft**4
-        * (h0**2 + 1.0 - og_factor * og_d)
+        * first
         * (h0**2 + (1.0 - og_d) ** 2)
         * amplitude
         * omega
@@ -581,6 +716,7 @@ def drag_route_eddy_damping(
     rho = _positive("rho", rho)
     area = _positive("area", area)
     radius = _positive("radius", radius)
+    amplitude = _amplitude(amplitude)
     quadratic = 0.5 * cd * rho * area * radius**3
     return equivalent_linear_damping(0.0, quadratic, 0.0, omega, amplitude)
 
@@ -610,7 +746,7 @@ def lift_damping(
     draft = _positive("draft", draft)
     beam = _positive("beam", beam)
     og_d = _finite("og", og) / draft
-    cm = _positive("midship_coefficient", midship_coefficient)
+    cm = _fraction("midship_coefficient", midship_coefficient)
     if cm <= 0.92:
         kappa = 0.0
     elif cm <= 0.97:
@@ -680,7 +816,7 @@ def bilge_keel_lever(
     beam = _positive("beam", beam)
     draft = _positive("draft", draft)
     og_d = _og_ratio(og, draft)
-    r_d = _non_negative("bilge_radius", bilge_radius) / draft
+    r_d = _section_radius(bilge_radius, beam, draft) / draft
     h0 = beam / (2.0 * draft)
     return draft * math.sqrt((h0 - 0.293 * r_d) ** 2 + (1.0 - og_d - 0.293 * r_d) ** 2)
 
@@ -701,11 +837,15 @@ def bilge_keel_normal_section(
     omega: float,
     bilge_radius: Optional[float] = None,
 ) -> float:
-    """Bilge-keel normal-force damping per unit keel length, zero speed (eqs. 47-48)."""
+    """Bilge-keel normal-force damping per unit keel length, zero speed (eqs. 47-48).
+
+    Uses ``f**2`` as the paper and ITTC 2024 print; ITTC 2011 eq. 2.25 prints
+    ``f``.
+    """
     rho = _positive("rho", rho)
     sigma = _area_coefficient(sigma)
     b_bk = _positive("bilge_keel_breadth", bilge_keel_breadth)
-    amplitude = _positive("amplitude", amplitude)
+    amplitude = _amplitude(amplitude, positive=True)
     omega = _positive("omega", omega)
     if bilge_radius is None:
         bilge_radius = bilge_radius_from_area_coefficient(beam, draft, sigma)
@@ -730,18 +870,19 @@ def bilge_keel_hull_pressure_section(
 
     Uses ``B0 = m4**3 / (3 (H0 - 0.215 m1)) + ...`` as printed in the paper and
     in ITTC 7.5-02-07-04.5 (2024); the 2011 revision prints ``m2**2`` for
-    ``m4**3``.
+    ``m4**3``. This part alone may be negative (the hull pressure can oppose
+    the keel force); :func:`bilge_keel_damping_section` checks the sum.
     """
     rho = _positive("rho", rho)
     beam = _positive("beam", beam)
     draft = _positive("draft", draft)
     sigma = _area_coefficient(sigma)
     b_bk = _positive("bilge_keel_breadth", bilge_keel_breadth)
-    amplitude = _positive("amplitude", amplitude)
+    amplitude = _amplitude(amplitude, positive=True)
     omega = _positive("omega", omega)
     if bilge_radius is None:
         bilge_radius = bilge_radius_from_area_coefficient(beam, draft, sigma)
-    radius = _non_negative("bilge_radius", bilge_radius)
+    radius = _section_radius(bilge_radius, beam, draft)
     lever = bilge_keel_lever(beam, draft, og, radius)
     f = _flow_factor(sigma)
     h0 = beam / (2.0 * draft)
@@ -796,7 +937,8 @@ def bilge_keel_damping_section(
     """Bilge-keel damping per unit keel length at zero speed (eq. 46).
 
     Normal-force plus hull-pressure parts; the keel's own wave making and the
-    speed effect are neglected, as in the paper.
+    speed effect are neglected, as in the paper. A sum at or below zero raises
+    (outside the empirical domain, for example at very large amplitude).
     """
     args = (
         rho,
@@ -809,7 +951,10 @@ def bilge_keel_damping_section(
         omega,
         bilge_radius,
     )
-    return bilge_keel_normal_section(*args) + bilge_keel_hull_pressure_section(*args)
+    return _dissipative(
+        "bilge-keel damping",
+        bilge_keel_normal_section(*args) + bilge_keel_hull_pressure_section(*args),
+    )
 
 
 # --- totals -------------------------------------------------------------------
@@ -817,13 +962,25 @@ def bilge_keel_damping_section(
 
 @dataclass(frozen=True)
 class RollDampingComponents:
-    """Equivalent linear roll damping by component, in consistent units."""
+    """Equivalent linear roll damping by component, in consistent units.
+
+    ``flags`` lists domain conditions that the caller must see (``FLAG_*``
+    constants); an empty tuple means none was raised. ``citations`` is the
+    structured provenance of the components, one :class:`Citation` per
+    equation group; :func:`validate_citations` resolves it.
+    """
 
     friction: float
     eddy: float
     lift: float
     wave: float
     bilge_keel: float
+    flags: tuple[str, ...] = ()
+    citations: tuple[Citation, ...] = field(default=(), repr=False)
+
+    def __post_init__(self) -> None:
+        for name in ("friction", "eddy", "lift", "wave", "bilge_keel"):
+            _non_negative(name, getattr(self, name))
 
     @property
     def total(self) -> float:
@@ -847,6 +1004,25 @@ class RollDampingComponents:
             "bilge_keel": self.bilge_keel,
             "total": self.total,
         }
+
+
+def _cite(*sections: str) -> tuple[Citation, ...]:
+    return tuple(replace(SOURCE_CITATION, section=s) for s in sections)
+
+
+def validate_citations(
+    result: RollDampingComponents, wiki_root: Optional[Path] = None
+) -> None:
+    """Resolve every citation of ``result`` fail-closed against the wiki.
+
+    Raises :class:`digitalmodel.citations.schema.CitationResolutionError` when
+    the page is missing or its code_id, publisher or revision differ. With
+    ``wiki_root`` of ``None`` the citation resolver's search order is used.
+    """
+    if not result.citations:
+        raise RollDampingComponentError("the result carries no citations to resolve")
+    for citation in result.citations:
+        validate_citation(citation, repo_root=wiki_root)
 
 
 def barge_roll_damping(
@@ -881,9 +1057,26 @@ def barge_roll_damping(
 
     ``omega`` should be the roll natural frequency when the result is turned
     into a percentage of critical.
+
+    The keel inputs are validated whether or not a keel is fitted; a keel needs
+    both a breadth and a length. The result is flagged
+    ``FLAG_AMPLITUDE_ABOVE_PAPER_EXAMPLES`` above 10 deg and
+    ``FLAG_EQ35_WITH_ROUNDED_BILGE`` when a non-zero bilge radius is given,
+    because eq. 35 assumes a sharp corner.
     """
     draft = _positive("draft", draft)
+    beam = _positive("beam", beam)
     og = draft - _positive("kg", kg)
+    amplitude = _amplitude(amplitude, positive=True)
+    _fraction("midship_coefficient", midship_coefficient)
+    b_bk = _non_negative("bilge_keel_breadth", bilge_keel_breadth)
+    l_bk = _non_negative("bilge_keel_length", bilge_keel_length)
+    radius = _section_radius(bilge_radius, beam, draft)
+    if (b_bk > 0.0) != (l_bk > 0.0):
+        raise RollDampingComponentError(
+            "a bilge keel needs both a breadth and a length; got breadth "
+            f"{b_bk!r} and length {l_bk!r}"
+        )
     radius_f = friction_radius(
         block_coefficient,
         ship_wetted_area(length, draft, beam, block_coefficient),
@@ -903,10 +1096,26 @@ def barge_roll_damping(
     )
 
     bilge_keel = 0.0
-    if bilge_keel_breadth > 0.0 and bilge_keel_length > 0.0:
-        radius = _non_negative("bilge_radius", bilge_radius)
+    if b_bk > 0.0:
         sigma = 1.0 - (4.0 - math.pi) * radius**2 / (2.0 * beam * draft)
-        bilge_keel = bilge_keel_length * bilge_keel_damping_section(
-            rho, beam, draft, sigma, og, bilge_keel_breadth, amplitude, omega, radius
+        bilge_keel = l_bk * bilge_keel_damping_section(
+            rho, beam, draft, sigma, og, b_bk, amplitude, omega, radius
         )
-    return RollDampingComponents(friction, eddy, lift, wave, bilge_keel)
+
+    flags = []
+    if amplitude > PAPER_EXAMPLE_AMPLITUDE:
+        flags.append(FLAG_AMPLITUDE_ABOVE_PAPER_EXAMPLES)
+    if radius > 0.0:
+        flags.append(FLAG_EQ35_WITH_ROUNDED_BILGE)
+    citations = _cite(
+        "eqs. 4-5, p. 918 (equivalent linearisation and component sum)",
+        "eqs. 8-10, 12, pp. 919-920 (skin friction)",
+        "eqs. 35-36, p. 924 (sharp-cornered barge eddy making)",
+        "eqs. 37-38, p. 924 (lift)",
+        "eqs. 39-43, p. 925 (wave damping at speed)",
+    )
+    if b_bk > 0.0:
+        citations += _cite("eqs. 46-60, pp. 926-927 (bilge keel)")
+    return RollDampingComponents(
+        friction, eddy, lift, wave, bilge_keel, tuple(flags), citations
+    )
