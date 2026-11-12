@@ -226,6 +226,14 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: actions/checkout@v4
 
+      # The self-hosted runner provides python3 but no `python`; the baseline
+      # step below needs an interpreter on PATH, as the other jobs provide.
+      - name: Set up Python
+        if: github.ref == 'refs/heads/main'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Download sweep results
         if: github.ref == 'refs/heads/main'
         uses: actions/download-artifact@v4

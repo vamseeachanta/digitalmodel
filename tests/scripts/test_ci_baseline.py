@@ -128,7 +128,8 @@ def test_health_workflow_names_and_soft_failure_are_preserved():
     }
     steps = workflow['jobs']['sweep-result']['steps']
     assert [step['name'] for step in steps] == [
-        'Summarize shard results', 'Checkout baseline tools', 'Download sweep results',
+        'Summarize shard results', 'Checkout baseline tools', 'Set up Python',
+        'Download sweep results',
         'Publish main baseline', 'Upload main baseline', 'Update main health',
         'Enforce full sweep result',
     ]
@@ -297,6 +298,18 @@ def test_workflow_keeps_required_name_and_infrastructure_failures():
         assert "exit 1" in block
     assert '"$CI_BASELINE_MODE" = "report"' in step["run"]
     assert "tests/scripts/test_ci_baseline.py" in str(workflow["jobs"]["ci-harness-tests"])
+
+
+def test_sweep_bare_python_steps_follow_setup_python():
+    """Self-hosted runners lack a `python` executable; setup-python provides it."""
+    workflow = yaml.safe_load((ROOT / ".github/workflows/full-matrix-sweep.yml").read_text())
+    for job_id, job in workflow["jobs"].items():
+        provided = False
+        for step in job["steps"]:
+            provided = provided or str(step.get("uses", "")).startswith("actions/setup-python@")
+            lines = str(step.get("run", "")).splitlines()
+            if any(line.strip().startswith("python ") for line in lines):
+                assert provided, f"{job_id}: {step['name']} runs python before setup-python"
 
 
 def test_junit_missing_failure_details_is_unparsed(tmp_path):
