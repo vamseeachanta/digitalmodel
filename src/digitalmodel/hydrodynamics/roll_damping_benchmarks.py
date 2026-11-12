@@ -13,7 +13,8 @@ Loads the public tables under ``data/roll_damping/``:
   held in the private llm-wiki.
 
 Contracts follow ``digitalmodel.riser_database.loader``: known file names
-only, a size cap per file, ``yaml.safe_load``, and fail-closed errors.
+only, a size cap per file, a safe YAML loader that rejects duplicate
+keys, unique CSV headers, and fail-closed errors.
 :func:`verdict` grades a calculated value against a reference with the bands
 of one quantity and never clamps an unknown quantity.
 """
@@ -95,7 +96,10 @@ def _read_text(root: Path, name: str) -> str:
 
 def _rows(root: Path, name: str, required: tuple[str, ...]) -> list[dict[str, str]]:
     reader = csv.DictReader(_read_text(root, name).splitlines())
-    missing = [c for c in required if c not in (reader.fieldnames or [])]
+    header = reader.fieldnames or []
+    if len(set(header)) != len(header):
+        raise RollDampingDataError(table=name, reason=f"duplicate column names in header {header}")
+    missing = [c for c in required if c not in header]
     if missing:
         raise RollDampingDataError(table=name, reason=f"missing columns {missing}")
     return list(reader)
@@ -178,8 +182,25 @@ def _check_band(band: Band) -> Band:
     return band
 
 
+class _UniqueKeyLoader(yaml.SafeLoader):
+    """Safe loader that rejects duplicate mapping keys instead of overwriting."""
+
+
+def _unique_mapping(loader: yaml.SafeLoader, node: yaml.MappingNode, deep: bool = False) -> dict:
+    keys = set()
+    for key_node, _ in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if key in keys:
+            raise RollDampingDataError(table="acceptance_criteria.yaml", reason=f"duplicate key {key!r}")
+        keys.add(key)
+    return loader.construct_mapping(node, deep=deep)
+
+
+_UniqueKeyLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _unique_mapping)
+
+
 def load_acceptance_criteria(root: Path = DEFAULT_DATA_ROOT) -> dict[str, Band]:
-    doc = yaml.safe_load(_read_text(root, "acceptance_criteria.yaml"))
+    doc = yaml.load(_read_text(root, "acceptance_criteria.yaml"), Loader=_UniqueKeyLoader)  # noqa: S506 (safe subclass)
     if not isinstance(doc, dict) or not isinstance(doc.get("quantities"), dict):
         raise RollDampingDataError(table="acceptance_criteria.yaml", reason="no quantities mapping")
     out = {}

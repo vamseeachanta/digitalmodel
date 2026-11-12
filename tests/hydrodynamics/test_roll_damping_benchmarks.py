@@ -268,3 +268,21 @@ def test_wiki_tables_reject_unknown_source(tmp_path: Path):
     path.write_text(path.read_text(encoding="utf-8").replace("chakrabarti2001-c1,chakrabarti2001", "chakrabarti2001-c1,nosuch"), encoding="utf-8")
     with pytest.raises(rb.RollDampingDataError, match="unknown source_id"):
         rb.load_wiki_tables(tmp_path / "rd")
+
+
+def test_duplicate_csv_header_is_rejected(tmp_path: Path):
+    shutil.copytree(rb.DEFAULT_DATA_ROOT, tmp_path / "rd")
+    path = tmp_path / "rd" / "benchmark_cases.csv"
+    lines = path.read_text(encoding="utf-8").splitlines()
+    lines = [lines[0] + ",damping_pct"] + [ln + ",2.0" for ln in lines[1:]]
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    with pytest.raises(rb.RollDampingDataError, match="duplicate column"):
+        rb.load_benchmark_cases(tmp_path / "rd")
+
+
+def test_duplicate_yaml_key_is_rejected(tmp_path: Path):
+    shutil.copytree(rb.DEFAULT_DATA_ROOT, tmp_path / "rd")
+    path = tmp_path / "rd" / "acceptance_criteria.yaml"
+    path.write_text(path.read_text(encoding="utf-8").replace("    one_sided: true", "    one_sided: false\n    one_sided: true"), encoding="utf-8")
+    with pytest.raises(rb.RollDampingDataError, match="duplicate key"):
+        rb.load_acceptance_criteria(tmp_path / "rd")
