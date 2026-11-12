@@ -305,3 +305,42 @@ def test_no_published_coefficient_table_in_the_study():
     assert "215.695" not in text  # Q6 values live in the private wiki
     ids = {r["table_id"] for r in rb.load_wiki_tables()}
     assert "ittc2024-simplified-ikeda-q6" in ids
+
+
+def _fake_q6_wiki(tmp_path: Path, body: str) -> Path:
+    rel = {r["table_id"]: r["wiki_path"] for r in rb.load_wiki_tables()}["ittc2024-simplified-ikeda-q6"]
+    target = tmp_path / "wiki" / rel
+    target.parent.mkdir(parents=True)
+    target.write_text(body, encoding="utf-8")
+    return tmp_path / "wiki"
+
+
+# Synthetic coefficients only (not the published table): c0 = 1, others 0.
+_Q6_HEADER = "row,c4,c3,c2,c1,c0,note\n"
+_Q6_ROWS = "".join(f"{k},0,0,0,0,1,x\n" for k in ("q6_ae", "q6_be1", "q6_be2"))
+
+
+def test_q6_loader_rejects_duplicate_rows_and_headers(tmp_path: Path):
+    mod = _study()
+    wiki = _fake_q6_wiki(tmp_path / "a", _Q6_HEADER + _Q6_ROWS + "q6_ae,0,0,0,0,2,dup\n")
+    with pytest.raises(rb.RollDampingDataError, match="duplicate Q6 row"):
+        mod._load_q6(wiki)
+    wiki = _fake_q6_wiki(tmp_path / "b", "row,c4,c3,c2,c1,c0,c0\n" + _Q6_ROWS)
+    with pytest.raises(rb.RollDampingDataError, match="bad Q6 header"):
+        mod._load_q6(wiki)
+    wiki = _fake_q6_wiki(tmp_path / "c", _Q6_HEADER + "q6_ae,0,0,0,0,1,x\n")
+    with pytest.raises(rb.RollDampingDataError, match="missing Q6 rows"):
+        mod._load_q6(wiki)
+
+
+def test_container_rows_are_reported_with_and_without_the_wiki(tmp_path: Path):
+    mod = _study()
+    rows = [r for r in mod.reproduction_verdicts(mod.reproduction()) if r["row"] in ("9", "10")]
+    assert len(rows) == 4
+    assert all(r["colour"] == "not graded" and "--wiki-root" in r["reason"] for r in rows)
+    wiki = _fake_q6_wiki(tmp_path, _Q6_HEADER + _Q6_ROWS)
+    rep = mod.reproduction()
+    rep["container"] = mod.container_model(wiki)
+    rows = [r for r in mod.reproduction_verdicts(rep) if r["row"] in ("9", "10")]
+    assert len(rows) == 4
+    assert all(r["colour"] in ("green", "amber", "red") for r in rows)

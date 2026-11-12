@@ -165,12 +165,27 @@ def reproduction(wiki_root=None) -> dict:
 # Its Q6 coefficient table is held in the private wiki (pointer in
 # data/roll_damping/wiki_tables.csv) and read from the wiki root at run time.
 def _load_q6(wiki_root: Path) -> list[list[float]]:
-    from digitalmodel.hydrodynamics.roll_damping_benchmarks import load_wiki_tables
+    from digitalmodel.hydrodynamics.roll_damping_benchmarks import RollDampingDataError, load_wiki_tables
 
     rel = {r["table_id"]: r["wiki_path"] for r in load_wiki_tables()}["ittc2024-simplified-ikeda-q6"]
-    rows = {r["row"]: r for r in csv.DictReader((Path(wiki_root) / rel).read_text(encoding="utf-8").splitlines())}
+    reader = csv.DictReader((Path(wiki_root) / rel).read_text(encoding="utf-8").splitlines())
     cols = ("c4", "c3", "c2", "c1", "c0")
-    return [[float(rows[k][c]) for c in cols] for k in ("q6_ae", "q6_be1", "q6_be2")]
+    header = reader.fieldnames or []
+    if len(set(header)) != len(header) or any(c not in header for c in ("row", *cols)):
+        raise RollDampingDataError(table=rel, reason=f"bad Q6 header {header}")
+    rows: dict[str, dict] = {}
+    for r in reader:
+        if r["row"] in rows:
+            raise RollDampingDataError(table=rel, reason=f"duplicate Q6 row {r['row']!r}")
+        rows[r["row"]] = r
+    need = ("q6_ae", "q6_be1", "q6_be2")
+    missing = [k for k in need if k not in rows]
+    if missing:
+        raise RollDampingDataError(table=rel, reason=f"missing Q6 rows {missing}")
+    try:
+        return [[float(rows[k][c]) for c in cols] for k in need]
+    except (TypeError, ValueError) as exc:
+        raise RollDampingDataError(table=rel, reason=f"non-numeric Q6 value: {exc}") from None
 
 
 def _simplified_cr(q, x1, x2, x3, x4):
@@ -189,7 +204,8 @@ def container_model(wiki_root) -> dict:
     inertia = 2 * rho * cb * L * B * d * (B**2 + d**2) / 12
     out = {}
     if wiki_root is None:
-        return out  # rows 9 and 10 need the wiki table
+        # rows 9 and 10 need the Q6 table from the private wiki; report them as not graded
+        return {"missing": "Q6 table not available: run with --wiki-root"}
     q = _load_q6(wiki_root)
     for cm in (0.95, 0.97, 0.99):
         cr = _simplified_cr(q, B / d, cb, cm, 0.0)
@@ -380,12 +396,17 @@ def reproduction_verdicts(rep: dict) -> list[dict]:
         ("7", "Table 1 sectional formula, sigma 0.99, reduced rakes (0.225)", "printed_table_value", rep["t1_sectional_s099_R197"], 0.225, "no (station data not printed)"),
         ("8", "Barge 16.9 ft, total factor, zero speed (text 14 %)", "printed_table_value", 100 * rep["d169_eddy"], 14.0, "no (inertia, KG not printed)"),
     ]
-    for cm in [k for k in ("0.95", "0.99") if k in rep["container"]]:
-        c = rep["container"][cm]
-        rows.append(("9", f"Fig. 4 container-ship model, eddy part (about 2.7 %), C_M {cm}", "figure_read", c["eddy_pct"], 2.7, "no (sections, GM, inertia not printed)"))
-        rows.append(("10", f"Fig. 4 container-ship model, bilge-keel part (about 2.1 %), C_M {cm}", "figure_read", c["bilge_keel_pct"], 2.1, "no (keel section not printed)"))
+    cont = rep["container"]
+    for cm in ("0.95", "0.99"):
+        c = cont.get(cm, {})
+        rows.append(("9", f"Fig. 4 container-ship model, eddy part (about 2.7 %), C_M {cm}", "figure_read", c.get("eddy_pct"), 2.7, "no (sections, GM, inertia not printed)"))
+        rows.append(("10", f"Fig. 4 container-ship model, bilge-keel part (about 2.1 %), C_M {cm}", "figure_read", c.get("bilge_keel_pct"), 2.1, "no (keel section not printed)"))
     out = []
     for n, item, qty, calc, ref, inputs in rows:
+        if calc is None:
+            out.append(dict(row=n, item=item, quantity=qty, calculated=None, reference=ref, inputs=inputs,
+                            colour="not graded", reason=cont.get("missing", "no calculated value")))
+            continue
         out.append(dict(row=n, item=item, quantity=qty, calculated=calc, reference=ref,
                         inputs=inputs, **verdict(qty, calc, ref)))
     return out
