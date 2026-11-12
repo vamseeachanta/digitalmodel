@@ -1,0 +1,168 @@
+LineTypes:
+- Name: chain_76mm_R3
+  Category: General
+  OD: 0.152
+  ID: 0
+  MassPerUnitLength: 0.1264944
+  EA: 493270.39999999997
+  EI:
+  - 0
+  - ~
+  GJ: 0
+  PoissonRatio: 0.5
+  Cd:
+  - 2.4
+  - ~
+  - 0.008
+  Ca:
+  - 1.0
+  - ~
+  - 0
+  Cm:
+  - ~
+  - ~
+  - ~
+  CompressionIsLimited: 'No'
+  AllowableTension: 4884.278016
+  SeabedLateralFrictionCoefficient: 1.0
+  SeabedAxialFrictionCoefficient: ~
+  RayleighDampingCoefficients: (no damping)
+Vessels:
+- Name: FPSO
+  Connection: Free
+  InitialHeading: 0
+  PrimaryMotion: None
+  SuperimposedMotion: None
+  IncludedInStatics: None
+  VesselType: Vessel Type1
+  InitialPosition:
+  - 0.0
+  - 0.0
+  - 0.0
+  Length: ~
+Lines:
+- Name: Leg1
+  EndAConnection: Fixed
+  EndBConnection: FPSO
+  EndAX: 848.0
+  EndAY: 212.0
+  EndAZ: -200.0
+  EndBX: 40.0
+  EndBY: 10.0
+  EndBZ: -10.0
+  NumberOfSections: 1
+  LineType, Length, NumberOfSegments:
+  - - chain_76mm_R3
+    - 900.0
+    - 90
+  StaticsStep1: Catenary
+- Name: Leg2
+  EndAConnection: Fixed
+  EndBConnection: FPSO
+  EndAX: -848.0
+  EndAY: 212.0
+  EndAZ: -200.0
+  EndBX: -40.0
+  EndBY: 10.0
+  EndBZ: -10.0
+  NumberOfSections: 1
+  LineType, Length, NumberOfSegments:
+  - - chain_76mm_R3
+    - 900.0
+    - 90
+  StaticsStep1: Catenary
+- Name: Leg3
+  EndAConnection: Fixed
+  EndBConnection: FPSO
+  EndAX: -848.0
+  EndAY: -212.0
+  EndAZ: -200.0
+  EndBX: -40.0
+  EndBY: -10.0
+  EndBZ: -10.0
+  NumberOfSections: 1
+  LineType, Length, NumberOfSegments:
+  - - chain_76mm_R3
+    - 900.0
+    - 90
+  StaticsStep1: Catenary
+- Name: Leg4
+  EndAConnection: Fixed
+  EndBConnection: FPSO
+  EndAX: 848.0
+  EndAY: -212.0
+  EndAZ: -200.0
+  EndBX: 40.0
+  EndBY: -10.0
+  EndBZ: -10.0
+  NumberOfSections: 1
+  LineType, Length, NumberOfSegments:
+  - - chain_76mm_R3
+    - 900.0
+    - 90
+  StaticsStep1: Catenary
+Winches:
+- Name: Winch_Leg1
+  Connection:
+  - FPSO
+  - Leg1
+  ConnectionPoint:
+  - - 40.0
+    - 10.0
+    - -10.0
+  - - 0
+    - 0
+    - 0
+  ConnectionzRelativeTo:
+  - ~
+  - End B
+  WinchControl: Specified tension
+  Tension: 500.0
+- Name: Winch_Leg2
+  Connection:
+  - FPSO
+  - Leg2
+  ConnectionPoint:
+  - - -40.0
+    - 10.0
+    - -10.0
+  - - 0
+    - 0
+    - 0
+  ConnectionzRelativeTo:
+  - ~
+  - End B
+  WinchControl: Specified tension
+  Tension: 500.0
+- Name: Winch_Leg3
+  Connection:
+  - FPSO
+  - Leg3
+  ConnectionPoint:
+  - - -40.0
+    - -10.0
+    - -10.0
+  - - 0
+    - 0
+    - 0
+  ConnectionzRelativeTo:
+  - ~
+  - End B
+  WinchControl: Specified tension
+  Tension: 500.0
+- Name: Winch_Leg4
+  Connection:
+  - FPSO
+  - Leg4
+  ConnectionPoint:
+  - - 40.0
+    - -10.0
+    - -10.0
+  - - 0
+    - 0
+    - 0
+  ConnectionzRelativeTo:
+  - ~
+  - End B
+  WinchControl: Specified tension
+  Tension: 500.0

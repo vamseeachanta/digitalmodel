@@ -1,0 +1,79 @@
+# Typed mooring example: four-leg catenary chain spread mooring of a vessel.
+#
+# The typed `mooring` section carries the legs; the `generic` section carries
+# the host vessel that the fairleads connect to (digitalmodel #3972).
+# Leg data are illustrative input values, not a design: grade R3 76 mm
+# chain, 900 m per leg, 200 m water depth, pretension 500 kN per leg.
+# Line-type defaults come from routers/mooring_router.py; see #3982 for the
+# open chain-hydrodynamics defect that affects the drag values.
+#
+# Anchor radius (hand check, inextensible catenary, no seabed friction):
+#   chain mass m = 0.0219e-3 x 76^2 = 0.1265 te/m; router OD = 2d = 0.152 m,
+#   displaced 1.025 x pi x 0.152^2 / 4 = 0.0186 te/m; submerged w = 1.058 kN/m.
+#   h = 190 m (fairlead z -10 m, seabed z -200 m), top tension T = 500 kN:
+#   H = T - w h = 299.0 kN; a = H / w = 282.6 m; suspended s = sqrt(h^2 + 2 h a)
+#   = 378.8 m; suspended span x = a asinh(s / a) = 311.6 m; grounded 900 - s
+#   = 521.2 m; fairlead-to-anchor horizontal distance 832.9 m, placed radially
+#   along each fairlead azimuth from the vessel origin. Lay azimuth is left to
+#   the generator default: its reference end (anchor = End A here) is not
+#   established offline (see the run package in the PR).
+#
+# Generate:
+#   python -m digitalmodel.solvers.orcaflex.modular_generator generate \
+#       --input spec.yml --output modular/
+
+metadata:
+  name: "mooring_spread_catenary"
+  description: "Four-leg catenary chain spread mooring with a generic host vessel"
+  structure: mooring
+  operation: inplace
+  project: "OrcaFlex typed examples"
+  version: "1.0"
+
+environment:
+  water:
+    depth: 200                    # Water depth (m)
+    density: 1.025                # Seawater density (te/m3)
+  seabed:
+    stiffness:
+      normal: 100                 # Normal stiffness (kN/m/m2)
+      shear: 100                  # Shear stiffness (kN/m/m2)
+
+mooring:
+  lines:
+    - name: "Leg1"
+      segments:
+        - {type: chain, diameter: 0.076, length: 900, grade: R3, segment_length: 10}
+      anchor: {type: anchor, position: [848.0, 212.0, -200]}
+      fairlead: {type: fairlead, position: [40, 10, -10], vessel: "FPSO"}
+      pretension: 500
+    - name: "Leg2"
+      segments:
+        - {type: chain, diameter: 0.076, length: 900, grade: R3, segment_length: 10}
+      anchor: {type: anchor, position: [-848.0, 212.0, -200]}
+      fairlead: {type: fairlead, position: [-40, 10, -10], vessel: "FPSO"}
+      pretension: 500
+    - name: "Leg3"
+      segments:
+        - {type: chain, diameter: 0.076, length: 900, grade: R3, segment_length: 10}
+      anchor: {type: anchor, position: [-848.0, -212.0, -200]}
+      fairlead: {type: fairlead, position: [-40, -10, -10], vessel: "FPSO"}
+      pretension: 500
+    - name: "Leg4"
+      segments:
+        - {type: chain, diameter: 0.076, length: 900, grade: R3, segment_length: 10}
+      anchor: {type: anchor, position: [848.0, -212.0, -200]}
+      fairlead: {type: fairlead, position: [40, -10, -10], vessel: "FPSO"}
+      pretension: 500
+
+generic:
+  vessels:
+    - name: "FPSO"
+      vessel_type: "Vessel Type1"
+      connection: "Free"
+      initial_position: [0, 0, 0]
+      properties:
+        InitialHeading: 0
+        PrimaryMotion: "None"
+        SuperimposedMotion: "None"
+        IncludedInStatics: "None"

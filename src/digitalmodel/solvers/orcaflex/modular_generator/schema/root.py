@@ -82,7 +82,8 @@ class ProjectInputSpec(BaseModel):
         Cross-validate model components for physical consistency.
 
         Checks:
-        - One domain must be defined; risers may retain a generic fallback
+        - One domain must be defined; risers may retain a generic fallback and
+          moorings may carry generic host objects (vessels, buoys)
         - Water depth consistency with seabed features
         - Current profile points must be at or above the water bottom
         - Tug positions relative to pipeline length
@@ -104,7 +105,14 @@ class ProjectInputSpec(BaseModel):
             self.riser is not None and self.generic is not None
             and self.pipeline is None and self.mooring is None
         )
-        if model_types_defined > 1 and not riser_with_fallback:
+        # A typed mooring names the vessel or buoy its fairleads connect to but
+        # cannot define it; the generic section carries those host objects and
+        # the mooring router merges its lines into that generic model.
+        mooring_with_hosts = (
+            self.mooring is not None and self.generic is not None
+            and self.pipeline is None and self.riser is None
+        )
+        if model_types_defined > 1 and not (riser_with_fallback or mooring_with_hosts):
             defined = []
             if self.pipeline is not None:
                 defined.append("pipeline")
