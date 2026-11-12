@@ -111,6 +111,22 @@ def test_rigid_mass_matrix_symmetric(sources):
     assert mass[0, 4] == pytest.approx(model.mass * model.cog[2])
 
 
+def test_flexible_representation_checked_as_whole_body(sources):
+    """A flexible hull holds the platform only; the checks add tower and RNA mass."""
+    spec = copy.deepcopy(build_spec(*sources))
+    fowt = spec["fowt"]
+    fowt["representation"] = "flexible"
+    fowt["tower"] = {"base_elevation": 15.0, "sections": [
+        {"length": 129.386, "outer_diameter": 8.0, "mass_per_length": 10.0,
+         "bending_stiffness": 1.0e9, "axial_stiffness": 1.0e8, "torsional_stiffness": 1.0e9}]}
+    fowt["rna"] = {"mass": 945.77, "centre_of_mass_from_tower_top": [-7.32, 0.0, 4.6],
+                   "inertia_about_centre_of_mass": [[4.0e5, 0, 0], [0, 2.7e5, 0], [0, 0, 2.9e5]]}
+    model = model_from_spec(spec)
+    platform = fowt["hull"]["mass"]
+    assert model.mass == pytest.approx((platform + 1293.86 + 945.77) * 1000.0)
+    assert model.mass > platform * 1000.0
+
+
 # ---------------------------------------------------- still water (LC0)
 def test_lc0_equilibrium_converged(results):
     assert np.max(np.abs(results["still_water"]["residual"])) < 1.0
