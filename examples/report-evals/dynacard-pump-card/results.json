@@ -10,7 +10,7 @@
  },
  "code": {
   "repo": "https://github.com/vamseeachanta/digitalmodel",
-  "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+  "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
   "paths": [
    "src/digitalmodel/marine_ops/artificial_lift/dynacard",
    "tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json",
@@ -24,7 +24,7 @@
    "id": "source_0",
    "description": "Public example surface card, rod string and stored pump card",
    "source": "Repository field fixture",
-   "url": "https://github.com/vamseeachanta/digitalmodel/blob/484b674ade72817359dc135344dfd1f2411b488b/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json",
+   "url": "https://github.com/vamseeachanta/digitalmodel/blob/b0c6503e483a95a0bbc67665d03f9044e7cb6fcd/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json",
    "licence": "MIT",
    "version_or_date": "2026-11-12",
    "sha256_published": "6bb1139455b95d0f27ce254b1e10571d454f3fd0535de732bd73813b9a09adc5",
@@ -48,7 +48,7 @@
    "id": "source_2",
    "description": "Recorded shape-only plate score",
    "source": "Repository benchmark",
-   "url": "https://github.com/vamseeachanta/digitalmodel/blob/484b674ade72817359dc135344dfd1f2411b488b/tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json",
+   "url": "https://github.com/vamseeachanta/digitalmodel/blob/b0c6503e483a95a0bbc67665d03f9044e7cb6fcd/tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json",
    "licence": "MIT",
    "version_or_date": "2026-11-12",
    "sha256_published": "db2418fee26e577ba384f9a879ff162a44291e192123e8fb62bd455dae727cf7",
@@ -153,7 +153,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -171,7 +171,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.5
    },
@@ -189,7 +189,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.5
    },
@@ -207,7 +207,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -225,7 +225,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.0005
    },
@@ -243,7 +243,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.5
    },
@@ -261,7 +261,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.5
    },
@@ -279,7 +279,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.5
    },
@@ -297,7 +297,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -315,7 +315,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -333,7 +333,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -351,7 +351,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -369,7 +369,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.05
    },
@@ -387,7 +387,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.0005
    },
@@ -405,7 +405,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.0005
    },
@@ -423,7 +423,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.0005
    },
@@ -441,7 +441,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -459,7 +459,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -477,7 +477,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -495,7 +495,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -513,7 +513,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -531,7 +531,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -549,7 +549,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -567,7 +567,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -585,7 +585,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -603,7 +603,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -621,7 +621,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -639,7 +639,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -657,7 +657,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -675,7 +675,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -693,7 +693,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -711,7 +711,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -729,7 +729,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -747,7 +747,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -765,7 +765,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -783,7 +783,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -801,7 +801,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -819,7 +819,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -837,7 +837,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -855,7 +855,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -873,7 +873,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -891,7 +891,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -909,7 +909,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -927,7 +927,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -945,7 +945,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -963,7 +963,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -981,7 +981,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -999,7 +999,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1017,7 +1017,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1035,7 +1035,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1053,7 +1053,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1071,7 +1071,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1089,7 +1089,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1107,7 +1107,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1125,7 +1125,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1143,7 +1143,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1161,7 +1161,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1179,7 +1179,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1197,7 +1197,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1215,7 +1215,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1233,7 +1233,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1251,7 +1251,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1269,7 +1269,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1287,7 +1287,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1305,7 +1305,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1323,7 +1323,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1341,7 +1341,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1359,7 +1359,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1377,7 +1377,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1395,7 +1395,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1413,7 +1413,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1431,7 +1431,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1449,7 +1449,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1467,7 +1467,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1485,7 +1485,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1503,7 +1503,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1521,7 +1521,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1539,7 +1539,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1557,7 +1557,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1575,7 +1575,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1593,7 +1593,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1611,7 +1611,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1629,7 +1629,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1647,7 +1647,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1665,7 +1665,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1683,7 +1683,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1701,7 +1701,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1719,7 +1719,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1737,7 +1737,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1755,7 +1755,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1773,7 +1773,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1791,7 +1791,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1809,7 +1809,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1827,7 +1827,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1845,7 +1845,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1863,7 +1863,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1881,7 +1881,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1899,7 +1899,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1917,7 +1917,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1935,7 +1935,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1953,7 +1953,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1971,7 +1971,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -1989,7 +1989,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2007,7 +2007,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2025,7 +2025,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2043,7 +2043,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2061,7 +2061,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2079,7 +2079,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2097,7 +2097,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2115,7 +2115,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2133,7 +2133,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2151,7 +2151,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2169,7 +2169,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2187,7 +2187,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2205,7 +2205,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2223,7 +2223,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2241,7 +2241,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2259,7 +2259,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2277,7 +2277,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2295,7 +2295,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2313,7 +2313,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2331,7 +2331,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2349,7 +2349,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2367,7 +2367,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2385,7 +2385,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2403,7 +2403,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2421,7 +2421,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2439,7 +2439,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2457,7 +2457,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2475,7 +2475,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2493,7 +2493,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2511,7 +2511,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2529,7 +2529,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2547,7 +2547,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2565,7 +2565,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2583,7 +2583,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2601,7 +2601,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2619,7 +2619,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2637,7 +2637,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2655,7 +2655,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2673,7 +2673,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2691,7 +2691,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2709,7 +2709,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2727,7 +2727,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2745,7 +2745,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2763,7 +2763,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2781,7 +2781,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2799,7 +2799,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2817,7 +2817,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2835,7 +2835,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2853,7 +2853,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2871,7 +2871,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2889,7 +2889,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2907,7 +2907,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2925,7 +2925,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2943,7 +2943,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2961,7 +2961,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2979,7 +2979,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -2997,7 +2997,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3015,7 +3015,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3033,7 +3033,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3051,7 +3051,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3069,7 +3069,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3087,7 +3087,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3105,7 +3105,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3123,7 +3123,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3141,7 +3141,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3159,7 +3159,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3177,7 +3177,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3195,7 +3195,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3213,7 +3213,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3231,7 +3231,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3249,7 +3249,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3267,7 +3267,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3285,7 +3285,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3303,7 +3303,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3321,7 +3321,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3339,7 +3339,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3357,7 +3357,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3375,7 +3375,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3393,7 +3393,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3411,7 +3411,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3429,7 +3429,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3447,7 +3447,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3465,7 +3465,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3483,7 +3483,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3501,7 +3501,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3519,7 +3519,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3537,7 +3537,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3555,7 +3555,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3573,7 +3573,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3591,7 +3591,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3609,7 +3609,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3627,7 +3627,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3645,7 +3645,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3663,7 +3663,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3681,7 +3681,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3699,7 +3699,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3717,7 +3717,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3735,7 +3735,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3753,7 +3753,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3771,7 +3771,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3789,7 +3789,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3807,7 +3807,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3825,7 +3825,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3843,7 +3843,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3861,7 +3861,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3879,7 +3879,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3897,7 +3897,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3915,7 +3915,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3933,7 +3933,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3951,7 +3951,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3969,7 +3969,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -3987,7 +3987,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4005,7 +4005,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4023,7 +4023,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4041,7 +4041,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4059,7 +4059,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4077,7 +4077,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4095,7 +4095,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4113,7 +4113,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4131,7 +4131,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4149,7 +4149,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4167,7 +4167,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4185,7 +4185,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4203,7 +4203,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4221,7 +4221,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4239,7 +4239,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4257,7 +4257,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4275,7 +4275,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4293,7 +4293,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4311,7 +4311,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4329,7 +4329,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4347,7 +4347,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4365,7 +4365,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4383,7 +4383,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4401,7 +4401,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4419,7 +4419,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4437,7 +4437,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4455,7 +4455,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4473,7 +4473,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4491,7 +4491,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4509,7 +4509,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4527,7 +4527,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4545,7 +4545,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4563,7 +4563,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4581,7 +4581,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4599,7 +4599,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4617,7 +4617,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4635,7 +4635,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4653,7 +4653,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4671,7 +4671,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4689,7 +4689,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4707,7 +4707,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4725,7 +4725,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },
@@ -4743,7 +4743,7 @@
    "source": "Retained public example well; fixed repository inputs",
    "method": "examples/report-evals/dynacard-pump-card/analysis.py run(); package calculations and default solver",
    "repo": "https://github.com/vamseeachanta/digitalmodel",
-   "commit": "484b674ade72817359dc135344dfd1f2411b488b",
+   "commit": "b0c6503e483a95a0bbc67665d03f9044e7cb6fcd",
    "tolerance": {
     "abs": 0.005
    },

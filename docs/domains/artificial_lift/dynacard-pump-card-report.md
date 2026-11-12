@@ -146,7 +146,7 @@ Table 6. Minimum mean distance after independent axis normalisation, resampling 
 
 ## Appendix A Sensitivity analysis
 
-Each input family is changed independently about the public example well. Rod length and pump depth are scaled together; all taper diameters are scaled together while weight per length is scaled with area to preserve effective density. Each entry is the output change as a percentage of its base value. The sensitivity factor is the difference of the positive and negative output changes divided by the difference of the input percentages. A zero is printed as 0.00; the wider central difference exposes nonlinearity. A response is marked stepped where the two factors differ by more than 0.10, or where the result moves the same way for a decrease and an increase of the input. Such a result moves in jumps, because the corner points that define it shift between samples; its factor is not a reliable slope.
+Each input family is changed independently about the public example well. Rod length and pump depth are scaled together; all taper diameters are scaled together while weight per length is scaled with area to preserve effective density. Each entry is the output change as a percentage of its base value. The sensitivity factor is the difference of the positive and negative output changes divided by the difference of the input percentages. A zero is printed as 0.00; the wider central difference exposes nonlinearity. A response is marked stepped where the two factors differ by more than 0.10, or where the result moves the same way, by more than 0.01 %, for a decrease and an increase of the input. Such a result moves in jumps, because the corner points that define it shift between samples; its factor is not a reliable slope.
 
 | Input | Output | −5 % | −1 % | 1 % | 5 % | Factor at ±1 % | Factor at ±5 % | Response |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -199,9 +199,9 @@ The [reusable prompt](../../../examples/report-evals/dynacard-pump-card/PROMPT.m
 
 | Data | Source | Licence | Version or date | Link |
 | --- | --- | --- | --- | --- |
-| Public example surface card, rod string and stored pump card | Repository field fixture | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/484b674ade72817359dc135344dfd1f2411b488b/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json) |
+| Public example surface card, rod string and stored pump card | Repository field fixture | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/b0c6503e483a95a0bbc67665d03f9044e7cb6fcd/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json) |
 | Public reference shapes | Public diagnostic plate | CC0 1.0 | 2026-10-11 | [Source](https://doi.org/10.17632/hnfwm9mjs6.1) |
-| Recorded shape-only plate score | Repository benchmark | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/484b674ade72817359dc135344dfd1f2411b488b/tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json) |
+| Recorded shape-only plate score | Repository benchmark | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/b0c6503e483a95a0bbc67665d03f9044e7cb6fcd/tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json) |
 
 Table B1. Retained data sources; input and source digests are recorded by the analysis and eval.
 

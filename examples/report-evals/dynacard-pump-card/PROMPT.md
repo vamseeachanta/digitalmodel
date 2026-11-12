@@ -15,7 +15,7 @@ fillage from it. Do it first on the public example well, then on my card.
 
 Inputs (all public, no account needed):
 - Code and data: https://github.com/vamseeachanta/digitalmodel at commit
-  484b674ade72817359dc135344dfd1f2411b488b, MIT licence.
+  b0c6503e483a95a0bbc67665d03f9044e7cb6fcd, MIT licence.
 - The public example well:
   tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json in that
   repository. It is an anonymised field well: a measured surface card, a
@@ -29,8 +29,9 @@ Inputs (all public, no account needed):
 Steps:
 1. git clone https://github.com/vamseeachanta/digitalmodel
    cd digitalmodel
-   git fetch origin 484b674ade72817359dc135344dfd1f2411b488b || git fetch origin refs/pull/3969/head
-   git checkout 484b674ade72817359dc135344dfd1f2411b488b
+   git fetch origin b0c6503e483a95a0bbc67665d03f9044e7cb6fcd || git fetch origin refs/pull/3969/head
+   git checkout b0c6503e483a95a0bbc67665d03f9044e7cb6fcd
+   (The files at that commit can name an earlier pin; the values are the same.)
    uv sync --extra test
 2. Run the public example and keep its output and figure:
    PYTHONPATH=src uv run --no-sync python examples/report-evals/dynacard-pump-card/analysis.py --out analysis.json --figure figure.png
@@ -113,7 +114,7 @@ for the public example well is not an uncertainty bound for a different card.
 | Fluid density | 0.00 | 0.00 | 0.00 | 0.22 | 0.00 |
 | Pump diameter | < 0.01 | < 0.01 | < 0.01 | < 0.01 | 2.00 |
 
-Sensitivity factors on the public example well: % change in the result per 1 % change in the input, from the ±1 % steps. * stepped response: the ±1 % and ±5 % factors differ by more than 0.10, or the result moves the same way for a decrease and an increase; use the full table in the report. < 0.01 marks a nonzero magnitude below the resolution.
+Sensitivity factors on the public example well: % change in the result per 1 % change in the input, from the ±1 % steps. * stepped response: the ±1 % and ±5 % factors differ by more than 0.10, or the result moves the same way, by more than 0.01 %, for a decrease and an increase; use the full table in the report. < 0.01 marks a nonzero magnitude below the resolution.
 
 You cannot:
 - Name a pump fault with a stated field accuracy: every shape label is a HYPOTHESIS; field accuracy is NOT_EVALUATED because independent labelled field cards are unavailable.
