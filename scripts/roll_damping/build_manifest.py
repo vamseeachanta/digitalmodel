@@ -23,7 +23,7 @@ def main() -> None:
             entry["quantities"] = len(yaml.safe_load(raw)["quantities"])
         tables[name.rsplit(".", 1)[0]] = entry
     doc = {"generated_by": "scripts/roll_damping/build_manifest.py", "route": "public", "tables": tables}
-    (ROOT / "manifest.yaml").write_text(yaml.safe_dump(doc, sort_keys=False), encoding="utf-8")
+    (ROOT / "manifest.yaml").write_bytes(yaml.safe_dump(doc, sort_keys=False).encode("utf-8"))
 
 
 if __name__ == "__main__":

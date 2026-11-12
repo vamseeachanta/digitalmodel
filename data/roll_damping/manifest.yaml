@@ -11,8 +11,8 @@ tables:
     rows: 7
   method_matrix:
     file: method_matrix.csv
-    sha256: e7ae859d3b4de51397754e196f0441fc64b9af1409f815bdb1446b7096d0effe
-    rows: 12
+    sha256: 468383401c60496d8ab884e6a8e22248835ac164e24254493c77847dcebc024d
+    rows: 13
   wiki_tables:
     file: wiki_tables.csv
     sha256: 8f29a28e3587c6cb067c43b5fab83d9255f7c36df8de7317d1a4c889e7fc8754
