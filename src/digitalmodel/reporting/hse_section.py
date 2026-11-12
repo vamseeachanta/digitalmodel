@@ -112,10 +112,16 @@ def check_consistency(markdown: str, sidecar: dict) -> List[str]:
     """Structural agreement between the appendix text and its sidecar.
 
     Each data source in the sidecar must appear in the text with its link and
-    the date it was read, and each reference must be printed. This does not
-    prove any number: the counts and case statements are checked where the
-    section is generated.
+    the date it was read, and each reference must be printed. Only the text
+    that is placed in the report counts: text before the first subsection is
+    not placed, and a repeated or misplaced subsection is refused. This does
+    not prove any number: the counts and case statements are checked where
+    the section is generated.
     """
+    try:
+        markdown = "\n".join(body for _, body in _subsections(markdown).values())
+    except ValueError as exc:
+        return [str(exc)]
     problems: List[str] = []
     for src in sidecar.get("sources") or []:
         name = src.get("source_id", "?")
@@ -204,33 +210,50 @@ def markdown_to_html(text: str) -> str:
 _HEADING = re.compile(r"^### ([A-Z])\.(\d) (.+)$", re.MULTILINE)
 
 
-def hse_content(markdown: str) -> Dict[str, str]:
-    """Split the generated appendix into the six slots, as HTML.
+def _subsections(markdown: str) -> Dict[int, tuple]:
+    """Letter and retained text of each subsection, keyed by its number.
 
-    Raises ``ValueError`` if a subsection is missing or its heading differs
-    from the fixed one.
+    Raises ``ValueError`` for a repeated number, more than one appendix letter,
+    or a missing, renamed or empty subsection.
     """
     marks = list(_HEADING.finditer(markdown))
-    found = {
-        int(m.group(2)): (m.group(3).strip(), m.end(), i, m.group(1))
-        for i, m in enumerate(marks)
-    }
-    content: Dict[str, str] = {}
-    for key, (n, heading) in HSE_BLOCKS.items():
+    numbers = [int(m.group(2)) for m in marks]
+    repeated = sorted({n for n in numbers if numbers.count(n) > 1})
+    if repeated:
+        raise ValueError(f"HSE appendix: subsection {repeated[0]} appears twice")
+    if len({m.group(1) for m in marks}) > 1:
+        raise ValueError("HSE appendix: subsections carry different letters")
+    found = {int(m.group(2)): (i, m) for i, m in enumerate(marks)}
+    out: Dict[int, tuple] = {}
+    for n, heading in HSE_BLOCKS.values():
         if n not in found:
             raise ValueError(f"HSE appendix: subsection {n} ({heading}) is missing")
-        got, start, idx, letter = found[n]
+        idx, mark = found[n]
+        got = mark.group(3).strip()
         if got != heading:
             raise ValueError(
                 f"HSE appendix: subsection {n} is {got!r}, not {heading!r}"
             )
         end = marks[idx + 1].start() if idx + 1 < len(marks) else len(markdown)
-        body = markdown[start:end].strip()
+        body = markdown[mark.end() : end].strip()
         if not body:
             raise ValueError(f"HSE appendix: subsection {n} ({heading}) is empty")
-        content[key] = f"<h3>{letter}.{n} {html.escape(got)}</h3>" + markdown_to_html(
-            body
-        )
+        out[n] = (mark.group(1), body)
+    return out
+
+
+def hse_content(markdown: str) -> Dict[str, str]:
+    """Split the generated appendix into the six slots, as HTML.
+
+    Raises ``ValueError`` if a subsection is missing, empty or repeated, or
+    its heading differs from the fixed one.
+    """
+    parts = _subsections(markdown)
+    content: Dict[str, str] = {}
+    for key, (n, heading) in HSE_BLOCKS.items():
+        letter, body = parts[n]
+        title = f"<h3>{letter}.{n} {html.escape(heading)}</h3>"
+        content[key] = title + markdown_to_html(body)
     return content
 
 

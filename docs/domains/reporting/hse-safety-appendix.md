@@ -90,5 +90,9 @@ is done where the section is generated.
   `allow_open=True` the lesson and open-item checks are skipped.
 - `check_consistency` returns a problem when the text does not print a source
   with its link and date read, or a reference, that the sidecar lists.
+  Only the text of the six subsections counts, because only that text is
+  placed in the report. Text before the first subsection is not placed.
+- A subsection number that appears twice, or subsections with different
+  appendix letters, are refused.
 - Links are rendered only for plain `https` addresses made of URL characters.
   All other text is escaped, including quotation marks.

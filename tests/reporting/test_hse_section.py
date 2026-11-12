@@ -239,3 +239,47 @@ def test_load_refuses_text_that_lost_its_citation(tmp_path) -> None:
     md.with_suffix(".json").write_text(json.dumps(_sidecar()), encoding="utf-8")
     with pytest.raises(ValueError, match="not in the text"):
         load_hse_appendix(md)
+
+
+def _load(tmp_path, markdown: str):
+    md = tmp_path / "appendix.md"
+    md.write_text(markdown, encoding="utf-8")
+    md.with_suffix(".json").write_text(json.dumps(_sidecar()), encoding="utf-8")
+    return load_hse_appendix(md)
+
+
+def _split_at_last_heading(markdown: str) -> tuple:
+    head, _, tail = markdown.rpartition("### F.6 ")
+    return head, "### F.6 " + tail
+
+
+def test_citation_before_the_first_subsection_does_not_count(tmp_path) -> None:
+    head, last = _split_at_last_heading(_markdown())
+    body = last.split("\n", 1)[1].strip()
+    moved = body + "\n\n" + head + "### F.6 " + HEADINGS[5] + "\n\nNone.\n"
+    assert "https://example.org/a.zip (read 2026-01-31)" in moved
+    assert check_consistency(moved, _sidecar()) != []
+    with pytest.raises(ValueError, match="not in the text"):
+        _load(tmp_path, moved)
+
+
+def test_repeated_subsection_is_refused(tmp_path) -> None:
+    doubled = _markdown() + "\n### F.6 " + HEADINGS[5] + "\n\nNone.\n"
+    with pytest.raises(ValueError, match="subsection 6 appears twice"):
+        hse_content(doubled)
+    assert check_consistency(doubled, _sidecar()) == [
+        "HSE appendix: subsection 6 appears twice"
+    ]
+    with pytest.raises(ValueError, match="appears twice"):
+        _load(tmp_path, doubled)
+
+
+def test_mixed_appendix_letters_are_refused() -> None:
+    mixed = _markdown().replace("### F.3 ", "### G.3 ")
+    with pytest.raises(ValueError, match="different letters"):
+        hse_content(mixed)
+
+
+def test_every_citation_reaches_the_rendered_slots(tmp_path) -> None:
+    html_text = "".join(_load(tmp_path, _markdown()).values())
+    assert "https://example.org/a.zip" in html_text
