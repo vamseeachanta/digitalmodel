@@ -276,13 +276,13 @@ class LinesBuilder(BaseBuilder):
         static_equilibrium_screen. The seed uses an empty uniform coated pipe.
         """
         from digitalmodel.installation.pipelay.integrity import G_STANDARD
-        from .linetype_builder import MATERIAL_PROPERTIES
+        from .linetype_builder import material_properties
 
         pipe = self.spec.pipeline
         stinger = self.spec.equipment.stinger
         od = pipe.dimensions.outer_diameter
         wall = pipe.dimensions.wall_thickness
-        density = MATERIAL_PROPERTIES.get(pipe.material, MATERIAL_PROPERTIES["X65"])["MaterialDensity"]
+        density = material_properties(pipe.material)["MaterialDensity"]
         mass = density * math.pi / 4 * (od**2 - (od - 2 * wall)**2)
         for coating in [pipe.coatings.corrosion, *pipe.coatings.weight]:
             outer = od + 2 * coating.thickness

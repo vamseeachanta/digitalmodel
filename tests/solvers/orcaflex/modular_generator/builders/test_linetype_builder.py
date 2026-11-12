@@ -129,6 +129,26 @@ class TestMaterialProperties:
         with pytest.raises(ValueError, match="Unsupported pipeline material"):
             _build(_make_pipeline_spec(material=grade))
 
+    def test_slay_seed_uses_the_same_fail_closed_lookup(self):
+        """The S-lay span seed read material density with its own silent,
+        case-sensitive X65 fallback; it now shares the builder's lookup."""
+        from types import SimpleNamespace
+
+        from digitalmodel.solvers.orcaflex.modular_generator.builders.lines_builder import (
+            LinesBuilder,
+        )
+
+        builder = LinesBuilder.__new__(LinesBuilder)
+        builder.spec = SimpleNamespace(
+            pipeline=SimpleNamespace(
+                material="X80",
+                dimensions=SimpleNamespace(outer_diameter=0.5, wall_thickness=0.02),
+            ),
+            equipment=SimpleNamespace(stinger=None),
+        )
+        with pytest.raises(ValueError, match="Unsupported pipeline material 'X80'"):
+            builder._slay_taut_span(100.0)
+
     def test_supported_grades_case_insensitive(self):
         lt = _build(_make_pipeline_spec(material="x52"))[0]
         assert lt["DNVSTF101Fy"] == MATERIAL_PROPERTIES["X52"]["DNVSTF101Fy"]
