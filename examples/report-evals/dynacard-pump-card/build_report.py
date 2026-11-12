@@ -232,7 +232,7 @@ PYTHONPATH=src uv run --no-sync python examples/report-evals/dynacard-pump-card/
 PYTHONPATH=src uv run --no-sync python examples/report-evals/dynacard-pump-card/eval.py
 ```
 
-The [last-run record](../../../examples/report-evals/dynacard-pump-card/last-run.json) grades **{grade}** against the printed results and their half-last-digit tolerances. This grade checks numerical reconstruction; ASSUMED inputs and HYPOTHESIS labels retain their separate statuses. The code pin is provisional until the report files are committed.
+The [last-run record](../../../examples/report-evals/dynacard-pump-card/last-run.json) grades **{grade}** against the printed results and their half-last-digit tolerances. This grade checks numerical reconstruction; ASSUMED inputs and HYPOTHESIS labels retain their separate statuses.
 '''
 
 

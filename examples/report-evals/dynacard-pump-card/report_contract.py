@@ -2,8 +2,8 @@
 import json
 from pathlib import Path
 
-TITLE = ('Sucker-rod pump dynamometer card analysis: surface card to pump card by the wave equation, '
-         'with fillage, fluid load and input sensitivity')
+TITLE = ('Rod pump dynamometer card analysis: pump card, fluid load and fillage '
+         'from a surface card by the wave equation')
 REPO = 'https://github.com/vamseeachanta/digitalmodel'
 FOLDER = 'examples/report-evals/dynacard-pump-card'
 METRICS = {

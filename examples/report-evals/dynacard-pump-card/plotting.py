@@ -70,9 +70,9 @@ def _draw_cards(ax, data):
             fontweight='bold', va='center', ha='left')
     ax.text(label_x, pump_y.max() + .035 * y_span, 'Pump card\ncomputed by the\nwave equation',
             color=ORANGE, fontsize=10, fontweight='bold', va='bottom', ha='left')
-    notes = ['green dashes: independent\nfrequency-domain check']
+    notes = ['green dashes: second solver,\nfrequency domain']
     if cards.get('reference') is not None:
-        notes.append('grey band: stored reference')
+        notes.append('grey band: card stored in\nthe well record')
     ax.text(label_x, pump_y.max() + .02 * y_span, '\n'.join(notes), color='#555555',
             fontsize=7.5, va='top', ha='left')
 
