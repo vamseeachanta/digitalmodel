@@ -5,6 +5,7 @@ import copy
 import csv
 import importlib.util
 import json
+import sys
 from pathlib import Path
 
 import pytest
@@ -142,10 +143,11 @@ def test_generated_page_is_current_and_carries_no_run_approval_wording(inventory
     assert "## Reproduce" in text
 
 
-def test_inventory_paths_are_owned_and_executed_by_the_subsea_gate():
+def test_inventory_paths_are_owned_and_executed_by_the_subsea_gate(monkeypatch):
     spec = importlib.util.spec_from_file_location(
         "detect_touched_domains", ROOT / "scripts" / "ci" / "detect_touched_domains.py")
     detector = importlib.util.module_from_spec(spec)
+    monkeypatch.setitem(sys.modules, spec.name, detector)
     spec.loader.exec_module(detector)
     domains = detector.parse_domains(ROOT / "tests" / "DOMAINS.md")
     for path in ("tests/riser_capability/test_riser_inventory.py",
@@ -153,7 +155,7 @@ def test_inventory_paths_are_owned_and_executed_by_the_subsea_gate():
                  "scripts/riser_capability/build_riser_inventory.py",
                  "docs/domains/risers/riser-capability-inventory.md"):
         selected = detector.touched_domains([path], domains)
-        assert {domain.name for domain in selected} == {"subsea"}, path
+        assert "subsea" in {domain.name for domain in selected}, path
     gates = yaml.safe_load((ROOT / ".claude" / "quality-gates.yaml").read_text(encoding="utf-8"))["gates"]
     assert "tests/riser_capability/" in gates["tests-subsea"]["test_roots"]
     assert " tests/riser_capability/ " in gates["tests-subsea"]["command"]

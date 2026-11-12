@@ -48,7 +48,7 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("scripts/bha_database/", ("subsea",)),
     ("data/riser_capability/", ("subsea",)),
     ("scripts/riser_capability/", ("subsea",)),
-    ("docs/domains/risers/riser-capability-inventory.md", ("subsea",)),
+    ("docs/domains/risers/riser-capability-inventory.md", ("contracts", "subsea")),
     ("scripts/risers/analytical_riser_regression.py", ("subsea",)),
     ("docs/audits/analytical-riser-regression.json", ("subsea",)),
     ("docs/audits/analytical-riser-regression.html", ("subsea",)),
