@@ -1,0 +1,259 @@
+"""Licence-free checks of the generated IEA 15 MW / VolturnUS-S fowt model.
+
+Comparators: published values recorded in basis.yml (Allen et al. 2020,
+NREL/TP-5000-76773, Tables 6 and 11), the repository's quasi-static analysis
+of the same platform (#2473, docs/reports/fowt-volturnus-mooring-analysis
+manifest), and two existing repository catenary solvers.
+"""
+from __future__ import annotations
+
+import copy
+import json
+import math
+from pathlib import Path
+
+import numpy as np
+import pytest
+
+from digitalmodel.floating_wind.fowt_static_checks import (
+    catenary_endpoint,
+    model_from_spec,
+    rigid_mass_matrix,
+    run_checks,
+    solve_catenary,
+)
+from digitalmodel.floating_wind.iea15_orcaflex_spec import build_spec, load_sources
+
+ROOT = Path(__file__).resolve().parents[2]
+MANIFEST = ROOT / "docs" / "reports" / "fowt-volturnus-mooring-analysis.manifest.json"
+
+
+@pytest.fixture(scope="module")
+def sources():
+    return load_sources()
+
+
+@pytest.fixture(scope="module")
+def results(sources):
+    basis, data = sources
+    spec = build_spec(basis, data)
+    turbine = data["turbine"]
+    return run_checks(spec, data, basis["turbine"]["rated_rotor_thrust"]["value"],
+                      [turbine["hub_overhang"]["value"], 0.0, turbine["hub_height"]["value"]],
+                      turbine["shaft_tilt"]["value"])
+
+
+@pytest.fixture(scope="module")
+def previous():
+    return json.loads(MANIFEST.read_text(encoding="utf-8"))["results"]
+
+
+# ------------------------------------------------------------- catenary
+def test_catenary_round_trip():
+    x, z = catenary_endpoint(1.3e6, 2.0e6, 850.0, 5844.0, 3.27e9)
+    h, v = solve_catenary(x, z, 850.0, 5844.0, 3.27e9)
+    assert h == pytest.approx(1.3e6, rel=1e-8)
+    assert v == pytest.approx(2.0e6, rel=1e-8)
+
+
+def test_grounded_inextensible_limit_matches_repo_tool():
+    from digitalmodel.marine_ops.fowt_quasi_static.mooring import grounded_horizontal_tension
+
+    span, rise, length, w = 780.0, 186.0, 850.0, 5844.0
+    h, _ = solve_catenary(span, rise, length, w, 1e15)
+    assert h == pytest.approx(grounded_horizontal_tension(span, rise, length, w), rel=1e-6)
+
+
+def _integrate(h: float, v: float, length: float, w: float, ea: float) -> np.ndarray:
+    """Endpoint of an elastic catenary by direct integration from the anchor."""
+    from scipy.integrate import solve_ivp
+
+    def slope(s, _):
+        tv = v - w * (length - s)
+        t = math.hypot(h, tv)
+        return [h / t * (1 + t / ea), tv / t * (1 + t / ea)]
+
+    return solve_ivp(slope, [0, length], [0, 0], rtol=1e-11, atol=1e-9).y[:, -1]
+
+
+def test_suspended_elastic_line_against_direct_integration():
+    span, rise, length, w, ea = 550.0, 400.0, 690.0, 1000.0, 1e9
+    h, v = solve_catenary(span, rise, length, w, ea, guess=(3e5, 6e5))
+    assert v > w * length  # fully suspended
+    assert _integrate(h, v, length, w, ea) == pytest.approx([span, rise], abs=1e-6)
+
+
+def test_suspended_inextensible_line_matches_repo_catenary_solver():
+    """Agreement in the inextensible limit.
+
+    For EA = 1e9 N the repository CatenarySolver returns a horizontal tension
+    6 % above the direct-integration value on this geometry; that difference
+    is reported separately and is not a comparator here.
+    """
+    from digitalmodel.marine_ops.marine_analysis.catenary.solver import (
+        CatenaryInput,
+        CatenarySolver,
+    )
+
+    span, rise, length, w, ea = 550.0, 400.0, 690.0, 1000.0, 1e14
+    h, v = solve_catenary(span, rise, length, w, ea, guess=(3e5, 6e5))
+    other = CatenarySolver().solve(CatenaryInput(length=length, horizontal_span=span,
+                                                 vertical_span=rise, weight_per_length=w,
+                                                 ea_stiffness=ea))
+    assert h == pytest.approx(other.horizontal_tension, rel=1e-5)
+    assert v == pytest.approx(other.vertical_tension_fairlead, rel=1e-5)
+
+
+def test_rigid_mass_matrix_symmetric(sources):
+    model = model_from_spec(build_spec(*sources))
+    mass = rigid_mass_matrix(model)
+    assert np.allclose(mass, mass.T)
+    assert mass[0, 4] == pytest.approx(model.mass * model.cog[2])
+
+
+# ---------------------------------------------------- still water (LC0)
+def test_lc0_equilibrium_converged(results):
+    assert np.max(np.abs(results["still_water"]["residual"])) < 1.0
+
+
+def test_lc0_fairlead_tension_against_allen_table_6(results, sources):
+    basis, _ = sources
+    published = basis["mooring"]["published_pretension"]["value"]
+    for line in results["still_water"]["lines"]:
+        assert line["tension"] == pytest.approx(published, rel=0.02)
+
+
+def test_lc0_net_buoyancy_carried_by_mooring(results):
+    vertical = -results["still_water"]["mooring_load"][2]
+    hydro_weight = results["net_buoyancy"]
+    heave = results["still_water"]["position"][2]
+    assert heave < 0  # the platform sinks until mooring weight balances buoyancy
+    assert vertical > hydro_weight
+
+
+# ------------------------------------------------------- natural periods
+TOLERANCE = {"surge": 0.10, "heave": 0.05, "pitch": 0.05, "yaw": 0.10}
+INDEX = {"surge": 0, "heave": 2, "pitch": 4, "yaw": 5}
+
+
+@pytest.mark.parametrize("mode", ["surge", "heave", "pitch", "yaw"])
+def test_natural_period_against_allen_table_11(results, sources, mode):
+    basis, _ = sources
+    published = basis["published"]["natural_periods"]["value"][INDEX[mode]]
+    computed = results["natural"]["periods"][mode]
+    assert computed == pytest.approx(published, rel=TOLERANCE[mode])
+
+
+@pytest.mark.parametrize("mode", ["surge", "heave", "pitch", "yaw"])
+def test_natural_period_against_repository_bem_analysis(results, previous, mode):
+    computed = results["natural"]["periods"][mode]
+    assert computed == pytest.approx(previous["periods"]["at_tower_top"][INDEX[mode]], rel=0.02)
+
+
+def test_mooring_stiffness_against_repository_moorpy_model(results, previous):
+    ours = np.diag(results["natural"]["mooring_stiffness"])
+    theirs = np.diag(np.array(previous["mooring_stiffness"]))
+    for i in (0, 1, 2, 5):
+        assert ours[i] == pytest.approx(theirs[i], rel=0.02)
+    for i in (3, 4):  # rotational terms depend on the trimmed equilibrium
+        assert ours[i] == pytest.approx(theirs[i], rel=0.03)
+
+
+# ------------------------------------------------------ rated thrust (LC4)
+def test_surge_only_offset_against_repository_analysis(results, previous):
+    """Rotations and draft held, horizontal thrust: the #2473 assumptions."""
+    operating = next(c for c in previous["cases"] if c["sea"] == "operating"
+                     and c["state"] == "intact" and c["heading"] == 0.0)
+    assert results["loaded_surge_only"]["position"][0] == pytest.approx(
+        operating["mean"][0], rel=0.05)
+
+
+def test_free_offset_and_pitch_bounded(results):
+    q = results["loaded_free"]["position"]
+    assert np.max(np.abs(results["loaded_free"]["residual"])) < 1.0
+    assert 15.0 < q[0] < 30.0  # inside the fowt_mooring atlas watch-circle axis
+    assert 0.0 < math.degrees(q[4]) < 10.0
+    upwind = results["loaded_free"]["lines"][0]
+    assert upwind["utilisation"] < 1.0
+
+
+# ------------------------------------------------- load cases and packages
+EQ = {"surge": 0.387, "heave": -0.382, "pitch": -1.417}
+
+
+def test_load_case_matrix(sources):
+    from digitalmodel.floating_wind.iea15_orcaflex_spec import load_case_specs
+    from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
+
+    basis, data = sources
+    cases = load_case_specs(basis, data, EQ)
+    assert list(cases) == ["LC0_statics", "LC1_surge_decay", "LC2_heave_decay",
+                           "LC3_pitch_decay", "LC4a_rated_thrust_statics", "LC4_operating",
+                           "LC5_parked_extreme"]
+    for spec in cases.values():
+        # Validate a copy: the Waves validator moves flat keys into 'trains' in place.
+        ProjectInputSpec(**copy.deepcopy(spec))
+    surge = cases["LC1_surge_decay"]["fowt"]["hull"]
+    assert surge["included_in_statics"] == "None"
+    assert surge["initial_position"] == pytest.approx([EQ["surge"] + 10.0, 0.0, EQ["heave"]])
+    pitch = cases["LC3_pitch_decay"]["fowt"]["hull"]
+    assert pitch["initial_orientation"][1] == pytest.approx(EQ["pitch"] + 5.0)
+    heave = cases["LC2_heave_decay"]["fowt"]["hull"]
+    assert heave["initial_position"][2] == pytest.approx(EQ["heave"] - 2.0)
+    rated = cases["LC4a_rated_thrust_statics"]["fowt"]["rotor_thrust"]["thrust"]
+    assert rated * 1000 == pytest.approx(basis["turbine"]["rated_rotor_thrust"]["value"])
+    op = cases["LC4_operating"]
+    assert op["environment"]["raw_properties"]["WaveTrains"][0]["WaveTp"] == pytest.approx(
+        basis["environment"]["operating"]["peak_period"]["value"])
+    assert op["environment"]["raw_properties"]["WaveTrains"][0]["WaveGamma"] == pytest.approx(
+        basis["environment"]["operating"]["jonswap_gamma"]["value"])
+    assert op["fowt"]["hull"]["include_wave_load_first_order"] is True
+    parked = cases["LC5_parked_extreme"]
+    assert "rotor_thrust" not in parked["fowt"]
+    assert parked["environment"]["waves"]["height"] == pytest.approx(10.7)
+
+
+def test_sea_state_emits_peak_period_not_zero_crossing(sources, tmp_path):
+    import yaml as _yaml
+
+    from digitalmodel.floating_wind.iea15_orcaflex_spec import load_case_specs
+    from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
+    from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
+
+    spec = load_case_specs(*sources, EQ)["LC5_parked_extreme"]
+    ModularModelGenerator.from_spec(ProjectInputSpec(**spec)).generate(tmp_path)
+    env = _yaml.safe_load((tmp_path / "includes" / "03_environment.yml").read_text())
+    train = env["Environment"]["WaveTrains"][0]
+    assert train["WaveType"] == "JONSWAP"
+    assert train["WaveTp"] == pytest.approx(14.2)
+    assert "WaveTz" not in train
+    assert train["WaveGamma"] == pytest.approx(2.75)
+    assert train["WaveHs"] == pytest.approx(10.7)
+
+
+def test_committed_results_reproduce(results):
+    committed = json.loads((ROOT / "docs" / "domains" / "orcaflex" / "examples" / "fowt"
+                            / "iea15-volturnus-s" / "results.json").read_text(encoding="utf-8"))
+    assert committed["natural_periods"]["heave"] == pytest.approx(
+        results["natural"]["periods"]["heave"], rel=1e-6)
+    assert committed["rated_thrust_free"]["surge"] == pytest.approx(
+        results["loaded_free"]["position"][0], rel=1e-6)
+    assert all(c["within_tolerance"] for c in committed["comparisons"])
+
+
+def test_run_packages_written(tmp_path):
+    import importlib.util
+
+    script = ROOT / "scripts" / "fowt" / "write_iea15_run_packages.py"
+    spec = importlib.util.spec_from_file_location("packages", script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.main(["x", str(tmp_path)]) == 0
+    index = json.loads((tmp_path / "index.json").read_text())
+    assert len(index["cases"]) == 7
+    for case in index["cases"]:
+        folder = tmp_path / case["case"]
+        assert (folder / "model" / "master.yml").exists()
+        text = (folder / "run.md").read_text()
+        assert "## Expected" in text or "## Limitations" in text
+        assert "validated" in text  # the do-not-overclaim instruction is present

@@ -186,3 +186,64 @@ def thrust_at(data: dict, wind_speed: float) -> float:
             f = (wind_speed - lower[0]) / (upper[0] - lower[0])
             return lower[3] + f * (upper[3] - lower[3])
     raise ValueError(f"wind speed {wind_speed} m/s outside the rotor performance table")
+
+
+def _sea_state(hs: float, tp: float, gamma: float, direction: float = 0.0) -> dict:
+    """JONSWAP train given by Hs, Tp and gamma.
+
+    Tp and gamma go through the raw wave-train layer so that the environment
+    builder emits ``WaveTp`` (not ``WaveTz``) and keeps gamma = 1.0, which the
+    spec-level gamma field (gamma > 1) does not accept.
+    """
+    return {
+        "waves": {"type": "jonswap", "height": hs, "period": tp, "direction": direction},
+        "raw_properties": {"WaveTrains": [{
+            "Name": "Wave 1", "WaveJONSWAPParameters": "Partially specified",
+            "WaveTp": tp, "WaveGamma": gamma}]},
+    }
+
+
+def load_case_specs(basis: dict, data: dict, equilibrium: dict) -> dict[str, dict]:
+    """Load-case matrix for the licensed runs.
+
+    ``equilibrium`` holds the still-water position from the licence-free
+    checks: ``surge`` (m), ``heave`` (m) and ``pitch`` (deg). Decay cases
+    start from that position plus the stated offset and are excluded from
+    statics so the offset is held at the start of dynamics.
+    """
+    env = basis["environment"]
+    rated = _v(basis["turbine"]["rated_rotor_thrust"]) / 1000.0
+    op, ext = env["operating"], env["extreme"]
+    op_wind = _v(op["wind_speed"])
+    cases: dict[str, dict] = {}
+    cases["LC0_statics"] = build_spec(basis, data, name="LC0_statics", stages=[10, 100])
+    decays = {
+        "LC1_surge_decay": ([10.0, 0.0, 0.0], [0.0, 0.0, 0.0], 1200),
+        "LC2_heave_decay": ([0.0, 0.0, -2.0], [0.0, 0.0, 0.0], 300),
+        "LC3_pitch_decay": ([0.0, 0.0, 0.0], [0.0, 5.0, 0.0], 400),
+    }
+    for name, (offset, rotation, duration) in decays.items():
+        spec = build_spec(basis, data, name=name, stages=[1, duration])
+        hull = spec["fowt"]["hull"]
+        hull["initial_position"] = [equilibrium["surge"] + offset[0], 0.0,
+                                    equilibrium["heave"] + offset[2]]
+        hull["initial_orientation"] = [0.0, equilibrium["pitch"] + rotation[1], 0.0]
+        hull["included_in_statics"] = "None"
+        cases[name] = spec
+    cases["LC4a_rated_thrust_statics"] = build_spec(
+        basis, data, name="LC4a_rated_thrust_statics", stages=[10, 100],
+        thrust_kN=rated, wind_speed=_v(basis["turbine"]["rated_wind_speed"]))
+    operating = build_spec(basis, data, name="LC4_operating", stages=[100, 3600],
+                           thrust_kN=thrust_at(data, op_wind) / 1000.0, wind_speed=op_wind)
+    operating["environment"].update(_sea_state(
+        _v(op["significant_wave_height"]), _v(op["peak_period"]), _v(op["jonswap_gamma"])))
+    operating["environment"]["wind"] = {"speed": op_wind, "direction": 0.0}
+    operating["fowt"]["hull"]["include_wave_load_first_order"] = True
+    cases["LC4_operating"] = operating
+    parked = build_spec(basis, data, name="LC5_parked_extreme", stages=[100, 3600])
+    parked["environment"].update(_sea_state(
+        _v(ext["significant_wave_height"]), _v(ext["peak_period"]), _v(ext["jonswap_gamma"])))
+    parked["environment"]["wind"] = {"speed": _v(ext["wind_speed"]), "direction": 0.0}
+    parked["fowt"]["hull"]["include_wave_load_first_order"] = True
+    cases["LC5_parked_extreme"] = parked
+    return cases
