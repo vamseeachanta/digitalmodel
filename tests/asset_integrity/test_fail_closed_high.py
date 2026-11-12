@@ -210,6 +210,139 @@ def test_A14_invalid_decision_inputs_and_unknown_life():
     assert decide(1, .9, math.inf, "pressure", screening_pass=True).verdict == "ESCALATE"
 
 
+def test_current_state_screen_has_no_projected_life():
+    life = math.nan
+    result = decide(1, .9, life, "pressure", life_required=False)
+    assert result.verdict == "ACCEPT"
+    assert result.to_dict()["remaining_life_yr"] is None
+    assert result.remaining_life_basis == "Current-state screen; no life projection"
+    assert "no life projection" in result.governing_criterion
+    assert decide(1, .9, life, "pressure").verdict == "ESCALATE"
+
+
+@pytest.mark.parametrize("life", [0, 5, math.inf])
+def test_current_state_screen_rejects_an_unreported_life(life):
+    with pytest.raises(ValueError, match="life"):
+        decide(1, .9, life, "pressure", life_required=False)
+
+
+@pytest.mark.parametrize("option", [None, 0, 1, "false", np.bool_(False)])
+def test_current_state_option_requires_literal_boolean(option):
+    with pytest.raises(ValueError, match="life_required"):
+        decide(1, .9, math.nan, "pressure", life_required=option)
+
+
+@pytest.mark.parametrize("margin,screen,app,expected", [
+    (.1, True, Applicability(), "REPLACE"),
+    (.8, True, Applicability(), "DERATE"),
+    (1, False, Applicability(), "ESCALATE"),
+    (math.nan, True, Applicability(), "ESCALATE"),
+    (1, True, Applicability(False, ["UNSUPPORTED"], ["Width is not assessed"]), "ESCALATE"),
+])
+def test_current_state_option_retains_strength_and_applicability_guards(margin, screen, app, expected):
+    result = decide(margin, .9, math.nan, "pressure", life_required=False,
+                    screening_pass=screen, applicability=app)
+    assert result.verdict == expected
+    assert result.verdict not in ("ACCEPT", "MONITOR")
+
+
+@pytest.mark.parametrize("force_type", [None, "LML"])
+def test_future_allowance_cannot_resolve_a_two_cell_profile(force_type):
+    grid = pd.DataFrame(np.full((6, 6), .5), index=np.arange(6) * 2)
+    grid.iloc[2, 3], grid.iloc[3, 3] = .30, .32
+    original = grid.copy(deep=True)
+    current = assess_component(component(), grid, force_type=force_type)
+    future = assess_component(component(fca_in=.06), grid, force_type=force_type)
+    assert current.assessment_type == future.assessment_type == "LML"
+    assert current.sufficiency_status == future.sufficiency_status == "TAKE_MORE"
+    assert current.sufficiency.metrics["profile_cells"] == future.sufficiency.metrics["profile_cells"] == 2
+    assert current.details["router"]["degraded_fraction"] == future.details["router"]["degraded_fraction"]
+    # Two measured rows at 2 in pitch span 4 in, regardless of future loss.
+    assert current.level2["flaw_length_in"] == future.level2["flaw_length_in"] == 4
+    assert any(a.action == "densify_readings" for a in future.sufficiency.actions)
+    assert not current.passes and not future.passes
+    # Hand net wall: 0.300 - 0.060 = 0.240 in; rate is 0.005 in/yr.
+    assert future.level2["t_mm_in"] == pytest.approx(.240)
+    assert future.remaining_life_yr == pytest.approx(current.remaining_life_yr - 12)
+    assert future.rsf <= current.rsf
+    pd.testing.assert_frame_equal(grid, original)
+
+
+def test_future_allowance_preserves_measured_pitting_morphology():
+    grid = pd.DataFrame(np.full((10, 10), .5))
+    for row, col in ((2, 2), (2, 7), (7, 2), (7, 7), (4, 4)):
+        grid.iloc[row, col] = .30
+    current = assess_component(component(), grid)
+    future = assess_component(component(fca_in=.06), grid)
+    assert current.assessment_type == future.assessment_type == "PITTING"
+    before = current.details["pitting_characterization"]
+    after = future.details["pitting_characterization"]
+    assert before == after
+    assert after["pit_count"] == after["pitted_cell_count"] == 5
+    assert current.sufficiency.metrics["profile_cells"] == future.sufficiency.metrics["profile_cells"] == 5
+    assert future.level2["t_mm_in"] == pytest.approx(.240)
+    assert future.rsf <= current.rsf
+
+
+def test_local_strength_uses_measured_extent_and_future_wall():
+    grid = pd.DataFrame(np.full((6, 6), .5))
+    grid.iloc[2:4, 3] = .30
+    engine = Level2Engine("LML", 12, .5, .4)
+    current = engine.evaluate(grid)
+    future = engine.evaluate(grid, fca_in=.06)
+    assert current["flaw_length_in"] == future["flaw_length_in"] == 2
+    assert future["t_mm_in"] == pytest.approx(.240)
+    assert future["rsf"] < current["rsf"]
+    for bad in (-.01, math.nan, math.inf, .30):
+        with pytest.raises(ValueError, match="FCA|fca"):
+            engine.evaluate(grid, fca_in=bad)
+
+
+def test_unsupported_derating_is_limited_to_evaluated_pressure_check():
+    from digitalmodel.units import Q_
+
+    derate = reduced_mawp(Q_(1000, "psi"))
+    supported = decide(.8, .9, 5, "pressure", derate=derate)
+    unsupported = decide(.8, .9, 5, "pressure", derate=derate,
+                         applicability=Applicability(False, ["WIDTH"], ["Width not assessed"]))
+    assert supported.verdict == unsupported.verdict == "DERATE"
+    assert unsupported.action == supported.action
+    assert unsupported.derated == supported.derated
+    assert "Evaluated pressure check only" in unsupported.governing_criterion
+    assert "no operating limit is established" in unsupported.governing_criterion
+    assert "Evaluated pressure check only" not in supported.governing_criterion
+    escalated = decide(1, .9, 5, "pressure", derate=derate,
+                       applicability=Applicability(False, ["WIDTH"], ["Width not assessed."]))
+    assert escalated.verdict == "ESCALATE"
+    assert "Evaluated pressure check only" in escalated.governing_criterion
+    assert ".." not in unsupported.governing_criterion
+
+
+def test_future_pitting_strength_matches_net_wall_control(monkeypatch):
+    grid = pd.DataFrame(np.full((10, 10), .5))
+    for row, col in ((2, 2), (2, 7), (7, 2), (7, 7), (4, 4)):
+        grid.iloc[row, col] = .30
+    monkeypatch.setattr(Level1Screener, "t_min", lambda self: .4)
+    result = assess_component(component(fca_in=.02), grid, force_type="PITTING")
+    net_char = characterize_pit_field(grid - .02, .5)
+    expected_l1 = screen_pitting_level1(net_char, t_min_in=.4)
+    expected_l2 = assess_pitting_level2_equivalent_lta(
+        net_char, nominal_od_in=12, nominal_wt_in=.5, t_min_in=.4)
+    # Hand wall inputs: .300-.020=.280; .500-.020=.480; .500-.280=.220 in.
+    assert net_char.t_min_pit_in == pytest.approx(.280)
+    assert net_char.background_min_in == pytest.approx(.480)
+    assert net_char.avg_pit_depth_in == pytest.approx(.220)
+    assert result.level1["margin_in"] == pytest.approx(-.120)
+    actual_l1 = result.level1["pitting_screen"]
+    for key in ("verdict", "average_criterion_pass", "deep_pit_criterion_pass"):
+        assert actual_l1[key] == expected_l1[key]
+    assert actual_l1["rt_deepest_pit"] == pytest.approx(expected_l1["rt_deepest_pit"])
+    for key in ("rsf", "rt", "flaw_length_in", "folias_factor", "t_am_in", "t_mm_in"):
+        assert result.level2[key] == pytest.approx(expected_l2[key])
+    assert result.level2["equivalent_lta"] == pytest.approx(expected_l2["equivalent_lta"])
+    assert result.level2["applicability"].to_dict() == expected_l2["applicability"].to_dict()
+
+
 def test_A14_booleans_and_invalid_rerating_limits_are_not_numeric_evidence():
     from digitalmodel.units import Q_
 

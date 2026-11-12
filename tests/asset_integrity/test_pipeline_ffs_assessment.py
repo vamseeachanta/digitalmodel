@@ -41,10 +41,12 @@ def assert_published_report(root, fresh):
     assert report.is_file(), "Published report is missing"
     registered = html_checker.all_registered_outputs(root)
     assert report in registered, "Published report has no generator ownership"
-    assert report.read_bytes() == fresh[0].read_bytes(), "Published report has drifted"
+    assert report.read_bytes() == fresh[0].read_bytes(), (
+        "Published report has drifted; rebuild with python scripts/reporting/build_pipeline_ffs_report.py")
     manifest = report.with_suffix(".manifest.json")
     assert manifest in registered, "Published manifest has no generator ownership"
-    assert manifest.read_bytes() == fresh[1].read_bytes(), "Published manifest has drifted"
+    assert manifest.read_bytes() == fresh[1].read_bytes(), (
+        "Published manifest has drifted; rebuild with python scripts/reporting/build_pipeline_ffs_report.py")
 
 
 def test_published_report_matches_generator(tmp_path):
@@ -180,7 +182,8 @@ def result():
 def test_source_pins(result):
     for source in result["sources"]:
         payload = (ROOT / source["path"]).read_bytes().replace(b"\r\n", b"\n")
-        assert hashlib.sha256(payload).hexdigest() == source["sha256_lf"]
+        assert hashlib.sha256(payload).hexdigest() == source["sha256_lf"], (
+            "Source pin mismatch; rebuild with python scripts/reporting/build_pipeline_ffs_report.py")
 
 
 def test_every_result_matches_existing_methods(result):
@@ -409,6 +412,49 @@ def test_rendered_numbers_match_existing_engine_outputs(tmp_path, result):
         assert f"Decision: <strong>{section['decision']}</strong>" in fragment
 
 
+def assert_no_public_report_factors(page):
+    from bs4 import BeautifulSoup
+    from unicodedata import normalize
+
+    soup = BeautifulSoup(page, "html.parser")
+    for node in soup.select("h3"):
+        node.decompose()
+    for figure in soup.select("svg"):
+        if figure.get("aria-label") not in {"Method comparison", "River-bottom profile", "Thickness grid (in)"}:
+            continue
+        for node in figure.select("text"):
+            if re.fullmatch(r"[\d+.,eE%()/\[\] −-]+", node.get_text(" ").strip()):
+                node.decompose()
+    # Numerical results and measured inputs are data, not method coefficients.
+    # Retain every coefficient/factor row so its label cannot hide a disclosure.
+    for table in soup.select("table"):
+        caption = table.find("caption")
+        title = re.sub(r"^Table [A-Z0-9]+[.][0-9]+[.]\s*", "", caption.get_text(" ", strip=True)) if caption else ""
+        if title not in {"Pipe geometry, loading and rate", "Remaining strength", "Thickness and local-loss assessment",
+                         "Declared-rate remaining-life sensitivity"} and not title.endswith(
+                             (" — complete thickness grid", " — complete method rows")):
+            continue
+        for row in table.select("tr"):
+            if re.search(r"factor|coefficient|\brsf\b|rsf[_ ]?a|\bf[12]?\b", normalize("NFKC", row.get_text(" ")), re.I):
+                continue
+            for cell in row.select("td"):
+                if re.fullmatch(r"[\d+.,eE%()/\[\] −-]+", cell.get_text(" ").strip()):
+                    cell.decompose()
+    parser = VisibleText()
+    parser.feed(str(soup))
+    visible = re.sub(r"(?:Section|Table) [A-Z0-9]+[.][0-9]+", "", " ".join(parser.text))
+    # This exact declared inspection default comes from the configurable
+    # sufficiency policy, not a licensed equation; no other prose is exempted.
+    declared_floor = (
+        f"The replacement floor of RSF {builder.measurement_sufficiency._SEVERE_RSF_FLOOR:.2f} "
+        "is an assessment default of the measurement-sufficiency evaluation; "
+        "it is configurable, not a code mandate."
+    )
+    assert visible.count(declared_floor) <= 1
+    visible = visible.replace(declared_floor, "")
+    assert_no_factor_numbers(visible)
+
+
 def test_public_assumptions_exclude_method_coefficients(tmp_path):
     report, _ = builder.build(ROOT, tmp_path)
     page = report.read_text(encoding="utf-8")
@@ -431,10 +477,8 @@ def test_public_assumptions_exclude_method_coefficients(tmp_path):
     # Reject coefficient disclosures, allowing unrelated grid readings and
     # synthetic input quantities that happen to share digits with constants.
     visible = re.sub(r"(?:Section|Table) [A-Z0-9]+[.][0-9]+", "", visible)
-    for token in licensed_tokens():
-        pattern = r"(?<![\d.])" + re.escape(token) + r"(?![\d.])"
-        assert not re.search(pattern, visible)
-        assert not re.search(pattern, str(assumptions))
+    assert_no_public_report_factors(page)
+    assert_no_factor_fields(assumptions)
     assert "Minimum 15 readings" not in visible
     assert "minimum of 5 degraded cells" in visible
     assert "assumed modelling" not in visible
@@ -504,9 +548,88 @@ def test_public_labels_and_flaw_lengths(tmp_path, result):
     public = json.loads(manifest.read_text(encoding="utf-8"))["assessment"]
     for section in public["sections"]:
         assert "verdict" not in section["level1"]
-        assert section["level2"]["pressure_criterion"] == "RATING_ABOVE_DEMAND"
+        assert section["level2"]["pressure_criterion"] == "NOT_CREDITED_APPLICABILITY_INCOMPLETE"
+        assert section["level2"]["strength_factor_comparison"] == "NOT_CREDITED_APPLICABILITY_INCOMPLETE"
+        assert section["pressure_rating_psi"] is None
+        assert section["axial_limit_psi"] is None
+        assert set(section["coordinator"]) == {
+            "component_id", "assessment_type", "t_nominal_in", "t_min_in", "t_measured_min_in",
+            "t_measured_avg_in", "fca_in",
+        }
         assert "RSF=" not in section["strength_decision"]["governing_criterion"]
     assert "Local-loss flaw length (in)" in page.read_text(encoding="utf-8")
+
+
+def test_supported_public_rating_retains_numeric_comparison(result):
+    from copy import deepcopy
+
+    supported = deepcopy(result)
+    for section in supported["sections"]:
+        section["level2"]["applicability"] = {"ok": True, "flags": [], "notes": []}
+        section["applicability"] = {"ok": True, "flags": [], "notes": []}
+        section["decision"] = "re-rate"
+    for section in builder.public_assessment(supported)["sections"]:
+        assert section["level2"]["pressure_criterion"] == "RATING_ABOVE_DEMAND"
+        assert section["level2"]["strength_factor_comparison"] != "NOT_CREDITED_APPLICABILITY_INCOMPLETE"
+        assert section["pressure_rating_psi"] > 0
+        assert section["axial_limit_psi"] > 0
+
+
+@pytest.mark.parametrize("decision,ok", [
+    ("take more measurements", True), ("accept", True),
+    ("escalate", True), ("re-rate", False),
+])
+def test_public_operating_limits_require_supported_rerate(result, decision, ok):
+    from copy import deepcopy
+
+    changed = deepcopy(result)
+    for section in changed["sections"]:
+        section["decision"] = decision
+        section["applicability"] = {"ok": ok, "flags": [] if ok else ["UNSUPPORTED"], "notes": []}
+    for section in builder.public_assessment(changed)["sections"]:
+        assert section["pressure_rating_psi"] is None
+        assert section["axial_limit_psi"] is None
+
+
+@pytest.mark.parametrize("shape", ["RSFₐ", "F₁", "Allowable RSF", "prose", "Unclassified value", "diagram", "assumptions"])
+def test_visible_report_factor_symbols_and_prose_are_checked(result, shape):
+    factor = format(result["sections"][0]["component"]["rsf_a"], ".2f")
+    if shape == "prose":
+        page = "<p>Allowable factor: " + factor + " in this assessment.</p>"
+    elif shape == "diagram":
+        page = "<svg><text>" + factor + "</text></svg>"
+    elif shape == "assumptions":
+        page = ("<table><caption>Table A.5. Assumptions</caption><tr>"
+                "<td>Location class design</td><td>" + factor + "</td></tr></table>")
+    else:
+        caption = ("" if shape == "Unclassified value" else
+                   "<caption>Table 5.2. Thickness and local-loss assessment</caption>")
+        page = "<table>" + caption + "<tr><td>" + shape + "</td><td>" + factor + "</td></tr></table>"
+    with pytest.raises(AssertionError):
+        assert_no_public_report_factors(page)
+
+
+@pytest.mark.parametrize("notation", [".2f", ".2e"])
+@pytest.mark.parametrize("punctuation", ["", ".", ",", ")"])
+def test_factor_disclosure_rejects_equivalent_numeric_text(result, notation, punctuation):
+    factor = result["sections"][0]["component"]["rsf_a"]
+    with pytest.raises(AssertionError):
+        assert_no_factor_fields({"note": "Allowable factor: " + format(factor, notation) + punctuation})
+
+
+@pytest.mark.parametrize("notation", [".2f", ".2e"])
+@pytest.mark.parametrize("punctuation", [".", ",", ")"])
+def test_visible_report_disclosure_rejects_equivalent_numeric_text(result, notation, punctuation):
+    factor = result["sections"][0]["component"]["rsf_a"]
+    page = "<p>Allowable factor: " + format(factor, notation) + punctuation + "</p>"
+    with pytest.raises(AssertionError):
+        assert_no_public_report_factors(page)
+
+
+def test_disclosure_distinguishes_unity_from_private_factor_fields():
+    assert_no_factor_fields({"note": "A 1 in sample pitch is assumed"})
+    with pytest.raises(AssertionError):
+        assert_no_factor_fields({"rsf_a": 1.0})
 
 
 @lru_cache(maxsize=1)
@@ -523,19 +646,33 @@ def licensed_tokens():
                 if isinstance(node, ast.Constant) and isinstance(node.value, float):
                     if 0 < node.value < 4 and not node.value.is_integer():
                         tokens.add(str(node.value))
-    def factor_tokens(value):
+    def factor_tokens(value, path=()):
         if isinstance(value, dict):
             for key, child in value.items():
                 if key in builder.PRIVATE_FACTOR_FIELDS:
+                    # This exact source is the builder's synthetic unity
+                    # capacity/demand criterion, not a published coefficient.
+                    if (path[-1:] == ("strength_decision",) and key == "rsf_a"
+                            and value.get("asset_class") == "pipeline"
+                            and child == value.get("margin_allowable") == 1.0):
+                        continue
                     tokens.add(str(child))
                 else:
-                    factor_tokens(child)
+                    factor_tokens(child, path + (key,))
         elif isinstance(value, list):
             for child in value:
-                factor_tokens(child)
+                factor_tokens(child, path)
 
     factor_tokens(builder.evaluate(ROOT))
     return tokens
+
+
+def assert_no_factor_numbers(value):
+    from decimal import Decimal
+
+    factors = {Decimal(token) for token in licensed_tokens()}
+    numbers = re.findall(r"(?<![\w.])[-+]?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][-+]?\d+)?(?!\w|\.\d)", value)
+    assert not any(Decimal(number) in factors for number in numbers)
 
 
 def assert_no_factor_fields(value):
@@ -550,8 +687,7 @@ def assert_no_factor_fields(value):
         for child in value:
             assert_no_factor_fields(child)
     elif isinstance(value, str):
-        for token in licensed_tokens():
-            assert not re.search(r"(?<![\w.])" + re.escape(token) + r"(?![\w.])", value)
+        assert_no_factor_numbers(value)
 
 
 def test_public_manifest_and_input_exclude_factor_fields(tmp_path):
@@ -575,11 +711,8 @@ def test_disclosure_negative_control(artifact, tmp_path):
     if artifact == "report":
         path.write_text(path.read_text(encoding="utf-8") + "<p>Safety factor: " + token + "</p>",
                         encoding="utf-8", newline="\n")
-        parser = VisibleText()
-        parser.feed(path.read_text(encoding="utf-8"))
         with pytest.raises(AssertionError):
-            assert not re.search(r"(?<![\d.])" + re.escape(token) + r"(?![\d.])",
-                                 " ".join(parser.text))
+            assert_no_public_report_factors(path.read_text(encoding="utf-8"))
     else:
         payload = (json.loads(path.read_text(encoding="utf-8")) if artifact == "manifest"
                    else builder.load_yaml(path))
@@ -630,6 +763,7 @@ def test_revision_history_follows_summary(tmp_path, result):
         ["02", "2026-10-21", "Established the supported wall interval and a passing and failing pressure bracket before the life search; retained numerical evidence and identified boundary censoring and unreachable targets. Both synthetic section results are unchanged."],
         ["03", "2026-10-21", "Excluded zero-wall endpoints from numerical life and limited pressure-projection qualification to the checked shell-parameter range because the remaining-thickness limits are not checked. Both synthetic section results are unchanged."],
         ["04", "2026-10-22", "Withheld reduced-wall clearance where the circumferential criterion is unavailable; marked the affected life and inspection interval not evaluated and preserved required measurement actions."],
+        ["05", "2026-11-12", "Restored current-demand screening without a life projection; preserved measured flaw extent and sampling requirements under future corrosion allowance; identified reduced-wall pressure figures as diagnostic until the circumferential criterion is assessed."],
     ]
     config = builder.load_yaml(ROOT / builder.WORKFLOW / "input.yml")
     spec = builder.report_spec(ROOT, result)
@@ -758,3 +892,55 @@ def test_projection_discloses_lambda_only_qualification(tmp_path, result):
     section = result["sections"][0]
     assert section["life_basis"].startswith("Not evaluated")  # A08
     assert section["life_search"]["qualification_scope"] == "lambda-range only"
+
+
+def test_escalation_notes_have_terminal_punctuation(result):
+    from copy import deepcopy
+
+    section = deepcopy(result["sections"][0])
+    section["decision"] = "escalate"
+    section["applicability"]["notes"] = ["First applicability note", "Second applicability note."]
+    action = builder.action_text(section)
+    assert "First applicability note. Second applicability note. Confirm" in action
+
+
+def test_report_rejects_unsupported_future_allowance(result):
+    section = result["sections"][0]
+    with pytest.raises(ValueError, match="future corrosion allowance"):
+        builder.evaluate_section(section["inputs"],
+                                 replace(FFSComponent(**section["component"]), fca_in=.01),
+                                 builder.load_yaml(ROOT / builder.WORKFLOW / "input.yml"))
+
+
+def test_supported_method_retains_its_separate_governing_comparison(result):
+    summary = builder.section_material(result)[0][1].markdown
+    assert "B31G governs at" in summary
+    assert "not credited until the circumferential criterion is assessed" in summary
+
+
+def test_rating_qualification_names_the_missing_criterion(result):
+    from copy import deepcopy
+
+    changed = deepcopy(result)
+    section = changed["sections"][0]
+    app = {"ok": False, "flags": ["AXIAL_CHECK_NOT_EVALUATED"],
+           "notes": ["Axial criterion is unavailable"]}
+    section["applicability"] = section["level2"]["applicability"] = app
+    summary = builder.section_material(changed)[0][0].markdown
+    assert "Axial criterion is unavailable" in summary
+    assert "until the circumferential criterion is assessed" not in summary
+
+
+@pytest.mark.parametrize("copy", ["generated", "api/ffs", "reports"])
+def test_unqualified_reduced_wall_rating_is_not_credited(copy, tmp_path):
+    path = (builder.build(ROOT, tmp_path)[0] if copy == "generated"
+            else ROOT / "docs" / copy / "pipeline-ffs-assessment.html")
+    parser = VisibleText()
+    parser.feed(path.read_text(encoding="utf-8"))
+    visible = " ".join(parser.text)
+    assert "not credited until the circumferential criterion is assessed" in visible
+    assert "Reduced local-loss rating governs at" not in visible
+    rows = TableRows()
+    rows.feed(path.read_text(encoding="utf-8"))
+    rsf_rows = [row for row in rows.rows if row and row[0] == "Level 2 remaining strength factor"]
+    assert any("not credited" in row[2] for row in rsf_rows)

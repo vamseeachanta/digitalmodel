@@ -36,3 +36,6 @@ revision_history:
   - rev: '04'
     date: '2026-10-22'
     description: Withheld reduced-wall clearance where the circumferential criterion is unavailable; marked the affected life and inspection interval not evaluated and preserved required measurement actions.
+  - rev: '05'
+    date: '2026-11-12'
+    description: Restored current-demand screening without a life projection; preserved measured flaw extent and sampling requirements under future corrosion allowance; identified reduced-wall pressure figures as diagnostic until the circumferential criterion is assessed.

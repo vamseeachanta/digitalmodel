@@ -140,10 +140,11 @@ def _decision(rows, applicability):
     decision = decide(
         governing["margin"] if applicability.ok or failed else float("nan"),
         1.0,
-        float("inf"),
+        float("nan"),
         "pipeline",
         bands=DecisionBands(monitor_band=0, derate_floor=0, repair_life_yr=0),
         applicability=applicability,
+        life_required=False,
     ).to_dict()
     decision.pop("rsf")
     decision.pop("rsf_a")
@@ -152,12 +153,13 @@ def _decision(rows, applicability):
     decision["remaining_life_yr"] = None
     if not applicability.ok and not failed:
         decision["demand_limits_psi"] = None
-        decision["governing_criterion"] = (
-            "A fitness verdict is not established; engineering review required. "
-            + "; ".join(applicability.notes)
-        )
         return governing["method"], decision
-    criterion = "Current demand passes: minimum allowable/demand >= 1.000."
+    criterion = decision["governing_criterion"]
+    if decision["verdict"] in ("ACCEPT", "MONITOR"):
+        criterion = (
+            "Current demand passes: minimum allowable/demand >= 1.000. "
+            "Current-state screen; no life projection."
+        )
     pressure_limits = [row["allowable_pressure_psi"] for row in supported
                        if row["allowable_pressure_psi"] is not None]
     pressure = min(pressure_limits) if pressure_limits else None
@@ -175,7 +177,8 @@ def _decision(rows, applicability):
         criterion = (
             f"Demand exceeds an independently supported allowable: pressure limit={pressure} psi; "
             f"axial membrane stress limit={axial} psi. "
-            "Reduce each exceeded demand to its limit; engineering review required."
+            "Reduce each exceeded demand to its limit; engineering review required. "
+            "Current-state screen; no life projection."
         )
     decision["governing_criterion"] = (
         f"{governing['method']}: allowable/demand={governing['margin']:.3f}; "
@@ -383,7 +386,7 @@ def router(cfg):
     if not stem or Path(stem).name != stem or "\\" in stem:
         raise ValueError("Report input stem must be a single filename")
     report = folder / f"{stem}-pipeline-defect-screen.html"
-    report.write_text(render_report(inputs, result), encoding="utf-8")
+    report.write_text(render_report(inputs, result), encoding="utf-8", newline="\n")
     result["report_file"] = report.name
     cfg[cfg["basename"]] = result
     return cfg

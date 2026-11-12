@@ -26,18 +26,19 @@ def test_strain_golden_and_report(tmp_path):
     expected = max(math.sqrt(x*x-x*(y+membrane)+(y+membrane)**2),
                    math.sqrt(x*x+x*(membrane-y)+(membrane-y)**2))
     assert result["assessment"]["strain"]["eps_max"] == pytest.approx(expected)
-    assert result["decision"]["verdict"] == "ESCALATE"  # A14: life is unknown.
+    assert result["decision"]["verdict"] == "ACCEPT"
+    assert result["decision"]["remaining_life_basis"] == "Current-state screen; no life projection"
     report = result["report_html"]
     assert "Appendix R" in report
     assert "manual" in report.lower()
     assert "not evaluated" in report.lower()
     assert "Remaining Strength Factor" not in report
-    assert Path(result["report_path"]).read_text() == report
+    assert Path(result["report_path"]).read_text(encoding="utf-8") == report
 
 
 @pytest.mark.parametrize("params,verdict", [
     ({"with_gouge_or_metal_loss": True}, "ESCALATE"),
-    ({"restrained": True}, "ESCALATE"),
+    ({"restrained": True}, "MONITOR"),
     ({"on_weld": True}, "REPAIR"),
     ({"dent_length_axial_in": 1.0}, "ESCALATE"),
 ])

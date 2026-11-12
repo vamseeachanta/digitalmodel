@@ -160,7 +160,7 @@ def test_through_wall_and_intact_grids_are_explicit(reference, thickness):
     if thickness == 0:
         assert result["decision"]["verdict"] == "ESCALATE"
     else:
-        assert result["decision"]["verdict"] == "ESCALATE"  # A14
+        assert result["decision"]["verdict"] == "ACCEPT"
 
 
 def test_ratio_screen_has_no_rsf_or_replacement_verdict(reference):
@@ -168,13 +168,16 @@ def test_ratio_screen_has_no_rsf_or_replacement_verdict(reference):
 
     result = assess(reference)
     assert result["governing_method"] == "RSTRENG"
-    assert result["decision"]["verdict"] == "ESCALATE"  # A14
+    assert result["decision"]["verdict"] == "ACCEPT"
+    assert result["decision"]["remaining_life_basis"] == "Current-state screen; no life projection"
     assert "RSF" not in result["decision"]["governing_criterion"]
     assert "rsf" not in result["decision"]
     reference["axial_stress_psi"] = 100000
     result = assess(reference)
     assert result["decision"]["verdict"] == "DERATE"
     assert result["decision"]["action"] == "REDUCE AXIAL STRESS"
+    assert "MAWP" not in result["decision"]["governing_criterion"]
+    assert "operating pressure" not in result["decision"]["governing_criterion"]
     assert result["decision"]["rerated_mawp_psi"] is None
     json.dumps(result, allow_nan=False)
 

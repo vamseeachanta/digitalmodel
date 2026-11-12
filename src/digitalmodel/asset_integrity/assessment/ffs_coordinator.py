@@ -27,7 +27,7 @@ Units: inches and psi (consistent with the Phase-1 modules).
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, dataclass, field, replace
 import math
 from pathlib import Path
 from typing import Any, Mapping, Optional, Union
@@ -185,9 +185,8 @@ def assess_component(
     df = _to_grid_df(grid, input_units)
     if component.fca_in >= float(measured_grid(df).min()):
         raise ValueError("FCA consumes a measured ligament; strength is not evaluated")
-    # Assess future net wall once throughout screening, strength and life.
-    df = df - component.fca_in
-    measured_grid(df)
+    # Measured morphology and survey coverage do not change with future loss.
+    net_grid = df - component.fca_in
 
     route = FFSRouter.classify(
         df, component.nominal_od_in, component.nominal_wt_in, force_type=force_type,
@@ -203,8 +202,8 @@ def assess_component(
         allowable_stress_psi=component.allowable_stress_psi,
     )
     t_min = screener.t_min()
-    t_mm = GridParser.min_thickness(df)
-    t_am = GridParser.mean_thickness(df)
+    t_mm = GridParser.min_thickness(net_grid)
+    t_am = GridParser.mean_thickness(net_grid)
     l1 = screener.evaluate(t_mm)
 
     pit_char = None
@@ -216,7 +215,22 @@ def assess_component(
         pit_char = characterize_pit_field(df, component.nominal_wt_in,
                                          row_spacing_in=component.row_spacing_in)
         pit_l1 = screen_pitting_level1(
-            pit_char, t_min_in=t_min
+            pit_char, t_min_in=t_min, fca_in=component.fca_in
+        )
+        # Keep measured pit populations/extent; deduct allowance from each wall
+        # entering the equivalent-LTA strength checks, including background.
+        fca = component.fca_in
+        future_pits = replace(
+            pit_char,
+            t_min_pit_in=pit_char.t_min_pit_in - fca,
+            t_avg_pit_in=pit_char.t_avg_pit_in - fca,
+            max_pit_depth_in=pit_char.max_pit_depth_in + fca,
+            avg_pit_depth_in=pit_char.avg_pit_depth_in + fca,
+            max_pit_depth_ratio=(pit_char.max_pit_depth_in + fca) / component.nominal_wt_in,
+            avg_pit_depth_ratio=(pit_char.avg_pit_depth_in + fca) / component.nominal_wt_in,
+            background_median_in=pit_char.background_median_in - fca,
+            background_min_in=(pit_char.background_min_in - fca
+                               if pit_char.background_min_in is not None else None),
         )
         combined_verdict = (
             "ACCEPT"
@@ -225,7 +239,7 @@ def assess_component(
         )
         l1 = {**l1, "verdict": combined_verdict, "pitting_screen": pit_l1}
         l2 = assess_pitting_level2_equivalent_lta(
-            pit_char,
+            future_pits,
             nominal_od_in=component.nominal_od_in,
             nominal_wt_in=component.nominal_wt_in,
             t_min_in=t_min,
@@ -239,7 +253,7 @@ def assess_component(
             t_min_in=t_min,
             rsf_a=component.rsf_a,
             row_spacing_in=component.row_spacing_in,
-        ).evaluate(df)
+        ).evaluate(df, fca_in=component.fca_in)
 
     # Applicability flags raised by the Level 2 engine (Folias lambda cap);
     # any flag makes the decision ESCALATE instead of a numeric verdict.

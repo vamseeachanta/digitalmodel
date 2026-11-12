@@ -315,7 +315,7 @@ class Decision:
     asset_class: str
     margin: float
     margin_allowable: float
-    remaining_life_yr: float
+    remaining_life_yr: float | None
     governing_criterion: str
     derated: Optional["ureg.Quantity"] = None
     applicability: Applicability = field(default_factory=Applicability)
@@ -363,6 +363,7 @@ def decide(
     screening_pass: Optional[bool] = None,
     applicability: Optional[Applicability] = None,
     zero_rate_basis: str | None = None,
+    life_required: bool = True,
 ) -> Decision:
     """Shared FFS decision tree for any asset class.
 
@@ -384,6 +385,10 @@ def decide(
             checks escalate while independently established failures retain
             their required action. None means no additional method record.
         zero_rate_basis: Explicit qualification for a zero-rate infinite life.
+        life_required: False only for a current-state screen without a life
+            projection; its life input must be NaN. Strength, screening and
+            applicability still govern. A failed screen without a numeric
+            margin failure escalates for an explicit engineering disposition.
     """
     policy = _policy(asset_class)
     app = applicability if applicability is not None else Applicability()
@@ -406,6 +411,10 @@ def decide(
         raise ValueError("remaining life must be nonnegative or explicitly unknown")
     if screening_pass is not None and type(screening_pass) is not bool:
         raise ValueError("screening_pass must be a boolean or None")
+    if type(life_required) is not bool:
+        raise ValueError("life_required must be an explicit boolean")
+    if not life_required and not math.isnan(life):
+        raise ValueError("Current-state screening requires NaN life; no life projection is used")
     life_known = math.isfinite(life) or (
         life == math.inf and isinstance(zero_rate_basis, str) and bool(zero_rate_basis.strip()))
     if life == math.inf and not life_known:
@@ -423,18 +432,27 @@ def decide(
             asset_class=policy.name,
             margin=m,
             margin_allowable=m_a,
-            remaining_life_yr=life,
-            governing_criterion=criterion,
+            remaining_life_yr=life if life_required else None,
+            governing_criterion=criterion + (
+                " Current-state screen; no life projection." if not life_required else ""),
             derated=derating.value if derating is not None else None,
             applicability=app,
-            remaining_life_basis=zero_rate_basis if life == math.inf else None,
+            remaining_life_basis=("Current-state screen; no life projection" if not life_required
+                                  else zero_rate_basis if life == math.inf else None),
         )
 
     # Independent numeric failures retain their required action even if another
     # check is unavailable; missing applicability never improves that action.
     app_note = ""
+    rating_note = ""
     if not app.ok:
-        app_note = " Other checks are not evaluated: " + "; ".join(app.notes or app.flags)
+        app_note = " Other checks are not evaluated: " + "; ".join(app.notes or app.flags).rstrip(". ") + "."
+        if derating is not None:
+            check = "pressure" if derating.value.check("[pressure]") else "limit"
+            rating_note = (
+                f" Evaluated {check} check only; no operating limit is established."
+            )
+            app_note += rating_note
     if math.isfinite(m) and m < b.derate_floor:
         return _make(Verdict.REPLACE,
                      f"{lbl}={m:.3f} is below the de-rating floor {b.derate_floor:.2f}. "
@@ -446,12 +464,13 @@ def decide(
     # Unsupported criteria with no independently established failure escalate.
     if not app.ok:
         flags = ", ".join(app.flags)
-        notes = "; ".join(app.notes)
+        notes = "; ".join(app.notes).rstrip(". ")
+        margin_note = (f"Margin {lbl}={m:.3f} is reported for reference only; "
+                       if math.isfinite(m) else "Margin is not evaluated; ")
         return _make(
             Verdict.ESCALATE,
-            f"Applicability flag(s) raised [{flags}]: {notes}.  Margin "
-            f"{lbl}={m:.3f} is reported for reference only; a Level 3 / "
-            "engineering review is required before a fitness verdict.",
+            f"Applicability flag(s) raised [{flags}]: {notes}.  " + margin_note + "a Level 3 / "
+            "engineering review is required before a fitness verdict." + rating_note,
         )
 
     if not math.isfinite(m):
@@ -461,16 +480,21 @@ def decide(
             "higher assessment level.",
         )
 
-    if not life_known:
+    if life_required and not life_known:
         return _make(Verdict.ESCALATE,
                      "Remaining life not evaluated: corrosion rate or qualified zero-rate "
                      "basis is missing; establish the life basis before clearance.")
 
+    if not life_required and screening_pass is False:
+        return _make(Verdict.ESCALATE,
+                     "Current-state screening failed; establish the required repair or "
+                     "higher-level assessment disposition before clearance.")
+
     if screening_pass is None:
-        screening_pass = m >= m_a and life > 0.0
+        screening_pass = m >= m_a and (not life_required or life > 0.0)
 
     # Clearance requires both numeric strength/life and any supplied screen.
-    if screening_pass and m >= m_a and life > 0:
+    if screening_pass and m >= m_a and (not life_required or life > 0):
         if m < m_a + b.monitor_band:
             return _make(
                 Verdict.MONITOR,

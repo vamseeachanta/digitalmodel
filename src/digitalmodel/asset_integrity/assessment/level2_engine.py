@@ -117,11 +117,13 @@ class Level2Engine:
     # Public interface
     # ------------------------------------------------------------------
 
-    def evaluate(self, grid_df: pd.DataFrame) -> dict:
+    def evaluate(self, grid_df: pd.DataFrame, *, fca_in: float = 0.0) -> dict:
         """Run the Level 2 assessment on the parsed wall-thickness grid.
 
         Args:
             grid_df: Normalised wall-thickness DataFrame (inches).
+            fca_in: Future allowance deducted from strength wall only; the
+                measured grid continues to define the flaw extent.
 
         Returns:
             dict with keys:
@@ -137,11 +139,15 @@ class Level2Engine:
                     exceeds the Table 4.4 range and M_t was frozen (#1094)
         """
         values = measured_grid(grid_df)
+        finite_number(fca_in, "fca_in", positive=False)
+        if fca_in >= float(values.min()):
+            raise ValueError("FCA consumes a measured ligament; strength is not evaluated")
         if 2 * float(values.max()) >= self._od:
             raise ValueError("Measured wall requires OD > 2 times wall")
+        net_grid = grid_df - fca_in
         if self._type == "GML":
-            return self._evaluate_gml(grid_df)
-        return self._evaluate_lml(grid_df)
+            return self._evaluate_gml(net_grid)
+        return self._evaluate_lml(net_grid, measured_df=grid_df)
 
     def local_loss_projection_domain(self, grid_df: pd.DataFrame):
         """Supported wall interval when only current minima decrease.
@@ -200,7 +206,7 @@ class Level2Engine:
     # LML assessment (Part 5 Level 2)
     # ------------------------------------------------------------------
 
-    def _evaluate_lml(self, grid_df: pd.DataFrame) -> dict:
+    def _evaluate_lml(self, grid_df: pd.DataFrame, *, measured_df: pd.DataFrame) -> dict:
         """Part 5 Level 2: localised RSF with Folias factor.
 
         1. Identify the flaw bounding box (cells below threshold).
@@ -215,7 +221,7 @@ class Level2Engine:
         # t_c: future thickness outside the flaw = t_min (conservative)
         t_c = self._t_min
 
-        l_a, lam, mt = self._lml_geometry(grid_df)
+        l_a, lam, mt = self._lml_geometry(measured_df)
 
         # Thickness ratio Rt = t_mm / t_c
         rt = t_mm / t_c

@@ -19,7 +19,7 @@ def reference():
         Path(__file__).resolve().parents[2]
         / "examples/workflows/pipeline-corroded-defect-screen/input.yml"
     )
-    inputs = yaml.safe_load(path.read_text())["pipeline_defect_screen"]
+    inputs = yaml.safe_load(path.read_text(encoding="utf-8"))["pipeline_defect_screen"]
     inputs["length_confirmed"] = True
     return inputs
 
@@ -106,7 +106,7 @@ def test_length_confirmation_requires_boolean(reference, confirmation):
 
 def test_confirmed_boundary_preserves_reference_pressures(reference):
     result = assess(reference)
-    assert result["decision"]["verdict"] == "ESCALATE"  # A14
+    assert result["decision"]["verdict"] == "ACCEPT"
     assert any(
         "full defect length is caller confirmed." in note
         for note in result["limitations"]

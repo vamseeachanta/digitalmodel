@@ -1,7 +1,7 @@
 """Manual dent geometry adapter, preserving all existing screening criteria."""
-from dataclasses import asdict
+from dataclasses import asdict, replace
 
-from digitalmodel.asset_integrity.assessment.ffs_decision import decide
+from digitalmodel.asset_integrity.assessment.ffs_decision import Verdict, decide
 from digitalmodel.asset_integrity.assessment.ffs_report import FFSReport
 from digitalmodel.asset_integrity.assessment.screening_report import finite_number, store_report
 from .dent_assessment import (
@@ -36,17 +36,24 @@ def _decision(assessment, geometry):
     unreliable = any(geometry["dent_depth_in"] / geometry[key] > 0.5
                      for key in ("dent_length_axial_in", "dent_length_circ_in"))
     if status == "REJECT":
-        decision = decide(1.0, 1.0, 0.0, "pipeline", screening_pass=False)
+        decision = decide(float("nan"), 1.0, float("nan"), "pipeline", life_required=False)
+        # The dent engine establishes rejection independently of projected life.
+        decision = replace(decision, verdict=Verdict.REPAIR, action="REPAIR")
     elif status == "NEEDS_ASSESSMENT" or unreliable:
-        decision = decide(float("nan"), 1.0, 0.0, "pipeline")
+        decision = decide(float("nan"), 1.0, float("nan"), "pipeline", life_required=False)
     else:
         token = 1.0 if status == "MONITOR" else 2.0
-        decision = decide(token, 1.0, float("inf"), "pipeline", screening_pass=True)
+        decision = decide(token, 1.0, float("nan"), "pipeline", screening_pass=True,
+                          life_required=False)
     result = decision.to_dict()
     for key in ("rsf", "rsf_a", "margin", "margin_allowable", "remaining_life_yr",
                 "rerated_mawp_psi", "derated", "derated_units"):
         result.pop(key)
-    result["governing_criterion"] = assessment.governing_criterion
+    # Shared numeric tokens encode the engine disposition, not strain margins.
+    result["governing_criterion"] = (
+        f"Current-state screening disposition: {decision.verdict.value}; no life projection. "
+        + assessment.governing_criterion
+    )
     if status == "REJECT":
         result["governing_criterion"] += "; repair or higher-level assessment required"
     if unreliable:

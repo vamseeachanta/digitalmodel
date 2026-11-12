@@ -244,6 +244,8 @@ def _bisect_local_loss(evaluate, evidence, finish, low, high, target):
 
 
 def evaluate_section(data, component, cfg):
+    if component.fca_in != 0:
+        raise ValueError("Report future corrosion allowance is not supported; no rating is established")
     strength = assess(data)
     frame = pd.DataFrame(data["grid"], index=data["axial_positions_in"])
     # Both grids bound local patches; degraded-cell fraction within a selected
@@ -306,15 +308,13 @@ def evaluate_section(data, component, cfg):
                          flags=not app.ok)
     rating = min(pressure_rating(data["design_pressure_psi"], pressure_margin),
                  local_rating)
-    coordinator = detailed.to_dict()
-    # The automatic repair helper lacks a repair-specific design basis here.
-    # Its default repair-life interval must not be confused with assessed life.
-    coordinator.pop("repair_recommendation", None)
-    # Coordinator RSF/rating and decision use a different reference wall and
-    # are diagnostic only. Do not mix them with the issued local-loss result.
-    for field in ("rsf", "rsf_a", "folias_factor", "verdict", "rerated_pressure_psi",
-                  "sufficiency_status", "passes", "code_reference"):
-        coordinator.pop(field, None)
+    # Only geometry is shared with the issued result. Coordinator decisions and
+    # life use a different reference wall and are excluded from this report.
+    detailed_values = detailed.to_dict()
+    coordinator = {key: detailed_values[key] for key in (
+        "component_id", "assessment_type", "t_nominal_in", "t_min_in", "t_measured_min_in",
+        "t_measured_avg_in", "fca_in",
+    )}
     return {
         "name": data["component_id"], "inputs": data, "component": asdict(component),
         "strength": strength, "coordinator": coordinator,
@@ -362,12 +362,23 @@ def public_assessment(result):
             "RATING_ABOVE_DEMAND" if section["local_loss_rating_psi"] >= section["inputs"]["design_pressure_psi"]
             else "RATING_BELOW_DEMAND"
         )
+        if not local["applicability"]["ok"]:
+            local["pressure_criterion"] = "NOT_CREDITED_APPLICABILITY_INCOMPLETE"
+            local["strength_factor_comparison"] = "NOT_CREDITED_APPLICABILITY_INCOMPLETE"
+        if section["decision"] != "re-rate" or not section["applicability"]["ok"]:
+            section["pressure_rating_psi"] = None
+            section["axial_limit_psi"] = None
         decision = section["strength_decision"]
         decision["minimum_capacity_to_demand"] = decision.pop("rsf")
         decision["governing_criterion"] = (
-            f"Minimum capacity/demand={decision['margin']:.4g}; required ratio=1. "
+            "Compare minimum_capacity_to_demand with margin_allowable. "
             "Includes the reduced local-loss pressure rating and separate axial restriction."
         )
+        if not section["applicability"]["ok"]:
+            decision["governing_criterion"] += (
+                " Diagnostic pressure check only; no operating limit is established "
+                "until the other applicability checks are resolved."
+            )
         if section["sufficiency"]["status"] == "ESCALATE":
             section["sufficiency"]["reasons"] = [
                 "Remaining strength factor below the allowable factor and above "
@@ -438,7 +449,7 @@ def action_text(section):
                      "Clearance remains withheld while the local profile remains under-sampled. ")
         return ("Complete the formal local-loss evaluation: required applicability "
                 "criteria are not established. " + field
-                + " ".join(section["applicability"]["notes"])
+                + " ".join(note.rstrip(". ") + "." for note in section["applicability"]["notes"])
                 + " Confirm the applicability, material and load basis before adopting any rating. "
                 "Interim operation is a decision for the maintainer of the pipeline record.")
     return f"Maintain the stated loads and repeat inspection within {number(section['interval_yr'])} yr."
@@ -504,17 +515,35 @@ def method_table(section, title):
                          "Allowable axial stress (psi)", "Demand (psi)", "Ratio (%)", "Applicability"], rows)
 
 
+def rating_qualification(app, *, include_notes=True):
+    """Bind uncredited ratings to the checks actually marked unavailable."""
+    if app["ok"]:
+        return "Reference 3; pressure rating before loss from Reference 4"
+    reason = (
+        "Diagnostic only; not credited until the circumferential criterion is assessed. "
+        if "LML_CIRCUMFERENTIAL_NOT_EVALUATED" in app["flags"] else
+        "Diagnostic only; reduced-wall rating is not credited until the required applicability checks are resolved. "
+    )
+    return reason + (" ".join(note.rstrip(". ") + "." for note in app["notes"])
+                     if include_notes else "")
+
+
 def result_blocks(section, key):
     c, suff, local = section["coordinator"], section["sufficiency"], section["level2"]
+    rating_basis = rating_qualification(local["applicability"])
+    rsf_basis = (
+        "Below the allowable factor" if local["rsf"] < local["rsf_a"]
+        else "At or above the allowable factor"
+    ) + "; " + rating_basis[0].lower() + rating_basis[1:]
     blocks = [text("# " + section["name"]), *figures(section, key), method_table(section, "Remaining strength")]
     blocks.append(table("Thickness and local-loss assessment", ["Quantity", "Result", "Criterion or basis"], [
         ["Minimum remaining wall (in)", number(c["t_measured_min_in"], thickness=True), "Synthetic grid"],
         ["Mean remaining wall (in)", number(c["t_measured_avg_in"], thickness=True), "Synthetic grid"],
         ["Required pressure wall (in)", number(c["t_min_in"], thickness=True), "Pressure design: Reference 4"],
         ["Point-minimum pressure-wall comparison", "minimum wall meets criterion" if section["level1"]["verdict"] == "ACCEPT" else "minimum wall below criterion", "Diagnostic comparison only; not an intervention rule or an API Level 1 criterion"],
-        ["Reference wall away from flaw (in)", number(section["reference_wall_in"], thickness=True), "Full-wall background; future allowance deducted"],
-        ["Level 2 remaining strength factor", number(local["rsf"]), "Below the allowable factor; reduced pressure rating evaluated (Reference 3)" if local["rsf"] < local["rsf_a"] else "At or above the allowable factor (Reference 3)"],
-        ["Reduced local-loss rating (psi)", number(section["local_loss_rating_psi"]), "Reference 3; pressure rating before loss from Reference 4"],
+        ["Reference wall away from flaw (in)", number(section["reference_wall_in"], thickness=True), "Full-wall background; zero future corrosion allowance in this report"],
+        ["Level 2 remaining strength factor", number(local["rsf"]), rsf_basis],
+        ["Reduced local-loss rating (psi)", number(section["local_loss_rating_psi"]), rating_basis],
         ["Assessment path", "Local metal loss", "Bounded patch; general-loss averaging is not applied"],
         ["Bulging factor", number(local["folias_factor"]), "Simplified local-loss relation"],
         ["Local-loss flaw length (in)", number(local["flaw_length_in"]), "Degraded axial rows times row spacing"],
@@ -602,7 +631,7 @@ def methodology():
         "Through-wall loss raises an applicability flag. This is not a burst-pressure or combined-loading calculation. Method source: Reference 3.",
         "The point-minimum comparison uses the required pressure wall (Reference 4) as a diagnostic, not an intervention or API Level 1 criterion. "
         "Both sections are local metal loss: Section A is a single bounded patch, not general loss around the pipe. "
-        "The Level 2 calculation uses the wall away from the flaw, after uniform loss and future allowance, "
+        "The Level 2 calculation uses the wall away from the flaw after uniform loss, with zero future corrosion allowance in this report, "
         "as the reference wall in the simplified local-loss relation (Reference 3). "
         "The full-wall background establishes that reference for these synthetic grids. The reduced rating uses the uncorroded "
         "pressure rating obtained by inverting the linear pressure-wall calculation (Reference 4), then applies the remaining-strength reduction. "
@@ -617,7 +646,7 @@ def methodology():
         "Acceptance or monitoring gives **accept** only with "
         "positive remaining life. Other outcomes give **escalate**. "
         "The pressure reduction uses only pressure ratios and the corrected local-loss pressure rating, never an axial ratio. "
-        "The reduced rating participates in the strength decision even when the remaining strength factor is below its allowable value.",
+        "The reduced rating is diagnostic only when applicability is incomplete; it is not credited until the circumferential criterion is assessed.",
     )]
 
 
@@ -644,12 +673,26 @@ def section_material(result):
             f"{number(row['allowable_pressure_psi'])} psi. "
             if governing_name == "Reduced local-loss rating" else ""
         )
+        governing_qualified = (
+            s["level2"]["applicability"]["ok"] if governing_name == "Reduced local-loss rating"
+            else row["applicability"]["ok"]
+        )
+        rating_claim = (
+            f"{governing_name} governs at {number(governing_rating)} psi against "
+            if governing_qualified else
+            f"{governing_name} is diagnostic at {number(governing_rating)} psi against "
+        )
+        rating_credit = (
+            "The lower pressure rating participates in the decision. "
+            if s["applicability"]["ok"] else
+            "The reduced-wall rating: " + rating_qualification(s["applicability"], include_notes=False) + " "
+        )
         summary.append(text(f"**{s['name']}: {s['decision']}.** {action_text(s)} {deferred_referral(s)}"
                             "A changed minimum, defect extent or loss pattern will require reassessment; "
                             "a repeat-inspection corrosion rate will change the life projection. "
-                            f"{governing_name} governs at {number(governing_rating)} psi against "
+                            + rating_claim +
                             f"{number(pressure)} psi, a ratio of {ratio(governing_rating / pressure)}. "
-                            + comparison +
+                            + rating_credit + comparison +
                             f"Minimum wall is {number(s['coordinator']['t_measured_min_in'], thickness=True)} in."))
         suff = s["sufficiency"]["metrics"]
         sampling_basis = (f"The local profile contains {suff['profile_cells']} degraded cells. " +
@@ -664,7 +707,7 @@ def section_material(result):
                              f"The reduced local-loss rating is {number(s['local_loss_rating_psi'])} psi against "
                              f"{number(s['inputs']['design_pressure_psi'])} psi, a ratio of "
                              f"{ratio(s['local_loss_rating_psi'] / s['inputs']['design_pressure_psi'])}. "
-                             "The lower pressure rating participates in the decision. "
+                             + rating_credit
                              + sampling_basis + f"The final decision is {s['decision']}{adequacy_note}. "
                              + action_text(s) + " " + deferred_referral(s)))
         recommendations.append(text(s["name"] + ": **" + s["decision"] + "**. " + action_text(s) + " " + deferred_referral(s) +
