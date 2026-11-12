@@ -108,7 +108,7 @@ class ProjectInputSpec(BaseModel):
             )
         riser_with_fallback = (
             self.riser is not None and self.generic is not None
-            and self.pipeline is None and self.mooring is None
+            and self.pipeline is None and self.mooring is None and self.fowt is None
         )
         if model_types_defined > 1 and not riser_with_fallback:
             defined = []
