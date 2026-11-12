@@ -19,6 +19,7 @@ from .constants import (
 )
 
 MODEL_PATH = Path(__file__).parent / "data" / "dynacard_classifier.json"
+SHAPE_MODEL_PATH = Path(__file__).parent / "data" / "dynacard_shape_classifier.json"
 
 
 class PumpDiagnostics:
@@ -269,52 +270,14 @@ class PumpDiagnostics:
     def _classify_legacy(downhole_card: CardData) -> str:
         """Legacy threshold-based classification (fallback).
 
-        Fires only when :meth:`_load_model` returns ``None`` -- the shipped
-        ``data/dynacard_classifier.json`` is missing or unparseable. That is a
-        degraded install, not a normal operating mode, and it is the worst
-        possible moment to guess.
+        Used only when the shipped model is missing or unparseable. Returns
+        NORMAL, FLUID_POUND or GAS_INTERFERENCE. Neither tagging direction is
+        diagnosed: opposite contact locations require morphology and opposite
+        repairs, which a magnitude threshold cannot establish.
 
-        **This classifier does not diagnose pump tagging, in either
-        direction.** Tagging up and tagging down are opposite mechanisms with
-        opposite repairs -- space the pump down versus space it up -- so a
-        one-sided answer is not a partial answer, it is a 50% chance of the
-        inverse field action. Distinguishing them needs card *morphology*
-        (which end of the stroke the impact sits at, and whether load spikes
-        above the upstroke plateau or dips below the downstroke line), which
-        is what the trained model reads and what a peak/trough threshold
-        cannot. Abstaining leaves the operator to look at the card; guessing
-        sends a crew to re-space a pump the wrong way.
-
-        The rule this replaced compared peak load against
-        ``PUMP_TAGGING_LOAD_THRESHOLD_LBS`` (38,000 lb) and returned
-        ``PUMP_TAGGING_UP``. Two independent problems, both measurable against
-        this package's own generators:
-
-        1. It could never return ``PUMP_TAGGING_DOWN``. A down-tag is a load
-           *minimum*; a maximum-load test is structurally blind to it.
-        2. It did not detect tagging up either. Every card
-           ``generate_pump_tagging_up_card`` produces peaks at 16-21 klb, so
-           the 38 klb rule never fired on a real up-tagging card. What it
-           actually fired on was absolute load above a barrel rating -- a
-           magnitude excursion that carries no information about which end of
-           the pump is being struck, and that a genuinely tagging-down card on
-           a deep well trips just as readily.
-
-        So the branch was not "tagging detection missing its down half"; it
-        detected a different quantity and mislabelled it. Making it two-sided
-        would mean writing a second, uncalibrated morphology classifier and
-        shipping it under the fallback -- a fabricated capability, and exactly
-        the defect class dm#1952 objects to.
-
-        Returning the retired direction-neutral ``PUMP_TAGGING`` is not an
-        available escape either: ``card_generators.MODE_ALIASES`` and
-        ``report_sections.TROUBLESHOOTING_ALIASES`` both resolve it back to
-        ``PUMP_TAGGING_UP``, so the report would still print "space the pump
-        down".
-
-        Returns:
-            One of ``NORMAL``, ``FLUID_POUND``, ``GAS_INTERFERENCE`` -- the
-            findings a threshold rule can honestly support.
+        The retired peak-load test identified a barrel-rating excursion, not
+        tagging. Its PUMP_TAGGING alias also resolves to PUMP_TAGGING_UP, so it
+        cannot express abstention. See the fallback correction in issue 1952.
         """
         pos = np.array(downhole_card.position)
         load = np.array(downhole_card.load)
@@ -345,23 +308,46 @@ def classify_with_model(card: CardData, model: dict) -> str:
     return mode
 
 
-def _check_feature_count(features: np.ndarray, model: dict) -> None:
-    """Fail loudly when the shipped model predates the current feature vector.
+def classify_shape(card: CardData) -> DiagnosticResult:
+    """Classify only normalised shape using JSON trees, without scikit-learn.
 
-    A stale model is the dangerous case, not a broken one: its ``scaling``
-    arrays are shorter than the vector, numpy broadcasts or raises deep inside
-    :meth:`FeatureExtractor.normalize`, and if it happens to line up the trees
-    split on features that are not the ones they were trained on -- producing
-    confident, wrong diagnoses with nothing to indicate anything went wrong.
-    Adding a feature (dm#1884) without retraining is exactly how that happens.
+    Magnitude is invisible: rod parting, stuck pump and gas lock may be defined
+    by low load range or short stroke. Such conditions need the load range
+    compared with the expected fluid load and an expected stroke basis, which
+    are outside this model. Confidence describes synthetic class separation,
+    not independently validated field probability. Missing artefacts raise;
+    this opt-in path does not fall back to the default magnitude classifier.
     """
+    model = json.loads(SHAPE_MODEL_PATH.read_text(encoding="utf-8"))
+    return _classify_shape_with_model(card, model)
+
+
+def _classify_shape_with_model(card: CardData, model: dict) -> DiagnosticResult:
+    """Evaluate the exact supplied shape artefact, independently of caches."""
+    features = FeatureExtractor.extract_shape_vector(card)
+    _check_feature_count(features, model, shape=True)
+    features = FeatureExtractor.normalize(features, model["scaling"])
+    mode, probabilities = _predict_from_trees(features, model)
+    ranked = np.argsort(probabilities)[::-1]
+    return DiagnosticResult(
+        classification=mode, confidence=round(float(probabilities[ranked[0]]), 4),
+        differential=[{"mode": model["class_labels"][idx],
+                       "probability": round(float(probabilities[idx]), 4)}
+                      for idx in ranked[:3]],
+        model_version=model.get("model_version", "1.0"),
+    )
+
+
+def _check_feature_count(features: np.ndarray, model: dict, *, shape=False) -> None:
+    """Reject an extractor/model dimension mismatch before normalisation."""
     expected = len(model["scaling"]["min"])
     if len(features) != expected:
+        name = "dynacard_shape_classifier" if shape else "dynacard_classifier"
+        trainer = "train_and_export_shape" if shape else "train_and_export"
         raise ValueError(
             f"dynacard model expects {expected} features but the extractor "
-            f"produced {len(features)} -- the shipped "
-            f"data/dynacard_classifier.json predates the current feature "
-            f"vector. Retrain with training.train_and_export()."
+            f"produced {len(features)} -- data/{name}.json predates the current "
+            f"feature vector. Retrain with training.{trainer}()."
         )
 
 
@@ -369,15 +355,7 @@ def _predict_from_trees(
     features: np.ndarray,
     model: dict,
 ) -> tuple:
-    """Traverse GradientBoosting decision trees from JSON model.
-
-    Args:
-        features: Normalized feature vector of shape (n_features,).
-        model: Loaded model dictionary.
-
-    Returns:
-        (predicted_class_label, probability_array)
-    """
+    """Return (class label, probabilities) from normalised features and JSON trees."""
     n_classes = model["n_classes"]
     learning_rate = model["learning_rate"]
     trees = model["trees"]
