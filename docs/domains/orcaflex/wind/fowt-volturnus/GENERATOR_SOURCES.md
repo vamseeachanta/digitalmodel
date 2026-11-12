@@ -36,6 +36,8 @@ pinned revision before parsing any values. A mismatch rejects extraction.
 The raw files are not committed; their SHA-256 digests are recorded in
 `generator_data.yml`, and the extraction test reproduces the committed file
 byte for byte when the raw folder is supplied through `DIGITALMODEL_IEA15_RAW`.
+Mass totals and mass-weighted centres use `math.fsum` so that Python 3.11 and
+3.12 reproduce the same bytes without rounding the extracted values.
 
 The workbook's RNA row centre of mass is not the mass-weighted combination of
 its own nacelle, blade and hub rows: the component rows place it 0.533 m further

@@ -18,6 +18,7 @@ Usage::
 from __future__ import annotations
 
 import hashlib
+import math
 import sys
 from pathlib import Path
 
@@ -127,11 +128,13 @@ def build(raw: Path) -> dict:
             raise ValueError(f"source digest mismatch: {names[key].name}")
     overview, nacelle, performance = read_tabular(names["tabular"])
     rotor_rows = [nacelle["Blades"], nacelle["Hub_System"]]
-    rotor_mass = sum(float(r[1]) for r in rotor_rows)
-    rotor_cm = [sum(float(r[1]) * float(r[c]) for r in rotor_rows) / rotor_mass
+    # Keep accumulation independent of Python's built-in sum implementation.
+    rotor_mass = math.fsum(float(r[1]) for r in rotor_rows)
+    rotor_cm = [math.fsum(float(r[1]) * float(r[c]) for r in rotor_rows) / rotor_mass
                 for c in (2, 3, 4)]
     parts = rotor_rows + [nacelle["nacelle"]]
-    combined = [sum(float(r[1]) * float(r[c]) for r in parts) / sum(float(r[1]) for r in parts)
+    total_mass = math.fsum(float(r[1]) for r in parts)
+    combined = [math.fsum(float(r[1]) * float(r[c]) for r in parts) / total_mass
                 for c in (2, 3, 4)]
     zero, infinite, rows = read_wamit1(names["wamit1"])
     hst = read_hst(names["hst"])
