@@ -4,7 +4,10 @@
 #
 # Riser: 10.75 in steel, OD 0.2731 m, ID 0.2223 m, 0.1552 te/m, EI 31,709
 # kN.m2, EA 4.091e6 kN, contents 1.0 te/m3; vertical from the seabed anchor
-# (z -500 m) to a free top at z +12 m; length 512 m.
+# (z -500 m) to a free top at z +12 m; length 512 m. EI, EA and GJ use
+# E = 207 GPa and Poisson ratio 0.3, assumed, based on previous experience,
+# and not taken from a cited material source. The tensioner stiffness and
+# target tension are illustrative inputs, not sourced equipment data.
 # Tensioners: 4 linear spring/damper links, 50 kN/m each, from vessel points
 # on a 3 m radius at z +20 m to the riser top; target vertical total 1000 kN.
 #
@@ -18,9 +21,10 @@
 #     vertical stiffness 190.8 kN/m incl. geometric term): top rises about
 #     0.081 m; top effective tension about 984.5 kN, bottom about 311.9 kN.
 #     Identity: top - bottom effective tension = W = 672.7 kN.
-#   The equilibrium estimate uses effective tension for stretch; wall-tension
+#   The equilibrium estimate uses effective tension for stretch. Wall-tension
 #     pressure terms (external up to about 294 kN, internal up to about 195 kN
-#     at the bottom) and Poisson coupling shift it by a few per cent.
+#     at the bottom) and Poisson coupling are omitted; their effect on the
+#     rise and the top tension is not established offline.
 #
 # Generate:
 #   python -m digitalmodel.solvers.orcaflex.modular_generator generate \

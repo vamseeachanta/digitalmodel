@@ -147,3 +147,41 @@ def test_example_matches_golden(example, tmp_path):
         got = yaml.safe_load((includes / name).read_text(encoding="utf-8"))
         want = yaml.safe_load((GOLDEN / name).read_text(encoding="utf-8"))
         assert got == want, name
+
+
+def test_example_header_equilibrium_hand_check(example):
+    """Recompute the example header's static estimate from the spec inputs.
+
+    Effective-tension stretch of the riser balanced against the linearised
+    tensioner vertical stiffness (axial plus geometric term). Arithmetic of
+    the header only; it is not a licensed statics result.
+    """
+    g, rho = 9.80665, 1.025
+    spec = ProjectInputSpec(**example).riser
+    line_type, line = spec.line_types[0], spec.lines[0]
+    tensioner = spec.tensioners[0]
+    od, idia = line_type.outer_diameter, line_type.inner_diameter
+    w = (line_type.mass_per_length + line.contents.density * math.pi * idia**2 / 4
+         - rho * math.pi * od**2 / 4) * g
+    length = line.get_total_length()
+    weight = w * length
+    assert w == pytest.approx(1.314, abs=0.001)
+    assert weight == pytest.approx(672.7, abs=0.1)
+
+    dz = tensioner.vessel_z - line.end_a.position[2]
+    link = math.hypot(tensioner.radius, dz)
+    unit = tensioner.total_tension / tensioner.count * link / dz
+    k_vertical = tensioner.count * (
+        tensioner.stiffness * (dz / link) ** 2 + unit / link * (tensioner.radius / link) ** 2
+    )
+    assert k_vertical == pytest.approx(190.8, abs=0.1)
+    k_riser = line_type.axial_stiffness / length
+    assert k_riser == pytest.approx(7990, abs=1)
+    # Rise d: riser stretch (mean effective tension / k_riser) equals d,
+    # with top tension T0 - k_vertical * d.
+    t0 = tensioner.total_tension
+    rise = (2 * t0 - weight) / (2 * k_riser + 2 * k_vertical)
+    top = t0 - k_vertical * rise
+    assert rise == pytest.approx(0.081, abs=0.001)
+    assert top == pytest.approx(984.5, abs=0.1)
+    assert top - weight == pytest.approx(311.9, abs=0.15)

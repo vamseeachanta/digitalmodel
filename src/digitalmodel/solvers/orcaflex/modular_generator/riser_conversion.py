@@ -185,6 +185,10 @@ def render_riser(riser: Riser, fallback: GenericModel) -> GenericModel:
         raise ValueError("Riser fallback requires one line and one vessel")
     if riser.links or riser.clump_types:
         raise ValueError("Typed links and clumps are not supported by riser fallback")
+    if riser.tensioners:
+        # The fallback emits no tensioner links; rendering the line without
+        # them would drop the top support silently (#3976).
+        raise ValueError("Typed tensioners are not supported by riser fallback")
     type_templates = {obj["name"]: obj for obj in generic.get("line_types", [])}
     if len(type_templates) != len(generic.get("line_types", [])) or not {
         obj.name for obj in riser.line_types

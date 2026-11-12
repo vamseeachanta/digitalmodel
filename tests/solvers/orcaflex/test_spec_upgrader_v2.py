@@ -349,3 +349,23 @@ def test_multiple_referenced_line_types_preserve_order(single_riser, tmp_path):
     upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
     assert [s["line_type"] for s in upgraded["riser"]["lines"][0]["sections"]] == [row[0] for row in rows]
     assert generated_mapping(upgraded, tmp_path / "after") == generated_mapping(single_riser, tmp_path / "before")
+
+
+def test_typed_tensioners_are_rejected_on_fallback_route(single_riser, tmp_path):
+    """Typed tensioners must not be dropped silently on the riser-plus-generic route.
+
+    The fallback renders only the line and vessel templates and emits no
+    tensioner links (#3976), so generation must refuse a typed tensioner.
+    """
+    upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
+    line = upgraded["riser"]["lines"][0]
+    line["end_a"]["type"] = "free"
+    line["end_a"].pop("name", None)
+    upgraded["riser"]["tensioners"] = [{
+        "name": "Tensioner", "line": line["name"], "count": 4, "total_tension": 1000,
+        "stiffness": 50, "radius": 3, "vessel_z": 20,
+    }]
+    original = deepcopy(upgraded)
+    with pytest.raises(ValueError, match="tensioners"):
+        generated_mapping(upgraded, tmp_path / "out")
+    assert upgraded == original
