@@ -84,10 +84,38 @@ def test_an_unknown_database_reference_is_rejected(inventory, tmp_path):
         builder.load_inventory(_write(broken, tmp_path))
 
 
-def test_excluded_folders_still_record_origin_as_not_stated(inventory):
+def test_excluded_folders_record_every_provenance_field_as_not_stated(inventory):
     for item in inventory["excluded_model_folders"]["paths"]:
-        text = (ROOT / item / "PROVENANCE.md").read_text(encoding="utf-8")
-        assert "not stated" in text
+        fields = builder.provenance_fields(ROOT / item / "PROVENANCE.md")
+        for field in builder.PROVENANCE_FIELDS:
+            assert fields[field].startswith("not stated"), (item, field)
+
+
+def test_a_single_stated_provenance_field_is_detected(tmp_path):
+    source = ROOT / "docs/domains/orcaflex/risers/production/PROVENANCE.md"
+    text = source.read_text(encoding="utf-8").replace(
+        "## Origin class\n\nnot stated", "## Origin class\n\npublic benchmark", 1)
+    path = tmp_path / "PROVENANCE.md"
+    path.write_text(text, encoding="utf-8")
+    fields = builder.provenance_fields(path)
+    assert fields["Origin class"] == "public benchmark"
+    assert fields["Date"].startswith("not stated")
+
+
+def test_flexible_line_type_examples_are_not_listed_under_steel_risers(inventory):
+    entries = {entry["id"]: entry for entry in inventory["riser_types"]}
+    for steel in ("scr", "slwr"):
+        assert not [p for p in entries[steel]["public_solver_examples"] if "/A01/" in p or "a01_" in p]
+    line_types = (ROOT / "docs/domains/orcaflex/examples/modular/A01/A01 Catenary riser"
+                  / "includes/05_line_types.yml").read_text(encoding="utf-8")
+    assert "flexible" in line_types
+    assert any("A01 Catenary riser" in p for p in entries["flexible"]["public_solver_examples"])
+
+
+def test_issue_references_are_links(inventory):
+    text = builder.render(inventory)
+    assert "[#3942]" not in text  # the tracker is not listed as an open slice
+    assert "[#3944](https://github.com/vamseeachanta/digitalmodel/issues/3944)" in text
 
 
 def test_generated_page_is_current_and_carries_no_run_approval_wording(inventory):

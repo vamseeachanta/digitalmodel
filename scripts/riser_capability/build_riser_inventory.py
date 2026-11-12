@@ -24,6 +24,8 @@ STATUS_TEXT = {
     "components_only": "calculation parts only; no configuration solver",
     "absent": "no calculation in the repository",
 }
+PROVENANCE_FIELDS = ("Origin class", "Source statement", "Date", "Basis", "Permitted use")
+ISSUES_URL = "https://github.com/vamseeachanta/digitalmodel/issues/"
 PATH_KEYS = ("modules", "tests", "example_inputs", "public_solver_examples", "worked_configurations")
 
 
@@ -60,10 +62,28 @@ def load_inventory(path: Path = SOURCE) -> dict:
         if not (ROOT / row["path"]).exists():
             raise ValueError(f"database path does not exist: {row['path']}")
     for item in data["excluded_model_folders"]["paths"]:
-        text = (ROOT / item / "PROVENANCE.md").read_text(encoding="utf-8")
-        if "not stated" not in text:
-            raise ValueError(f"{item}: PROVENANCE.md now states an origin; revise the exclusion")
+        fields = provenance_fields(ROOT / item / "PROVENANCE.md")
+        for field in PROVENANCE_FIELDS:
+            if not fields.get(field, "").startswith("not stated"):
+                raise ValueError(f"{item}: PROVENANCE.md field '{field}' is no longer 'not stated'; revise the exclusion")
     return data
+
+
+def provenance_fields(path: Path) -> dict[str, str]:
+    """Map each level-two heading of a PROVENANCE.md file to its body text."""
+    fields: dict[str, str] = {}
+    name = None
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("## "):
+            name = line[3:].strip()
+            fields[name] = ""
+        elif name is not None and line.strip():
+            fields[name] = (fields[name] + " " + line.strip()).strip()
+    return fields
+
+
+def _issue(number: int) -> str:
+    return f"[#{number}]({ISSUES_URL}{number})"
 
 
 def record_count(path: Path) -> int | None:
@@ -107,7 +127,7 @@ def render(data: dict) -> str:
               "| Riser type | Status | Open-source calculation | Worked configurations | Open issues |",
               "| --- | --- | --- | --- | --- |"]
     for e in data["riser_types"]:
-        issues = ", ".join(f"#{n}" for n in e["open_issues"]) or "none"
+        issues = ", ".join(_issue(n) for n in e["open_issues"]) or "none"
         solver = " ".join(e["open_source_solver"].split())
         lines.append(f"| {e['name']} | {STATUS_TEXT[e['status']]} | {solver} | "
                      f"{_links(e['worked_configurations'])} | {issues} |")
@@ -128,11 +148,12 @@ def render(data: dict) -> str:
         shown = "-" if count is None else str(count)
         lines.append(f"| {row['category']} | `{row['path']}` | {shown} | {population(count)} | {row['provenance']} |")
     for row in data["absent_database_categories"]:
-        issue = f"issue #{row['issue']}" if row["issue"] else "no issue yet"
+        issue = f"issue {_issue(row['issue'])}" if row["issue"] else "no issue yet"
         lines.append(f"| {row['category']} | none | - | absent ({issue}) | none |")
     lines += ["", "Table 2. Riser input databases; record counts are computed at generation.", "",
               "## Excluded model folders", "",
-              " ".join(data["excluded_model_folders"]["reason"].split()), ""]
+              " ".join(data["excluded_model_folders"]["reason"].split()).replace(
+                  "(issue 3956)", f"(issue {_issue(3956)})"), ""]
     lines += [f"- `{item}`" for item in data["excluded_model_folders"]["paths"]]
     lines += ["", "## Reproduce", "", "```bash",
               "PYTHONPATH=src uv run python scripts/riser_capability/build_riser_inventory.py --check",

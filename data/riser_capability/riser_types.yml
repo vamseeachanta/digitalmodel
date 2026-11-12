@@ -7,6 +7,8 @@
 #   absent          no calculation exists in this repository
 # public_solver_examples lists public example models and, where committed, the
 # static solver readback (results.json) for the same public example.
+# The public A01 examples use flexible-pipe line types and are listed under the
+# flexible riser only; the A05 examples use steel riser pipe.
 # worked_configurations lists committed, reproducible cases only. A planned case
 # appears under open_issues, never under worked_configurations.
 schema_version: 1
@@ -129,10 +131,8 @@ riser_types:
       - examples/workflows/riser-fatigue/input.yml
       - examples/riser_input/riser_scr.yml
     public_solver_examples:
-      - docs/domains/orcaflex/examples/modular/A01/A01 Catenary riser/master.yml
       - docs/domains/orcaflex/examples/modular/A05/A05 Catenary with semisub/master.yml
       - docs/domains/orcaflex/examples/modular/A05/A05 Catenary with spar/master.yml
-      - docs/domains/orcaflex/library/tier2_fast/a01_catenary_riser/validation/results.json
     databases: [config_catalog, material_sn_scf_dff, line_pipe, soil_stiffness]
     worked_configurations: []
     open_issues: [3943, 3951, 3952, 3957, 810]
@@ -160,9 +160,7 @@ riser_types:
       - examples/workflows/riser-configuration-screen/slwr.yml
       - examples/riser_input/riser_slwr.yml
     public_solver_examples:
-      - docs/domains/orcaflex/examples/modular/A01/A01 Lazy wave riser/master.yml
       - docs/domains/orcaflex/examples/modular/A05/A05 Lazy wave with FPSO/master.yml
-      - docs/domains/orcaflex/library/tier2_fast/a01_lazy_wave_riser/validation/results.json
     databases: [config_catalog, material_sn_scf_dff, line_pipe]
     worked_configurations: []
     open_issues: [3943, 3951, 3957, 1947, 1948]
@@ -187,10 +185,14 @@ riser_types:
     example_inputs:
       - examples/riser_input/riser_flexible.yml
     public_solver_examples:
+      - docs/domains/orcaflex/examples/modular/A01/A01 Catenary riser/master.yml
+      - docs/domains/orcaflex/examples/modular/A01/A01 Lazy wave riser/master.yml
       - docs/domains/orcaflex/examples/modular/A01/A01 Steep wave riser/master.yml
       - docs/domains/orcaflex/examples/modular/A01/A01 Pliant wave riser/master.yml
       - docs/domains/orcaflex/examples/modular/A02/A02 Lazy S simple/master.yml
       - docs/domains/orcaflex/examples/modular/A02/A02 Lazy S detailed/master.yml
+      - docs/domains/orcaflex/library/tier2_fast/a01_catenary_riser/validation/results.json
+      - docs/domains/orcaflex/library/tier2_fast/a01_lazy_wave_riser/validation/results.json
       - docs/domains/orcaflex/library/tier2_fast/a01_steep_wave_riser/validation/results.json
       - docs/domains/orcaflex/library/tier2_fast/a01_pliant_wave_riser/validation/results.json
     databases: [flexible_pipe]
