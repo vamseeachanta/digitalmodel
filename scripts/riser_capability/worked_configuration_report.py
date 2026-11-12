@@ -42,7 +42,7 @@ def inputs_section(cases):
         ["SLWR buoyancy factor axis", "1", "1.5, 2.0, 2.5", "assumed", "buoyed weight = bare weight × (1 − factor)"],
         ["SLWR sag fraction axis", "1", "0.1, 0.2, 0.3", "assumed", "sag elevation / water depth"],
         ["SLWR hog fraction axis", "1", "0.25, 0.35, 0.5", "assumed", "hog elevation / water depth"],
-        ["Maximum static utilisation", "1", "0.67", "assumed", "2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor"],
+        ["Maximum static utilisation", "1", "0.67", "assumed", "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor"],
         ["Minimum bend radius", "m", "OD/(2 × 0.002)", "assumed", "0.2% outer-fibre elastic bending strain; not a code value"],
         ["Maximum top tension", "N", "0.6 × yield strength × steel area", "assumed", "worked-config-1 tension screen"],
         ["Minimum hog clearance", "m", "50.0", "assumed", "worked-config-1; SCR has no hog bend"],
@@ -88,13 +88,53 @@ def result_tables(case):
                      display(check["margin"]), check["status"], criterion["basis"]])
     text += table(["Criterion", "Limit", "Zero computed", "Governing computed", "Envelope computed", "Controlling offset", "Margin", "Status", "Basis"], rows,
                   f"Table {case['case_id']}-2. Each constraint is evaluated over all offsets. Margin is limit minus computed for upper limits, computed minus limit for lower limits; units follow the limit. SCR hog values are not applicable, rather than missing evidence.")
-    rows = []
-    for label, row in [("zero", zero), ("governing", governing)]:
-        for name, comp in row["comparators"].items():
-            rows.append([label, name, number(comp["comparator_value"]), number(comp["screen_value"]),
-                         number(comp["difference_percent"]), comp["status"]])
-    return text + table(["Offset", "Quantity (N or m)", "Comparator", "Screen", "Difference (%)", "Status"], rows,
-                        f"Table {case['case_id']}-3. Comparator criterion: absolute relative difference ≤ 1e-6 before serialization. Signed difference = 100 × (screen/comparator − 1).")
+    return text + comparator_table(case, zero, governing)
+
+
+def comparator_table(case, zero, governing):
+    """Show geometry at zero/governing offsets and stress at every offset."""
+    comparisons = [(label, name, comp) for label, row in [("zero", zero), ("governing", governing)]
+                   for name, comp in row["comparators"].items() if name != "static_von_mises_utilisation"]
+    comparisons += [(offset(row["offset_m"]), "static_von_mises_utilisation",
+                     row["comparators"]["static_von_mises_utilisation"]) for row in case["offset_results"]]
+    rows = [[label, name, number(comp["comparator_value"]), number(comp["screen_value"]),
+             number(comp["difference_percent"]), comp.get("governing_critical_section", "not applicable"),
+             number(comp["relative_tolerance"]), comp["status"], comp.get("missing_evidence") or "none"]
+            for label, name, comp in comparisons]
+    return table(["Offset", "Quantity (N, m or 1)", "Comparator", "Screen", "Difference (%)",
+                  "Governing critical section", "Relative tolerance (1)", "Status", "Missing evidence"], rows,
+                 f"Table {case['case_id']}-3. Comparator criterion: absolute relative difference ≤ 1e-6 before serialization. "
+                 "Signed difference = 100 × (screen − comparator)/comparator. Stress is compared at all four offsets; "
+                 "a difference outside tolerance is not established and requires the named evidence.")
+
+
+def stress_scope(data):
+    """State stress independence, empirical tolerance and unresolved comparisons."""
+    evidence = data["stress_comparator_evidence"]
+    text = ("The stress comparator uses the same thin-wall formulation as the screen, with an independent implementation "
+            "and independent section selection. Both bending signs are evaluated at hang-off and touchdown, and at sag "
+            "and hog for SLWR. Hoop stress is (pi − pe) OD/(2t), pressure end force is π(pi ID² − pe OD²)/4, "
+            "axial stress is (T + Fpressure)/Asteel ± E OD κ/2, and utilisation is "
+            "√(axial² + hoop² − axial × hoop)/yield. Hang-off uses Ttop and κ = w H/Ttop²; touchdown/sag use "
+            "H and κ = w/H; hog uses H and κ = abs(w(1 − factor))/H. The maximum over those sections is retained "
+            "(first named section on an exact tie). H and Ttop are exposed screen inputs to the comparator, so independent "
+            "global equilibrium is not established by the stress comparison. Agreement establishes the named-section "
+            "comparison within tolerance; continuous interior extrema are not established. It is not a code check and "
+            "does not provide thick-wall or FE verification.\n\n")
+    text += (f"The stress criterion is 1e-6 relative before output rounding, based on numerical-noise agreement across "
+             f"{evidence['base_offset_rows']} base offset rows and {evidence['sensitivity_runs']} sensitivity runs "
+             f"({evidence['sensitivity_offset_rows']} offset rows, including the base rows). The observed maximum absolute "
+             f"difference is {number(evidence['maximum_absolute_difference_percent'])} %. No sampling allowance is applied. "
+             f"Observed governing critical sections: {', '.join(evidence['governing_critical_sections'])}. Hang-off is an "
+             "explicitly sampled endpoint. A sampled screen value lower than the comparator at an unsampled critical "
+             "section understates that section's utilisation; the sampled screen can miss an exact critical section or "
+             "govern at an interior sample. Agreement here does not exclude that limitation for other configurations.\n\n")
+    missing = evidence["not_established_rows"]
+    text += "Stress comparator not established rows: " + ("none at the stated tolerance.\n\n" if not missing else "\n\n")
+    for row in missing:
+        text += (f"- {row['case_id']}, {row['wall_step']}, {offset(row['offset_m'])}: not established; "
+                 f"missing evidence: {row['comparison']['missing_evidence']}.\n")
+    return text + ("\n" if missing else "")
 
 
 def sensitivity_section(cases):
@@ -115,7 +155,7 @@ def sensitivity_section(cases):
                          number(metrics.get("static_von_mises_utilisation")), number(change.get("static_von_mises_utilisation")),
                          number(metrics.get("minimum_bend_radius_m")), number(change.get("minimum_bend_radius_m")),
                          "feasible" if step["feasible"] else "not feasible"])
-        text += table(["Wall step", "Wall (mm)", "Weight (N/m)", "Tension limit (kN)", "Top tension (kN)", "ΔT (%)", "Utilisation (1)", "ΔU (%)", "Radius (m)", "ΔR (%)", "Disposition"], rows,
+        text += table(["Wall step", "Wall (mm)", "Weight (N/m)", "Tension limit (kN)", "Top tension maximum over offsets (kN)", "ΔT (%)", "Utilisation maximum over offsets (1)", "ΔU (%)", "Radius minimum over offsets (m)", "ΔR (%)", "Disposition"], rows,
                       f"Table {case['case_id']}-4. Wall sensitivity against the base; full selected grid coordinates and individual constraint margins are retained in JSON.")
     return text
 
@@ -196,8 +236,8 @@ def render_report(data):
              "Rsag = H/w and Rhog = H/|w(1 − factor)|. Bare suspended material is split before and after "
              "the exposed buoyed interval; the grounded tail is excluded. SLWR horizontal tension is a supplied comparator "
              "input; independent agreement of H and suspended geometry is not established by this equilibrium check.\n\n"
-             "## Inputs and basis\n\n")
-    text += inputs_section(cases) + "## Results per case\n\n"
+             )
+    text += stress_scope(data) + "## Inputs and basis\n\n" + inputs_section(cases) + "## Results per case\n\n"
     for case in cases:
         coordinates = ", ".join(f"{key}={number(value)}" for key, value in case["configuration"].items())
         text += f"### {case['case_id']}\n\nSelected grid coordinates: {coordinates}.\n\n"

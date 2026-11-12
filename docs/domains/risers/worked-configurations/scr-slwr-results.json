@@ -51,7 +51,7 @@
         "static_von_mises_utilisation": {
           "computed": 0.318359,
           "criterion": {
-            "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+            "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
             "limit": 0.67,
             "name": "static_von_mises_utilisation",
             "relation": "<=",
@@ -155,6 +155,20 @@
               "screen_value": 283265.0,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.289503,
+              "critical_section_utilisations": {
+                "hang-off": 0.289503,
+                "touchdown": 0.277356
+              },
+              "difference_percent": 3.83492e-14,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.289503,
+              "status": "pass"
+            },
             "suspended_length_m": {
               "comparator_value": 1334.2,
               "difference_percent": 7.90744e-12,
@@ -223,7 +237,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.289503,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -792,6 +806,20 @@
               "screen_value": 377495.0,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.301537,
+              "critical_section_utilisations": {
+                "hang-off": 0.301537,
+                "touchdown": 0.26986
+              },
+              "difference_percent": 0.0,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.301537,
+              "status": "pass"
+            },
             "suspended_length_m": {
               "comparator_value": 1428.15,
               "difference_percent": 7.83307e-12,
@@ -860,7 +888,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.301537,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -1429,6 +1457,20 @@
               "screen_value": 504102.0,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.318359,
+              "critical_section_utilisations": {
+                "hang-off": 0.318359,
+                "touchdown": 0.269898
+              },
+              "difference_percent": 0.0,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.318359,
+              "status": "pass"
+            },
             "suspended_length_m": {
               "comparator_value": 1545.41,
               "difference_percent": -7.48886e-12,
@@ -1497,7 +1539,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.318359,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -2066,6 +2108,20 @@
               "screen_value": 379432.0,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.301789,
+              "critical_section_utilisations": {
+                "hang-off": 0.301789,
+                "touchdown": 0.269798
+              },
+              "difference_percent": 0.0,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.301789,
+              "status": "pass"
+            },
             "suspended_length_m": {
               "comparator_value": 1430.01,
               "difference_percent": 5.26293e-12,
@@ -2134,7 +2190,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.301789,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -2777,7 +2833,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.342673,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -2812,6 +2868,91 @@
             "top_tension_kn": 1068.98
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.316758,
+                "critical_section_utilisations": {
+                  "hang-off": 0.316758,
+                  "touchdown": 0.306714
+                },
+                "difference_percent": 1.75248e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.316758,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 246116.0,
+              "offset_m": -50.0,
+              "static_von_mises_utilisation": 0.316758,
+              "top_tension_n": 877101.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.327514,
+                "critical_section_utilisations": {
+                  "hang-off": 0.327514,
+                  "touchdown": 0.299889
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.327514,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 327988.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.327514,
+              "top_tension_n": 958973.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.342673,
+                "critical_section_utilisations": {
+                  "hang-off": 0.342673,
+                  "touchdown": 0.299786
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.342673,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 437991.0,
+              "offset_m": 50.0,
+              "static_von_mises_utilisation": 0.342673,
+              "top_tension_n": 1068980.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.32774,
+                "critical_section_utilisations": {
+                  "hang-off": 0.32774,
+                  "touchdown": 0.299832
+                },
+                "difference_percent": 1.69376e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.32774,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 329671.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 50.0
+              },
+              "static_von_mises_utilisation": 0.32774,
+              "top_tension_n": 960656.0
+            }
+          ],
           "submerged_weight_n_m": 630.985,
           "wall_step": "thinner",
           "wall_thickness_m": 0.015875
@@ -2871,7 +3012,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.318359,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -2906,6 +3047,91 @@
             "top_tension_kn": 1230.33
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.289503,
+                "critical_section_utilisations": {
+                  "hang-off": 0.289503,
+                  "touchdown": 0.277356
+                },
+                "difference_percent": 3.83492e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.289503,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 283265.0,
+              "offset_m": -50.0,
+              "static_von_mises_utilisation": 0.289503,
+              "top_tension_n": 1009490.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.301537,
+                "critical_section_utilisations": {
+                  "hang-off": 0.301537,
+                  "touchdown": 0.26986
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.301537,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 377495.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.301537,
+              "top_tension_n": 1103720.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.318359,
+                "critical_section_utilisations": {
+                  "hang-off": 0.318359,
+                  "touchdown": 0.269898
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.318359,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 504102.0,
+              "offset_m": 50.0,
+              "static_von_mises_utilisation": 0.318359,
+              "top_tension_n": 1230330.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.301789,
+                "critical_section_utilisations": {
+                  "hang-off": 0.301789,
+                  "touchdown": 0.269798
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.301789,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 379432.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 50.0
+              },
+              "static_von_mises_utilisation": 0.301789,
+              "top_tension_n": 1105660.0
+            }
+          ],
           "submerged_weight_n_m": 726.226,
           "wall_step": "base",
           "wall_thickness_m": 0.018263
@@ -2965,7 +3191,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.292419,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -3000,6 +3226,91 @@
             "top_tension_kn": 1488.84
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.259655,
+                "critical_section_utilisations": {
+                  "hang-off": 0.259655,
+                  "touchdown": 0.2445
+                },
+                "difference_percent": 2.13788e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.259655,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 342784.0,
+              "offset_m": -50.0,
+              "static_von_mises_utilisation": 0.259655,
+              "top_tension_n": 1221600.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.273414,
+                "critical_section_utilisations": {
+                  "hang-off": 0.273414,
+                  "touchdown": 0.236056
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.273414,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 456813.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.273414,
+              "top_tension_n": 1335630.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.292419,
+                "critical_section_utilisations": {
+                  "hang-off": 0.292419,
+                  "touchdown": 0.236308
+                },
+                "difference_percent": -1.89834e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.292419,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 610022.0,
+              "offset_m": 50.0,
+              "static_von_mises_utilisation": 0.292419,
+              "top_tension_n": 1488840.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.273701,
+                "critical_section_utilisations": {
+                  "hang-off": 0.273701,
+                  "touchdown": 0.235987
+                },
+                "difference_percent": -2.02817e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.273701,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 459157.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 50.0
+              },
+              "static_von_mises_utilisation": 0.273701,
+              "top_tension_n": 1337980.0
+            }
+          ],
           "submerged_weight_n_m": 878.819,
           "wall_step": "thicker",
           "wall_thickness_m": 0.022225
@@ -3058,7 +3369,7 @@
         "static_von_mises_utilisation": {
           "computed": 0.41445,
           "criterion": {
-            "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+            "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
             "limit": 0.67,
             "name": "static_von_mises_utilisation",
             "relation": "<=",
@@ -3162,6 +3473,20 @@
               "screen_value": 621811.0,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.36382,
+              "critical_section_utilisations": {
+                "hang-off": 0.36382,
+                "touchdown": 0.292114
+              },
+              "difference_percent": -1.52578e-14,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.36382,
+              "status": "pass"
+            },
             "suspended_length_m": {
               "comparator_value": 2001.31,
               "difference_percent": 7.32802e-12,
@@ -3230,7 +3555,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.36382,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -3799,6 +4124,20 @@
               "screen_value": 828661.0,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.385071,
+              "critical_section_utilisations": {
+                "hang-off": 0.385071,
+                "touchdown": 0.292293
+              },
+              "difference_percent": 0.0,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.385071,
+              "status": "pass"
+            },
             "suspended_length_m": {
               "comparator_value": 2142.22,
               "difference_percent": 7.79062e-12,
@@ -3867,7 +4206,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.385071,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -4436,6 +4775,20 @@
               "screen_value": 1106580.0,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.41445,
+              "critical_section_utilisations": {
+                "hang-off": 0.41445,
+                "touchdown": 0.301384
+              },
+              "difference_percent": 1.33939e-14,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.41445,
+              "status": "pass"
+            },
             "suspended_length_m": {
               "comparator_value": 2318.11,
               "difference_percent": -8.98467e-12,
@@ -4504,7 +4857,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.41445,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -5073,6 +5426,20 @@
               "screen_value": 832913.0,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.385514,
+              "critical_section_utilisations": {
+                "hang-off": 0.385514,
+                "touchdown": 0.292372
+              },
+              "difference_percent": 1.43993e-14,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.385514,
+              "status": "pass"
+            },
             "suspended_length_m": {
               "comparator_value": 2145.02,
               "difference_percent": -1.67481e-12,
@@ -5141,7 +5508,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.385514,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -5784,7 +6151,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.437078,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -5819,6 +6186,91 @@
             "top_tension_kn": 2294.73
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.390974,
+                "critical_section_utilisations": {
+                  "hang-off": 0.390974,
+                  "touchdown": 0.32834
+                },
+                "difference_percent": 1.41982e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.390974,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 528328.0,
+              "offset_m": -75.0,
+              "static_von_mises_utilisation": 0.390974,
+              "top_tension_n": 1882840.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.410219,
+                "critical_section_utilisations": {
+                  "hang-off": 0.410219,
+                  "touchdown": 0.328303
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.410219,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 704081.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.410219,
+              "top_tension_n": 2058590.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.437078,
+                "critical_section_utilisations": {
+                  "hang-off": 0.437078,
+                  "touchdown": 0.336054
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.437078,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 940221.0,
+              "offset_m": 75.0,
+              "static_von_mises_utilisation": 0.437078,
+              "top_tension_n": 2294730.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.410622,
+                "critical_section_utilisations": {
+                  "hang-off": 0.410622,
+                  "touchdown": 0.328369
+                },
+                "difference_percent": 2.70376e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.410622,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 707694.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 75.0
+              },
+              "static_von_mises_utilisation": 0.410622,
+              "top_tension_n": 2062210.0
+            }
+          ],
           "submerged_weight_n_m": 903.009,
           "wall_step": "thinner",
           "wall_thickness_m": 0.018263
@@ -5878,7 +6330,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.41445,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -5913,6 +6365,91 @@
             "top_tension_kn": 2700.76
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.36382,
+                "critical_section_utilisations": {
+                  "hang-off": 0.36382,
+                  "touchdown": 0.292114
+                },
+                "difference_percent": -1.52578e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.36382,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 621811.0,
+              "offset_m": -75.0,
+              "static_von_mises_utilisation": 0.36382,
+              "top_tension_n": 2215990.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.385071,
+                "critical_section_utilisations": {
+                  "hang-off": 0.385071,
+                  "touchdown": 0.292293
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.385071,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 828661.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.385071,
+              "top_tension_n": 2422840.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.41445,
+                "critical_section_utilisations": {
+                  "hang-off": 0.41445,
+                  "touchdown": 0.301384
+                },
+                "difference_percent": 1.33939e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.41445,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 1106580.0,
+              "offset_m": 75.0,
+              "static_von_mises_utilisation": 0.41445,
+              "top_tension_n": 2700760.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.385514,
+                "critical_section_utilisations": {
+                  "hang-off": 0.385514,
+                  "touchdown": 0.292372
+                },
+                "difference_percent": 1.43993e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.385514,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 832913.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 75.0
+              },
+              "static_von_mises_utilisation": 0.385514,
+              "top_tension_n": 2427090.0
+            }
+          ],
           "submerged_weight_n_m": 1062.79,
           "wall_step": "base",
           "wall_thickness_m": 0.021438
@@ -5972,7 +6509,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.397091,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -6007,6 +6544,91 @@
             "top_tension_kn": 3191.94
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.342281,
+                "critical_section_utilisations": {
+                  "hang-off": 0.342281,
+                  "touchdown": 0.261349
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.342281,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 734897.0,
+              "offset_m": -75.0,
+              "static_von_mises_utilisation": 0.342281,
+              "top_tension_n": 2619010.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.36541,
+                "critical_section_utilisations": {
+                  "hang-off": 0.36541,
+                  "touchdown": 0.261774
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.36541,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 979366.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.36541,
+              "top_tension_n": 2863480.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.397091,
+                "critical_section_utilisations": {
+                  "hang-off": 0.397091,
+                  "touchdown": 0.272305
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.397091,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 1307830.0,
+              "offset_m": 75.0,
+              "static_von_mises_utilisation": 0.397091,
+              "top_tension_n": 3191940.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.365889,
+                "critical_section_utilisations": {
+                  "hang-off": 0.365889,
+                  "touchdown": 0.261868
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.365889,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 984392.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 75.0
+              },
+              "static_von_mises_utilisation": 0.365889,
+              "top_tension_n": 2868500.0
+            }
+          ],
           "submerged_weight_n_m": 1256.07,
           "wall_step": "thicker",
           "wall_thickness_m": 0.0254
@@ -6065,7 +6687,7 @@
         "static_von_mises_utilisation": {
           "computed": 0.385021,
           "criterion": {
-            "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+            "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
             "limit": 0.67,
             "name": "static_von_mises_utilisation",
             "relation": "<=",
@@ -6169,6 +6791,20 @@
               "screen_value": 784286.0,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.341922,
+              "critical_section_utilisations": {
+                "hang-off": 0.341922,
+                "touchdown": 0.28193
+              },
+              "difference_percent": 0.0,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.341922,
+              "status": "pass"
+            },
             "suspended_length_m": {
               "comparator_value": 2668.41,
               "difference_percent": -6.98718e-12,
@@ -6237,7 +6873,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.341922,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -6806,6 +7442,20 @@
               "screen_value": 1045190.0,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.359935,
+              "critical_section_utilisations": {
+                "hang-off": 0.359935,
+                "touchdown": 0.28218
+              },
+              "difference_percent": -1.54225e-14,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.359935,
+              "status": "pass"
+            },
             "suspended_length_m": {
               "comparator_value": 2856.3,
               "difference_percent": -4.45785e-12,
@@ -6874,7 +7524,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.359935,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -7443,6 +8093,20 @@
               "screen_value": 1395730.0,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.385021,
+              "critical_section_utilisations": {
+                "hang-off": 0.385021,
+                "touchdown": 0.289664
+              },
+              "difference_percent": 2.88354e-14,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.385021,
+              "status": "pass"
+            },
             "suspended_length_m": {
               "comparator_value": 3090.81,
               "difference_percent": 6.17941e-13,
@@ -7511,7 +8175,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.385021,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -8080,6 +8744,20 @@
               "screen_value": 1050550.0,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.360312,
+              "critical_section_utilisations": {
+                "hang-off": 0.360312,
+                "touchdown": 0.282245
+              },
+              "difference_percent": 0.0,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.360312,
+              "status": "pass"
+            },
             "suspended_length_m": {
               "comparator_value": 2860.03,
               "difference_percent": -2.17831e-12,
@@ -8148,7 +8826,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.360312,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -8791,7 +9469,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.385146,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -8826,6 +9504,91 @@
             "top_tension_kn": 2507.1
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.354116,
+                "critical_section_utilisations": {
+                  "hang-off": 0.354116,
+                  "touchdown": 0.318233
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.354116,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 577223.0,
+              "offset_m": -100.0,
+              "static_von_mises_utilisation": 0.354116,
+              "top_tension_n": 2057090.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.366955,
+                "critical_section_utilisations": {
+                  "hang-off": 0.366955,
+                  "touchdown": 0.317093
+                },
+                "difference_percent": -1.51275e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.366955,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 769240.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.366955,
+              "top_tension_n": 2249110.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.385146,
+                "critical_section_utilisations": {
+                  "hang-off": 0.385146,
+                  "touchdown": 0.321205
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.385146,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 1027230.0,
+              "offset_m": 100.0,
+              "static_von_mises_utilisation": 0.385146,
+              "top_tension_n": 2507100.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.367226,
+                "critical_section_utilisations": {
+                  "hang-off": 0.367226,
+                  "touchdown": 0.317118
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.367226,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 773188.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 100.0
+              },
+              "static_von_mises_utilisation": 0.367226,
+              "top_tension_n": 2253060.0
+            }
+          ],
           "submerged_weight_n_m": 739.934,
           "wall_step": "thinner",
           "wall_thickness_m": 0.021438
@@ -8885,7 +9648,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.385021,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -8920,6 +9683,91 @@
             "top_tension_kn": 3406.46
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.341922,
+                "critical_section_utilisations": {
+                  "hang-off": 0.341922,
+                  "touchdown": 0.28193
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.341922,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 784286.0,
+              "offset_m": -100.0,
+              "static_von_mises_utilisation": 0.341922,
+              "top_tension_n": 2795020.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.359935,
+                "critical_section_utilisations": {
+                  "hang-off": 0.359935,
+                  "touchdown": 0.28218
+                },
+                "difference_percent": -1.54225e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.359935,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 1045190.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.359935,
+              "top_tension_n": 3055920.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.385021,
+                "critical_section_utilisations": {
+                  "hang-off": 0.385021,
+                  "touchdown": 0.289664
+                },
+                "difference_percent": 2.88354e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.385021,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 1395730.0,
+              "offset_m": 100.0,
+              "static_von_mises_utilisation": 0.385021,
+              "top_tension_n": 3406460.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.360312,
+                "critical_section_utilisations": {
+                  "hang-off": 0.360312,
+                  "touchdown": 0.282245
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.360312,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 1050550.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 100.0
+              },
+              "static_von_mises_utilisation": 0.360312,
+              "top_tension_n": 3061280.0
+            }
+          ],
           "submerged_weight_n_m": 1005.37,
           "wall_step": "base",
           "wall_thickness_m": 0.0254
@@ -8979,7 +9827,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.389982,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -9014,6 +9862,91 @@
             "top_tension_kn": 4108.6
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.339255,
+                "critical_section_utilisations": {
+                  "hang-off": 0.339255,
+                  "touchdown": 0.261713
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.339255,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 945944.0,
+              "offset_m": -100.0,
+              "static_von_mises_utilisation": 0.339255,
+              "top_tension_n": 3371130.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.360583,
+                "critical_section_utilisations": {
+                  "hang-off": 0.360583,
+                  "touchdown": 0.263121
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.360583,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 1260620.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.360583,
+              "top_tension_n": 3685810.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.389982,
+                "critical_section_utilisations": {
+                  "hang-off": 0.389982,
+                  "touchdown": 0.273218
+                },
+                "difference_percent": 4.27028e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.389982,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 1683420.0,
+              "offset_m": 100.0,
+              "static_von_mises_utilisation": 0.389982,
+              "top_tension_n": 4108600.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.361026,
+                "critical_section_utilisations": {
+                  "hang-off": 0.361026,
+                  "touchdown": 0.263219
+                },
+                "difference_percent": -1.53759e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.361026,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 1267090.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 100.0
+              },
+              "static_von_mises_utilisation": 0.361026,
+              "top_tension_n": 3692280.0
+            }
+          ],
           "submerged_weight_n_m": 1212.59,
           "wall_step": "thicker",
           "wall_thickness_m": 0.028575
@@ -9106,7 +10039,7 @@
         "static_von_mises_utilisation": {
           "computed": 0.316505,
           "criterion": {
-            "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+            "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
             "limit": 0.67,
             "name": "static_von_mises_utilisation",
             "relation": "<=",
@@ -9222,6 +10155,22 @@
               "screen_value": 329.034,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.314079,
+              "critical_section_utilisations": {
+                "hang-off": 0.314079,
+                "hog bend": 0.249006,
+                "sag bend": 0.28614,
+                "touchdown": 0.28614
+              },
+              "difference_percent": 0.0,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.314079,
+              "status": "pass"
+            },
             "top_tension_n": {
               "comparator_value": 1231100.0,
               "difference_percent": 0.0,
@@ -9300,7 +10249,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.314079,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -9873,6 +10822,22 @@
               "screen_value": 354.355,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.315205,
+              "critical_section_utilisations": {
+                "hang-off": 0.315205,
+                "hog bend": 0.248308,
+                "sag bend": 0.281852,
+                "touchdown": 0.281852
+              },
+              "difference_percent": 0.0,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.315205,
+              "status": "pass"
+            },
             "top_tension_n": {
               "comparator_value": 1237750.0,
               "difference_percent": -1.88108e-14,
@@ -9951,7 +10916,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.315205,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -10524,6 +11489,22 @@
               "screen_value": 382.489,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.316505,
+              "critical_section_utilisations": {
+                "hang-off": 0.316505,
+                "hog bend": 0.247848,
+                "sag bend": 0.278183,
+                "touchdown": 0.278183
+              },
+              "difference_percent": 5.26164e-14,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.316505,
+              "status": "pass"
+            },
             "top_tension_n": {
               "comparator_value": 1245520.0,
               "difference_percent": 0.0,
@@ -10602,7 +11583,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.316505,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -11175,6 +12156,22 @@
               "screen_value": 354.617,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.315217,
+              "critical_section_utilisations": {
+                "hang-off": 0.315217,
+                "hog bend": 0.248302,
+                "sag bend": 0.281813,
+                "touchdown": 0.281813
+              },
+              "difference_percent": 0.0,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.315217,
+              "status": "pass"
+            },
             "top_tension_n": {
               "comparator_value": 1237820.0,
               "difference_percent": 1.88098e-14,
@@ -11253,7 +12250,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.315217,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -11946,7 +12943,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.340953,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -11981,6 +12978,99 @@
             "top_tension_kn": 1082.18
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.338756,
+                "critical_section_utilisations": {
+                  "hang-off": 0.338756,
+                  "hog bend": 0.281549,
+                  "sag bend": 0.314696,
+                  "touchdown": 0.314696
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.338756,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 207616.0,
+              "offset_m": -75.0,
+              "static_von_mises_utilisation": 0.338756,
+              "top_tension_n": 1069650.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.339776,
+                "critical_section_utilisations": {
+                  "hang-off": 0.339776,
+                  "hog bend": 0.280923,
+                  "sag bend": 0.310796,
+                  "touchdown": 0.310796
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.339776,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 223593.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.339776,
+              "top_tension_n": 1075420.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.340953,
+                "critical_section_utilisations": {
+                  "hang-off": 0.340953,
+                  "hog bend": 0.280505,
+                  "sag bend": 0.307464,
+                  "touchdown": 0.307464
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.340953,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 241345.0,
+              "offset_m": 75.0,
+              "static_von_mises_utilisation": 0.340953,
+              "top_tension_n": 1082180.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.339787,
+                "critical_section_utilisations": {
+                  "hang-off": 0.339787,
+                  "hog bend": 0.280918,
+                  "sag bend": 0.310761,
+                  "touchdown": 0.310761
+                },
+                "difference_percent": 1.63371e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.339787,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 223758.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 75.0
+              },
+              "static_von_mises_utilisation": 0.339787,
+              "top_tension_n": 1075480.0
+            }
+          ],
           "submerged_weight_n_m": 630.985,
           "wall_step": "thinner",
           "wall_thickness_m": 0.015875
@@ -12074,7 +13164,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.316505,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -12109,6 +13199,99 @@
             "top_tension_kn": 1245.52
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.314079,
+                "critical_section_utilisations": {
+                  "hang-off": 0.314079,
+                  "hog bend": 0.249006,
+                  "sag bend": 0.28614,
+                  "touchdown": 0.28614
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.314079,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 238953.0,
+              "offset_m": -75.0,
+              "static_von_mises_utilisation": 0.314079,
+              "top_tension_n": 1231100.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.315205,
+                "critical_section_utilisations": {
+                  "hang-off": 0.315205,
+                  "hog bend": 0.248308,
+                  "sag bend": 0.281852,
+                  "touchdown": 0.281852
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.315205,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 257342.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.315205,
+              "top_tension_n": 1237750.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.316505,
+                "critical_section_utilisations": {
+                  "hang-off": 0.316505,
+                  "hog bend": 0.247848,
+                  "sag bend": 0.278183,
+                  "touchdown": 0.278183
+                },
+                "difference_percent": 5.26164e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.316505,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 277774.0,
+              "offset_m": 75.0,
+              "static_von_mises_utilisation": 0.316505,
+              "top_tension_n": 1245520.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.315217,
+                "critical_section_utilisations": {
+                  "hang-off": 0.315217,
+                  "hog bend": 0.248302,
+                  "sag bend": 0.281813,
+                  "touchdown": 0.281813
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.315217,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 257532.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 75.0
+              },
+              "static_von_mises_utilisation": 0.315217,
+              "top_tension_n": 1237820.0
+            }
+          ],
           "submerged_weight_n_m": 726.226,
           "wall_step": "base",
           "wall_thickness_m": 0.018263
@@ -12202,7 +13385,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.290396,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -12237,6 +13420,99 @@
             "top_tension_kn": 1507.23
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.287673,
+                "critical_section_utilisations": {
+                  "hang-off": 0.287673,
+                  "hog bend": 0.211443,
+                  "sag bend": 0.254402,
+                  "touchdown": 0.254402
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.287673,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 289162.0,
+              "offset_m": -75.0,
+              "static_von_mises_utilisation": 0.287673,
+              "top_tension_n": 1489770.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.288939,
+                "critical_section_utilisations": {
+                  "hang-off": 0.288939,
+                  "hog bend": 0.210634,
+                  "sag bend": 0.249575,
+                  "touchdown": 0.249575
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.288939,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 311414.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.288939,
+              "top_tension_n": 1497820.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.290396,
+                "critical_section_utilisations": {
+                  "hang-off": 0.290396,
+                  "hog bend": 0.210109,
+                  "sag bend": 0.245434,
+                  "touchdown": 0.245434
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.290396,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 336139.0,
+              "offset_m": 75.0,
+              "static_von_mises_utilisation": 0.290396,
+              "top_tension_n": 1507230.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.288952,
+                "critical_section_utilisations": {
+                  "hang-off": 0.288952,
+                  "hog bend": 0.210627,
+                  "sag bend": 0.249532,
+                  "touchdown": 0.249532
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.288952,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 311644.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 75.0
+              },
+              "static_von_mises_utilisation": 0.288952,
+              "top_tension_n": 1497900.0
+            }
+          ],
           "submerged_weight_n_m": 878.819,
           "wall_step": "thicker",
           "wall_thickness_m": 0.022225
@@ -12329,7 +13605,7 @@
         "static_von_mises_utilisation": {
           "computed": 0.383286,
           "criterion": {
-            "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+            "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
             "limit": 0.67,
             "name": "static_von_mises_utilisation",
             "relation": "<=",
@@ -12445,6 +13721,22 @@
               "screen_value": 438.712,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.379892,
+              "critical_section_utilisations": {
+                "hang-off": 0.379892,
+                "hog bend": 0.26604,
+                "sag bend": 0.300727,
+                "touchdown": 0.300727
+              },
+              "difference_percent": 0.0,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.379892,
+              "status": "pass"
+            },
             "top_tension_n": {
               "comparator_value": 2402180.0,
               "difference_percent": 3.87699e-14,
@@ -12523,7 +13815,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.379892,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -13096,6 +14388,22 @@
               "screen_value": 472.474,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.381466,
+              "critical_section_utilisations": {
+                "hang-off": 0.381466,
+                "hog bend": 0.265884,
+                "sag bend": 0.297576,
+                "touchdown": 0.297576
+              },
+              "difference_percent": 0.0,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.381466,
+              "status": "pass"
+            },
             "top_tension_n": {
               "comparator_value": 2415160.0,
               "difference_percent": -1.92808e-14,
@@ -13174,7 +14482,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.381466,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -13747,6 +15055,22 @@
               "screen_value": 509.986,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.383286,
+              "critical_section_utilisations": {
+                "hang-off": 0.383286,
+                "hog bend": 0.266013,
+                "sag bend": 0.295034,
+                "touchdown": 0.295034
+              },
+              "difference_percent": 0.0,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.383286,
+              "status": "pass"
+            },
             "top_tension_n": {
               "comparator_value": 2430330.0,
               "difference_percent": 0.0,
@@ -13825,7 +15149,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.383286,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -14398,6 +15722,22 @@
               "screen_value": 472.822,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.381482,
+              "critical_section_utilisations": {
+                "hang-off": 0.381482,
+                "hog bend": 0.265884,
+                "sag bend": 0.297548,
+                "touchdown": 0.297548
+              },
+              "difference_percent": 0.0,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.381482,
+              "status": "pass"
+            },
             "top_tension_n": {
               "comparator_value": 2415290.0,
               "difference_percent": 1.92797e-14,
@@ -14476,7 +15816,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.381482,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -15169,7 +16509,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.408562,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -15204,6 +16544,99 @@
             "top_tension_kn": 2064.96
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.405473,
+                "critical_section_utilisations": {
+                  "hang-off": 0.405473,
+                  "hog bend": 0.305731,
+                  "sag bend": 0.33612,
+                  "touchdown": 0.33612
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.405473,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 396161.0,
+              "offset_m": -100.0,
+              "static_von_mises_utilisation": 0.405473,
+              "top_tension_n": 2041040.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.406905,
+                "critical_section_utilisations": {
+                  "hang-off": 0.406905,
+                  "hog bend": 0.305574,
+                  "sag bend": 0.333286,
+                  "touchdown": 0.333286
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.406905,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 426648.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.406905,
+              "top_tension_n": 2052060.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.408562,
+                "critical_section_utilisations": {
+                  "hang-off": 0.408562,
+                  "hog bend": 0.305659,
+                  "sag bend": 0.330995,
+                  "touchdown": 0.330995
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.408562,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 460522.0,
+              "offset_m": 100.0,
+              "static_von_mises_utilisation": 0.408562,
+              "top_tension_n": 2064960.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.40692,
+                "critical_section_utilisations": {
+                  "hang-off": 0.40692,
+                  "hog bend": 0.305574,
+                  "sag bend": 0.333261,
+                  "touchdown": 0.333261
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.40692,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 426963.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 100.0
+              },
+              "static_von_mises_utilisation": 0.40692,
+              "top_tension_n": 2052180.0
+            }
+          ],
           "submerged_weight_n_m": 903.009,
           "wall_step": "thinner",
           "wall_thickness_m": 0.018263
@@ -15297,7 +16730,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.383286,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -15332,6 +16765,99 @@
             "top_tension_kn": 2430.33
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.379892,
+                "critical_section_utilisations": {
+                  "hang-off": 0.379892,
+                  "hog bend": 0.26604,
+                  "sag bend": 0.300727,
+                  "touchdown": 0.300727
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.379892,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 466258.0,
+              "offset_m": -100.0,
+              "static_von_mises_utilisation": 0.379892,
+              "top_tension_n": 2402180.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.381466,
+                "critical_section_utilisations": {
+                  "hang-off": 0.381466,
+                  "hog bend": 0.265884,
+                  "sag bend": 0.297576,
+                  "touchdown": 0.297576
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.381466,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 502139.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.381466,
+              "top_tension_n": 2415160.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.383286,
+                "critical_section_utilisations": {
+                  "hang-off": 0.383286,
+                  "hog bend": 0.266013,
+                  "sag bend": 0.295034,
+                  "touchdown": 0.295034
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.383286,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 542006.0,
+              "offset_m": 100.0,
+              "static_von_mises_utilisation": 0.383286,
+              "top_tension_n": 2430330.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.381482,
+                "critical_section_utilisations": {
+                  "hang-off": 0.381482,
+                  "hog bend": 0.265884,
+                  "sag bend": 0.297548,
+                  "touchdown": 0.297548
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.381482,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 502509.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 100.0
+              },
+              "static_von_mises_utilisation": 0.381482,
+              "top_tension_n": 2415290.0
+            }
+          ],
           "submerged_weight_n_m": 1062.79,
           "wall_step": "base",
           "wall_thickness_m": 0.021438
@@ -15425,7 +16951,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.36351,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -15460,6 +16986,99 @@
             "top_tension_kn": 2872.33
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.359833,
+                "critical_section_utilisations": {
+                  "hang-off": 0.359833,
+                  "hog bend": 0.231403,
+                  "sag bend": 0.270839,
+                  "touchdown": 0.270839
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.359833,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 551055.0,
+              "offset_m": -100.0,
+              "static_von_mises_utilisation": 0.359833,
+              "top_tension_n": 2839060.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.361538,
+                "critical_section_utilisations": {
+                  "hang-off": 0.361538,
+                  "hog bend": 0.23125,
+                  "sag bend": 0.267355,
+                  "touchdown": 0.267355
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.361538,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 593462.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.361538,
+              "top_tension_n": 2854390.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.36351,
+                "critical_section_utilisations": {
+                  "hang-off": 0.36351,
+                  "hog bend": 0.231431,
+                  "sag bend": 0.264548,
+                  "touchdown": 0.264548
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.36351,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 640579.0,
+              "offset_m": 100.0,
+              "static_von_mises_utilisation": 0.36351,
+              "top_tension_n": 2872330.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.361556,
+                "critical_section_utilisations": {
+                  "hang-off": 0.361556,
+                  "hog bend": 0.23125,
+                  "sag bend": 0.267324,
+                  "touchdown": 0.267324
+                },
+                "difference_percent": 1.53534e-14,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.361556,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 593899.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 100.0
+              },
+              "static_von_mises_utilisation": 0.361556,
+              "top_tension_n": 2854550.0
+            }
+          ],
           "submerged_weight_n_m": 1256.07,
           "wall_step": "thicker",
           "wall_thickness_m": 0.0254
@@ -15552,7 +17171,7 @@
         "static_von_mises_utilisation": {
           "computed": 0.345875,
           "criterion": {
-            "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+            "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
             "limit": 0.67,
             "name": "static_von_mises_utilisation",
             "relation": "<=",
@@ -15668,6 +17287,22 @@
               "screen_value": 548.391,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.343208,
+              "critical_section_utilisations": {
+                "hang-off": 0.343208,
+                "hog bend": 0.261493,
+                "sag bend": 0.291463,
+                "touchdown": 0.291463
+              },
+              "difference_percent": 0.0,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.343208,
+              "status": "pass"
+            },
             "top_tension_n": {
               "comparator_value": 2840490.0,
               "difference_percent": -1.63937e-14,
@@ -15746,7 +17381,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.343208,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -16319,6 +17954,22 @@
               "screen_value": 590.592,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.344445,
+              "critical_section_utilisations": {
+                "hang-off": 0.344445,
+                "hog bend": 0.261195,
+                "sag bend": 0.288423,
+                "touchdown": 0.288423
+              },
+              "difference_percent": 0.0,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.344445,
+              "status": "pass"
+            },
             "top_tension_n": {
               "comparator_value": 2855830.0,
               "difference_percent": 0.0,
@@ -16397,7 +18048,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.344445,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -16970,6 +18621,22 @@
               "screen_value": 637.482,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.345875,
+              "critical_section_utilisations": {
+                "hang-off": 0.345875,
+                "hog bend": 0.261115,
+                "sag bend": 0.285909,
+                "touchdown": 0.285909
+              },
+              "difference_percent": 0.0,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.345875,
+              "status": "pass"
+            },
             "top_tension_n": {
               "comparator_value": 2873780.0,
               "difference_percent": -4.86114e-14,
@@ -17048,7 +18715,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.345875,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -17621,6 +19288,22 @@
               "screen_value": 591.028,
               "status": "pass"
             },
+            "static_von_mises_utilisation": {
+              "comparator_value": 0.344458,
+              "critical_section_utilisations": {
+                "hang-off": 0.344458,
+                "hog bend": 0.261193,
+                "sag bend": 0.288396,
+                "touchdown": 0.288396
+              },
+              "difference_percent": 0.0,
+              "governing_critical_section": "hang-off",
+              "missing_evidence": "",
+              "relative_tolerance": 1e-06,
+              "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+              "screen_value": 0.344458,
+              "status": "pass"
+            },
             "top_tension_n": {
               "comparator_value": 2856000.0,
               "difference_percent": -1.63047e-14,
@@ -17699,7 +19382,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.344458,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -18392,7 +20075,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.35676,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -18427,6 +20110,99 @@
             "top_tension_kn": 2115.06
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.354828,
+                "critical_section_utilisations": {
+                  "hang-off": 0.354828,
+                  "hog bend": 0.302779,
+                  "sag bend": 0.327479,
+                  "touchdown": 0.327479
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.354828,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 405773.0,
+              "offset_m": -125.0,
+              "static_von_mises_utilisation": 0.354828,
+              "top_tension_n": 2090560.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.355725,
+                "critical_section_utilisations": {
+                  "hang-off": 0.355725,
+                  "hog bend": 0.302398,
+                  "sag bend": 0.324664,
+                  "touchdown": 0.324664
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.355725,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 436999.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.355725,
+              "top_tension_n": 2101850.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.35676,
+                "critical_section_utilisations": {
+                  "hang-off": 0.35676,
+                  "hog bend": 0.302177,
+                  "sag bend": 0.322292,
+                  "touchdown": 0.322292
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.35676,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 471695.0,
+              "offset_m": 125.0,
+              "static_von_mises_utilisation": 0.35676,
+              "top_tension_n": 2115060.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.355734,
+                "critical_section_utilisations": {
+                  "hang-off": 0.355734,
+                  "hog bend": 0.302395,
+                  "sag bend": 0.324639,
+                  "touchdown": 0.324639
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.355734,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 437321.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 125.0
+              },
+              "static_von_mises_utilisation": 0.355734,
+              "top_tension_n": 2101970.0
+            }
+          ],
           "submerged_weight_n_m": 739.934,
           "wall_step": "thinner",
           "wall_thickness_m": 0.021438
@@ -18520,7 +20296,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.345875,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -18555,6 +20331,99 @@
             "top_tension_kn": 2873.78
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.343208,
+                "critical_section_utilisations": {
+                  "hang-off": 0.343208,
+                  "hog bend": 0.261493,
+                  "sag bend": 0.291463,
+                  "touchdown": 0.291463
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.343208,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 551333.0,
+              "offset_m": -125.0,
+              "static_von_mises_utilisation": 0.343208,
+              "top_tension_n": 2840490.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.344445,
+                "critical_section_utilisations": {
+                  "hang-off": 0.344445,
+                  "hog bend": 0.261195,
+                  "sag bend": 0.288423,
+                  "touchdown": 0.288423
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.344445,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 593761.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.344445,
+              "top_tension_n": 2855830.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.345875,
+                "critical_section_utilisations": {
+                  "hang-off": 0.345875,
+                  "hog bend": 0.261115,
+                  "sag bend": 0.285909,
+                  "touchdown": 0.285909
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.345875,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 640903.0,
+              "offset_m": 125.0,
+              "static_von_mises_utilisation": 0.345875,
+              "top_tension_n": 2873780.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.344458,
+                "critical_section_utilisations": {
+                  "hang-off": 0.344458,
+                  "hog bend": 0.261193,
+                  "sag bend": 0.288396,
+                  "touchdown": 0.288396
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.344458,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 594199.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 125.0
+              },
+              "static_von_mises_utilisation": 0.344458,
+              "top_tension_n": 2856000.0
+            }
+          ],
           "submerged_weight_n_m": 1005.37,
           "wall_step": "base",
           "wall_thickness_m": 0.0254
@@ -18648,7 +20517,7 @@
             "static_von_mises_utilisation": {
               "computed": 0.344078,
               "criterion": {
-                "basis": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+                "basis": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
                 "limit": 0.67,
                 "name": "static_von_mises_utilisation",
                 "relation": "<=",
@@ -18683,6 +20552,99 @@
             "top_tension_kn": 3466.12
           },
           "missing_evidence": "",
+          "stress_comparisons": [
+            {
+              "comparison": {
+                "comparator_value": 0.340943,
+                "critical_section_utilisations": {
+                  "hang-off": 0.340943,
+                  "hog bend": 0.237544,
+                  "sag bend": 0.271305,
+                  "touchdown": 0.271305
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.340943,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 664975.0,
+              "offset_m": -125.0,
+              "static_von_mises_utilisation": 0.340943,
+              "top_tension_n": 3425980.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.342397,
+                "critical_section_utilisations": {
+                  "hang-off": 0.342397,
+                  "hog bend": 0.237326,
+                  "sag bend": 0.268132,
+                  "touchdown": 0.268132
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.342397,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 716148.0,
+              "offset_m": 0.0,
+              "static_von_mises_utilisation": 0.342397,
+              "top_tension_n": 3444480.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.344078,
+                "critical_section_utilisations": {
+                  "hang-off": 0.344078,
+                  "hog bend": 0.237375,
+                  "sag bend": 0.265546,
+                  "touchdown": 0.265546
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.344078,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 773006.0,
+              "offset_m": 125.0,
+              "static_von_mises_utilisation": 0.344078,
+              "top_tension_n": 3466120.0
+            },
+            {
+              "comparison": {
+                "comparator_value": 0.342412,
+                "critical_section_utilisations": {
+                  "hang-off": 0.342412,
+                  "hog bend": 0.237325,
+                  "sag bend": 0.268104,
+                  "touchdown": 0.268104
+                },
+                "difference_percent": 0.0,
+                "governing_critical_section": "hang-off",
+                "missing_evidence": "",
+                "relative_tolerance": 1e-06,
+                "scope": "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop",
+                "screen_value": 0.342412,
+                "status": "pass"
+              },
+              "horizontal_tension_n": 716676.0,
+              "offset_m": {
+                "x_m": 0.0,
+                "y_m": 125.0
+              },
+              "static_von_mises_utilisation": 0.342412,
+              "top_tension_n": 3444680.0
+            }
+          ],
           "submerged_weight_n_m": 1212.59,
           "wall_step": "thicker",
           "wall_thickness_m": 0.028575
@@ -18697,5 +20659,22 @@
   "provisional": true,
   "sensitivity_basis": "generic nominal wall steps (assumed), not a vendor catalogue",
   "sensitivity_metrics": "rank-1 candidate envelope over all offsets: maximum top tension/utilisation, minimum radius; percentages use six-significant-figure metric values",
+  "stress_comparator_evidence": {
+    "base_offset_rows": 24,
+    "basis": "numerical-noise agreement across all base offsets and wall-step runs; no sampling allowance",
+    "governing_critical_sections": [
+      "hang-off"
+    ],
+    "maximum_absolute_difference_percent": 5.26164e-14,
+    "maximum_difference_row": {
+      "case_id": "slwr-1500m-8in",
+      "offset_m": 75.0,
+      "wall_step": "base"
+    },
+    "not_established_rows": [],
+    "relative_tolerance": 1e-06,
+    "sensitivity_offset_rows": 72,
+    "sensitivity_runs": 18
+  },
   "tier": "SCREEN"
 }

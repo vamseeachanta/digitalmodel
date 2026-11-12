@@ -45,7 +45,7 @@ riser_configuration_screen:
     min_bend_radius_m: 68.2625
     # assumed minimum hog clearance of 50.0 m
     min_hog_clearance_m: 50.0
-    # screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor
+    # an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor
     max_static_utilisation: 0.67
   axes:
     hangoff_angle_deg:

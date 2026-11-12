@@ -3,6 +3,20 @@
 Edit CASES or SIZES to extend the demonstration, then regenerate. The YAMLs
 are generated inputs, not an independent design database. Only the existing
 open-source screen is executed; no production solver modules are modified.
+
+Independent stress derivation: a longitudinal cut balances differential
+pressure against two walls, giving hoop = (pi-pe)*OD/(2*t). Closed-end
+pressure thrust is Fp = pi_math/4*(pi*ID**2-pe*OD**2); steel area is
+A = pi_math/4*(OD**2-ID**2). Axial membrane stress is (T+Fp)/A.
+Elastic outer-fibre bending adds both signs of E*OD*kappa/2. Plane-stress
+von Mises is sqrt(axial**2+hoop**2-axial*hoop); utilisation divides by yield.
+Cable equilibrium dV/ds = -w and tan(theta) = V/H, with theta the tangent
+angle from horizontal (not the input hang-off angle from vertical), give curvature
+abs(w)*H/T**2. Thus hang-off uses (Ttop, w*H/Ttop**2), touchdown and
+sag use (H, w/H), and hog uses (H, abs(w*(1-factor))/H). Both axial signs
+are checked at each named section; the largest utilisation governs, with
+the first named section retained on an exact tie. No sampled shape point
+or stress helper is used by this independent comparator.
 """
 
 import json
@@ -22,11 +36,12 @@ SIZES = {8: (.219075, [.015875, .018263, .022225]),
          10: (.273050, [.018263, .021438, .025400]),
          12: (.323850, [.021438, .025400, .028575])}
 MODEL_SOURCE = "src/digitalmodel/subsea/catenary_riser/models.py"
+STRESS_RELATIVE_TOLERANCE = 1e-6
 BASES = {
     "top_tension_n": "assumed: 0.6 * specified minimum yield strength * steel area",
     "bend_radius_m": "assumed screening strain limit 0.2%; OD/(2*0.002), not a code value",
     "hog_clearance_m": "assumed minimum hog clearance of 50.0 m",
-    "static_von_mises_utilisation": "screening limit taken as a 2/3 allowable-stress ratio on von Mises stress; a project shall replace it with the governing code design factor",
+    "static_von_mises_utilisation": "an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor",
     "shape_closure": "numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M",
     "net_buoyancy": "screen domain: buoyancy_factor > 1 for a net-buoyant section",
     "hog_above_sag": "screen domain: hog_fraction > sag_fraction",
@@ -34,7 +49,7 @@ BASES = {
 
 
 # Comparator section: these functions use only math and supplied scalars.
-# No screen or catenary imports are used here; H is supplied for SLWR only.
+# No screen or catenary imports are used here; stress uses exposed H and Ttop.
 def scr_comparator(weight, depth, angle_deg):
     """Closed-form inextensible catenary, horizontal tangent at touchdown."""
     sine = math.sin(math.radians(angle_deg))
@@ -55,6 +70,45 @@ def slwr_comparator(weight, factor, horizontal, start, buoyed, suspended):
     return {"top_tension_n": math.hypot(horizontal, vertical),
             "sag_radius_m": horizontal / weight,
             "hog_radius_m": horizontal / abs(weight * (1-factor))}
+
+
+def stress_comparator(pipe, weight, horizontal, top, factor=None):
+    """Evaluate exact named sections with math and supplied scalars only."""
+    outer, wall = pipe["outer_diameter_m"], pipe["wall_thickness_m"]
+    inner = outer - 2*wall
+    area = math.pi * (outer**2 - inner**2) / 4
+    inside, outside = pipe["internal_pressure_pa"], pipe["external_pressure_pa"]
+    hoop = (inside - outside) * outer / (2*wall)
+    pressure_force = math.pi / 4 * (inside*inner**2 - outside*outer**2)
+    sections = [("hang-off", top, weight*horizontal/top**2),
+                ("touchdown", horizontal, weight/horizontal)]
+    if factor is not None:
+        sections += [("sag bend", horizontal, weight/horizontal),
+                     ("hog bend", horizontal, abs(weight*(1-factor))/horizontal)]
+    values = {}
+    for name, tension, curvature in sections:
+        membrane = (tension + pressure_force) / area
+        bending = pipe["youngs_modulus_pa"] * outer * curvature / 2
+        values[name] = max(math.sqrt(axial**2 + hoop**2 - axial*hoop)
+                           for axial in (membrane-bending, membrane+bending)) / pipe["yield_strength_pa"]
+    governing = max(values, key=values.get)
+    return {"comparator_value": values[governing], "governing_critical_section": governing,
+            "critical_section_utilisations": values}
+
+
+def stress_comparison(settings, configuration, row):
+    """Compare sampled stress with exact named sections without tuning tolerance."""
+    reference = stress_comparator(settings["pipe"], settings["submerged_weight_n_m"],
+                                  row["horizontal_tension_n"], row["top_tension_n"],
+                                  configuration.get("buoyancy_factor"))
+    result = comparison(reference["comparator_value"], row["static_von_mises_utilisation"],
+                        "independent thin-wall implementation and named critical sections, conditional on exposed H and Ttop")
+    result.update(reference)
+    result["relative_tolerance"] = STRESS_RELATIVE_TOLERANCE
+    result["status"] = "pass" if abs(result["difference_percent"]) <= 100*STRESS_RELATIVE_TOLERANCE else "not established"
+    result["missing_evidence"] = ("" if result["status"] == "pass" else
+                                  "dense or continuous-section stress-envelope verification resolving sampled versus exact critical-section disagreement")
+    return result
 
 
 def comparison(reference, actual, scope):
@@ -186,6 +240,7 @@ def enrich_row(settings, configuration, row):
                                   row["buoyed_length_m"], row["suspended_length_m"])
         scope = "global vertical equilibrium and local radii conditional on exposed H and suspended lengths; H is not independently established"
     row["comparators"] = {name: comparison(value, row[name], scope) for name, value in expected.items()}
+    row["comparators"]["static_von_mises_utilisation"] = stress_comparison(settings, configuration, row)
     return row
 
 
@@ -227,7 +282,27 @@ def sensitivity_entry(result, step):
             "max_top_tension_n": result["inputs"]["constraints"]["max_top_tension_n"],
             "configuration": result["configuration"], "feasible": result["feasible"],
             "feasible_count": result["feasible_count"], "constraint_envelope": result["constraint_envelope"],
+            "stress_comparisons": [{**{key: row[key] for key in ("offset_m", "horizontal_tension_n", "top_tension_n",
+                                                               "static_von_mises_utilisation")},
+                                    "comparison": row["comparators"]["static_von_mises_utilisation"]} for row in rows],
             "metrics": round_values(metrics), "missing_evidence": result["missing_evidence"]}
+
+
+def stress_evidence(cases):
+    """Retain empirical tolerance evidence across every selected sensitivity row."""
+    records = [{"case_id": case["case_id"], "wall_step": step["wall_step"], **row}
+               for case in cases for step in case["sensitivity"] for row in step["stress_comparisons"]]
+    largest = max(records, key=lambda row: abs(row["comparison"]["difference_percent"]))
+    return {"relative_tolerance": STRESS_RELATIVE_TOLERANCE,
+            "basis": "numerical-noise agreement across all base offsets and wall-step runs; no sampling allowance",
+            "base_offset_rows": sum(len(case["offset_results"]) for case in cases),
+            "sensitivity_runs": sum(len(case["sensitivity"]) for case in cases),
+            "sensitivity_offset_rows": len(records),
+            "maximum_absolute_difference_percent": abs(largest["comparison"]["difference_percent"]),
+            "maximum_difference_row": {key: largest[key] for key in ("case_id", "wall_step", "offset_m")},
+            "governing_critical_sections": sorted({row["comparison"]["governing_critical_section"] for row in records}),
+            "not_established_rows": [{key: row[key] for key in ("case_id", "wall_step", "offset_m", "comparison")}
+                                     for row in records if row["comparison"]["status"] != "pass"]}
 
 
 def build_results():
@@ -246,6 +321,7 @@ def build_results():
             "sensitivity_basis": "generic nominal wall steps (assumed), not a vendor catalogue",
             "sensitivity_metrics": "rank-1 candidate envelope over all offsets: maximum top tension/utilisation, minimum radius; percentages use six-significant-figure metric values",
             "comparator_criterion": "relative difference <= 1e-6 before output rounding",
+            "stress_comparator_evidence": stress_evidence(cases),
             "cases": cases}
 
 
