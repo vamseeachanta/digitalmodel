@@ -329,6 +329,17 @@ class RiserVessel(BaseModel):
             raise ValueError(f"Must have 3 components, got {len(v)}")
         return v
 
+    @field_validator("orientation")
+    @classmethod
+    def validate_heading_only(cls, v: list[float]) -> list[float]:
+        """The builder emits only the heading; refuse roll and pitch (#3986)."""
+        if v[0] or v[1]:
+            raise ValueError(
+                f"orientation {v}: roll and pitch are not emitted by the riser "
+                "vessel builder (only the heading, orientation[2]); set them to 0"
+            )
+        return v
+
 
 class RiserLine(BaseModel):
     """
