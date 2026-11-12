@@ -54,8 +54,10 @@ its source table or input file:
 - [`docs/domains/orcaflex/wind/fowt-volturnus/basis.yml`](../../../wind/fowt-volturnus/basis.yml):
   system mass and inertia, hull geometry, mooring, metocean ([#2473](https://github.com/vamseeachanta/digitalmodel/pull/2473));
 - [`docs/domains/orcaflex/wind/fowt-volturnus/generator_data.yml`](../../../wind/fowt-volturnus/generator_data.yml):
-  rotor and nacelle geometry and mass, the steady thrust curve, WAMIT
-  hydrostatics, added mass and radiation damping, and quadratic damping.
+  rotor and nacelle geometry and mass, the steady thrust curve, the
+  floating-tower station table, WAMIT hydrostatics, added mass and radiation
+  damping, and quadratic damping. Its sources are listed in
+  [`GENERATOR_SOURCES.md`](../../../wind/fowt-volturnus/GENERATOR_SOURCES.md).
 
 The pinned IEA repository holds no OrcaFlex input files.
 
