@@ -265,11 +265,6 @@ class FowtSpec(BaseModel):
         if self.representation == "flexible":
             if self.tower is None or self.rna is None:
                 raise ValueError("flexible representation needs tower and rna")
-            if any(self.hull.initial_orientation[:2]):
-                raise ValueError(
-                    "flexible representation with a non-zero initial roll or pitch is not "
-                    "supported: the tower-top RNA position is not rotated with the hull; "
-                    "use the rigid representation for decay starts")
         elif self.tower is not None or self.rna is not None:
             raise ValueError("rigid representation carries tower and RNA mass in the hull; "
                              "omit tower and rna")
