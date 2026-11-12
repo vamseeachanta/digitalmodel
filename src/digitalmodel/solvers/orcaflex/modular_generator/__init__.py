@@ -195,8 +195,9 @@ class ModularModelGenerator:
                 else:
                     merged[key] = value
 
-        if self.spec.generic is None:
-            # Create new generic model from router output
+        if self.spec.generic is None or self.spec.fowt is not None:
+            # FOWT inputs cannot contain authored generic objects. Replace the
+            # previous derived model so repeated routing does not append copies.
             self.spec = self.spec.model_copy(
                 update={"generic": GenericModel(**merged)}
             )

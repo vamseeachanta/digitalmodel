@@ -398,6 +398,30 @@ def test_golden_lc0_model(tmp_path):
         assert got == want, rel
 
 
+@pytest.mark.parametrize("representation", ["rigid", "flexible"])
+@pytest.mark.parametrize("methods", [
+    ("generate", "generate"),
+    ("generate_with_overrides", "generate_with_overrides"),
+    ("generate", "generate_with_overrides"),
+    ("generate_with_overrides", "generate"),
+])
+def test_repeated_generation_preserves_objects(spec_dict, tmp_path, representation, methods):
+    """Reusing either API emits the same validated inputs without duplicate objects."""
+    data = copy.deepcopy(spec_dict)
+    if representation == "flexible":
+        data["fowt"] = _flexible(spec_dict)
+    generator = ModularModelGenerator.from_spec(ProjectInputSpec(**data))
+    snapshots = []
+    for index, method in enumerate(methods):
+        output = tmp_path / str(index)
+        getattr(generator, method)(output)
+        snapshots.append({
+            path.relative_to(output).as_posix(): path.read_bytes()
+            for path in output.rglob("*") if path.is_file()
+        })
+    assert snapshots[0] == snapshots[1]
+
+
 def test_decay_start_controls_reach_the_vessel(spec_dict):
     fowt = copy.deepcopy(spec_dict["fowt"])
     fowt["hull"]["initial_position"] = [10.0, 0.0, -0.4]

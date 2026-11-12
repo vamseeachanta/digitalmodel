@@ -124,8 +124,8 @@ def test_periods_against_openfast_linearisation(checks, sources, mode, tolerance
     assert checks["natural"]["periods"][mode] == pytest.approx(lin, rel=tolerance)
 
 
-def test_surge_difference_explained_by_infinite_frequency_added_mass(checks, sources):
-    """With A(infinity) the surge period moves to within 1 % of the linearisation."""
+def test_surge_period_sensitivity_to_infinite_frequency_added_mass(checks, sources):
+    """Added-mass substitution tests sensitivity, not the cause of the discrepancy."""
     basis, data = sources
     lin = basis["comparators"]["openfast_linearisation_periods"]["value"]["surge"]
     inf = natural_periods(checks["model"], data, checks["still"]["position"],
