@@ -147,6 +147,15 @@ class ProjectInputSpec(BaseModel):
             # Check S-lay equipment consistency
             if self.equipment.stinger and not self.equipment.vessel:
                 raise ValueError("Stinger requires a vessel to be defined")
+            if self.equipment.jlay and not self.equipment.vessel:
+                raise ValueError("J-lay tower requires a vessel to be defined")
+            if self.equipment.jlay and self.equipment.stinger:
+                raise ValueError("J-lay tower and stinger cannot both be defined")
+            if self.equipment.jlay and self.equipment.tensioner:
+                raise ValueError(
+                    "J-lay tower carries the pipe tension at the pinned hang-off; "
+                    "a tensioner cannot also be defined"
+                )
             if self.equipment.tensioner and not self.equipment.vessel:
                 raise ValueError("Tensioner requires a vessel to be defined")
 

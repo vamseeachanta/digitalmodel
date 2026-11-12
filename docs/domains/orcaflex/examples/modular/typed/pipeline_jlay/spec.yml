@@ -1,0 +1,65 @@
+# Typed pipelay example: J-lay from a tower (digitalmodel #3978).
+#
+# 12.75 in X65 pipe, wall 20.6 mm, 3 mm coating at 0.95 te/m3, 3000 m long,
+# laid in 1000 m water depth from a tower hang-off 30 m above the waterline,
+# 8 deg from vertical, leaning aft. All values are illustrative input data,
+# not a design. Related: #2765 (J-lay qualification in the pipelay
+# calculation pack), #2431 (pipelay workflow).
+#
+# Hand check (inextensible catenary, pipe empty, g 9.80665 m/s2, seawater
+# 1.025 te/m3):
+#   steel 7.85 x pi/4 x (0.3239^2 - 0.2827^2) = 0.15408 te/m; coating
+#   0.00293 te/m; displaced 1.025 x pi/4 x 0.3299^2 = 0.08762 te/m;
+#   submerged w = 0.6805 kN/m.
+#   Hang-off height h = 1000 + 30 = 1030 m; angle from horizontal 82 deg:
+#   a = h / (sec 82 - 1) = 166.52 m; suspended s = a tan 82 = 1184.88 m;
+#   suspended span x = a asinh(tan 82) = 443.00 m; grounded 1815.12 m;
+#   End B span 2258.13 m aft of the hang-off.
+#   Top tension T = w (a + h) = 814.3 kN; horizontal tension H = w a = 113.3 kN.
+#
+# Generate:
+#   python -m digitalmodel.solvers.orcaflex.modular_generator generate \
+#       --input spec.yml --output modular/
+
+metadata:
+  name: "pipeline_jlay"
+  description: "12.75 in pipeline J-lay from a tower in 1000 m water depth"
+  structure: pipeline
+  operation: installation/j-lay
+  project: "OrcaFlex typed examples"
+  version: "1.0"
+
+environment:
+  water:
+    depth: 1000
+    density: 1.025
+  seabed:
+    slope: 0
+    stiffness: {normal: 100, shear: 10}
+
+pipeline:
+  name: "Pipeline"
+  material: X65
+  dimensions:
+    outer_diameter: 0.3239
+    wall_thickness: 0.0206
+  coatings:
+    corrosion: {thickness: 0.003, density: 0.95}
+  segments:
+    - {type: "X65_12in", length: 3000, segment_length: 5}
+
+equipment:
+  vessel:
+    name: "LayVessel"
+    properties:
+      loa: 180
+      beam: 40
+      depth: 15
+      draft: 8
+      gmt: 5
+      cog: [90, 0, 12]
+      gyration_radii: [14, 45, 45]
+    position: [0, 0, 0]
+  jlay:
+    tower_top: [-20, 0, 30]
+    tower_angle: 8

@@ -183,7 +183,9 @@ class LinesBuilder(BaseBuilder):
         seabed_slope = self.spec.environment.seabed.slope
         is_s_lay = self.spec.is_s_lay()
 
-        if is_s_lay:
+        if self.spec.equipment.jlay is not None:
+            end_a, end_b = self._jlay_endpoints()
+        elif is_s_lay:
             end_a, end_b = self._slay_endpoints()
         else:
             # Floating installation (existing logic)
@@ -214,7 +216,9 @@ class LinesBuilder(BaseBuilder):
             ["Infinity", None, "Infinity"],  # End A: rigid
             ["Infinity", None, "Infinity"],  # End B: rigid
         ]
-        if is_s_lay:
+        if self.spec.equipment.jlay is not None:
+            stiffness = [[0, None], [0, None]]  # pinned hang-off and seabed end
+        elif is_s_lay:
             stiffness = [[], [0, None]]
 
         # Arclength settings (End A, End B)
@@ -267,6 +271,67 @@ class LinesBuilder(BaseBuilder):
             raise ValueError("S-lay End B is beyond pipe reach: endpoint chord exceeds pipe length")
         return [["Free", x, y, z, 180, 90, 0, None],
                 ["Anchored", x - span * c, y - span * s, coated_radius, 180,
+                 90 + self.spec.environment.seabed.slope, 0, None]]
+
+    def jlay_seed(self) -> dict[str, float]:
+        """Inextensible-catenary seed for a J-lay hang-off (#3978).
+
+        Pipe taken empty with its coatings; hang-off angle phi from horizontal
+        is 90 deg minus the tower angle; h is the hang-off height above the
+        seabed. Catenary parameter a = h / (sec(phi) - 1); suspended length
+        s = a tan(phi); suspended span x = a asinh(tan(phi)); top tension
+        T = w (a + h); horizontal tension H = w a. End B span = x + (L - s).
+        """
+        from digitalmodel.installation.pipelay.integrity import G_STANDARD
+        from .linetype_builder import MATERIAL_PROPERTIES
+
+        pipe = self.spec.pipeline
+        jlay = self.spec.equipment.jlay
+        vessel = self.spec.equipment.vessel
+        od = pipe.dimensions.outer_diameter
+        wall = pipe.dimensions.wall_thickness
+        density = MATERIAL_PROPERTIES["X65"]["MaterialDensity"]  # steel, same for all grades
+        mass = density * math.pi / 4 * (od**2 - (od - 2 * wall) ** 2)
+        for coating in [pipe.coatings.corrosion, *pipe.coatings.weight]:
+            outer = od + 2 * coating.thickness
+            mass += coating.density * math.pi / 4 * (outer**2 - od**2)
+            od = outer
+        weight = (mass - self.spec.environment.water.density * math.pi / 4 * od**2) * G_STANDARD
+        height = self.spec.environment.water.depth + vessel.position[2] + jlay.tower_top[2]
+        if weight <= 0 or height <= 0:
+            raise ValueError("J-lay seed requires positive submerged weight and hang-off height")
+        phi = math.radians(90.0 - jlay.tower_angle)
+        a = height / (1.0 / math.cos(phi) - 1.0)
+        suspended = a * math.tan(phi)
+        suspended_span = a * math.asinh(math.tan(phi))
+        length = sum(segment.length for segment in pipe.segments)
+        if suspended >= length:
+            raise ValueError(
+                f"J-lay seed requires a grounded remainder: suspended length "
+                f"{suspended:.1f} m is not below the pipe length {length:.1f} m"
+            )
+        return {
+            "weight": weight, "height": height, "a": a, "suspended": suspended,
+            "suspended_span": suspended_span, "span": suspended_span + length - suspended,
+            "top_tension": weight * (a + height), "horizontal_tension": weight * a,
+            "outer_diameter": od,
+        }
+
+    def _jlay_endpoints(self) -> list[list]:
+        """End A pinned to the vessel at the tower top; End B on the seabed aft."""
+        vessel = self.spec.equipment.vessel
+        jlay = self.spec.equipment.jlay
+        if any(vessel.orientation[:2]):
+            raise ValueError("J-lay endpoint seed requires level hull")
+        seed = self.jlay_seed()
+        heading = math.radians(vessel.orientation[2])
+        c, s = math.cos(heading), math.sin(heading)
+        top = jlay.tower_top
+        x = vessel.position[0] + c * top[0] - s * top[1]
+        y = vessel.position[1] + s * top[0] + c * top[1]
+        span = seed["span"]
+        return [[vessel.name, top[0], top[1], top[2], 180, 180 - jlay.tower_angle, 0, None],
+                ["Anchored", x - span * c, y - span * s, seed["outer_diameter"] / 2, 180,
                  90 + self.spec.environment.seabed.slope, 0, None]]
 
     def _slay_taut_span(self, height: float) -> float:
