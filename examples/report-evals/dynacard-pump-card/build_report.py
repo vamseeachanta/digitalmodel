@@ -125,8 +125,8 @@ def sensitivity_section(data):
             'The sensitivity factor is the difference of the positive and negative output changes '
             'divided by the difference of the input percentages. A zero is printed as 0.00; '
             'the wider central difference exposes nonlinearity. A response is marked stepped '
-            'where the two factors differ by more than 0.10, or where the result moves the same way '
-            'for a decrease and an increase of the input. Such a result moves in jumps, '
+            'where the two factors differ by more than 0.10, or where the result moves the same way, '
+            'by more than 0.01 %, for a decrease and an increase of the input. Such a result moves in jumps, '
             'because the corner points that define it shift between samples; its factor '
             'is not a reliable slope.\n\n' +
             table(headers, rows, 'Table A1. Output changes (%) and central sensitivity factors (% output per % input).'))
@@ -276,7 +276,7 @@ def sensitivity_prompt(data):
                   'Maximum pump load', 'Displacement'), rows,
                  'Sensitivity factors on the public example well: % change in the result per '
                  '1 % change in the input, from the ±1 % steps. * stepped response: the ±1 % '
-                 'and ±5 % factors differ by more than 0.10, or the result moves the same way for a decrease and an increase; use the full table in the report. < 0.01 marks a nonzero magnitude below the resolution.')
+                 'and ±5 % factors differ by more than 0.10, or the result moves the same way, by more than 0.01 %, for a decrease and an increase; use the full table in the report. < 0.01 marks a nonzero magnitude below the resolution.')
 
 
 def prompt_start(data):
@@ -317,6 +317,7 @@ Steps:
    cd digitalmodel
    git fetch origin {pin} || git fetch origin refs/pull/{PULL_REQUEST}/head
    git checkout {pin}
+   (The files at that commit can name an earlier pin; the values are the same.)
    uv sync --extra test
 2. Run the public example and keep its output and figure:
    PYTHONPATH=src uv run --no-sync python examples/report-evals/dynacard-pump-card/analysis.py --out analysis.json --figure figure.png
