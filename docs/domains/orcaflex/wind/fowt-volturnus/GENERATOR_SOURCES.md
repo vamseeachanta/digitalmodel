@@ -25,6 +25,14 @@ from `https://raw.githubusercontent.com/IEAWindTask37/IEA-15-240-RWT/<revision>/
 - `OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_HydroDyn.dat`:
   `WAMITULEN`, `PtfmVol0` and the additional quadratic damping matrix `AddBQuad`.
 
+The finite-frequency radiation table is a diagnostic subset: the source supplies
+18 matrix entries per period, while the export retains only entries 11, 33, 55,
+15 and 66 for each of added mass and damping. Sway, roll and other coupling
+entries are omitted. Omitted entries must not be treated as zero; complete
+matrices must be read from the pinned source before use in a full model.
+
+The extractor verifies all four inputs against expected SHA-256 digests at the
+pinned revision before parsing any values. A mismatch rejects extraction.
 The raw files are not committed; their SHA-256 digests are recorded in
 `generator_data.yml`, and the extraction test reproduces the committed file
 byte for byte when the raw folder is supplied through `DIGITALMODEL_IEA15_RAW`.
