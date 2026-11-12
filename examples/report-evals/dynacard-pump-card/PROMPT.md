@@ -15,7 +15,7 @@ fillage from it. Do it first on the public example well, then on my card.
 
 Inputs (all public, no account needed):
 - Code and data: https://github.com/vamseeachanta/digitalmodel at commit
-  2b6c475a8145f5f5f967a9d3a08d995847953734, MIT licence.
+  793469a03e67d2cf141f4f5a865139375d581743, MIT licence.
 - The public example well:
   tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json in that
   repository. It is an anonymised field well: a measured surface card, a
@@ -29,8 +29,8 @@ Inputs (all public, no account needed):
 Steps:
 1. git clone https://github.com/vamseeachanta/digitalmodel
    cd digitalmodel
-   git fetch origin 2b6c475a8145f5f5f967a9d3a08d995847953734 || git fetch origin refs/pull/3969/head
-   git checkout 2b6c475a8145f5f5f967a9d3a08d995847953734
+   git fetch origin 793469a03e67d2cf141f4f5a865139375d581743 || git fetch origin refs/pull/3969/head
+   git checkout 793469a03e67d2cf141f4f5a865139375d581743
    (The files at that commit can name an earlier pin; the values are the same.)
    uv sync --extra test
 2. Run the public example and keep its output and figure:

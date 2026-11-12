@@ -2,12 +2,12 @@
  "schema_version": "1.0",
  "report_id": "dynacard-pump-card",
  "mode": "rebuild",
- "started_utc": "2026-11-12T18:11:29Z",
- "finished_utc": "2026-11-12T18:11:36Z",
+ "started_utc": "2026-11-12T18:13:19Z",
+ "finished_utc": "2026-11-12T18:13:26Z",
  "grade": "PASS",
- "pinned_commit": "2b6c475a8145f5f5f967a9d3a08d995847953734",
+ "pinned_commit": "793469a03e67d2cf141f4f5a865139375d581743",
  "artifacts": {
-  "results.json": "113040fbb14eaffc29d5d5b114c3469f28222ca68249cc8935cd8ded076d1724",
+  "results.json": "c486dfc803e926ff540796cc73969b3954af227e366013a1f3e6b5567743ed1e",
   "eval.py": "50b0dd4a7f9fd21b736b4319ff2a2f100818fa9612c827c115ebe29e216b961b",
   "../evalkit.py": "e52cd0ff12cd869c4e2f55ee6a5777800a4278828d28d8fc546cc7b69efe2eb3"
  },
@@ -15,8 +15,8 @@
  "platform": "Windows",
  "context": {
   "revision": "candidate",
-  "repo_head": "2b6c475a8145f5f5f967a9d3a08d995847953734",
-  "digitalmodel_head": "2b6c475a8145f5f5f967a9d3a08d995847953734",
+  "repo_head": "793469a03e67d2cf141f4f5a865139375d581743",
+  "digitalmodel_head": "793469a03e67d2cf141f4f5a865139375d581743",
   "digitalmodel_file": "src/digitalmodel/__init__.py",
   "code_mode": "candidate",
   "sha256": {
@@ -110,7 +110,7 @@
   },
   "shape_hypothesis_status": "HYPOTHESIS",
   "published_example_status": "NOT_EVALUATED",
-  "artifacts_repo_head": "2b6c475a8145f5f5f967a9d3a08d995847953734",
+  "artifacts_repo_head": "793469a03e67d2cf141f4f5a865139375d581743",
   "artifacts_dirty": true
  },
  "errors": [],
