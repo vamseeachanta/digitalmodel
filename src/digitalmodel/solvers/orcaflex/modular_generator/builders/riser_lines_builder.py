@@ -101,7 +101,19 @@ class RiserLinesBuilder(BaseBuilder):
             # Contents
             "ContentsMethod": "Uniform",
             "ContentsDensity": riser_line.contents.density,
+            # kPa in the OrcaFlex SI unit system (kN, m, te, s)
+            "ContentsPressure": riser_line.contents.pressure,
         }
+
+        # The schema states flow rate in m/s, but the OrcaFlex unit for
+        # ContentsFlowRate is not established offline; refuse a non-zero value
+        # instead of emitting it with a possibly wrong unit or dropping it.
+        if riser_line.contents.flow_rate:
+            raise ValueError(
+                f"Line '{riser_line.name}': contents flow_rate "
+                f"{riser_line.contents.flow_rate} is not supported; its OrcaFlex "
+                "unit is unconfirmed (see #3983). Set flow_rate to 0."
+            )
 
         # Add StaticsStep2 if specified (needed for wave configurations)
         if riser_line.statics_step2:
