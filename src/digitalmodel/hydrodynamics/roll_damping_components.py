@@ -56,8 +56,9 @@ states about 5 deg (p. 924) and its examples use 10 deg.
 
 Provenance. Whole-hull results carry a structured citation sidecar
 (:class:`digitalmodel.citations.schema.Citation`, one record per equation
-group) in ``RollDampingComponents.citations``. :func:`validate_citations`
-resolves them fail-closed against the wiki source page.
+group) in ``RollDampingComponents.citations``. :func:`barge_roll_damping`
+resolves them fail-closed before it returns; :func:`validate_citations`
+re-checks a result against any wiki root.
 
 Conversion to a percentage of critical uses
 :func:`digitalmodel.hydrodynamics.diffraction.roll_damping.damping_to_percent_critical`,
@@ -81,9 +82,11 @@ from digitalmodel.hydrodynamics.diffraction.roll_damping import (
 __all__ = [
     "FLAG_AMPLITUDE_ABOVE_PAPER_EXAMPLES",
     "FLAG_EQ35_WITH_ROUNDED_BILGE",
+    "FLAG_STRIP_STATIONS_EXCLUDED",
     "MAX_AMPLITUDE",
     "PAPER_EXAMPLE_AMPLITUDE",
     "SOURCE_CITATION",
+    "ExcludedStation",
     "HullSection",
     "OutsideEmpiricalDomainError",
     "RollDampingComponentError",
@@ -98,6 +101,8 @@ __all__ = [
     "drag_route_eddy_damping",
     "eddy_damping_section",
     "eddy_damping_sections",
+    "eddy_damping_strip",
+    "StripEddyDamping",
     "eddy_forward_speed_factor",
     "eddy_pressure_ratio",
     "equivalent_linear_damping",
@@ -126,6 +131,7 @@ PAPER_EXAMPLE_AMPLITUDE = math.radians(10.0)
 
 FLAG_AMPLITUDE_ABOVE_PAPER_EXAMPLES = "amplitude_above_paper_examples"
 FLAG_EQ35_WITH_ROUNDED_BILGE = "eq35_with_rounded_bilge"
+FLAG_STRIP_STATIONS_EXCLUDED = "strip_stations_excluded"
 
 #: The source of every formula in this module. The wiki page is the
 #: naval-architecture source page for the paper; resolution needs its
@@ -149,7 +155,13 @@ class RollDampingComponentError(ValueError):
 
 
 class OutsideEmpiricalDomainError(RollDampingComponentError):
-    """Valid inputs for which a fitted formula gives no positive dissipation."""
+    """Valid inputs for which a fitted formula gives a finite, non-positive
+    dissipation coefficient. ``quantity`` names it and ``value`` holds it."""
+
+    def __init__(self, message: str, quantity: str = "", value: float = math.nan):
+        super().__init__(message)
+        self.quantity = quantity
+        self.value = value
 
 
 # --- validation helpers -------------------------------------------------------
@@ -221,10 +233,16 @@ def _section_radius(radius: float, beam: float, draft: float) -> float:
 
 
 def _dissipative(name: str, value: float) -> float:
-    if not math.isfinite(value) or value <= 0.0:
+    if not math.isfinite(value):
+        raise RollDampingComponentError(
+            f"{name} evaluates to {value!r}; a numerical failure, not a domain result"
+        )
+    if value <= 0.0:
         raise OutsideEmpiricalDomainError(
             f"{name} evaluates to {value!r}; the inputs are outside the empirical "
-            "domain of the formula (a dissipation coefficient must be positive)"
+            "domain of the formula (a dissipation coefficient must be positive)",
+            quantity=name,
+            value=value,
         )
     return value
 
@@ -566,7 +584,40 @@ class HullSection:
     bilge_radius: Optional[float] = None
 
 
-def eddy_damping_sections(
+@dataclass(frozen=True)
+class ExcludedStation:
+    """A strip station left out of the eddy integral (its C_R was not positive).
+
+    ``integration_weight`` is the station's trapezoidal weight (half the sum of
+    the adjacent intervals) and ``length_share`` that weight over the strip
+    length. Setting the ordinate to zero affects both adjacent trapezoids.
+    """
+
+    index: int
+    x: float
+    c_r: float
+    integration_weight: float
+    length_share: float
+
+
+@dataclass(frozen=True)
+class StripEddyDamping:
+    """Eddy damping from strip integration, with any excluded stations.
+
+    ``flags`` holds ``FLAG_STRIP_STATIONS_EXCLUDED`` whenever ``excluded`` is
+    not empty; the damping is then incomplete and must be reported with them.
+    """
+
+    damping: float
+    excluded: tuple[ExcludedStation, ...] = ()
+    flags: tuple[str, ...] = ()
+
+    @property
+    def excluded_length_share(self) -> float:
+        return sum(station.length_share for station in self.excluded)
+
+
+def eddy_damping_strip(
     sections: Sequence[HullSection],
     rho: float,
     og: float,
@@ -576,7 +627,7 @@ def eddy_damping_sections(
     h0_cap: Optional[float] = None,
     variant: EddyVariant = "chakrabarti2001",
     exclude_non_positive: bool = False,
-) -> float:
+) -> StripEddyDamping:
     """Eddy-making damping of a hull by trapezoidal integration of eq. 18.
 
     ``og`` is measured from the waterline and applies to every station.
@@ -587,11 +638,15 @@ def eddy_damping_sections(
     5); how the paper applies the cap is not printed, so this reading is an
     assumption.
 
-    A station whose C_R is zero or negative raises by default. The C_R fit
-    passes through zero for some full, rounded sections (H0 near 1, sigma
-    near 0.76); ``exclude_non_positive=True`` lets such stations contribute
-    zero instead. It is an explicit choice by the caller, not a method from
-    the paper, and it should be reported with the result.
+    A station whose C_R is zero or negative raises
+    :class:`OutsideEmpiricalDomainError` by default. The C_R fit passes through
+    zero for some full, rounded sections (H0 near 1, sigma near 0.76). With
+    ``exclude_non_positive=True`` such a station's ordinate is set to zero, and
+    the result lists it (index, x, fitted C_R, integration weight and share of
+    length) and carries ``FLAG_STRIP_STATIONS_EXCLUDED``. This is the caller's
+    choice, not a method from the paper; it neither estimates the true damping
+    nor bounds it. Non-finite values always raise, and a strip in which every
+    station is excluded raises.
     """
     if len(sections) < 2:
         raise RollDampingComponentError("at least two stations are needed to integrate")
@@ -601,7 +656,10 @@ def eddy_damping_sections(
         raise RollDampingComponentError(
             "stations must be sorted by strictly increasing x"
         )
+    span = xs[-1] - xs[0]
+    last = len(sections) - 1
     values = []
+    excluded = []
     for i, s in enumerate(sections):
         beam = s.beam
         if h0_cap is not None:
@@ -618,17 +676,51 @@ def eddy_damping_sections(
                 omega,
                 variant,
             )
-        except OutsideEmpiricalDomainError:
+        except OutsideEmpiricalDomainError as exc:
             if not exclude_non_positive:
                 raise
+            left = xs[i] - xs[i - 1] if i > 0 else 0.0
+            right = xs[i + 1] - xs[i] if i < last else 0.0
+            weight = 0.5 * (left + right)
+            excluded.append(ExcludedStation(i, xs[i], exc.value, weight, weight / span))
             value = 0.0
-        if i in (0, len(sections) - 1):
+        if not math.isfinite(value):
+            raise RollDampingComponentError(
+                f"station {i} (x = {xs[i]!r}) gives a non-finite eddy damping {value!r}"
+            )
+        if i in (0, last):
             value *= end_station_factor
         values.append(value)
-    return sum(
-        0.5 * (values[i] + values[i + 1]) * (xs[i + 1] - xs[i])
-        for i in range(len(xs) - 1)
+    if len(excluded) == len(sections):
+        raise OutsideEmpiricalDomainError(
+            "every station is outside the empirical domain of the C_R fit; "
+            "the strip has no supported eddy damping",
+            quantity="eddy damping (strip)",
+            value=0.0,
+        )
+    damping = sum(
+        0.5 * (values[i] + values[i + 1]) * (xs[i + 1] - xs[i]) for i in range(last)
     )
+    flags = (FLAG_STRIP_STATIONS_EXCLUDED,) if excluded else ()
+    return StripEddyDamping(damping, tuple(excluded), flags)
+
+
+def eddy_damping_sections(
+    sections: Sequence[HullSection],
+    rho: float,
+    og: float,
+    amplitude: float,
+    omega: float,
+    end_station_factor: float = 1.0,
+    h0_cap: Optional[float] = None,
+    variant: EddyVariant = "chakrabarti2001",
+) -> float:
+    """Eddy damping of a hull by strip integration; every station must be in
+    the domain. See :func:`eddy_damping_strip`, which can also exclude
+    stations and report them."""
+    return eddy_damping_strip(
+        sections, rho, og, amplitude, omega, end_station_factor, h0_cap, variant
+    ).damping
 
 
 def barge_eddy_damping(
@@ -1043,6 +1135,8 @@ def barge_roll_damping(
     bilge_radius: float = 0.0,
     og_factor: float = 1.0,
     gravity: float = STANDARD_GRAVITY,
+    *,
+    citation_root: Optional[Path] = None,
 ) -> RollDampingComponents:
     """Component roll damping of a rectangular barge, as the paper recommends.
 
@@ -1063,6 +1157,14 @@ def barge_roll_damping(
     ``FLAG_AMPLITUDE_ABOVE_PAPER_EXAMPLES`` above 10 deg and
     ``FLAG_EQ35_WITH_ROUNDED_BILGE`` when a non-zero bilge radius is given,
     because eq. 35 assumes a sharp corner.
+
+    Citations are resolved before the result is returned (fail-closed, per
+    the calculation-output citation contract): a missing source page, or a
+    code_id, publisher or revision that differs from the page frontmatter,
+    raises :class:`digitalmodel.citations.schema.CitationResolutionError` and
+    no result is returned. ``citation_root`` is a wiki clone root (or a local
+    fixture); ``None`` uses the citation resolver's search order
+    (``LLM_WIKI_PATH`` first).
     """
     draft = _positive("draft", draft)
     beam = _positive("beam", beam)
@@ -1116,6 +1218,8 @@ def barge_roll_damping(
     )
     if b_bk > 0.0:
         citations += _cite("eqs. 46-60, pp. 926-927 (bilge keel)")
+    for citation in citations:
+        validate_citation(citation, repo_root=citation_root)
     return RollDampingComponents(
         friction, eddy, lift, wave, bilge_keel, tuple(flags), citations
     )

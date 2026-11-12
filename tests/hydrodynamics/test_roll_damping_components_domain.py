@@ -9,14 +9,18 @@ Ocean Engineering 28, 915-932.
 """
 
 import math
+from pathlib import Path
 
 import pytest
 
 from digitalmodel.citations.schema import Citation, CitationResolutionError
+from digitalmodel.hydrodynamics import roll_damping_components as rdc
 from digitalmodel.hydrodynamics.roll_damping_components import (
     FLAG_AMPLITUDE_ABOVE_PAPER_EXAMPLES,
     FLAG_EQ35_WITH_ROUNDED_BILGE,
+    FLAG_STRIP_STATIONS_EXCLUDED,
     SOURCE_CITATION,
+    OutsideEmpiricalDomainError,
     RollDampingComponentError,
     RollDampingComponents,
     barge_eddy_damping,
@@ -29,6 +33,7 @@ from digitalmodel.hydrodynamics.roll_damping_components import (
     HullSection,
     eddy_damping_section,
     eddy_damping_sections,
+    eddy_damping_strip,
     eddy_pressure_ratio,
     friction_radius,
     lift_damping,
@@ -38,7 +43,18 @@ from digitalmodel.hydrodynamics.roll_damping_components import (
 
 RHO = 1025.0
 NU = 1.19e-6
-BARGE = dict(rho=RHO, nu=NU, length=120.0, beam=36.0, draft=5.5, kg=8.0, omega=0.6)
+# Vendored frontmatter-only wiki fixtures (shared with tests/citations/).
+CITATION_ROOT = Path(__file__).resolve().parents[1] / "citations" / "fixtures"
+BARGE = dict(
+    rho=RHO,
+    nu=NU,
+    length=120.0,
+    beam=36.0,
+    draft=5.5,
+    kg=8.0,
+    omega=0.6,
+    citation_root=CITATION_ROOT,
+)
 
 
 # --- P2-1: the diagnostic as_printed coefficient keeps C_p on both terms -------
@@ -313,12 +329,96 @@ def test_strip_sum_rejects_a_station_outside_the_domain_by_default():
         eddy_damping_sections(_stations_with_a_null_section(), RHO, -1.0, 0.1, 0.6)
 
 
-def test_strip_sum_can_exclude_out_of_domain_stations_explicitly():
+def _trapezoid(xs, values):
+    return sum(
+        0.5 * (values[i] + values[i + 1]) * (xs[i + 1] - xs[i])
+        for i in range(len(xs) - 1)
+    )
+
+
+def test_strip_record_without_exclusions_matches_the_strict_sum():
+    st = _stations_with_a_null_section()[::2]
+    record = eddy_damping_strip(st, RHO, -1.0, 0.1, 0.6)
+    assert record.damping == eddy_damping_sections(st, RHO, -1.0, 0.1, 0.6)
+    assert record.excluded == ()
+    assert record.flags == ()
+    assert record.excluded_length_share == 0.0
+
+
+def test_strip_record_names_each_excluded_station_and_its_weight():
     st = _stations_with_a_null_section()
+    record = eddy_damping_strip(st, RHO, -1.0, 0.1, 0.6, exclude_non_positive=True)
     v0, v2 = (
         eddy_damping_section(RHO, s.beam, s.draft, s.sigma, -1.0, None, 0.1, 0.6)
         for s in (st[0], st[2])
     )
-    expected = 0.5 * (v0 + 0.0) * 10.0 + 0.5 * (0.0 + v2) * 10.0
-    got = eddy_damping_sections(st, RHO, -1.0, 0.1, 0.6, exclude_non_positive=True)
-    assert got == pytest.approx(expected, rel=1e-12)
+    assert record.damping == pytest.approx(
+        _trapezoid([0.0, 10.0, 20.0], [v0, 0.0, v2]), rel=1e-12
+    )
+    assert record.flags == (FLAG_STRIP_STATIONS_EXCLUDED,)
+    (station,) = record.excluded
+    assert (station.index, station.x) == (1, 10.0)
+    assert station.integration_weight == pytest.approx(10.0)
+    assert station.length_share == pytest.approx(0.5)
+    assert -1.0e-3 < station.c_r < 0.0
+    assert record.excluded_length_share == pytest.approx(0.5)
+
+
+def test_strip_with_every_station_excluded_raises_rather_than_returning_zero():
+    null = _stations_with_a_null_section()[1]
+    st = [null, HullSection(x=20.0, beam=null.beam, draft=null.draft, sigma=null.sigma)]
+    with pytest.raises(OutsideEmpiricalDomainError):
+        eddy_damping_strip(st, RHO, -1.0, 0.1, 0.6, exclude_non_positive=True)
+
+
+def test_strip_exclusion_does_not_cover_non_finite_values(monkeypatch):
+    monkeypatch.setattr(rdc, "eddy_pressure_ratio", lambda *a, **k: float("nan"))
+    with pytest.raises(RollDampingComponentError) as info:
+        eddy_damping_strip(
+            _stations_with_a_null_section(),
+            RHO,
+            -1.0,
+            0.1,
+            0.6,
+            exclude_non_positive=True,
+        )
+    assert not isinstance(info.value, OutsideEmpiricalDomainError)
+
+
+def test_non_finite_coefficient_is_not_classed_as_outside_the_domain():
+    with pytest.raises(RollDampingComponentError) as info:
+        rdc._dissipative("C_R", float("nan"))
+    assert not isinstance(info.value, OutsideEmpiricalDomainError)
+    with pytest.raises(OutsideEmpiricalDomainError) as info:
+        rdc._dissipative("C_R", -1.0e-4)
+    assert info.value.value == -1.0e-4
+
+
+# --- R2-1: citations resolve at calculation time, fail-closed ---------------
+
+
+def test_barge_calculation_resolves_its_citations_against_the_fixture():
+    parts = barge_roll_damping(amplitude=math.radians(8.0), **BARGE)
+    assert parts.citations
+    validate_citations(parts, wiki_root=CITATION_ROOT)
+
+
+def test_barge_calculation_aborts_when_the_source_page_is_missing(tmp_path):
+    (tmp_path / "wikis").mkdir()
+    kwargs = dict(BARGE, citation_root=tmp_path)
+    with pytest.raises(CitationResolutionError, match=SOURCE_CITATION.code_id):
+        barge_roll_damping(amplitude=math.radians(8.0), **kwargs)
+
+
+@pytest.mark.parametrize("field", ["code_id", "publisher", "revision"])
+def test_barge_calculation_aborts_on_each_mismatched_identity_field(tmp_path, field):
+    identity = {
+        "code_id": SOURCE_CITATION.code_id,
+        "publisher": SOURCE_CITATION.publisher,
+        "revision": SOURCE_CITATION.revision,
+    }
+    identity[field] = "mismatch"
+    root = _wiki(tmp_path, **identity)
+    kwargs = dict(BARGE, citation_root=root)
+    with pytest.raises(CitationResolutionError, match=f"frontmatter_mismatch:{field}"):
+        barge_roll_damping(amplitude=math.radians(8.0), **kwargs)

@@ -20,6 +20,7 @@ Three kinds of check are made:
 """
 
 import math
+from pathlib import Path
 
 import pytest
 
@@ -49,6 +50,8 @@ from digitalmodel.hydrodynamics.roll_damping_components import (
     wave_damping_forward_speed,
 )
 
+# Vendored frontmatter-only wiki fixtures (shared with tests/citations/).
+CITATION_ROOT = Path(__file__).resolve().parents[1] / "citations" / "fixtures"
 RHO_SW = 1025.0  # kg/m3
 NU_SW = 1.19e-6  # m2/s
 
@@ -386,6 +389,7 @@ def test_barge_roll_damping_breakdown_sums_and_has_no_lift_at_rest():
         wave_damping_zero_speed=2.0e6,
         bilge_keel_breadth=0.5,
         bilge_keel_length=60.0,
+        citation_root=CITATION_ROOT,
     )
     assert parts.lift == 0.0
     assert parts.wave == pytest.approx(2.0e6, rel=1e-4)
