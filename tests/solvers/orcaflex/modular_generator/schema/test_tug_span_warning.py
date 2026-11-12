@@ -44,3 +44,10 @@ def test_tug_spread_within_limit_is_silent():
     with warnings.catch_warnings():
         warnings.simplefilter("error")
         ProjectInputSpec(**_spec(count=5, spacing=300))
+
+
+def test_tug_spread_at_exactly_one_and_a_half_lengths_is_silent():
+    # Last tug at 0 + 3 x 500 = 1500 m = 1.5 x 1000 m; the check is strict (>).
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+        ProjectInputSpec(**_spec(count=4, spacing=500))
