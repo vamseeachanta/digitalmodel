@@ -119,10 +119,19 @@ class TestMaterialProperties:
         lt = lt_list[0]
         assert lt["DNVSTF101Fy"] == MATERIAL_PROPERTIES["X70"]["DNVSTF101Fy"]
 
-    def test_unknown_grade_falls_back_to_x65(self):
-        lt_list = _build(_make_pipeline_spec(material="X999"))
-        lt = lt_list[0]
-        assert lt["MaterialDensity"] == MATERIAL_PROPERTIES["X65"]["MaterialDensity"]
+    @pytest.mark.parametrize("grade", ["X999", "X80", "API 5L X65"])
+    def test_unknown_grade_fails_closed(self, grade):
+        """An unsupported grade must not take X65 yield silently (#3984).
+
+        X80 previously generated DNVSTF101Fy = 450,000 kN/m2 (X65) instead of
+        its own SMYS; the builder now names the supported grades instead.
+        """
+        with pytest.raises(ValueError, match="Unsupported pipeline material"):
+            _build(_make_pipeline_spec(material=grade))
+
+    def test_supported_grades_case_insensitive(self):
+        lt = _build(_make_pipeline_spec(material="x52"))[0]
+        assert lt["DNVSTF101Fy"] == MATERIAL_PROPERTIES["X52"]["DNVSTF101Fy"]
 
     def test_custom_youngs_modulus(self):
         """Spec-level youngs_modulus overrides grade default."""

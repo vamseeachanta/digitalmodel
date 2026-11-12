@@ -100,9 +100,14 @@ class LineTypeBuilder(BaseBuilder):
 
         # Get material properties
         material_grade = pipeline.material.upper()
-        material_props = MATERIAL_PROPERTIES.get(
-            material_grade, MATERIAL_PROPERTIES["X65"]
-        )
+        if material_grade not in MATERIAL_PROPERTIES:
+            # Fail closed: a silent X65 fallback assigns the wrong yield
+            # strength (DNVSTF101Fy) to any other grade, e.g. X80 (#3984).
+            raise ValueError(
+                f"Unsupported pipeline material '{pipeline.material}'. "
+                f"Supported grades: {', '.join(sorted(MATERIAL_PROPERTIES))}"
+            )
+        material_props = MATERIAL_PROPERTIES[material_grade]
 
         # Override with spec values if provided
         youngs_modulus = (
