@@ -351,3 +351,19 @@ def test_multiple_referenced_line_types_preserve_order(single_riser, tmp_path):
     upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
     assert [s["line_type"] for s in upgraded["riser"]["lines"][0]["sections"]] == [row[0] for row in rows]
     assert generated_mapping(upgraded, tmp_path / "after") == generated_mapping(single_riser, tmp_path / "before")
+
+
+@pytest.mark.parametrize("stiffness", [[120, None], [120, 120]])
+def test_isotropic_native_stiffness_list_is_converted(single_riser, tmp_path, stiffness):
+    """The [EI, ~] input formerly pinned as rejected now converts (#3980).
+
+    Comparator: the authored EI of 120 kN.m2; the native list layout is
+    written back unchanged and the upgrade is lossless.
+    """
+    single_riser["generic"]["line_types"][0]["bending_stiffness"] = stiffness
+    upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
+    assert upgraded["riser"]["line_types"][0]["bending_stiffness"] == 120
+    after = generated_mapping(upgraded, tmp_path / "after")
+    assert after == generated_mapping(single_riser, tmp_path / "before")
+    (line_type,) = after["includes/20_generic_objects.yml"]["LineTypes"]
+    assert line_type["EI"] == stiffness

@@ -120,3 +120,15 @@ def test_anisotropic_ei_rejected():
         lt["properties"]["EI"] = [100.0, 200.0]
     with pytest.raises(ValueError, match="EI"):
         upgrade_spec(spec, DetectedModelType.RISER)
+
+
+def test_axial_drag_without_normal_drag_cell_is_rejected(tmp_path):
+    """An axial value needs a normal Cd cell; [~, ~, axial] is not emitted."""
+    spec = deepcopy(_spec("a01_catenary_riser"))
+    spec["generic"]["line_types"][0]["properties"].pop("Cd")
+    upgraded = upgrade_spec(spec, DetectedModelType.RISER)
+    line_type = upgraded["riser"]["line_types"][0]
+    assert "drag_coefficient" not in line_type
+    line_type["axial_drag_coefficient"] = 0.02
+    with pytest.raises(ValueError, match="normal"):
+        _generated(upgraded, tmp_path / "axial_only")

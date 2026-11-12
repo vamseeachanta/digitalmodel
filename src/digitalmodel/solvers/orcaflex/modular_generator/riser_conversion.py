@@ -191,6 +191,8 @@ def _restore_scalars(obj: dict, typed: Any, fields: dict[str, str]) -> None:
 
     Fields in ``_CELL_FIELDS`` replace their cell of a native list template.
     An axial value without a list template becomes ``[normal, ~, axial]``.
+    A list whose first (normal) cell would be undefined is rejected rather
+    than emitted as ``[~, ~, axial]``.
     """
     properties = obj.setdefault("properties", {})
     obj["name"] = typed.name
@@ -204,6 +206,11 @@ def _restore_scalars(obj: dict, typed: Any, fields: dict[str, str]) -> None:
             cells = list(current) if isinstance(current, list) else [current]
             cells += [None] * (width - len(cells))
             cells[index] = value
+            if cells[0] is None:
+                raise ValueError(
+                    f"{native} cell {index} is authored but the normal (first) "
+                    f"cell is undefined; author the normal value as well"
+                )
             properties[native] = cells
         else:
             properties[native] = value
