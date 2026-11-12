@@ -71,6 +71,55 @@ def test_quarter_wave_hand_solution(samples):
     assert np.ptp(card.position) < np.ptp(ctx.surface_card.position)
 
 
+@pytest.mark.parametrize("samples", [63, 64])
+@pytest.mark.parametrize("harmonic_count", [None, 15])
+def test_repeated_closing_sample_preserves_shared_downhole_samples(samples, harmonic_count):
+    """A repeated endpoint adds no time interval to the sampled physical cycle."""
+    ctx, _ = quarter_wave_context(samples)
+    closed = ctx.model_copy(deep=True)
+    closed.surface_card.position.append(closed.surface_card.position[0])
+    closed.surface_card.load.append(closed.surface_card.load[0])
+    original = closed.surface_card.model_dump()
+    with pytest.warns(UserWarning, match="comparison only: not field validated"):
+        baseline = DynacardPhysicsSolver(ctx).solve_wave_equation(harmonic_count=harmonic_count)
+    with pytest.warns(UserWarning, match="comparison only: not field validated"):
+        repeated = DynacardPhysicsSolver(closed).solve_wave_equation(harmonic_count=harmonic_count)
+    assert len(repeated.downhole_card.load) == samples
+    assert repeated.downhole_card.position == pytest.approx(baseline.downhole_card.position)
+    assert repeated.downhole_card.load == pytest.approx(baseline.downhole_card.load)
+    assert repeated.downhole_load_basis.closing_sample_dropped is True
+    assert baseline.downhole_load_basis.closing_sample_dropped is False
+    assert closed.surface_card.model_dump() == original
+
+
+@pytest.mark.parametrize("field", ["position", "load"])
+def test_near_closing_sample_is_retained(field):
+    ctx, _ = quarter_wave_context()
+    ctx.surface_card.position.append(ctx.surface_card.position[0])
+    ctx.surface_card.load.append(ctx.surface_card.load[0])
+    values = getattr(ctx.surface_card, field)
+    values[-1] = np.nextafter(values[0], np.inf)
+    with pytest.warns(UserWarning, match="comparison only: not field validated"):
+        result = DynacardPhysicsSolver(ctx).solve_wave_equation()
+    assert len(result.downhole_card.load) == 65
+    assert result.downhole_load_basis.closing_sample_dropped is False
+
+
+def test_closing_sample_removal_requires_three_remaining_samples():
+    ctx, _ = quarter_wave_context()
+    ctx.surface_card = CardData(position=[0, 1, 0], load=[20, 21, 20])
+    with pytest.raises(PhysicsError, match="at least three samples"):
+        DynacardPhysicsSolver(ctx).solve_wave_equation()
+
+
+def test_harmonic_limit_uses_count_after_closing_sample_removal():
+    ctx, _ = quarter_wave_context(63)
+    ctx.surface_card.position.append(ctx.surface_card.position[0])
+    ctx.surface_card.load.append(ctx.surface_card.load[0])
+    with pytest.raises(PhysicsError, match="harmonic_count"):
+        DynacardPhysicsSolver(ctx).solve_wave_equation(harmonic_count=32)
+
+
 def test_rippled_load_changes_shape():
     """q3=3*pi/2 gives cos(q3)=0: the surface load ripple cancels.
 

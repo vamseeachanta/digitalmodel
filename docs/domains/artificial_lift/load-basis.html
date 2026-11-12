@@ -16,9 +16,9 @@
 <body>
   <h1>Dynacard load basis analysis</h1>
   <h2>Summary</h2>
-  <p>The Gibbs comparison solver propagates position and applies an affine
-  transformation to surface load. The result records
-  <code>downhole_load_basis.method = affine_surface_load</code> and
+  <p>The Gibbs comparison solver propagates load and displacement through the
+  damped wave equation for a vertical rod string. The result records
+  <code>downhole_load_basis.method = coupled_frequency_domain</code> and
   <code>validation_status = NOT_EVALUATED</code>. These restrictions appear
   in serialized results, CLI summaries and HTML diagnostic reports.</p>
   <h2>Revision history</h2>
@@ -26,57 +26,85 @@
     <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
     <tbody><tr><td>1</td><td>2026-10-19</td><td>The retained approximation is
     disclosed so that scaled surface loads cannot be mistaken for propagated
-    downhole loads.</td></tr></tbody>
+    downhole loads.</td></tr>
+    <tr><td>2</td><td>2026-11-12</td><td>Coupled wave propagation replaces the
+    affine load basis; harmonic selection, submerged weight and closing-sample
+    removal are recorded.</td></tr></tbody>
   </table>
-  <p>Table 1. Initial issue of the load basis analysis.</p>
+  <p>Table 1. Load basis revisions and their purpose.</p>
   <h2>Method and sources</h2>
-  <p>The implemented arithmetic is <code>F_d = (F_s - W_b) a</code>, with
-  <code>W_b = sum(L A rho / C) b</code>. Rod length L is in feet, area A
-  in square inches, density rho in pounds per cubic foot, and C converts
-  square inches to square feet. Load is in pounds-force. This equation describes
-  the existing code; it is not a qualified wave-equation load solution.</p>
-  <p>The source is the repository's
+  <p>With distance x positive downward and displacement u positive upward,
+  tensile force is <code>F = -EA du/dx</code>. Fourier substitution in
+  <code>u_tt + c u_t = a² u_xx</code> gives
+  <code>gamma² = (-omega² + i omega c)/a²</code>. Each ordered rod section
+  propagates both displacement and force:</p>
+  <pre>U_out = cosh(gamma L) U_in - sinh(gamma L)/(EA gamma) F_in
+F_out = cosh(gamma L) F_in - EA gamma sinh(gamma L) U_in</pre>
+  <p>Dynamic length L is in inches, E in psi, A in square inches, wave speed a
+  in inches/second and damping rate c in inverse seconds. Displacement is in
+  inches and force in lbf. The derivation and sources are recorded in
+  <a href="../../../src/digitalmodel/marine_ops/artificial_lift/dynacard/gibbs-transfer.md">gibbs-transfer.md</a>:
+  <a href="https://solidmechanics.org/Text/Chapter4_3/Chapter4_3.php">Applied Mechanics of Solids, section 4.3.3</a>
+  and <a href="https://doi.org/10.2118/588-PA">SPE-588-PA (1963), The Mathematical Model</a>.</p>
+  <p>The static load is <code>F_p = F_s - W_b</code>, where
+  <code>W_b = sum((rho_effective - rho_fluid) A L_ft / 144)</code> and
+  <code>rho_effective = weight_per_foot × 144 / A</code>.
+  Density is in lb/ft³; 144 is the exact square-foot to square-inch conversion.
+  Supplied coupling-inclusive weight is retained. The implementation is
   <a href="../../../src/digitalmodel/marine_ops/artificial_lift/dynacard/physics.py">physics.py</a>
-  buoyant adjustment and
-  <a href="../../../src/digitalmodel/marine_ops/artificial_lift/dynacard/constants.py">constants.py</a>
-  unit-conversion, material-property and legacy-calibration blocks (2026).
-  The legacy inputs are rho = 490.0, C = 144.0, b = 0.825 and a = 0.88.
-  Their presence in the repository establishes the executed arithmetic,
-  not independent calibration evidence. No new coefficient is introduced.</p>
-  <h2>Synthetic worked example</h2>
-  <p>The chosen rod length is 100.0 ft and its diameter is sqrt(4/pi) in,
-  giving an area of 1.0 square inch. The chosen pump diameter is 1.0 in,
-  depth is 100.0 ft and speed is 1.0 stroke/min. The chosen surface samples
-  are shown below. These are arithmetic inputs, not field measurements.</p>
-  <p>Independent substitution gives <code>W = 100 × 1 × 490 / 144</code>,
-  or 340.3 lbf, and <code>W_b = W × 0.825</code>, or 280.7 lbf.
-  Each answer is calculated using the unrounded intermediate values.</p>
+  with no empirical attenuation, buoyancy or stroke multiplier.</p>
+  <h2>Recorded provenance</h2>
+  <p>The basis records the summed <code>buoyant_rod_weight_lbf</code>,
+  <code>harmonic_count</code> and <code>closing_sample_dropped</code>.
+  A null harmonic count means all harmonics are retained; zero retains DC only.
+  <code>attenuation_factor</code> is null for the coupled path.
+  An exactly repeated first/last position and load pair is removed before FFT
+  and harmonic validation. Both coordinates must match; near endpoints remain
+  distinct. The output then has one fewer sample and the input is unchanged.</p>
+  <h2>Synthetic static worked example</h2>
+  <p>The chosen rod length is 100.0 ft and diameter is sqrt(4/pi) in, giving
+  A = 1.0 in². Rod density is 144.0 lb/ft³, supplied weight is 1.0 lbf/ft,
+  fluid density is 72.0 lb/ft³, E is 1440.0 psi, wave speed is 60.0 ft/s and
+  damping is zero. Pump diameter is 1.000 in, depth is 100.0 ft and cycle rate
+  is 1.0 stroke/min. Five identical surface samples prescribe position 0.0 in
+  and load 1000.0 lbf; the repeated endpoint is removed, leaving four samples.
+  These are synthetic equation inputs, not field measurements.</p>
+  <p>Independent substitution gives
+  <code>W_b = (144 - 72) × 1 × 100 / 144 = 50 lbf</code> and
+  <code>F_p = 1000 - 50 = 950 lbf</code>. Every non-DC Fourier coefficient is
+  zero. Static elastic stretch is constant, so the zero-minimum position datum
+  gives 0.0 in at every pump sample; absolute static stretch is not returned.</p>
   <table>
     <thead><tr><th>Surface position (in)</th><th>Surface load (lbf)</th>
-    <th>Approximate downhole load (lbf)</th></tr></thead>
+    <th>Pump position (in)</th><th>Pump load (lbf)</th></tr></thead>
     <tbody>
-      <tr><td>0.0</td><td>1000.0</td><td>633.0</td></tr>
-      <tr><td>50.0</td><td>2000.0</td><td>1513.0</td></tr>
-      <tr><td>100.0</td><td>3000.0</td><td>2393.0</td></tr>
-      <tr><td>50.0</td><td>2000.0</td><td>1513.0</td></tr>
+      <tr><td>0.0</td><td>1000.0</td><td>0.0</td><td>950.0</td></tr>
     </tbody>
   </table>
-  <p>Table 2. Hand-calculated retained load transformation, rounded for display.</p>
+  <p>Table 2. Independent static solution at each of the four retained samples.</p>
   <p>Run <code>PYTHONPATH=src python examples/domains/artificial_lift/dynacard_load_basis.py</code>
   to reproduce the inputs, basis and answers. The regression test contains the
   independent substitution and compares unrounded results.</p>
   <h2>Qualification and way forward</h2>
-  <p class="limit">NOT_EVALUATED: independent physical validation of the load
-  transformation, buoyancy, attenuation, damping and stroke calibration is not
-  established. Load morphology and absolute loads are unqualified; derived
-  fillage, pressure, production, buckling and diagnoses inherit this limitation.
-  Matching the arithmetic above does not establish physical accuracy.</p>
-  <p>Existing results without the new metadata deserialize with a null basis;
-  null means unknown provenance, not validated load. Other solvers do not
-  acquire a Gibbs load basis. A qualified load-propagation implementation will
-  require an independent reference and documented calibration conditions.</p>
-  <p>For the defects tracked in issue 1952,
-  fillage delegation, derived mode counting and fallback abstention were already
-  implemented. This change addresses the remaining approximation disclosure.</p>
+  <p>At 15 harmonics, five fixture wells with zero rod damping give median
+  1.3% and maximum 2.0% load nRMSE against stored reference cards, compared with
+  the old affine path's 17.3% median. The per-fixture results are 0.52%, 1.74%,
+  1.34%, 2.03% and 0.39%; the fifth reference also excludes its repeated endpoint.
+  These are regression measurements, not engineering acceptance limits.</p>
+  <p>Surface/pump load correlation at shared indices reaches 0.991812 in the
+  first fixture, so a ceiling below 0.99 is not established. The measured
+  regression bound is below 0.995, excluding the affine path's correlation
+  of 1.0; field accuracy is not inferred from this bound.</p>
+  <p>No openly readable published worked example with tabulated card values was
+  found. Validation rests on closed-form cases derived from the cited equations
+  and the five stored reference cards. A published-example check is NOT_EVALUATED.</p>
+  <p class="limit">NOT_EVALUATED: load and displacement are propagated through
+  the damped wave equation for a vertical rod string; deviation, Coulomb friction
+  and damping calibration are not modelled; field diagnostic accuracy is not
+  established. Derived fillage, pressure, production, buckling and diagnoses
+  inherit this limitation. Equation agreement does not establish field accuracy.</p>
+  <p>Legacy saved <code>affine_surface_load</code> results remain readable.
+  Results without metadata deserialize with a null basis; null means unknown
+  provenance. Other solvers do not acquire a Gibbs load basis.</p>
 </body>
 </html>

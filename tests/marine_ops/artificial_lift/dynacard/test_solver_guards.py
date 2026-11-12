@@ -16,7 +16,8 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.adapter i
 from digitalmodel.marine_ops.artificial_lift.dynacard.exceptions import PhysicsError
 from digitalmodel.marine_ops.artificial_lift.dynacard.finite_difference import FiniteDifferenceSolver
 from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
-    AnalysisResults, CardData, DynacardAnalysisContext, PumpProperties, RodSection,
+    AnalysisResults, CardData, DownholeLoadBasis, DynacardAnalysisContext,
+    PumpProperties, RodSection,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.physics import DynacardPhysicsSolver
 from digitalmodel.marine_ops.artificial_lift.dynacard.solver import (
@@ -94,6 +95,32 @@ def test_comparison_uses_default_reference_and_ignores_phase(context, monkeypatc
         assert comparison["load_nrmse_pct"] < 1e-10
         assert comparison["stroke_error_pct"] == 0.0
     assert report["within_threshold"] is True
+
+
+@pytest.mark.parametrize("closing_sample_dropped", [False, True])
+def test_comparison_aligns_only_a_recorded_closing_sample(context, monkeypatch, closing_sample_dropped):
+    card = _comparison_solvers(monkeypatch)
+    closed = CardData(position=card.position + [card.position[0]],
+                      load=card.load + [card.load[0]])
+    context.surface_card = closed.model_copy(deep=True)
+    basis = DownholeLoadBasis(method="coupled_frequency_domain", buoyant_rod_weight_lbf=0.0,
+                             closing_sample_dropped=closing_sample_dropped)
+    monkeypatch.setattr(EverittJenningsContextSolver, "solve",
+                        lambda _: AnalysisResults(downhole_card=closed))
+    monkeypatch.setattr(DynacardPhysicsSolver, "solve_wave_equation",
+                        lambda _: AnalysisResults(downhole_card=card, downhole_load_basis=basis))
+    monkeypatch.setattr(FiniteDifferenceSolver, "solve",
+                        lambda _: AnalysisResults(downhole_card=closed))
+    workflow = DynacardWorkflow(context)
+    if not closing_sample_dropped:
+        with pytest.raises(ValueError, match="equal sample counts"):
+            workflow.compare_solvers()
+        return
+    report = workflow.compare_solvers()
+    assert report["comparisons"]["gibbs"]["load_nrmse_pct"] == pytest.approx(0.0)
+    assert report["reference_results"].downhole_card == closed
+    assert len(report["reference_results"].downhole_card.load) == len(card.load) + 1
+    assert context.surface_card == closed
 
 
 def test_comparison_raises_with_metrics_above_envelope(context, monkeypatch):

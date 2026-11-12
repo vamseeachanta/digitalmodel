@@ -6,7 +6,7 @@ from .calculations import calculate_pump_fillage
 from .exceptions import PhysicsError
 from .everitt_jennings.adapter import _effective_density_lb_ft3
 from .solver_guards import annotate_results, validate_stroke
-from .models import DynacardAnalysisContext, CardData, AnalysisResults
+from .models import DynacardAnalysisContext, CardData, AnalysisResults, DownholeLoadBasis
 from .constants import (
     FEET_TO_INCHES,
     SQUARE_FEET_TO_SQUARE_INCHES,
@@ -22,7 +22,8 @@ class DynacardPhysicsSolver:
     nonnegative viscous decay rate c in inverse seconds for
     u_tt + c*u_t = a²*u_xx. Zero explicitly selects the lossless model.
     This path does not estimate damping or establish field diagnostic accuracy.
-    Inputs must be uniformly timed over one cycle, excluding a repeated endpoint.
+    Inputs must be uniformly timed over one cycle. An exactly repeated closing
+    position/load pair is removed before transformation.
     """
 
     def __init__(self, context: DynacardAnalysisContext):
@@ -83,6 +84,12 @@ class DynacardPhysicsSolver:
         conversion from a dimensionless coefficient is NOT_EVALUATED.
         """
         u_surf, f_surf = self._validate_inputs()
+        closing_sample_dropped = bool(
+            u_surf[0] == u_surf[-1] and f_surf[0] == f_surf[-1]
+        )
+        if closing_sample_dropped:
+            u_surf, f_surf = u_surf[:-1], f_surf[:-1]
+            validate_stroke(u_surf, u_surf, f_surf, "gibbs")
         count = len(u_surf)
         if harmonic_count is not None and (
             isinstance(harmonic_count, (bool, np.bool_))
@@ -105,6 +112,7 @@ class DynacardPhysicsSolver:
 
         # Section matrices enforce continuity of displacement and total force
         # at each taper. Geometric A=pi*d²/4 and unit conversions are exact.
+        buoyant_rod_weight = 0.0
         try:
             with np.errstate(over="raise", invalid="raise", divide="raise"):
                 for section in self.ctx.rod_string:
@@ -136,6 +144,7 @@ class DynacardPhysicsSolver:
                         / SQUARE_FEET_TO_SQUARE_INCHES
                     )
                     force[0] -= count * weight
+                    buoyant_rod_weight += weight
                 # Absolute static stretch is not returned: position uses a
                 # zero-minimum datum. Remove DC before inverse transformation.
                 displacement[0] = 0
@@ -152,6 +161,12 @@ class DynacardPhysicsSolver:
         validate_stroke(u_surf, dh_pos, dh_load, "gibbs")
         self.results.downhole_card = CardData(
             position=dh_pos.tolist(), load=dh_load.tolist()
+        )
+        self.results.downhole_load_basis = DownholeLoadBasis(
+            method="coupled_frequency_domain",
+            buoyant_rod_weight_lbf=buoyant_rod_weight,
+            harmonic_count=harmonic_count,
+            closing_sample_dropped=closing_sample_dropped,
         )
         self.results.peak_polished_rod_load = float(np.max(f_surf))
         self.results.minimum_polished_rod_load = float(np.min(f_surf))

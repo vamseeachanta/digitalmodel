@@ -39,9 +39,17 @@ class DynacardWorkflow:
           unstable — see below.
 
     The Gibbs path propagates displacement and force through ordered rod
-    sections. Its independent analytical tests do not qualify field diagnosis;
-    it remains a comparison path. The legacy finite-difference solver is also
-    unqualified. See gibbs-transfer.md for the equations and validation limits.
+    sections. Across five fixture wells with zero rod damping, 15 harmonics
+    give median 1.3% and maximum 2.0% load nRMSE against stored reference cards;
+    the old affine path measured 17.3% median. These are regression measurements,
+    not field diagnostic acceptance limits. Gibbs workflow calls retain all
+    harmonics: median 2.19% and maximum 4.06% on the same cards.
+    No openly readable published worked
+    example with tabulated card values was found. Validation rests on closed-form
+    cases derived from the cited equations and the five stored reference cards;
+    a published-example check is NOT_EVALUATED. Field diagnostic accuracy remains
+    unestablished. The legacy finite-difference solver is also unqualified.
+    See gibbs-transfer.md for the equations and validation limits.
     """
 
     def __init__(
@@ -57,8 +65,8 @@ class DynacardWorkflow:
             context: Complete well analysis context. Can be set later
                 before calling analysis methods.
             solver_method: Physics solver to use. Defaults to
-                ``'everitt_jennings'``, the only one that reproduces the
-                reference downhole cards. ``'gibbs'`` and
+                ``'everitt_jennings'``, the default reference-card solver.
+                ``'gibbs'`` and
                 ``'finite_difference'`` are retained for comparison and
                 should not be used for diagnosis — see the class docstring.
         """
@@ -282,6 +290,7 @@ class DynacardWorkflow:
         Invalid cards and load nRMSE above the envelope raise PhysicsError.
         ``allow_divergence=True`` returns the failed gate and its evidence for
         inspection, without returning invalid cards.
+        Unexplained sample-count mismatches and programming errors propagate.
         The reference is always the default solver, even when this workflow
         explicitly selects a comparison-only alternative.
         """
@@ -339,6 +348,14 @@ class DynacardWorkflow:
                 raise PhysicsError("solver returned no downhole card", solver=method)
             validate_stroke(self.ctx.surface_card.position, candidate.position,
                             candidate.load, method)
+            basis = results.downhole_load_basis
+            if (basis is not None and basis.closing_sample_dropped
+                    and len(reference.position) == len(candidate.position) + 1):
+                # The default reference uses the same input indices. Omit the
+                # input's closing index from this comparison without mutation.
+                reference = reference.model_copy(update={
+                    "position": reference.position[:-1], "load": reference.load[:-1],
+                })
             with np.errstate(over="raise", invalid="raise", divide="raise"):
                 metrics = asdict(compare_cards(candidate, reference))
             metrics["reference_stroke"] = float(np.ptp(reference.position))

@@ -444,22 +444,32 @@ class DiagnosticResult(BaseModel):
 
 
 class DownholeLoadBasis(BaseModel):
-    """Executed Gibbs approximation; arithmetic provenance is not validation.
+    """Executed Gibbs load basis; provenance does not establish field accuracy."""
 
-    The coefficients originate in constants.py's legacy calibration block.
-    No independent physical qualification of those coefficients is established.
-    """
-
-    method: Literal["affine_surface_load"] = "affine_surface_load"
+    method: Literal["affine_surface_load", "coupled_frequency_domain"] = (
+        "affine_surface_load"  # Preserve omitted defaults in older saved bases.
+    )
     validation_status: Literal["NOT_EVALUATED"] = "NOT_EVALUATED"
     buoyant_rod_weight_lbf: float
-    attenuation_factor: float
+    attenuation_factor: Optional[float] = None
+    harmonic_count: Optional[int] = None
+    closing_sample_dropped: bool = False
     limitations: str = (
-        "Comparison only: load is not propagated through the wave equation. "
-        "Legacy buoyancy, attenuation, damping and stroke factors are unqualified; "
-        "absolute load and load morphology are not validated. Derived fillage, "
-        "pressure, production, buckling and diagnoses inherit this limitation."
+        "Comparison only: load and displacement are propagated through the damped "
+        "wave equation for a vertical rod string; deviation, Coulomb friction and "
+        "damping calibration are not modelled; field diagnostic accuracy is not "
+        "established."
     )
+
+    def model_post_init(self, __context: Any) -> None:
+        """Keep omitted legacy limitations from claiming coupled propagation."""
+        if self.method == "affine_surface_load" and "limitations" not in self.model_fields_set:
+            self.limitations = (
+                "Comparison only: load is not propagated through the wave equation. "
+                "Legacy buoyancy, attenuation, damping and stroke factors are unqualified; "
+                "absolute load and load morphology are not validated. Derived fillage, "
+                "pressure, production, buckling and diagnoses inherit this limitation."
+            )
 
 
 class AnalysisResults(BaseModel):

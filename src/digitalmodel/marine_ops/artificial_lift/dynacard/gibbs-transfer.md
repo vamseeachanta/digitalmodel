@@ -11,6 +11,9 @@ calibration and diagnostic accuracy remain **NOT_EVALUATED**.
 |---|---|---|
 | 1 | 2026-10-19 | Replaced affine load scaling with coupled section transfers and independent analytical cases. |
 | 2 | 2026-10-19 | Used supplied rod weight for static tension, added harmonic selection and clarified the damping basis and relative displacement datum. |
+| 3 | 2026-11-12 | Recorded coupled load provenance, removed exact closing samples before FFT, and measured stored-card parity at 15 harmonics. |
+
+Table 1. Coupled transfer revisions and their purpose.
 
 ## Equations and source
 
@@ -75,8 +78,14 @@ datum; absolute elastic stretch cannot be recovered from this card.
 
 ## Inputs and numerical interpretation
 
-- Cards must contain finite, equally spaced time samples over one cycle,
-  excluding a repeated closing endpoint. SPM supplies the cycle period.
+- Cards must contain finite, equally spaced time samples over one cycle.
+  An exactly repeated closing position/load pair is removed before FFT and
+  harmonic-count validation; both coordinates must match. The input remains
+  unchanged and the output contains one fewer sample. Near endpoints remain
+  distinct. At least three samples must remain. An endpoint quantized to the
+  same position/load pair is indistinguishable from an exported closing sample;
+  its timing provenance is not established by coordinate equality alone.
+  SPM supplies the cycle period.
   A position-digitized card without reliable timing does not establish this input.
 - Each section supplies length, diameter, modulus, wave speed, density, and
   `damping_factor`. In this solver `damping_factor` means **c in inverse seconds**,
@@ -100,6 +109,12 @@ datum; absolute elastic stretch cannot be recovered from this card.
   Nyquist coefficient is reconstructed by its real projection. Noise and high
   damping can make inverse propagation ill-conditioned; non-finite solutions
   raise PhysicsError. No denoising bandwidth or field accuracy is inferred.
+- `downhole_load_basis` records `method="coupled_frequency_domain"`, the summed
+  buoyant weight actually subtracted in lbf, the requested `harmonic_count`
+  (`None` means all harmonics for the coupled method), and `closing_sample_dropped`.
+  `attenuation_factor` is `None` and `validation_status` is `NOT_EVALUATED`.
+  Legacy saved `affine_surface_load` records remain readable; absent provenance
+  remains unknown. See [the static load basis example](../../../../../docs/domains/artificial_lift/load-basis.html).
 - `LOAD_ATTENUATION_FACTOR`, `STROKE_SCALING_FACTOR`, the fixed damping constant,
   and the empirical buoyancy factor are no longer used by this solver. Existing
   constants remain available for import compatibility.
@@ -137,10 +152,33 @@ checks that load morphology changes rather than undergoing affine scaling.
 
 ## Checks and limits
 
+Across five fixture wells with zero rod damping, 15 harmonics give median
+1.3% and maximum 2.0% load nRMSE against the stored reference cards. The old
+affine path measured 17.3% median. The per-fixture values are 0.52%, 1.74%,
+1.34%, 2.03% and 0.39%; the fifth input and reference each have one repeated
+closing sample, which is excluded from the comparison. The measured median
+is 1.337% and maximum is 2.033%. Regression bounds of median <1.40% and
+maximum <2.10% add 0.05-0.07 percentage point; they are not engineering
+acceptance limits. Retaining all harmonics gives 0.65%, 2.19%, 3.45%, 4.06%
+and 1.78% (median 2.19%, maximum 4.06%). The comparison uses `compare_cards`,
+which normalizes by reference load range and aligns traversal and sample origin.
+
+At 15 harmonics, surface/pump load Pearson correlations at the shared sample
+indices are 0.991812, 0.963179, 0.904878, 0.944531 and 0.964635. The requested
+<0.99 ceiling is not established for the first fixture. A measured <0.995
+regression bound excludes the affine path's correlation of 1.0; it does not
+establish field diagnostic accuracy.
+
+No openly readable published worked example with tabulated card values was
+found, so validation rests on (a) closed-form cases derived from the cited
+equations and (b) the five stored reference cards. A published-example check
+is **NOT_EVALUATED**. These fixtures do not establish nonzero damping
+calibration or field diagnostic accuracy.
+
 `test_gibbs_transfer.py` writes out independent solutions for the lossless
 quarter-wave case, a damped complex propagation constant, a two-section taper,
 static buoyancy, and subdivision invariance. It also checks the issue's
-correlation requirement and rejects invalid boundary/material inputs. Existing
+correlation ceiling on a synthetic case and rejects invalid boundary/material inputs. Existing
 fillage tests verify dependence on the solved card; the comparison gate still
 raises on disagreement unless an explicit divergence opt-in is provided.
 
