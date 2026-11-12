@@ -43,6 +43,7 @@ from .post_validator import (
     ValidationWarning,
     check_collection_collisions,
 )
+from .routers.fowt_router import FowtRouter
 from .routers.mooring_router import MooringRouter
 from .routers.vessel_router import VesselRouter
 from .schema.generic import GenericModel
@@ -173,6 +174,10 @@ class ModularModelGenerator:
         if hasattr(self.spec, 'mooring') and self.spec.mooring is not None:
             mooring_result = MooringRouter().route(self.spec.mooring)
             router_outputs.append(mooring_result)
+
+        # Route floating offshore wind turbine
+        if getattr(self.spec, 'fowt', None) is not None:
+            router_outputs.append(FowtRouter().route(self.spec.fowt))
 
         # Route vessel from equipment (if standalone vessel model)
         # VesselRouter is available for from_hull_catalog() calls

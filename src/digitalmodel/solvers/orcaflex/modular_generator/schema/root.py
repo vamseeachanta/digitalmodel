@@ -13,6 +13,7 @@ from .equipment import Equipment
 from .simulation import Simulation
 from .riser import Riser
 from .mooring import MooringSystem
+from .fowt import FowtSpec
 
 
 class ProjectInputSpec(BaseModel):
@@ -66,6 +67,9 @@ class ProjectInputSpec(BaseModel):
     pipeline: Pipeline | None = Field(default=None, description="Pipeline definition")
     riser: Riser | None = Field(default=None, description="Riser definition")
     mooring: MooringSystem | None = Field(default=None, description="Mooring system definition")
+    fowt: FowtSpec | None = Field(
+        default=None, description="Floating offshore wind turbine definition"
+    )
     generic: GenericModel | None = Field(
         default=None, description="Generic OrcaFlex model definition"
     )
@@ -94,11 +98,13 @@ class ProjectInputSpec(BaseModel):
             self.riser is not None,
             self.mooring is not None,
             self.generic is not None,
+            self.fowt is not None,
         ])
 
         if model_types_defined == 0:
             raise ValueError(
-                "Either 'pipeline', 'riser', 'mooring', or 'generic' must be defined in spec"
+                "Either 'pipeline', 'riser', 'mooring', 'generic' or 'fowt' must be "
+                "defined in spec"
             )
         riser_with_fallback = (
             self.riser is not None and self.generic is not None
@@ -114,6 +120,8 @@ class ProjectInputSpec(BaseModel):
                 defined.append("mooring")
             if self.generic is not None:
                 defined.append("generic")
+            if self.fowt is not None:
+                defined.append("fowt")
             raise ValueError(
                 f"Cannot define multiple model types ({', '.join(defined)}) "
                 "in same spec. Create separate spec files for each model type."
@@ -210,6 +218,10 @@ class ProjectInputSpec(BaseModel):
     def is_mooring(self) -> bool:
         """Check if this is a mooring model."""
         return self.mooring is not None
+
+    def is_fowt(self) -> bool:
+        """Check if this is a floating offshore wind turbine model."""
+        return self.fowt is not None
 
     def is_generic(self) -> bool:
         """Check if this is a generic model."""
