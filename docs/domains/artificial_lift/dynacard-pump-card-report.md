@@ -13,7 +13,7 @@ A measured surface dynamometer card contains rod-string weight, elastic stretch 
 
 ### 1.2 Scope of work
 
-One public field card is converted by the default solver and independently by a coupled frequency-domain solver. Stroke, fluid load, fillage, displacement, work per stroke and input sensitivity are calculated. Public shape references provide a separate hypothesis ranking.
+One public field card is converted by the default solver and, as a cross-check by a different numerical method, by a coupled frequency-domain solver. Stroke, fluid load, fillage, displacement, work per stroke and input sensitivity are calculated. Public shape references provide a separate hypothesis ranking.
 
 ### 1.3 Limitations
 
@@ -24,9 +24,11 @@ The analysis cannot:
 - Correct a mis-calibrated load cell without independent calibration evidence.
 - Give production from a card alone: operating runtime and plunger/valve slip are needed.
 
-The coupled Gibbs transfer is checked against closed-form cases derived from the cited equations and against the stored reference pump cards of five public example wells (median load nRMSE 1.3 %, maximum 2.0 %, 15 harmonics); no openly readable published worked example with tabulated card values was found, so a published-example check is NOT_EVALUATED.
+The coupled Gibbs transfer is checked against closed-form cases derived from the cited equations and against the stored pump cards of five public example wells (median load nRMSE 1.3 %, maximum 2.0 %, 15 harmonics); no openly readable published worked example with tabulated card values was found, so a published-example check is NOT_EVALUATED.
 
 The wave solutions terminate at the supplied rod-string length of 4750 ft; the stated pump depth is 4844 ft, leaving 94 ft unrepresented by the supplied taper inventory. Identification of the rod-string endpoint card as the pump card is ASSUMED; qualification at the stated pump depth requires a reconciled as-run rod and completion tally.
+
+The well record of the public example well carries two notes that bear on the results. Its own system reports that corner detection failed on this card, so the fillage and fluid load here rest on this package's corner detection alone. Its last well test gives a liquid rate below the displacement computed here at the stated basis; displacement from a card is not production.
 
 Model probabilities describe synthetic class separation and are not calibrated field probabilities. The public plate is dependent shape evidence because it also constrains the synthetic generators used for training.
 
@@ -58,7 +60,7 @@ Table 1. Public example well design and operating inputs, surface-first taper or
 
 | Assumption | Status | Value or basis | Reason |
 | --- | --- | --- | --- |
-| Vertical well | ASSUMED | Vertical cross-check; default uses supplied survey or vertical fallback | Deviation is not modelled in the frequency-domain cross-check. |
+| Vertical well | ASSUMED | Vertical cross-check; default uses supplied survey or vertical fallback | Deviation is not modelled in the frequency-domain cross-check. The public example well record gives a two-station survey with zero inclination. |
 | Pump boundary | ASSUMED | rod length ft: 4750.000; pump depth ft: 4844.000; unrepresented length ft: 94.000 | The supplied rod endpoint is identified with the pump boundary; qualification at the stated pump depth requires a reconciled as-run rod and completion tally. |
 | Rod damping | ASSUMED | default up down s inv: 0.010; 0.011; 0.037; 0.037; gibbs s inv: 0.000; 0.000 | Default damping is estimated from assumed annular geometry and viscosity; Gibbs rates are independently prescribed, not calibrated. |
 | Viscosity cp | ASSUMED | 10.000 | Default damping viscosity is not measured. |
@@ -72,12 +74,13 @@ Table 1. Public example well design and operating inputs, surface-first taper or
 | Load cell calibration | ASSUMED | Taken as given | No independent load-cell calibration is supplied. |
 | Uniform time sampling | ASSUMED | True | Samples are assumed uniformly timed over a full cycle; geometry alone cannot establish timing. |
 | Displacement basis | ASSUMED | runtime hours: 24; volumetric efficiency pct: 100 | Continuous fillage-adjusted displacement excludes slip and is not measured production. |
+| Fluid density lb ft3 | ASSUMED | 63.237 | Not measured: derived by the loader from the well-test water cut and the water and oil gravities in the well record. |
 
 Table 2. Assumptions retained by the calculation; ASSUMED is not a passing check.
 
 ## 3 Methodology
 
-Surface displacement and tensile load provide the boundary conditions for the damped axial rod wave equation. The default finite-difference adapter marches the displacement field through the tapered rod string and reconstructs pump load from strain, following Everitt and Jennings (1992), SPE-18189-PA. The independent coupled frequency-domain transfer propagates both displacement and force through each ordered taper, following the rod model of Gibbs (1963), [SPE-588-PA](https://doi.org/10.2118/588-PA), with 15 harmonics.
+Surface displacement and tensile load provide the boundary conditions for the damped axial rod wave equation. The default finite-difference adapter marches the displacement field through the tapered rod string and reconstructs pump load from strain, following Everitt and Jennings (1992), SPE-18189-PA. The coupled frequency-domain transfer is a separate numerical method: it propagates both displacement and force through each ordered taper as a frequency-domain solution of the rod model of Gibbs (1963), [SPE-588-PA](https://doi.org/10.2118/588-PA), with 15 harmonics.
 
 The [package calculations](../../../src/digitalmodel/marine_ops/artificial_lift/dynacard/calculations.py) define gross plunger travel as the position range, effective travel as the bottom-right corner position relative to the minimum, and fillage as effective travel divided by gross travel, expressed as a percentage. Fluid load is the mean upstroke load minus the mean downstroke load between the detected corner phases. The figure marks these mean levels rather than substituting the extreme load range. The [card-area calculation](../../../src/digitalmodel/marine_ops/artificial_lift/dynacard/power_consumption.py) closes the polygon and converts its enclosed area to work per stroke.
 
@@ -106,12 +109,12 @@ Table 3. Public example well results from the default finite-difference solver, 
 | Actual card | Reference card | Load nRMSE (%) |
 | --- | --- | --- |
 | Frequency domain | Default finite difference | 0.301 |
-| Default finite difference | Stored reference | 0.454 |
-| Frequency domain | Stored reference | 0.525 |
+| Default finite difference | Stored card, source finite difference | 0.454 |
+| Frequency domain | Stored card, source finite difference | 0.525 |
 
 Table 4. Card comparisons aligned by traversal and sample origin; each reference load range normalises its error.
 
-The measured surface card and the two computed pump cards are shown below with the stored reference. The reference shapes are displayed independently on normalised axes.
+The measured surface card and the two computed pump cards are shown below with the pump card stored in the well record. The stored card comes from the source system's own finite-difference calculation, with damping coefficients close to those of the default solver, so its agreement with the default solver is a regression check; only the frequency-domain solver is a different method. The reference shapes are displayed independently on normalised axes.
 
 ![Surface card and computed pump card, public example well](../../../examples/report-evals/dynacard-pump-card/figure-1-surface-and-pump-card.png)
 
@@ -143,7 +146,7 @@ Table 6. Minimum mean distance after independent axis normalisation, resampling 
 
 ## Appendix A Sensitivity analysis
 
-Each input family is changed independently about the public example well. Rod length and pump depth are scaled together; all taper diameters are scaled together while weight per length is scaled with area to preserve effective density. Each entry is the output change as a percentage of its base value. The sensitivity factor is the difference of the positive and negative output changes divided by the difference of the input percentages. A zero is printed as 0.00; the wider central difference exposes nonlinearity. A response is marked stepped where the two factors differ by more than 0.10. Such a result moves in jumps, because the corner points that define it shift between samples; its factor is not a reliable slope.
+Each input family is changed independently about the public example well. Rod length and pump depth are scaled together; all taper diameters are scaled together while weight per length is scaled with area to preserve effective density. Each entry is the output change as a percentage of its base value. The sensitivity factor is the difference of the positive and negative output changes divided by the difference of the input percentages. A zero is printed as 0.00; the wider central difference exposes nonlinearity. A response is marked stepped where the two factors differ by more than 0.10, or where the result moves the same way for a decrease and an increase of the input. Such a result moves in jumps, because the corner points that define it shift between samples; its factor is not a reliable slope.
 
 | Input | Output | −5 % | −1 % | 1 % | 5 % | Factor at ±1 % | Factor at ±5 % | Response |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -158,13 +161,13 @@ Each input family is changed independently about the public example well. Rod le
 | Rod diameter | Maximum pump load | 15.32 | 3.13 | −3.16 | −16.11 | −3.14 | −3.14 | smooth |
 | Rod diameter | Displacement | 2.02 | 0.36 | −0.35 | −1.50 | −0.36 | −0.35 | smooth |
 | Rod modulus | Pump stroke | −1.68 | −0.32 | 0.32 | 1.54 | 0.32 | 0.32 | smooth |
-| Rod modulus | Fluid load | −0.23 | 0.57 | 0.03 | −2.87 | −0.27 | −0.26 | smooth |
+| Rod modulus | Fluid load | −0.23 | 0.57 | 0.03 | −2.87 | −0.27 | −0.26 | stepped |
 | Rod modulus | Fillage | 2.48 | 0.47 | −0.46 | −2.17 | −0.47 | −0.47 | smooth |
 | Rod modulus | Maximum pump load | −0.17 | −0.03 | 0.03 | 0.16 | 0.03 | 0.03 | smooth |
 | Rod modulus | Displacement | 0.76 | 0.15 | −0.14 | −0.66 | −0.14 | −0.14 | smooth |
 | Pumping speed | Pump stroke | 0.31 | 0.06 | −0.06 | −0.30 | −0.06 | −0.06 | smooth |
 | Pumping speed | Fluid load | −2.07 | −1.79 | 0.08 | −0.29 | 0.93 | 0.18 | stepped |
-| Pumping speed | Fillage | 0.02 | 0.00 | 0.00 | −0.05 | 0.00 | −0.01 | smooth |
+| Pumping speed | Fillage | 0.02 | < 0.01 | < 0.01 | −0.05 | < 0.01 | −0.01 | smooth |
 | Pumping speed | Maximum pump load | −0.20 | −0.04 | 0.04 | 0.21 | 0.04 | 0.04 | smooth |
 | Pumping speed | Displacement | −4.68 | −0.93 | 0.93 | 4.63 | 0.93 | 0.93 | smooth |
 | Surface load scale | Pump stroke | 1.48 | 0.29 | −0.29 | −1.44 | −0.29 | −0.29 | smooth |
@@ -182,10 +185,10 @@ Each input family is changed independently about the public example well. Rod le
 | Fluid density | Fillage | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | smooth |
 | Fluid density | Maximum pump load | −1.09 | −0.22 | 0.22 | 1.09 | 0.22 | 0.22 | smooth |
 | Fluid density | Displacement | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | smooth |
-| Pump diameter | Pump stroke | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | smooth |
-| Pump diameter | Fluid load | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | smooth |
-| Pump diameter | Fillage | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | smooth |
-| Pump diameter | Maximum pump load | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | smooth |
+| Pump diameter | Pump stroke | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | smooth |
+| Pump diameter | Fluid load | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | smooth |
+| Pump diameter | Fillage | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | smooth |
+| Pump diameter | Maximum pump load | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | < 0.01 | smooth |
 | Pump diameter | Displacement | −9.75 | −1.99 | 2.01 | 10.25 | 2.00 | 2.00 | smooth |
 
 Table A1. Output changes (%) and central sensitivity factors (% output per % input).
@@ -196,9 +199,9 @@ The [reusable prompt](../../../examples/report-evals/dynacard-pump-card/PROMPT.m
 
 | Data | Source | Licence | Version or date | Link |
 | --- | --- | --- | --- | --- |
-| Public example surface card, rod string and stored reference | Repository field fixture | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/0330daa76bebea18c5a6a5a8fe559b8f2e89b40c/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json) |
+| Public example surface card, rod string and stored pump card | Repository field fixture | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/cfad19cd1f2cd1b2755479e733703a869b18e342/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json) |
 | Public reference shapes | Public diagnostic plate | CC0 1.0 | 2026-10-11 | [Source](https://doi.org/10.17632/hnfwm9mjs6.1) |
-| Recorded shape-only plate score | Repository benchmark | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/0330daa76bebea18c5a6a5a8fe559b8f2e89b40c/tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json) |
+| Recorded shape-only plate score | Repository benchmark | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/cfad19cd1f2cd1b2755479e733703a869b18e342/tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json) |
 
 Table B1. Retained data sources; input and source digests are recorded by the analysis and eval.
 
