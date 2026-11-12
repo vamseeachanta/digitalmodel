@@ -142,6 +142,39 @@ def test_committed_results_reproduce(checks):
     assert all(v["inside_band"] for v in committed["phase_ii_text_frequencies"].values())
 
 
+@pytest.mark.parametrize("perturbation", [-1e-12, 1e-12])
+def test_linearisation_precision_stable_under_roundoff(tmp_path, monkeypatch, perturbation):
+    """Serialize derived modes at eight significant digits across eigensolver noise."""
+    script = ROOT / "scripts" / "fowt" / "extract_oc4_generator_data.py"
+    module_spec = importlib.util.spec_from_file_location("precision_extraction", script)
+    module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(module)
+    periods = np.array([106.89211469, 106.97127140, 17.28332719,
+                        25.32632935, 25.44747689, 80.22157269])
+    damping = np.array([0.00916746364, 0.00919129334, 0.01136255032,
+                        0.01098305263, 0.01105023581, 0.00509299695])
+    omega = 2 * np.pi / periods
+    matrix = np.block([[np.zeros((6, 6)), np.eye(6)],
+                       [-np.diag(omega ** 2), -np.diag(2 * damping * omega)]])
+    path = tmp_path / "synthetic.lin"
+    path.write_text("A: 12\n" + "\n".join(" ".join(map(str, row)) for row in matrix),
+                    encoding="utf-8")
+    baseline = module.linearisation_periods(path)
+    for mode, period, ratio in zip(baseline.values(), periods, damping):
+        assert mode["period"] == float(f"{period:.8g}")
+        assert mode["damping_ratio"] == float(f"{ratio:.8g}")
+        assert mode["share"] == 1.0
+
+    eig = np.linalg.eig
+
+    def perturbed_eig(matrix):
+        values, vectors = eig(matrix)
+        return values[::-1] * (1 + perturbation), vectors[:, ::-1] * (1 - perturbation)
+
+    monkeypatch.setattr(module.np.linalg, "eig", perturbed_eig)
+    assert yaml.safe_dump(module.linearisation_periods(path)) == yaml.safe_dump(baseline)
+
+
 @pytest.mark.skipif(not os.environ.get("DIGITALMODEL_OC4_RAW"),
                     reason="raw r-test files not present; set DIGITALMODEL_OC4_RAW")
 def test_extraction_reproduces_committed_files(tmp_path):
@@ -152,6 +185,31 @@ def test_extraction_reproduces_committed_files(tmp_path):
     module.main(["x", os.environ["DIGITALMODEL_OC4_RAW"], str(tmp_path)])
     for name in ("basis.yml", "generator_data.yml"):
         assert (tmp_path / name).read_bytes() == (FOLDER / name).read_bytes(), name
+
+
+@pytest.mark.parametrize("script_name,case", [
+    ("write_oc4_run_packages.py", "LC6_yaw_decay"),
+    ("write_iea15_run_packages.py", "LC5_parked_extreme"),
+])
+def test_run_packages_retain_existing_results(tmp_path, script_name, case):
+    """Refuse a nonempty output before changing any package or its index."""
+    script = ROOT / "scripts" / "fowt" / script_name
+    module_spec = importlib.util.spec_from_file_location("retention_packages", script)
+    module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(module)
+    result = tmp_path / case / "model" / "saved.sim"
+    result.parent.mkdir(parents=True)
+    result.write_bytes(b"saved solver result")
+    (tmp_path / "index.json").write_bytes(b"saved index")
+    before = {p.relative_to(tmp_path): p.read_bytes()
+              for p in tmp_path.rglob("*") if p.is_file()}
+
+    with pytest.raises(FileExistsError, match="empty"):
+        module.main(["x", str(tmp_path)])
+
+    after = {p.relative_to(tmp_path): p.read_bytes()
+             for p in tmp_path.rglob("*") if p.is_file()}
+    assert after == before
 
 
 def test_run_packages_written(tmp_path):

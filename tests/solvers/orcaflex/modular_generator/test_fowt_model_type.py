@@ -86,6 +86,17 @@ def test_spec_validates_as_fowt_model(spec_dict):
     assert spec.fowt.representation == "rigid"
 
 
+@pytest.mark.parametrize("coefficient", [
+    "normal_drag_coefficient", "axial_drag_coefficient",
+    "normal_added_mass_coefficient", "axial_added_mass_coefficient",
+])
+def test_mooring_coefficients_must_be_explicit(spec_dict, coefficient):
+    fowt = copy.deepcopy(spec_dict["fowt"])
+    del fowt["mooring_line_types"][0][coefficient]
+    with pytest.raises(ValidationError, match=coefficient):
+        FowtSpec(**fowt)
+
+
 def test_fowt_and_generic_together_rejected(spec_dict):
     data = copy.deepcopy(spec_dict)
     data["generic"] = {}

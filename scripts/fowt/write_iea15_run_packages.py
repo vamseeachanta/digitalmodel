@@ -156,6 +156,8 @@ def run_md(name: str, spec: dict, eq: dict, x: dict, basis: dict) -> str:
 
 def main(argv: list[str]) -> int:
     out = Path(argv[1])
+    if out.exists() and (not out.is_dir() or any(out.iterdir())):
+        raise FileExistsError("Output directory must be empty; existing packages are retained")
     wamit = Path(argv[2]) if len(argv) > 2 else None
     basis, data = load_sources()
     eq, x = expectations(basis, data)
@@ -163,8 +165,6 @@ def main(argv: list[str]) -> int:
     index = []
     for name, spec in cases.items():
         folder = out / name
-        if folder.exists():
-            shutil.rmtree(folder)
         folder.mkdir(parents=True)
         (folder / "spec.yml").write_text(yaml.safe_dump(spec, sort_keys=False, width=100),
                                          encoding="utf-8", newline="\n")

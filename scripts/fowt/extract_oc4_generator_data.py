@@ -86,6 +86,9 @@ def linearisation_periods(path: Path) -> dict:
     Each platform degree of freedom takes the lightly damped (damping ratio
     below 0.1, frequency below 0.1 Hz) eigenmode in which it has the largest
     share of the six platform displacement states.
+    Derived period, damping ratio and share are stored at eight significant
+    digits to suppress eigensolver round-off across numerical environments.
+    Mode selection uses the unrounded values.
     """
     lines = text(path)
     i = next(k for k, line in enumerate(lines) if line.startswith("A:"))
@@ -105,7 +108,11 @@ def linearisation_periods(path: Path) -> dict:
     out = {}
     for d, name in enumerate(names):
         frequency, zeta, share = max(modes, key=lambda m: m[2][d])
-        out[name] = {"period": 1.0 / frequency, "damping_ratio": zeta, "share": float(share[d])}
+        out[name] = {
+            "period": float(f"{1.0 / frequency:.8g}"),
+            "damping_ratio": float(f"{zeta:.8g}"),
+            "share": float(f"{share[d]:.8g}"),
+        }
     return out
 
 

@@ -48,24 +48,24 @@ published:
 comparators:
   openfast_linearisation_periods:
     value:
-      surge: 106.8921146936897
-      sway: 106.97127139682905
-      heave: 17.283327191974045
-      roll: 25.326329350287732
-      pitch: 25.44747688506562
-      yaw: 80.22157268701285
+      surge: 106.89211
+      sway: 106.97127
+      heave: 17.283327
+      roll: 25.326329
+      pitch: 25.447477
+      yaw: 80.221573
     unit: s
     source: OpenFAST/r-test; glue-codes/openfast/5MW_OC4Semi_Linear/5MW_OC4Semi_Linear.1.lin; state matrix
       A eigen-analysis; mode per DOF chosen by largest platform-displacement share among modes with damping
       ratio < 0.1 and frequency < 0.1 Hz; OpenFAST v4.1.2-727 output; commit dd5feaaaa500ba7283140107806300d551cff0a7
   openfast_linearisation_damping:
     value:
-      surge: 0.009167463643090006
-      sway: 0.009191293338356395
-      heave: 0.011362550323560034
-      roll: 0.010983052631563805
-      pitch: 0.011050235812798934
-      yaw: 0.005092996949136417
+      surge: 0.0091674636
+      sway: 0.0091912933
+      heave: 0.01136255
+      roll: 0.010983053
+      pitch: 0.011050236
+      yaw: 0.0050929969
     unit: fraction of critical
     source: OpenFAST/r-test; glue-codes/openfast/5MW_OC4Semi_Linear/5MW_OC4Semi_Linear.1.lin; same eigenmodes;
       commit dd5feaaaa500ba7283140107806300d551cff0a7

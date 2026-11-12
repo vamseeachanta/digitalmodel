@@ -197,7 +197,7 @@ class FowtRotorThrust(BaseModel):
 
 
 class FowtMooringLineType(BaseModel):
-    """Mooring line type with directly specified properties."""
+    """Mooring line type with directly specified properties and coefficients."""
 
     name: str = Field(..., min_length=1)
     outer_diameter: float = Field(..., gt=0, description="Volume-equivalent diameter (m)")
@@ -205,10 +205,10 @@ class FowtMooringLineType(BaseModel):
     axial_stiffness: float = Field(..., gt=0, description="EA (kN)")
     minimum_breaking_load: float | None = Field(
         default=None, gt=0, description="(kN); None where the reference design publishes none")
-    normal_drag_coefficient: float = Field(default=2.4, ge=0)
-    axial_drag_coefficient: float = Field(default=1.15, ge=0)
-    normal_added_mass_coefficient: float = Field(default=1.0, ge=0)
-    axial_added_mass_coefficient: float = Field(default=0.5, ge=0)
+    normal_drag_coefficient: float = Field(..., ge=0)
+    axial_drag_coefficient: float = Field(..., ge=0)
+    normal_added_mass_coefficient: float = Field(..., ge=0)
+    axial_added_mass_coefficient: float = Field(..., ge=0)
 
 
 class FowtMooringLine(BaseModel):
