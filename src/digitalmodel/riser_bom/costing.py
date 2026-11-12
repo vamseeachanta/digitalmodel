@@ -2,6 +2,7 @@
 # Licensed under the MIT License. See LICENSE file for details.
 """Quantity-times-rate roll-up, with no embedded engineering or price factors.
 
+Only SLWR configurations with a positive whole buoyancy-module count are costed.
 Method: OpenStax, Prealgebra 2e (2020), section 5.6, Unit Rate / Unit Price.
 Whole-joint procurement uses the least integer that covers the supplied length;
 this is a declared procurement convention, not a structural design equation.
@@ -54,6 +55,7 @@ class Configuration:
 
     The citation identifies the supplied quantity schedule, including joint length.
     A distributed buoyant length alone does not establish a module count.
+    SLWR buoyancy requires a positive whole module count.
     """
 
     riser_length_m: object
@@ -95,7 +97,7 @@ def _quantities(configuration: Configuration) -> dict[str, Decimal]:
         "riser_joints": Decimal(ceil(Fraction(length) / Fraction(joint))),
         "coating": coating,
         "buoyancy_modules": number(
-            configuration.buoyancy_module_count, "buoyancy_module_count"
+            configuration.buoyancy_module_count, "buoyancy_module_count", positive=True
         ),
         "ancillaries": number(configuration.ancillary_count, "ancillary_count"),
         "installation_spread": number(
