@@ -93,6 +93,17 @@ def test_fowt_and_generic_together_rejected(spec_dict):
         ProjectInputSpec(**data)
 
 
+def test_fowt_with_riser_and_generic_fallback_rejected(spec_dict):
+    """The riser + generic fallback exception does not admit a third domain."""
+    template = EXAMPLES.parent / "library" / "templates" / "riser_catenary" / "spec.yml"
+    data = yaml.safe_load(template.read_text(encoding="utf-8"))
+    data["generic"] = {}
+    ProjectInputSpec(**copy.deepcopy(data))  # the fallback pair alone is accepted
+    data["fowt"] = copy.deepcopy(spec_dict["fowt"])
+    with pytest.raises(ValidationError, match="multiple model types"):
+        ProjectInputSpec(**data)
+
+
 def test_rigid_with_tower_rejected(spec_dict):
     fowt = _flexible(spec_dict)
     fowt["representation"] = "rigid"
