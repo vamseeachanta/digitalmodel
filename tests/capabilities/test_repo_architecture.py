@@ -10,6 +10,7 @@ import ast
 import importlib.util
 import json
 import re
+from collections import Counter
 from pathlib import Path
 
 import pytest
@@ -254,7 +255,7 @@ def test_drawing_preserves_sibling_outputs_and_generated_prerequisite(inventory)
                 fetched_sidecar = (
                     "fetch(" in producer
                     and 'output.with_suffix(".json")' in producer
-                    and artifact["path"] == str(Path(row["path"]).with_suffix(".json"))
+                    and artifact["path"] == Path(row["path"]).with_suffix(".json").as_posix()
                 )
                 assert artifact.get("consumed_by_page", False) == fetched_sidecar
                 assert (f"{node} --> {row['node']}\n" in drawing) == fetched_sidecar
@@ -339,8 +340,28 @@ def test_dataset_dispatch_includes_parameterized_projection_sources(
 
 def test_summary_counts_and_page_evidence_match_inventory(inventory):
     report = (ARTIFACTS / "repo-architecture.html").read_text(encoding="utf-8")
-    assert f"{len(inventory['capabilities'])} capability work declarations" in report
-    assert f"{len(inventory['pages'])} observed domain pages" in report
+    summary = report.split("<h2>Summary</h2>", 1)[1].split(
+        "<h2>Revision history</h2>", 1
+    )[0]
+    assert f"{len(inventory['capabilities'])} capability work declarations" in summary
+    assert f"{len(inventory['pages'])} observed domain pages" in summary
+    provenance = Counter(row["provenance"] for row in inventory["pages"])
+    categories = (
+        "registered generator",
+        "inline, no generator",
+        "external input or non-reproducible copy",
+    )
+    assert set(provenance) == set(categories)
+    counts = re.search(
+        r"(\d+) registered producers, (\d+) inline pages and "
+        r"(\d+) reproduction gaps across (\d+) directory groups",
+        summary,
+    )
+    assert counts is not None
+    reported = tuple(map(int, counts.groups()))
+    assert reported[:3] == tuple(provenance[category] for category in categories)
+    assert sum(reported[:3]) == len(inventory["pages"])
+    assert reported[3] == len({row["group"] for row in inventory["pages"]})
     for row in inventory["pages"]:
         assert f"<code>{row['path']}</code>" in report
         assert row["execution"] in report

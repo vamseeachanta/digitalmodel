@@ -169,7 +169,6 @@ The inventory keys are relative Python module names plus public symbol names. `s
 
 All numeric defaults and the locations of their uses are enumerated in section 3; no default is endorsed merely by being documented. For result dataclasses, callers constructing objects directly supply all fields without defaults, including confidence and units; no output schema validation is added.
 
-
 ## 3. Methods, equations and public basis
 
 Sources read on 2026-10-22: [open university thesis, *Inflow Performance Relationships (IPR) for Solution Gas Drive Reservoirs — a Semi-Analytical Approach* (2010), §§1.2.1–1.2.2, printed pp. 3, 5–6](https://blasingame.engr.tamu.edu/0_TAB_Grad/TAB_Grad_Thesis_Archive/MS_044_NASS%2CMaria_Thesis_TAMU_%28May_2010%29.pdf). This is secondary evidence of the equations, not an original-paper worked example. Repository companion: `docs/domains/production/production-engineering-literature.md`, “Open IPR equation passage ledger” and “Composite join derivation”.

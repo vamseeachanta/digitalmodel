@@ -10,7 +10,8 @@ The map lists implementations of method families for module knowledge packs. Its
 | 2 | 2026-10-16 | Regeneration and drift diagnostics were added; missing methods, caller relationships and fixture status were corrected. |
 | 3 | 2026-10-16 | Source coordinates and counts were refreshed after source updates; the removed lid fallback, contradictory rejections and visible drift diagnostics were corrected. |
 | 4 | 2026-10-23 | Six supplemental engineering families were added with bounded source lists, member roles and explicit qualification limits. |
-| 5 | 2026-10-28 | Regenerate source references, search counts and groups after retained source changes; remove vanished rejection references and preserve curated classifications. |
+| 5 | 2026-10-28 | Regenerate source references, search counts and groups after retained source changes; remove vanished rejection references and preserve curated classifications. The earlier published totals of 2348 / 2407 were stale relative to the base YAML totals of 2345 / 2404; no curated entry was removed. |
+| 6 | 2026-11-12 | Clarify the earlier count correction against unchanged curated entries. |
 
 The regenerated inventory searches 19472 tracked files and 17338 eligible text files. Tracked files were enumerated with `git ls-files`. Independent searches used algorithm signals, vocabulary and characteristic constants or keys. Python bodies were checked with `ast`; non-Python tables were checked at their data lines. Binary files, files over one MiB, lock files and generated output folders were excluded as recorded in `searched`.
 
