@@ -282,11 +282,14 @@ class LinesBuilder(BaseBuilder):
     def jlay_seed(self) -> dict[str, float]:
         """Inextensible-catenary seed for a J-lay hang-off (#3978).
 
-        Pipe taken empty with its coatings; hang-off angle phi from horizontal
-        is 90 deg minus the tower angle; h is the hang-off height above the
-        seabed. Catenary parameter a = h / (sec(phi) - 1); suspended length
-        s = a tan(phi); suspended span x = a asinh(tan(phi)); top tension
-        T = w (a + h); horizontal tension H = w a. End B span = x + (L - s).
+        Pipe taken empty with its coatings; wet and dry weights apply below
+        and above the waterline. For hang-off angle phi from horizontal,
+        H = (w_wet*h_wet + w_dry*h_dry)/(sec(phi) - 1). Each uniform arc
+        obeys dT = w*dh, ds = dV/w, dx = (H/w)*d(asinh(V/H)), V**2 = T**2-H**2;
+        H and V are continuous at the waterline. End B span = x + (L - s).
+        Basis: Classical Mechanics (online edition accessed 2026-11-13),
+        section 18.3, equations 18.3.2-18.3.9; source linked in the example.
+        Returned a = H/w_wet is the submerged arc's catenary parameter.
         Requires uniform segment coatings and a flat seabed; unused coating
         alternatives do not contribute to weight or diameter.
         """
@@ -298,6 +301,8 @@ class LinesBuilder(BaseBuilder):
         pipe = self.spec.pipeline
         jlay = self.spec.equipment.jlay
         vessel = self.spec.equipment.vessel
+        if not all(math.isfinite(value) for value in (*vessel.position, *vessel.orientation)):
+            raise ValueError("J-lay seed requires finite vessel position and orientation")
         if self.spec.environment.seabed.slope != 0:
             raise ValueError("J-lay seed requires a flat seabed")
 
@@ -328,14 +333,35 @@ class LinesBuilder(BaseBuilder):
             mass += coating_density * math.pi / 4 * (outer**2 - od**2)
             od = outer
         weight = (mass - self.spec.environment.water.density * math.pi / 4 * od**2) * G_STANDARD
-        height = self.spec.environment.water.depth + vessel.position[2] + jlay.tower_top[2]
-        if weight <= 0 or height <= 0:
-            raise ValueError("J-lay seed requires positive submerged weight and hang-off height")
+        dry_weight = mass * G_STANDARD
+        depth = self.spec.environment.water.depth
+        height = depth + vessel.position[2] + jlay.tower_top[2]
+        if (not all(math.isfinite(value) for value in (weight, dry_weight, height))
+                or min(weight, dry_weight, height) <= 0):
+            raise ValueError("J-lay seed requires finite positive weights and hang-off height")
         phi = math.radians(90.0 - jlay.tower_angle)
-        a = height / (1.0 / math.cos(phi) - 1.0)
-        suspended = a * math.tan(phi)
-        suspended_span = a * math.asinh(math.tan(phi))
+        wet_height = min(height, depth)
+        dry_height = height - wet_height
+        wet_load = weight * wet_height
+        load = wet_load + dry_weight * dry_height
+        horizontal = load / (1.0 / math.cos(phi) - 1.0)
+        if not math.isfinite(horizontal) or horizontal <= 0:
+            raise ValueError("J-lay seed requires finite positive horizontal tension")
+        a = horizontal / weight
+        wet_vertical = math.sqrt(wet_load * (2 * horizontal + wet_load))
+        top_vertical = horizontal * math.tan(phi)
+        suspended = wet_vertical / weight
+        suspended_span = a * math.asinh(wet_vertical / horizontal)
+        if dry_height > 0:
+            suspended += (top_vertical - wet_vertical) / dry_weight
+            suspended_span += horizontal / dry_weight * (
+                math.asinh(math.tan(phi)) - math.asinh(wet_vertical / horizontal)
+            )
         length = sum(segment.length for segment in pipe.segments)
+        top_tension = horizontal + load
+        if not all(math.isfinite(value) for value in
+                   (suspended, suspended_span, length, top_tension)):
+            raise ValueError("J-lay seed requires finite catenary geometry and tensions")
         if suspended >= length:
             raise ValueError(
                 f"J-lay seed requires a grounded remainder: suspended length "
@@ -344,25 +370,28 @@ class LinesBuilder(BaseBuilder):
         return {
             "weight": weight, "height": height, "a": a, "suspended": suspended,
             "suspended_span": suspended_span, "span": suspended_span + length - suspended,
-            "top_tension": weight * (a + height), "horizontal_tension": weight * a,
-            "outer_diameter": od,
+            "top_tension": top_tension, "horizontal_tension": horizontal,
+            "outer_diameter": od, "dry_weight": dry_weight,
         }
 
     def _jlay_endpoints(self) -> list[list]:
         """End A pinned to the vessel at the tower top; End B on the seabed aft."""
         vessel = self.spec.equipment.vessel
         jlay = self.spec.equipment.jlay
+        seed = self.jlay_seed()
         if any(vessel.orientation[:2]):
             raise ValueError("J-lay endpoint seed requires level hull")
-        seed = self.jlay_seed()
         heading = math.radians(vessel.orientation[2])
         c, s = math.cos(heading), math.sin(heading)
         top = jlay.tower_top
         x = vessel.position[0] + c * top[0] - s * top[1]
         y = vessel.position[1] + s * top[0] + c * top[1]
         span = seed["span"]
+        end_b_x, end_b_y = x - span * c, y - span * s
+        if not all(math.isfinite(value) for value in (x, y, end_b_x, end_b_y)):
+            raise ValueError("J-lay endpoint coordinates must be finite")
         return [[vessel.name, top[0], top[1], top[2], 180, 180 - jlay.tower_angle, 0, None],
-                ["Anchored", x - span * c, y - span * s, seed["outer_diameter"] / 2, 180,
+                ["Anchored", end_b_x, end_b_y, seed["outer_diameter"] / 2, 180,
                  90 + self.spec.environment.seabed.slope, 0, None]]
 
     def _slay_taut_span(self, height: float) -> float:

@@ -28,7 +28,7 @@ class ProjectInputSpec(BaseModel):
         from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
         import yaml
 
-        with open('spec.yml') as f:
+        with open('spec.yml', encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         spec = ProjectInputSpec(**data)
@@ -156,6 +156,10 @@ class ProjectInputSpec(BaseModel):
                     "J-lay tower carries the pipe tension at the pinned hang-off; "
                     "a tensioner cannot also be defined"
                 )
+            if self.equipment.jlay and self.equipment.buoyancy_modules:
+                raise ValueError("J-lay seed does not support buoyancy modules")
+            if self.equipment.jlay and self.equipment.slay_end_b_x is not None:
+                raise ValueError("J-lay seed cannot use slay_end_b_x")
             if self.equipment.tensioner and not self.equipment.vessel:
                 raise ValueError("Tensioner requires a vessel to be defined")
 
