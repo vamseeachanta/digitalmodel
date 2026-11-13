@@ -5,7 +5,14 @@ from __future__ import annotations
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    Field,
+    SerializerFunctionWrapHandler,
+    field_validator,
+    model_serializer,
+    model_validator,
+)
 
 
 class RiserConfiguration(str, Enum):
@@ -91,6 +98,21 @@ class RiserLineType(BaseModel):
     # Stress calculation diameters (if different from geometry)
     stress_od: float | None = Field(default=None, gt=0, description="Stress calc OD (m)")
     stress_id: float | None = Field(default=None, ge=0, description="Stress calc ID (m)")
+
+    @model_serializer(mode="wrap")
+    def serialize_authored_friction(self, handler: SerializerFunctionWrapHandler) -> dict:
+        """Keep unset friction absent across dictionary, JSON and YAML round trips.
+
+        The fallback renderer uses field presence to distinguish an authored
+        override from a compatibility default. Explicit defaults, zero and
+        axial null remain overrides; unprovided defaults stay available to
+        the typed builder without replacing retained native properties.
+        """
+        data = handler(self)
+        for field in ("seabed_lateral_friction", "seabed_axial_friction"):
+            if field not in self.model_fields_set:
+                data.pop(field, None)
+        return data
 
     @model_validator(mode="after")
     def validate_diameters(self) -> "RiserLineType":

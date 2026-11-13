@@ -202,6 +202,85 @@ def test_fallback_route_round_trip_preserves_native_friction(single_riser, tmp_p
     assert generated_mapping(upgraded, tmp_path / "after") == before
 
 
+def _legacy_friction_spec(single_riser, native):
+    """Model the older upgrader: friction remains only in the native fallback."""
+    upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
+    upgraded["generic"]["line_types"][0]["properties"].update(native)
+    return ProjectInputSpec.model_validate(upgraded)
+
+
+def _friction_round_trip(spec, transport):
+    import yaml
+
+    from digitalmodel.solvers.orcaflex.modular_generator.schema._overrides import (
+        apply_dotted_override,
+    )
+
+    if transport == "depth_sweep":
+        return apply_dotted_override(spec, "environment.water.depth", 250)
+    if transport == "json":
+        return ProjectInputSpec.model_validate_json(spec.model_dump_json())
+    if transport == "yaml":
+        return ProjectInputSpec.model_validate(
+            yaml.safe_load(yaml.safe_dump(spec.model_dump(mode="json"))))
+    assert transport == "dict"
+    return ProjectInputSpec.model_validate(spec.model_dump())
+
+
+@pytest.mark.parametrize("transport", ["dict", "json", "yaml", "depth_sweep"])
+@pytest.mark.parametrize("native", [{_LATERAL: 0.9, _AXIAL: 0.3}, {}],
+                         ids=["retained", "absent"])
+def test_fallback_unset_friction_survives_serialization_and_sweeps(
+        single_riser, tmp_path, transport, native):
+    spec = _legacy_friction_spec(single_riser, native)
+    reloaded = _friction_round_trip(spec, transport)
+    typed = reloaded.riser.line_types[0]
+    assert not {"seabed_lateral_friction", "seabed_axial_friction"} & typed.model_fields_set
+    line_type = _fallback_line_type(reloaded.model_dump(exclude_unset=True), tmp_path, transport)
+    assert {key: line_type[key] for key in (_LATERAL, _AXIAL) if key in line_type} == native
+    if transport == "depth_sweep":
+        assert reloaded.environment.water.depth == 250
+        assert spec.environment.water.depth == 200
+
+
+@pytest.mark.parametrize("transport", ["dict", "json", "yaml", "depth_sweep"])
+@pytest.mark.parametrize("lateral,axial", [(0.8, 0.4), (0.5, None), (0.0, 0.0)])
+def test_fallback_explicit_friction_survives_serialization_and_sweeps(
+        single_riser, tmp_path, transport, lateral, axial):
+    spec = _legacy_friction_spec(single_riser, {_LATERAL: 0.9, _AXIAL: 0.3})
+    spec.riser.line_types[0].seabed_lateral_friction = lateral
+    spec.riser.line_types[0].seabed_axial_friction = axial
+    reloaded = _friction_round_trip(spec, transport)
+    assert {"seabed_lateral_friction", "seabed_axial_friction"} <= (
+        reloaded.riser.line_types[0].model_fields_set)
+    line_type = _fallback_line_type(reloaded.model_dump(exclude_unset=True), tmp_path, transport)
+    assert (line_type[_LATERAL], line_type[_AXIAL]) == (lateral, axial)
+
+
+@pytest.mark.parametrize("field,native_key,value", [
+    ("seabed_lateral_friction", _LATERAL, 0.5),
+    ("seabed_lateral_friction", _LATERAL, 0.0),
+    ("seabed_axial_friction", _AXIAL, None),
+    ("seabed_axial_friction", _AXIAL, 0.4),
+])
+def test_campaign_can_sweep_unset_friction(single_riser, tmp_path, field, native_key, value):
+    from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import CampaignSpec
+
+    native = {_LATERAL: 0.9, _AXIAL: 0.3}
+    spec = _legacy_friction_spec(single_riser, native)
+    campaign = CampaignSpec(
+        base=spec,
+        campaign={"sweeps": [{"parameter": f"riser.line_types.0.{field}",
+                               "values": [value], "alias": "friction"}]},
+        output_naming="{base_name}_{friction}",
+    )
+    (_, changed), = campaign.generate_run_specs()
+    line_type = _fallback_line_type(changed.model_dump(exclude_unset=True), tmp_path, "sweep")
+    assert {key: line_type[key] for key in native} == {**native, native_key: value}
+    assert field in changed.riser.line_types[0].model_fields_set
+    assert field not in spec.riser.line_types[0].model_fields_set
+
+
 def test_uncited_friction_defaults_are_recorded_as_unqualified():
     """The standards document records each emitted default and its status.
 

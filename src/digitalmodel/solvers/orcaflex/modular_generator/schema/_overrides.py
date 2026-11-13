@@ -1,18 +1,18 @@
 """Dotted-path override helper for ProjectInputSpec with Pydantic re-validation.
 
-Dotted paths target the canonical ``model_dump()`` shape; use integer segments
+Dotted paths target model fields and dictionaries; use integer segments
 to index into list-valued fields (e.g. ``pipeline.segments.0.length``).
 """
 from __future__ import annotations
 
 from typing import Any
 
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from .root import ProjectInputSpec
 
 
-def _set_nested_safe(d: dict, path: str, value: Any) -> None:
+def _set_nested_safe(d: BaseModel | dict, path: str, value: Any) -> None:
     keys = path.split(".")
     cursor: Any = d
     for i, k in enumerate(keys):
@@ -32,6 +32,15 @@ def _set_nested_safe(d: dict, path: str, value: Any) -> None:
                 cursor[idx] = value
             else:
                 cursor = cursor[idx]
+        elif isinstance(cursor, BaseModel):
+            if k not in type(cursor).model_fields and k not in (cursor.model_extra or {}):
+                raise KeyError(
+                    f"path segment {k!r} not found in dotted path {path!r}"
+                )
+            if is_terminal:
+                setattr(cursor, k, value)
+            else:
+                cursor = getattr(cursor, k)
         elif isinstance(cursor, dict):
             if k not in cursor:
                 raise KeyError(
@@ -50,10 +59,12 @@ def _set_nested_safe(d: dict, path: str, value: Any) -> None:
 def apply_dotted_override(
     spec: ProjectInputSpec, dotted: str, value: Any
 ) -> ProjectInputSpec:
-    d = spec.model_dump()
-    _set_nested_safe(d, dotted, value)
+    # Set the target before serialization so even fields omitted by a model
+    # serializer can be swept, without marking unrelated defaults as authored.
+    changed = spec.model_copy(deep=True)
+    _set_nested_safe(changed, dotted, value)
     try:
-        return ProjectInputSpec.model_validate(d)
+        return ProjectInputSpec.model_validate(changed.model_dump())
     except ValidationError as exc:
         # Surface the offending sweep parameter so multi-sweep campaign debugging
         # points at the dotted path + value, not just an opaque Pydantic trace
