@@ -370,7 +370,9 @@ class MooringRouter(BaseRouter):
 
         Format: {type}_{diameter_mm}mm[_{grade}][_mu{friction}]. A seabed
         friction override is part of the name so that de-duplication by name
-        cannot merge it with the material default (#3989).
+        cannot merge it with the material default or with another override
+        (#3989). The coefficient is written with ``repr`` (shortest string
+        that round-trips the float), so distinct values give distinct names.
         """
         d_mm = round(seg.diameter * 1000)
         if seg.type == MooringSegmentType.CHAIN:
@@ -381,5 +383,5 @@ class MooringRouter(BaseRouter):
         else:
             name = f"polyester_{d_mm}mm"
         if seg.seabed_lateral_friction is not None:
-            name += f"_mu{seg.seabed_lateral_friction:g}"
+            name += f"_mu{float(seg.seabed_lateral_friction)!r}"
         return name
