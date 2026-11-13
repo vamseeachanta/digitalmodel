@@ -6,6 +6,7 @@ REVISIONS = (
     ("0", "2026-11-12", "Initial issue: six static worked configurations and wall sensitivity."),
     ("1", "2026-11-12", "Independent named-section stress comparison and radius/status assertions added."),
     ("2", "2026-11-13", "Diagnostic quantisation and deterministic noise ties added for portable regeneration; report percentage precision corrected."),
+    ("3", "2026-11-13", "Closure envelope ties use diagnostic resolution and declared offset order; raw violations remain controlling."),
 )
 
 
@@ -250,6 +251,8 @@ def render_report(data):
              "[scr-slwr-results.json](scr-slwr-results.json). Floats are serialized to six significant figures; comparator "
              "dispositions use unrounded values. Diagnostic differences use a resolution of 1e-8 percentage points; "
              "closure residuals, closure margins and shape coordinates use 1e-8 m, below the 1e-6 m closure criterion. "
+             "The closure envelope selects the smallest margin at that diagnostic resolution; raw violations precede "
+             "passes on a tie, then declared offset order resolves ties with the same status. "
              "Other calculated values retain calculation precision before six-significant-figure serialization. "
              "Report percentage differences use one decimal place and retain the raw-value dispositions. "
              "Raw workflow runtime is discarded.\n\n"

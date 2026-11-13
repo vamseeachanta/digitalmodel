@@ -22,6 +22,7 @@ Table 1. Feasibility against the stated limits; a zero feasible count retains th
 | 0 | 2026-11-12 | Initial issue: six static worked configurations and wall sensitivity. |
 | 1 | 2026-11-12 | Independent named-section stress comparison and radius/status assertions added. |
 | 2 | 2026-11-13 | Diagnostic quantisation and deterministic noise ties added for portable regeneration; report percentage precision corrected. |
+| 3 | 2026-11-13 | Closure envelope ties use diagnostic resolution and declared offset order; raw violations remain controlling. |
 
 Table R-1. Issued revisions; earlier rows are retained on reissue.
 
@@ -33,7 +34,7 @@ The method is an inextensible static cable screen with frictionless mobile touch
 
 The single pressure pair is internal design pressure 20.0e6 Pa and external pressure 0 Pa at surface hang-off. The screen applies it to the whole line; depth-dependent internal and external hydrostatics are not established. Minimum radius uses the screen's touchdown/sag/hog local radii. Utilisation uses sampled thin-wall von Mises stress including elastic curvature bending and pressure end force; it is not a code check.
 
-Rank 1 follows the screen's ascending maximum touchdown/sag excursion-curvature range among feasible candidates; if none is feasible, rank 1 follows the screen's violated-candidate ordering. The curvature-range objective is a stress-range proxy, not fatigue damage. A governing offset is selected by the smallest signed margin divided by the absolute limit (floor 1e-12); ties retain offset order. Each constraint also retains its own controlling offset, because one offset need not control every limit. All four offset rows and input hashes are in [scr-slwr-results.json](scr-slwr-results.json). Floats are serialized to six significant figures; comparator dispositions use unrounded values. Diagnostic differences use a resolution of 1e-8 percentage points; closure residuals, closure margins and shape coordinates use 1e-8 m, below the 1e-6 m closure criterion. Other calculated values retain calculation precision before six-significant-figure serialization. Report percentage differences use one decimal place and retain the raw-value dispositions. Raw workflow runtime is discarded.
+Rank 1 follows the screen's ascending maximum touchdown/sag excursion-curvature range among feasible candidates; if none is feasible, rank 1 follows the screen's violated-candidate ordering. The curvature-range objective is a stress-range proxy, not fatigue damage. A governing offset is selected by the smallest signed margin divided by the absolute limit (floor 1e-12); ties retain offset order. Each constraint also retains its own controlling offset, because one offset need not control every limit. All four offset rows and input hashes are in [scr-slwr-results.json](scr-slwr-results.json). Floats are serialized to six significant figures; comparator dispositions use unrounded values. Diagnostic differences use a resolution of 1e-8 percentage points; closure residuals, closure margins and shape coordinates use 1e-8 m, below the 1e-6 m closure criterion. The closure envelope selects the smallest margin at that diagnostic resolution; raw violations precede passes on a tie, then declared offset order resolves ties with the same status. Other calculated values retain calculation precision before six-significant-figure serialization. Report percentage differences use one decimal place and retain the raw-value dispositions. Raw workflow runtime is discarded.
 
 SCR comparator: H = wz sinθ/(1 − sinθ), Ttop = H + wz, s = √(z² + 2Hz/w), x = (H/w) asinh(s/(H/w)), Rtd = H/w. θ is the selected input angle from vertical at zero offset; at other offsets it is the exposed top angle, so those checks are conditional on that angle. SLWR comparator: Vtop = w Sbare + w(1 − factor) Sbuoyed, Ttop = hypot(H, Vtop), Rsag = H/w and Rhog = H/|w(1 − factor)|. Bare suspended material is split before and after the exposed buoyed interval; the grounded tail is excluded. SLWR horizontal tension is a supplied comparator input; independent agreement of H and suspended geometry is not established by this equilibrium check.
 
@@ -114,7 +115,7 @@ Table scr-1000m-8in-1. Rank-1 static quantities; governing offset 50 m. Horizont
 | bend_radius_m | >= 54.7687 m | 519.803 | 694.139 | 390.05 | -50 m | 335.281 | pass | assumed screening strain limit 0.2%; OD/(2*0.002), not a code value |
 | hog_clearance_m | >= 50 m | not applicable | not applicable | not applicable | not applicable | not applicable | not_applicable | assumed minimum hog clearance of 50.0 m |
 | static_von_mises_utilisation | <= 0.67 1 | 0.301537 | 0.318359 | 0.318359 | 50 m | 0.351641 | pass | an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor |
-| shape_closure | <= 1e-06 m | 0 | 0 | 0 | 0 m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
+| shape_closure | <= 1e-06 m | 0 | 0 | 0 | -50 m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
 
 Table scr-1000m-8in-2. Each constraint is evaluated over all offsets. Margin is limit minus computed for upper limits, computed minus limit for lower limits; units follow the limit. SCR hog values are not applicable, rather than missing evidence.
 
@@ -164,7 +165,7 @@ Table scr-1500m-10in-1. Rank-1 static quantities; governing offset 75 m. Horizon
 | bend_radius_m | >= 68.2625 m | 779.705 | 1041.21 | 585.075 | -75 m | 516.813 | pass | assumed screening strain limit 0.2%; OD/(2*0.002), not a code value |
 | hog_clearance_m | >= 50 m | not applicable | not applicable | not applicable | not applicable | not applicable | not_applicable | assumed minimum hog clearance of 50.0 m |
 | static_von_mises_utilisation | <= 0.67 1 | 0.385071 | 0.41445 | 0.41445 | 75 m | 0.25555 | pass | an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor |
-| shape_closure | <= 1e-06 m | 0 | 0 | 0 | 0 m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
+| shape_closure | <= 1e-06 m | 0 | 0 | 0 | -75 m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
 
 Table scr-1500m-10in-2. Each constraint is evaluated over all offsets. Margin is limit minus computed for upper limits, computed minus limit for lower limits; units follow the limit. SCR hog values are not applicable, rather than missing evidence.
 
@@ -214,7 +215,7 @@ Table scr-2000m-12in-1. Rank-1 static quantities; governing offset 100 m. Horizo
 | bend_radius_m | >= 80.9625 m | 1039.61 | 1388.28 | 780.1 | -100 m | 699.138 | pass | assumed screening strain limit 0.2%; OD/(2*0.002), not a code value |
 | hog_clearance_m | >= 50 m | not applicable | not applicable | not applicable | not applicable | not applicable | not_applicable | assumed minimum hog clearance of 50.0 m |
 | static_von_mises_utilisation | <= 0.67 1 | 0.359935 | 0.385021 | 0.385021 | 100 m | 0.284979 | pass | an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor |
-| shape_closure | <= 1e-06 m | 0 | 0 | 0 | 0 m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
+| shape_closure | <= 1e-06 m | 0 | 0 | 0 | -100 m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
 
 Table scr-2000m-12in-2. Each constraint is evaluated over all offsets. Margin is limit minus computed for upper limits, computed minus limit for lower limits; units follow the limit. SCR hog values are not applicable, rather than missing evidence.
 
@@ -264,7 +265,7 @@ Table slwr-1500m-8in-1. Rank-1 static quantities; governing offset -75 m. Horizo
 | bend_radius_m | >= 54.7687 m | 354.355 | 329.034 | 329.034 | -75 m | 274.266 | pass | assumed screening strain limit 0.2%; OD/(2*0.002), not a code value |
 | hog_clearance_m | >= 50 m | 750 | 772.172 | 727.607 | 75 m | 677.607 | pass | assumed minimum hog clearance of 50.0 m |
 | static_von_mises_utilisation | <= 0.67 1 | 0.315205 | 0.314079 | 0.316505 | 75 m | 0.353495 | pass | an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor |
-| shape_closure | <= 1e-06 m | 0 | 0 | 0 | cross (x=0, y=75) m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
+| shape_closure | <= 1e-06 m | 0 | 0 | 0 | -75 m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
 | net_buoyancy | > 1 1 | 1.5 | 1.5 | 1.5 | -75 m | 0.5 | pass | screen domain: buoyancy_factor > 1 for a net-buoyant section |
 | hog_above_sag | > 0 1 | 0.4 | 0.4 | 0.4 | -75 m | 0.4 | pass | screen domain: hog_fraction > sag_fraction |
 
@@ -312,7 +313,7 @@ Table slwr-2000m-10in-1. Rank-1 static quantities; governing offset 100 m. Horiz
 | bend_radius_m | >= 68.2625 m | 472.474 | 509.986 | 438.712 | -100 m | 370.45 | pass | assumed screening strain limit 0.2%; OD/(2*0.002), not a code value |
 | hog_clearance_m | >= 50 m | 1000 | 970.142 | 970.142 | 100 m | 920.142 | pass | assumed minimum hog clearance of 50.0 m |
 | static_von_mises_utilisation | <= 0.67 1 | 0.381466 | 0.383286 | 0.383286 | 100 m | 0.286714 | pass | an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor |
-| shape_closure | <= 1e-06 m | 0 | 0 | 0 | cross (x=0, y=100) m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
+| shape_closure | <= 1e-06 m | 0 | 0 | 0 | -100 m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
 | net_buoyancy | > 1 1 | 1.5 | 1.5 | 1.5 | -100 m | 0.5 | pass | screen domain: buoyancy_factor > 1 for a net-buoyant section |
 | hog_above_sag | > 0 1 | 0.4 | 0.4 | 0.4 | -100 m | 0.4 | pass | screen domain: hog_fraction > sag_fraction |
 
@@ -360,7 +361,7 @@ Table slwr-2500m-12in-1. Rank-1 static quantities; governing offset 125 m. Horiz
 | bend_radius_m | >= 80.9625 m | 590.592 | 637.482 | 548.391 | -125 m | 467.428 | pass | assumed screening strain limit 0.2%; OD/(2*0.002), not a code value |
 | hog_clearance_m | >= 50 m | 1250 | 1212.68 | 1212.68 | 125 m | 1162.68 | pass | assumed minimum hog clearance of 50.0 m |
 | static_von_mises_utilisation | <= 0.67 1 | 0.344445 | 0.345875 | 0.345875 | 125 m | 0.324125 | pass | an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor |
-| shape_closure | <= 1e-06 m | 0 | 0 | 0 | cross (x=0, y=125) m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
+| shape_closure | <= 1e-06 m | 0 | 0 | 0 | -125 m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
 | net_buoyancy | > 1 1 | 1.5 | 1.5 | 1.5 | -125 m | 0.5 | pass | screen domain: buoyancy_factor > 1 for a net-buoyant section |
 | hog_above_sag | > 0 1 | 0.4 | 0.4 | 0.4 | -125 m | 0.4 | pass | screen domain: hog_fraction > sag_fraction |
 

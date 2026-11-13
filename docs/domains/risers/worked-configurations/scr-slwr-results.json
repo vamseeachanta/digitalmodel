@@ -44,7 +44,7 @@
             "unit": "m"
           },
           "margin": 1e-06,
-          "offset_m": 0.0,
+          "offset_m": -50.0,
           "reason": "",
           "status": "pass"
         },
@@ -2826,7 +2826,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": 0.0,
+              "offset_m": -50.0,
               "reason": "",
               "status": "pass"
             },
@@ -3005,7 +3005,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": 0.0,
+              "offset_m": -50.0,
               "reason": "",
               "status": "pass"
             },
@@ -3184,7 +3184,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": 0.0,
+              "offset_m": -50.0,
               "reason": "",
               "status": "pass"
             },
@@ -3362,7 +3362,7 @@
             "unit": "m"
           },
           "margin": 1e-06,
-          "offset_m": 0.0,
+          "offset_m": -75.0,
           "reason": "",
           "status": "pass"
         },
@@ -6144,7 +6144,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": 0.0,
+              "offset_m": -75.0,
               "reason": "",
               "status": "pass"
             },
@@ -6323,7 +6323,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": 0.0,
+              "offset_m": -75.0,
               "reason": "",
               "status": "pass"
             },
@@ -6502,7 +6502,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": 0.0,
+              "offset_m": -75.0,
               "reason": "",
               "status": "pass"
             },
@@ -6680,7 +6680,7 @@
             "unit": "m"
           },
           "margin": 1e-06,
-          "offset_m": 0.0,
+          "offset_m": -100.0,
           "reason": "",
           "status": "pass"
         },
@@ -9462,7 +9462,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": 0.0,
+              "offset_m": -100.0,
               "reason": "",
               "status": "pass"
             },
@@ -9641,7 +9641,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": 0.0,
+              "offset_m": -100.0,
               "reason": "",
               "status": "pass"
             },
@@ -9820,7 +9820,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": 0.0,
+              "offset_m": -100.0,
               "reason": "",
               "status": "pass"
             },
@@ -10029,10 +10029,7 @@
             "unit": "m"
           },
           "margin": 1e-06,
-          "offset_m": {
-            "x_m": 0.0,
-            "y_m": 75.0
-          },
+          "offset_m": -75.0,
           "reason": "",
           "status": "pass"
         },
@@ -12933,10 +12930,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": {
-                "x_m": 0.0,
-                "y_m": 75.0
-              },
+              "offset_m": -75.0,
               "reason": "",
               "status": "pass"
             },
@@ -13154,10 +13148,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": {
-                "x_m": 0.0,
-                "y_m": 75.0
-              },
+              "offset_m": -75.0,
               "reason": "",
               "status": "pass"
             },
@@ -13375,10 +13366,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": {
-                "x_m": 0.0,
-                "y_m": 75.0
-              },
+              "offset_m": -75.0,
               "reason": "",
               "status": "pass"
             },
@@ -13595,10 +13583,7 @@
             "unit": "m"
           },
           "margin": 1e-06,
-          "offset_m": {
-            "x_m": 0.0,
-            "y_m": 100.0
-          },
+          "offset_m": -100.0,
           "reason": "",
           "status": "pass"
         },
@@ -16499,10 +16484,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": {
-                "x_m": 0.0,
-                "y_m": 100.0
-              },
+              "offset_m": -100.0,
               "reason": "",
               "status": "pass"
             },
@@ -16720,10 +16702,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": {
-                "x_m": 0.0,
-                "y_m": 100.0
-              },
+              "offset_m": -100.0,
               "reason": "",
               "status": "pass"
             },
@@ -16941,10 +16920,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": {
-                "x_m": 0.0,
-                "y_m": 100.0
-              },
+              "offset_m": -100.0,
               "reason": "",
               "status": "pass"
             },
@@ -17161,10 +17137,7 @@
             "unit": "m"
           },
           "margin": 1e-06,
-          "offset_m": {
-            "x_m": 0.0,
-            "y_m": 125.0
-          },
+          "offset_m": -125.0,
           "reason": "",
           "status": "pass"
         },
@@ -20065,10 +20038,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": {
-                "x_m": 0.0,
-                "y_m": 125.0
-              },
+              "offset_m": -125.0,
               "reason": "",
               "status": "pass"
             },
@@ -20286,10 +20256,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": {
-                "x_m": 0.0,
-                "y_m": 125.0
-              },
+              "offset_m": -125.0,
               "reason": "",
               "status": "pass"
             },
@@ -20507,10 +20474,7 @@
                 "unit": "m"
               },
               "margin": 1e-06,
-              "offset_m": {
-                "x_m": 0.0,
-                "y_m": 125.0
-              },
+              "offset_m": -125.0,
               "reason": "",
               "status": "pass"
             },
@@ -20658,6 +20622,7 @@
   "data_basis": "generic assumed values for a public worked configuration; no project data",
   "diagnostic_serialization": {
     "basis": "nearest resolution for diagnostic differences, closure values/margins and shape coordinates; statuses use unrounded values",
+    "closure_envelope_tie_rule": "smallest closure margin at diagnostic resolution; violations precede passes on a tie, then declared offset order",
     "difference_resolution_percent": 1e-08,
     "geometry_resolution_m": 1e-08
   },

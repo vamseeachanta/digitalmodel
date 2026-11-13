@@ -228,8 +228,12 @@ def test_constraint_values_margins_and_selection(results):
         assert case["governing_offset_index"] == governing
         for name, envelope in case["constraint_envelope"].items():
             if envelope["margin"] is not None:
-                assert envelope["margin"] == min(r["criteria"][name]["margin"]
-                                                  for r in case["offset_results"])
+                margins = [r["criteria"][name]["margin"] for r in case["offset_results"]]
+                if name == "shape_closure":
+                    # Closure diagnostics resolve noise ties at the declared 1e-8 m resolution.
+                    assert round(envelope["margin"], 8) == min(round(margin, 8) for margin in margins)
+                else:
+                    assert envelope["margin"] == min(margins)
 
 
 def test_sensitivity_values_and_scr_signs(builder, results):
@@ -384,6 +388,67 @@ def test_diagnostic_maximum_uses_quantised_ties(builder, results):
     evidence = builder.stress_evidence(cases)
     assert evidence["maximum_absolute_difference_percent"] == .01234567
     assert evidence["maximum_difference_row"]["case_id"] == CASES[-1]
+
+
+def test_artifacts_ignore_closure_noise(builder, monkeypatch):
+    """Swap sub-resolution closure residuals through all generated artifacts."""
+    from digitalmodel.riser_configuration_screen import workflow
+
+    screen = workflow.screen
+    cached = {}
+    residuals = [1e-12, 2e-12]
+
+    def noisy_screen(settings):
+        key = json.dumps(settings, sort_keys=True)
+        if key not in cached:
+            cached[key] = screen(settings)
+        result = dict(cached[key])
+        selected = deepcopy(result["ranked_candidates"][0])
+        for index, row in enumerate(selected["offset_results"]):
+            error = residuals[index] if index < len(residuals) else 0.0
+            row["vertical_closure_error_m"] = error
+            row["horizontal_closure_error_m"] = -error
+        result["ranked_candidates"] = [selected, *result["ranked_candidates"][1:]]
+        return result
+
+    monkeypatch.setattr(workflow, "screen", noisy_screen)
+    expected = builder.build_outputs()
+    residuals.reverse()
+    actual = builder.build_outputs()
+    assert len(expected) == 14
+    for path in expected:
+        assert actual[path] == expected[path], path
+
+
+@pytest.mark.parametrize("residuals,index,status", [
+    ([1e-12, 2e-12], 0, "pass"),
+    ([2e-12, 1e-12], 0, "pass"),
+    ([1e-12, 2e-8], 1, "pass"),
+    ([math.nextafter(1e-6, 0.0), math.nextafter(1e-6, math.inf)], 1, "violation"),
+    ([math.nextafter(1e-6, math.inf), math.nextafter(1e-6, 0.0)], 0, "violation"),
+])
+def test_closure_envelope_ties_preserve_raw_acceptance(builder, results, monkeypatch,
+                                                      residuals, index, status):
+    """Resolve diagnostic ties in input order while retaining any violation."""
+    from digitalmodel.riser_configuration_screen import workflow
+
+    case = deepcopy(results["cases"][0])
+    for i, row in enumerate(case["offset_results"]):
+        row["vertical_closure_error_m"] = residuals[i] if i < len(residuals) else 0.0
+        row["horizontal_closure_error_m"] = 0.0
+    candidate = {**case, "constraints": case["screen_constraints"]}
+    monkeypatch.setattr(workflow, "screen", lambda settings: {
+        **case, "ranked_candidates": [candidate]})
+    result = builder.select_result(case["inputs"])
+    check = result["constraint_envelope"]["shape_closure"]
+    assert check["offset_m"] == case["offset_results"][index]["offset_m"]
+    assert check["computed"] == residuals[index]
+    assert check["status"] == status
+    assert check["criterion"]["limit"] == 1e-6
+    assert builder.diagnostic_values(check)["status"] == status
+    for raw, row in zip(case["offset_results"], result["offset_results"]):
+        expected_status = "pass" if raw["vertical_closure_error_m"] <= 1e-6 else "violation"
+        assert row["criteria"]["shape_closure"]["status"] == expected_status
 
 
 @pytest.mark.parametrize("stress", [False, True])

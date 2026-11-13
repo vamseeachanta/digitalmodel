@@ -263,6 +263,16 @@ def enrich_row(settings, configuration, row):
     return row
 
 
+def constraint_envelope_order(check):
+    """Order closure diagnostics at output resolution, with violations first on ties."""
+    margin = check["margin"]
+    if margin is None:
+        return math.inf, False
+    if check["criterion"]["name"] == "shape_closure":
+        return round(margin, DIAGNOSTIC_DECIMALS), check["status"] != "violation"
+    return margin, False
+
+
 def select_result(settings):
     """Retain the first ranked candidate even when every candidate violates."""
     from digitalmodel.riser_configuration_screen.workflow import screen
@@ -272,8 +282,8 @@ def select_result(settings):
     rows = [enrich_row(settings, selected["configuration"], row) for row in selected["offset_results"]]
     envelope = {}
     for name in rows[0]["criteria"] if rows else []:
-        index = min(range(len(rows)), key=lambda i: (
-            rows[i]["criteria"][name]["margin"] if rows[i]["criteria"][name]["margin"] is not None else math.inf))
+        # min retains declared offset order when the diagnostic keys tie.
+        index = min(range(len(rows)), key=lambda i: constraint_envelope_order(rows[i]["criteria"][name]))
         envelope[name] = {**rows[index]["criteria"][name], "offset_m": rows[index]["offset_m"]}
     governing = min(range(len(rows)), key=lambda i: min(
         c["margin"] / max(abs(c["criterion"]["limit"]), 1e-12)
@@ -348,6 +358,7 @@ def build_results():
             "diagnostic_serialization": {
                 "difference_resolution_percent": 10**-DIAGNOSTIC_DECIMALS,
                 "geometry_resolution_m": 10**-DIAGNOSTIC_DECIMALS,
+                "closure_envelope_tie_rule": "smallest closure margin at diagnostic resolution; violations precede passes on a tie, then declared offset order",
                 "basis": "nearest resolution for diagnostic differences, closure values/margins and shape coordinates; statuses use unrounded values"},
             "stress_comparator_evidence": stress_evidence(cases),
             "cases": cases}
