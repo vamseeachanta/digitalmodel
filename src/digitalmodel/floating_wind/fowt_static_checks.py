@@ -105,8 +105,9 @@ def flexible_mass_properties(fowt, principal_rna_inertia: bool = False
     """Rigid-equivalent mass (kg), centre (m) and inertia (kg m2) of hull, tower and RNA.
 
     Tower sections are thin-walled tubes on the hull z axis. With
-    ``principal_rna_inertia`` the RNA products of inertia are dropped, as in
-    the generated lumped buoy.
+    ``principal_rna_inertia`` the RNA products of inertia are dropped, to
+    measure their effect; the generated model keeps them (the RNA buoy carries
+    mass and centre, and a principal-axes child buoy carries the moments).
     """
     hull = fowt.hull
     parts = [(hull.mass * KILO, hull.centre_of_mass,

@@ -150,6 +150,29 @@ def test_rigid_equivalent_matches_rigid_representation(flexible, rigid, sources)
         assert periods_f[mode] == pytest.approx(periods_r[mode], rel=1e-4), mode
 
 
+def test_flexible_model_carries_spec_radiation(flexible, rigid):
+    """The rigid-equivalent body keeps the validated spec radiation for the period check."""
+    model_f, model_r = model_from_spec(flexible), model_from_spec(rigid)
+    assert len(model_f.radiation_added_mass) == len(flexible["fowt"]["hull"]["radiation"]) > 0
+    assert len(model_f.radiation_added_mass) == len(model_r.radiation_added_mass)
+    for (period_f, added_f), (period_r, added_r) in zip(model_f.radiation_added_mass,
+                                                        model_r.radiation_added_mass):
+        assert period_f == period_r
+        assert np.array_equal(added_f, added_r)
+
+
+@pytest.mark.parametrize("infinite", [False, True])
+def test_flexible_periods_refuse_spec_added_mass_unlike_the_data(flexible, sources, infinite):
+    """Both period variants of the flexible path check the spec radiation against the data."""
+    _, data = sources
+    perturbed = copy.deepcopy(flexible)
+    for entry in perturbed["fowt"]["hull"]["radiation"]:
+        entry["added_mass"] = [[4.0 * v for v in row] for row in entry["added_mass"]]
+    model = model_from_spec(perturbed)
+    with pytest.raises(ValueError, match="added mass differs"):
+        natural_periods(model, data, np.zeros(6), infinite_frequency_added_mass=infinite)
+
+
 def test_hydrostatic_weight_term_uses_platform_only(flexible):
     """The VesselType carries the platform; tower and RNA weight act through their own objects."""
     fowt = FowtSpec(**flexible["fowt"])
@@ -253,3 +276,34 @@ def test_generated_rna_reproduces_full_tensor(flexible, sources):
     assert abs(expected[0, 2]) > 0.1 * expected[1, 1]  # the source tensor has products
     assert rebuilt == pytest.approx(expected, abs=1e-9 * expected.max())
     assert child["InitialAttitude"][1] == pytest.approx(12.75, abs=0.01)
+
+
+def _rna_child(spec: dict) -> dict:
+    fowt = FowtSpec(**spec["fowt"])
+    buoys = {b["name"]: b["properties"] for b in FowtRouter().route(fowt)["buoys_6d"]}
+    return buoys[f"{fowt.rna.name} inertia"]
+
+
+def test_rna_child_written_at_stated_precision(flexible):
+    """Principal moments at 11 significant figures, attitude at 1e-9 degree."""
+    from digitalmodel.solvers.orcaflex.modular_generator.routers import fowt_router
+
+    assert fowt_router.RNA_MOMENT_SIGNIFICANT_FIGURES == 11
+    assert fowt_router.RNA_ATTITUDE_DECIMAL_PLACES == 9
+    child = _rna_child(flexible)
+    assert all(float(f"{m:.11g}") == m for m in child["MomentsOfInertia"])
+    assert all(round(a, 9) == a for a in child["InitialAttitude"])
+
+
+def test_rna_child_unchanged_by_eigensolver_roundoff(flexible, monkeypatch):
+    """Eigensolver differences of the size seen between numpy builds (about 1e-14
+    relative) do not change the written child buoy, so the golden is stable."""
+    reference = _rna_child(flexible)
+    exact = np.linalg.eigh
+
+    def perturbed(matrix):
+        values, vectors = exact(matrix)
+        return values * (1.0 + 3e-14), vectors * (1.0 + 2e-14)
+
+    monkeypatch.setattr(np.linalg, "eigh", perturbed)
+    assert _rna_child(flexible) == reference

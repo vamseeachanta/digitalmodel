@@ -93,6 +93,18 @@ def buoy_attitude(r: list[list[float]]) -> list[float]:
     return [math.degrees(r1), math.degrees(r2), math.degrees(r3)]
 
 
+# Written precision of the RNA principal-axes child buoy. np.linalg.eigh
+# results differ between numpy builds at about 1e-14 relative, which changed
+# the generated text in the 14th significant figure. Moments are written to
+# 11 significant figures (rounding step at most 5e-11 of each moment, 20 times
+# inside the 1e-9 tensor-reconstruction tolerance) and the attitude to 1e-9
+# degree (at most 9e-12 rad). Both steps are three or more orders of
+# magnitude above the numpy differences, so builds agree unless a value lies
+# within about 1e-14 of a rounding boundary.
+RNA_MOMENT_SIGNIFICANT_FIGURES = 11
+RNA_ATTITUDE_DECIMAL_PLACES = 9
+
+
 def principal_axes(inertia: list[list[float]]) -> tuple[list[float], list[list[float]]]:
     """Principal moments and the rotation whose columns are the principal axes.
 
@@ -344,9 +356,11 @@ class FowtRouter(BaseRouter):
                 "BuoyType": "Lumped buoy",
                 "Connection": rna.name,
                 "InitialPosition": list(rna.centre_of_mass_from_tower_top),
-                "InitialAttitude": buoy_attitude(axes),
+                "InitialAttitude": [round(a, RNA_ATTITUDE_DECIMAL_PLACES)
+                                    for a in buoy_attitude(axes)],
                 "Mass": 0,
-                "MomentsOfInertia": moments,
+                "MomentsOfInertia": [float(f"{m:.{RNA_MOMENT_SIGNIFICANT_FIGURES}g}")
+                                     for m in moments],
                 "CentreOfMass": [0, 0, 0],
                 "Volume": 0,
                 "CentreOfVolume": [0, 0, 0],
