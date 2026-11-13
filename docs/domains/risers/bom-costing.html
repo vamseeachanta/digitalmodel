@@ -19,20 +19,25 @@ caption {caption-side: bottom; text-align: left; padding: .5em 0;}
 into a five-category cost breakdown with a separate citation sidecar. The method is
 public; real cost tables and results derived from them remain private. The worked
 example uses invented quantities and prime-number rates in fictional TEST currency.</p>
+<p>This method costs steel lazy-wave risers (SLWR). A positive whole buoyancy-module
+count is required; configurations with zero modules are outside this contract.</p>
 <h2>Revision history</h2>
 <table>
 <tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
 <tr><td>1</td><td>2026-10-19</td><td>Define the public costing contract and synthetic example for configuration trade studies.</td></tr>
+<tr><td>2</td><td>2026-11-12</td><td>Distinguish the two adapter inputs, reject zero buoyancy-module counts for SLWR costing, and include BOM tests in continuous integration so documentation and checks match execution.</td></tr>
 <caption>Table 1. Document revision.</caption>
 </table>
 <h2>Input schema and method</h2>
 <p><code>Configuration</code> requires <code>riser_length_m</code>,
 <code>joint_length_m</code>, <code>coated_length_m</code>, <code>buoyancy_module_count</code>,
 <code>ancillary_count</code>, <code>installation_days</code> and a <code>Citation</code>
-identifying the complete quantity schedule. Lengths and duration accept decimal strings;
-counts shall be nonnegative integers. Installed and joint lengths shall be positive.
+identifying the complete quantity schedule. Lengths and duration accept decimal strings.
+Counts shall be whole numbers; the buoyancy-module count shall be positive and the
+ancillary count may be zero. Installed and joint lengths shall be positive.
 Coating length shall not exceed installed length. Missing scope shall not be replaced
-by a zero: a supplied zero states that no quantity is included for that category.</p>
+by a zero: a supplied zero for coating, ancillaries or installation duration states
+that no quantity is included for that category.</p>
 <table>
 <tr><th>Component</th><th>Quantity</th><th>Rate denominator</th></tr>
 <tr><td>riser_joints</td><td>ceil(installed length / joint length)</td><td>joint</td></tr>
@@ -99,9 +104,17 @@ with all other quantities held fixed. This demonstrates the cost axis only.</p>
 and prints a JSON breakdown, total and citations. Existing output files are never overwritten.
 The answer is <code>131.5</code> TEST; the public test checks this independent hand sum.</p>
 <h2>Configuration integration and limits</h2>
-<p><code>configuration_from_lazy_wave(result, ...)</code> consumes the analytical
-<code>LazyWaveResults.total_arc_length</code> interface and adds the supplied grounded length
-before costing. No solver is imported or executed by the adapter. Joint length, coating scope,
+<p><code>configuration_from_lazy_wave(result, ...)</code> accepts either a solved-length
+object providing <code>total_arc_length</code> or a <code>LazyWaveConfiguration</code>.
+Solved lengths are used directly without importing the marine package or executing a solver.
+For a configuration input, the adapter imports the existing analytical
+<code>LazyWaveSolver</code> and calls <code>solve</code> on a revalidated copy.
+The hog bend shall be below mean sea level:
+<code>hog_bend_above_seabed &lt; vertical_distance + hangoff_below_msl</code>,
+with all three inputs in metres. This check does not establish structural adequacy,
+dynamic clearance or the suitability of a hog at or above hang-off. Solved lengths
+carry no geometry for this check. Both paths add the supplied grounded length
+before costing. Joint length, coating scope,
 discrete module count, ancillary count and installation duration remain required inputs.
 The unified design-input schema does not establish all these procurement quantities, so
 no automatic sizing factors or conversions from distributed buoyancy are assumed.</p>

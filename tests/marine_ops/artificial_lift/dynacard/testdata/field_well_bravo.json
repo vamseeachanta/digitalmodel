@@ -1,9 +1,9 @@
 {
   "CardDetails": {
-    "ID": 2223782,
-    "Api14": "42219017970000",
-    "WellName": "SUNDU-004",
-    "CardTimeStamp": "2019-05-01T20:45:00",
+    "ID": 102,
+    "Api14": "API-FIELD-BRAVO",
+    "WellName": "Field well bravo",
+    "CardTimeStamp": "2016-04-26T20:45:00",
     "CreatedTimeStamp": null,
     "UpdatedTimeStamp": null,
     "CalculationMethod": "Finite Difference",
@@ -32,7 +32,7 @@
     "CasingLiquidGradient": null
   },
   "WellTestData": {
-    "WellTestDate": "2019-02-14T00:00:00",
+    "WellTestDate": "2016-02-10T00:00:00",
     "OilRate": 10.74,
     "GasRate": 0.16,
     "WaterRate": 195.77,
@@ -40,10 +40,10 @@
     "WellTestRuntime": 18.75
   },
   "equipmentData": {
-    "ApiNo14": "42219017970000",
+    "ApiNo14": "API-FIELD-BRAVO",
     "Rods": [
       {
-        "InstallId": 45374,
+        "InstallId": 1002,
         "RID": 1,
         "Manufacturer": "Generic",
         "Grade": "KD",
@@ -69,7 +69,7 @@
         "RodStressSigmaA": null
       },
       {
-        "InstallId": 45374,
+        "InstallId": 1002,
         "RID": 2,
         "Manufacturer": "Generic",
         "Grade": "SK",
@@ -96,12 +96,12 @@
       }
     ],
     "Pump": {
-      "InstallId": 45374,
+      "InstallId": 1002,
       "Depth": 4630.0,
       "Diameter": 1.75
     },
     "SurfaceUnit": {
-      "InstallId": 45374,
+      "InstallId": 1002,
       "Description": "A-C-640-365-144",
       "PumpingUnitManufacturer": "L",
       "PumpingUnitGeometry": "M",

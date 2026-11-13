@@ -28,6 +28,7 @@ def cited_root(tmp_path):
         "---\ncode_id: SYNTHETIC-BOM\npublisher: Synthetic fixture\nrevision: 1\n---\n"
         "Invented arithmetic, no real cost basis.\n",
         encoding="utf-8",
+        newline="\n",
     )
     return tmp_path
 
@@ -95,6 +96,11 @@ def test_configuration_rolls_up_all_five_categories(tmp_path):
         ("coated_length_m", "-1"),
         ("buoyancy_module_count", "1.5"),
         ("buoyancy_module_count", "-1"),
+        ("buoyancy_module_count", True),
+        ("buoyancy_module_count", False),
+        ("buoyancy_module_count", None),
+        ("buoyancy_module_count", "NaN"),
+        ("buoyancy_module_count", "Infinity"),
         ("ancillary_count", "0.5"),
         ("installation_days", "-1"),
         ("installation_days", True),
@@ -129,6 +135,17 @@ def test_mismatched_citation_revision_fails_at_calculation(tmp_path):
 
 def test_zero_quantity_does_not_hide_uncited_rate(tmp_path):
     rates = list(basis().rates)
+    rates[3] = replace(rates[3], citation=None)
+    with pytest.raises(ValueError, match="Citation"):
+        cost_bom(
+            configuration(ancillary_count=0),
+            replace(basis(), rates=tuple(rates)),
+            citation_root=cited_root(tmp_path),
+        )
+
+
+def test_zero_module_count_still_checks_citations_first(tmp_path):
+    rates = list(basis().rates)
     rates[2] = replace(rates[2], citation=None)
     with pytest.raises(ValueError, match="Citation"):
         cost_bom(
@@ -136,6 +153,29 @@ def test_zero_quantity_does_not_hide_uncited_rate(tmp_path):
             replace(basis(), rates=tuple(rates)),
             citation_root=cited_root(tmp_path),
         )
+
+
+@pytest.mark.parametrize("count", [0, 0.0, "0", "0.0", "-0", "0E+3", Decimal(0)])
+def test_lazy_wave_rejects_zero_buoyancy_module_count(tmp_path, count):
+    with pytest.raises(ValueError, match="buoyancy_module_count.*positive"):
+        cost_bom(
+            configuration(buoyancy_module_count=count),
+            basis(),
+            citation_root=cited_root(tmp_path),
+        )
+
+
+@pytest.mark.parametrize("count", [1, "1"])
+def test_one_buoyancy_module_is_costed(tmp_path, count):
+    """Hand sum: 3*2 + 25*3 + 1*5 + 2*7 + 1.5*11 = 116.5 TEST."""
+    result = cost_bom(
+        configuration(buoyancy_module_count=count),
+        basis(),
+        citation_root=cited_root(tmp_path),
+    )
+    assert Decimal(result["breakdown"][2]["quantity"]) == 1
+    assert Decimal(result["breakdown"][2]["subtotal"]) == 5
+    assert Decimal(result["total"]) == Decimal("116.5")
 
 
 @pytest.mark.parametrize(
