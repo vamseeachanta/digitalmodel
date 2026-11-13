@@ -7,36 +7,36 @@ clump_types:
     Volume: 2.548
     Height: 1.5
     AlignWith: Line axes
-    Cd:
-    - 1.2
-    - null
-    - 1.2
-    Ca:
-    - 1.0
-    - null
-    - 1.0
     DragArea:
     - 2.2
     - null
     - 1.7
+    Cd:
+    - 0.6444
+    - null
+    - 1.027879287
+    Ca:
+    - 1.0
+    - null
+    - 0.5
 - name: SubBuoy
   properties:
     Mass: 5.0
     Volume: 25.0
     Height: 3.6
     AlignWith: Line axes
-    Cd:
-    - 1.0
-    - null
-    - 1.0
-    Ca:
-    - 1.0
-    - null
-    - 1.0
     DragArea:
     - 10.7
     - null
     - 6.9
+    Cd:
+    - 0.6444
+    - null
+    - 1.027879287
+    Ca:
+    - 1.0
+    - null
+    - 0.5
 lines:
 - name: Leg1
   properties:

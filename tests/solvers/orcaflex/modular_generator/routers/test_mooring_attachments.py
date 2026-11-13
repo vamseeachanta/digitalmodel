@@ -68,12 +68,35 @@ def test_data_names_match_native_example(mooring):
     assert set(emitted) <= set(native_clump)
 
 
-def test_net_weight_and_upthrust_match_hand_values(mooring):
-    """Comparators recorded in the example header: 170.5 kN and 202.3 kN."""
-    types = {ct["name"]: ct for ct in mooring["clump_types"]}
+# Standard acceleration of gravity, exact (NIST CODATA,
+# https://physics.nist.gov/cgi-bin/cuu/Value?gn, retrieved 2026-11-13).
+G_N = 9.80665
+
+
+def test_net_weight_and_upthrust_match_hand_values():
+    """Comparators recorded in the example header: 170.5 kN and 202.3 kN.
+
+    Sea density is the example's environment input, which equals the
+    density of the public example "A01 Lazy wave riser"; g is G_N.
+    """
+    spec = yaml.safe_load(EXAMPLE.read_text(encoding="utf-8"))
+    native_env = yaml.safe_load((NATIVE / "03_environment.yml").read_text(encoding="utf-8"))
+    rho = spec["environment"]["water"]["density"]
+    assert rho == native_env["Environment"]["Density"]
+    types = {ct["name"]: ct for ct in spec["mooring"]["clump_types"]}
     clump, buoy = types["Clump20te"], types["SubBuoy"]
-    assert (clump["mass"] - 1.025 * clump["volume"]) * 9.80665 == pytest.approx(170.5, abs=0.1)
-    assert (1.025 * buoy["volume"] - buoy["mass"]) * 9.80665 == pytest.approx(202.3, abs=0.1)
+    assert (clump["mass"] - rho * clump["volume"]) * G_N == pytest.approx(170.5, abs=0.1)
+    assert (rho * buoy["volume"] - buoy["mass"]) * G_N == pytest.approx(202.3, abs=0.1)
+
+
+def test_coefficients_are_the_cited_example_values(mooring):
+    """Cd and Ca equal the (normal, axial) cells of the public example's
+    clump type "Module", the source cited in the example header."""
+    native = yaml.safe_load((NATIVE / "01_general.yml").read_text(encoding="utf-8"))
+    (module,) = [ct for ct in native["ClumpTypes"] if ct["Name"] == "Module"]
+    for ct in mooring["clump_types"]:
+        assert ct["drag_coefficient"] == [module["Cd"][0], module["Cd"][2]]
+        assert ct["added_mass_coefficient"] == [module["Ca"][0], module["Ca"][2]]
 
 
 def test_unknown_clump_type_rejected(mooring):
