@@ -14,20 +14,58 @@ from copy import deepcopy
 from typing import Any
 
 from pydantic import BaseModel, ValidationError
+from pydantic.fields import FieldInfo
 
 from .root import ProjectInputSpec
 
 
-def _mark_edited_ancestors(value: Any) -> bool:
-    """Mark a field set when any value below it is set; return whether set.
+def _differs_from_default(field: FieldInfo, value: Any, model: BaseModel) -> bool:
+    """Whether an unset container no longer equals its declared default."""
+    try:
+        default = field.get_default(
+            call_default_factory=True, validated_data=dict(model.__dict__)
+        )
+    except TypeError:  # pydantic < 2.10 takes no validated_data argument
+        default = field.get_default(call_default_factory=True)
+    return _plain(value) != _plain(default)
 
-    In-place attribute edits (``spec.environment.water.depth = x``) record the
-    edit on the nested model only. Without this, ``exclude_unset`` would drop
-    an edit made below a field whose parent was never authored.
+
+def _plain(value: Any) -> Any:
+    """Comparable form: models as dumps, tuples as lists."""
+    if isinstance(value, BaseModel):
+        return value.model_dump()
+    if isinstance(value, (list, tuple)):
+        return [_plain(item) for item in value]
+    if isinstance(value, dict):
+        return {key: _plain(item) for key, item in value.items()}
+    return value
+
+
+def _mark_edited_ancestors(value: Any) -> bool:
+    """Mark a field set when it holds an edit; return whether ``value`` is set.
+
+    Two kinds of edit record no assignment on the field that holds them, so
+    ``exclude_unset`` would drop them:
+
+    - an attribute edit below an unset parent
+      (``spec.environment.water.depth = x`` records the edit on ``water``);
+    - an in-place edit inside a default list or dictionary
+      (``spec.simulation.stages[1] = 30``, ``properties["Cd"] = ...``).
+
+    An unset field is marked when anything below it is set, or when it is a
+    container that no longer equals its declared default. Unedited defaults
+    stay unset. No validation is run.
     """
     if isinstance(value, BaseModel):
-        for name in type(value).model_fields:
-            if _mark_edited_ancestors(getattr(value, name, None)):
+        for name, field in type(value).model_fields.items():
+            item = getattr(value, name, None)
+            below = _mark_edited_ancestors(item)
+            if name in value.model_fields_set:
+                continue
+            if below or (
+                isinstance(item, (list, tuple, dict))
+                and _differs_from_default(field, item, value)
+            ):
                 value.__pydantic_fields_set__.add(name)
         return bool(value.model_fields_set)
     if isinstance(value, (list, tuple)):
