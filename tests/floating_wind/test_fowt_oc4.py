@@ -175,3 +175,22 @@ def test_run_packages_written(tmp_path):
         assert "validated" in text and "Expected" in text
     surge = (tmp_path / "LC1_surge_decay" / "run.md").read_text(encoding="utf-8")
     assert "106.89 s" in surge and "10 %" in surge
+
+
+def test_run_package_rerun_keeps_saved_results(tmp_path):
+    """A rerun must never delete files the writer did not produce (e.g. .sim results)."""
+    script = ROOT / "scripts" / "fowt" / "write_oc4_run_packages.py"
+    module_spec = importlib.util.spec_from_file_location("oc4_packages_rerun", script)
+    module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(module)
+    assert module.main(["x", str(tmp_path)]) == 0
+    master = tmp_path / "LC1_surge_decay" / "model" / "master.yml"
+    first = master.read_bytes()
+    assert module.main(["x", str(tmp_path)]) == 0  # untouched packages regenerate
+    assert master.read_bytes() == first
+    saved = tmp_path / "LC1_surge_decay" / "model" / "LC1_surge_decay.sim"
+    saved.write_bytes(b"solver results")
+    with pytest.raises(FileExistsError, match="LC1_surge_decay.sim"):
+        module.main(["x", str(tmp_path)])
+    assert saved.read_bytes() == b"solver results"
+    assert master.read_bytes() == first

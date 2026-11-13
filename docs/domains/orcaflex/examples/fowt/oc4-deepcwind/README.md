@@ -91,7 +91,9 @@ Five packages, one per case, each holding `spec.yml`, the generated model
 (`model/master.yml`) and a `run.md` with the exact settings and the expected
 values with tolerances. The OC4 basis carries no rotor thrust and no sea state,
 so only still-water cases are prepared.
-`scripts/fowt/write_oc4_run_packages.py <output_dir>` regenerates them.
+`scripts/fowt/write_oc4_run_packages.py <output_dir>` regenerates them. Regeneration replaces a package only when every file in it is one
+the script wrote, unchanged; a folder holding anything else, such as saved
+solver results, is refused and left as it is.
 
 | Package | Expected comparator |
 |---|---|
