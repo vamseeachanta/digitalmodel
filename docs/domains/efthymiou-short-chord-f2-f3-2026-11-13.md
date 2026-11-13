@@ -19,6 +19,15 @@ deferred**. Fixed-end crowns (Eqns 2/4) are retained. No general-fixity paramete
 C is introduced. The OPB brace expression is retained without F3, and its result
 remains unverified. Method descriptions expose these limitations.
 
+## Revision history
+
+| Revision | Date | Change and reason |
+|---|---|---|
+| 0 | 2026-11-13 | F2/F3 factors and the retained base-equation limitations were recorded. |
+| 1 | 2026-11-13 | Remaining issue scope and golden-value provenance were clarified to distinguish implemented factors from unverified base equations. |
+
+Table 1a. Validation-record revisions.
+
 ## Source of truth
 
 - DNV-RP-C203 (2021), Appendix B, Table B-1: axial load, general fixity,
@@ -117,11 +126,18 @@ before the final SCF floor. The approved plan flags the candidate Eqn-11 form
 `tau^-0.54 * gamma^-0.05 * (0.99 - 0.47*beta + 0.08*beta^4) * SCF_chord_OPB`.
 The candidate is **not freshly source-verified and is not implemented**.
 
-The next checkpoint is licensed Table B-1 verification of Eqn 11, followed by
-an independently derived brace golden and F3 wiring if confirmed. Full
-general-fixity Eqns 5/6/7 likewise require source verification. A follow-up
-issue is not posted because this task permits local files only; the PR-body
-draft retains the discrepancy for the publishing owner.
+Issue #1148 remains open for the unresolved base-equation scope:
+
+- Eqn 11 source verification, followed by an independently derived OPB
+  brace-saddle golden and F3 application if the equation is confirmed.
+- General-fixity Eqns 5/6/7 source verification and implementation with
+  parameter C, including the saddle and crown terms.
+
+This change references #1148 rather than closing it. A separate follow-up
+issue has not been created; the acceptance requirement for that issue remains
+unmet. The maintainers need to create and link that issue before closing #1148,
+or retain the remaining work explicitly in #1148. Neither the retained OPB
+brace expression nor the general-fixity base equations are validated here.
 
 ## Test changes
 

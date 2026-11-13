@@ -1,4 +1,4 @@
-"""F2/F3 goldens from DNV-RP-C203 App. B, Table B-1; issue #1148.
+"""F2/F3 goldens from the F1 validation record and Decimal re-evaluation; #1148.
 
 The approved fallback retains the fixed-end axial base equations and leaves
 the unverified OPB brace equation unchanged. These are factor-wiring tests,
