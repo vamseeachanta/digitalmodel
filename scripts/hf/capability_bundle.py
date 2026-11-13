@@ -25,7 +25,8 @@ SOURCES = {
     "wall_thickness": (
         "structural/wall-thickness-explorer.json",
         "scripts/capabilities/build_wall_thickness_explorer.py",
-        "Rounded wall sweep; check columns vary by standard.",
+        "Rounded pressure-only wall sweep with zero effective tension and zero bending moment; "
+        "combined tension and bending are not evaluated. Check columns vary by standard.",
     ),
     "wall_thickness_tension_moment": (
         "structural/wall-thickness-3d.json",
