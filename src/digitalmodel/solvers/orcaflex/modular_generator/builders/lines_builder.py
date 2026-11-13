@@ -291,10 +291,14 @@ class LinesBuilder(BaseBuilder):
         section 18.3, equations 18.3.2-18.3.9; source linked in the example.
         Returned a = H/w_wet is the submerged arc's catenary parameter.
         Requires uniform segment coatings and a flat seabed; unused coating
-        alternatives do not contribute to weight or diameter.
+        alternatives do not contribute to weight or diameter. Heights are
+        measured from the emitted WaterSurfaceZ: the seabed lies the water
+        depth below it (OrcaFlex seabed data), so translating the sea surface
+        and the vessel together leaves the seed unchanged.
         """
         from digitalmodel.installation.pipelay.integrity import G_STANDARD
         from .context import BuilderContext
+        from .environment_builder import EnvironmentBuilder
         from .linetype_builder import LineTypeBuilder
         from .vardata_builder import VarDataBuilder
 
@@ -306,9 +310,16 @@ class LinesBuilder(BaseBuilder):
         if self.spec.environment.seabed.slope != 0:
             raise ValueError("J-lay seed requires a flat seabed")
 
-        # Resolve the same coating references and layers that are emitted by
-        # the other builders, without changing the caller's shared context.
+        # Resolve the same environment, coating references and layers that are
+        # emitted by the other builders, without changing the shared context.
         context = BuilderContext()
+        environment = EnvironmentBuilder(self.spec, context).build()["Environment"]
+        if environment.get("SeabedType", "Flat") != "Flat":
+            raise ValueError("J-lay seed requires a flat seabed (SeabedType Flat)")
+        surface = environment.get("WaterSurfaceZ", 0)
+        if (isinstance(surface, bool) or not isinstance(surface, (int, float))
+                or not math.isfinite(surface)):
+            raise ValueError(f"J-lay seed requires a finite numeric WaterSurfaceZ, got {surface!r}")
         coating_data = VarDataBuilder(self.spec, context).build()
         coatings = {entry["Name"]: entry["LayerThickness, LayerMaterialDensity"]
                     for entry in coating_data["VariableData"]["Coatingsorlinings"]}
@@ -335,7 +346,8 @@ class LinesBuilder(BaseBuilder):
         weight = (mass - self.spec.environment.water.density * math.pi / 4 * od**2) * G_STANDARD
         dry_weight = mass * G_STANDARD
         depth = self.spec.environment.water.depth
-        height = depth + vessel.position[2] + jlay.tower_top[2]
+        # Tower top above the seabed, which lies at WaterSurfaceZ - depth.
+        height = depth + vessel.position[2] + jlay.tower_top[2] - surface
         if (not all(math.isfinite(value) for value in (weight, dry_weight, height))
                 or min(weight, dry_weight, height) <= 0):
             raise ValueError("J-lay seed requires finite positive weights and hang-off height")

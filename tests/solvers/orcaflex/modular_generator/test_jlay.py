@@ -306,9 +306,13 @@ def test_jlay_rejects_nonfinite_vessel_geometry(example, field, component, value
 
 @pytest.mark.parametrize("field", ["position", "orientation"])
 def test_generation_rejects_nonfinite_vessel_geometry(example, tmp_path, field):
-    data = copy.deepcopy(example)
-    data["equipment"]["vessel"].setdefault(field, [0, 0, 0])[2] = math.nan
-    generator = ModularModelGenerator.from_spec(ProjectInputSpec(**data))
+    # The schema now refuses this input (test_vessel_schema_rejects_nonfinite_geometry);
+    # mutate a validated spec so the generation-time seed guard stays covered.
+    spec = ProjectInputSpec(**copy.deepcopy(example))
+    vector = getattr(spec.equipment.vessel, field)
+    vector[2] = math.nan
+    assert math.isnan(getattr(spec.equipment.vessel, field)[2])
+    generator = ModularModelGenerator.from_spec(spec)
     with pytest.raises(ValueError, match="finite"):
         generator.generate(tmp_path / "output")
     assert not (tmp_path / "output").exists()
@@ -339,3 +343,63 @@ def test_finite_vessel_translation_preserves_seed(example):
     assert seed["height"] == 1035
     assert end_b[1] == pytest.approx(100 - 20 - seed["span"])
     assert end_b[2] == 200
+
+
+def _environment(data: dict) -> dict:
+    from digitalmodel.solvers.orcaflex.modular_generator.builders.environment_builder import (
+        EnvironmentBuilder,
+    )
+
+    return EnvironmentBuilder(ProjectInputSpec(**data), BuilderContext()).build()["Environment"]
+
+
+@pytest.mark.parametrize("surface", [-50.0, 100.0])
+def test_seed_is_invariant_to_water_surface_translation(example, surface):
+    # The seabed lies `depth` below the emitted WaterSurfaceZ, so raising the
+    # sea surface and the vessel together is a rigid translation.
+    base = _builder(example).jlay_seed()
+    base_end_b = _pipeline(example)[CONN][1]
+    data = copy.deepcopy(example)
+    data["environment"]["raw_properties"] = {"WaterSurfaceZ": surface}
+    data["equipment"]["vessel"]["position"][2] += surface
+    assert _environment(data)["WaterSurfaceZ"] == surface
+    seed = _builder(data).jlay_seed()
+    for key in ("height", "suspended", "suspended_span", "span", "top_tension", "horizontal_tension"):
+        assert seed[key] == pytest.approx(base[key], rel=1e-12), key
+    assert _pipeline(data)[CONN][1] == pytest.approx(base_end_b)
+
+
+def test_seed_measures_hangoff_from_emitted_water_surface(example):
+    data = copy.deepcopy(example)
+    data["environment"]["raw_properties"] = {"WaterSurfaceZ": 10.0}
+    seed = _builder(data).jlay_seed()
+    lowered = copy.deepcopy(example)
+    lowered["equipment"]["jlay"]["tower_top"][2] = 20
+    assert seed["height"] == pytest.approx(1020)
+    assert seed["span"] == pytest.approx(_builder(lowered).jlay_seed()["span"])
+
+
+@pytest.mark.parametrize("surface", [math.nan, math.inf, "high", True])
+def test_seed_rejects_unusable_water_surface(example, surface):
+    data = copy.deepcopy(example)
+    data["environment"]["raw_properties"] = {"WaterSurfaceZ": surface}
+    with pytest.raises(ValueError, match="WaterSurfaceZ"):
+        _builder(data).jlay_seed()
+
+
+def test_seed_rejects_non_flat_seabed_type(example):
+    data = copy.deepcopy(example)
+    data["environment"]["raw_properties"] = {"SeabedType": "Profile"}
+    assert _environment(data)["SeabedType"] == "Profile"
+    with pytest.raises(ValueError, match="flat seabed"):
+        _builder(data).jlay_seed()
+
+
+@pytest.mark.parametrize("field", ["position", "orientation"])
+@pytest.mark.parametrize("component", range(3), ids=["x", "y", "z"])
+@pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf], ids=["nan", "inf", "negative-inf"])
+def test_vessel_schema_rejects_nonfinite_geometry(example, field, component, value):
+    data = copy.deepcopy(example)
+    data["equipment"]["vessel"].setdefault(field, [0, 0, 0])[component] = value
+    with pytest.raises(ValidationError, match="finite"):
+        ProjectInputSpec(**data)

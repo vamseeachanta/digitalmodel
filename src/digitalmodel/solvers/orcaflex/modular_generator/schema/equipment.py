@@ -311,6 +311,9 @@ class Vessel(BaseModel):
     def validate_vector3(cls, v: list[float]) -> list[float]:
         if len(v) != 3:
             raise ValueError(f"Must have exactly 3 components, got {len(v)}")
+        # NaN passes every comparison guard downstream; reject it here first.
+        if not all(math.isfinite(component) for component in v):
+            raise ValueError(f"{v}: every component must be finite")
         return v
 
     @field_validator("orientation")

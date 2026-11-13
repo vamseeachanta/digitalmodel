@@ -32,6 +32,9 @@
 #   Applied separately to the wet and dry arcs, dT = w*dh, ds = dV/w and
 #   dx = (H/w)*d(asinh(V/H)), where V^2 = T^2 - H^2. Horizontal and vertical
 #   forces are continuous across the waterline; each arc uses its own w.
+#   Heights are measured from the emitted WaterSurfaceZ (0 here); the
+#   seabed lies the water depth below it, so the hang-off height is
+#   depth + vessel z + tower-top z - WaterSurfaceZ = 1030 m.
 #   Extending x by the grounded remainder L - s assumes a flat seabed. This flexible,
 #   inextensible seed omits bending stiffness, stretch, drag and friction;
 #   it is not a solved installation equilibrium or a strength check.
