@@ -257,3 +257,15 @@ def test_extraction_rejects_altered_reference_volume(tmp_path):
     hydrodyn.write_bytes(original.replace(b"13917", b"14017"))
     with pytest.raises(ValueError, match=f"source digest mismatch: {hydrodyn.name}"):
         module.build(tmp_path)
+
+
+@pytest.mark.parametrize("infinite", [False, True])
+def test_periods_refuse_spec_added_mass_unlike_the_data(spec, sources, infinite):
+    """Both period variants check the emitted spec radiation against the data."""
+    _, data = sources
+    perturbed = copy.deepcopy(spec)
+    for entry in perturbed["fowt"]["hull"]["radiation"]:
+        entry["added_mass"] = [[4.0 * v for v in row] for row in entry["added_mass"]]
+    model = model_from_spec(perturbed)
+    with pytest.raises(ValueError, match="added mass differs"):
+        natural_periods(model, data, np.zeros(6), infinite_frequency_added_mass=infinite)

@@ -89,6 +89,15 @@ def main() -> int:
     result = {
         "description": "Licence-free checks of the generated IEA 15 MW / VolturnUS-S fowt "
                        "model (rigid representation). SI units.",
+        "qualification": {
+            "readiness": basis["qualification"]["readiness"],
+            "use_for_analysis": basis["qualification"]["use_for_analysis"],
+            "natural_periods": "The system inertia, and so the pitch and yaw periods "
+                               "and, through coupling, the surge period, uses the adopted tower-top reading of the RNA "
+                               "inertia tensor, which is assumed: the published tensors "
+                               "disagree and the discrepancy is unresolved (basis.yml "
+                               "qualification).",
+        },
         "gravity": spec["fowt"]["gravity"],
         "rated_thrust": thrust,
         "hub_position": hub,

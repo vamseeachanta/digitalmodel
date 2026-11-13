@@ -83,6 +83,9 @@ class Model:
     w: float                    # submerged weight per length N/m
     ea: float                   # N
     mbl: float | None           # N; None where not published
+    # (period s, 6x6 added mass SI) of every spec radiation entry, as validated;
+    # period 0 is infinite frequency. Checked against the data by natural_periods.
+    radiation_added_mass: tuple = ()
 
 
 def model_from_spec(spec: dict) -> Model:
@@ -116,7 +119,9 @@ def model_from_spec(spec: dict) -> Model:
         anchors=np.array([[*line.anchor_xy, -depth + line.anchor_height_above_seabed]
                           for line in fowt.mooring_lines]),
         length=lengths.pop(), w=w, ea=lt.axial_stiffness * KILO,
-        mbl=None if lt.minimum_breaking_load is None else lt.minimum_breaking_load * KILO)
+        mbl=None if lt.minimum_breaking_load is None else lt.minimum_breaking_load * KILO,
+        radiation_added_mass=tuple((entry.period, np.array(entry.added_mass) * KILO)
+                                   for entry in hull.radiation))
 
 
 def rotation(rx: float, ry: float, rz: float) -> np.ndarray:
@@ -259,6 +264,40 @@ def rigid_mass_matrix(model: Model) -> np.ndarray:
     return mass
 
 
+def check_spec_radiation(model: Model, data: dict, rtol: float = 1e-9) -> None:
+    """Require the spec's added mass to be the data's, entry by entry.
+
+    The periods are computed from the ``generator_data.yml`` table, which also
+    holds the zero-frequency matrix that closes it below its lowest frequency
+    (the spec has no zero-frequency entry). The generator emits the spec's
+    radiation list, so the two must hold the same periods and added-mass
+    matrices; otherwise the periods would not describe the generated model.
+    Comparison is to ``rtol`` of each matrix's largest entry (conversion
+    round-off only). Damping is not used by the period calculation and is not
+    compared.
+    """
+    from digitalmodel.floating_wind.iea15_orcaflex_spec import _expand
+
+    hydro = data["hydrodynamics"]
+    expected = {0.0: model.rho * np.array(
+        hydro["added_mass_infinite_frequency_nondimensional"]["value"])}
+    for row in hydro["radiation_by_period_nondimensional"]["value"]:
+        expected[row[0]] = model.rho * np.array(_expand(row)[0])
+    actual = list(model.radiation_added_mass)
+    periods = sorted(expected)
+    if len(actual) != len(periods) or any(
+            not math.isclose(p, q, rel_tol=rtol, abs_tol=0.0)
+            for (p, _), q in zip(actual, periods)):
+        raise ValueError("spec radiation periods differ from the generator data's "
+                         f"({len(actual)} spec entries, {len(periods)} in the data)")
+    for (period, matrix), key in zip(actual, periods):
+        reference = expected[key]
+        scale = float(np.max(np.abs(reference)))
+        if not np.allclose(matrix, reference, rtol=rtol, atol=rtol * scale):
+            raise ValueError(f"spec added mass differs from the generator data at period "
+                             f"{period:g} s (0 = infinite frequency)")
+
+
 def natural_periods(model: Model, data: dict, q0: np.ndarray, iterations: int = 50,
                     infinite_frequency_added_mass: bool = False) -> dict:
     """Coupled surge-heave-pitch and uncoupled yaw periods (s).
@@ -266,8 +305,10 @@ def natural_periods(model: Model, data: dict, q0: np.ndarray, iterations: int = 
     By default the added mass is taken at each mode's own frequency. With
     ``infinite_frequency_added_mass`` the infinite-frequency matrix is used
     for every mode, which reproduces time-domain models whose radiation
-    memory does not recover the low-frequency added mass.
+    memory does not recover the low-frequency added mass. In both cases the
+    spec radiation is first checked against the data (``check_spec_radiation``).
     """
+    check_spec_radiation(model, data)
     if infinite_frequency_added_mass:
         a_inf = model.rho * np.array(
             data["hydrodynamics"]["added_mass_infinite_frequency_nondimensional"]["value"])

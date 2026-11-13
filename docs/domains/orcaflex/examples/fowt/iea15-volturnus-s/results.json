@@ -1,5 +1,10 @@
 {
  "description": "Licence-free checks of the generated IEA 15 MW / VolturnUS-S fowt model (rigid representation). SI units.",
+ "qualification": {
+  "readiness": "partial",
+  "use_for_analysis": "assumed",
+  "natural_periods": "The system inertia, and so the pitch and yaw periods and, through coupling, the surge period, uses the adopted tower-top reading of the RNA inertia tensor, which is assumed: the published tensors disagree and the discrepancy is unresolved (basis.yml qualification)."
+ },
  "gravity": 9.80665,
  "rated_thrust": 2457229.448975228,
  "hub_position": [
