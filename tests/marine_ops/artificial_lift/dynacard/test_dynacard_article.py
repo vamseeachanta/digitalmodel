@@ -216,3 +216,25 @@ def test_every_source_has_url_and_date(page):
     assert "https://doi.org/10.17632/hnfwm9mjs6.1" in page
     assert "retrieved 11 Oct 2026" in prompts
     assert "cleansed_well_001.json" in page
+
+
+def test_pinned_figure_csv_is_the_committed_file(builder):
+    import subprocess
+    path = (FOLDER / "figure-1-cards.csv").relative_to(ROOT).as_posix()
+    pinned = subprocess.run(["git", "show", f"{builder.CARDS_COMMIT}:{path}"], cwd=ROOT,
+                            capture_output=True, check=False)
+    if pinned.returncode != 0:
+        pytest.skip("pinned commit not in this clone")
+    assert pinned.stdout.decode("utf-8") == (FOLDER / "figure-1-cards.csv").read_text(encoding="utf-8")
+
+
+def test_reproduction_bound_rounds_up(builder):
+    assert builder.upper_bound(2.29e-9) == "3 × 10⁻⁹"
+    assert builder.upper_bound(2.0e-9) == "2 × 10⁻⁹"
+    assert builder.upper_bound(9.5e-9) == "1 × 10⁻⁸"
+
+
+def test_examples_body_says_cards_are_illustrations(page):
+    section = _visible(_body(page)[_body(page).index('id="ten-conditions"'):])
+    assert "illustrate shapes rather than field wells" in section
+    assert "lifts a fluid load" not in section

@@ -38,6 +38,8 @@ REPO = "https://github.com/vamseeachanta/digitalmodel"
 # worked examples with the browser application.
 REPORT_COMMIT = "7d02ae07248b038dcdec5e7097565c02fcd152f8"
 APP_COMMIT = "feeccc283ec431540dbd0d282b60a7a2402e5475"
+# Commit that added figure-1-cards.csv; the test checks the file has not changed since.
+CARDS_COMMIT = "242f931efefa8facbe337502a2cdb4cebe08fd78"
 PLATE_DOI = "https://doi.org/10.17632/hnfwm9mjs6.1"
 
 REVISION = "Revision 3, 13 Nov 2026"
@@ -135,6 +137,16 @@ def pct_score(p: float) -> str:
     if value < 0.5:
         return "under 1 %"
     return f"{value:.0f} %"
+
+
+def upper_bound(value: float) -> str:
+    """One-digit upper bound in plain notation, for example 2.29e-09 -> 3 × 10⁻⁹."""
+    exponent = math.floor(math.log10(value))
+    digit = math.ceil(value / 10 ** exponent - 1e-12)
+    if digit == 10:
+        digit, exponent = 1, exponent + 1
+    sup = str(exponent).translate(str.maketrans("-0123456789", "⁻⁰¹²³⁴⁵⁶⁷⁸⁹"))
+    return f"{digit} × 10{sup}"
 
 
 def series_list(items) -> str:
@@ -270,7 +282,7 @@ def figure_one(f) -> str:
             '<span class="key k-pump"></span>Pump card, computed</div>'
             '<figcaption><b>Figure 1. Surface card and computed pump card, public example well.</b> '
             f'Surface stroke {r["surface_stroke_in"]:.1f} in, pump stroke {r["pump_stroke_in"]:.1f} in. '
-            'Data: <a href="figure-1-cards.csv">figure-1-cards.csv</a>.</figcaption></figure>')
+            f'Data: <a href="{blob(CARDS_COMMIT, CARDS_CSV.as_posix())}">figure-1-cards.csv</a>, version of 13 Nov 2026.</figcaption></figure>')
 
 
 def example_panel(rec) -> str:
@@ -296,13 +308,13 @@ def example_panel(rec) -> str:
         f'<div class="prob-row"><span class="prob-name">{esc(PLAIN[k])}</span>'
         f'<span class="prob-track"><span class="prob-bar" style="width:{100 * v:.1f}%"></span></span>'
         f'<span class="prob-value">{pct_score(v)}</span></div>' for k, v in probs)
-    return (f'<section class="example-panel" aria-live="polite" id="example-{rec["index"]}">'
+    return (f'<section class="example-panel" id="example-{rec["index"]}">'
             f'<h3>Example {rec["index"]}: {esc(rec["english_gloss"])}</h3>{svg}'
             '<div class="legend small"><span class="key k-surface"></span>Surface card'
             '<span class="key k-plate"></span>Plate shape<span class="key k-pump"></span>Pump card, computed</div>'
             f'<div class="probs" aria-label="Shape model, three highest classes">{bars}</div><ul>'
             f'<li>Pump card recovered within {rec["round_trip"]["load_nrmse_pct"]:.1f} % of its load range.</li>'
-            f'<li>Pump fills to {a["fillage_pct"]:.1f} % and lifts a fluid load of {a["fluid_load_lbf"]:,.0f} lbf.</li>'
+            f'<li>Fillage reads {a["fillage_pct"]:.1f} % and fluid load {a["fluid_load_lbf"]:,.0f} lbf.</li>'
             f'<li>{esc(reading)}</li></ul></section>')
 
 
@@ -315,7 +327,7 @@ def examples_view(f) -> str:
             f'<tr tabindex="0" data-example="{rec["index"]}"><td>{rec["index"]}</td>'
             f'<td>{esc(rec["english_gloss"])}</td>'
             f'<td>{esc(PLAIN[shape["classification"]])} ({pct_score(shape["confidence"])})</td>'
-            f'<td class="{"yes" if agrees else "no"}">{"yes" if agrees else "no"}</td>'
+            f'<td class="{"yes" if agrees else "no"}">{("yes, assumed" if rec["crosswalk_kind"] == "assumed" else "yes") if agrees else "no"}</td>'
             f'<td class="num">{rec["analysis"]["fillage_pct"]:.0f}</td>'
             f'<td class="num">{rec["analysis"]["fluid_load_lbf"]:,.0f}</td></tr>')
     table = ('<div class="table-wrap"><table class="examples"><thead><tr><th>No.</th><th>Condition (plate label)</th>'
@@ -325,7 +337,7 @@ def examples_view(f) -> str:
     readme = blob(APP_COMMIT, "docs/domains/artificial_lift/dynacard-examples/README.md")
     return (f'<figure id="figure-2"><div class="examples-view"><div class="examples-table">{table}'
             '<p class="hint">Point at a row, or select it, to show that example.</p></div>'
-            f'<div class="examples-panels">{panels}</div></div>'
+            f'<div class="examples-panels" aria-live="polite">{panels}</div></div>'
             '<figcaption><b>Figure 2. Ten pump conditions: model reading and cards.</b> '
             f'Data: one CSV per example in the <a href="{readme}">worked examples</a>.</figcaption></figure>')
 
@@ -352,37 +364,37 @@ def body(f) -> str:
 <blockquote class="takeaway">A surface card, measured at the top of a rod-pumped well, carries enough to see the pump at the bottom of the well and to screen that pump from the office.</blockquote>
 <div class="opening">
 <p>A rod pump works at the bottom of the well, out of sight. What the operator measures is the surface card: the load on the polished rod against its position, over one stroke. That card mixes the pump's work with the weight, stretch and vibration of the rod string, so a pump problem can hide inside it.</p>
-<p>The capability shown here takes the rod string out of the picture. From the surface card and the well's rod and pump data, it computes the pump card, reads how far the plunger travels, how full the pump fills and what load it lifts, and gives a first reading of the pump's condition. It runs in a web page with nothing to install, so an engineer or a manager can screen a well from the office and plan the well visit around a specific check.</p>
+<p>The capability shown here takes the rod string out of the picture. From the surface card and the well's rod and pump data, it computes the pump card, reads how far the plunger travels, how full the pump fills and what load it lifts, and gives a first reading of the pump's condition. It runs in a web page, so a well can be screened from the office and the well visit planned around a specific check.</p>
 </div>
 <p>Based on public data, two of the cards are shown in Figure 1.</p>
 <ul>
 <li>The blue loop is the surface card of a public example well, measured at the top of the rod string.</li>
 <li>The orange loop is the pump card computed from it, at the bottom of the {f['rod_length']:,.0f} ft rod string.</li>
 <li>The rods stretch and vibrate, so the {r['surface_stroke_in']:.1f} in surface stroke becomes a {r['pump_stroke_in']:.1f} in stroke at the pump.</li>
-<li>The lower right corner of the pump card is cut away: on the way down, the load leaves the plunger only when the plunger reaches liquid. This is the mark of a pump that is not full.</li>
 </ul>
 {figure_one(f)}
 <h2 id="key-conclusions">Key conclusions</h2>
 <p>The key conclusions for the example well are as follows:</p>
 <ul>
 <li>The pump fills to {r['fillage_pct']:.0f} % of its stroke. At 24 hours a day and no slip, it displaces {r['pump_displacement_bbl_day']:.1f} bbl/day, against {r['gross_displacement_bbl_day']:.1f} bbl/day for a full pump, so about {f['unused_capacity']:.0f} bbl/day of pump capacity is not used.</li>
-<li>The pump has more capacity than the liquid reaching it, which supports a review of pumping speed or run time against the well's inflow.</li>
+<li>The pump is not full on each stroke, so it has spare capacity at this speed. Whether liquid inflow or gas limits the fill is a check for the well.</li>
 <li>The plunger lifts a fluid load of {r['fluid_load_lbf']:,.0f} lbf on each upstroke.</li>
 <li>The pump stroke is {r['pump_stroke_in']:.1f} in, {100 * r['stroke_ratio']:.0f} % of the surface stroke. Rod stretch and rod dynamics take the rest, which the surface card alone does not separate.</li>
 <li>The card shape reads as {top['label'].lower()}{GLOSS.get(top['label'].lower(), '')}. This reading is a hypothesis to check at the well; the pump card, the fillage and the fluid load are the result.</li>
+<li>The well record marks this card as a shutdown card that the source system could not analyse, so the fillage and the fluid load rest on this calculation alone.</li>
 </ul>
-<p>Two numerical methods are available for the pump card: a finite-difference method and a frequency-domain method. On this well they agree closely, within {r['gibbs_default_load_nrmse_pct']:.2f} % of the load range, so either gives the same result. Both are in the reusable prompt. The comparison is given in Appendix B, and the inputs and limits of the example well in Appendix A.</p>
+<p>Two numerical methods are available for the pump card: a finite-difference method and a frequency-domain method. On this well their pump cards agree closely, within {r['gibbs_default_load_nrmse_pct']:.2f} % of the load range. Both are in the reusable prompt. The comparison is given in Appendix B, and the inputs and limits of the example well in Appendix A.</p>
 <h2 id="ten-conditions">Ten pump conditions read from their surface cards</h2>
-<p>Based on public data, ten common pump conditions are run through the same analysis, from surface card to pump card to a reading of the pump's condition. They are shown in Figure 2.</p>
+<p>Based on public data, ten common pump conditions are run through the same analysis, from surface card to pump card to a reading of the pump's condition. Each surface card is built from a published pump card shape at an assumed stroke and load, so the cards illustrate shapes rather than field wells. They are shown in Figure 2.</p>
 <ul>
 <li>Every pump card is recovered within {f['nrmse_min']:.1f} to {f['nrmse_max']:.1f} % of its load range.</li>
 <li>The shape model names {f['matches']} of the 10 conditions correctly.</li>
-<li>Where it misses, {miss_lines}. A model reading is a hypothesis to check at the well.</li>
+<li>Where it misses, {miss_lines}.</li>
 </ul>
 {examples_view(f)}
 <p>How the ten examples are built, and the full values, are given in Appendix C.</p>
 <h2 id="own-card">Run the analysis on your own card</h2>
-<p>The same analysis runs in a web page that works offline. Load a surface card with the well's rod and pump data, and the page draws the pump card and reads fillage, fluid load and the model readings, with the same numbers as the library. The page is in the <a href="{app}">digitalmodel library</a>.</p>
+<p>The same analysis runs in a web page in the <a href="{app}">digitalmodel library</a>; it needs no installation and no network once its files are on disk. Load a surface card with the well's rod and pump data, and the page draws the pump card and reads fillage, fluid load and the model readings.</p>
 <p><a href="{report_md}">Read the full study</a></p>
 <p>To try it out or adapt the analysis, see <a href="#appendix-d">reusable prompt</a>.</p>
 <p>The work leaves open the accuracy of the model readings on field cards: both models are trained on synthetic cards, and no labelled field cards were available to test them.</p>
@@ -394,7 +406,7 @@ def body(f) -> str:
 <li>Gibbs, S. G. (1963). Predicting the Behavior of Sucker-Rod Pumping Systems. SPE-588-PA. <a href="https://doi.org/10.2118/588-PA">doi:10.2118/588-PA</a>.</li>
 <li>Everitt, T. A. and Jennings, J. W. (1992). An Improved Finite-Difference Calculation of Downhole Dynamometer Cards for Sucker-Rod Pumps. SPE-18189-PA. <a href="https://doi.org/10.2118/18189-PA">doi:10.2118/18189-PA</a>.</li>
 <li>Diagnostic plate of ten pump working conditions. Mendeley Data, version 1, CC0 1.0. <a href="{PLATE_DOI}">doi:10.17632/hnfwm9mjs6.1</a>, retrieved 11 Oct 2026.</li>
-<li>digitalmodel library, MIT licence. <a href="{REPO}">github.com/vamseeachanta/digitalmodel</a>.</li>
+<li>digitalmodel library, MIT licence, version of 12 Nov 2026. <a href="{tree(REPORT_COMMIT, "")}">github.com/vamseeachanta/digitalmodel</a>.</li>
 </ol>
 """
 
@@ -469,11 +481,11 @@ def appendices(f) -> str:
 <h2 id="appendix-c">Appendix C The ten examples in detail</h2>
 <p>How the ten examples are built and their full values are given in this appendix.</p>
 <ul>
-<li>Each of the ten shapes of the public diagnostic plate [3] is scaled to an assumed {basis['stroke_in']['value']:.0f} in pump stroke and to the static fluid load of a {w['plunger_diameter_in']:.1f} in plunger at {w['pump_depth_ft']:,.0f} ft ({basis['load_range_lbf']['value']:,.0f} lbf). The plate gives shapes only, with no stroke or load.</li>
+<li>Each of the ten shapes of the public diagnostic plate [3] is scaled to an assumed {basis['stroke_in']['value']:.0f} in pump stroke and to the static fluid load of a {w['plunger_diameter_in']:.1f} in plunger at {w['pump_depth_ft']:,.0f} ft with {w['tubing_pressure_psi']:.0f} psi tubing pressure ({basis['load_range_lbf']['value']:,.0f} lbf). These are shape illustrations, not field pump cards. The plate gives shapes only, with no stroke or load.</li>
 <li>Each scaled shape is lifted to a surface card through the rod string of the example well and then analysed like a measured card. The surface cards are therefore synthesised, not measured.</li>
 <li>The plate labels insufficient supply and sand production have no model class of the same name; they are matched to fluid pound and sand wear by assumption.</li>
 <li>The shape model names {f['matches']} of the 10 conditions; the second, shipped model names {f['shipped']}. Model scores are the models' own outputs, not the chance that a fault is present.</li>
-<li>The web page reproduces the library on all ten examples: pump loads within {f['repro_load']:.0e} lbf and {"the same" if f['repro_labels'] else "different"} model labels.</li>
+<li>The web page reproduces the library on all ten examples: pump loads within {upper_bound(f['repro_load'])} lbf and {"the same" if f['repro_labels'] else "different"} model labels.</li>
 </ul>
 {table(["No.", "Condition", "Surface stroke (in)", "Pump stroke (in)", "Fillage (%)", "Fluid load (lbf)", "Round trip (% of load range)", "Shape model", "Shipped model"], c_rows, "Table C1. Ten worked examples, finite-difference method.")}
 <p>The probabilities of all model classes are shown in the <a href="{matrix}">diagnostics matrix</a>; each example's figure and data are in the <a href="{readme}">worked examples</a>.</p>"""
@@ -487,7 +499,7 @@ def appendices(f) -> str:
 <li>Data required: none beyond the public data below.</li>
 <li>Data required to adapt: a surface card over one stroke, the rod string, the pump depth and plunger diameter, and the pumping speed.</li>
 <li>Paid or behind an account: none.</li>
-<li>Changes over time: none; the code is pinned to one commit.</li>
+<li>Changes over time: none; each link is pinned to a commit.</li>
 </ul>
 <p>Give this prompt to your assistant: <a href="{prompt}">reusable prompt for the pump card analysis</a>, in the digitalmodel library.</p>
 <p>Data: public example well, file <a href="{fixture}">cleansed_well_001.json</a> of the digitalmodel library, MIT licence, version of 12 Nov 2026; public diagnostic plate, Mendeley Data, <a href="{PLATE_DOI}">doi:10.17632/hnfwm9mjs6.1</a>, CC0 1.0, retrieved 11 Oct 2026.</p>
@@ -541,7 +553,7 @@ table.examples tbody tr{cursor:pointer}table.examples tbody tr:hover,table.examp
 aside.offer{border:1px solid var(--line);border-radius:6px;padding:10px 14px;font:14px system-ui,sans-serif;color:var(--ink2);margin:16px 0}
 .signoff{font:12px system-ui,sans-serif;color:var(--muted)}
 ol.refs{font-size:14px}
-@media print{.contents,.hint{display:none}.page{display:block}}
+@media print{.contents,.hint{display:none}.page{display:block}.js .example-panel{display:block}.js .examples-view{display:block}}
 """ % (BLUE, ORANGE, GREY)
 
 SCRIPT = """
@@ -549,7 +561,7 @@ SCRIPT = """
 var root=document.documentElement;root.className+=' js';
 var rows=Array.prototype.slice.call(document.querySelectorAll('tr[data-example]'));
 function show(n){
-  rows.forEach(function(r){var on=r.getAttribute('data-example')===n;r.classList.toggle('active',on);r.setAttribute('aria-selected',on?'true':'false');});
+  rows.forEach(function(r){var on=r.getAttribute('data-example')===n;r.classList.toggle('active',on);});
   Array.prototype.forEach.call(document.querySelectorAll('.example-panel'),function(p){p.classList.toggle('active',p.id==='example-'+n);});
 }
 rows.forEach(function(r){var n=r.getAttribute('data-example');
@@ -567,7 +579,7 @@ if(rows.length){show(rows[0].getAttribute('data-example'));}
 def build_html(root: Path = ROOT) -> str:
     f = facts(load_sources(root))
     sections = [("key-conclusions", "Key conclusions"), ("ten-conditions", "Ten pump conditions"),
-                ("own-card", "Run it on your own card"), ("references", "References"),
+                ("own-card", "Run the analysis on your own card"), ("references", "References"),
                 ("appendix-a", "A Example well"), ("appendix-b", "B Two methods"),
                 ("appendix-c", "C Ten examples"), ("appendix-d", "D Reusable prompts")]
     csp = ("default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; "
