@@ -11,7 +11,7 @@ from typing import Any, Iterator
 import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ._overrides import apply_dotted_override
+from ._overrides import apply_dotted_override, dump_authored
 from .environment import Current, SeabedStiffness, Waves, Wind
 from .root import ProjectInputSpec
 
@@ -612,9 +612,11 @@ class CampaignGenerator:
                     # to their plain values; a python-mode dump would emit
                     # !!python/object/apply tags that the yaml.safe_load used
                     # by spec.yml consumers (cli.py, ModularModelGenerator)
-                    # cannot read.
+                    # cannot read. Only authored and edited fields are
+                    # written, so schema defaults stay unset when spec.yml is
+                    # loaded again (riser-plus-generic rendering relies on it).
                     (run_dir / "spec.yml").write_text(
-                        yaml.dump(spec.model_dump(mode="json"), default_flow_style=False)
+                        yaml.dump(dump_authored(spec, mode="json"), default_flow_style=False)
                     )
                     manifest_runs.append({"name": name, "combo": combo})
                     logger.info("Generated spec: %s", name)

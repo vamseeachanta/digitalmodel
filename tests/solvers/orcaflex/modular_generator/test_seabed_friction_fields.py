@@ -9,6 +9,7 @@ output so existing models are unchanged.
 from __future__ import annotations
 
 import pytest
+import yaml
 
 from digitalmodel.solvers.orcaflex.modular_generator.builders.context import BuilderContext
 from digitalmodel.solvers.orcaflex.modular_generator.builders.riser_linetype_builder import (
@@ -228,3 +229,70 @@ def test_uncited_friction_defaults_are_recorded_as_unqualified():
             "SeabedLateralFrictionCoefficient"]
         assert any(k.startswith("`MooringRouter._friction` default") and label in k
                    and v == f"{default:.1f}" for k, v in rows.items()), label
+
+
+# Campaign sweeps must not turn unset typed friction into authored defaults.
+# A riser-plus-generic spec upgraded before friction became a typed field keeps
+# its native friction in the generic fallback (simulated below by moving the
+# values back to the fallback after upgrade). The authored native 0.9/0.3 are
+# the expected outputs after an unrelated water-depth sweep; with no native
+# keys, the expected output carries no friction keys at all.
+
+
+def _campaign_line_type(upgraded, tmp_path, spec_only):
+    from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+        CampaignGenerator,
+    )
+
+    campaign = {
+        "base": upgraded,
+        "campaign": {"sweeps": [{"parameter": "environment.water.depth",
+                                 "values": [180], "alias": "wd"}]},
+        "output_naming": "{base_name}_wd{wd}",
+    }
+    campaign_file = tmp_path / "campaign.yml"
+    campaign_file.write_text(yaml.safe_dump(campaign, sort_keys=False), encoding="utf-8")
+    out = tmp_path / "out"
+    result = CampaignGenerator(campaign_file).generate(out, spec_only=spec_only)
+    assert result.errors == [] and result.run_count == 1
+    (run_dir,) = result.run_dirs
+    if spec_only:
+        spec = yaml.safe_load((run_dir / "spec.yml").read_text(encoding="utf-8"))
+        assert spec["environment"]["water"]["depth"] == 180
+        return _fallback_line_type(spec, tmp_path, "from_spec_yml")
+    objects = yaml.safe_load(
+        (run_dir / "includes" / "20_generic_objects.yml").read_text(encoding="utf-8"))
+    (line_type,) = objects["LineTypes"]
+    return line_type
+
+
+def _upgraded_with_fallback_friction(single_riser, friction):
+    upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
+    typed = upgraded["riser"]["line_types"][0]
+    assert "seabed_lateral_friction" not in typed
+    assert "seabed_axial_friction" not in typed
+    upgraded["generic"]["line_types"][0]["properties"].update(friction)
+    return upgraded
+
+
+@pytest.mark.parametrize("spec_only", [False, True], ids=["generated", "spec_yml"])
+def test_campaign_sweep_keeps_retained_native_friction(single_riser, tmp_path, spec_only):
+    upgraded = _upgraded_with_fallback_friction(single_riser, {_LATERAL: 0.9, _AXIAL: 0.3})
+    line_type = _campaign_line_type(upgraded, tmp_path, spec_only)
+    assert (line_type[_LATERAL], line_type[_AXIAL]) == (0.9, 0.3)
+
+
+@pytest.mark.parametrize("spec_only", [False, True], ids=["generated", "spec_yml"])
+def test_campaign_sweep_adds_no_friction_default(single_riser, tmp_path, spec_only):
+    upgraded = _upgraded_with_fallback_friction(single_riser, {})
+    line_type = _campaign_line_type(upgraded, tmp_path, spec_only)
+    assert _LATERAL not in line_type and _AXIAL not in line_type
+
+
+def test_campaign_sweep_still_applies_authored_friction(single_riser, tmp_path):
+    """Provenance is kept, not frozen: authored typed friction still wins."""
+    upgraded = _upgraded_with_fallback_friction(single_riser, {_LATERAL: 0.9, _AXIAL: 0.3})
+    upgraded["riser"]["line_types"][0].update(
+        seabed_lateral_friction=0.8, seabed_axial_friction=0.4)
+    line_type = _campaign_line_type(upgraded, tmp_path, spec_only=False)
+    assert (line_type[_LATERAL], line_type[_AXIAL]) == (0.8, 0.4)
