@@ -140,6 +140,8 @@ class MooringRouter(BaseRouter):
             "line_types": line_types,
             "lines": lines,
         }
+        if spec.clump_types:
+            result["clump_types"] = [self._clump_type(ct) for ct in spec.clump_types]
         if winches:
             result["winches"] = winches
 
@@ -315,6 +317,16 @@ class MooringRouter(BaseRouter):
         if ml.lay_azimuth is not None:
             properties["LayAzimuth"] = ml.lay_azimuth
 
+        if ml.attachments:
+            # Native attachment table (public example "A01 Lazy wave riser"):
+            # z is the arc length measured from End A, which is the anchor.
+            properties[
+                "AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo"
+            ] = [
+                [att.clump_type, 0, 0, att.arc_length, "End A"]
+                for att in sorted(ml.attachments, key=lambda att: att.arc_length)
+            ]
+
         return {
             "name": ml.name,
             "properties": properties,
@@ -347,6 +359,27 @@ class MooringRouter(BaseRouter):
                 "Tension": ml.pretension,
             },
         }
+
+    @staticmethod
+    def _clump_type(ct) -> dict[str, Any]:
+        """ClumpType in the format of builders/riser_clumptype_builder.py.
+
+        Directional properties are [normal, ~, axial]; a clump whose
+        displaced mass (1.025 x volume in seawater) exceeds its mass is a
+        submerged buoy.
+        """
+        properties: dict[str, Any] = {
+            "Mass": ct.mass,
+            "Volume": ct.volume,
+            "Height": ct.height,
+            "AlignWith": "Line axes",
+        }
+        # Key order follows the native example: DragArea, Cd, Ca.
+        if ct.drag_area:
+            properties["DragArea"] = [ct.drag_area[0], None, ct.drag_area[1]]
+        properties["Cd"] = [ct.drag_coefficient[0], None, ct.drag_coefficient[1]]
+        properties["Ca"] = [ct.added_mass_coefficient[0], None, ct.added_mass_coefficient[1]]
+        return {"name": ct.name, "properties": properties}
 
     @staticmethod
     def _friction(seg: MooringSegment, default: float) -> float:
