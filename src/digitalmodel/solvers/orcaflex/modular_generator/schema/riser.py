@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import math
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class RiserConfiguration(str, Enum):
@@ -299,6 +300,11 @@ def _vector3(v: list[float]) -> list[float]:
     return v
 
 
+def _require_finite(v: list[float]) -> None:
+    if not all(math.isfinite(c) for c in v):
+        raise ValueError(f"Components must be finite, got {v}")
+
+
 class RiserBuoy(BaseModel):
     """Lumped 6D buoy for buoy-supported risers, hybrid towers and arches.
 
@@ -326,6 +332,9 @@ class RiserBuoy(BaseModel):
         added_mass_coefficient: Added mass coefficient per axis [x, y, z].
     """
 
+    # Non-finite values would be copied unchanged into the OrcaFlex model.
+    model_config = ConfigDict(allow_inf_nan=False)
+
     name: str = Field(..., min_length=1, description="Buoy name")
     connection: str = Field(default="Free", min_length=1, description="Connection")
     position: list[float] = Field(..., description="Initial position [x, y, z] (m)")
@@ -346,12 +355,14 @@ class RiserBuoy(BaseModel):
     )
     @classmethod
     def validate_vector3(cls, v: list[float]) -> list[float]:
+        _require_finite(v)
         return _vector3(v)
 
     @field_validator("moments_of_inertia", "drag_area", "drag_coefficient",
                      "added_mass_coefficient")
     @classmethod
     def validate_non_negative(cls, v: list[float]) -> list[float]:
+        _require_finite(v)
         if any(c < 0 for c in v):
             raise ValueError(f"Components must be >= 0, got {v}")
         return v
