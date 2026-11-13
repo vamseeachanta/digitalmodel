@@ -15,7 +15,9 @@ apply. Sources:
   the OpenFAST linearisation ``5MW_OC4Semi_Linear.1.lin``, whose state matrix
   gives the comparator natural periods.
 
-``raw_dir`` holds the r-test files under their base names.
+``raw_dir`` holds the r-test files under their base names. Their SHA-256
+digests are verified against the pinned values before parsing; any other
+bytes are refused.
 """
 from __future__ import annotations
 
@@ -38,6 +40,18 @@ FILES = {
     "hydrodyn": "glue-codes/openfast/5MW_OC4Semi_Linear/NRELOffshrBsline5MW_OC4DeepCwindSemi_HydroDyn.dat",
     "map": "glue-codes/openfast/5MW_OC4Semi_Linear/NRELOffshrBsline5MW_OC4DeepCwindSemi_MAP.dat",
     "lin": "glue-codes/openfast/5MW_OC4Semi_Linear/5MW_OC4Semi_Linear.1.lin",
+}
+# Expected bytes at COMMIT, pinned independently of the generated output (as in
+# extract_iea15_generator_data.py); verified before any file is parsed.
+EXPECTED_SHA256 = {
+    "elastodyn": "cbc370e5151625df2a4f1cab50ede39b8d6bd9a91747f362064e8821c288d699",
+    "tower": "226d37eb0d5b4f7b387b7d3e0b29a15cf95a54ee1146fb595426affaf9279b83",
+    "blade": "615b5352843f118e85c02616f8a0ae401e34c1df07d6dd3ed6f77bdd3d4198b5",
+    "hst": "ba933c18034bacc87a932254ad47047d44eef006bc150b76fecd3445965482d8",
+    "wamit1": "6d05fa1d1f159c1c0a44a0b4f9a2029113c7bf96b942742a1681267fdff84792",
+    "hydrodyn": "6096dbe11cb79fcb770485bdcce30042669d8f9c781adf9e25d48db19837f07a",
+    "map": "afbd4ed14f172a8ad07dc1bd1485e0154f2283badece7fe81b698f0ba0550daf",
+    "lin": "4098c8badb84b9324d2fd36193bdf23fb5fe2b5d1fd000f96979cc3521fe0660",
 }
 # NumPy 2 renamed trapz to trapezoid; support both.
 _trapz = getattr(np, "trapezoid", None) or np.trapz
@@ -225,6 +239,10 @@ def aggregate(parts: list[dict]) -> dict:
 
 def build(raw: Path) -> tuple[dict, dict]:
     names = {k: raw / Path(v).name for k, v in FILES.items()}
+    digests = {k: hashlib.sha256(p.read_bytes()).hexdigest() for k, p in names.items()}
+    for key, digest in digests.items():
+        if digest != EXPECTED_SHA256[key]:
+            raise ValueError(f"source digest mismatch: {names[key].name}")
     parts = components(raw)
     system = aggregate(parts)
     agg_src = ("aggregation of the components listed under system.components; "
@@ -307,8 +325,7 @@ def build(raw: Path) -> tuple[dict, dict]:
         "source_url": f"https://github.com/OpenFAST/r-test/tree/{COMMIT}",
         "licence": "Apache License 2.0 (LICENSE at the pinned revision)",
         "extraction": "scripts/fowt/extract_oc4_generator_data.py",
-        "source_sha256": {FILES[k]: hashlib.sha256(p.read_bytes()).hexdigest()
-                          for k, p in names.items()},
+        "source_sha256": {FILES[k]: digest for k, digest in digests.items()},
         "hydrodynamics": {
             "wamit_length_scale": item(value(names["hydrodyn"], "WAMITULEN"), "m",
                                        src("hydrodyn", "WAMITULEN")),

@@ -683,6 +683,68 @@ def test_rna_products_of_inertia_carried_by_principal_axes_child(spec_dict, prod
         assert buoys[other] == reference[other]
 
 
+def _assert_rebuilds(full, attitude, moments):
+    r = _rotation_from_buoy_attitude(attitude)
+    rebuilt = [[sum(r[i][k] * moments[k] * r[j][k] for k in range(3)) for j in range(3)]
+               for i in range(3)]
+    scale = max(full[i][i] for i in range(3))
+    for i in range(3):
+        for j in range(3):
+            assert rebuilt[i][j] == pytest.approx(full[i][j], abs=1e-9 * scale)
+
+
+def test_rna_tied_axis_inertia_routes(spec_dict):
+    """Principal axes at 45 deg tie two host axes; the assignment is one-to-one.
+
+    [[2, 1, 0], [1, 2, 0], [0, 0, 2]] passes schema validation; its x and y
+    principal axes lie at 45 deg in the xy plane, so a per-axis argmax picks
+    the same host axis for both and routing failed.
+    """
+    fowt = _flexible(spec_dict)
+    rna = fowt["rna"]
+    unit = rna["inertia_about_centre_of_mass"][2][2] / 2.0
+    tensor = [[2 * unit, unit, 0.0], [unit, 2 * unit, 0.0], [0.0, 0.0, 2 * unit]]
+    rna["inertia_about_centre_of_mass"] = tensor
+    FowtSpec(**fowt)  # valid input
+    child = _buoys(fowt)[f"{rna.get('name', 'RNA')} inertia"]
+    assert sorted(child["MomentsOfInertia"]) == pytest.approx(
+        [unit, 2 * unit, 3 * unit], rel=1e-12)
+    _assert_rebuilds(tensor, child["InitialAttitude"], child["MomentsOfInertia"])
+    assert all(abs(angle) <= 45.0 + 1e-9 for angle in child["InitialAttitude"])
+
+
+def test_principal_axes_one_to_one_for_valid_tensors():
+    """Every symmetric positive-definite tensor yields a proper rotation.
+
+    Seeded random tensors, the 45 deg tie, a fully tied (isotropic-pair)
+    tensor and principal axes from a 180 deg turn about (1, 1, 1), whose
+    columns all have negative diagonals before sign correction.
+    """
+    import numpy as np
+
+    from digitalmodel.solvers.orcaflex.modular_generator.routers.fowt_router import (
+        buoy_attitude,
+        principal_axes,
+    )
+
+    rng = np.random.default_rng(4014)
+    n = np.ones(3) / math.sqrt(3.0)
+    turn = 2.0 * np.outer(n, n) - np.eye(3)
+    tensors = [
+        [[2.0, 1.0, 0.0], [1.0, 2.0, 0.0], [0.0, 0.0, 2.0]],
+        [[2.0, 0.0, 1.0], [0.0, 2.0, 0.0], [1.0, 0.0, 2.0]],
+        [[3.0, 1.0, 1.0], [1.0, 3.0, 1.0], [1.0, 1.0, 3.0]],
+        (turn @ np.diag([1.0, 2.0, 3.0]) @ turn.T).tolist(),
+    ]
+    for _ in range(200):
+        q, _r = np.linalg.qr(rng.normal(size=(3, 3)))
+        tensors.append((q @ np.diag(rng.uniform(1.0, 5.0, 3)) @ q.T).tolist())
+    for tensor in tensors:
+        moments, axes = principal_axes(tensor)
+        assert np.linalg.det(np.array(axes)) == pytest.approx(1.0, abs=1e-9)
+        _assert_rebuilds(tensor, buoy_attitude(axes), moments)
+
+
 def test_diagonal_rna_inertia_emits_no_child(spec_dict):
     buoys = _buoys(_flexible(spec_dict))
     assert not any(name.endswith(" inertia") for name in buoys)

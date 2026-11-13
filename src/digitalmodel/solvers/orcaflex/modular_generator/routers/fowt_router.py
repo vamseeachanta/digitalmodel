@@ -96,26 +96,31 @@ def buoy_attitude(r: list[list[float]]) -> list[float]:
 def principal_axes(inertia: list[list[float]]) -> tuple[list[float], list[list[float]]]:
     """Principal moments and the rotation whose columns are the principal axes.
 
-    Each eigenvector is matched to the host axis it lies closest to and signed
-    so that the rotation is proper (det +1) and close to the identity; the
-    moments are returned in that column order.
+    Eigenvectors are assigned to the host axes one-to-one, choosing the
+    permutation with the largest summed alignment |cos| (the first such
+    permutation when axes tie, e.g. two principal axes at 45 deg to two host
+    axes). Each column is signed so that its diagonal entry is non-negative;
+    if that leaves a reflection, the column with the smallest diagonal entry
+    is reversed, so the rotation is proper (det +1) and close to the
+    identity. The moments are returned in that column order.
     """
+    import itertools
+
     import numpy as np
 
     values, vectors = np.linalg.eigh(np.array(inertia, dtype=float))
-    order = [int(np.argmax(np.abs(vectors[:, k]))) for k in range(3)]
-    if sorted(order) != [0, 1, 2]:
-        raise ValueError("principal axes cannot be matched to the host axes")
-    columns = [0, 0, 0]
-    for k, axis in enumerate(order):
-        columns[axis] = k
+    columns = list(max(
+        itertools.permutations(range(3)),
+        key=lambda perm: sum(abs(vectors[axis, perm[axis]]) for axis in range(3)),
+    ))
     p = vectors[:, columns]
     moments = values[columns]
     for k in range(3):
         if p[k, k] < 0:
             p[:, k] = -p[:, k]
     if np.linalg.det(p) < 0:
-        raise ValueError("principal axes do not form a proper rotation")
+        k = int(np.argmin(np.abs(np.diag(p))))
+        p[:, k] = -p[:, k]
     return [float(x) for x in moments], p.tolist()
 
 
