@@ -18,9 +18,10 @@ Conventions and simplifications, all stated in the returned ``source_note``:
   22, 44 and 24 are completed from the hull's three-fold symmetry
   (A22=A11, A44=A55, A24=-A15). The zero- and infinite-frequency matrices
   held in full show these relations to 0.1 % (tested).
-* Infinite-frequency added mass mirrors the source upper triangle into the
-  lower triangle, following the WAMIT importer's symmetry policy. Source
-  values are retained unchanged in the extracted data file.
+* The spec holds the source radiation matrices unchanged. The generator's
+  fowt router emits them with the upper triangle mirrored into the lower
+  triangle, the OrcaFlex WAMIT importer's symmetry policy, after a 1 %
+  reciprocal-pair tolerance check.
 * OrcaFlex other-damping is diagonal; the HydroDyn surge-pitch coupling
   entries of ``AddBQuad`` are not represented.
 * Seabed contact stiffness and line hydrodynamic settings that are model
@@ -71,19 +72,13 @@ def _dimensional(matrix: list[list[float]], rho: float, factor: float = 1.0) -> 
     return [[rho * factor * value for value in row] for row in matrix]
 
 
-def _symmetric_upper(matrix: list[list[float]]) -> list[list[float]]:
-    """Mirror the upper triangle, matching Orcina's WAMIT import policy."""
-    return [[matrix[min(i, j)][max(i, j)] for j in range(6)] for i in range(6)]
-
-
 def radiation_entries(data: dict, rho: float) -> list[dict]:
     hydro = data["hydrodynamics"]
     if _v(hydro["wamit_length_scale"]) != 1.0:
         raise ValueError("conversion assumes WAMITULEN = 1 m")
     entries = [{
         "period": 0.0,
-        "added_mass": _dimensional(_symmetric_upper(
-            _v(hydro["added_mass_infinite_frequency_nondimensional"])), rho),
+        "added_mass": _dimensional(_v(hydro["added_mass_infinite_frequency_nondimensional"]), rho),
         "damping": [[0.0] * 6 for _ in range(6)],
     }]
     for row in hydro["radiation_by_period_nondimensional"]["value"]:
@@ -157,12 +152,18 @@ def build_spec(basis: dict, data: dict, *, thrust_kN: float | None = None,
             "basis.yml and generator_data.yml (IEA-15-240-RWT at "
             f"{data['reference_commit'][:7]}; Allen et al. 2020 NREL/TP-5000-76773). "
             "Hull mass properties are whole-system values (rigid representation). "
-            "Infinite-frequency added mass mirrors the source upper triangle "
-            "(WAMIT importer symmetry policy). "
+            "Radiation matrices are held as in the source; the generator emits the "
+            "upper triangle mirrored (WAMIT importer symmetry policy). "
             "WAMIT 22, 44, 24 completed by three-fold symmetry; AddBQuad off-diagonals "
             "dropped (OrcaFlex other damping is diagonal). Mooring Cd 2.0/0.4 and Ca "
             "0.82/0.27 from the MoorDyn input LINE TYPES at the same revision. "
-            f"Nominal chain diameter {nominal} m is not used for hydrodynamics."
+            f"Nominal chain diameter {nominal} m is not used for hydrodynamics. "
+            f"Basis readiness {basis['qualification']['readiness']}; "
+            f"use for analysis {basis['qualification']['use_for_analysis']}. "
+            "System inertia assumes the RNA tensor is about tower top with CG tensor F-P. "
+            "Retaining F24:K24 as trusted endpoint is an additional assumption; L24:Q24 "
+            "remains the independent published comparator. The tensor-reference "
+            "discrepancy remains unresolved."
         ),
     }
     if thrust_kN is not None:
@@ -217,6 +218,13 @@ def _sea_state(hs: float, tp: float, gamma: float, direction: float = 0.0) -> di
     }
 
 
+# Load cases whose run needs the licensed WAMIT import. The generated vessel
+# type carries no load RAOs, so first-order wave loading stays off in the
+# generated model (the schema rejects it without RAOs); run.md switches it on
+# after the import supplies them.
+WAVE_CASES = ("LC4_operating", "LC5_parked_extreme")
+
+
 def load_case_specs(basis: dict, data: dict, equilibrium: dict) -> dict[str, dict]:
     """Load-case matrix for the licensed runs.
 
@@ -252,12 +260,10 @@ def load_case_specs(basis: dict, data: dict, equilibrium: dict) -> dict[str, dic
     operating["environment"].update(_sea_state(
         _v(op["significant_wave_height"]), _v(op["peak_period"]), _v(op["jonswap_gamma"])))
     operating["environment"]["wind"] = {"speed": op_wind, "direction": 0.0}
-    operating["fowt"]["hull"]["include_wave_load_first_order"] = True
     cases["LC4_operating"] = operating
     parked = build_spec(basis, data, name="LC5_parked_extreme", stages=[100, 3600])
     parked["environment"].update(_sea_state(
         _v(ext["significant_wave_height"]), _v(ext["peak_period"]), _v(ext["jonswap_gamma"])))
     parked["environment"]["wind"] = {"speed": _v(ext["wind_speed"]), "direction": 0.0}
-    parked["fowt"]["hull"]["include_wave_load_first_order"] = True
     cases["LC5_parked_extreme"] = parked
     return cases

@@ -69,28 +69,28 @@ fowt:
         - 101003.49999999999
         - 0.0
         - -1.888803375
-      - - -0.021750971499999997
+      - - -0.03605254025
         - 0.0
         - 24821.71775
         - 0.0
         - -18.32713325
         - 0.0
       - - 0.0
-        - 101003.49999999999
+        - 100936.22924999999
         - 0.0
         - 11640484.249999998
         - 0.0
         - -52.643733499999996
-      - - -101004.96574999999
+      - - -100938.802
         - 0.0
-        - -18.32713325
+        - -18.450317749999996
         - 0.0
         - 11639858.999999998
         - 0.0
       - - 0.0
-        - -1.888803375
+        - -1.5875978999999998
         - 0.0
-        - -52.643733499999996
+        - -46.1107525
         - 0.0
         - 20137519.0
       damping:
@@ -7682,11 +7682,14 @@ fowt:
     anchor_height_above_seabed: 0.0
     length: 850.0
   source_note: basis.yml and generator_data.yml (IEA-15-240-RWT at e4993d6; Allen et al. 2020 NREL/TP-5000-76773).
-    Hull mass properties are whole-system values (rigid representation). Infinite-frequency added mass
-    mirrors the source upper triangle (WAMIT importer symmetry policy). WAMIT 22, 44, 24 completed by
-    three-fold symmetry; AddBQuad off-diagonals dropped (OrcaFlex other damping is diagonal). Mooring
-    Cd 2.0/0.4 and Ca 0.82/0.27 from the MoorDyn input LINE TYPES at the same revision. Nominal chain
-    diameter 0.185 m is not used for hydrodynamics.
+    Hull mass properties are whole-system values (rigid representation). Radiation matrices are held as
+    in the source; the generator emits the upper triangle mirrored (WAMIT importer symmetry policy). WAMIT
+    22, 44, 24 completed by three-fold symmetry; AddBQuad off-diagonals dropped (OrcaFlex other damping
+    is diagonal). Mooring Cd 2.0/0.4 and Ca 0.82/0.27 from the MoorDyn input LINE TYPES at the same revision.
+    Nominal chain diameter 0.185 m is not used for hydrodynamics. Basis readiness partial; use for analysis
+    assumed. System inertia assumes the RNA tensor is about tower top with CG tensor F-P. Retaining F24:K24
+    as trusted endpoint is an additional assumption; L24:Q24 remains the independent published comparator.
+    The tensor-reference discrepancy remains unresolved.
 simulation:
   time_step: 0.1
   stages:

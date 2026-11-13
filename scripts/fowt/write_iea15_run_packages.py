@@ -33,6 +33,7 @@ from digitalmodel.floating_wind.fowt_static_checks import (
 )
 from digitalmodel.floating_wind.iea15_orcaflex_spec import (
     build_spec,
+    WAVE_CASES,
     load_case_specs,
     load_sources,
     thrust_at,
@@ -140,6 +141,9 @@ def run_md(name: str, spec: dict, eq: dict, x: dict, basis: dict) -> str:
                   "   accept an origin shift caused by the rigid whole-system centre of mass.",
                   "   Use length scale 1 m and water density 1.025 te/m3. Record import warnings",
                   "   and overwritten values. The licensed import has not been exercised.",
+                  "   The generated vessel type has first-order wave loading switched off,",
+                  "   because it carries no load RAOs until this import. After the import,",
+                  "   switch on the vessel's included effect Wave load (1st order).",
                   "3. Confirm the wave train reads JONSWAP with the Hs, Tp and gamma below.",
                   f"4. Run statics, then dynamics: stages {spec['simulation']['stages']} s.", "",
                   "## Settings", "",
@@ -188,7 +192,7 @@ def main(argv: list[str]) -> int:
         (folder / "spec.yml").write_text(yaml.safe_dump(spec, sort_keys=False, width=100),
                                          encoding="utf-8", newline="\n")
         ModularModelGenerator(folder / "spec.yml").generate(folder / "model")
-        needs_hydro = spec["fowt"]["hull"].get("include_wave_load_first_order", False)
+        needs_hydro = name in WAVE_CASES
         if needs_hydro and wamit is not None:
             (folder / "hydro").mkdir()
             for file in WAMIT:

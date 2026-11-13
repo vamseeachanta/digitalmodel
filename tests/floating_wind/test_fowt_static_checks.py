@@ -25,7 +25,11 @@ from digitalmodel.floating_wind.fowt_static_checks import (
     run_checks,
     solve_catenary,
 )
-from digitalmodel.floating_wind.iea15_orcaflex_spec import build_spec, load_sources
+from digitalmodel.floating_wind.iea15_orcaflex_spec import (
+    WAVE_CASES,
+    build_spec,
+    load_sources,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "docs" / "reports" / "fowt-volturnus-mooring-analysis.manifest.json"
@@ -121,7 +125,8 @@ def test_flexible_representation_rejected_by_rigid_checks(sources):
     fowt["representation"] = "flexible"
     fowt["tower"] = {"base_elevation": 15.0, "sections": [
         {"length": 129.386, "outer_diameter": 8.0, "mass_per_length": 10.0,
-         "bending_stiffness": 1.0e9, "axial_stiffness": 1.0e8, "torsional_stiffness": 1.0e9}]}
+         "bending_stiffness": 1.0e9, "axial_stiffness": 1.0e8, "torsional_stiffness": 1.0e9,
+         "poisson_ratio": 0.3}]}  # synthetic fixture values, not reference-design data
     fowt["rna"] = {"mass": 945.77, "centre_of_mass_from_tower_top": [-7.32, 0.0, 4.6],
                    "inertia_about_centre_of_mass": [[4.0e5, 0, 0], [0, 2.7e5, 0], [0, 0, 2.9e5]]}
     with pytest.raises(NotImplementedError, match="flexible representation"):
@@ -224,7 +229,12 @@ def test_load_case_matrix(sources):
         basis["environment"]["operating"]["peak_period"]["value"])
     assert op["environment"]["raw_properties"]["WaveTrains"][0]["WaveGamma"] == pytest.approx(
         basis["environment"]["operating"]["jonswap_gamma"]["value"])
-    assert op["fowt"]["hull"]["include_wave_load_first_order"] is True
+    # The generated vessel type carries no load RAOs, so the generated model
+    # keeps first-order wave loading off; run.md switches it on after the
+    # licensed WAMIT import supplies the RAOs.
+    assert WAVE_CASES == ("LC4_operating", "LC5_parked_extreme")
+    for name in WAVE_CASES:
+        assert cases[name]["fowt"]["hull"].get("include_wave_load_first_order", False) is False
     parked = cases["LC5_parked_extreme"]
     assert "rotor_thrust" not in parked["fowt"]
     assert parked["environment"]["waves"]["height"] == pytest.approx(10.7)
@@ -313,3 +323,5 @@ def test_wave_packages_include_wamit_import_output(tmp_path):
         assert "requested data" in instructions
         assert "centre of mass" in instructions
         assert "phase origins" in instructions
+        assert "Wave load (1st order)" in instructions
+

@@ -19,6 +19,34 @@ from .base_router import BaseRouter
 DRAUGHT_NAME = "Draught1"
 
 
+def symmetric_radiation_matrix(matrix: list[list[float]]) -> list[list[float]]:
+    """Mirror the upper triangle within the source acceptance tolerance.
+
+    OrcaFlex requires exactly symmetric added mass and radiation damping
+    (Orcina help, Vessel types: stiffness, added mass and damping). The
+    OrcaFlex WAMIT importer "imports only the upper right triangle of each
+    matrix and sets the lower left triangle values to match" (Orcina help,
+    Importing hydrodynamic data: WAMIT, read 2026-11-12); the same policy is
+    applied here so that generated and natively imported vessel types agree.
+    Reject a pair difference above 1 % of sqrt(abs(Mii)) * sqrt(abs(Mjj)),
+    plus 1e-9 in that entry's dimensional units for roundoff when a diagonal
+    is zero. The 1 % policy matches the source-data symmetry check; it is not
+    a solver tolerance. Inputs remain unchanged and nonfinite values are
+    rejected.
+    """
+    if any(not math.isfinite(value) for row in matrix for value in row):
+        raise ValueError("radiation matrix entries must be finite")
+    result = [list(row) for row in matrix]
+    for i in range(6):
+        for j in range(i + 1, 6):
+            scale = math.sqrt(abs(matrix[i][i])) * math.sqrt(abs(matrix[j][j]))
+            if abs(matrix[i][j] - matrix[j][i]) > 0.01 * scale + 1e-9:
+                raise ValueError(
+                    f"radiation matrix exceeds symmetry tolerance at ({i + 1}, {j + 1})")
+            result[j][i] = matrix[i][j]
+    return result
+
+
 def full_hydrostatic_stiffness(spec: FowtSpec) -> list[list[float]]:
     """Return the heave/roll/pitch block in the OrcaFlex convention.
 
@@ -117,9 +145,9 @@ class FowtRouter(BaseRouter):
                     "AMDPeriodOrFrequency": entry.period,
                     "AddedMassMatrixX, AddedMassMatrixY, AddedMassMatrixZ, "
                     "AddedMassMatrixRx, AddedMassMatrixRy, AddedMassMatrixRz":
-                        [list(row) for row in entry.added_mass],
+                        symmetric_radiation_matrix(entry.added_mass),
                     "DampingX, DampingY, DampingZ, DampingRx, DampingRy, DampingRz":
-                        [list(row) for row in entry.damping],
+                        symmetric_radiation_matrix(entry.damping),
                 }
                 for entry in hull.radiation
             ],
@@ -228,7 +256,7 @@ class FowtRouter(BaseRouter):
                     "CompressionIsLimited": "No",
                     "EI": [section.bending_stiffness, None],
                     "EA": section.axial_stiffness,
-                    "PoissonRatio": 0.5,
+                    "PoissonRatio": section.poisson_ratio,
                     "GJ": section.torsional_stiffness,
                     "Ca": [0, None, 0],
                     "Cd": [0, None, 0],
@@ -287,8 +315,7 @@ class FowtRouter(BaseRouter):
                 "InitialPosition": position,
                 "InitialAttitude": attitude,
                 "Mass": rna.mass,
-                # Lumped buoys take principal moments only; products of
-                # inertia of the RNA tensor are not represented.
+                # The schema requires principal axes: all products are zero.
                 "MomentsOfInertia": [inertia[0][0], inertia[1][1], inertia[2][2]],
                 "CentreOfMass": list(rna.centre_of_mass_from_tower_top),
                 "Volume": 0,

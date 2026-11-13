@@ -41,6 +41,7 @@ platform instead (Table 5).
 | Revision | Date | Change and reason |
 |---|---|---|
 | 1 | 2026-11-12 | Corrected the wave import file and readiness wording; mirrored the added-mass upper triangle and tested repeated generation to prevent invalid native inputs. |
+| 2 | 2026-11-13 | The generator, not the spec, now mirrors the upper triangle of every radiation matrix (one policy for all fowt specs); the spec holds the source values and the emitted model is unchanged. The wave-case models keep first-order wave loading off until the licensed import supplies load RAOs, and `run.md` switches it on after the import. |
 
 Table 1a. Revision history.
 
@@ -199,8 +200,10 @@ Not established:
   the model. The packages below are the next step.
 - **Time-domain decay periods and damping.** They need the LC1 to LC3 runs.
 - **Wave response in LC4 and LC5.** The generated VesselType carries no load
-  RAOs. The wave packages require a licensed import of the first-order WAMIT
-  `.out` text file before running. The numeric `.1`, `.3` and `.hst` files are
+  RAOs, so the generated wave-case models have first-order wave loading
+  switched off. The wave packages require a licensed import of the first-order
+  WAMIT `.out` text file, after which `run.md` switches the vessel's Wave load
+  (1st order) effect on. The numeric `.1`, `.3` and `.hst` files are
   retained for reference. The generated `run.md` specifies the requested data,
   property restoration and reference-origin checks. Mean wave drift is not
   included, because no QTF data are imported.

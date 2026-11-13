@@ -4,8 +4,8 @@ Reads public files of the IEAWindTask37/IEA-15-240-RWT repository at the
 pinned revision (Apache-2.0) and writes
 ``docs/domains/orcaflex/wind/fowt-volturnus/generator_data.yml``. Every value
 carries its unit and its source file, sheet or row. The raw files are not
-committed; their SHA-256 digests are recorded in the output so that a
-re-extraction can be checked against the same bytes.
+committed; their SHA-256 digests are verified before parsing and recorded
+in the output. Altered inputs are rejected rather than attributed to the pin.
 
 Usage::
 
@@ -18,6 +18,7 @@ Usage::
 from __future__ import annotations
 
 import hashlib
+import math
 import sys
 from pathlib import Path
 
@@ -30,6 +31,20 @@ FILES = {
     "wamit1": "OpenFAST/IEA-15-240-RWT-UMaineSemi/HydroData/IEA-15-240-RWT-UMaineSemi.1",
     "hst": "OpenFAST/IEA-15-240-RWT-UMaineSemi/HydroData/IEA-15-240-RWT-UMaineSemi.hst",
     "hydrodyn": "OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_HydroDyn.dat",
+}
+
+# Derived centres and centre differences are serialized to 12 decimal places
+# in metres. Use fsum rather than sum (whose float algorithm changed in Python
+# 3.12), and round only the final reported quantity, not intermediate centres.
+# Source values, matrices and digests retain their original precision.
+DERIVED_DECIMAL_PLACES = 12
+
+# Expected bytes at COMMIT, independently pinned from the generated output.
+EXPECTED_SHA256 = {
+    "tabular": "9ed6ee219a97c443d0b900498e3ef4fefa12d855d9a7c9e4c5b9bc0702b9078a",
+    "wamit1": "bca0d60c95c9ab59a15980c4cdcf335f529ce51dd84f6e3a5c0b8d30b2295b92",
+    "hst": "658421641ad3b523827c1b3f2faa16ec276e2298fc795c583e6350241ca76e27",
+    "hydrodyn": "0960e4b09fb9ba58a393e7cc7c4e12caa19fde80ed6c1ff2b62121980abd7d94",
 }
 
 
@@ -113,13 +128,19 @@ def read_value(path: Path, label: str) -> float:
 
 def build(raw: Path) -> dict:
     names = {key: raw / Path(rel).name for key, rel in FILES.items()}
+    digests = {key: sha256(path) for key, path in names.items()}
+    for key, digest in digests.items():
+        if digest != EXPECTED_SHA256[key]:
+            raise ValueError(f"source digest mismatch: {names[key].name}")
     overview, nacelle, performance = read_tabular(names["tabular"])
     rotor_rows = [nacelle["Blades"], nacelle["Hub_System"]]
-    rotor_mass = sum(float(r[1]) for r in rotor_rows)
-    rotor_cm = [sum(float(r[1]) * float(r[c]) for r in rotor_rows) / rotor_mass
+    rotor_mass = math.fsum(float(r[1]) for r in rotor_rows)
+    rotor_cm = [round(math.fsum(float(r[1]) * float(r[c]) for r in rotor_rows) / rotor_mass,
+                      DERIVED_DECIMAL_PLACES)
                 for c in (2, 3, 4)]
     parts = rotor_rows + [nacelle["nacelle"]]
-    combined = [sum(float(r[1]) * float(r[c]) for r in parts) / sum(float(r[1]) for r in parts)
+    total_mass = math.fsum(float(r[1]) for r in parts)
+    combined = [math.fsum(float(r[1]) * float(r[c]) for r in parts) / total_mass
                 for c in (2, 3, 4)]
     zero, infinite, rows = read_wamit1(names["wamit1"])
     hst = read_hst(names["hst"])
@@ -134,7 +155,7 @@ def build(raw: Path) -> dict:
         "source_url": f"https://github.com/IEAWindTask37/IEA-15-240-RWT/tree/{COMMIT}",
         "licence": "Apache License 2.0 (LICENSE at the pinned revision)",
         "extraction": "scripts/fowt/extract_iea15_generator_data.py",
-        "source_sha256": {FILES[k]: sha256(p) for k, p in names.items()},
+        "source_sha256": {FILES[k]: digest for k, digest in digests.items()},
         "turbine": {
             "rotor_diameter": item(float(overview["Rotor diameter [m]"]), "m",
                                    src("tabular", f"{ov} B4")),
@@ -173,7 +194,8 @@ def build(raw: Path) -> dict:
                 [float(nacelle["RNA"][c]) for c in (2, 3, 4)], "m",
                 src("tabular", f"{nms} row RNA C:E")),
             "rna_component_centre_discrepancy": item(
-                [combined[k] - float(nacelle["RNA"][c]) for k, c in enumerate((2, 3, 4))], "m",
+                [round(combined[k] - float(nacelle["RNA"][c]), DERIVED_DECIMAL_PLACES)
+                 for k, c in enumerate((2, 3, 4))], "m",
                 src("tabular", f"{nms}; mass-weighted centre of rows nacelle, Blades and "
                                "Hub_System minus row RNA C:E. The RNA row is not the "
                                "mass-weighted combination of its component rows; the "
@@ -203,6 +225,12 @@ def build(raw: Path) -> dict:
                 infinite, "A/(rho L^k); k=3 translation, 4 coupled, 5 rotation; L=1 m",
                 src("wamit1", "period 0 (infinite frequency) rows")),
             "radiation_by_period_nondimensional": {
+                "coverage": "diagnostic subset",
+                "limitations": "The source supplies 18 matrix entries per period; only entries "
+                               "11,33,55,15,66 are retained for added mass and damping. "
+                               "Sway, roll and other coupling entries are omitted; "
+                               "omitted entries must not be treated as zero. "
+                               "Use the pinned source for complete matrices.",
                 "columns": ["period s", "A11", "A33", "A55", "A15", "A66",
                             "B11", "B33", "B55", "B15", "B66"],
                 "unit": "A/(rho L^k); B/(rho omega L^k); L=1 m",
