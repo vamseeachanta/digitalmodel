@@ -83,8 +83,7 @@ def test_fixed_basis_and_hand_calculation(document):
 
 
 def test_surface_transform_and_round_trip(records):
-    # 3% envelope: pre-task probe 0.4--2.4%, with 0.6 percentage-point headroom
-    # for numerical-library differences; this tests inverse consistency only.
+    # Resolution is derived only from source samples, never the recovered card.
     for r in records:
         surface, source = r["surface_card"], r["source_pump_card"]
         assert np.ptp(source["position"]) == pytest.approx(40)
@@ -92,7 +91,13 @@ def test_surface_transform_and_round_trip(records):
         assert np.ptp(source["load"]) == pytest.approx(fluid_load_scale_lbf())
         assert abs(np.ptp(surface["position"]) - 40) > 0.1
         assert abs(np.ptp(surface["load"]) - np.ptp(source["load"])) > 1
-        assert 0 <= r["round_trip"]["load_nrmse_pct"] < 3.0
+        resolution = 100 * max(abs(b - a) for a, b in zip(
+            source["load"], source["load"][1:] + source["load"][:1])) / np.ptp(source["load"])
+        assert r["round_trip"]["tolerance_pct"] == pytest.approx(resolution)
+        assert 0 <= r["round_trip"]["load_nrmse_pct"] < resolution
+        # Retain the stricter historical regression ceiling without treating
+        # its prior-run origin as independent qualification evidence.
+        assert r["round_trip"]["load_nrmse_pct"] < 3.0
         assert abs(r["round_trip"]["stroke_difference_in"]) < 0.1
 
 
@@ -141,8 +146,9 @@ def test_matrix_probabilities(document):
 def test_matrix_rows_use_computed_card_probabilities(records):
     from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import (
         SHAPE_MODEL_PATH, FeatureExtractor, _classify_shape_with_model, _predict_from_trees,
+        read_model_bytes,
     )
-    model = json.loads(SHAPE_MODEL_PATH.read_text(encoding="utf-8"))
+    model = json.loads(read_model_bytes(SHAPE_MODEL_PATH))
     matrix = diagnostics_matrix(records)
     modes = [column["mode"] for column in matrix["columns"][:-1]]
     for record, row in zip(records, matrix["rows"], strict=True):
@@ -170,17 +176,93 @@ def test_matrix_rows_use_computed_card_probabilities(records):
 
 
 def test_card_work_uses_module_area(records):
-    from digitalmodel.marine_ops.artificial_lift.dynacard.models import DynacardAnalysisContext
-    from digitalmodel.marine_ops.artificial_lift.dynacard.power_consumption import (
-        PowerConsumptionCalculator,
-    )
     for record in records:
         surface = CardData(**record["surface_card"])
-        calculator = PowerConsumptionCalculator(
-            DynacardAnalysisContext(**example_well(), surface_card=surface))
         for key, card in (("polished_rod_work_per_stroke_ft_lbf", surface),
                           ("pump_work_per_stroke_ft_lbf", CardData(**record["computed_pump_card"]))):
-            assert record["analysis"][key] == pytest.approx(calculator._calculate_card_area(card))
+            # Independent signed polygon cross-products; inches -> feet.
+            vertices = list(zip(card.position, card.load))
+            twice_area = sum(x * v - u * y for (x, y), (u, v) in zip(
+                vertices, vertices[1:] + vertices[:1]))
+            assert record["analysis"][key] == pytest.approx(abs(twice_area) / 24)
+
+
+@pytest.mark.parametrize("reverse,closed", [(False, False), (True, False), (False, True)])
+def test_reported_work_has_hand_calculated_oracles(records, reverse, closed):
+    from digitalmodel.marine_ops.artificial_lift.dynacard.models import DynacardAnalysisContext
+    from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow
+    from digitalmodel.marine_ops.artificial_lift.dynacard.worked_examples import _analysis_values
+
+    context = DynacardAnalysisContext(**example_well(), surface_card=CardData(**records[0]["surface_card"]))
+    result = DynacardWorkflow(context).run_full_analysis()
+    # Offset rectangle: 40 in * 1200 lbf / 12 = 4000 ft·lbf.
+    # Offset triangle: (30 in * 800 lbf / 2) / 12 = 1000 ft·lbf.
+    cards = [([7, 7, 47, 47], [200, 1400, 1400, 200]),
+             ([5, 5, 35], [100, 900, 100])]
+    prepared = []
+    for position, load in cards:
+        if reverse:
+            position, load = position[::-1], load[::-1]
+        if closed:
+            position, load = position + position[:1], load + load[:1]
+        prepared.append(CardData(position=position, load=load))
+    context.surface_card, result.downhole_card = prepared
+    analysis = _analysis_values(context, result)
+    assert analysis["polished_rod_work_per_stroke_ft_lbf"] == pytest.approx(4000)
+    assert analysis["pump_work_per_stroke_ft_lbf"] == pytest.approx(1000)
+
+
+@pytest.mark.parametrize("difference,expected", [(1e-12, 0.0), (-1e-12, 0.0),
+                                                 (0.0000012, 0.000001), (15.25, 15.25)])
+def test_precision_effect_has_absolute_reporting_resolution(monkeypatch, difference, expected):
+    from types import SimpleNamespace
+    from digitalmodel.marine_ops.artificial_lift.dynacard import worked_examples
+
+    values = iter([difference, 0.0])
+
+    class Workflow:
+        def __init__(self, context):
+            pass
+
+        def run_full_analysis(self):
+            value = next(values)
+            return SimpleNamespace(fluid_load=SimpleNamespace(fluid_load=value),
+                                   fillage=SimpleNamespace(fillage=value, corners=[0, 1, 2, 3]))
+
+    monkeypatch.setattr(worked_examples, "DynacardWorkflow", Workflow)
+    card = CardData(position=[0, 1, 0], load=[0, 1, 0])
+    effect = worked_examples._published_precision_effect(card, card)
+    assert effect == {"fluid_load_difference_lbf": expected,
+                      "fillage_difference_pct": expected, "corners_changed": False}
+
+
+def test_round_trip_criterion_has_independent_sampling_oracle():
+    # Four 100-lbf steps span 400 lbf: resolution = 100 * 100/400 = 25%.
+    loads = [0, 100, 200, 300, 400, 300, 200, 100]
+    reference = CardData(position=[0, 0, 0, 1, 2, 2, 2, 1], load=loads)
+    for offset, expected in [(80, 20), (120, 30)]:
+        actual = CardData(position=reference.position, load=[v + offset for v in loads])
+        check = _round_trip(actual, reference)
+        assert check["tolerance_pct"] == 25
+        assert check["load_nrmse_pct"] == pytest.approx(expected)
+        assert (check["load_nrmse_pct"] < check["tolerance_pct"]) == (offset == 80)
+
+
+def test_assumed_numerical_inputs_have_previous_experience_provenance(document):
+    for entry in document["basis"].values():
+        assert entry["provenance"] == "assumed, based on previous experience"
+
+
+def test_generated_svg_has_no_trailing_whitespace(tmp_path, builder):
+    import matplotlib.pyplot as plt
+    plots = builder._helper("plots")
+    figure = plt.figure()
+    figure.add_subplot().plot([0, 1], [0, 1])
+    plots._save(figure, tmp_path, "whitespace")
+    raw = (tmp_path / "whitespace.svg").read_bytes()
+    assert b"\r" not in raw
+    assert raw.endswith(b"\n")
+    assert all(line == line.rstrip() for line in raw.splitlines())
 
 
 def test_analysis_preserves_module_basis(records):
@@ -268,7 +350,7 @@ def test_each_readme_section_has_figure_analysis_and_source(document, builder):
         assert f"[{title}](#{anchor})" in readme
         for label, unit, value in re.findall(r"^\| ([^|]+) \| ([^|]+) \| ([^|]+) \|$", section, re.M):
             if unit in decimals:
-                places = 3 if "nRMSE" in label else decimals[unit]
+                places = decimals[unit]
                 pattern = rf"-?\d+\.\d{{{places}}}" if places else r"-?\d+"
                 assert re.fullmatch(pattern, value), (title, label, value)
 

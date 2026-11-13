@@ -47,7 +47,9 @@ def _precision_sentence(records) -> str:
     where = ("examples " + ", ".join(moved)) if moved else "no example"
     return ("Every analysis runs on the surface card at its published CSV precision "
             "(0.0001 in, 0.01 lbf), so rerunning a published CSV reproduces the stored "
-            "values. Fluid load and fillage step with the detected corner samples: the "
+            "values. Precision-effect deltas are reported at an absolute resolution "
+            "of 1e-6 lbf and 1e-6 percentage points; smaller cancellation noise is "
+            "reported as zero. Fluid load and fillage step with the detected corner samples: the "
             "unrounded synthesised cards give fluid loads differing by up to "
             f"{load:.0f} lbf and " + (f"fillage by up to {fill:.1f} percentage points"
             if fill >= 0.05 else "the same fillage to one decimal") + ", with "
@@ -120,7 +122,7 @@ def summary_table(records):
                      f"{a['pump_gross_stroke_in']:.2f}", f"{a['fillage_pct']:.1f}",
                      f"{a['fluid_load_lbf']:.0f}", d["shipped"]["classification"],
                      d["shape_only"]["classification"],
-                     f"{r['round_trip']['load_nrmse_pct']:.3f}"])
+                     f"{r['round_trip']['load_nrmse_pct']:.1f}"])
     return table(["Example", "Condition", "Crosswalk", "Pump stroke (in)",
                   "Fillage (%)", "Fluid load (lbf)", "Shipped HYPOTHESIS",
                   "Shape-only HYPOTHESIS (computed pump card)", "Round-trip nRMSE (%)"], rows,
@@ -159,7 +161,8 @@ def analysis_table(record):
             for key, (label, unit) in ANALYSIS_FIELDS.items()]
     rows.extend([["Production runtime source", "category", analysis["runtime_source"]],
                  ["Buckling compression flag", "boolean", analysis["buckling_detected"]],
-                 ["Round-trip load nRMSE", "%", f"{record['round_trip']['load_nrmse_pct']:.3f}"],
+                 ["Round-trip load nRMSE", "%", f"{record['round_trip']['load_nrmse_pct']:.1f}"],
+                 ["Source-step resolution limit", "%", f"{record['round_trip']['tolerance_pct']:.1f}"],
                  ["Round-trip stroke difference", "in", f"{record['round_trip']['stroke_difference_in']:.2f}"]])
     return table(["Quantity", "Unit", "Value"], rows,
                  f"Table {record['index'] + 2}. Example {record['index']} workflow results; "
@@ -209,7 +212,8 @@ def basis_section(document):
     rows = []
     for key, entry in document["basis"].items():
         for i, (path, value) in enumerate(_basis_leaves(key, entry["value"])):
-            reason = entry["reason"] if i == 0 else f"Same ASSUMED {key} basis."
+            reason = (entry["reason"] if i == 0 else f"Same ASSUMED {key} basis.")
+            reason += " Provenance: " + entry["provenance"] + "."
             rows.append([f"`{path}`", entry["status"],
                          "`" + json.dumps(value, ensure_ascii=False) + "`", reason])
     return ("## Basis and assumptions\n\n" +
@@ -244,8 +248,19 @@ def limitations():
             "field probabilities. Every classifier call remains **HYPOTHESIS**.\n\n"
             "The forward model is the discrete inverse of the default solver on the "
             "same grid. Round-trip load nRMSE tests inverse consistency under that "
-            "basis, not physical accuracy. The test limit is 3.0 %, above the prior "
-            "0.4–2.4 % probe envelope by 0.6 percentage points. Direction and cyclic "
+            "basis, not physical accuracy. The numerical criterion is derived from "
+            "the source samples independently of solver output: RMS recovery error "
+            "is less than the largest adjacent source-load increment, including "
+            "closure. In percent of source load range, the limit is "
+            "100 * max(abs(F[i+1] - F[i])) / range(F). This compares recovery error "
+            "with one sample of source-load resolution; it is not an engineering "
+            "acceptance limit or evidence of field accuracy. An eight-sample "
+            "hand calculation with 100 lbf steps over a 400 lbf range gives "
+            "25.0 %; constant offsets of 80 lbf and 120 lbf give RMS errors "
+            "of 20.0 % and 30.0 %, respectively, on opposite sides of that limit. "
+            "The former 3.0 % limit depended on an unretained prior run; it remains "
+            "an additional regression ceiling, without serving as independent "
+            "qualification evidence. Direction and cyclic "
             "phase follow compare_cards alignment; no load offset is introduced. "
             "Computed pump position retains the solver datum (static rod stretch "
             "offset) in JSON and CSV; stroke is compared by range. Each card is plotted "
@@ -269,14 +284,16 @@ def score_section(records):
     errors = [r["round_trip"]["load_nrmse_pct"] for r in records]
     negative = "; ".join(f"example {r['index']}: {r['analysis']['pump_intake_pressure_psi']:.3f} psi"
                          for r in records if r["analysis"]["pump_intake_pressure_psi"] < 0)
+    limits = [r["round_trip"]["tolerance_pct"] for r in records]
     return (f"Computed-card shape-only matches {correct(records, 'shape_only')}/10 "
             f"expected modes; the shipped model matches {correct(records, 'shipped')}/10; "
             f"source-shape consistency is {source_correct(literal)}/8 literal and "
             f"{source_correct(records)}/10 including ASSUMED crosswalks, against the "
             "[recorded plate score](../plate-classifier-score.md) of 5/8 and 6/10. " +
             difference +
-            f"The observed round-trip load nRMSE range is {min(errors):.3f}–{max(errors):.3f} %, "
-            "below the 3.0 % inverse-consistency test limit.\n\n"
+            f"The observed round-trip load nRMSE range is {min(errors):.1f}–{max(errors):.1f} %; "
+            f"source-step resolution limits range from {min(limits):.1f}–{max(limits):.1f} %. "
+            "Each unrounded error is checked against its own source-derived limit.\n\n"
             + _precision_sentence(records) +
             f"Computed CPIP below zero: {negative or 'none'}. These values are retained "
             "as reported by the module; physical intake pressure is not established "
@@ -324,9 +341,14 @@ def readme(document, matrix):
                "The offline builder uses the retained digest-pinned workbook and models. "
                "The check compares results.json, all CSVs and README byte for byte; "
                "figures are excluded. SVG and PNG use fixed sizes and 150 dpi.\n")
-    digests = "\nModel SHA-256 digests: " + "; ".join(
+    revisions = ("## Revision history\n\n" + table(
+        ["Revision", "Date", "Change and reason"],
+        [["1", "2026-11-12", "Ten dependent plate examples with assumed physical scales."],
+         ["2", "2026-11-13", "Absolute delta resolution, lossless model storage, source-derived numerical criterion and input provenance correct reproducibility and evidence gaps."]],
+        "Table R1. Report revisions.") + "\n")
+    digests = "\nModel SHA-256 digests (decompressed inference JSON): " + "; ".join(
         f"{key} `{digest}`" for key, digest in document["model_digests"].items()) + ".\n"
-    return (header + reading_guide(records) + "\n" + score_section(records) + "\n" + summary_table(records) + "\n" +
+    return (header + revisions + reading_guide(records) + "\n" + score_section(records) + "\n" + summary_table(records) + "\n" +
             matrix_section(matrix) + "\n" + "\n".join(example_section(r) for r in records) +
             "\n" + basis_section(document) + digests + "\n" + limitations() + "\n" + rebuild)
 

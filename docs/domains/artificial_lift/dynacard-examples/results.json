@@ -53,7 +53,8 @@
           }
         ]
       },
-      "reason": "Illustrative design values; no measured well is represented. Rod order is surface first; lengths ft, diameters in, weights lb/ft, moduli psi."
+      "reason": "Illustrative design values; no measured well is represented. Rod order is surface first; lengths ft, diameters in, weights lb/ft, moduli psi.",
+      "provenance": "assumed, based on previous experience"
     },
     "resolved_context_defaults": {
       "status": "ASSUMED",
@@ -149,32 +150,38 @@
           "efficiency_pumping_unit": 0.9
         }
       },
-      "reason": "All unspecified context, rod, pump and surface-unit fields retain model defaults; no survey or well test was supplied."
+      "reason": "All unspecified context, rod, pump and surface-unit fields retain model defaults; no survey or well test was supplied.",
+      "provenance": "assumed, based on previous experience"
     },
     "stroke_in": {
       "status": "ASSUMED",
       "value": 40.0,
-      "reason": "Dimensionless source has no measured stroke."
+      "reason": "Dimensionless source has no measured stroke.",
+      "provenance": "assumed, based on previous experience"
     },
     "minimum_load_lbf": {
       "status": "ASSUMED",
       "value": 0.0,
-      "reason": "Dimensionless source has no measured load datum."
+      "reason": "Dimensionless source has no measured load datum.",
+      "provenance": "assumed, based on previous experience"
     },
     "load_range_lbf": {
       "status": "ASSUMED",
       "value": 3935.82689,
-      "reason": "Fo = (pi/4 * 1.5^2) * (63.237 * 4844 / 144 + 100); common static fluid-load scale at zero intake pressure."
+      "reason": "Fo = (pi/4 * 1.5^2) * (63.237 * 4844 / 144 + 100); common static fluid-load scale at zero intake pressure.",
+      "provenance": "assumed, based on previous experience"
     },
     "scale_intake_pressure_psi": {
       "status": "ASSUMED",
       "value": 0.0,
-      "reason": "Defines only the static load scale; computed CPIP need not be zero."
+      "reason": "Defines only the static load scale; computed CPIP need not be zero.",
+      "provenance": "assumed, based on previous experience"
     },
     "card_space": {
       "status": "ASSUMED",
       "value": "pump (downhole)",
-      "reason": "Source does not identify surface or pump space."
+      "reason": "Source does not identify surface or pump space.",
+      "provenance": "assumed, based on previous experience"
     },
     "sampling": {
       "status": "ASSUMED",
@@ -183,7 +190,8 @@
         "timing": "uniform",
         "preparation": "closed, uniform normalised Euclidean arc length, clockwise, renormalised"
       },
-      "reason": "Arc-length samples are treated as uniformly timed; measured kinematics are unavailable."
+      "reason": "Arc-length samples are treated as uniformly timed; measured kinematics are unavailable.",
+      "provenance": "assumed, based on previous experience"
     },
     "surface_card": {
       "status": "ASSUMED",
@@ -192,7 +200,8 @@
         "position_decimals": 4,
         "load_decimals": 2
       },
-      "reason": "Forward rod-string model, not a measured polished-rod card. Rounded to the published CSV precision before analysis, so the published card reproduces the stored results."
+      "reason": "Forward rod-string model, not a measured polished-rod card. Rounded to the published CSV precision before analysis, so the published card reproduces the stored results.",
+      "provenance": "assumed, based on previous experience"
     },
     "crosswalks": {
       "status": "ASSUMED",
@@ -200,12 +209,14 @@
         "供液不足": "FLUID_POUND",
         "出砂": "SAND_ABRASION"
       },
-      "reason": "Supply insufficiency does not establish fluid pound; sand production does not establish abrasion."
+      "reason": "Supply insufficiency does not establish fluid pound; sand production does not establish abrasion.",
+      "provenance": "assumed, based on previous experience"
     },
     "uniform_scale": {
       "status": "ASSUMED",
       "value": "All ten shapes use the same stroke and load range",
-      "reason": "Rod parting and other near-zero physical-load conditions are shape illustrations, not physical pump cards."
+      "reason": "Rod parting and other near-zero physical-load conditions are shape illustrations, not physical pump cards.",
+      "provenance": "assumed, based on previous experience"
     },
     "cpip_defaults": {
       "status": "ASSUMED",
@@ -214,7 +225,8 @@
         "water_sg": 1.03,
         "water_cut_pct": 50.0
       },
-      "reason": "CPIP derives density from this default mixture, not context fluid_density; retained as the module reports it."
+      "reason": "CPIP derives density from this default mixture, not context fluid_density; retained as the module reports it.",
+      "provenance": "assumed, based on previous experience"
     },
     "production": {
       "status": "ASSUMED",
@@ -222,7 +234,8 @@
         "runtime_hours": 24.0,
         "pump_efficiency_pct": 100.0
       },
-      "reason": "InputParameters defaults runtime to 24 h (reported source: card); no measured runtime or efficiency. Production = net displacement * runtime / 24; reported efficiency is not a multiplier."
+      "reason": "InputParameters defaults runtime to 24 h (reported source: card); no measured runtime or efficiency. Production = net displacement * runtime / 24; reported efficiency is not a multiplier.",
+      "provenance": "assumed, based on previous experience"
     },
     "solver_defaults": {
       "status": "ASSUMED",
@@ -233,12 +246,18 @@
         "tubing_id_in": 2.441,
         "zero_surface_position_datum": true
       },
-      "reason": "Forward and default inverse use matching grids, damping defaults and vertical survey; inverse output smoothing remains enabled."
+      "reason": "Forward and default inverse use matching grids, damping defaults and vertical survey; inverse output smoothing remains enabled.",
+      "provenance": "assumed, based on previous experience"
     }
   },
   "model_digests": {
     "shipped": "c3612e1f31aad740b4ebc5f81e34bf09ae7d21e42f1f18915c2a76c94337a40c",
     "shape_only": "4190590bd965267518f9e936ac3a315d3be9a68eac72e92b60f5b1e6bb38c94f"
+  },
+  "model_digest_basis": "SHA-256 of decompressed inference JSON bytes",
+  "precision_effect_resolution": {
+    "fluid_load_lbf": 1e-06,
+    "fillage_percentage_points": 1e-06
   },
   "examples": [
     {
@@ -1018,12 +1037,12 @@
         "stroke_difference_in": 7.32793617e-05,
         "alignment": "compare_cards direction and joint position/load phase objective",
         "closing_endpoint": "Duplicate computed closing endpoint omitted for comparison only",
-        "tolerance_pct": 3.0,
-        "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
+        "tolerance_pct": 3.49990853,
+        "tolerance_basis": "One source-sample load increment: 100 * max(abs(F[i+1]-F[i])) / range(F), including closure; illustrative sampling resolution, not a field acceptance limit"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": -0.00114513661,
-        "fillage_difference_pct": 6.10070027e-05,
+        "fluid_load_difference_lbf": -0.001145,
+        "fillage_difference_pct": 6.1e-05,
         "corners_changed": false
       }
     },
@@ -1804,12 +1823,12 @@
         "stroke_difference_in": 3.13449492e-05,
         "alignment": "compare_cards direction and joint position/load phase objective",
         "closing_endpoint": "Duplicate computed closing endpoint omitted for comparison only",
-        "tolerance_pct": 3.0,
-        "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
+        "tolerance_pct": 3.43339983,
+        "tolerance_basis": "One source-sample load increment: 100 * max(abs(F[i+1]-F[i])) / range(F), including closure; illustrative sampling resolution, not a field acceptance limit"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": -6.29097003e-05,
-        "fillage_difference_pct": -4.6430358e-05,
+        "fluid_load_difference_lbf": -6.3e-05,
+        "fillage_difference_pct": -4.6e-05,
         "corners_changed": false
       }
     },
@@ -2590,12 +2609,12 @@
         "stroke_difference_in": 5.11386276e-07,
         "alignment": "compare_cards direction and joint position/load phase objective",
         "closing_endpoint": "Duplicate computed closing endpoint omitted for comparison only",
-        "tolerance_pct": 3.0,
-        "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
+        "tolerance_pct": 3.41033498,
+        "tolerance_basis": "One source-sample load increment: 100 * max(abs(F[i+1]-F[i])) / range(F), including closure; illustrative sampling resolution, not a field acceptance limit"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": -34.1359398,
-        "fillage_difference_pct": 0.000145721851,
+        "fluid_load_difference_lbf": -34.13594,
+        "fillage_difference_pct": 0.000146,
         "corners_changed": true
       }
     },
@@ -3376,12 +3395,12 @@
         "stroke_difference_in": 7.55756641e-05,
         "alignment": "compare_cards direction and joint position/load phase objective",
         "closing_endpoint": "Duplicate computed closing endpoint omitted for comparison only",
-        "tolerance_pct": 3.0,
-        "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
+        "tolerance_pct": 3.53924445,
+        "tolerance_basis": "One source-sample load increment: 100 * max(abs(F[i+1]-F[i])) / range(F), including closure; illustrative sampling resolution, not a field acceptance limit"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": 14.7499952,
-        "fillage_difference_pct": 0.000182709048,
+        "fluid_load_difference_lbf": 14.749995,
+        "fillage_difference_pct": 0.000183,
         "corners_changed": true
       }
     },
@@ -4162,12 +4181,12 @@
         "stroke_difference_in": -3.10822101e-05,
         "alignment": "compare_cards direction and joint position/load phase objective",
         "closing_endpoint": "Duplicate computed closing endpoint omitted for comparison only",
-        "tolerance_pct": 3.0,
-        "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
+        "tolerance_pct": 3.67062505,
+        "tolerance_basis": "One source-sample load increment: 100 * max(abs(F[i+1]-F[i])) / range(F), including closure; illustrative sampling resolution, not a field acceptance limit"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": 0.000247962484,
-        "fillage_difference_pct": -0.000110270825,
+        "fluid_load_difference_lbf": 0.000248,
+        "fillage_difference_pct": -0.00011,
         "corners_changed": false
       }
     },
@@ -4948,12 +4967,12 @@
         "stroke_difference_in": 2.30992107e-06,
         "alignment": "compare_cards direction and joint position/load phase objective",
         "closing_endpoint": "Duplicate computed closing endpoint omitted for comparison only",
-        "tolerance_pct": 3.0,
-        "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
+        "tolerance_pct": 3.5097454,
+        "tolerance_basis": "One source-sample load increment: 100 * max(abs(F[i+1]-F[i])) / range(F), including closure; illustrative sampling resolution, not a field acceptance limit"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": 0.000149672897,
-        "fillage_difference_pct": -0.000142347073,
+        "fluid_load_difference_lbf": 0.00015,
+        "fillage_difference_pct": -0.000142,
         "corners_changed": false
       }
     },
@@ -5734,12 +5753,12 @@
         "stroke_difference_in": 2.12142821e-05,
         "alignment": "compare_cards direction and joint position/load phase objective",
         "closing_endpoint": "Duplicate computed closing endpoint omitted for comparison only",
-        "tolerance_pct": 3.0,
-        "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
+        "tolerance_pct": 3.61816231,
+        "tolerance_basis": "One source-sample load increment: 100 * max(abs(F[i+1]-F[i])) / range(F), including closure; illustrative sampling resolution, not a field acceptance limit"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": -0.00196923839,
-        "fillage_difference_pct": 3.64939936e-05,
+        "fluid_load_difference_lbf": -0.001969,
+        "fillage_difference_pct": 3.6e-05,
         "corners_changed": false
       }
     },
@@ -6520,12 +6539,12 @@
         "stroke_difference_in": 5.3029151e-05,
         "alignment": "compare_cards direction and joint position/load phase objective",
         "closing_endpoint": "Duplicate computed closing endpoint omitted for comparison only",
-        "tolerance_pct": 3.0,
-        "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
+        "tolerance_pct": 3.45677339,
+        "tolerance_basis": "One source-sample load increment: 100 * max(abs(F[i+1]-F[i])) / range(F), including closure; illustrative sampling resolution, not a field acceptance limit"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": -0.00167966895,
-        "fillage_difference_pct": 4.95061572e-06,
+        "fluid_load_difference_lbf": -0.00168,
+        "fillage_difference_pct": 5e-06,
         "corners_changed": false
       }
     },
@@ -7306,12 +7325,12 @@
         "stroke_difference_in": 6.18728692e-05,
         "alignment": "compare_cards direction and joint position/load phase objective",
         "closing_endpoint": "Duplicate computed closing endpoint omitted for comparison only",
-        "tolerance_pct": 3.0,
-        "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
+        "tolerance_pct": 3.53200436,
+        "tolerance_basis": "One source-sample load increment: 100 * max(abs(F[i+1]-F[i])) / range(F), including closure; illustrative sampling resolution, not a field acceptance limit"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": 28.1745002,
-        "fillage_difference_pct": -8.41669586e-05,
+        "fluid_load_difference_lbf": 28.1745,
+        "fillage_difference_pct": -8.4e-05,
         "corners_changed": true
       }
     },
@@ -8092,12 +8111,12 @@
         "stroke_difference_in": 1.88580486e-06,
         "alignment": "compare_cards direction and joint position/load phase objective",
         "closing_endpoint": "Duplicate computed closing endpoint omitted for comparison only",
-        "tolerance_pct": 3.0,
-        "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
+        "tolerance_pct": 5.34880263,
+        "tolerance_basis": "One source-sample load increment: 100 * max(abs(F[i+1]-F[i])) / range(F), including closure; illustrative sampling resolution, not a field acceptance limit"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": -0.00142573444,
-        "fillage_difference_pct": 1.17618568e-05,
+        "fluid_load_difference_lbf": -0.001426,
+        "fillage_difference_pct": 1.2e-05,
         "corners_changed": false
       }
     }
