@@ -11,6 +11,7 @@ out-of-range rail.
 from __future__ import annotations
 
 from itertools import product
+from math import prod
 from numbers import Real
 from typing import Optional
 
@@ -29,7 +30,7 @@ def _require_finite_numeric(values: list, label: str) -> None:
         isinstance(value, (bool, np.bool_)) or not isinstance(value, Real)
         for value in values
     ):
-        raise ValueError(f"{label} must contain real numeric values, not booleans")
+        raise ValueError(f"{label} must contain real, non-boolean numeric values")
     if not np.isfinite(values).all():
         raise ValueError(f"{label} must contain only finite values")
 
@@ -86,9 +87,12 @@ def atlas_from_summary(
 
     for column in [*axis_names, response]:
         _require_finite_numeric(df[column].tolist(), f"column {column!r}")
-    expected = set(product(*(axis.grid for axis in axes)))
     actual = list(df[axis_names].itertuples(index=False, name=None))
-    if len(actual) != len(set(actual)) or set(actual) != expected:
+    if (
+        len(actual) != prod(len(axis.grid) for axis in axes)
+        or len(actual) != len(set(actual))
+        or set(actual) != set(product(*(axis.grid for axis in axes)))
+    ):
         raise ValueError(
             "atlas grid is not full-factorial: completed cases must cover "
             "every declared Cartesian node exactly once"

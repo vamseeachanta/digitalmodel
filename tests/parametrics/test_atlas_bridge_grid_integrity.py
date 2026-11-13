@@ -64,6 +64,63 @@ def test_requires_exact_unique_cartesian_membership(study, frame, no_atlas, faul
         build(study, frame)
 
 
+@pytest.mark.parametrize("status", ["completed", "failed"])
+def test_large_incomplete_grid_rejected_before_enumeration(
+    monkeypatch, no_atlas, status
+):
+    study = ParametricStudy(
+        name="synthetic",
+        parameters=[
+            ParameterSweep(name=f"x{i}", values=list(range(10))) for i in range(7)
+        ],
+    )
+    # Seven ten-knot axes declare 10,000,000 nodes, with at most one completed row.
+    frame = pd.DataFrame(
+        [{**{p.name: 0 for p in study.parameters}, "metric": 0, "status": status}]
+    )
+    original = frame.copy(deep=True)
+
+    def forbidden(*args):
+        pytest.fail("incomplete grid reached Cartesian enumeration")
+
+    monkeypatch.setattr(atlas_bridge, "product", forbidden)
+    with pytest.raises(ValueError, match="full-factorial"):
+        build(study, frame)
+    pd.testing.assert_frame_equal(frame, original)
+
+
+@pytest.mark.parametrize("fault", ["missing", "extra"])
+def test_row_count_mismatch_rejected_before_enumeration(
+    study, frame, no_atlas, monkeypatch, fault
+):
+    frame = (
+        frame.iloc[:-1]
+        if fault == "missing"
+        else pd.concat([frame, frame.iloc[:1]], ignore_index=True)
+    )
+
+    def forbidden(*args):
+        pytest.fail("row count mismatch reached Cartesian enumeration")
+
+    monkeypatch.setattr(atlas_bridge, "product", forbidden)
+    with pytest.raises(ValueError, match="full-factorial"):
+        build(study, frame)
+
+
+def test_matching_row_count_still_checks_membership(study, frame, monkeypatch):
+    calls = []
+    original_product = atlas_bridge.product
+
+    def record_product(*grids):
+        calls.append(grids)
+        return original_product(*grids)
+
+    monkeypatch.setattr(atlas_bridge, "product", record_product)
+    atlas = build(study, frame)
+    assert calls == [([0, 1, 2], [0, 1, 2])]
+    pd.testing.assert_frame_equal(atlas.grid, frame[["x", "y", "metric"]])
+
+
 @pytest.mark.parametrize("column", ["x", "y", "metric"])
 @pytest.mark.parametrize("value", [np.nan, np.inf, -np.inf])
 def test_rejects_nonfinite_rows(study, frame, no_atlas, column, value):
@@ -78,7 +135,7 @@ def test_rejects_nonfinite_rows(study, frame, no_atlas, column, value):
 def test_rejects_coercible_or_nonnumeric_rows(study, frame, no_atlas, column, value):
     frame[column] = frame[column].astype(object)
     frame.loc[0, column] = value
-    with pytest.raises(ValueError, match="numeric"):
+    with pytest.raises(ValueError, match="real, non-boolean numeric values"):
         build(study, frame)
 
 
