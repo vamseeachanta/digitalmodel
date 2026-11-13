@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ._enums import RollerType
@@ -309,6 +311,9 @@ class Vessel(BaseModel):
     def validate_vector3(cls, v: list[float]) -> list[float]:
         if len(v) != 3:
             raise ValueError(f"Must have exactly 3 components, got {len(v)}")
+        # NaN passes every comparison guard downstream; reject it here first.
+        if not all(math.isfinite(component) for component in v):
+            raise ValueError(f"{v}: every component must be finite")
         return v
 
     @field_validator("orientation")
@@ -378,6 +383,33 @@ class Tensioner(BaseModel):
     tension_value: float = Field(..., gt=0, description="Applied tension (kN)")
 
 
+class JLay(BaseModel):
+    """J-lay tower for steep pipelay from the vessel (#3978).
+
+    The pipe hangs from the tower top, pinned at ``tower_top`` (vessel axes),
+    and is laid aft of the vessel (towards vessel -x). The generator seeds
+    End B on the seabed at the inextensible-catenary span for the hang-off
+    angle; the pipe is taken empty with its coatings.
+
+    Attributes:
+        tower_top: Pipe hang-off point at the tower top [x, y, z] (vessel
+            axes, m).
+        tower_angle: Tower inclination from vertical (deg), leaning aft.
+    """
+
+    tower_top: list[float] = Field(..., description="Hang-off point [x, y, z] (m)")
+    tower_angle: float = Field(..., gt=0, lt=45, description="Angle from vertical (deg)")
+
+    @field_validator("tower_top")
+    @classmethod
+    def validate_vector3(cls, v: list[float]) -> list[float]:
+        if len(v) != 3:
+            raise ValueError(f"Must have exactly 3 components, got {len(v)}")
+        if not all(math.isfinite(component) for component in v):
+            raise ValueError("Tower top components must be finite")
+        return v
+
+
 class Equipment(BaseModel):
     """Complete equipment specification for installation operations."""
 
@@ -398,6 +430,7 @@ class Equipment(BaseModel):
         default=None, allow_inf_nan=False, description="Declared S-lay anchor x in vessel coordinates (m)"
     )
     tensioner: Tensioner | None = Field(default=None, description="Tensioner configuration")
+    jlay: JLay | None = Field(default=None, description="J-lay tower (#3978)")
 
     @model_validator(mode="after")
     def resolve_roller_compat(self) -> "Equipment":
