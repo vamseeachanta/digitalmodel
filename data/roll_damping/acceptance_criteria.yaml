@@ -1,0 +1,67 @@
+# Benchmark acceptance criteria for roll damping calculations.
+#
+# Each quantity has a three-colour band on the absolute relative deviation
+# |calculated / reference - 1| in percent:
+#   green  : deviation <= green_max_pct     (reproduced / agrees)
+#   amber  : deviation <= amber_max_pct     (same order; investigate the basis)
+#   red    : deviation >  amber_max_pct     (not reproduced; do not use without a cause)
+# abs_floor (optional) is a difference in the quantity's own unit at or below
+# which the result is green whatever the percentage, for small reference values.
+# one_sided: true grades only a calculated value above the reference; a value
+# at or below it is green (consistent), because the reference is known to hold
+# parts the calculation leaves out.
+# The bands are proposed engineering bands (judgement), not code limits. Each
+# rationale says which part rests on a cited observation and which is proposed.
+version: 1
+quantities:
+  identity:
+    description: Closed-form identity or restated coefficient (no measured input)
+    green_max_pct: 0.5
+    amber_max_pct: 2.0
+    rationale: Proposed. Arithmetic only; printed coefficients have three significant figures, so rounding alone is under 0.5 %.
+  figure_read:
+    description: Calculated value against a value read from a printed figure
+    green_max_pct: 10.0
+    amber_max_pct: 25.0
+    rationale: Proposed. Reading a printed plot carries about 5 % to 10 % uncertainty (for example plus or minus 10 on 120 in Chakrabarti 2001 Fig. 5). Amber allows the reading plus an unstated input.
+  printed_table_value:
+    description: Calculated value against a printed table or text value whose inputs are stated or tightly bounded
+    green_max_pct: 10.0
+    amber_max_pct: 25.0
+    rationale: Proposed. Printed to two significant figures (about 3 %) and computed with an assumed inertia basis (several %).
+  damping_ratio_vs_measured:
+    description: Calculated damping ratio (% of critical) against model-test or CFD decay damping
+    green_max_pct: 20.0
+    amber_max_pct: 50.0
+    abs_floor: 0.5
+    abs_floor_unit: percentage points of critical
+    rationale: >-
+      Proposed, anchored on cited spreads: CFD reproduces model decay tests within about 2 % to 20 % (koop2019 and koop2022, abstracts;
+      kjaer2024, -4.6 % to +14.2 %, p. 14). An empirical component method on a non-standard hull
+      cannot be held tighter than the CFD spread, so 20 % is green. Beyond 50 % the method or its basis is
+      wrong for the hull. The 0.5 point floor covers decay-fit scatter on lightly damped hulls (about 1 %).
+  partial_vs_measured_total:
+    description: A calculated viscous part (for example the eddy part only) against measured total decay damping, which also holds the wave and friction parts
+    green_max_pct: 20.0
+    amber_max_pct: 50.0
+    one_sided: true
+    rationale: >-
+      Proposed. The omitted parts are non-negative, so a calculated part at or below the measured total is
+      consistent and grades green; only an excess is evidence of overprediction. The excess bands are those of
+      damping_ratio_vs_measured. A low value is not confirmed by this check; the wave part from a solver is needed
+      for a two-sided comparison.
+  cfd_vs_model_test:
+    description: CFD damping against a model test of the same hull and condition
+    green_max_pct: 10.0
+    amber_max_pct: 20.0
+    rationale: Proposed, anchored on cited spreads. Published 2-D CFD agrees within 2 % to 3.2 % (koop2019; gu-day2015); 3-D and multi-verifier spreads reach 20 % (koop2022).
+  solver_to_solver_damping:
+    description: The same external damping applied in two diffraction solvers (added B44 or % critical)
+    green_max_pct: 1.0
+    amber_max_pct: 5.0
+    rationale: Proposed (engineering judgement). The input is identical, so any difference is a unit, axis or basis error; 5 % allows for interpolation of A44 at the natural frequency.
+  natural_period:
+    description: Roll natural period from two routes (mass matrices against RAO peak, or two solvers)
+    green_max_pct: 2.0
+    amber_max_pct: 5.0
+    rationale: Proposed (engineering judgement). A 0.25 s period grid at 7 s to 12 s gives 2 % to 3.5 % resolution.

@@ -34,10 +34,13 @@ def _legacy_accesses(source):
         return []
     tree = ast.parse(source)
     aliases = {"np", "numpy"}
+    wildcard_numpy = False
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             aliases.update(alias.asname or alias.name for alias in node.names
                            if alias.name == "numpy")
+        elif isinstance(node, ast.ImportFrom) and node.module == "numpy":
+            wildcard_numpy |= any(alias.name == "*" for alias in node.names)
     lines = source.splitlines()
     bindings = [node for node in tree.body if isinstance(node, ast.Assign)
                 and ast.get_source_segment(source, node) == FALLBACK_BINDING]
@@ -50,6 +53,9 @@ def _legacy_accesses(source):
                 offenders.append(node.lineno)
         elif (isinstance(node, ast.ImportFrom) and node.module == "numpy"
               and any(alias.name == "trapz" for alias in node.names)):
+            offenders.append(node.lineno)
+        elif (wildcard_numpy and isinstance(node, ast.Name) and node.id == "trapz"
+              and isinstance(node.ctx, ast.Load)):
             offenders.append(node.lineno)
     return offenders
 
@@ -70,6 +76,23 @@ def test_cfd_sources_use_only_single_trapz_fallback():
 ])
 def test_scan_rejects_legacy_access(source):
     assert _legacy_accesses(source)
+
+
+@pytest.mark.parametrize("source", [
+    "from numpy import *\ntrapz(y, x)",
+    "from numpy import *\nintegrate = trapz\nintegrate(y, x)",
+])
+def test_scan_rejects_wildcard_import_legacy_references(source):
+    assert _legacy_accesses(source) == [2]
+
+
+@pytest.mark.parametrize("source", [
+    "from numpy import *\ntrapezoid(y, x)",
+    'from numpy import *\n# trapz is historical prose\ntext = "trapz(y, x)"',
+    "from scipy.integrate import *\ntrapz(y, x)",
+])
+def test_scan_allows_wildcard_imports_without_numpy_legacy_references(source):
+    assert not _legacy_accesses(source)
 
 
 def test_scan_allows_prose_other_libraries_and_one_binding():

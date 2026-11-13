@@ -10,6 +10,7 @@ legacy scripts and API scripts.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | Initial | 2026-10-20 | Document the compatible binding and an independent hand calculation. |
+| Guard extension | 2026-11-13 | Detect bare legacy references following NumPy wildcard imports. |
 
 ## Binding
 
@@ -65,8 +66,11 @@ These variants exercise coordinate order, spacing, complex values and axes.
 
 `tests/scripts/test_cfd_scripts_numpy_compat.py` scans Python files and notebook
 code cells under the five source trees. It rejects direct NumPy legacy access,
-including alias imports, except for one exact module-level fallback per file.
+including alias imports and bare references following `from numpy import *`,
+except for one exact module-level fallback per file.
 Comments, strings, notebook prose and other libraries are not NumPy calls.
+Wildcard imports alone are not legacy accesses; the guard checks loaded names
+so a function reference assigned to another name is also detected.
 The guard also tests synthetic legacy-only, modern-only and combined APIs.
 
 The independent hand-integral tests preserve existing reference values and add
