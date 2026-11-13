@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Licence-free checks of the generated IEA 15 MW / VolturnUS-S fowt model.
 
 Comparators: published values recorded in basis.yml (Allen et al. 2020,
@@ -22,7 +25,16 @@ from digitalmodel.floating_wind.fowt_static_checks import (
     run_checks,
     solve_catenary,
 )
-from digitalmodel.floating_wind.iea15_orcaflex_spec import build_spec, load_sources
+from digitalmodel.floating_wind.iea15_orcaflex_spec import (
+    WAVE_CASES,
+    build_spec,
+    load_sources,
+)
+from digitalmodel.floating_wind.run_package_folder import (
+    MANIFEST_NAME,
+    prepare_case_folder,
+    record_case_folder,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "docs" / "reports" / "fowt-volturnus-mooring-analysis.manifest.json"
@@ -118,7 +130,8 @@ def test_flexible_representation_rejected_by_rigid_checks(sources):
     fowt["representation"] = "flexible"
     fowt["tower"] = {"base_elevation": 15.0, "sections": [
         {"length": 129.386, "outer_diameter": 8.0, "mass_per_length": 10.0,
-         "bending_stiffness": 1.0e9, "axial_stiffness": 1.0e8, "torsional_stiffness": 1.0e9}]}
+         "bending_stiffness": 1.0e9, "axial_stiffness": 1.0e8, "torsional_stiffness": 1.0e9,
+         "poisson_ratio": 0.3}]}  # synthetic fixture values, not reference-design data
     fowt["rna"] = {"mass": 945.77, "centre_of_mass_from_tower_top": [-7.32, 0.0, 4.6],
                    "inertia_about_centre_of_mass": [[4.0e5, 0, 0], [0, 2.7e5, 0], [0, 0, 2.9e5]]}
     with pytest.raises(NotImplementedError, match="flexible representation"):
@@ -221,7 +234,12 @@ def test_load_case_matrix(sources):
         basis["environment"]["operating"]["peak_period"]["value"])
     assert op["environment"]["raw_properties"]["WaveTrains"][0]["WaveGamma"] == pytest.approx(
         basis["environment"]["operating"]["jonswap_gamma"]["value"])
-    assert op["fowt"]["hull"]["include_wave_load_first_order"] is True
+    # The generated vessel type carries no load RAOs, so the generated model
+    # keeps first-order wave loading off; run.md switches it on after the
+    # licensed WAMIT import supplies the RAOs.
+    assert WAVE_CASES == ("LC4_operating", "LC5_parked_extreme")
+    for name in WAVE_CASES:
+        assert cases[name]["fowt"]["hull"].get("include_wave_load_first_order", False) is False
     parked = cases["LC5_parked_extreme"]
     assert "rotor_thrust" not in parked["fowt"]
     assert parked["environment"]["waves"]["height"] == pytest.approx(10.7)
@@ -271,3 +289,97 @@ def test_run_packages_written(tmp_path):
         text = (folder / "run.md").read_text()
         assert "## Expected" in text or "## Limitations" in text
         assert "validated" in text  # the do-not-overclaim instruction is present
+
+
+def test_wave_packages_include_wamit_import_output(tmp_path):
+    """The importer needs the first-order text output, with a selectable suffix."""
+    import importlib.util
+
+    script = ROOT / "scripts" / "fowt" / "write_iea15_run_packages.py"
+    spec = importlib.util.spec_from_file_location("packages", script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    source = tmp_path / "source"
+    source.mkdir()
+    stem = Path(module.WAMIT[0]).stem
+    output_name = f"{stem}_1stOrder.out.wamit"
+    import_name = Path(output_name).with_suffix("").name
+    files = {f"{stem}{suffix}": f"reference {suffix}\r\n".encode()
+             for suffix in (".1", ".3", ".hst")}
+    files[output_name] = b"first-order WAMIT output\r\n"
+    for name, content in files.items():
+        (source / name).write_bytes(content)
+
+    out = tmp_path / "packages"
+    assert module.main(["x", str(out), str(source)]) == 0
+    index = json.loads((out / "index.json").read_text())
+    wave_cases = [case for case in index["cases"] if case["needs_wamit_import"]]
+    assert len(wave_cases) == 2
+    for case in index["cases"]:
+        folder = out / case["case"]
+        if not case["needs_wamit_import"]:
+            assert not (folder / "hydro").exists()
+            continue
+        expected = {import_name if name == output_name else name: content
+                    for name, content in files.items()}
+        assert {p.name: p.read_bytes() for p in (folder / "hydro").iterdir()} == expected
+        instructions = (folder / "run.md").read_text()
+        assert f"`hydro/{import_name}`" in instructions
+        assert "requested data" in instructions
+        assert "centre of mass" in instructions
+        assert "phase origins" in instructions
+        assert "Wave load (1st order)" in instructions
+
+
+def _packages_module():
+    import importlib.util
+
+    script = ROOT / "scripts" / "fowt" / "write_iea15_run_packages.py"
+    spec = importlib.util.spec_from_file_location("packages", script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_run_package_rerun_keeps_saved_results(tmp_path):
+    """A rerun must never delete files the generator did not write (e.g. .sim results)."""
+    module = _packages_module()
+    assert module.main(["x", str(tmp_path)]) == 0
+    first = (tmp_path / "LC0_statics" / "model" / "master.yml").read_bytes()
+    # An untouched package regenerates in place.
+    assert module.main(["x", str(tmp_path)]) == 0
+    assert (tmp_path / "LC0_statics" / "model" / "master.yml").read_bytes() == first
+    saved = tmp_path / "LC0_statics" / "model" / "LC0_statics.sim"
+    saved.write_bytes(b"solver results")
+    with pytest.raises(FileExistsError, match="LC0_statics.sim"):
+        module.main(["x", str(tmp_path)])
+    assert saved.read_bytes() == b"solver results"
+    assert (tmp_path / "LC0_statics" / "model" / "master.yml").read_bytes() == first
+
+
+def test_case_folder_refuses_unrecorded_or_edited_content(tmp_path):
+    folder = tmp_path / "case"
+    prepare_case_folder(folder)  # absent: created
+    (folder / "sub").mkdir()
+    (folder / "sub" / "a.yml").write_text("a", encoding="utf-8")
+    record_case_folder(folder)
+    assert (folder / MANIFEST_NAME).is_file()
+    (folder / "sub" / "a.yml").write_text("edited", encoding="utf-8")
+    with pytest.raises(FileExistsError, match="a.yml"):
+        prepare_case_folder(folder)
+    assert (folder / "sub" / "a.yml").read_text(encoding="utf-8") == "edited"
+    (folder / "sub" / "a.yml").write_text("a", encoding="utf-8")
+    prepare_case_folder(folder)  # unchanged generated content: cleared
+    assert folder.is_dir() and not any(folder.iterdir())
+    legacy = tmp_path / "legacy"
+    legacy.mkdir()
+    (legacy / "run.md").write_text("old", encoding="utf-8")
+    with pytest.raises(FileExistsError, match="no generator manifest"):
+        prepare_case_folder(legacy)  # written before manifests existed: never deleted
+    assert (legacy / "run.md").read_text(encoding="utf-8") == "old"
+    (folder / "x.txt").write_text("x", encoding="utf-8")
+    record_case_folder(folder)
+    (folder / MANIFEST_NAME).write_text("{not json", encoding="utf-8")
+    with pytest.raises(FileExistsError, match="manifest"):
+        prepare_case_folder(folder)
+    assert (folder / "x.txt").exists()

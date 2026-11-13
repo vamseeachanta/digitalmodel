@@ -1,12 +1,18 @@
-"""Write ready-to-run licensed packages for the IEA 15 MW / VolturnUS-S load cases.
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""Write licensed-run inputs and instructions for the reference load cases.
 
     python scripts/fowt/write_iea15_run_packages.py <output_dir> [<wamit_dir>]
 
 For each load case: ``spec.yml``, the generated OrcaFlex model (``model/``)
 and ``run.md`` with the exact settings, the expected comparators and their
 tolerances. Cases with waves need the public WAMIT files
-``IEA-15-240-RWT-UMaineSemi.1``, ``.3`` and ``.hst``; when ``wamit_dir`` is
-given they are copied into ``hydro/`` of those packages. Nothing is run.
+alongside the first-order ``*_1stOrder.out.wamit`` text output. When
+``wamit_dir`` is given they are copied into ``hydro/`` of those packages;
+the text output is renamed to ``.out`` for the importer. Without that
+directory, wave packages still require external hydrodynamic inputs.
+Nothing is run or confirmed to load in the licensed solver.
 """
 from __future__ import annotations
 
@@ -27,15 +33,23 @@ from digitalmodel.floating_wind.fowt_static_checks import (
 )
 from digitalmodel.floating_wind.iea15_orcaflex_spec import (
     build_spec,
+    WAVE_CASES,
     load_case_specs,
     load_sources,
     thrust_at,
+)
+from digitalmodel.floating_wind.run_package_folder import (
+    prepare_case_folder,
+    record_case_folder,
 )
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 
 COMMIT = "e4993d63de10f165389534461dd544006750fe60"
 WAMIT = ["IEA-15-240-RWT-UMaineSemi.1", "IEA-15-240-RWT-UMaineSemi.3",
          "IEA-15-240-RWT-UMaineSemi.hst"]
+WAMIT_OUTPUT = f"{Path(WAMIT[0]).stem}_1stOrder.out.wamit"
+WAMIT_IMPORT = Path(WAMIT_OUTPUT).with_suffix("").name
+WAMIT.append(WAMIT_OUTPUT)
 ALLEN = "Allen et al. (2020) NREL/TP-5000-76773"
 
 
@@ -115,12 +129,25 @@ def run_md(name: str, spec: dict, eq: dict, x: dict, basis: dict) -> str:
         lines += ["", "No published offset is tabulated (Allen et al. section 3.1 gives a "
                   "figure only)."]
     else:
-        lines += ["2. Before statics, import the public WAMIT first-order data from `hydro/`",
-                  "   into the VesselType `VolturnUS-S type` (OrcaFlex vessel type data import,",
-                  "   WAMIT: `.1` added mass and damping, `.3` load RAOs, `.hst` hydrostatics).",
-                  "   Keep the generated mass, centre of mass, displaced volume, centre of",
-                  "   buoyancy, hydrostatic stiffness and other damping; record any value the",
-                  "   import overwrites. WAMIT length scale 1 m, water density 1.025 te/m3.",
+        lines += ["2. Before statics, use the vessel type WAMIT data importer and select",
+                  f"   `hydro/{WAMIT_IMPORT}` (the first-order text output, renamed",
+                  "   from `.out.wamit`). The `.1`, `.3` and `.hst` files are retained for",
+                  "   reference; they are not the file selected by this importer. If `hydro/`",
+                  "   is absent, supply these files from the pinned public source first.",
+                  "   Save the generated mass, centre of mass, displaced volume, centre of",
+                  "   buoyancy, hydrostatic stiffness and other damping before import.",
+                  "   Temporarily set the vessel type centre of mass to [0, 0, 0], matching",
+                  "   the centre in the source output and the common hull datum. On the",
+                  "   requested data page select added mass and damping and first-order load",
+                  "   RAOs only; leave displacement RAOs, QTFs and mass properties unselected.",
+                  "   Restore the saved generated properties afterwards. Confirm added mass,",
+                  "   damping and load RAO origins and phase origins are all [0, 0, 0]; do not",
+                  "   accept an origin shift caused by the rigid whole-system centre of mass.",
+                  "   Use length scale 1 m and water density 1.025 te/m3. Record import warnings",
+                  "   and overwritten values. The licensed import has not been exercised.",
+                  "   The generated vessel type has first-order wave loading switched off,",
+                  "   because it carries no load RAOs until this import. After the import,",
+                  "   switch on the vessel's included effect Wave load (1st order).",
                   "3. Confirm the wave train reads JONSWAP with the Hs, Tp and gamma below.",
                   f"4. Run statics, then dynamics: stages {spec['simulation']['stages']} s.", "",
                   "## Settings", "",
@@ -163,19 +190,20 @@ def main(argv: list[str]) -> int:
     index = []
     for name, spec in cases.items():
         folder = out / name
-        if folder.exists():
-            shutil.rmtree(folder)
-        folder.mkdir(parents=True)
+        # Never delete a package wholesale: saved solver results may sit in it.
+        prepare_case_folder(folder)
         (folder / "spec.yml").write_text(yaml.safe_dump(spec, sort_keys=False, width=100),
                                          encoding="utf-8", newline="\n")
         ModularModelGenerator(folder / "spec.yml").generate(folder / "model")
-        needs_hydro = spec["fowt"]["hull"].get("include_wave_load_first_order", False)
+        needs_hydro = name in WAVE_CASES
         if needs_hydro and wamit is not None:
             (folder / "hydro").mkdir()
             for file in WAMIT:
-                shutil.copy2(wamit / file, folder / "hydro" / file)
+                destination = WAMIT_IMPORT if file == WAMIT_OUTPUT else file
+                shutil.copy2(wamit / file, folder / "hydro" / destination)
         (folder / "run.md").write_text(run_md(name, spec, eq, x, basis), encoding="utf-8",
                                        newline="\n")
+        record_case_folder(folder)
         digest = hashlib.sha256((folder / "model" / "includes" / "20_generic_objects.yml")
                                 .read_bytes()).hexdigest()
         index.append({"case": name, "needs_wamit_import": needs_hydro,

@@ -32,7 +32,15 @@ from __future__ import annotations
 import math
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+class _FiniteModel(BaseModel):
+    """Base for every fowt model: NaN and infinity are rejected in all float
+    fields, including floats nested in vectors, matrices and radiation lists,
+    so that no non-finite value reaches the generated model."""
+
+    model_config = ConfigDict(allow_inf_nan=False)
+
 
 Vector3 = list[float]
 Matrix3 = list[list[float]]
@@ -54,7 +62,7 @@ def _check_square(value: list[list[float]], size: int, name: str) -> list[list[f
     return value
 
 
-class FowtRadiationEntry(BaseModel):
+class FowtRadiationEntry(_FiniteModel):
     """Added mass and radiation damping at one wave period.
 
     ``period`` 0 denotes infinite frequency (OrcaFlex convention with waves
@@ -71,7 +79,7 @@ class FowtRadiationEntry(BaseModel):
         return _check_square(value, 6, "radiation matrix")
 
 
-class FowtHull(BaseModel):
+class FowtHull(_FiniteModel):
     """Floating hull carried by an OrcaFlex Vessel and VesselType.
 
     ``hydrostatic_stiffness_excluding_gravity`` is the heave/roll/pitch block
@@ -107,7 +115,14 @@ class FowtHull(BaseModel):
     included_in_statics: Literal["6 DOF", "None"] = Field(
         default="6 DOF", description="'None' holds the initial position for decay tests")
     include_wave_load_first_order: bool = Field(
-        default=False, description="Needs load RAOs in the VesselType; none are emitted")
+        default=False, description="Must remain false until sourced load RAOs are supported")
+
+    @field_validator("include_wave_load_first_order")
+    @classmethod
+    def _sourced_wave_loads_only(cls, value: bool) -> bool:
+        if value:
+            raise ValueError("first-order wave loading requires sourced load RAOs; not supported")
+        return value
 
     @field_validator("centre_of_mass", "centre_of_buoyancy", "initial_position",
                      "initial_orientation")
@@ -133,8 +148,13 @@ class FowtHull(BaseModel):
         return self
 
 
-class FowtTowerSection(BaseModel):
-    """One prismatic tower section, listed from the base upward."""
+class FowtTowerSection(_FiniteModel):
+    """One prismatic tower section, listed from the base upward.
+
+    Material properties, including Poisson ratio, must be supplied from the
+    chosen material basis and documented in ``FowtSpec.source_note``. There
+    is no assumed incompressible material or reference-design default.
+    """
 
     length: float = Field(..., gt=0, description="Section length (m)")
     outer_diameter: float = Field(..., gt=0, description="Outer diameter (m)")
@@ -142,9 +162,11 @@ class FowtTowerSection(BaseModel):
     bending_stiffness: float = Field(..., gt=0, description="EI (kN.m2)")
     axial_stiffness: float = Field(..., gt=0, description="EA (kN)")
     torsional_stiffness: float = Field(..., gt=0, description="GJ (kN.m2)")
+    poisson_ratio: float = Field(
+        ..., allow_inf_nan=False, description="Material Poisson ratio; document its basis in source_note")
 
 
-class FowtTower(BaseModel):
+class FowtTower(_FiniteModel):
     """Flexible tower: a finite-element line from the hull to the RNA buoy."""
 
     name: str = Field(default="Tower", min_length=1)
@@ -157,8 +179,12 @@ class FowtTower(BaseModel):
         return self.base_elevation + sum(section.length for section in self.sections)
 
 
-class FowtRna(BaseModel):
-    """Rotor-nacelle assembly as a lumped mass (flexible representation)."""
+class FowtRna(_FiniteModel):
+    """Rotor-nacelle assembly in principal axes (flexible representation).
+
+    The lumped buoy takes diagonal moments only. Nonzero products of inertia
+    require an axes transformation of the full model and are not supported.
+    """
 
     name: str = Field(default="RNA", min_length=1)
     mass: float = Field(..., gt=0, description="Mass (te)")
@@ -173,10 +199,13 @@ class FowtRna(BaseModel):
     @field_validator("inertia_about_centre_of_mass")
     @classmethod
     def _three_by_three(cls, value: list[list[float]]) -> list[list[float]]:
-        return _check_square(value, 3, "matrix")
+        _check_square(value, 3, "matrix")
+        if any(value[i][j] != 0 for i in range(3) for j in range(3) if i != j):
+            raise ValueError("RNA inertia must be in principal axes with zero products of inertia")
+        return value
 
 
-class FowtRotorThrust(BaseModel):
+class FowtRotorThrust(_FiniteModel):
     """Steady rotor thrust applied at the hub along the tilted shaft.
 
     The force acts downwind (positive x for a rotor upwind of the tower at
@@ -187,7 +216,10 @@ class FowtRotorThrust(BaseModel):
     name: str = Field(default="Hub load point", min_length=1)
     thrust: float = Field(..., ge=0, description="Thrust (kN)")
     hub_position: Vector3 = Field(..., description="Hub centre in hull axes (m)")
-    shaft_tilt: float = Field(default=0.0, ge=0, le=20, description="(deg)")
+    shaft_tilt: float = Field(
+        ..., allow_inf_nan=False,
+        description="Signed shaft tilt (deg); document its basis in source_note. "
+                    "No reference-design angle cap is imposed by the force rotation")
     wind_speed: float | None = Field(default=None, ge=0, description="Hub wind speed the thrust belongs to (m/s)")
 
     @field_validator("hub_position")
@@ -196,8 +228,13 @@ class FowtRotorThrust(BaseModel):
         return _check_vector(value, 3, "vector")
 
 
-class FowtMooringLineType(BaseModel):
-    """Mooring line type with directly specified properties."""
+class FowtMooringLineType(_FiniteModel):
+    """Mooring line type with directly specified properties.
+
+    All hydrodynamic coefficients are required inputs. Record their source,
+    coefficient convention and any assumptions in ``FowtSpec.source_note``;
+    coefficients of one reference design are not generic line-type defaults.
+    """
 
     name: str = Field(..., min_length=1)
     outer_diameter: float = Field(..., gt=0, description="Volume-equivalent diameter (m)")
@@ -205,13 +242,13 @@ class FowtMooringLineType(BaseModel):
     axial_stiffness: float = Field(..., gt=0, description="EA (kN)")
     minimum_breaking_load: float | None = Field(
         default=None, gt=0, description="(kN); None where the reference design publishes none")
-    normal_drag_coefficient: float = Field(default=2.4, ge=0)
-    axial_drag_coefficient: float = Field(default=1.15, ge=0)
-    normal_added_mass_coefficient: float = Field(default=1.0, ge=0)
-    axial_added_mass_coefficient: float = Field(default=0.5, ge=0)
+    normal_drag_coefficient: float = Field(..., ge=0, allow_inf_nan=False)
+    axial_drag_coefficient: float = Field(..., ge=0, allow_inf_nan=False)
+    normal_added_mass_coefficient: float = Field(..., ge=0, allow_inf_nan=False)
+    axial_added_mass_coefficient: float = Field(..., ge=0, allow_inf_nan=False)
 
 
-class FowtMooringLine(BaseModel):
+class FowtMooringLine(_FiniteModel):
     """Single-segment line from a hull fairlead to a seabed anchor."""
 
     name: str = Field(..., min_length=1)
@@ -234,7 +271,7 @@ class FowtMooringLine(BaseModel):
         return _check_vector(value, 2, "anchor_xy")
 
 
-class FowtSpec(BaseModel):
+class FowtSpec(_FiniteModel):
     """Floating offshore wind turbine model."""
 
     representation: Literal["rigid", "flexible"] = Field(default="rigid")

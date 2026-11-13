@@ -160,6 +160,14 @@ class ModularModelGenerator:
         into GenericModel-compatible dicts, then merge them into
         spec.generic for processing by GenericModelBuilder.
         """
+        if self.spec.fowt is not None:
+            # FOWT input excludes a user-supplied generic model. Rebuild its
+            # derived objects on each call, retaining the engineering source
+            # for repeat generation and subsequent domain edits.
+            generic = GenericModel(**FowtRouter().route(self.spec.fowt))
+            self.spec = self.spec.model_copy(update={"generic": generic})
+            return
+
         if self.spec.riser is not None and self.spec.generic is not None:
             from .riser_conversion import render_riser
 
@@ -174,10 +182,6 @@ class ModularModelGenerator:
         if hasattr(self.spec, 'mooring') and self.spec.mooring is not None:
             mooring_result = MooringRouter().route(self.spec.mooring)
             router_outputs.append(mooring_result)
-
-        # Route floating offshore wind turbine
-        if getattr(self.spec, 'fowt', None) is not None:
-            router_outputs.append(FowtRouter().route(self.spec.fowt))
 
         # Route vessel from equipment (if standalone vessel model)
         # VesselRouter is available for from_hull_catalog() calls
@@ -195,9 +199,8 @@ class ModularModelGenerator:
                 else:
                     merged[key] = value
 
-        if self.spec.generic is None or self.spec.fowt is not None:
-            # FOWT inputs cannot contain authored generic objects. Replace the
-            # previous derived model so repeated routing does not append copies.
+        if self.spec.generic is None:
+            # Create new generic model from router output
             self.spec = self.spec.model_copy(
                 update={"generic": GenericModel(**merged)}
             )
