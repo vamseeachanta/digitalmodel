@@ -33,6 +33,8 @@ def natural_roll_period(
     beam_m: float,
     gm_m: float,
     c_roll: float = 0.80,
+    *,
+    kxx_m: Optional[float] = None,
 ) -> float:
     """Natural roll period (seconds).
 
@@ -45,10 +47,22 @@ def natural_roll_period(
         gm_m: metacentric height GM in meters
         c_roll: roll gyration coefficient (k_xx/B), default 0.80
             Note: c_roll includes the 2*pi factor for simplicity
+            Retained for compatibility; the legacy estimate ignores this value.
+        kxx_m: finite positive rigid-body radius in meters about the
+            centroidal longitudinal axis. None retains the 0.40 * beam estimate.
+            Booleans are rejected. Added hydrodynamic inertia is not included.
+
+    For a result from ``gyradius_from_point_masses``, use
+    ``natural_roll_period(beam_m, gm_m, kxx_m=result.roll)``.
     """
     if gm_m <= 0:
         raise ValueError("GM must be positive for stable vessel")
-    k_xx = 0.40 * beam_m  # typical gyration radius
+    if kxx_m is None:
+        k_xx = 0.40 * beam_m  # typical gyration radius
+    else:
+        if isinstance(kxx_m, bool) or not math.isfinite(kxx_m) or kxx_m <= 0:
+            raise ValueError("kxx_m must be finite and positive")
+        k_xx = kxx_m
     return 2 * math.pi * k_xx / math.sqrt(G * gm_m)
 
 
@@ -111,15 +125,33 @@ def natural_pitch_period(
     lwl_m: float,
     gml_m: float,
     displacement_tonnes: float,
+    *,
+    kyy_m: Optional[float] = None,
 ) -> float:
     """Natural pitch period (seconds).
 
     T_pitch = 2 * pi * k_yy / sqrt(g * GML)
     where k_yy ≈ 0.25 * L (pitch radius of gyration)
+
+    Args:
+        lwl_m: waterline length in meters, used for the legacy radius estimate.
+        gml_m: longitudinal metacentric height in meters.
+        displacement_tonnes: retained for compatibility; unused by this equation.
+        kyy_m: finite positive rigid-body radius in meters about the
+            centroidal transverse axis. None retains the 0.25 * length estimate.
+            Booleans are rejected. Added hydrodynamic inertia is not included.
+
+    For a result from ``gyradius_from_point_masses``, use
+    ``natural_pitch_period(lwl_m, gml_m, displacement_tonnes, kyy_m=result.pitch)``.
     """
     if gml_m <= 0:
         raise ValueError("Longitudinal GM must be positive")
-    k_yy = 0.25 * lwl_m
+    if kyy_m is None:
+        k_yy = 0.25 * lwl_m
+    else:
+        if isinstance(kyy_m, bool) or not math.isfinite(kyy_m) or kyy_m <= 0:
+            raise ValueError("kyy_m must be finite and positive")
+        k_yy = kyy_m
     return 2 * math.pi * k_yy / math.sqrt(G * gml_m)
 
 

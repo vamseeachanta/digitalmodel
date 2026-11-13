@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import warnings
+
 from pydantic import BaseModel, Field, model_validator
 
 from .metadata import Metadata
@@ -139,10 +141,16 @@ class ProjectInputSpec(BaseModel):
                 tugs = self.equipment.tugs
                 max_tug_x = tugs.first_position[0] + (tugs.count - 1) * tugs.spacing
 
-                # Only warn if tugs extend significantly beyond pipeline
+                # Only warn if tugs extend significantly beyond pipeline; this
+                # can be intentional (staged installation), so it is not an error.
                 if max_tug_x > total_pipeline_length * 1.5:
-                    # This could be intentional for staged installation
-                    pass  # Could add warning logging here
+                    warnings.warn(
+                        f"Last tug at x = {max_tug_x:g} m lies beyond 1.5 times the "
+                        f"pipeline length ({total_pipeline_length:g} m); check the "
+                        "tug spacing unless the spread is intended (staged installation).",
+                        UserWarning,
+                        stacklevel=2,
+                    )
 
             # Check S-lay equipment consistency
             if self.equipment.stinger and not self.equipment.vessel:

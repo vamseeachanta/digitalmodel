@@ -416,9 +416,11 @@ SPECS: list[dict] = [
          blurb="One 12.75-inch X65 deepwater line sized under all nine registered design codes at "
                "once — a wall-thickness slider drives each code's governing utilization against the "
                "1.0 limit, with the minimum wall to pass per code. Every point is a live "
-               "WallThicknessAnalyzer evaluation (369 in total), not a mock.",
+               "WallThicknessAnalyzer evaluation (369 in total), not a mock. Pressure-only sweep "
+               "with zero effective tension and zero bending moment; combined tension and bending are not evaluated.",
          figures=[("9", "design codes"), ("369", "engine evaluations"), ("~19.5 mm", "min wall, pipeline codes")],
-         bullets=["Burst / pressure-containment, collapse (solved from the cubic), propagation-buckling and combined-loading utilizations per code",
+         bullets=["Pressure-only sweep with zero effective tension and zero bending moment; combined tension and bending are not evaluated",
+                  "Burst / pressure-containment, collapse (solved from the cubic) and propagation-buckling utilizations per code",
                   "Edition-aware factors (DNV-OS-F101 2007 vs DNV-ST-F101 2021; API RP 1111 3rd vs 4th edition)",
                   "Propagation buckling governs the pipeline codes (~19.5 mm needed) while DNV-ST-F201 riser LRFD passes at 8 mm"]),
     dict(id="wall-thickness-load-explorer", kind="work", title="Wall-thickness tension and bending explorer",
