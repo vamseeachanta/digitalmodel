@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Composite material stress example</title>
+  <style>
+    body { max-width: 58rem; margin: 2rem auto; padding: 0 1rem; font: 1rem/1.6 system-ui, sans-serif; color: #202a35; }
+    h1, h2 { line-height: 1.2; }
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { border: 1px solid #bdc7d1; padding: .5rem; text-align: left; }
+    caption { caption-side: bottom; text-align: left; padding-top: .4rem; }
+    pre { overflow-x: auto; background: #edf2f6; padding: 1rem; }
+    code { font-size: .95em; }
+    aside { border-left: .3rem solid #496b90; padding-left: 1rem; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>Composite material stress example</h1>
+  <p>The concrete-filled circular hollow section example exports stresses calculated
+    by <code>sectionproperties</code> under synthetic axial strain and bending.
+    Separate steel and concrete stresses are retained at the shared interface.
+    This example extends the <a href="sectionproperties-composite-evaluation.md">composite stiffness demonstration</a>;
+    it establishes no operating load or design capacity.</p>
+
+  <h2>Revision history</h2>
+  <table>
+    <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+    <tbody><tr><td>1</td><td>2026-11-13</td><td>Library material stresses and reproducible exports are added to complement the existing mesh and stiffness examples.</td></tr></tbody>
+    <caption>Table 1. Initial issue of the example.</caption>
+  </table>
+
+  <h2>Basis and loads</h2>
+  <p>All inputs are arbitrary synthetic demonstration values. Outside diameter is
+    80.0 mm and wall thickness is 8.000 mm. Elastic moduli are 210,000 MPa for steel
+    and 35,000 MPa for concrete. Perfect bond, plane sections and uncracked linear
+    elasticity are assumed. Poisson ratios, strengths and densities supplied to the
+    material objects are synthetic placeholders; this axial and bending calculation
+    depends on the geometry and elastic moduli.</p>
+  <p>For this concentric section, the elastic centroid is at the origin. The imposed
+    centroidal strain is &epsilon;<sub>0</sub> = 10<sup>&minus;4</sup>, and curvature is
+    &kappa; = 10<sup>&minus;6</sup> mm<sup>&minus;1</sup>. Positive curvature raises
+    the normal stress at positive y. The independent oracle is
+    &sigma;<sub>i</sub>(y) = E<sub>i</sub>(&epsilon;<sub>0</sub> + &kappa;y).</p>
+  <pre><code>section, stiffness = run_cft_case(...)
+post = section.calculate_stress(
+    n=epsilon0 * stiffness["EA_N"],
+    mxx=kappa * stiffness["EIxx_Nmm2"],
+)
+material_arrays = post.get_stress()
+post.plot_stress(stress="zz", render=False, colorbar_label="Normal stress (MPa)")</code></pre>
+  <p>Raw EA in N and EI in N mm<sup>2</sup> define N and Mxx in N and N mm.
+    Steel-transformed I = EI/E<sub>s</sub> in mm<sup>4</sup> is recorded separately;
+    it is not used as flexural rigidity. All shear and torsion actions are zero,
+    so geometric analysis suffices. Warping and plastic analysis are not run.</p>
+
+  <h2>Independent stress checks</h2>
+  <table>
+    <thead><tr><th>Material</th><th>x (mm)</th><th>y (mm)</th><th>Hand stress (MPa)</th></tr></thead>
+    <tbody>
+      <tr><td>Steel, outer surface</td><td>0.0</td><td>40.0</td><td>29.4</td></tr>
+      <tr><td>Steel, interface</td><td>0.0</td><td>32.0</td><td>27.7</td></tr>
+      <tr><td>Concrete, interface</td><td>0.0</td><td>32.0</td><td>4.6</td></tr>
+    </tbody>
+    <caption>Table 2. Independent positive-curvature oracle, displayed to one decimal place; tests use unrounded equations.</caption>
+  </table>
+  <p>The stress jump follows the modulus ratio while interface strain remains
+    continuous. Library nodal stresses are checked at both material sides using
+    32-sided polygons with maximum triangle area 16.0 mm<sup>2</sup> and 64-sided
+    polygons with area 4.0 mm<sup>2</sup>. The coordinate allowance is
+    10<sup>&minus;8</sup> mm. Relative stress tolerance is
+    (2&pi;/n)<sup>2</sup>/3 + 10&radic;(machine epsilon), with a separate absolute
+    allowance of 10<sup>&minus;6</sup> MPa. This is a demonstration tolerance tied
+    to the polygon stiffness bound, not a design criterion. Negative curvature
+    and zero actions are also tested.</p>
+
+  <h2>Execution and retained outputs</h2>
+  <pre><code>python -m scripts.integrations.composite_stress_example --output-dir RESULTS</code></pre>
+  <p>The output directory is supplied explicitly. The default mesh has 64 polygon
+    sides and maximum triangle area 4.0 mm<sup>2</sup>. Importing the module performs
+    no meshing, stress calculation, directory creation or output writes.</p>
+  <table>
+    <thead><tr><th>Output</th><th>Content</th></tr></thead>
+    <tbody>
+      <tr><td><code>sectionproperties_cft_results.json</code></td><td>Existing CFT geometric stiffness results.</td></tr>
+      <tr><td><code>composite_stress.png</code></td><td>Library stress contours, material masks, coordinates in mm and colorbar in MPa.</td></tr>
+      <tr><td><code>composite_stress.csv</code></td><td>Material, node ID, coordinates in mm and library normal stress in MPa.</td></tr>
+      <tr><td><code>composite_stress_receipt.json</code></td><td>Execution time, library version, inputs, units, mesh, assumptions, stiffness, loads, tolerance, output inventory and SHA-256 payload digests.</td></tr>
+    </tbody>
+    <caption>Table 3. Runtime products; no generated result is embedded in this page.</caption>
+  </table>
+  <p>CSV membership is derived from each material group's element connectivity,
+    rather than nonzero stresses. Both material rows at a shared node and true zero
+    stresses are retained. Tests compare all exported values with the library's
+    returned arrays and read back all four files to verify the receipt and payload digests.</p>
+  <aside><p>Bond transfer, slip, cracking, nonlinear response, local connection
+    behavior and member capacity are outside this example. The nodal field is
+    the library result; the hand equations are used only as an independent test oracle.
+    The dependencies declared by the repository are required; the tests exercise
+    version 3.10.2. Compatibility with every permitted dependency version is not established.</p></aside>
+</main>
+</body>
+</html>
