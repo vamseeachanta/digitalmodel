@@ -44,12 +44,48 @@ def store_data_marker(request):
             "run scripts/data/fetch.py <id>"
         )
 
-_SOLVER_WORD = re.compile(r"\bsolver\b")
+# pytest's ``-m`` lexer (``_pytest.mark.expression``) reads a marker identifier
+# as one run of word characters and ``: + - . [ ] \ /``, so ``slow-solver`` and
+# ``solver.extra`` are whole identifiers that do not name ``solver``.
+_MARK_TOKEN = re.compile(
+    r"""[ \t]*(?:(?P<punct>[()=,])|(?P<string>'[^']*'|"[^"]*")|(?P<ident>[\w:+\-.\[\]\\/]+))"""
+)
+_MARK_KEYWORDS = frozenset({"and", "or", "not"})
+
+
+def _marker_names(markexpr):
+    """Marker identifiers a ``-m`` expression names; None when it does not lex.
+
+    In ``marker(name=value)`` the keyword names and values are arguments, not
+    marker names, and a string literal is never an identifier.
+    """
+    text = (markexpr or "").strip(" \t")
+    names, pos, in_call, after_marker = set(), 0, False, False
+    while pos < len(text):
+        match = _MARK_TOKEN.match(text, pos)
+        if not match:
+            return None
+        pos = match.end()
+        punct, ident = match.group("punct"), match.group("ident")
+        if in_call:
+            in_call = punct != ")"
+        elif punct == "(" and after_marker:
+            in_call = True
+        elif ident is not None and ident not in _MARK_KEYWORDS:
+            names.add(ident)
+        after_marker = ident is not None and ident not in _MARK_KEYWORDS and not in_call
+    return names
 
 
 def selects_solver(markexpr: str) -> bool:
-    """True when a ``-m`` expression names the ``solver`` marker explicitly."""
-    return bool(_SOLVER_WORD.search(markexpr or ""))
+    """True when a ``-m`` expression names the ``solver`` marker explicitly.
+
+    Only a complete marker identifier counts: ``slow-solver``, ``solver.extra``
+    and ``solvers`` do not name ``solver``, nor does a keyword argument or a
+    string.  An expression that does not lex leaves the guard on; pytest then
+    rejects it.
+    """
+    return "solver" in (_marker_names(markexpr) or ())
 
 
 def pytest_collection_modifyitems(config, items):

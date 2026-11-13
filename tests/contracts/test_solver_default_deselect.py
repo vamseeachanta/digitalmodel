@@ -39,6 +39,25 @@ def _selects_solver():
         ("not solver", True),
         ("solver and not slow", True),
         ("(slow or solver)", True),
+        ("not(solver)", True),
+        ("solver(reason='x')", True),
+        ("slow (n=1) or solver", True),
+        # Only a complete marker identifier names solver (pytest's -m lexer
+        # reads these as single identifiers).
+        ("slow-solver", False),
+        ("not slow-solver", False),
+        ("solver-slow", False),
+        ("solver.extra", False),
+        ("not solver.extra", False),
+        ("x/solver", False),
+        ("x:solver", False),
+        ("solver[1]", False),
+        # Keyword arguments and strings are not marker names.
+        ("slow(solver=1)", False),
+        ("slow(name='solver')", False),
+        ('slow(name="solver")', False),
+        # An expression that does not lex leaves the guard on.
+        ("'solver", False),
     ],
 )
 def test_only_an_expression_naming_solver_opts_in(markexpr, expected):
@@ -65,8 +84,9 @@ def test_plain_run_deselects_solver_tests():
     assert not [i for i in ids if i.endswith(MARKED)]
 
 
-def test_other_mark_expressions_still_deselect_solver_tests():
-    assert not [i for i in _collect("-m", "not slow") if i.endswith(MARKED)]
+@pytest.mark.parametrize("markexpr", ["not slow", "not slow-solver", "not solver.extra"])
+def test_other_mark_expressions_still_deselect_solver_tests(markexpr):
+    assert not [i for i in _collect("-m", markexpr) if i.endswith(MARKED)]
 
 
 def test_dash_m_solver_selects_only_solver_tests():

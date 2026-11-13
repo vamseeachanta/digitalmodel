@@ -14,8 +14,9 @@ test module and ``conftest.py`` it finds the names bound to the real OrcFxAPI
 helper it uses, or a fixture it requests (in the module or in a ``conftest.py``
 above it) loads one of those names or calls ``importorskip("OrcFxAPI")``.  A
 ``find_spec("OrcFxAPI")`` availability probe and an import whose name is never
-used are not reaches.  An OrcFxAPI call at import time cannot be deselected and
-is reported on its own.
+used are not reaches.  An OrcFxAPI call at import time (module level, a class
+body, a decorator such as ``parametrize`` or an argument default) runs during
+collection, cannot be deselected and is reported on its own, marker or not.
 
 Limits: reaches through ``src`` helpers are not traced, so tests that reach the
 solver only through a ``src`` helper are marked by hand; a fixture is matched
@@ -137,16 +138,72 @@ def _is_main_guard(node: ast.AST) -> bool:
     )
 
 
-def _module_scope(body: list[ast.stmt]):
-    """Statements executed at import time, outside function and class bodies."""
+def _definition_time(fn: ast.AST):
+    """Parts of a ``def`` evaluated when the definition runs, not when it is called."""
+    yield from fn.decorator_list
+    yield from fn.args.defaults
+    yield from (d for d in fn.args.kw_defaults if d is not None)
+
+
+def _import_time(body: list[ast.stmt]):
+    """Expressions and simple statements executed when pytest imports the module.
+
+    That is module-level code and every class body (at any nesting), plus the
+    decorators and argument defaults of each ``def`` and the decorators, bases
+    and keywords of each ``class`` among them -- including a solver-marked
+    test's ``parametrize`` arguments.  Function bodies and the ``__main__``
+    guard are not executed on import.
+    """
     for node in body:
-        if isinstance(node, (*FUNCS, ast.ClassDef)) or _is_main_guard(node):
+        if _is_main_guard(node):
             continue
+        if isinstance(node, FUNCS):
+            yield from _definition_time(node)
+        elif isinstance(node, ast.ClassDef):
+            yield from node.decorator_list
+            yield from node.bases
+            yield from node.keywords
+            yield from _import_time(node.body)
+        else:
+            yield from _statement_parts(node)
+
+
+_BLOCK_ITEMS = (ast.stmt, ast.excepthandler, ast.match_case)
+
+
+def _statement_parts(node: ast.stmt):
+    """A simple statement whole; a compound one as its own expressions and blocks."""
+    fields = [value for _, value in ast.iter_fields(node)]
+    blocks = [v for v in fields if isinstance(v, list) and v and isinstance(v[0], _BLOCK_ITEMS)]
+    if not blocks:
         yield node
-        for attr in ("body", "orelse", "finalbody"):
-            yield from _module_scope(getattr(node, attr, None) or [])
-        for handler in getattr(node, "handlers", None) or []:
-            yield from _module_scope(handler.body)
+        return
+    for value in fields:
+        if isinstance(value, ast.AST):
+            yield value
+        elif isinstance(value, list) and value and isinstance(value[0], ast.withitem):
+            yield from value
+    for block in blocks:
+        for item in block:
+            if isinstance(item, ast.excepthandler):
+                if item.type is not None:
+                    yield item.type
+                yield from _import_time(item.body)
+            elif isinstance(item, ast.match_case):
+                if item.guard is not None:
+                    yield item.guard
+                yield from _import_time(item.body)
+            else:
+                yield from _import_time([item])
+
+
+def _executed(node: ast.AST):
+    """``ast.walk`` without entering a lambda body, which runs only when called."""
+    yield node
+    for child in ast.iter_child_nodes(node):
+        if isinstance(node, ast.Lambda) and child is node.body:
+            continue
+        yield from _executed(child)
 
 
 @dataclass
@@ -172,17 +229,20 @@ class Module:
         return _close(self._defs(self.tree.body), self.api, set(), outer)[1]
 
     def violations(self, outer: set[str], base: Path) -> list[str]:
-        """Unmarked tests that reach OrcFxAPI, and import-time OrcFxAPI calls."""
+        """Unmarked tests that reach OrcFxAPI, and import-time OrcFxAPI calls.
+
+        An import-time call (module level, a class body, a decorator such as
+        ``parametrize``, or an argument default) runs during collection, before
+        deselection can act, so it is reported whatever the markers say.
+        """
         rel = self.path.relative_to(base).as_posix()
-        found = [
-            f"{rel}:{node.lineno} calls OrcFxAPI at import time"
-            for node in _module_scope(self.tree.body)
-            if isinstance(node, (ast.Expr, ast.Assign, ast.AnnAssign, ast.AugAssign))
-            and any(
-                isinstance(sub, ast.Call) and _direct_reach(sub.func, self.api)
-                for sub in ast.walk(node)
-            )
-        ]
+        lines = {
+            sub.lineno
+            for node in _import_time(self.tree.body)
+            for sub in _executed(node)
+            if isinstance(sub, ast.Call) and _direct_reach(sub.func, self.api)
+        }
+        found = [f"{rel}:{line} calls OrcFxAPI at import time" for line in sorted(lines)]
         if "pytestmark" in self.solver_names:
             return found
         helpers, fixtures = _close(self._defs(self.tree.body), self.api, set(), outer)
@@ -325,6 +385,68 @@ def test_scan_reports_import_time_calls_even_in_a_marked_module(tmp_path):
         {"tests/test_m.py": GATED + "pytestmark = pytest.mark.solver\nM = OrcFxAPI.Model()\n"},
     )
     assert found == ["tests/test_m.py:8 calls OrcFxAPI at import time"]
+
+
+@pytest.mark.parametrize(
+    "body, line",
+    [
+        # Class bodies run on import, also in a solver-marked class or module.
+        ("class TestA:\n    model = OrcFxAPI.Model()\n", 8),
+        ("@pytest.mark.solver\nclass TestA:\n    model = OrcFxAPI.Model()\n", 9),
+        (
+            "pytestmark = pytest.mark.solver\nclass TestA:\n    class Inner:\n"
+            "        m = OrcFxAPI.Model()\n",
+            10,
+        ),
+        # Decorator arguments run at definition, before deselection.
+        (
+            "@pytest.mark.solver\n@pytest.mark.parametrize('m', [OrcFxAPI.Model()])\n"
+            "def test_a(m):\n    pass\n",
+            8,
+        ),
+        (
+            "class TestA:\n    @pytest.mark.solver\n"
+            "    @pytest.mark.parametrize('m', [OrcFxAPI.Model()])\n"
+            "    def test_a(self, m):\n        pass\n",
+            9,
+        ),
+        ("@pytest.fixture(params=[OrcFxAPI.Model()])\ndef m(request):\n    pass\n", 7),
+        # Argument defaults run at definition too.
+        ("@pytest.mark.solver\ndef test_a(m=OrcFxAPI.Model()):\n    pass\n", 8),
+        ("@pytest.mark.solver\ndef test_a(*, m=OrcFxAPI.Model()):\n    pass\n", 8),
+        ("class TestA:\n    def test_a(self, m=OrcFxAPI.Model()):\n        pass\n", 8),
+        # Class decorators, bases and keywords.
+        ("@pytest.mark.usefixtures(OrcFxAPI.Model())\nclass TestA:\n    pass\n", 7),
+        ("class TestA(OrcFxAPI.Model()):\n    pass\n", 7),
+        ("class TestA(metaclass=OrcFxAPI.Meta()):\n    pass\n", 7),
+        # Compound statements: their tests, iterables and context managers run.
+        ("if OrcFxAPI.Model():\n    pass\n", 7),
+        ("for m in OrcFxAPI.Models():\n    pass\n", 7),
+        ("with OrcFxAPI.Model() as m:\n    pass\n", 7),
+        ("try:\n    pass\nexcept ImportError:\n    M = OrcFxAPI.Model()\n", 10),
+    ],
+)
+def test_scan_reports_collection_time_calls(tmp_path, body, line):
+    found = _scan_text(tmp_path, {"tests/test_m.py": GATED + body})
+    assert f"tests/test_m.py:{line} calls OrcFxAPI at import time" in found
+
+
+@pytest.mark.parametrize(
+    "body",
+    [
+        # Code that runs only when called is not an import-time call.
+        "@pytest.mark.solver\ndef test_a(m=None):\n    OrcFxAPI.Model()\n",
+        "@pytest.mark.solver\nclass TestA:\n    def test_a(self):\n        OrcFxAPI.Model()\n",
+        "pytestmark = pytest.mark.solver\nMAKE = lambda: OrcFxAPI.Model()\n",
+        (
+            "@pytest.mark.solver\n@pytest.mark.parametrize('m', [lambda: OrcFxAPI.Model()])\n"
+            "def test_a(m):\n    pass\n"
+        ),
+    ],
+)
+def test_scan_does_not_report_call_time_code(tmp_path, body):
+    found = _scan_text(tmp_path, {"tests/test_m.py": GATED + body})
+    assert not [f for f in found if "import time" in f]
 
 
 def test_scan_ignores_the_main_guard(tmp_path):
