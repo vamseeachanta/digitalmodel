@@ -7684,12 +7684,18 @@ fowt:
     length: 850.0
   source_note: 'basis.yml and generator_data.yml (IEA-15-240-RWT at e4993d6; Allen et al. 2020 NREL/TP-5000-76773).
     Hull mass properties are whole-system values (rigid representation). WAMIT 22, 44, 24 completed by
-    three-fold symmetry; AddBQuad off-diagonals dropped (OrcaFlex other damping is diagonal). Mooring
-    Cd 2.0/0.4 and Ca 0.82/0.27 from the MoorDyn input LINE TYPES at the same revision. Nominal chain
-    diameter 0.185 m is not used for hydrodynamics. Flexible representation: hull = platform (ElastoDyn
-    PtfmMass, PtfmCM, PtfmRIner, PtfmPIner, PtfmYIner); tower from generator_data.yml floating_tower (tapered
-    top span in four sections, tube formulas); RNA lumped at its centre of mass with the adopted tower-top
-    tensor moved to that centre. The RNA buoy takes principal moments only.'
+    three-fold symmetry; AddBQuad off-diagonals dropped (OrcaFlex other damping is diagonal). Radiation
+    matrices are held as in the source; the generator emits the upper triangle mirrored (WAMIT importer
+    symmetry policy). Mooring Cd 2.0/0.4 and Ca 0.82/0.27 from the MoorDyn input LINE TYPES at the same
+    revision. Nominal chain diameter 0.185 m is not used for hydrodynamics. Basis readiness partial; use
+    for analysis assumed. System inertia assumes the RNA tensor is about tower top with CG tensor F-P.
+    Retaining F24:K24 as trusted endpoint is an additional assumption; L24:Q24 remains the independent
+    published comparator. The tensor-reference discrepancy remains unresolved. Flexible representation:
+    hull = platform (ElastoDyn PtfmMass, PtfmCM, PtfmRIner, PtfmPIner, PtfmYIner); tower from generator_data.yml
+    floating_tower (tapered top span in four sections, tube formulas); RNA lumped at its centre of mass
+    with the adopted tower-top tensor moved to that centre. The tensor''s products of inertia are kept:
+    a massless child buoy on its principal axes carries the moments. Tower Poisson ratio E/(2G)-1 from
+    the moduli implied by the station table.'
   tower:
     base_elevation: 15.0
     target_segment_length: 5.0
@@ -7700,78 +7706,91 @@ fowt:
       bending_stiffness: 6770483053.822951
       axial_stiffness: 551313566.6225398
       torsional_stiffness: 5368993061.681601
+      poisson_ratio: 0.26103404791929385
     - length: 13.0
       outer_diameter: 10.0
       mass_per_length: 20.38917296175965
       bending_stiffness: 6012481882.039173
       axial_stiffness: 488597482.9082112
       torsional_stiffness: 4767898132.457064
+      poisson_ratio: 0.2610340479192941
     - length: 13.0
       outer_diameter: 10.0
       mass_per_length: 17.74593754420522
       bending_stiffness: 5243746348.958784
       axial_stiffness: 425256111.7710334
       torsional_stiffness: 4158290854.724316
+      poisson_ratio: 0.26103404791929385
     - length: 13.0
       outer_diameter: 10.0
       mass_per_length: 15.06274432910412
       bending_stiffness: 4460124325.473567
       axial_stiffness: 360957208.9409086
       torsional_stiffness: 3536878590.100539
+      poisson_ratio: 0.26103404791929363
     - length: 13.0
       outer_diameter: 10.0
       mass_per_length: 12.342493075792431
       bending_stiffness: 3662321082.394025
       axial_stiffness: 295770263.0192291
       torsional_stiffness: 2904220618.338462
+      poisson_ratio: 0.26103404791929385
     - length: 13.0
       outer_diameter: 10.0
       mass_per_length: 9.633133853710918
       bending_stiffness: 2864351052.96177
       axial_stiffness: 230844329.1088167
       torsional_stiffness: 2271430384.998683
+      poisson_ratio: 0.2610340479192941
     - length: 13.0
       outer_diameter: 10.0
       mass_per_length: 7.027093864636848
       bending_stiffness: 2093645920.024909
       axial_stiffness: 168394293.425278
       torsional_stiffness: 1660261214.579753
+      poisson_ratio: 0.26103404791929363
     - length: 13.0
       outer_diameter: 10.0
       mass_per_length: 4.645480359965536
       bending_stiffness: 1386598101.730969
       axial_stiffness: 111322318.71472651
       torsional_stiffness: 1099572294.672658
+      poisson_ratio: 0.2610340479192943
     - length: 13.0
       outer_diameter: 10.0
       mass_per_length: 2.596062157158992
       bending_stiffness: 776096735.8216012
       axial_stiffness: 62210931.15645799
       torsional_stiffness: 615444711.5065297
+      poisson_ratio: 0.26103404791929385
     - length: 3.0972500000000025
       outer_diameter: 9.5625
       mass_per_length: 1.9881117225287548
       bending_stiffness: 543656345.7592719
       axial_stiffness: 47642265.09774029
       torsional_stiffness: 431119482.1871026
+      poisson_ratio: 0.26103404791929385
     - length: 3.0962499999999977
       outer_diameter: 8.6875
       mass_per_length: 1.8060419015287887
       bending_stiffness: 407554444.01762134
       axial_stiffness: 43279221.22043433
       torsional_stiffness: 323190674.1059738
+      poisson_ratio: 0.26103404791929385
     - length: 3.0962499999999977
       outer_diameter: 7.8125
       mass_per_length: 1.6239720805288222
       bending_stiffness: 296304282.5861581
       axial_stiffness: 38916177.343129486
       torsional_stiffness: 234969296.09082332
+      poisson_ratio: 0.26103404791929385
     - length: 3.0962499999999977
       outer_diameter: 6.9375
       mass_per_length: 1.4419022595288562
       bending_stiffness: 207400519.863442
       axial_stiffness: 34553133.46582465
       torsional_stiffness: 164468612.2517095
+      poisson_ratio: 0.26103404791929385
   rna:
     mass: 945.7696942734005
     centre_of_mass_from_tower_top:

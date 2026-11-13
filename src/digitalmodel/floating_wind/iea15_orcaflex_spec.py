@@ -328,7 +328,8 @@ def tower_sections(data: dict, taper_subsections: int = 4) -> list[dict]:
     mid-height (linear between stations, so the section masses sum to the
     piecewise-linear integral) and stiffnesses from tube formulas at its
     mid-height diameter and thickness, using the moduli implied by the span's
-    end stations.
+    end stations. Poisson's ratio follows from the same moduli as
+    E / (2 G) - 1.
     """
     rows = _v(data["floating_tower"])
     moduli = tower_moduli(data)
@@ -341,11 +342,13 @@ def tower_sections(data: dict, taper_subsections: int = 4) -> list[dict]:
             carry += span
             continue
         if a[1:] == b[1:]:
+            poisson = moduli["E_bending"][k] / (2.0 * moduli["G"][k]) - 1.0
             pieces = [(span, a[1], a[2], a[3], a[6], a[9], a[8])]
         else:
             young = (moduli["E_bending"][k] + moduli["E_bending"][k + 1]) / 2.0
             young_axial = (moduli["E_axial"][k] + moduli["E_axial"][k + 1]) / 2.0
             shear = (moduli["G"][k] + moduli["G"][k + 1]) / 2.0
+            poisson = young / (2.0 * shear) - 1.0
             pieces = []
             for j in range(taper_subsections):
                 f = (j + 0.5) / taper_subsections
@@ -363,6 +366,9 @@ def tower_sections(data: dict, taper_subsections: int = 4) -> list[dict]:
                 "bending_stiffness": ei / 1000.0,
                 "axial_stiffness": ea / 1000.0,
                 "torsional_stiffness": gj / 1000.0,
+                # Isotropic relation nu = E / (2 G) - 1 with the moduli the
+                # station table implies (EI/I and GJ/J).
+                "poisson_ratio": poisson,
             })
         carry = 0.0
     return sections
@@ -413,7 +419,9 @@ def build_flexible_spec(basis: dict, data: dict, **kwargs) -> dict:
         " Flexible representation: hull = platform (ElastoDyn PtfmMass, PtfmCM, PtfmRIner, "
         "PtfmPIner, PtfmYIner); tower from generator_data.yml floating_tower (tapered top span "
         "in four sections, tube formulas); RNA lumped at its centre of mass with the adopted "
-        "tower-top tensor moved to that centre. The RNA buoy takes principal moments only.")
+        "tower-top tensor moved to that centre. The tensor's products of inertia are kept: "
+        "a massless child buoy on its principal axes carries the moments. Tower Poisson "
+        "ratio E/(2G)-1 from the moduli implied by the station table.")
     spec["metadata"]["description"] = spec["metadata"]["description"].replace(
         "rigid", "flexible")
     return spec

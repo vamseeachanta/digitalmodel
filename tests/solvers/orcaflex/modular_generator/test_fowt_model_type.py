@@ -605,11 +605,87 @@ def test_first_order_wave_load_rejected_without_sourced_raos(spec_dict):
 
 
 @pytest.mark.parametrize("i,j", [(0, 1), (0, 2), (1, 0), (1, 2), (2, 0), (2, 1)])
-def test_rna_products_of_inertia_rejected(spec_dict, i, j):
+def test_rna_asymmetric_inertia_rejected(spec_dict, i, j):
     fowt = _flexible(spec_dict)
     fowt["rna"]["inertia_about_centre_of_mass"][i][j] = -1.2e4
-    with pytest.raises(ValidationError, match="principal axes"):
+    with pytest.raises(ValidationError, match="symmetric"):
         FowtSpec(**fowt)
+
+
+def test_rna_non_positive_definite_inertia_rejected(spec_dict):
+    fowt = _flexible(spec_dict)
+    inertia = fowt["rna"]["inertia_about_centre_of_mass"]
+    inertia[0][2] = inertia[2][0] = 2.0 * max(inertia[0][0], inertia[2][2])
+    with pytest.raises(ValidationError, match="positive definite"):
+        FowtSpec(**fowt)
+
+
+def _rotation_from_buoy_attitude(angles):
+    a, b, c = (math.radians(x) for x in angles)
+    rx = [[1, 0, 0], [0, math.cos(a), -math.sin(a)], [0, math.sin(a), math.cos(a)]]
+    ry = [[math.cos(b), 0, math.sin(b)], [0, 1, 0], [-math.sin(b), 0, math.cos(b)]]
+    rz = [[math.cos(c), -math.sin(c), 0], [math.sin(c), math.cos(c), 0], [0, 0, 1]]
+
+    def mul(p, q):
+        return [[sum(p[i][k] * q[k][j] for k in range(3)) for j in range(3)] for i in range(3)]
+    return mul(mul(rx, ry), rz)
+
+
+def _buoys(fowt):
+    return {b["name"]: b["properties"]
+            for b in FowtRouter().route(FowtSpec(**fowt))["buoys_6d"]}
+
+
+@pytest.mark.parametrize("products", [
+    {(0, 2): -1.2e4},
+    {(0, 1): 3.0e3, (0, 2): -4.5e4, (1, 2): -7.0e2},
+])
+@pytest.mark.parametrize("tilted", [False, True])
+def test_rna_products_of_inertia_carried_by_principal_axes_child(spec_dict, products, tilted):
+    """Products are not dropped: the host carries mass and centre, a rigidly
+    attached child carries the principal moments at the principal attitude, and
+    the pair reproduces the full tensor about the centre of mass."""
+    fowt = _flexible(spec_dict)
+    rna = fowt["rna"]
+    for (i, j), value in products.items():
+        rna["inertia_about_centre_of_mass"][i][j] = value
+        rna["inertia_about_centre_of_mass"][j][i] = value
+    if tilted:
+        fowt["hull"]["initial_orientation"] = [1.0, 3.5, 20.0]
+    upright = copy.deepcopy(fowt)
+    upright["rna"]["inertia_about_centre_of_mass"] = [
+        [rna["inertia_about_centre_of_mass"][i][i] if i == j else 0.0 for j in range(3)]
+        for i in range(3)]
+    buoys, reference = _buoys(fowt), _buoys(upright)
+    name = rna.get("name", "RNA")
+    host = buoys[name]
+    child = buoys[f"{name} inertia"]
+    # Host: unchanged position, attitude, mass and centre; moments moved to the child.
+    for key in ("InitialPosition", "InitialAttitude", "Mass", "CentreOfMass", "Connection"):
+        assert host[key] == reference[name][key]
+    assert host["MomentsOfInertia"] == [0, 0, 0]
+    assert child["Connection"] == name
+    assert child["InitialPosition"] == rna["centre_of_mass_from_tower_top"]
+    assert child["Mass"] == 0 and child["CentreOfMass"] == [0, 0, 0]
+    r = _rotation_from_buoy_attitude(child["InitialAttitude"])
+    moments = child["MomentsOfInertia"]
+    rebuilt = [[sum(r[i][k] * moments[k] * r[j][k] for k in range(3)) for j in range(3)]
+               for i in range(3)]
+    full = rna["inertia_about_centre_of_mass"]
+    scale = max(full[i][i] for i in range(3))
+    for i in range(3):
+        for j in range(3):
+            assert rebuilt[i][j] == pytest.approx(full[i][j], abs=1e-9 * scale)
+    # Child axes stay close to the host axes (no axis permutation).
+    assert all(abs(angle) < 45.0 for angle in child["InitialAttitude"])
+    # Hub load point and tower connection are unaffected.
+    for other in set(reference) - {name}:
+        assert buoys[other] == reference[other]
+
+
+def test_diagonal_rna_inertia_emits_no_child(spec_dict):
+    buoys = _buoys(_flexible(spec_dict))
+    assert not any(name.endswith(" inertia") for name in buoys)
 
 
 def test_generated_source_note_preserves_inertia_qualification(spec_dict, sources):

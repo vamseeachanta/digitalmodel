@@ -280,8 +280,19 @@ parts:
   and G = 79.3 GPa at every station.
 - **Rotor-nacelle assembly**: a lumped 6D buoy of 945.8 t at the tower top. It
   carries the adopted tower-top inertia tensor moved to the assembly's own
-  centre of mass. The buoy takes principal moments only, so the products of
-  inertia are dropped.
+  centre of mass. An OrcaFlex lumped buoy takes principal moments only
+  (Orcina, OrcaFlex help, 6D buoys: common data). The assembly buoy therefore
+  stays in tower-top axes and carries the mass and centre of mass, and a
+  massless child buoy rigidly attached at the centre of mass, oriented on the
+  tensor's principal axes (about 12.8° from the tower-top axes), carries the
+  three principal moments. The pair reproduces the full tensor, products of
+  inertia included, to 1e-9 of its largest moment (tested). That OrcaFlex adds
+  a child buoy's moments to its parent's rigid-body inertia is not stated in
+  the help pages read; the `LC0_flexible_statics` package records it as a
+  check. Statics depend only on mass and centre of mass, which the parent
+  carries.
+- **Tower Poisson's ratio**: 0.261 at every section, from the isotropic
+  relation E/(2G) − 1 with the moduli the station table implies.
 
 The VesselType's hydrostatic weight term uses the platform alone, because
 OrcaFlex applies the tower and assembly weight through their own objects.
@@ -301,8 +312,8 @@ cantilever calculation with the base fixed to the hull. They include the tower's
 own weight and the assembly weight acting at its 7.32 m upwind offset; P-delta
 is excluded. A negative displacement is upwind.
 
-Dropping the assembly's products of inertia changes the system Ixz by 4.5 %,
-which is 0.1 % of Ixx.
+Dropping the assembly's products of inertia would change the system Ixz by
+4.5 %, which is 0.1 % of Ixx; the generated model keeps them.
 
 The generated model places the Tower line, whose End A connects to the
 assembly buoy, before the 6D buoys

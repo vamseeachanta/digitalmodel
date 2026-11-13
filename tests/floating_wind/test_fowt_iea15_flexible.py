@@ -197,7 +197,8 @@ def test_tower_deflection_against_cantilever_formula(flexible):
     length, ei = 100.0, 1.0e9  # m, kN.m2
     fowt["tower"]["sections"] = [{"length": length, "outer_diameter": 8.0,
                                   "mass_per_length": 1.0e-9, "bending_stiffness": ei,
-                                  "axial_stiffness": 1.0e8, "torsional_stiffness": 1.0e9}]
+                                  "axial_stiffness": 1.0e8, "torsional_stiffness": 1.0e9,
+                                  "poisson_ratio": 0.3}]  # synthetic fixture
     fowt["rna"]["centre_of_mass_from_tower_top"] = [-5.0, 0.0, 0.0]
     spec = FowtSpec(**fowt)
     moment = spec.rna.mass * 1000.0 * spec.gravity * 5.0  # N m, bends toward -x
@@ -220,3 +221,35 @@ def test_tower_deflection_reference_values(flexible):
     pitched = tower_top_deflection(spec, (q[3], q[4], q[5]))
     assert pitched["top_displacement_x"] == pytest.approx(-0.2225, abs=5e-4)
     assert np.degrees(pitched["top_rotation_about_y"]) == pytest.approx(-0.389, abs=1e-3)
+
+
+def test_tower_poisson_ratio_from_station_moduli(sources):
+    """nu = E/(2G) - 1; for a thin tube J = 2I, so nu = EI/GJ - 1 at each station."""
+    _, data = sources
+    base = data["floating_tower"]["value"][0]
+    sections = tower_sections(data)
+    assert sections[0]["poisson_ratio"] == pytest.approx(base[6] / base[8] - 1.0, rel=1e-9)
+    for section in sections:
+        assert section["poisson_ratio"] == pytest.approx(200.0 / (2.0 * 79.3) - 1.0, rel=1e-3)
+
+
+def test_generated_rna_reproduces_full_tensor(flexible, sources):
+    """The emitted RNA pair keeps the source tensor's products of inertia."""
+    basis, _ = sources
+    from digitalmodel.floating_wind.iea15_orcaflex_spec import rna_about_own_centre
+
+    fowt = FowtSpec(**flexible["fowt"])
+    buoys = {b["name"]: b["properties"] for b in FowtRouter().route(fowt)["buoys_6d"]}
+    host, child = buoys[fowt.rna.name], buoys[f"{fowt.rna.name} inertia"]
+    assert host["MomentsOfInertia"] == [0, 0, 0]
+    assert host["Mass"] == pytest.approx(fowt.rna.mass)
+    a, b, c = np.radians(child["InitialAttitude"])
+    rx = np.array([[1, 0, 0], [0, np.cos(a), -np.sin(a)], [0, np.sin(a), np.cos(a)]])
+    ry = np.array([[np.cos(b), 0, np.sin(b)], [0, 1, 0], [-np.sin(b), 0, np.cos(b)]])
+    rz = np.array([[np.cos(c), -np.sin(c), 0], [np.sin(c), np.cos(c), 0], [0, 0, 1]])
+    r = rx @ ry @ rz
+    rebuilt = r @ np.diag(child["MomentsOfInertia"]) @ r.T
+    expected = np.array(rna_about_own_centre(basis)["inertia_about_centre_of_mass"])
+    assert abs(expected[0, 2]) > 0.1 * expected[1, 1]  # the source tensor has products
+    assert rebuilt == pytest.approx(expected, abs=1e-9 * expected.max())
+    assert child["InitialAttitude"][1] == pytest.approx(12.75, abs=0.01)

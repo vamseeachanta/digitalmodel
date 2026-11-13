@@ -293,6 +293,7 @@ def test_run_packages_written(tmp_path):
         assert "validated" in text  # the do-not-overclaim instruction is present
     flexible = (tmp_path / "LC0_flexible_statics" / "run.md").read_text(encoding="utf-8")
     assert "#3971" in flexible and "-0.222 m" in flexible and "-0.389 deg" in flexible
+    assert "`RNA inertia`" in flexible  # the principal-axes child is flagged for checking
 
 
 def test_wave_packages_include_wamit_import_output(tmp_path):
