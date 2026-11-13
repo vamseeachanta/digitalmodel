@@ -14,7 +14,8 @@ Links:
   LinearSpring: 'Yes'
   UnstretchedLength: 3.204001
   Stiffness: 50.0
-  LinearDamper: 'No'
+  LinearDamper: 'Yes'
+  DampingConstant: 0.0
 - Name: Tensioner_2
   LinkType: Spring/Damper
   Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
@@ -30,7 +31,8 @@ Links:
   LinearSpring: 'Yes'
   UnstretchedLength: 3.204001
   Stiffness: 50.0
-  LinearDamper: 'No'
+  LinearDamper: 'Yes'
+  DampingConstant: 0.0
 - Name: Tensioner_3
   LinkType: Spring/Damper
   Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
@@ -46,7 +48,8 @@ Links:
   LinearSpring: 'Yes'
   UnstretchedLength: 3.204001
   Stiffness: 50.0
-  LinearDamper: 'No'
+  LinearDamper: 'Yes'
+  DampingConstant: 0.0
 - Name: Tensioner_4
   LinkType: Spring/Damper
   Connection, ConnectionX, ConnectionY, ConnectionZ, ConnectionzRelativeTo:
@@ -62,4 +65,5 @@ Links:
   LinearSpring: 'Yes'
   UnstretchedLength: 3.204001
   Stiffness: 50.0
-  LinearDamper: 'No'
+  LinearDamper: 'Yes'
+  DampingConstant: 0.0

@@ -301,7 +301,9 @@ class RiserTensioner(BaseModel):
     """Top tensioner system for a top-tensioned or drilling riser (#3976).
 
     ``count`` linear spring/damper links run from points on the vessel to the
-    riser at ``arc_length`` from End A. The vessel points lie on a circle of
+    free End A node (``arc_length`` must be zero). Interior attachments are
+    unsupported because OrcaFlex snaps them to reference-arc-length nodes.
+    The vessel points lie on a circle of
     ``radius`` about the riser top in plan, at height ``vessel_z``, in vessel
     axes. The generator sets each unstretched length so that, in the initial
     (generated) geometry, the vertical components of the link tensions sum
@@ -323,7 +325,7 @@ class RiserTensioner(BaseModel):
         radius: Plan radius of the vessel points about the riser top (m).
         vessel_z: Height of the vessel points in vessel axes (m).
         start_angle: Plan angle of the first unit in vessel axes (deg).
-        arc_length: Riser attachment arc length from End A (m).
+        arc_length: Attachment arc length from End A (m); only zero is supported.
     """
 
     name: str = Field(..., min_length=1, description="Link name prefix")
@@ -335,7 +337,7 @@ class RiserTensioner(BaseModel):
     radius: float = Field(..., gt=0, description="Plan radius (m)")
     vessel_z: float = Field(..., description="Vessel point height, vessel axes (m)")
     start_angle: float = Field(default=0, description="First unit angle (deg)")
-    arc_length: float = Field(default=0, ge=0, description="Attachment arc length (m)")
+    arc_length: float = Field(default=0, ge=0, description="Attachment arc length (m), End A only")
 
 
 class RiserVessel(BaseModel):
@@ -495,7 +497,11 @@ class Riser(BaseModel):
     def validate_tensioners(self) -> "Riser":
         """Tensioners support the free End A of a defined line; names unique."""
         lines = {line.name: line for line in self.lines}
-        names = [t.name for t in self.tensioners] + [link.name for link in self.links]
+        names = [
+            f"{t.name}_{i}"
+            for t in self.tensioners
+            for i in range(1, t.count + 1)
+        ] + [link.name for link in self.links]
         for tensioner in self.tensioners:
             line = lines.get(tensioner.line)
             if line is None:
@@ -511,6 +517,11 @@ class Riser(BaseModel):
                 raise ValueError(
                     f"Tensioner '{tensioner.name}' arc_length beyond line '{line.name}'"
                 )
-        if len(names) != len(set(names)):
+            if tensioner.arc_length != 0:
+                raise ValueError(
+                    f"Tensioner '{tensioner.name}' supports End A only "
+                    "(arc_length must be zero); interior attachment snapping is unsupported"
+                )
+        if len(names) != len({name.casefold() for name in names}):
             raise ValueError(f"Duplicate link or tensioner names: {names}")
         return self

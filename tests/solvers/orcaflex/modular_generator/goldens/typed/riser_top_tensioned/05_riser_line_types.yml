@@ -13,12 +13,12 @@ LineTypes:
   - ~
   - ~
   EI:
-  - 31709.0
+  - 32169.0
   - ~
-  EA: 4091000.0
+  EA: 4150772.0
   PoissonRatio: 0.3
   ExpansionTable: None
-  GJ: 24392.0
+  GJ: 24745.0
   TensionTorqueCoupling: 0
   OuterContactDiameter: ~
   InnerContactDiameter: ~

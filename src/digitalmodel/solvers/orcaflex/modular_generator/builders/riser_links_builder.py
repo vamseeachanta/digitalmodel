@@ -101,7 +101,8 @@ class RiserLinksBuilder(BaseBuilder):
             # Native spring/damper data (public example "H03 Floating and stowed lines"):
             # a linear spring uses UnstretchedLength and Stiffness (kN/m).
             link_def["LinearSpring"] = "Yes"
-            link_def["LinearDamper"] = "No"
+            link_def["LinearDamper"] = "Yes"
+            link_def["DampingConstant"] = 0
 
         if riser_link.release_stage is not None:
             link_def["ReleaseStage"] = riser_link.release_stage
@@ -112,8 +113,7 @@ class RiserLinksBuilder(BaseBuilder):
     def tensioner_geometry(tensioner, riser) -> list[dict[str, float]]:
         """Vessel points, link length, tension and unstretched length per unit.
 
-        The riser attachment point is taken at ``arc_length`` vertically below
-        the free End A position (a vertical riser top). Coordinates of the
+        The riser attachment point is the free End A node. Coordinates of the
         vessel points are in vessel axes (vessel position and heading).
         """
         line = next(line for line in riser.lines if line.name == tensioner.line)
@@ -123,7 +123,7 @@ class RiserLinksBuilder(BaseBuilder):
         dy = line.end_a.position[1] - vessel.position[1]
         top_x = math.cos(heading) * dx + math.sin(heading) * dy
         top_y = -math.sin(heading) * dx + math.cos(heading) * dy
-        attach_z = line.end_a.position[2] - vessel.position[2] - tensioner.arc_length
+        attach_z = line.end_a.position[2] - vessel.position[2]
         dz = tensioner.vessel_z - attach_z
         if dz <= 0:
             raise ValueError(
@@ -167,9 +167,8 @@ class RiserLinksBuilder(BaseBuilder):
                 "LinearSpring": "Yes",
                 "UnstretchedLength": round(unit["unstretched_length"], 6),
                 "Stiffness": tensioner.stiffness,
-                "LinearDamper": "Yes" if tensioner.damping else "No",
+                "LinearDamper": "Yes",
+                "DampingConstant": tensioner.damping,
             }
-            if tensioner.damping:
-                link_def["DampingConstant"] = tensioner.damping
             links.append(link_def)
         return links

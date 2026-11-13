@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import copy
 import math
+import re
 from pathlib import Path
 
 import pytest
@@ -58,7 +59,8 @@ def test_tensioner_links_geometry_and_unstretched_length(example):
         # Hand value in the example header: L0 = 8.544 - 267.0 / 50 = 3.204 m.
         assert link["UnstretchedLength"] == pytest.approx(3.204, abs=0.001)
         assert link["Stiffness"] == 50
-        assert link["LinearSpring"] == "Yes" and link["LinearDamper"] == "No"
+        assert link["LinearSpring"] == "Yes" and link["LinearDamper"] == "Yes"
+        assert link["DampingConstant"] == 0
 
 
 def test_target_vertical_tension_sums_to_total(example):
@@ -97,12 +99,19 @@ def test_spring_damper_link_data_names_match_native(example):
         "unstretched_length": 5, "stiffness": 100,
     }]
     user_link = _links(data)[0]
-    assert user_link["LinearSpring"] == "Yes" and user_link["LinearDamper"] == "No"
+    assert user_link["LinearSpring"] == "Yes" and user_link["LinearDamper"] == "Yes"
+    assert user_link["DampingConstant"] == 0
     native = next(
         link for link in yaml.safe_load(NATIVE_LINKS.read_text(encoding="utf-8"))["Links"]
         # PyYAML (YAML 1.1) reads the native unquoted Yes as True.
-        if link.get("LinkType") == "Spring/damper" and link.get("LinearSpring") in ("Yes", True)
+        if link.get("LinkType") == "Spring/damper"
+        and link.get("LinearSpring") in ("Yes", True)
+        and link.get("DampingConstant") == 0
     )
+    for link in (user_link, *_links(example)):
+        assert link["LinearDamper"] in ("Yes", True)
+        assert native["LinearDamper"] in ("Yes", True)
+        assert link["DampingConstant"] == native["DampingConstant"]
     keys = set(user_link) - {"LinkType"}
     assert keys <= set(native)
     tensioner_keys = set(_links(example)[0]) - {"LinkType"}
@@ -121,6 +130,53 @@ def test_tensioner_unknown_line_rejected(example):
     data["riser"]["tensioners"][0]["line"] = "Missing"
     with pytest.raises(ValidationError, match="unknown line"):
         ProjectInputSpec(**data)
+
+
+@pytest.mark.parametrize("arc_length", [0.4, 1.0])
+def test_interior_tensioner_attachment_rejected(example, arc_length):
+    """Only End A is supported, including on-node interior positions.
+
+    At 0.4 m the 1 m top mesh snaps the attachment to node zero, which
+    invalidates prestress computed from an exact 0.4 m vertical offset.
+    """
+    example["riser"]["tensioners"][0]["arc_length"] = arc_length
+    with pytest.raises(ValidationError, match="supports End A only"):
+        ProjectInputSpec(**example)
+
+
+@pytest.mark.parametrize("link_name", ["Tensioner_1", "tensioner_1", "TENSIONER_4"])
+def test_explicit_link_cannot_duplicate_generated_name(example, link_name):
+    example["riser"]["links"] = [{
+        "name": link_name, "link_type": "tether",
+        "connections": [
+            {"object_name": "Anchored", "x": 0, "y": 0, "z": 0},
+            {"object_name": "TTR", "x": 0, "y": 0, "z": 0},
+        ],
+        "unstretched_length": 5, "stiffness": 100,
+    }]
+    with pytest.raises(ValidationError, match="Duplicate link or tensioner names"):
+        ProjectInputSpec(**example)
+
+
+def test_generated_link_names_are_case_insensitive(example):
+    second = copy.deepcopy(example["riser"]["tensioners"][0])
+    second["name"] = "tensioner"
+    example["riser"]["tensioners"].append(second)
+    with pytest.raises(ValidationError, match="Duplicate link or tensioner names"):
+        ProjectInputSpec(**example)
+
+
+def test_explicit_link_may_share_tensioner_prefix(example):
+    example["riser"]["links"] = [{
+        "name": "Tensioner", "link_type": "tether",
+        "connections": [
+            {"object_name": "Anchored", "x": 0, "y": 0, "z": 0},
+            {"object_name": "TTR", "x": 0, "y": 0, "z": 0},
+        ],
+        "unstretched_length": 5, "stiffness": 100,
+    }]
+    names = [link["Name"] for link in _links(example)]
+    assert names == ["Tensioner", *[f"Tensioner_{i}" for i in range(1, 5)]]
 
 
 def test_vessel_point_below_riser_top_rejected(example):
@@ -149,6 +205,22 @@ def test_example_matches_golden(example, tmp_path):
         assert got == want, name
 
 
+def test_example_material_stiffnesses_from_public_elastic_constants(example):
+    """Recompute the stiffnesses using the material source cited in the header."""
+    line_type = ProjectInputSpec(**example).riser.line_types[0]
+    od, idia = line_type.outer_diameter, line_type.inner_diameter
+    # SteelConstruction.info, Steel material properties, Other properties:
+    # https://steelconstruction.info/topics/design/steel-material-properties/
+    youngs_modulus, poisson_ratio = 210e6, 0.3  # kN/m2, dimensionless
+    area = math.pi * (od**2 - idia**2) / 4
+    inertia = math.pi * (od**4 - idia**4) / 64
+    assert line_type.poisson_ratio == poisson_ratio
+    assert line_type.axial_stiffness == pytest.approx(youngs_modulus * area, abs=0.5)
+    assert line_type.bending_stiffness == pytest.approx(youngs_modulus * inertia, abs=0.5)
+    shear_modulus = youngs_modulus / (2 * (1 + poisson_ratio))
+    assert line_type.torsional_stiffness == pytest.approx(shear_modulus * 2 * inertia, abs=0.5)
+
+
 def test_example_header_equilibrium_hand_check(example):
     """Recompute the example header's static estimate from the spec inputs.
 
@@ -156,17 +228,29 @@ def test_example_header_equilibrium_hand_check(example):
     tensioner vertical stiffness (axial plus geometric term). Arithmetic of
     the header only; it is not a licensed statics result.
     """
-    g, rho = 9.80665, 1.025
+    g, rho = 9.80665, example["environment"]["water"]["density"]
     spec = ProjectInputSpec(**example).riser
     line_type, line = spec.line_types[0], spec.lines[0]
     tensioner = spec.tensioners[0]
     od, idia = line_type.outer_diameter, line_type.inner_diameter
-    w = (line_type.mass_per_length + line.contents.density * math.pi * idia**2 / 4
-         - rho * math.pi * od**2 / 4) * g
+    dry_weight = (line_type.mass_per_length
+                  + line.contents.density * math.pi * idia**2 / 4) * g
+    wet_weight = dry_weight - rho * math.pi * od**2 / 4 * g
     length = line.get_total_length()
-    weight = w * length
-    assert w == pytest.approx(1.314, abs=0.001)
-    assert weight == pytest.approx(672.7, abs=0.1)
+    # The vertical line spans z = -500 to +12 m; only 500 m displaces seawater.
+    dry_length = line.end_a.position[2]
+    wet_length = length - dry_length
+    assert (wet_length, dry_length) == (500, 12)
+    weight = wet_weight * wet_length + dry_weight * dry_length
+    assert wet_weight == pytest.approx(1.314, abs=0.001)
+    assert dry_weight == pytest.approx(1.903, abs=0.001)
+    assert weight == pytest.approx(679.7, abs=0.1)
+    header_weight = re.search(
+        r"Identity: top - bottom effective tension = W = ([\d.]+) kN",
+        EXAMPLE.read_text(encoding="utf-8"),
+    )
+    assert header_weight is not None
+    assert float(header_weight[1]) == pytest.approx(weight, abs=0.1)
 
     dz = tensioner.vessel_z - line.end_a.position[2]
     link = math.hypot(tensioner.radius, dz)
@@ -176,12 +260,14 @@ def test_example_header_equilibrium_hand_check(example):
     )
     assert k_vertical == pytest.approx(190.8, abs=0.1)
     k_riser = line_type.axial_stiffness / length
-    assert k_riser == pytest.approx(7990, abs=1)
-    # Rise d: riser stretch (mean effective tension / k_riser) equals d,
-    # with top tension T0 - k_vertical * d.
+    assert k_riser == pytest.approx(8107, abs=1)
+    # Integrate the piecewise weight below the top to obtain the mean tension
+    # loss. Stretch uses T_top minus that loss, at fixed initial wet/dry lengths.
+    mean_loss = (dry_weight * (dry_length**2 / 2 + dry_length * wet_length)
+                 + wet_weight * wet_length**2 / 2) / length
     t0 = tensioner.total_tension
-    rise = (2 * t0 - weight) / (2 * k_riser + 2 * k_vertical)
+    rise = (t0 - mean_loss) / (k_riser + k_vertical)
     top = t0 - k_vertical * rise
-    assert rise == pytest.approx(0.081, abs=0.001)
-    assert top == pytest.approx(984.5, abs=0.1)
-    assert top - weight == pytest.approx(311.9, abs=0.15)
+    assert rise == pytest.approx(0.079, abs=0.001)
+    assert top == pytest.approx(984.9, abs=0.1)
+    assert top - weight == pytest.approx(305.2, abs=0.1)
