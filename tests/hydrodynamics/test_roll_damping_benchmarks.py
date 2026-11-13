@@ -138,6 +138,14 @@ def test_method_matrix_covers_core_scenarios():
         assert r.primary_method and r.screening_damping_pct and r.basis
 
 
+def test_keel_recommendation_identifies_the_implemented_drag_fit():
+    row = next(r for r in rb.load_method_matrix()
+               if r.scenario_id == "barge-bilge-keels")
+    assert "ITTC 2024 eq. 48" in row.primary_method
+    assert "ITTC 2024 eq. 48" in row.digitalmodel_route
+    assert "ITTC 2024 low-Ke fit (eq. 49) is not implemented" in row.digitalmodel_route
+
+
 def test_wiki_tables_are_pointers_not_values():
     for row in rb.load_wiki_tables():
         assert row["wiki_path"].startswith("wikis/")
