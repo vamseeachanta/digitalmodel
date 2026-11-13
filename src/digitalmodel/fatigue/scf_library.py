@@ -23,10 +23,18 @@ References
 """
 
 import math
-from typing import Optional, Union
+from typing import Literal
 
-import numpy as np
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
+
+from ._scf_details import (
+    PlateGeometry as PlateGeometry,
+    scf_butt_weld_misalignment as scf_butt_weld_misalignment,
+    scf_circumferential_groove as scf_circumferential_groove,
+    scf_cruciform_joint as scf_cruciform_joint,
+    scf_fillet_weld_toe as scf_fillet_weld_toe,
+    scf_shoulder_fillet as scf_shoulder_fillet,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -119,9 +127,8 @@ def short_chord_factor_f1(beta: float, gamma: float, alpha: float) -> float:
     For ``alpha >= 12`` (long chord) the saddle SCFs are not reduced and
     ``F1 = 1.0``. Crown terms (Eqns. 2, 4) are never reduced.
 
-    Companion factors not implemented here (out of scope for this axial,
-    fixed-end function): **F2** (axial saddle, *pinned* chord ends) and **F3**
-    (out-of-plane-bending saddle terms).
+    Companion corrections are :func:`short_chord_factor_f2` (pinned axial)
+    and :func:`short_chord_factor_f3` (out-of-plane bending).
 
     Parameters
     ----------
@@ -136,31 +143,48 @@ def short_chord_factor_f1(beta: float, gamma: float, alpha: float) -> float:
     )
 
 
-def efthymiou_ty_axial(geom: TubularJointGeometry) -> SCFResult:
-    """Efthymiou SCF for T/Y joint under axial brace load.
+def short_chord_factor_f2(beta: float, gamma: float, alpha: float) -> float:
+    """Axial saddle F2 for general/pinned chord-end fixity.
 
-    DNV-RP-C203 (2021), Table B-1; Efthymiou (1988), OTC 4829.
+    DNV-RP-C203 (2021) Appendix B, Table B-1, axial load, general fixity,
+    short-chord column; Efthymiou (1988), OTC 4829::
 
-    The short-chord correction factor F1 (fixed chord ends) is applied to the
-    saddle terms when ``alpha < 12`` — see :func:`short_chord_factor_f1`. The
-    default geometry (``L = 2.5*D`` -> ``alpha = 5``) is a short chord, so F1
-    *does* reduce the saddle SCFs by default.
+        F2 = 1 - (1.43*beta - 0.97*beta^2 - 0.03) * gamma^0.04
+                 * exp(-0.71 * gamma^(-1.38) * alpha^2.5)
 
-    Parameters
-    ----------
-    geom : TubularJointGeometry
-
-    Returns
-    -------
-    SCFResult
+    ``beta=d/D``, ``gamma=D/(2T)``, ``alpha=2L/D``. For ``alpha >= 12``,
+    return exactly 1.0. F2 corrects both axial saddles, never the crowns.
     """
-    b = geom.beta
-    g = geom.gamma
-    t = geom.tau
-    a = geom.alpha
-    th = math.radians(geom.theta)
-    sin_th = math.sin(th)
+    if alpha >= 12.0:
+        return 1.0
+    return 1.0 - (1.43 * beta - 0.97 * beta**2 - 0.03) * gamma**0.04 * math.exp(
+        -0.71 * gamma ** (-1.38) * alpha**2.5
+    )
 
+
+def short_chord_factor_f3(beta: float, gamma: float, alpha: float) -> float:
+    """OPB saddle short-chord factor F3.
+
+    DNV-RP-C203 (2021) Appendix B, Table B-1, out-of-plane bending,
+    saddle short-chord column; Efthymiou (1988), OTC 4829::
+
+        F3 = 1 - 0.55*beta^1.8 * gamma^0.16
+                 * exp(-0.49 * gamma^(-0.89) * alpha^1.8)
+
+    ``beta=d/D``, ``gamma=D/(2T)``, ``alpha=2L/D``. For ``alpha >= 12``,
+    return exactly 1.0. IPB crown terms take no short-chord correction.
+    """
+    if alpha >= 12.0:
+        return 1.0
+    return 1.0 - 0.55 * beta**1.8 * gamma**0.16 * math.exp(
+        -0.49 * gamma ** (-0.89) * alpha**1.8
+    )
+
+
+def _axial_base_terms(
+    b: float, g: float, t: float, a: float, sin_th: float,
+) -> tuple[float, float, float, float]:
+    """Uncorrected fixed-end axial Eqns 1–4 (DNV-RP-C203 App. B Table B-1)."""
     # Published Efthymiou (1988, OTC 4829) / DNV-RP-C203 App. B T/Y axial set.
     # Chord saddle:  gamma * tau^1.1 * (1.11 - 3(beta-0.52)^2) * sin(theta)^1.6
     scf_cs = g * t**1.1 * (1.11 - 3.0 * (b - 0.52) ** 2) * sin_th**1.6
@@ -181,22 +205,40 @@ def efthymiou_ty_axial(geom: TubularJointGeometry) -> SCFResult:
         + g**1.2 * (0.12 * math.exp(-4.0 * b) + 0.011 * b**2 - 0.045)
         + b * t * (0.1 * a - 1.2)
     )
+    return scf_cs, scf_cc, scf_bs, scf_bc
 
-    # Short-chord correction (DNV-RP-C203 App. B, Table B-1): for alpha < 12 the
-    # axial SADDLE SCFs (chord saddle + brace saddle) are reduced by F1 (fixed
-    # chord ends). Crown terms are unaffected. F2 (pinned ends) / F3 (OPB) are
-    # out of scope for this fixed-end axial function.
-    f1 = short_chord_factor_f1(b, g, a)
-    scf_cs *= f1
-    scf_bs *= f1
+
+def efthymiou_ty_axial(
+    geom: TubularJointGeometry, *, chord_ends: Literal["fixed", "pinned"] = "fixed",
+) -> SCFResult:
+    """T/Y axial SCF, DNV-RP-C203 (2021) App. B Table B-1; OTC 4829 (1988).
+
+    Fixed ends use F1 on both saddles; pinned ends use F2 for ``alpha < 12``.
+    Default ``L=2.5*D`` gives ``alpha=5``. Crowns are never factor-corrected.
+    Pinned approximation: F2 applied to fixed-end saddle form; Eqn-5/6/7
+    general-fixity base equations deferred because the appendix is unavailable.
+    Fixed-end crowns (Eqns 2/4) and saddles (Eqns 1/3) are retained.
+    """
+    if chord_ends not in ("fixed", "pinned"):
+        raise ValueError("chord_ends must be 'fixed' or 'pinned'")
+    b, g, t, a = geom.beta, geom.gamma, geom.tau, geom.alpha
+    sin_th = math.sin(math.radians(geom.theta))
+    scf_cs, scf_cc, scf_bs, scf_bc = _axial_base_terms(b, g, t, a, sin_th)
+    factor = short_chord_factor_f1 if chord_ends == "fixed" else short_chord_factor_f2
+    correction = factor(b, g, a)
+    scf_cs *= correction
+    scf_bs *= correction
 
     scf_chord = max(abs(scf_cs), abs(scf_cc), 1.0)
     scf_brace = max(abs(scf_bs), abs(scf_bc), 1.0)
 
+    factor_name = "F1" if chord_ends == "fixed" else "F2"
+    approximation = "; fixed-end base approximation" if chord_ends == "pinned" else ""
     return SCFResult(
         scf_chord=round(scf_chord, 3),
         scf_brace=round(scf_brace, 3),
-        method="Efthymiou T/Y axial (DNV-RP-C203 Table B-5)",
+        method=f"Efthymiou T/Y axial, {chord_ends} chord ends{approximation} "
+        f"(DNV-RP-C203 App. B Table B-1, {factor_name})",
     )
 
 
@@ -204,6 +246,7 @@ def efthymiou_ty_ipb(geom: TubularJointGeometry) -> SCFResult:
     """Efthymiou SCF for T/Y joint under in-plane bending.
 
     DNV-RP-C203 (2021), Table B-5.
+    No short-chord correction — DNV-RP-C203 App. B marks IPB crowns 'None'.
 
     Parameters
     ----------
@@ -237,7 +280,10 @@ def efthymiou_ty_ipb(geom: TubularJointGeometry) -> SCFResult:
 def efthymiou_ty_opb(geom: TubularJointGeometry) -> SCFResult:
     """Efthymiou SCF for T/Y joint under out-of-plane bending.
 
-    DNV-RP-C203 (2021), Table B-5.
+    DNV-RP-C203 (2021) App. B, Table B-1, Eqn 10; OTC 4829 (1988).
+    F3 reduces the chord saddle for ``alpha < 12``; ``alpha >= 12`` is unreduced.
+    Eqn 11 could not be verified against the appendix. The legacy brace-saddle
+    expression is unchanged and receives no F3; the brace SCF is unverified.
     """
     b = geom.beta
     g = geom.gamma
@@ -246,6 +292,7 @@ def efthymiou_ty_opb(geom: TubularJointGeometry) -> SCFResult:
     sin_th = math.sin(th)
 
     scf_cs = g * t * b * (1.7 - 1.05 * b ** 3) * sin_th ** 1.6
+    scf_cs *= short_chord_factor_f3(b, g, geom.alpha)
     scf_bs = t ** 0.9 * (0.12 * math.exp(-4.0 * b) + 0.011 * b ** 2 - 0.045)
     scf_bs = max(scf_bs, 0.0)
 
@@ -255,7 +302,8 @@ def efthymiou_ty_opb(geom: TubularJointGeometry) -> SCFResult:
     return SCFResult(
         scf_chord=round(scf_chord, 3),
         scf_brace=round(scf_brace, 3),
-        method="Efthymiou T/Y out-of-plane bending (DNV-RP-C203 Table B-5)",
+        method="Efthymiou T/Y out-of-plane bending "
+        "(DNV-RP-C203 App. B Table B-1, Eqn 10, F3; legacy brace unverified)",
     )
 
 
@@ -293,172 +341,3 @@ def efthymiou_k_axial(
         scf_brace=round(scf_brace, 3),
         method="Efthymiou K-joint balanced axial (DNV-RP-C203 Table B-6)",
     )
-
-
-# ---------------------------------------------------------------------------
-# Plate / weld SCFs — DNV-RP-C203 Appendix D
-# ---------------------------------------------------------------------------
-
-class PlateGeometry(BaseModel):
-    """Geometry of a plated connection for SCF calculation.
-
-    Attributes
-    ----------
-    t : float — plate thickness (mm)
-    e : float — eccentricity / misalignment (mm), default 0
-    l_weld : float — weld leg length (mm), default 0
-    W : float — attachment width (mm), default 0
-    """
-    t: float
-    e: float = 0.0
-    l_weld: float = 0.0
-    W: float = 0.0
-
-
-def scf_butt_weld_misalignment(
-    t1: float,
-    t2: float,
-    e: float = 0.0,
-) -> float:
-    """SCF for butt weld with thickness transition and/or misalignment.
-
-    DNV-RP-C203 (2021), Appendix D, Eq. (D.1):
-
-        SCF = 1 + 3 * (e / t) * exp(-t / L)
-
-    Simplified form for axial misalignment where L → ∞ for long plates.
-
-    Parameters
-    ----------
-    t1, t2 : float  — Plate thicknesses on either side (mm).
-    e : float        — Linear misalignment (mm).
-
-    Returns
-    -------
-    float : SCF (≥ 1.0)
-    """
-    t = min(t1, t2)
-    if t <= 0:
-        raise ValueError("Plate thickness must be positive")
-    # Thickness transition
-    scf_thickness = 1.0 + 2.5 * (abs(t2 - t1) / t) * (1.0 / (1.0 + (t2 / t1) ** 1.5))
-    # Misalignment
-    scf_misalign = 1.0 + 3.0 * abs(e) / t
-    return round(max(scf_thickness, scf_misalign, 1.0), 4)
-
-
-def scf_cruciform_joint(
-    t: float,
-    a_weld: float,
-    e: float = 0.0,
-) -> float:
-    """SCF for cruciform (load-carrying fillet weld) joint.
-
-    DNV-RP-C203 (2021), Appendix D, Table D-3.
-
-    Parameters
-    ----------
-    t : float     — plate thickness (mm)
-    a_weld : float — fillet weld throat thickness (mm)
-    e : float     — misalignment (mm)
-
-    Returns
-    -------
-    float : SCF
-    """
-    if t <= 0 or a_weld <= 0:
-        raise ValueError("Thickness and weld throat must be positive")
-    # Km from misalignment
-    km = 1.0 + 6.0 * abs(e) / t
-    # Weld geometry correction
-    kw = 1.0 + 0.5 * (t / a_weld - 1.0) ** 0.5 if a_weld < t else 1.0
-    return round(max(km * kw, 1.0), 4)
-
-
-def scf_fillet_weld_toe(
-    t: float,
-    theta: float = 45.0,
-    r: float = 0.0,
-) -> float:
-    """SCF at fillet weld toe.
-
-    Semi-empirical equation from IIW-2259-15, Eq. (3.3-1).
-
-    Parameters
-    ----------
-    t : float     — plate thickness (mm)
-    theta : float — weld toe angle (degrees), default 45
-    r : float     — weld toe radius (mm), default 0 (sharp)
-
-    Returns
-    -------
-    float : SCF
-    """
-    if t <= 0:
-        raise ValueError("Plate thickness must be positive")
-    th_rad = math.radians(theta)
-    if r <= 0:
-        r = 0.5  # assume a minimal radius for sharp toe
-    scf = 1.0 + 0.27 * (th_rad ** 0.37) * (t / r) ** 0.25
-    return round(max(scf, 1.0), 4)
-
-
-# ---------------------------------------------------------------------------
-# Parametric SCF for common geometries
-# ---------------------------------------------------------------------------
-
-def scf_shoulder_fillet(
-    D: float,
-    d: float,
-    r: float,
-) -> float:
-    """SCF for a stepped shaft with shoulder fillet under tension.
-
-    Peterson's Stress Concentration Factors, Chart 3.1.
-
-    Parameters
-    ----------
-    D : float — larger diameter (mm)
-    d : float — smaller diameter (mm)
-    r : float — fillet radius (mm)
-
-    Returns
-    -------
-    float : SCF
-    """
-    if d <= 0 or D <= d or r <= 0:
-        raise ValueError("Require D > d > 0 and r > 0")
-    h = (D - d) / 2.0
-    ratio = h / r
-    # Peterson approximation (simplified)
-    C1 = 0.926 + 1.157 * math.sqrt(ratio) - 0.099 * ratio
-    C2 = 0.012 - 3.036 * math.sqrt(ratio) + 0.961 * ratio
-    t_ratio = 2.0 * h / d  # h/r normalised
-    scf = C1 + C2 * t_ratio
-    return round(max(scf, 1.0), 4)
-
-
-def scf_circumferential_groove(
-    D: float,
-    d: float,
-    r: float,
-) -> float:
-    """SCF for a circumferential U-groove under tension.
-
-    Peterson's Stress Concentration Factors, Chart 2.21.
-
-    Parameters
-    ----------
-    D : float — outer diameter (mm)
-    d : float — root diameter at groove (mm)
-    r : float — groove root radius (mm)
-
-    Returns
-    -------
-    float : SCF
-    """
-    if d <= 0 or D <= d or r <= 0:
-        raise ValueError("Require D > d > 0 and r > 0")
-    t = (D - d) / 2.0
-    scf = 1.0 + 2.0 * math.sqrt(t / r)
-    return round(scf, 4)
