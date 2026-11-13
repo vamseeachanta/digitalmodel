@@ -4,125 +4,173 @@
 import numpy as np
 from .calculations import calculate_pump_fillage
 from .exceptions import PhysicsError
+from .everitt_jennings.adapter import _effective_density_lb_ft3
 from .solver_guards import annotate_results, validate_stroke
 from .models import DynacardAnalysisContext, CardData, AnalysisResults, DownholeLoadBasis
 from .constants import (
     FEET_TO_INCHES,
-    STEEL_YOUNGS_MODULUS_PSI,
-    STEEL_DENSITY_LB_PER_FT3,
     SQUARE_FEET_TO_SQUARE_INCHES,
     SECONDS_PER_MINUTE,
-    WAVE_SPEED_IN_PER_S,
-    GIBBS_DAMPING_COEFFICIENT,
-    BUOYANCY_FACTOR,
-    LOAD_ATTENUATION_FACTOR,
-    STROKE_SCALING_FACTOR,
     BUCKLING_DETECTION_LOAD_THRESHOLD_LBS,
 )
 
-class DynacardPhysicsSolver:
-    """
-    Legacy Gibbs comparison solver with propagated position and scaled load.
 
-    Load is an affine surface-load approximation, not a wave-equation solution.
-    Physical qualification of this hybrid card is not established.
+class DynacardPhysicsSolver:
+    """Coupled frequency-domain solution for a vertical, tapered elastic rod.
+
+    Rod sections are ordered from surface to pump. ``damping_factor`` is the
+    nonnegative viscous decay rate c in inverse seconds for
+    u_tt + c*u_t = a²*u_xx. Zero explicitly selects the lossless model.
+    This path does not estimate damping or establish field diagnostic accuracy.
+    Inputs must be uniformly timed over one cycle. An exactly repeated closing
+    position/load pair is removed before transformation.
     """
 
     def __init__(self, context: DynacardAnalysisContext):
-        """Initialize the Gibbs analytical solver.
-
-        Args:
-            context: Complete well analysis context including surface card,
-                rod string, pump, and operating parameters.
-        """
         self.ctx = context
         self.results = AnalysisResults()
 
-    def solve_wave_equation(self):
+    def _validate_inputs(self):
+        """Reject invalid boundary and material inputs before Fourier arithmetic."""
+        u = np.asarray(self.ctx.surface_card.position, dtype=float)
+        f = np.asarray(self.ctx.surface_card.load, dtype=float)
+        validate_stroke(u, u, f, "gibbs")
+        if (
+            not np.isfinite(self.ctx.spm)
+            or self.ctx.spm <= 0
+            or not np.isfinite(self.ctx.fluid_density)
+            or self.ctx.fluid_density < 0
+        ):
+            raise PhysicsError(
+                "positive SPM and nonnegative fluid density required", solver="gibbs"
+            )
+        if not self.ctx.rod_string:
+            raise PhysicsError("rod string must contain a section", solver="gibbs")
+        for section in self.ctx.rod_string:
+            positive = [
+                section.length,
+                section.diameter,
+                section.modulus_of_elasticity,
+                section.speed_of_sound,
+                section.density,
+                section.weight_per_foot,
+            ]
+            if (
+                not np.all(np.isfinite(positive))
+                or min(positive) <= 0
+                or not np.isfinite(section.damping_factor)
+                or section.damping_factor < 0
+            ):
+                raise PhysicsError(
+                    "invalid rod section properties or damping rate", solver="gibbs"
+                )
+        return u, f
+
+    def solve_wave_equation(self, *, harmonic_count=None):
+        """Propagate displacement AND tensile force through every rod section.
+
+        Basis: Applied Mechanics of Solids (online edition read 2026-10-19), section 4.3.3:
+        https://solidmechanics.org/Text/Chapter4_3/Chapter4_3.php
+        Damped rod model and boundary conditions: SPE-588-PA (1963),
+        Predicting the Behavior of Sucker-Rod Pumping Systems,
+        The Mathematical Model. https://doi.org/10.2118/588-PA
+        With x downward, u upward, F=-EA*u_x. Fourier substitution in
+        u_tt+c*u_t=a²*u_xx gives gamma²=(-omega²+i*omega*c)/a².
+        Differentiating the displacement solution gives the companion force
+        equation (also specified in #1955). See gibbs-transfer.md for derivation.
+
+        harmonic_count retains that many positive-frequency harmonics, plus DC.
+        None retains all; zero retains only static load. The damping-factor
+        conversion from a dimensionless coefficient is NOT_EVALUATED.
         """
-        Implements the Gibbs analytical diagnostic method.
-        Propagates position in the frequency domain and approximates load.
-        The returned load basis records the executed legacy transformation
-        and its unqualified status; it does not certify derived diagnostics.
-        """
-        # 1. Inputs and Constants from Legacy "Gold Standard"
-        u_surf = np.array(self.ctx.surface_card.position)
-        f_surf = np.array(self.ctx.surface_card.load)
-        Nt = len(u_surf)
-
-        L = sum(section.length for section in self.ctx.rod_string) * FEET_TO_INCHES
-        E = STEEL_YOUNGS_MODULUS_PSI
-
-        # Wave speed from Legacy reference
-        a = WAVE_SPEED_IN_PER_S
-
-        avg_d = np.mean([s.diameter for s in self.ctx.rod_string])
-        A = np.pi * (avg_d**2) / 4.0
-
-        # 2. Fourier Decomposition
-        U_s = np.fft.fft(u_surf)
-        F_s = np.fft.fft(f_surf)
-        # Time step based on SPM
-        dt_total = (SECONDS_PER_MINUTE / self.ctx.spm)
-        freqs = np.fft.fftfreq(Nt, d=(dt_total / Nt))
-
-        # 3. Frequency Domain Transformation
-        U_d = np.zeros_like(U_s, dtype=complex)
-
-        # Damping coefficient (c) - Fixed well-specific value for parity
-        c = GIBBS_DAMPING_COEFFICIENT
-
-        for k in range(len(freqs)):
-            w = 2 * np.pi * freqs[k]
-            if w == 0:
-                U_d[k] = U_s[k]
-                continue
-
-            # Damped propagation constant
-            gamma = np.sqrt((-w**2 + 1j * w * c) + 0j) / a
-
-            cosh_gl = np.cosh(gamma * L)
-            sinh_gl = np.sinh(gamma * L)
-
-            # Gibbs analytical solution for position at x=L
-            U_d[k] = U_s[k] * cosh_gl - (F_s[k] / (E * A * gamma)) * sinh_gl
-
-        # 4. Inverse Transform to Time Domain
-        dh_pos = np.real(np.fft.ifft(U_d))
-
-        # Final Buoyant Adjustment (Exact matching legacy subtraction)
-        # Buoyant Weight = Rod Weight * (1 - rho_fluid/rho_steel)
-        total_rod_weight = sum(
-            s.length * (s.diameter**2 * np.pi / 4) * (STEEL_DENSITY_LB_PER_FT3 / SQUARE_FEET_TO_SQUARE_INCHES)
-            for s in self.ctx.rod_string
+        u_surf, f_surf = self._validate_inputs()
+        closing_sample_dropped = bool(
+            u_surf[0] == u_surf[-1] and f_surf[0] == f_surf[-1]
         )
-        buoyant_weight = total_rod_weight * BUOYANCY_FACTOR
+        if closing_sample_dropped:
+            u_surf, f_surf = u_surf[:-1], f_surf[:-1]
+            validate_stroke(u_surf, u_surf, f_surf, "gibbs")
+        count = len(u_surf)
+        if harmonic_count is not None and (
+            isinstance(harmonic_count, (bool, np.bool_))
+            or not isinstance(harmonic_count, (int, np.integer))
+            or not 0 <= harmonic_count <= count // 2
+        ):
+            raise PhysicsError(
+                "harmonic_count must be an integer from zero to sample_count//2",
+                solver="gibbs",
+            )
+        period = SECONDS_PER_MINUTE / self.ctx.spm
+        omega = 2 * np.pi * np.fft.rfftfreq(count, d=period / count)
+        displacement = np.fft.rfft(u_surf)
+        force = np.fft.rfft(f_surf)
+        if harmonic_count is not None:
+            # Discard before propagation so rejected noise cannot overflow.
+            omega = omega[: harmonic_count + 1]
+            displacement = displacement[: harmonic_count + 1]
+            force = force[: harmonic_count + 1]
 
-        # Attenuation correction for load - final alignment
-        dh_load = (f_surf - buoyant_weight) * LOAD_ATTENUATION_FACTOR
+        # Section matrices enforce continuity of displacement and total force
+        # at each taper. Geometric A=pi*d²/4 and unit conversions are exact.
+        buoyant_rod_weight = 0.0
+        try:
+            with np.errstate(over="raise", invalid="raise", divide="raise"):
+                for section in self.ctx.rod_string:
+                    length = section.length * FEET_TO_INCHES
+                    area = np.pi * section.diameter**2 / 4
+                    ea = section.modulus_of_elasticity * area
+                    speed = section.speed_of_sound * FEET_TO_INCHES
+                    gamma = (
+                        np.sqrt(
+                            -(omega[1:] ** 2) + 1j * omega[1:] * section.damping_factor
+                        )
+                        / speed
+                    )
+                    z = gamma * length
+                    cosine, sine = np.cosh(z), np.sinh(z)
+                    # sinh(gamma*L)/gamma = L*sinh(z)/z. np.sinc uses
+                    # sin(pi*x)/(pi*x); the imaginary argument supplies sinh.
+                    compliance = length / ea * np.sinc(z / (1j * np.pi))
+                    old_u, old_f = displacement[1:].copy(), force[1:].copy()
+                    displacement[1:] = cosine * old_u - compliance * old_f
+                    force[1:] = cosine * old_f - ea * gamma * sine * old_u
 
-        # Stroke Synchronization
-        dh_pos = dh_pos - np.min(dh_pos)
-        # This legacy empirical factor remains unqualified (#1857). The Gibbs
-        # comparison path is restricted to measured surface travel by
-        # GIBBS_STROKE_RATIO_LIMIT; that is an implementation envelope, not a
-        # physical prohibition on plunger overtravel.
-        dh_pos = dh_pos * STROKE_SCALING_FACTOR
+                    # Static equilibrium includes the supplied coupling weight,
+                    # using the same effective density as the default solver.
+                    weight = (
+                        (_effective_density_lb_ft3(section) - self.ctx.fluid_density)
+                        * area
+                        * section.length
+                        / SQUARE_FEET_TO_SQUARE_INCHES
+                    )
+                    force[0] -= count * weight
+                    buoyant_rod_weight += weight
+                # Absolute static stretch is not returned: position uses a
+                # zero-minimum datum. Remove DC before inverse transformation.
+                displacement[0] = 0
+                dh_pos = np.fft.irfft(displacement, n=count)
+                dh_load = np.fft.irfft(force, n=count)
+                dh_pos -= np.min(dh_pos)
+        except (FloatingPointError, OverflowError) as exc:
+            raise PhysicsError(
+                "non-finite frequency-domain propagation", solver="gibbs"
+            ) from exc
 
+        # irfft uses the real projection of the unpaired Nyquist component.
+        # No empirical stroke or load multiplier is applied.
         validate_stroke(u_surf, dh_pos, dh_load, "gibbs")
-
         self.results.downhole_card = CardData(
-            position=dh_pos.tolist(),
-            load=dh_load.tolist()
+            position=dh_pos.tolist(), load=dh_load.tolist()
         )
         self.results.downhole_load_basis = DownholeLoadBasis(
-            buoyant_rod_weight_lbf=buoyant_weight,
-            attenuation_factor=LOAD_ATTENUATION_FACTOR,
+            method="coupled_frequency_domain",
+            buoyant_rod_weight_lbf=buoyant_rod_weight,
+            harmonic_count=harmonic_count,
+            closing_sample_dropped=closing_sample_dropped,
         )
-        self.results.peak_polished_rod_load = np.max(f_surf)
-        self.results.minimum_polished_rod_load = np.min(f_surf)
+        self.results.peak_polished_rod_load = float(np.max(f_surf))
+        self.results.minimum_polished_rod_load = float(np.min(f_surf))
         self.results.ctx = self.ctx
-
         return annotate_results(self.results, self.ctx, "gibbs")
 
     def detect_buckling(self):
