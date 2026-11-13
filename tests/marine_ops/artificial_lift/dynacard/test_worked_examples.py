@@ -309,3 +309,32 @@ def test_check_cli_detects_drift(tmp_path, document, builder):
     check = subprocess.run(command, **options)
     assert check.returncode != 0
     assert "README.md" in check.stdout + check.stderr
+
+
+def test_published_surface_csv_reproduces_stored_analysis(document):
+    """The analysed surface card is exactly the published two-column card.
+
+    Corner detection moves in sample steps, so fluid load and fillage can shift
+    when an input is rounded after analysis (example 4 moved 15 lbf when its
+    card was rounded to nine significant digits). The analysis therefore runs
+    on the card at its published CSV precision, and rerunning the workflow on
+    each published CSV must reproduce the stored values.
+    """
+    from digitalmodel.marine_ops.artificial_lift.dynacard.models import DynacardAnalysisContext
+    from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow
+
+    for record in document["examples"]:
+        path = OUTPUT / f"example-{record['index']:02d}-{record['slug']}-surface-card.csv"
+        rows = list(csv.DictReader(io.StringIO(path.read_text(encoding="utf-8"))))
+        card = CardData(position=[float(r["position_in"]) for r in rows],
+                        load=[float(r["load_lbf"]) for r in rows])
+        assert card.position == record["surface_card"]["position"]
+        assert card.load == record["surface_card"]["load"]
+        context = DynacardAnalysisContext(**example_well(), surface_card=card)
+        result = DynacardWorkflow(context).run_full_analysis()
+        stored = record["analysis"]
+        for value, key in ((result.fluid_load.fluid_load, "fluid_load_lbf"),
+                           (result.fillage.fillage, "fillage_pct"),
+                           (result.fillage.net_stroke, "pump_net_stroke_in")):
+            # results.json keeps nine significant digits.
+            assert value == pytest.approx(stored[key], rel=1e-8, abs=1e-9), (record["index"], key)

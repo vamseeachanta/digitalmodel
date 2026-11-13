@@ -21,19 +21,21 @@ Gallery. Ten surface-card and computed-pump-card examples.
 
 Computed-card shape-only matches 6/10 expected modes; the shipped model matches 4/10; source-shape consistency is 5/8 literal and 6/10 including ASSUMED crosswalks, against the [recorded plate score](../plate-classifier-score.md) of 5/8 and 6/10. No rows differ from the source-shape call. The observed round-trip load nRMSE range is 0.402–2.422 %, below the 3.0 % inverse-consistency test limit.
 
-Computed CPIP below zero: example 1: -28.764 psi; example 8: -57.484 psi. These values are retained as reported by the module; physical intake pressure is not established without a consistent dimensioned fluid-pressure basis and measured cards.
+Every analysis runs on the surface card at its published CSV precision (0.0001 in, 0.01 lbf), so rerunning a published CSV reproduces the stored values. Fluid load and fillage step with the detected corner samples: the unrounded synthesised cards give fluid loads differing by up to 34 lbf and the same fillage to one decimal, with corners moved in examples 3, 4, 9. Differences of this size between two tools reading the same card are expected unless both use identical input digits.
+
+Computed CPIP below zero: example 1: -28.764 psi; example 8: -57.485 psi. These values are retained as reported by the module; physical intake pressure is not established without a consistent dimensioned fluid-pressure basis and measured cards.
 
 | Example | Condition | Crosswalk | Pump stroke (in) | Fillage (%) | Fluid load (lbf) | Shipped HYPOTHESIS | Shape-only HYPOTHESIS (computed pump card) | Round-trip nRMSE (%) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 1 | Normal operation | LITERAL | 40.00 | 83.6 | 3711 | PLUNGER_UNDERTRAVEL | NORMAL | 0.505 |
 | 2 | Insufficient supply | ASSUMED | 40.00 | 23.1 | 3020 | FLUID_POUND | FLUID_POUND | 0.881 |
-| 3 | Gas interference | LITERAL | 40.00 | 28.3 | 3370 | VALVE_LEAK_TV | GAS_INTERFERENCE | 0.402 |
-| 4 | Rod parting | LITERAL | 40.00 | 92.4 | 2950 | PLUNGER_UNDERTRAVEL | ROD_PARTING | 0.557 |
+| 3 | Gas interference | LITERAL | 40.00 | 28.3 | 3405 | VALVE_LEAK_TV | GAS_INTERFERENCE | 0.402 |
+| 4 | Rod parting | LITERAL | 40.00 | 92.4 | 2935 | PLUNGER_UNDERTRAVEL | ROD_PARTING | 0.557 |
 | 5 | Tagging up | LITERAL | 40.00 | 70.2 | 3456 | VALVE_LEAK_TV | VALVE_LEAK_TV | 0.758 |
 | 6 | Tagging down | LITERAL | 40.00 | 79.0 | 3303 | VALVE_LEAK_TV | VALVE_LEAK_TV | 0.435 |
 | 7 | Traveling valve leakage | LITERAL | 40.00 | 93.7 | 3403 | VALVE_LEAK_TV | VALVE_LEAK_TV | 0.503 |
-| 8 | Standing valve leakage | LITERAL | 40.00 | 74.5 | 3762 | VALVE_LEAK_SV | VALVE_LEAK_SV | 0.503 |
-| 9 | Plunger out of barrel | LITERAL | 40.00 | 93.6 | 2582 | PLUNGER_OUT_OF_BARREL | VALVE_LEAK_TV | 0.537 |
+| 8 | Standing valve leakage | LITERAL | 40.00 | 74.5 | 3762 | VALVE_LEAK_SV | VALVE_LEAK_SV | 0.504 |
+| 9 | Plunger out of barrel | LITERAL | 40.00 | 93.6 | 2554 | PLUNGER_OUT_OF_BARREL | VALVE_LEAK_TV | 0.537 |
 | 10 | Sand production | ASSUMED | 40.00 | 77.1 | 3235 | VALVE_LEAK_TV | VALVE_LEAK_TV | 2.422 |
 
 Table 1. Computed values under the ASSUMED basis; calls are hypotheses.
@@ -49,7 +51,7 @@ Figure 1. Probabilities are from the shape-only model on the pump card computed 
 | 1 | 81.27 | 0.00 | 0.00 | 0.02 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.07 | 18.64 | PLUNGER_UNDERTRAVEL |
 | 2 | 0.00 | 98.72 | 1.19 | 0.08 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | FLUID_POUND |
 | 3 | 0.00 | 0.00 | 50.72 | 0.00 | 0.00 | 0.00 | 49.28 | 0.00 | 0.00 | 0.00 | 0.00 | VALVE_LEAK_TV |
-| 4 | 0.00 | 0.00 | 0.00 | 99.67 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.09 | 0.24 | PLUNGER_UNDERTRAVEL |
+| 4 | 0.00 | 0.00 | 0.00 | 99.70 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.06 | 0.24 | PLUNGER_UNDERTRAVEL |
 | 5 | 0.00 | 0.00 | 0.00 | 0.00 | 0.01 | 0.00 | 99.99 | 0.00 | 0.00 | 0.00 | 0.00 | VALVE_LEAK_TV |
 | 6 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 1.08 | 98.92 | 0.00 | 0.00 | 0.00 | 0.00 | VALVE_LEAK_TV |
 | 7 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 0.00 | 99.56 | 0.00 | 0.00 | 0.00 | 0.44 | VALVE_LEAK_TV |
@@ -171,10 +173,10 @@ Figure 4. Synthesised surface card, not a measured card; computed pump card over
 | Pump gross stroke | in | 40.00 |
 | Effective pump travel | in | 11.31 |
 | Pump fillage | % | 28.3 |
-| Fluid load (upstroke minus downstroke mean) | lbf | 3370 |
-| Upstroke mean load | lbf | 3684 |
+| Fluid load (upstroke minus downstroke mean) | lbf | 3405 |
+| Upstroke mean load | lbf | 3718 |
 | Downstroke mean load | lbf | 313 |
-| CPIP intake pressure | psi | 164.2 |
+| CPIP intake pressure | psi | 144.9 |
 | CPIP discharge pressure | psi | 2071.4 |
 | CPIP module fluid density | lb/ft³ | 58.651 |
 | CPIP tubing gradient | psi/ft | 0.4070 |
@@ -219,10 +221,10 @@ Figure 5. Synthesised surface card, not a measured card; computed pump card over
 | Pump gross stroke | in | 40.00 |
 | Effective pump travel | in | 36.96 |
 | Pump fillage | % | 92.4 |
-| Fluid load (upstroke minus downstroke mean) | lbf | 2950 |
-| Upstroke mean load | lbf | 3352 |
+| Fluid load (upstroke minus downstroke mean) | lbf | 2935 |
+| Upstroke mean load | lbf | 3337 |
 | Downstroke mean load | lbf | 402 |
-| CPIP intake pressure | psi | 402.0 |
+| CPIP intake pressure | psi | 410.4 |
 | CPIP discharge pressure | psi | 2071.4 |
 | CPIP module fluid density | lb/ft³ | 58.651 |
 | CPIP tubing gradient | psi/ft | 0.4070 |
@@ -242,8 +244,8 @@ Figure 5. Synthesised surface card, not a measured card; computed pump card over
 
 Table 6. Example 4 workflow results; numeric zero is a calculated value, not missing evidence.
 
-- **HYPOTHESIS — shape-only model, computed pump card:** `ROD_PARTING`. Top three: ROD_PARTING 99.67 %; BENT_BARREL 0.22 %; SAND_ABRASION 0.09 %.
-- **HYPOTHESIS — shipped model:** `PLUNGER_UNDERTRAVEL`; confidence 99.98 %. Differential: PLUNGER_UNDERTRAVEL 99.98 %; BENT_BARREL 0.02 %; SAND_ABRASION 0.00 %.
+- **HYPOTHESIS — shape-only model, computed pump card:** `ROD_PARTING`. Top three: ROD_PARTING 99.70 %; BENT_BARREL 0.22 %; SAND_ABRASION 0.06 %.
+- **HYPOTHESIS — shipped model:** `PLUNGER_UNDERTRAVEL`; confidence 99.76 %. Differential: PLUNGER_UNDERTRAVEL 99.76 %; VALVE_LEAK_SV 0.21 %; BENT_BARREL 0.03 %.
 - Expected condition / crosswalk: `ROD_PARTING` / **LITERAL**.
 - Source-shape check: `ROD_PARTING`.
 
@@ -286,7 +288,7 @@ Figure 6. Synthesised surface card, not a measured card; computed pump card over
 | Production runtime source | category | card |
 | Buckling compression flag | boolean | False |
 | Round-trip load nRMSE | % | 0.758 |
-| Round-trip stroke difference | in | 0.00 |
+| Round-trip stroke difference | in | -0.00 |
 
 Table 7. Example 5 workflow results; numeric zero is a calculated value, not missing evidence.
 
@@ -382,7 +384,7 @@ Figure 8. Synthesised surface card, not a measured card; computed pump card over
 | Production runtime source | category | card |
 | Buckling compression flag | boolean | False |
 | Round-trip load nRMSE | % | 0.503 |
-| Round-trip stroke difference | in | -0.00 |
+| Round-trip stroke difference | in | 0.00 |
 
 Table 9. Example 7 workflow results; numeric zero is a calculated value, not missing evidence.
 
@@ -429,7 +431,7 @@ Figure 9. Synthesised surface card, not a measured card; computed pump card over
 | Polished-rod work per stroke | ft·lbf | 11198 |
 | Production runtime source | category | card |
 | Buckling compression flag | boolean | False |
-| Round-trip load nRMSE | % | 0.503 |
+| Round-trip load nRMSE | % | 0.504 |
 | Round-trip stroke difference | in | 0.00 |
 
 Table 10. Example 8 workflow results; numeric zero is a calculated value, not missing evidence.
@@ -459,10 +461,10 @@ Figure 10. Synthesised surface card, not a measured card; computed pump card ove
 | Pump gross stroke | in | 40.00 |
 | Effective pump travel | in | 37.42 |
 | Pump fillage | % | 93.6 |
-| Fluid load (upstroke minus downstroke mean) | lbf | 2582 |
-| Upstroke mean load | lbf | 2635 |
+| Fluid load (upstroke minus downstroke mean) | lbf | 2554 |
+| Upstroke mean load | lbf | 2607 |
 | Downstroke mean load | lbf | 53 |
-| CPIP intake pressure | psi | 610.2 |
+| CPIP intake pressure | psi | 626.1 |
 | CPIP discharge pressure | psi | 2071.4 |
 | CPIP module fluid density | lb/ft³ | 58.651 |
 | CPIP tubing gradient | psi/ft | 0.4070 |
@@ -478,7 +480,7 @@ Figure 10. Synthesised surface card, not a measured card; computed pump card ove
 | Production runtime source | category | card |
 | Buckling compression flag | boolean | False |
 | Round-trip load nRMSE | % | 0.537 |
-| Round-trip stroke difference | in | -0.00 |
+| Round-trip stroke difference | in | 0.00 |
 
 Table 11. Example 9 workflow results; numeric zero is a calculated value, not missing evidence.
 
@@ -642,7 +644,9 @@ Source: [DOI 10.17632/hnfwm9mjs6.1](https://data.mendeley.com/datasets/hnfwm9mjs
 | `sampling.samples` | ASSUMED | `100` | Arc-length samples are treated as uniformly timed; measured kinematics are unavailable. |
 | `sampling.timing` | ASSUMED | `"uniform"` | Same ASSUMED sampling basis. |
 | `sampling.preparation` | ASSUMED | `"closed, uniform normalised Euclidean arc length, clockwise, renormalised"` | Same ASSUMED sampling basis. |
-| `surface_card` | ASSUMED | `"synthesised from the plate shape"` | Forward rod-string model, not a measured polished-rod card. |
+| `surface_card.origin` | ASSUMED | `"synthesised from the plate shape"` | Forward rod-string model, not a measured polished-rod card. Rounded to the published CSV precision before analysis, so the published card reproduces the stored results. |
+| `surface_card.position_decimals` | ASSUMED | `4` | Same ASSUMED surface_card basis. |
+| `surface_card.load_decimals` | ASSUMED | `2` | Same ASSUMED surface_card basis. |
 | `crosswalks.供液不足` | ASSUMED | `"FLUID_POUND"` | Supply insufficiency does not establish fluid pound; sand production does not establish abrasion. |
 | `crosswalks.出砂` | ASSUMED | `"SAND_ABRASION"` | Same ASSUMED crosswalks basis. |
 | `uniform_scale` | ASSUMED | `"All ten shapes use the same stroke and load range"` | Rod parting and other near-zero physical-load conditions are shape illustrations, not physical pump cards. |

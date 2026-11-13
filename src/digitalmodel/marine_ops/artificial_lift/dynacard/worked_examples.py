@@ -37,6 +37,22 @@ class _PinnedDiagnostics(PumpDiagnostics):
         return self._pinned_model
 
 
+# Published surface-card CSV precision. The workflow analyses the card at this
+# precision so that a reader rerunning the published CSV reproduces the stored
+# results: corner detection moves in sample steps, and rounding after the
+# analysis shifted example 4's fluid load by 15 lbf.
+SURFACE_POSITION_DECIMALS = 4
+SURFACE_LOAD_DECIMALS = 2
+
+
+def published_surface_card(card: CardData) -> CardData:
+    """Round a synthesised surface card to its published CSV precision."""
+    return CardData(
+        position=[round(float(v), SURFACE_POSITION_DECIMALS) for v in card.position],
+        load=[round(float(v), SURFACE_LOAD_DECIMALS) for v in card.load],
+    )
+
+
 def example_well() -> dict:
     """Return independent dictionaries of the fixed ASSUMED oilfield basis."""
     return {
@@ -141,11 +157,34 @@ def _analysis_values(ctx, result) -> dict:
     }
 
 
+def _published_precision_effect(unrounded: CardData, published: CardData) -> dict:
+    """Fluid load and fillage on the unrounded card minus the published-card values.
+
+    Reported, not limited: corner detection moves in whole samples, so these
+    results can step when the input changes in its last published digit.
+    """
+    values = []
+    for card in (unrounded, published):
+        result = DynacardWorkflow(
+            DynacardAnalysisContext(**example_well(), surface_card=card)
+        ).run_full_analysis()
+        values.append((result.fluid_load.fluid_load, result.fillage.fillage,
+                       list(result.fillage.corners)))
+    (load_u, fill_u, corners_u), (load_p, fill_p, corners_p) = values
+    return {
+        "fluid_load_difference_lbf": load_u - load_p,
+        "fillage_difference_pct": fill_u - fill_p,
+        "corners_changed": corners_u != corners_p,
+    }
+
+
 def _build_example(curve, index, manifest, models, digests) -> dict:
     source = prepare_plate_card(curve, samples=100, stroke_in=40.0,
                                 load_range_lbf=fluid_load_scale_lbf())
     ctx = DynacardAnalysisContext(**example_well(), surface_card=source)
-    ctx.surface_card = surface_card_from_pump_card(source, ctx)
+    unrounded = surface_card_from_pump_card(source, ctx)
+    ctx.surface_card = published_surface_card(unrounded)
+    precision = _published_precision_effect(unrounded, ctx.surface_card)
     workflow = DynacardWorkflow(ctx)
     workflow.diagnostics = _PinnedDiagnostics(models["shipped"])
     result = workflow.run_full_analysis()
@@ -172,6 +211,7 @@ def _build_example(curve, index, manifest, models, digests) -> dict:
         },
         "consistency": {"source_shape_only": source_shape},
         "round_trip": _round_trip(result.downhole_card, source),
+        "published_precision_effect": precision,
     }
 
 
@@ -201,7 +241,7 @@ def _basis() -> dict:
         "scale_intake_pressure_psi": (0.0, "Defines only the static load scale; computed CPIP need not be zero."),
         "card_space": ("pump (downhole)", "Source does not identify surface or pump space."),
         "sampling": ({"samples": 100, "timing": "uniform", "preparation": "closed, uniform normalised Euclidean arc length, clockwise, renormalised"}, "Arc-length samples are treated as uniformly timed; measured kinematics are unavailable."),
-        "surface_card": ("synthesised from the plate shape", "Forward rod-string model, not a measured polished-rod card."),
+        "surface_card": ({"origin": "synthesised from the plate shape", "position_decimals": SURFACE_POSITION_DECIMALS, "load_decimals": SURFACE_LOAD_DECIMALS}, "Forward rod-string model, not a measured polished-rod card. Rounded to the published CSV precision before analysis, so the published card reproduces the stored results."),
         "crosswalks": (_ASSUMED_MODES, "Supply insufficiency does not establish fluid pound; sand production does not establish abrasion."),
         "uniform_scale": ("All ten shapes use the same stroke and load range", "Rod parting and other near-zero physical-load conditions are shape illustrations, not physical pump cards."),
         "cpip_defaults": ({"oil_api": 35.0, "water_sg": 1.03, "water_cut_pct": 50.0}, "CPIP derives density from this default mixture, not context fluid_density; retained as the module reports it."),

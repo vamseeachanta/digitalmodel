@@ -38,6 +38,23 @@ UNIT_DECIMALS = {"in": 2, "lbf": 0, "%": 1, "psi": 1, "bbl/day": 1,
                  "ft·lbf": 0, "lb/ft³": 3, "psi/ft": 4, "h/day": 1}
 
 
+def _precision_sentence(records) -> str:
+    """State the published-precision effect on the stepped results."""
+    effects = [(r["index"], r["published_precision_effect"]) for r in records]
+    load = max(abs(e["fluid_load_difference_lbf"]) for _, e in effects)
+    fill = max(abs(e["fillage_difference_pct"]) for _, e in effects)
+    moved = [str(i) for i, e in effects if e["corners_changed"]]
+    where = ("examples " + ", ".join(moved)) if moved else "no example"
+    return ("Every analysis runs on the surface card at its published CSV precision "
+            "(0.0001 in, 0.01 lbf), so rerunning a published CSV reproduces the stored "
+            "values. Fluid load and fillage step with the detected corner samples: the "
+            "unrounded synthesised cards give fluid loads differing by up to "
+            f"{load:.0f} lbf and " + (f"fillage by up to {fill:.1f} percentage points"
+            if fill >= 0.05 else "the same fillage to one decimal") + ", with "
+            f"corners moved in {where}. Differences of this size between two tools "
+            "reading the same card are expected unless both use identical input digits.\n\n")
+
+
 def stem(record):
     return f"example-{record['index']:02d}-{record['slug']}"
 
@@ -260,6 +277,7 @@ def score_section(records):
             difference +
             f"The observed round-trip load nRMSE range is {min(errors):.3f}–{max(errors):.3f} %, "
             "below the 3.0 % inverse-consistency test limit.\n\n"
+            + _precision_sentence(records) +
             f"Computed CPIP below zero: {negative or 'none'}. These values are retained "
             "as reported by the module; physical intake pressure is not established "
             "without a consistent dimensioned fluid-pressure basis and measured cards.\n")
