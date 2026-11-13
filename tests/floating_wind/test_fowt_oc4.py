@@ -175,6 +175,25 @@ def test_run_packages_written(tmp_path):
         assert "validated" in text and "Expected" in text
     surge = (tmp_path / "LC1_surge_decay" / "run.md").read_text(encoding="utf-8")
     assert "106.89 s" in surge and "10 %" in surge
+    # The README leaves the surge difference unexplained; the package must not promise a cause.
+    assert "explains" not in surge and "not established" in surge
+
+
+def test_source_note_states_table_5_1_departures(spec):
+    """Seabed drag and line structural damping (Table 5-1) are not modelled; say so."""
+    note = spec["fowt"]["source_note"]
+    assert "seabed drag coefficient 1.0 is not modelled" in note
+    assert "2 % stiffness-proportional structural damping is not modelled" in note
+    assert "Poisson ratio 0.5 is an assumption" in note
+
+
+def test_mooring_comparators_cite_printed_page_28():
+    """Eqs. (5-14) and (5-15) are on printed page 28 of the definition report."""
+    committed = json.loads((EXAMPLE / "results.json").read_text(encoding="utf-8"))
+    cited = [c["comparator_source"] for c in committed["comparisons"]
+             if "(5-14)" in c["comparator_source"]]
+    assert len(cited) == 6
+    assert all(source.endswith("printed page 28") for source in cited)
 
 
 def test_run_package_rerun_keeps_saved_results(tmp_path):
@@ -257,3 +276,15 @@ def test_extraction_rejects_altered_reference_volume(tmp_path):
     hydrodyn.write_bytes(original.replace(b"13917", b"14017"))
     with pytest.raises(ValueError, match=f"source digest mismatch: {hydrodyn.name}"):
         module.build(tmp_path)
+
+
+@pytest.mark.parametrize("infinite", [False, True])
+def test_periods_refuse_spec_added_mass_unlike_the_data(spec, sources, infinite):
+    """Both period variants check the emitted spec radiation against the data."""
+    _, data = sources
+    perturbed = copy.deepcopy(spec)
+    for entry in perturbed["fowt"]["hull"]["radiation"]:
+        entry["added_mass"] = [[4.0 * v for v in row] for row in entry["added_mass"]]
+    model = model_from_spec(perturbed)
+    with pytest.raises(ValueError, match="added mass differs"):
+        natural_periods(model, data, np.zeros(6), infinite_frequency_added_mass=infinite)

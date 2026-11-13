@@ -9,7 +9,9 @@ For each load case: ``spec.yml``, the generated OrcaFlex model (``model/``)
 and ``run.md`` with the exact settings, the expected comparators and their
 tolerances. Cases with waves need the public WAMIT files
 alongside the first-order ``*_1stOrder.out.wamit`` text output. When
-``wamit_dir`` is given they are copied into ``hydro/`` of those packages;
+``wamit_dir`` is given, their SHA-256 digests are verified against the pinned
+revision before anything is written, then they are copied into ``hydro/`` of
+those packages;
 the text output is renamed to ``.out`` for the importer. Without that
 directory, wave packages still require external hydrodynamic inputs.
 Nothing is run or confirmed to load in the licensed solver.
@@ -53,7 +55,34 @@ WAMIT = ["IEA-15-240-RWT-UMaineSemi.1", "IEA-15-240-RWT-UMaineSemi.3",
 WAMIT_OUTPUT = f"{Path(WAMIT[0]).stem}_1stOrder.out.wamit"
 WAMIT_IMPORT = Path(WAMIT_OUTPUT).with_suffix("").name
 WAMIT.append(WAMIT_OUTPUT)
+# Expected bytes of the packaged files at COMMIT (HydroData folder), pinned
+# independently of any supplied copy. The .1 and .hst values equal the
+# extractor's pins for the same revision; the .3 and first-order output values
+# are the SHA-256 of the public files at COMMIT, read 2026-11-13.
+WAMIT_SHA256 = {
+    "IEA-15-240-RWT-UMaineSemi.1":
+        "bca0d60c95c9ab59a15980c4cdcf335f529ce51dd84f6e3a5c0b8d30b2295b92",
+    "IEA-15-240-RWT-UMaineSemi.3":
+        "a6fd78f6cb35dcbb79ab82982cee5c5abd11ca6ddc44b6f6f8d657032fb1ed35",
+    "IEA-15-240-RWT-UMaineSemi.hst":
+        "658421641ad3b523827c1b3f2faa16ec276e2298fc795c583e6350241ca76e27",
+    "IEA-15-240-RWT-UMaineSemi_1stOrder.out.wamit":
+        "89f85beedfcb5aaaed6fc99dfa03d6639a9cc062ec460a56d3f08e7988d989d4",
+}
 ALLEN = "Allen et al. (2020) NREL/TP-5000-76773"
+
+
+def verify_wamit_sources(folder: Path) -> None:
+    """Refuse supplied hydrodynamic files whose bytes are not the pinned revision's.
+
+    Run before any package is written or replaced: the packages attribute these
+    files to COMMIT, and the package manifest records only what was copied.
+    """
+    for name in WAMIT:
+        digest = hashlib.sha256((folder / name).read_bytes()).hexdigest()
+        if digest != WAMIT_SHA256[name]:
+            raise ValueError(f"WAMIT source digest mismatch: {name} is not the file at "
+                             f"commit {COMMIT}")
 
 
 def _kn(value: float) -> str:
@@ -238,6 +267,8 @@ def flexible_case(basis: dict, data: dict) -> tuple[dict, str]:
 def main(argv: list[str]) -> int:
     out = Path(argv[1])
     wamit = Path(argv[2]) if len(argv) > 2 else None
+    if wamit is not None:
+        verify_wamit_sources(wamit)
     basis, data = load_sources()
     eq, x = expectations(basis, data)
     cases = load_case_specs(basis, data, eq)

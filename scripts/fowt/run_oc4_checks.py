@@ -54,7 +54,7 @@ def main() -> int:
     lin = basis["comparators"]["openfast_linearisation_periods"]["value"]
     text = published["natural_frequencies_text"]["value"]
     hydro = spec["fowt"]["hull"]["hydrostatic_stiffness_excluding_gravity"]
-    p5 = f"{REPORT}, Eq. (5-14) and (5-15), printed page 27"
+    p5 = f"{REPORT}, Eq. (5-14) and (5-15), printed page 28"
     comparisons = [
         compare("Displaced volume", "m3", spec["fowt"]["hull"]["displaced_volume"],
                 published["displacement"]["value"], f"{REPORT}, Table 4-6", 0.01),
@@ -72,6 +72,7 @@ def main() -> int:
         compare("Mooring stiffness, yaw", "N m/rad", k[5, 5], 1.17e8, p5, 0.03),
         compare("Mooring stiffness, surge-pitch", "N/rad", k[0, 4], -1.08e5, p5, 0.05),
     ]
+    # Proposed tolerances (no published basis): screening bands, not engineering acceptance.
     tol = {"surge": 0.10, "heave": 0.05, "pitch": 0.05, "yaw": 0.10}
     for mode in ("surge", "heave", "pitch", "yaw"):
         comparisons.append(compare(f"Natural period, {mode}", "s", freq["periods"][mode],

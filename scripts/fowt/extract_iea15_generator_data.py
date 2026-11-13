@@ -143,6 +143,7 @@ def build(raw: Path) -> dict:
             raise ValueError(f"source digest mismatch: {names[key].name}")
     overview, nacelle, performance = read_tabular(names["tabular"])
     rotor_rows = [nacelle["Blades"], nacelle["Hub_System"]]
+    # Keep accumulation independent of Python's built-in sum implementation.
     rotor_mass = math.fsum(float(r[1]) for r in rotor_rows)
     rotor_cm = [round(math.fsum(float(r[1]) * float(r[c]) for r in rotor_rows) / rotor_mass,
                       DERIVED_DECIMAL_PLACES)

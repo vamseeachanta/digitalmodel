@@ -411,36 +411,36 @@ class TestTorqueBalanceWithRealData:
     """Tests using real well card data."""
 
     @pytest.fixture
-    def well_7699227(self):
-        """Load well 7699227 test data."""
-        filepath = TEST_DATA_DIR / "7699227.json"
+    def well_echo(self):
+        """Load well field well echo test data."""
+        filepath = TEST_DATA_DIR / "field_well_echo.json"
         if filepath.exists():
             return load_from_json_file(filepath)
-        pytest.skip("Test data file 7699227.json not found")
+        pytest.skip("Test data file field_well_echo.json not found")
 
-    def test_torque_balance_7699227(self, well_7699227):
-        """Test torque balance calculation with well 7699227 data."""
+    def test_torque_balance_echo(self, well_echo):
+        """Test torque balance calculation with well field well echo data."""
         # Skip if surface unit geometry is not available
-        if well_7699227.surface_unit.dimensional_k <= 0:
+        if well_echo.surface_unit.dimensional_k <= 0:
             pytest.skip("No surface unit geometry in test data")
 
-        result = calculate_torque_balance(well_7699227)
+        result = calculate_torque_balance(well_echo)
         assert isinstance(result, TorqueBalanceAnalysis)
 
-    def test_optimal_moment_estimated_7699227(self, well_7699227):
+    def test_optimal_moment_estimated_echo(self, well_echo):
         """Test optimal moment estimation with real data."""
-        if well_7699227.surface_unit.dimensional_k <= 0:
+        if well_echo.surface_unit.dimensional_k <= 0:
             pytest.skip("No surface unit geometry in test data")
 
-        result = calculate_torque_balance(well_7699227)
+        result = calculate_torque_balance(well_echo)
         assert isinstance(result.estimated_optimal_moment, float)
 
-    def test_peak_torques_reasonable_7699227(self, well_7699227):
+    def test_peak_torques_reasonable_echo(self, well_echo):
         """Test that peak torques are reasonable with real data."""
-        if well_7699227.surface_unit.dimensional_k <= 0:
+        if well_echo.surface_unit.dimensional_k <= 0:
             pytest.skip("No surface unit geometry in test data")
 
-        result = calculate_torque_balance(well_7699227)
+        result = calculate_torque_balance(well_echo)
         # Peak torques should be reasonable for typical well
         assert abs(result.upstroke_peak_torque) < 10000  # M-in-lbs
         assert abs(result.downstroke_peak_torque) < 10000

@@ -5,7 +5,7 @@ digitalmodel.field_development.opex_estimator
 =============================================
 
 Estimates annual operating expenditure (OPEX) for offshore host facilities
-based on GoM benchmark data and industry heuristics.
+using screening assumptions, not sourced benchmarks; no escalation is applied.
 
 GoM OPEX Benchmarks (2024 basis):
 - Deepwater GoM OPEX/bbl: $15-50/bbl depending on host type and field age
@@ -15,7 +15,8 @@ GoM OPEX Benchmarks (2024 basis):
 - FPSO:  $150-500M/yr (lease/manning dominates)
 - Tieback: $20-80M/yr incremental to host OPEX
 
-Field age effect: maintenance costs rise ~2% per year after year 5.
+Field age effect: maintenance costs rise 2.5% per year after year 5
+(screening assumption, not sourced).
 
 Usage
 -----
@@ -83,7 +84,7 @@ _REF_CAPACITY_BOPD = 100_000.0
 
 # OPEX aging: annual increase factor in maintenance/inspection costs
 # Applied as compounding from year 5 onward (new field has reduced complexity)
-_AGING_RATE_PER_YEAR = 0.025   # 2.5% per year beyond year 5
+_AGING_RATE_PER_YEAR = 0.025   # 2.5% per year beyond year 5; unsourced assumption
 _AGING_REFERENCE_AGE = 5       # years
 
 
@@ -124,7 +125,7 @@ def estimate_opex(
     production_capacity_bopd: float,
     field_age_years: int,
 ) -> OPEXEstimate:
-    """Estimate annual OPEX for an offshore host facility based on GoM benchmarks.
+    """Estimate annual OPEX using unsourced screening assumptions (2024 basis).
 
     Parameters
     ----------
@@ -176,11 +177,11 @@ def estimate_opex(
     per_bbl = round(_opex_per_bbl(base, production_capacity_bopd), 2)
 
     basis = (
-        f"GoM {host_type.value} OPEX benchmark (2024 basis); "
+        "screening assumption, not sourced; 2024 basis, not escalated; "
+        f"GoM {host_type.value} OPEX; "
         f"ref 100k bopd, age {_AGING_REFERENCE_AGE} yr; "
         f"capacity_factor={cap_factor:.3f}, age_factor={age_fac:.3f}. "
-        f"Typical GoM deepwater OPEX: $15-50/bbl. "
-        f"Sources: BSEE production data, EIA GoM operator cost surveys."
+        "GoM deepwater OPEX: assumed $15-50/bbl, not a sourced range."
     )
 
     return OPEXEstimate(

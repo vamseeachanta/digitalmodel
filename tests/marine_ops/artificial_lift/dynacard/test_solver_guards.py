@@ -16,7 +16,8 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.adapter i
 from digitalmodel.marine_ops.artificial_lift.dynacard.exceptions import PhysicsError
 from digitalmodel.marine_ops.artificial_lift.dynacard.finite_difference import FiniteDifferenceSolver
 from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
-    AnalysisResults, CardData, DynacardAnalysisContext, PumpProperties, RodSection,
+    AnalysisResults, CardData, DownholeLoadBasis, DynacardAnalysisContext,
+    PumpProperties, RodSection,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.physics import DynacardPhysicsSolver
 from digitalmodel.marine_ops.artificial_lift.dynacard.solver import (
@@ -49,7 +50,7 @@ def _solve(context, method):
 
 
 @pytest.mark.parametrize("method,flag", [
-    ("gibbs", "comparison only: load not propagated"),
+    ("gibbs", "comparison only: not field validated"),
     ("finite_difference", "comparison only: not validated"),
 ])
 def test_direct_comparison_solver_warns_and_serializes_flag(context, method, flag):
@@ -59,21 +60,13 @@ def test_direct_comparison_solver_warns_and_serializes_flag(context, method, fla
     assert results.solver_method == method
 
 
-@pytest.mark.parametrize("method", ["gibbs"])
-def test_direct_solver_rejects_excessive_downhole_stroke(context, method):
-    context.surface_card.position = [x * 0.001 for x in context.surface_card.position]
-    with pytest.raises(PhysicsError, match="downhole stroke exceeds surface stroke"):
-        _solve(context, method)
-
-
-@pytest.mark.parametrize("method", ["gibbs"])
-def test_workflow_rejects_invalid_stroke_before_diagnosis(context, method):
-    workflow = DynacardWorkflow(context, solver_method=method)
+def test_workflow_rejects_nonfinite_card_before_diagnosis(context):
+    workflow = DynacardWorkflow(context, solver_method="gibbs")
     invalid = AnalysisResults(downhole_card=CardData(
-        position=[0.0, 400.0, 0.0], load=[1.0, 2.0, 3.0],
+        position=[0.0, 400.0, 0.0], load=[1.0, float("nan"), 3.0],
     ))
     workflow.solver = SimpleNamespace(solve=lambda: invalid, solve_wave_equation=lambda: invalid)
-    with pytest.raises(PhysicsError, match="downhole stroke exceeds surface stroke"):
+    with pytest.raises(PhysicsError, match="non-finite"):
         workflow.run_full_analysis()
 
 
@@ -102,6 +95,32 @@ def test_comparison_uses_default_reference_and_ignores_phase(context, monkeypatc
         assert comparison["load_nrmse_pct"] < 1e-10
         assert comparison["stroke_error_pct"] == 0.0
     assert report["within_threshold"] is True
+
+
+@pytest.mark.parametrize("closing_sample_dropped", [False, True])
+def test_comparison_aligns_only_a_recorded_closing_sample(context, monkeypatch, closing_sample_dropped):
+    card = _comparison_solvers(monkeypatch)
+    closed = CardData(position=card.position + [card.position[0]],
+                      load=card.load + [card.load[0]])
+    context.surface_card = closed.model_copy(deep=True)
+    basis = DownholeLoadBasis(method="coupled_frequency_domain", buoyant_rod_weight_lbf=0.0,
+                             closing_sample_dropped=closing_sample_dropped)
+    monkeypatch.setattr(EverittJenningsContextSolver, "solve",
+                        lambda _: AnalysisResults(downhole_card=closed))
+    monkeypatch.setattr(DynacardPhysicsSolver, "solve_wave_equation",
+                        lambda _: AnalysisResults(downhole_card=card, downhole_load_basis=basis))
+    monkeypatch.setattr(FiniteDifferenceSolver, "solve",
+                        lambda _: AnalysisResults(downhole_card=closed))
+    workflow = DynacardWorkflow(context)
+    if not closing_sample_dropped:
+        with pytest.raises(ValueError, match="equal sample counts"):
+            workflow.compare_solvers()
+        return
+    report = workflow.compare_solvers()
+    assert report["comparisons"]["gibbs"]["load_nrmse_pct"] == pytest.approx(0.0)
+    assert report["reference_results"].downhole_card == closed
+    assert len(report["reference_results"].downhole_card.load) == len(card.load) + 1
+    assert context.surface_card == closed
 
 
 def test_comparison_raises_with_metrics_above_envelope(context, monkeypatch):
@@ -153,7 +172,7 @@ def test_production_utility_keeps_default_solver(context):
     assert not any("comparison only" in flag for flag in result.solver_flags)
 
 
-@pytest.mark.parametrize("method", ["everitt_jennings", "finite_difference"])
+@pytest.mark.parametrize("method", ["everitt_jennings", "gibbs", "finite_difference"])
 def test_direct_solver_allows_downhole_overtravel(context, method):
     context.surface_card.position = [x * 0.001 for x in context.surface_card.position]
     results = _solve(context, method)
@@ -161,7 +180,7 @@ def test_direct_solver_allows_downhole_overtravel(context, method):
     assert np.all(np.isfinite(results.downhole_card.load))
 
 
-@pytest.mark.parametrize("method", ["everitt_jennings", "finite_difference"])
+@pytest.mark.parametrize("method", ["everitt_jennings", "gibbs", "finite_difference"])
 def test_workflow_allows_overtravel_before_diagnosis(context, method):
     context.surface_card.position = [x * 0.001 for x in context.surface_card.position]
     expected = _solve(context, method).downhole_card

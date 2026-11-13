@@ -1,9 +1,9 @@
 {
   "CardDetails": {
-    "ID": 5206267,
+    "ID": 203,
     "Api14": "API-CLEANSED-003",
     "WellName": "Well-C",
-    "CardTimeStamp": "2019-08-18T12:47:09",
+    "CardTimeStamp": "2016-08-13T12:47:09",
     "CreatedTimeStamp": null,
     "UpdatedTimeStamp": null,
     "CalculationMethod": "Finite Difference",
@@ -32,7 +32,7 @@
     "CasingLiquidGradient": null
   },
   "WellTestData": {
-    "WellTestDate": "2019-07-30T00:00:00",
+    "WellTestDate": "2016-07-25T00:00:00",
     "OilRate": 41.85,
     "GasRate": 312.92,
     "WaterRate": 146.6,
@@ -43,7 +43,7 @@
     "ApiNo14": "API-CLEANSED-003",
     "Rods": [
       {
-        "InstallId": 51049,
+        "InstallId": 1003,
         "RID": 1,
         "Manufacturer": "Generic",
         "Grade": "KD",
@@ -69,7 +69,7 @@
         "RodStressSigmaA": 35943.302343359304
       },
       {
-        "InstallId": 51049,
+        "InstallId": 1003,
         "RID": 2,
         "Manufacturer": "Generic",
         "Grade": "KD",
@@ -95,7 +95,7 @@
         "RodStressSigmaA": 33766.759335027746
       },
       {
-        "InstallId": 51049,
+        "InstallId": 1003,
         "RID": 3,
         "Manufacturer": "Generic",
         "Grade": "KD",
@@ -121,7 +121,7 @@
         "RodStressSigmaA": 30828.17312704408
       },
       {
-        "InstallId": 51049,
+        "InstallId": 1003,
         "RID": 4,
         "Manufacturer": "Generic",
         "Grade": "KD",
@@ -147,7 +147,7 @@
         "RodStressSigmaA": 28718.81853804067
       },
       {
-        "InstallId": 51049,
+        "InstallId": 1003,
         "RID": 5,
         "Manufacturer": "API",
         "Grade": "D",
@@ -174,12 +174,12 @@
       }
     ],
     "Pump": {
-      "InstallId": 51049,
+      "InstallId": 1003,
       "Depth": 6208.0,
       "Diameter": 1.75
     },
     "SurfaceUnit": {
-      "InstallId": 51049,
+      "InstallId": 1003,
       "Description": null,
       "PumpingUnitManufacturer": "L",
       "PumpingUnitGeometry": "C",

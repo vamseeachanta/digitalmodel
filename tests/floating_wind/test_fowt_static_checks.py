@@ -11,8 +11,11 @@ manifest), and two existing repository catenary solvers.
 from __future__ import annotations
 
 import copy
+import hashlib
 import json
 import math
+import os
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -21,6 +24,7 @@ import pytest
 from digitalmodel.floating_wind.fowt_static_checks import (
     catenary_endpoint,
     model_from_spec,
+    natural_periods,
     rigid_mass_matrix,
     run_checks,
     solve_catenary,
@@ -296,8 +300,12 @@ def test_run_packages_written(tmp_path):
     assert "`RNA inertia`" in flexible  # the principal-axes child is flagged for checking
 
 
-def test_wave_packages_include_wamit_import_output(tmp_path):
-    """The importer needs the first-order text output, with a selectable suffix."""
+def test_wave_packages_include_wamit_import_output(tmp_path, monkeypatch):
+    """The importer needs the first-order text output, with a selectable suffix.
+
+    Placeholder bytes stand in for the public files here, so their digests are
+    pinned for this test only; the real pins are tested separately below.
+    """
     import importlib.util
 
     script = ROOT / "scripts" / "fowt" / "write_iea15_run_packages.py"
@@ -314,6 +322,8 @@ def test_wave_packages_include_wamit_import_output(tmp_path):
     files[output_name] = b"first-order WAMIT output\r\n"
     for name, content in files.items():
         (source / name).write_bytes(content)
+    monkeypatch.setattr(module, "WAMIT_SHA256", {
+        name: hashlib.sha256(content).hexdigest() for name, content in files.items()})
 
     out = tmp_path / "packages"
     assert module.main(["x", str(out), str(source)]) == 0
@@ -394,3 +404,125 @@ def test_case_folder_refuses_unrecorded_or_edited_content(tmp_path):
     with pytest.raises(FileExistsError, match="manifest"):
         prepare_case_folder(folder)
     assert (folder / "x.txt").exists()
+
+
+# ------------------------------------- spec radiation used by the period check
+def _spec_with_scaled_added_mass(sources, factor, entries=None):
+    spec = copy.deepcopy(build_spec(*sources))
+    radiation = spec["fowt"]["hull"]["radiation"]
+    for k in range(len(radiation)) if entries is None else entries:
+        radiation[k]["added_mass"] = [[factor * v for v in row]
+                                      for row in radiation[k]["added_mass"]]
+    return spec
+
+
+@pytest.mark.parametrize("factor, entries", [
+    (4.0, None),        # the review's probe: every spec added-mass matrix times four
+    (1.01, [1]),        # one finite-frequency entry, 1 %
+    (1.01, [0]),        # the infinite-frequency entry, 1 %
+])
+def test_natural_periods_reject_spec_radiation_not_matching_the_data(sources, factor, entries):
+    """The periods use the data table, so the spec the generator emits must
+    hold the same added mass; otherwise the check does not describe the
+    generated model."""
+    _, data = sources
+    model = model_from_spec(_spec_with_scaled_added_mass(sources, factor, entries))
+    with pytest.raises(ValueError, match="added mass differs"):
+        natural_periods(model, data, np.zeros(6))
+
+
+def test_natural_periods_reject_spec_missing_a_tabulated_period(sources):
+    _, data = sources
+    spec = copy.deepcopy(build_spec(*sources))
+    del spec["fowt"]["hull"]["radiation"][5]
+    with pytest.raises(ValueError, match="radiation periods"):
+        natural_periods(model_from_spec(spec), data, np.zeros(6))
+
+
+def test_run_checks_reject_perturbed_spec_radiation(sources):
+    basis, data = sources
+    turbine = data["turbine"]
+    with pytest.raises(ValueError, match="added mass differs"):
+        run_checks(_spec_with_scaled_added_mass(sources, 4.0), data,
+                   basis["turbine"]["rated_rotor_thrust"]["value"],
+                   [turbine["hub_overhang"]["value"], 0.0, turbine["hub_height"]["value"]],
+                   turbine["shaft_tilt"]["value"])
+
+
+# ------------------------------------------- packaged hydrodynamic source pins
+def test_wamit_package_pins_cover_every_packaged_file():
+    """Independent pins for all four packaged files; .1 and .hst equal the
+    digests the extractor recorded for the same revision."""
+    module = _packages_module()
+    assert set(module.WAMIT_SHA256) == set(module.WAMIT)
+    _, data = load_sources()
+    recorded = {Path(k).name: v for k, v in data["source_sha256"].items()}
+    stem = Path(module.WAMIT[0]).stem
+    for name in (f"{stem}.1", f"{stem}.hst"):
+        assert module.WAMIT_SHA256[name] == recorded[name]
+    assert all(len(v) == 64 and int(v, 16) >= 0 for v in module.WAMIT_SHA256.values())
+
+
+def _placeholder_wamit(module, folder):
+    folder.mkdir()
+    for name in module.WAMIT:
+        (folder / name).write_bytes(b"not the pinned file\n")
+
+
+def test_wave_packages_refuse_unpinned_wamit_bytes(tmp_path):
+    """Stale or altered files are refused before any package is written."""
+    module = _packages_module()
+    source = tmp_path / "source"
+    _placeholder_wamit(module, source)
+    out = tmp_path / "packages"
+    with pytest.raises(ValueError, match="WAMIT source digest mismatch"):
+        module.main(["x", str(out), str(source)])
+    assert not out.exists()
+
+
+def test_unpinned_wamit_bytes_leave_existing_packages_unchanged(tmp_path):
+    module = _packages_module()
+    out = tmp_path / "packages"
+    assert module.main(["x", str(out)]) == 0
+    before = {p.relative_to(out): p.read_bytes() for p in out.rglob("*") if p.is_file()}
+    source = tmp_path / "source"
+    _placeholder_wamit(module, source)
+    with pytest.raises(ValueError, match="WAMIT source digest mismatch"):
+        module.main(["x", str(out), str(source)])
+    after = {p.relative_to(out): p.read_bytes() for p in out.rglob("*") if p.is_file()}
+    assert after == before
+
+
+@pytest.mark.skipif(not os.environ.get("DIGITALMODEL_IEA15_RAW"),
+                    reason="raw IEA files not present; set DIGITALMODEL_IEA15_RAW")
+def test_wave_packages_accept_pinned_files_and_refuse_one_altered_byte(tmp_path):
+    module = _packages_module()
+    raw = Path(os.environ["DIGITALMODEL_IEA15_RAW"])
+    source = tmp_path / "source"
+    source.mkdir()
+    for name in module.WAMIT:
+        shutil.copyfile(raw / name, source / name)
+    module.verify_wamit_sources(source)  # the pinned set is accepted
+    radiation = source / f"{Path(module.WAMIT[0]).stem}.3"
+    content = bytearray(radiation.read_bytes())
+    content[-2] = ord("0") if content[-2] != ord("0") else ord("1")
+    radiation.write_bytes(bytes(content))
+    with pytest.raises(ValueError, match=f"WAMIT source digest mismatch: {radiation.name}"):
+        module.verify_wamit_sources(source)
+
+
+# ---------------------------------------------- inertia qualification carried
+def test_committed_results_carry_the_inertia_qualification(sources):
+    basis, _ = sources
+    committed = json.loads((ROOT / "docs" / "domains" / "orcaflex" / "examples" / "fowt"
+                            / "iea15-volturnus-s" / "results.json").read_text(encoding="utf-8"))
+    qualification = committed["qualification"]
+    assert qualification["readiness"] == basis["qualification"]["readiness"]
+    assert qualification["use_for_analysis"] == basis["qualification"]["use_for_analysis"]
+    assert "RNA" in qualification["natural_periods"]
+    assert "assumed" in qualification["natural_periods"]
+    readme = (ROOT / "docs" / "domains" / "orcaflex" / "examples" / "fowt"
+              / "iea15-volturnus-s" / "README.md").read_text(encoding="utf-8")
+    established = readme.split("Established without a licence")[1].split("Not established")[0]
+    period_item = next(item for item in established.split("\n- ") if "natural periods" in item)
+    assert "assumed" in period_item and "RNA" in period_item

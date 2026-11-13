@@ -41,6 +41,7 @@ DECAYS = {
     "LC3_pitch_decay": ("pitch", [0.0, 0.0, 0.0], [0.0, 5.0, 0.0], 400),
     "LC6_yaw_decay": ("yaw", [0.0, 0.0, 0.0], [0.0, 0.0, 8.0], 800),
 }
+# Proposed tolerances in % (no published basis): screening bands, not engineering acceptance.
 PERIOD_TOLERANCE = {"surge": 10, "heave": 5, "pitch": 5, "yaw": 10}
 
 
@@ -121,8 +122,8 @@ def run_md(name: str, spec: dict, x: dict, basis: dict) -> str:
         if mode == "surge":
             lines += ["", "With the infinite-frequency added mass the hand calculation gives "
                       f"{x['periods_infinite_frequency']['surge']:.2f} s. Record which of the "
-                      "two values the decay is closer to; the report README explains the "
-                      "difference."]
+                      "two values the decay is closer to; the cause of the difference from "
+                      "the OpenFAST linearisation is not established (report README)."]
     lines += ["", "## Record", "",
               "Return the OrcaFlex version, the load and statics messages, the values in the",
               "table above, and the `.sim` file size. Do not describe the model as validated",
