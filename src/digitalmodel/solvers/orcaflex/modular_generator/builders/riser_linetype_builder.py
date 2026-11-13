@@ -67,13 +67,9 @@ class RiserLineTypeBuilder(BaseBuilder):
         # Calculate mass per unit length if using structural properties
         mass = lt.mass_per_length
 
-        # Handle drag coefficient - can be float or string (table reference)
-        if isinstance(lt.drag_coefficient, str):
-            # Table reference
-            cd_values = [lt.drag_coefficient, None, lt.axial_drag_coefficient]
-        else:
-            # Numeric value
-            cd_values = [lt.drag_coefficient, None, lt.axial_drag_coefficient]
+        # Drag coefficient: a number or a variable-data table name; the
+        # native layout is [normal, ~, axial] for both.
+        cd_values = [lt.drag_coefficient, None, lt.axial_drag_coefficient]
 
         line_type_def = {
             "Name": lt.name,
@@ -128,8 +124,8 @@ class RiserLineTypeBuilder(BaseBuilder):
         line_type_def["TorsionalStressLoadingFactor"] = 1
 
         # Seabed friction
-        line_type_def["SeabedLateralFrictionCoefficient"] = 0.5
-        line_type_def["SeabedAxialFrictionCoefficient"] = None
+        line_type_def["SeabedLateralFrictionCoefficient"] = lt.seabed_lateral_friction
+        line_type_def["SeabedAxialFrictionCoefficient"] = lt.seabed_axial_friction
 
         # Damping
         line_type_def["RayleighDampingCoefficients"] = "(no damping)"
