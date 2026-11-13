@@ -301,7 +301,7 @@ class Vessel(BaseModel):
         default=[0, 0, 0], min_length=3, max_length=3, description="Initial position [x, y, z] (m)"
     )
     orientation: list[float] = Field(
-        default=[0, 0, 0], min_length=3, max_length=3, description="Initial orientation [rx, ry, rz] (deg)"
+        default=[0, 0, 0], min_length=3, max_length=3, description="Initial orientation [rx, ry, rz] (deg); rz is the heading, rx and ry must be 0"
     )
 
     @field_validator("position", "orientation")
@@ -309,6 +309,17 @@ class Vessel(BaseModel):
     def validate_vector3(cls, v: list[float]) -> list[float]:
         if len(v) != 3:
             raise ValueError(f"Must have exactly 3 components, got {len(v)}")
+        return v
+
+    @field_validator("orientation")
+    @classmethod
+    def validate_heading_only(cls, v: list[float]) -> list[float]:
+        """The builder emits only the heading; refuse roll and pitch (#3986)."""
+        if v[0] or v[1]:
+            raise ValueError(
+                f"orientation {v}: roll and pitch are not emitted by the S-lay "
+                "vessel builder (only the heading, orientation[2]); set them to 0"
+            )
         return v
 
 
