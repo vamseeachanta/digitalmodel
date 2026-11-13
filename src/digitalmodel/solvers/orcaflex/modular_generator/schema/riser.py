@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Riser models for production and export risers."""
 
 from __future__ import annotations
@@ -5,7 +8,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 
 class RiserConfiguration(str, Enum):
@@ -325,6 +328,8 @@ class RiserBuoy(BaseModel):
         drag_coefficient: Drag force coefficient per axis [x, y, z].
         added_mass_coefficient: Added mass coefficient per axis [x, y, z].
     """
+
+    model_config = ConfigDict(allow_inf_nan=False)
 
     name: str = Field(..., min_length=1, description="Buoy name")
     connection: str = Field(default="Free", min_length=1, description="Connection")

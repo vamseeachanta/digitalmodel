@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Typed riser buoys (digitalmodel #3974).
 
 The typed riser had no buoy object: a ``type: buoy`` line end referenced a
@@ -78,7 +81,7 @@ def test_buoy_net_upthrust_matches_hand_value(example):
     """Comparator: 2549.7 kN recorded in the example header."""
     buoy = ProjectInputSpec(**example).riser.buoys[0]
     upthrust = (1.025 * buoy.volume - buoy.mass) * 9.80665
-    assert upthrust == pytest.approx(2549.7, abs=0.1)
+    assert upthrust == pytest.approx(2549.7, abs=0.05)
 
 
 def test_line_end_on_undefined_buoy_rejected(example):
@@ -124,6 +127,29 @@ def test_buoy_hydrodynamic_and_inertia_inputs_required(example, field):
         ProjectInputSpec(**data)
 
 
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+@pytest.mark.parametrize("field", ["mass", "volume", "height"])
+def test_buoy_scalar_inputs_must_be_finite(example, field, value):
+    data = copy.deepcopy(example)
+    data["riser"]["buoys"][0][field] = value
+    with pytest.raises(ValidationError, match=field):
+        ProjectInputSpec(**data)
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+@pytest.mark.parametrize("component", range(3))
+@pytest.mark.parametrize("field", [
+    "position", "attitude", "moments_of_inertia", "centre_of_mass",
+    "centre_of_volume", "drag_area", "drag_coefficient", "added_mass_coefficient",
+])
+def test_buoy_vector_inputs_must_be_finite(example, field, component, value):
+    data = copy.deepcopy(example)
+    buoy = data["riser"]["buoys"][0]
+    buoy.setdefault(field, [0.0, 0.0, 0.0])[component] = value
+    with pytest.raises(ValidationError, match=field):
+        ProjectInputSpec(**data)
+
+
 def test_riser_without_buoys_emits_no_buoy_include(example, tmp_path):
     data = copy.deepcopy(example)
     del data["riser"]["buoys"]
@@ -151,37 +177,151 @@ def test_example_header_hand_checks(example):
     """
     import math
 
-    g, rho = 9.80665, 1.025
-    spec = ProjectInputSpec(**example).riser
+    project = ProjectInputSpec(**example)
+    g, rho = 9.80665, project.environment.water.density
+    spec = project.riser
     buoy = spec.buoys[0]
+
+    def endpoint(connection):
+        # This illustrative geometry has level, unrotated object axes.
+        if connection.type.value == "buoy":
+            assert buoy.attitude == [0, 0, 0]
+            origin = buoy.position
+        elif connection.type.value == "vessel":
+            assert spec.vessel.orientation == [0, 0, 0]
+            origin = spec.vessel.position
+        else:
+            assert connection.type.value == "anchor"
+            origin = [0, 0, -project.environment.water.depth]
+        return [a + b for a, b in zip(origin, connection.position)]
+
+    def submerged_weight(line):
+        line_type = next(lt for lt in spec.line_types if lt.name == line.sections[0].line_type)
+        assert all(s.line_type == line_type.name for s in line.sections)
+        return (line_type.mass_per_length
+                + line.contents.density * math.pi * line_type.inner_diameter**2 / 4
+                - rho * math.pi * line_type.outer_diameter**2 / 4) * g
+
+    upthrust = (rho * buoy.volume - buoy.mass) * g
+    assert upthrust == pytest.approx(2549.7, abs=0.05)
     r, h = 9.21 / 2, buoy.height
     assert math.pi * r**2 * h == pytest.approx(buoy.volume, rel=1e-3)
+    assert math.pi * r**2 * h == pytest.approx(399.7, abs=0.05)
     ixx, iyy, izz = buoy.moments_of_inertia
-    assert ixx == iyy == pytest.approx(buoy.mass * (3 * r**2 + h**2) / 12, abs=0.1)
-    assert izz == pytest.approx(buoy.mass * r**2 / 2, abs=0.1)
+    assert ixx == iyy == pytest.approx(buoy.mass * (3 * r**2 + h**2) / 12, abs=0.05)
+    assert izz == pytest.approx(buoy.mass * r**2 / 2, abs=0.05)
     assert buoy.drag_area == pytest.approx([2 * r * h, 2 * r * h, math.pi * r**2], abs=0.05)
 
-    scr_type = next(lt for lt in spec.line_types if lt.name == "scr_10in")
     scr = next(line for line in spec.lines if line.name == "SCR")
+    scr_type = next(lt for lt in spec.line_types if lt.name == scr.sections[0].line_type)
     od, idia = scr_type.outer_diameter, scr_type.inner_diameter
-    w = (scr_type.mass_per_length + scr.contents.density * math.pi * idia**2 / 4
-         - rho * math.pi * od**2 / 4) * g
-    assert w == pytest.approx(1.314, abs=0.001)
-    height, horizontal = 397.0, 150.0
+    area = math.pi * (od**2 - idia**2) / 4
+    second_moment = math.pi * (od**4 - idia**4) / 64
+    youngs_modulus = 210e6  # kN/m2; public material basis cited in the header.
+    assert scr_type.poisson_ratio == 0.3
+    assert scr_type.mass_per_length == pytest.approx(7.85 * area, abs=0.00005)
+    assert scr_type.bending_stiffness == pytest.approx(youngs_modulus * second_moment, abs=0.5)
+    assert scr_type.axial_stiffness == pytest.approx(youngs_modulus * area, abs=500)
+    assert scr_type.torsional_stiffness == pytest.approx(
+        youngs_modulus * second_moment / (1 + scr_type.poisson_ratio), abs=0.5
+    )
+    w = submerged_weight(scr)
+    assert w == pytest.approx(1.314, abs=0.0005)
+    scr_top, scr_anchor = endpoint(scr.end_a), endpoint(scr.end_b)
+    height = scr_top[2] - scr_anchor[2]
+    assert height == pytest.approx(397.0, abs=0.05)
+    horizontal = 150.0  # Authored horizontal tension assumption, kN.
     a = horizontal / w
     suspended = math.sqrt(height**2 + 2 * height * a)
     vertical = w * suspended
     span = a * math.asinh(suspended / a)
     length = sum(s.length for s in scr.sections)
-    assert suspended == pytest.approx(498.3, abs=0.1)
-    assert vertical == pytest.approx(654.5, abs=0.2)
-    assert length - suspended + span == pytest.approx(1050.6, abs=0.1)
-    anchor_x = scr.end_b.position[0]
-    assert buoy.position[0] - anchor_x == pytest.approx(length - suspended + span, abs=0.1)
+    assert suspended == pytest.approx(498.3, abs=0.05)
+    assert vertical == pytest.approx(654.6, abs=0.05)
+    assert math.degrees(math.atan2(horizontal, vertical)) == pytest.approx(12.9, abs=0.05)
+    assert span == pytest.approx(248.8, abs=0.05)
+    assert length - suspended == pytest.approx(801.7, abs=0.05)
+    assert length - suspended + span == pytest.approx(1050.6, abs=0.05)
+    assert math.dist(scr_top[:2], scr_anchor[:2]) == pytest.approx(
+        length - suspended + span, abs=0.05
+    )
 
-    tether_each = ((rho * buoy.volume - buoy.mass) * g - vertical - 101.2) / 2
-    assert tether_each == pytest.approx(897.0, abs=0.2)
+    jumper = next(line for line in spec.lines if line.name == "Jumper")
+    jumper_length = sum(s.length for s in jumper.sections)
+    jumper_top, jumper_buoy = endpoint(jumper.end_a), endpoint(jumper.end_b)
+    assert jumper_length == 250
+    assert jumper_top == [-40, 0, -10]
+    assert jumper_buoy == [-200, 0, -97]
+    jumper_w = submerged_weight(jumper)
+    assert jumper_w == pytest.approx(1.305, abs=0.0005)
+    dx = math.dist(jumper_top[:2], jumper_buoy[:2])
+    dz = jumper_top[2] - jumper_buoy[2]
+    # Free catenary: sqrt(L^2 - dz^2) = 2 a sinh(dx / (2 a)), H = w a.
+    target = math.sqrt(jumper_length**2 - dz**2)
+    assert target > dx > 0
+    low, high = dx / 100, jumper_length**2 / (target - dx)
+    for _ in range(100):
+        mid = (low + high) / 2
+        if 2 * mid * math.sinh(dx / (2 * mid)) > target:
+            low = mid
+        else:
+            high = mid
+    jumper_a = (low + high) / 2
+    assert 2 * jumper_a * math.sinh(dx / (2 * jumper_a)) == pytest.approx(target)
+    jumper_horizontal = jumper_w * jumper_a
+    jumper_vertical = jumper_horizontal * math.sinh(
+        dx / (2 * jumper_a) - math.atanh(dz / jumper_length)
+    )
+    assert jumper_horizontal == pytest.approx(66.5, abs=0.05)
+    assert jumper_vertical == pytest.approx(101.2, abs=0.05)
+
+    tether_total = upthrust - vertical - jumper_vertical
+    tether_each = tether_total / len(spec.links)
+    assert tether_total == pytest.approx(1793.9, abs=0.05)
+    assert tether_each == pytest.approx(896.9, abs=0.05)
+    lengths = []
     for link in spec.links:
+        top, bottom = link.connections
+        assert top.object_name == buoy.name and bottom.object_name == "Anchored"
+        top_xyz = [buoy.position[0] + top.x, buoy.position[1] + top.y, buoy.position[2] + top.z]
+        anchor_xyz = [bottom.x, bottom.y, -project.environment.water.depth + bottom.z]
+        geometric_length = math.dist(top_xyz, anchor_xyz)
+        lengths.append(geometric_length)
+        assert geometric_length == pytest.approx(397.0, abs=0.05)
+        assert link.stiffness == pytest.approx(0.78e8 * 0.1**2)
         assert link.unstretched_length == pytest.approx(
-            397 / (1 + tether_each / link.stiffness), abs=1e-3
+            geometric_length / (1 + tether_each / link.stiffness), abs=0.0005
         )
+    net_horizontal = horizontal - jumper_horizontal
+    lateral_stiffness = sum(tether_each / length for length in lengths)
+    shift = net_horizontal / lateral_stiffness
+    assert net_horizontal == pytest.approx(83.5, abs=0.05)
+    assert lateral_stiffness == pytest.approx(4.5, abs=0.05)
+    assert shift == pytest.approx(18, abs=0.5)
+    assert shift**2 / (2 * lengths[0]) == pytest.approx(0.4, abs=0.05)
+
+
+@pytest.mark.parametrize("path", [
+    ("riser", "line_types", 0, "bending_stiffness"),
+    ("riser", "line_types", 0, "axial_stiffness"),
+    ("riser", "line_types", 0, "torsional_stiffness"),
+    ("riser", "line_types", 1, "mass_per_length"),
+    ("riser", "lines", 0, "end_a", "position", 2),
+    ("riser", "lines", 0, "end_b", "position", 2),
+    ("riser", "lines", 1, "end_a", "position", 2),
+    ("riser", "lines", 1, "end_b", "position", 2),
+    ("riser", "vessel", "position", 2),
+    ("riser", "buoys", 0, "position", 2),
+    ("riser", "links", 0, "connections", 1, "z"),
+])
+def test_header_checks_detect_changed_properties_or_elevations(example, path):
+    """Every changed input invalidates at least one stated header figure."""
+    data = copy.deepcopy(example)
+    parent = data
+    for key in path[:-1]:
+        parent = parent[key]
+    parent[path[-1]] *= 1.1
+    if parent[path[-1]] == 0:
+        parent[path[-1]] = 10
+    with pytest.raises(AssertionError):
+        test_example_header_hand_checks(data)
