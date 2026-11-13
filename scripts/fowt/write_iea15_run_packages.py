@@ -38,6 +38,10 @@ from digitalmodel.floating_wind.iea15_orcaflex_spec import (
     load_sources,
     thrust_at,
 )
+from digitalmodel.floating_wind.run_package_folder import (
+    prepare_case_folder,
+    record_case_folder,
+)
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 
 COMMIT = "e4993d63de10f165389534461dd544006750fe60"
@@ -186,9 +190,8 @@ def main(argv: list[str]) -> int:
     index = []
     for name, spec in cases.items():
         folder = out / name
-        if folder.exists():
-            shutil.rmtree(folder)
-        folder.mkdir(parents=True)
+        # Never delete a package wholesale: saved solver results may sit in it.
+        prepare_case_folder(folder)
         (folder / "spec.yml").write_text(yaml.safe_dump(spec, sort_keys=False, width=100),
                                          encoding="utf-8", newline="\n")
         ModularModelGenerator(folder / "spec.yml").generate(folder / "model")
@@ -200,6 +203,7 @@ def main(argv: list[str]) -> int:
                 shutil.copy2(wamit / file, folder / "hydro" / destination)
         (folder / "run.md").write_text(run_md(name, spec, eq, x, basis), encoding="utf-8",
                                        newline="\n")
+        record_case_folder(folder)
         digest = hashlib.sha256((folder / "model" / "includes" / "20_generic_objects.yml")
                                 .read_bytes()).hexdigest()
         index.append({"case": name, "needs_wamit_import": needs_hydro,

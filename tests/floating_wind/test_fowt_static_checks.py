@@ -30,6 +30,11 @@ from digitalmodel.floating_wind.iea15_orcaflex_spec import (
     build_spec,
     load_sources,
 )
+from digitalmodel.floating_wind.run_package_folder import (
+    MANIFEST_NAME,
+    prepare_case_folder,
+    record_case_folder,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "docs" / "reports" / "fowt-volturnus-mooring-analysis.manifest.json"
@@ -325,3 +330,56 @@ def test_wave_packages_include_wamit_import_output(tmp_path):
         assert "phase origins" in instructions
         assert "Wave load (1st order)" in instructions
 
+
+def _packages_module():
+    import importlib.util
+
+    script = ROOT / "scripts" / "fowt" / "write_iea15_run_packages.py"
+    spec = importlib.util.spec_from_file_location("packages", script)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_run_package_rerun_keeps_saved_results(tmp_path):
+    """A rerun must never delete files the generator did not write (e.g. .sim results)."""
+    module = _packages_module()
+    assert module.main(["x", str(tmp_path)]) == 0
+    first = (tmp_path / "LC0_statics" / "model" / "master.yml").read_bytes()
+    # An untouched package regenerates in place.
+    assert module.main(["x", str(tmp_path)]) == 0
+    assert (tmp_path / "LC0_statics" / "model" / "master.yml").read_bytes() == first
+    saved = tmp_path / "LC0_statics" / "model" / "LC0_statics.sim"
+    saved.write_bytes(b"solver results")
+    with pytest.raises(FileExistsError, match="LC0_statics.sim"):
+        module.main(["x", str(tmp_path)])
+    assert saved.read_bytes() == b"solver results"
+    assert (tmp_path / "LC0_statics" / "model" / "master.yml").read_bytes() == first
+
+
+def test_case_folder_refuses_unrecorded_or_edited_content(tmp_path):
+    folder = tmp_path / "case"
+    prepare_case_folder(folder)  # absent: created
+    (folder / "sub").mkdir()
+    (folder / "sub" / "a.yml").write_text("a", encoding="utf-8")
+    record_case_folder(folder)
+    assert (folder / MANIFEST_NAME).is_file()
+    (folder / "sub" / "a.yml").write_text("edited", encoding="utf-8")
+    with pytest.raises(FileExistsError, match="a.yml"):
+        prepare_case_folder(folder)
+    assert (folder / "sub" / "a.yml").read_text(encoding="utf-8") == "edited"
+    (folder / "sub" / "a.yml").write_text("a", encoding="utf-8")
+    prepare_case_folder(folder)  # unchanged generated content: cleared
+    assert folder.is_dir() and not any(folder.iterdir())
+    legacy = tmp_path / "legacy"
+    legacy.mkdir()
+    (legacy / "run.md").write_text("old", encoding="utf-8")
+    with pytest.raises(FileExistsError, match="no generator manifest"):
+        prepare_case_folder(legacy)  # written before manifests existed: never deleted
+    assert (legacy / "run.md").read_text(encoding="utf-8") == "old"
+    (folder / "x.txt").write_text("x", encoding="utf-8")
+    record_case_folder(folder)
+    (folder / MANIFEST_NAME).write_text("{not json", encoding="utf-8")
+    with pytest.raises(FileExistsError, match="manifest"):
+        prepare_case_folder(folder)
+    assert (folder / "x.txt").exists()

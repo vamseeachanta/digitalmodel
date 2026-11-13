@@ -41,7 +41,7 @@ platform instead (Table 5).
 | Revision | Date | Change and reason |
 |---|---|---|
 | 1 | 2026-11-12 | Corrected the wave import file and readiness wording; mirrored the added-mass upper triangle and tested repeated generation to prevent invalid native inputs. |
-| 2 | 2026-11-13 | The generator, not the spec, now mirrors the upper triangle of every radiation matrix (one policy for all fowt specs); the spec holds the source values and the emitted model is unchanged. The wave-case models keep first-order wave loading off until the licensed import supplies load RAOs, and `run.md` switches it on after the import. |
+| 2 | 2026-11-13 | The generator, not the spec, now mirrors the upper triangle of every radiation matrix (one policy for all fowt specs); the spec holds the source values and the emitted model is unchanged. The wave-case models keep first-order wave loading off until the licensed import supplies load RAOs, and `run.md` switches it on after the import. Package regeneration refuses a folder holding files it did not write, so saved results are never deleted. |
 
 Table 1a. Revision history.
 
@@ -229,7 +229,9 @@ its bytes. Select that `.out` file in the vessel type importer and follow
 `run.md`; native loading, import, statics and dynamics remain unverified.
 Without the source directory, these hydrodynamic inputs are still required.
 `scripts/fowt/write_iea15_run_packages.py <output_dir>
-<wamit_dir>` regenerates them.
+<wamit_dir>` regenerates them. Regeneration replaces a package only when every
+file in it is one the script wrote, unchanged; a folder holding anything else,
+such as saved solver results, is refused and left as it is.
 
 | Package | Expected comparator |
 |---|---|
