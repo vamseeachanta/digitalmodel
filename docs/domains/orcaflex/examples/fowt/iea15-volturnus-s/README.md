@@ -42,6 +42,7 @@ platform instead (Table 5).
 |---|---|---|
 | 1 | 2026-11-12 | Corrected the wave import file and readiness wording; mirrored the added-mass upper triangle and tested repeated generation to prevent invalid native inputs. |
 | 2 | 2026-11-13 | The generator, not the spec, now mirrors the upper triangle of every radiation matrix (one policy for all fowt specs); the spec holds the source values and the emitted model is unchanged. The wave-case models keep first-order wave loading off until the licensed import supplies load RAOs, and `run.md` switches it on after the import. Package regeneration refuses a folder holding files it did not write, so saved results are never deleted. |
+| 3 | 2026-11-13 | The natural-period statement and `results.json` now carry the assumed RNA inertia-tensor reading. The period check refuses a spec whose added mass differs from the WAMIT table it computes with. Supplied hydrodynamic files are checked against pinned SHA-256 digests of the public revision before any package is written. No result value changed. |
 
 Table 1a. Revision history.
 
@@ -189,7 +190,14 @@ Established without a licence, within the stated tolerances:
   hydrostatic stiffness;
 - the generated mooring reproduces the published pretension;
 - the generated mass, stiffness and added mass give natural periods consistent
-  with the published values and with an independent earlier analysis;
+  with the published values and with an independent earlier analysis. This
+  holds for the system inertia built from the adopted tower-top reading of the
+  RNA inertia tensor, which is assumed: the published tensors disagree, and
+  `basis.yml` records readiness partial and use for analysis assumed. The
+  pitch and yaw periods, and through coupling the surge period, carry that
+  assumption (`results.json`, `qualification`). The check also requires the
+  spec's added mass, which the generator emits, to equal the WAMIT table the
+  periods are computed from;
 - the generated OrcaFlex key names all appear in the held Orcina examples for
   the same object types.
 
@@ -213,6 +221,9 @@ Not established:
 - **Rotor aerodynamics and control.** Thrust is a steady force. The OrcaFlex
   Turbine object would need the 50 blade stations, aerofoil polars and the
   ROSCO controller from the IEA repository. That is not built.
+- **The rotor-nacelle inertia tensor.** The published tensors disagree; the
+  tower-top reading is adopted as assumed and the discrepancy is unresolved.
+  The natural periods above carry this assumption.
 - **The source's rotor-nacelle centre of mass.** In the IEA workbook, the RNA
   row places the centre of mass 0.533 m further upwind than the mass-weighted
   combination of its own component rows. The model adopts the RNA row, as
