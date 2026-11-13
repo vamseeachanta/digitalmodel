@@ -1,17 +1,20 @@
-"""Bounded towing checks from the issue 487 approved design basis.
+"""Plan-criterion screening checks; historical module name retained for callers.
 
 The plan prescribes MBL/static tension >=1.67 and MBL/dynamic tension >=3.0.
-Those plan factors are implemented verbatim, not inferred from a full N001
-assessment. Fairlead capacities and bridle limits are explicit project inputs.
-The citation binds the available 2016-06 reference; no claim of certification,
-current-edition equivalence or complete marine-warranty compliance is made.
+Those factors are attributed only to the plan, not to DNV-ST-N001. Fairlead
+capacities and bridle limits are explicit project inputs. A screening PASS
+does not establish towline compatibility with full tug bollard pull or
+operational acceptance. No DNV compliance verdict is calculated here.
 """
 from dataclasses import dataclass
 import math
+from pathlib import Path
 
 from digitalmodel.citations.schema import Citation, validate_citation
 
 from .towline_analysis import _positive
+
+_BASIS_ROOT = Path(__file__).with_name('basis')
 
 
 @dataclass(frozen=True)
@@ -20,18 +23,19 @@ class Result:
     reason: str
     margin: float  # capacity minus demand in N, or distance to angle limit in deg
     citations: tuple[Citation, ...]
+    assessment: str = 'plan-criterion screening'
 
 
 def _reference() -> tuple[Citation, ...]:
     citation = Citation(
-        code_id='dnvgl-st-n001', publisher='DNV GL (now DNV)', revision='2016-06',
-        section='Section 11 (sea voyages and towing equipment)',
-        wiki_path='wikis/engineering-standards/wiki/standards/dnvgl-st-n001.md',
+        code_id='digitalmodel-towing-plan-487', publisher='digitalmodel', revision='2026-05-05',
+        section='Issue 487 plan: design basis and step 4, screening factors only',
+        wiki_path='wikis/towing-plan-487.md',
         source_sibling='generic',
-        note=('DNV-ST-N001 towing reference; SF 3.0 dynamic and 1.67 static are '
-              'the issue 487 approved-plan criteria, not a full compliance assessment.'),
+        note=('Plan-criterion screening: 3.0 dynamic and 1.67 static. '
+              'No standard clause has been established for these factors.'),
     )
-    validate_citation(citation)
+    validate_citation(citation, repo_root=_BASIS_ROOT)
     return (citation,)
 
 

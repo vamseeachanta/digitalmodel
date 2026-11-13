@@ -18,3 +18,5 @@ def test_installed_package_contains_worked_fixture():
     package = root / 'src/digitalmodel/marine_ops/towing'
     included = command.find_data_files('digitalmodel.marine_ops.towing', str(package))
     assert str(package / 'fixtures/barge_tug_500t_pull.yml') in included
+    for reference in ('towing-plan-487.md', 'ocimf-static-towing-2020.md'):
+        assert str(package / 'basis/wikis' / reference) in included

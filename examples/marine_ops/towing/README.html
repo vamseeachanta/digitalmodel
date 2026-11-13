@@ -23,14 +23,21 @@ The fixture's historical name contains “500t”; its actual tug capacity is 80
 The fixture is regression input, with no measured vessel data or certified rope properties.</p>
 
 <h2>Run and inspect</h2>
-<p>With the project dependencies installed, execute from the repository root:</p>
+<p>Install the project with its test extra (<code>pip install -e '.[test]'</code>),
+then execute from the repository root. The test extra includes setuptools for
+the package-data check; the build-system declaration alone does not install it
+into the test environment.</p>
 <pre>PYTHONPATH=src python examples/marine_ops/towing/towing_scenario.py
 PYTHONPATH=src python -m pytest tests/marine_ops/towing/ -m "not solver"</pre>
 <p>Set <code>MPLCONFIGDIR</code> to a writable temporary directory. Configure
 <code>LLM_WIKI_PATH</code> to the existing maintained wiki. The established citation
 resolver validates metadata at calculation time; missing or mismatched references
-raise <code>CitationResolutionError</code>. Tests provide explicitly synthetic
-metadata to exercise that behavior without distributing licensed standards text.</p>
+raise <code>CitationResolutionError</code>. With <code>LLM_WIKI_PATH</code> set,
+tests copy the maintained page into isolated temporary storage and exercise its
+actual metadata. Missing or changed metadata fails without a synthetic fallback.
+Without that setting, unit tests use explicitly synthetic resolver metadata;
+that run alone does not verify the maintained page. The plan and numerical-table
+sidecars are packaged with this module; no licensed standards text is bundled.</p>
 <p><code>run_scenario(environment="storm")</code> evaluates the storm input;
 <code>run_scenario(diameter_scale=0.8)</code> reduces diameter by 20% and scales
 weight and breaking load by 0.8², under the same-construction assumption.
@@ -65,11 +72,15 @@ accepts a signed uniform speed or a callable of height above bed. A callable
 requires water depth exceeding draft; midpoint quadrature integrates signed
 u|u| over occupied draft. The river-current package's power-law functions can
 be passed directly through a callable. No RiverCurrentProfile class exists.</li>
-<li>The existing <code>OCIMFLoading</code> approximate wind/current formulas are
-reused. Wind coefficient triples (Cx, Cy, Cmz) can be supplied explicitly with
-reference areas, using their tabulated signs. The existing approximation's
-cardinal-angle current artefacts are removed. The code does not retrieve or
-interpolate a licensed coefficient database.</li>
+<li>The barge default reuses the existing <code>OCIMFLoading</code> approximate
+wind/current formulas. Wind coefficient triples (Cx, Cy, Cmz) can be supplied
+with explicit reference areas. Alternatively,
+<code>WindProfile(..., coefficient_model="ocimf_2020_vlcc",
+moment_reference_length_m=Lpp)</code> uses periodic linear interpolation of the
+published VLCC wind table below, without caller-supplied coefficients. Explicit
+frontal/lateral areas and Lpp are required. VLCC coefficients are not applied
+automatically to the barge. The approximation's cardinal-angle current
+artefacts are removed.</li>
 <li><code>BollardPullCheck(tug_capacity, env_loads).check()</code> compares supplied
 capacity (N), multiplied by efficiency, with vector resultant demand multiplied
 by reserve factor. Its margin is available minus required force (N). The
@@ -87,13 +98,21 @@ degrees. Geometry margins in the example are metres (clearance) and dimensionles
 </ul>
 
 <h2>Qualification and limitations</h2>
-<p>The approved plan explicitly prescribes factors 3.0 dynamic and 1.67 static.
-Those factors are preserved. Citation metadata binds the available
-DNVGL-ST-N001 2016-06 reference, section 11. The implementation does not establish
-that those two factors alone constitute compliance with that edition, or
-with the <a href="https://www.dnv.com/energy/standards-guidelines/dnv-st-n001-marine-operations-and-marine-warranty/">current DNV-ST-N001 edition</a>.
-A PASS means the named checks meet the supplied criteria; it is not a
-marine-warranty certificate or a control/stability verdict.</p>
+<p>The approved plan prescribes factors 3.0 dynamic and 1.67 static. Those
+factors and all acceptance thresholds are preserved. The checks and verdict
+are named <strong>plan-criterion screening</strong>; their citation identifies
+the issue 487 plan. No DNV clause or table has been established for these factors,
+and no DNV-ST-N001 strength or compliance verdict is issued. The historical
+<code>dnv_st_n001_checks</code> import path is retained for callers.</p>
+<p>The fixture's 430 kN MBL is a synthetic regression assumption selected to
+exercise the screening PASS and diameter-reduction FAIL, with no manufacturer
+or certified wire property source. It is 354.532 kN below the tug's nominal
+784.532 kN bollard pull. A tug operating at full pull can exceed this assumed
+breaking load. The scenario therefore reports
+<code>operational_acceptance: NOT_ESTABLISHED</code> and an explicit equipment
+capacity comparison independently of its plan-criterion verdict. Certified
+equipment data and the governing standard's towline-strength criterion are
+required to establish operational acceptance.</p>
 <p>Dynamic tension is static tension multiplied by an explicit 1.3 example
 factor. No time-domain tug-barge interaction is solved. Line elasticity,
 seabed/water contact, buoyancy, wave loading, yaw control, girting, tug
@@ -102,12 +121,19 @@ model. The line uses the plan's air-weight assumption even when its predicted
 shape would enter water. Operational acceptance requires appropriate line
 properties, vessel coefficients, dynamic response and the governing standard
 assessment.</p>
-<p>The independent OCIMF regression uses only the 90° coefficient row from
-<a href="https://www.ocimf.org/document-libary/58-static-towing-assembly-guidelines-2020/file">Static Towing Assembly Guidelines (2020)</a>, MARIN report 31746-1-PO,
-Table 5, report page 29. Synthetic geometry and wind speed yield hand-calculated
-loads; computed components meet the plan's 5% tolerance. This establishes the
-coefficient-to-load arithmetic, not the applicability of VLCC coefficients to a
-barge. The catenary analytic case meets the separate 0.5% tolerance.</p>
+<p>The production interpolation is checked against
+<a href="https://safety4sea.com/wp-content/uploads/2020/04/OCIMF-Static-Towing-Assembly-Guidelines-2020_04.pdf">OCIMF Static Towing Assembly Guidelines (2020), retrieved publication copy</a>,
+MARIN report 31746-1-PO, Table 5, report page 29 (PDF page 66), rows 40° and 50°.
+Section 4.4, report page 10, defines the force and moment conventions; Table 1,
+report page 25, supplies VLCC frontal area 2300 m², lateral area 6500 m² and
+Lpp 354.4 m. At the declared test speed 20 m/s and density 1.25 kg/m³, the
+published 50° row gives 215.625 kN surge, 1056.250 kN sway and −92.720 MN·m yaw.
+The interpolated 45° case gives 245.813 kN, 983.125 kN and −92.720 MN·m.
+Both tests call the production coefficient model without supplying triples;
+the plan's 5% tolerance remains unchanged. The original explicit-coefficient
+90° arithmetic test is retained. The source digest and retrieval status are
+recorded in the packaged provenance sidecar. VLCC-to-barge applicability is
+not established. The catenary analytic tolerance remains 0.5%.</p>
 <p>Unit tests cover both safety factors, the diameter reduction, storm pull
 failure, each optimizer constraint, invalid inputs and missing citations.
 The fixture is explicitly included in installed package data.</p>

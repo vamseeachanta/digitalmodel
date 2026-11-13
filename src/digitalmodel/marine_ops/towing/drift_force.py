@@ -6,6 +6,8 @@ Issue 493 exposes profile functions, not a RiverCurrentProfile class.
 Directions follow OCIMFLoading's relative axes: positive force follows positive
 flow. Explicit signed wind coefficients are used as supplied without reflection;
 the caller must match their direction and reference areas to the source table.
+The opt-in OCIMF 2020 VLCC model interpolates a published table and requires
+explicit Lpp; it does not replace the barge's default approximation.
 No wave drift, yaw response, shallow-water correction or tug resistance is added.
 """
 from collections.abc import Callable
@@ -17,6 +19,7 @@ from digitalmodel.hydrodynamics.models import VesselProperties
 from digitalmodel.hydrodynamics.ocimf_loading import OCIMFLoading
 
 from .towline_analysis import _positive
+from . import ocimf_vlcc
 
 
 @dataclass(frozen=True)
@@ -25,6 +28,8 @@ class WindProfile:
     direction_deg: float = 0
     air_density_kg_m3: float = 1.225
     coefficients: tuple[float, float, float] | None = None  # Cx, Cy, Cmz
+    coefficient_model: str = 'approximate'
+    moment_reference_length_m: float | None = None  # Lpp for the published VLCC table
 
 
 @dataclass(frozen=True)
@@ -80,18 +85,32 @@ def _mean_signed_square(profile, vessel, water_depth, n_slices):
 
 
 def _wind_load(loader, vessel, wind):
-    if wind.coefficients is None:
-        return loader.wind_load(vessel, wind.speed_m_s, wind.direction_deg,
-                                wind.air_density_kg_m3)
-    if len(wind.coefficients) != 3 or not all(math.isfinite(v) for v in wind.coefficients):
+    if wind.coefficient_model not in ('approximate', 'ocimf_2020_vlcc'):
+        raise ValueError('unknown wind coefficient model')
+    length = wind.moment_reference_length_m
+    if length is not None and (not math.isfinite(length) or length <= 0):
+        raise ValueError('moment reference length must be finite and positive')
+    coefficients, citations = wind.coefficients, ()
+    if wind.coefficient_model == 'ocimf_2020_vlcc':
+        if coefficients is not None:
+            raise ValueError('coefficient model and explicit coefficients are mutually exclusive')
+        if length is None:
+            raise ValueError('VLCC table requires explicit moment reference length Lpp')
+        coefficients = ocimf_vlcc.wind_coefficients(wind.direction_deg)
+        citations = (ocimf_vlcc.reference(),)
+    if coefficients is None:
+        return (loader.wind_load(vessel, wind.speed_m_s, wind.direction_deg,
+                                 wind.air_density_kg_m3), citations)
+    if len(coefficients) != 3 or not all(math.isfinite(v) for v in coefficients):
         raise ValueError("wind coefficients must be a finite (Cx, Cy, Cmz) triple")
     if vessel.frontal_wind_area is None or vessel.lateral_wind_area is None:
         raise ValueError("tabulated coefficients require explicit wind reference areas")
-    cx, cy, cm = wind.coefficients
+    cx, cy, cm = coefficients
     q = 0.5 * wind.air_density_kg_m3 * wind.speed_m_s**2
-    return {'Fx_surge_N': q * vessel.frontal_wind_area * cx,
-            'Fy_sway_N': q * vessel.lateral_wind_area * cy,
-            'Mz_yaw_Nm': q * vessel.lateral_wind_area * vessel.length_overall * cm}
+    loads = {'Fx_surge_N': q * vessel.frontal_wind_area * cx,
+             'Fy_sway_N': q * vessel.lateral_wind_area * cy,
+             'Mz_yaw_Nm': q * vessel.lateral_wind_area * (length or vessel.length_overall) * cm}
+    return loads, citations
 
 
 def _citation() -> Citation:
@@ -128,12 +147,12 @@ def compute_drift_force(vessel: VesselProperties,
     loader = OCIMFLoading()
     direction = (current_direction_deg + 180) % 360 - 180
     current = _on_axis(loader.current_load(vessel, 1, direction, water_density_kg_m3), direction)
-    wind = _wind_load(loader, vessel, wind_profile)
+    wind, wind_citations = _wind_load(loader, vessel, wind_profile)
     return DriftForceResult(pressure_ratio * current['Fx_surge_N'],
                            pressure_ratio * current['Fy_sway_N'],
                            wind['Fx_surge_N'], wind['Fy_sway_N'],
                            pressure_ratio * current['Mz_yaw_Nm'] + wind['Mz_yaw_Nm'],
-                           (citation,))
+                           (citation, *wind_citations))
 
 
 compute = compute_drift_force

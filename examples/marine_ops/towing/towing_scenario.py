@@ -76,7 +76,13 @@ def run_scenario(*, environment='benign', diameter_scale=1.0):
             dynamic_amplification=line['dynamic_amplification'])
     passed = pull.passed and all(check.passed for check in checks.values())
     return {'verdict': 'PASS' if passed else 'FAIL',
-            'assessment': 'approved-plan static screening; no full DNV compliance or yaw assessment',
+            'assessment': 'plan-criterion screening',
+            'operational_acceptance': 'NOT_ESTABLISHED',
+            'equipment_compatibility': {
+                'mbl_below_bollard_pull': mbl < tug['bollard_pull_t'] * 1000 * 9.80665,
+                'margin_n': mbl - tug['bollard_pull_t'] * 1000 * 9.80665,
+                'basis': 'MBL versus nominal tug bollard pull; no standard strength criterion applied',
+            },
             'environment': environment, 'line_length_m': line['length_m'],
             'line_diameter_m': line['diameter_m'] * diameter_scale, 'mbl_n': mbl,
             'bollard_pull': asdict(pull), 'loads': asdict(loads),
