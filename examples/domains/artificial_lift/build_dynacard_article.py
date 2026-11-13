@@ -339,7 +339,7 @@ def examples_view(f) -> str:
             '<p class="hint">Point at a row, or select it, to show that example.</p></div>'
             f'<div class="examples-panels" aria-live="polite">{panels}</div></div>'
             '<figcaption><b>Figure 2. Ten pump conditions: model reading and cards.</b> '
-            f'Data: one CSV per example in the <a href="{readme}">worked examples</a>.</figcaption></figure>')
+            f'Data: one CSV per example in the <a href="{readme}">worked examples</a>, version of 13 Nov 2026.</figcaption></figure>')
 
 
 def contents(sections) -> str:
@@ -377,15 +377,15 @@ def body(f) -> str:
 <p>The key conclusions for the example well are as follows:</p>
 <ul>
 <li>The pump fills to {r['fillage_pct']:.0f} % of its stroke. At 24 hours a day and no slip, it displaces {r['pump_displacement_bbl_day']:.1f} bbl/day, against {r['gross_displacement_bbl_day']:.1f} bbl/day for a full pump, so about {f['unused_capacity']:.0f} bbl/day of pump capacity is not used.</li>
-<li>The pump is not full on each stroke, so it has spare capacity at this speed. Whether liquid inflow or gas limits the fill is a check for the well.</li>
+<li>On this card the pump fills to {r['fillage_pct']:.0f} %. The cause, whether inflow, gas, valve leakage or a corner-detection error, is a check for the well.</li>
 <li>The plunger lifts a fluid load of {r['fluid_load_lbf']:,.0f} lbf on each upstroke.</li>
 <li>The pump stroke is {r['pump_stroke_in']:.1f} in, {100 * r['stroke_ratio']:.0f} % of the surface stroke. Rod stretch and rod dynamics take the rest, which the surface card alone does not separate.</li>
 <li>The card shape reads as {top['label'].lower()}{GLOSS.get(top['label'].lower(), '')}. This reading is a hypothesis to check at the well; the pump card, the fillage and the fluid load are the result.</li>
 <li>The well record marks this card as a shutdown card that the source system could not analyse, so the fillage and the fluid load rest on this calculation alone.</li>
 </ul>
-<p>Two numerical methods are available for the pump card: a finite-difference method and a frequency-domain method. On this well their pump cards agree closely, within {r['gibbs_default_load_nrmse_pct']:.2f} % of the load range. Both are in the reusable prompt. The comparison is given in Appendix B, and the inputs and limits of the example well in Appendix A.</p>
+<p>Two numerical methods are available for the pump card: a finite-difference method and a frequency-domain method. On this well their pump cards agree closely, within {r['gibbs_default_load_nrmse_pct']:.2f} % of the load range. Both are in the reusable prompt; Appendix B compares them, and Appendix A gives the inputs and limits of the example well.</p>
 <h2 id="ten-conditions">Ten pump conditions read from their surface cards</h2>
-<p>Based on public data, ten common pump conditions are run through the same analysis, from surface card to pump card to a reading of the pump's condition. Each surface card is built from a published pump card shape at an assumed stroke and load, so the cards illustrate shapes rather than field wells. They are shown in Figure 2.</p>
+<p>Based on public data, ten common pump conditions are run through the same analysis, from surface card to pump card to a reading of the pump's condition. Each surface card is built from a published card shape, taken as a pump card by assumption, at an assumed stroke and load, so the cards illustrate shapes rather than field wells. They are shown in Figure 2.</p>
 <ul>
 <li>Every pump card is recovered within {f['nrmse_min']:.1f} to {f['nrmse_max']:.1f} % of its load range.</li>
 <li>The shape model names {f['matches']} of the 10 conditions correctly.</li>
@@ -394,8 +394,8 @@ def body(f) -> str:
 {examples_view(f)}
 <p>How the ten examples are built, and the full values, are given in Appendix C.</p>
 <h2 id="own-card">Run the analysis on your own card</h2>
-<p>The same analysis runs in a web page in the <a href="{app}">digitalmodel library</a>; it needs no installation and no network once its files are on disk. Load a surface card with the well's rod and pump data, and the page draws the pump card and reads fillage, fluid load and the model readings.</p>
-<p><a href="{report_md}">Read the full study</a></p>
+<p>The same analysis runs in a web page in the <a href="{app}">digitalmodel library</a> (version of 13 Nov 2026); it needs no installation and no network once its files are on disk. Load a surface card with the well's rod and pump data, and the page draws the pump card and reads fillage, fluid load and the model readings.</p>
+<p><a href="{report_md}">Read the full study</a> (version of 12 Nov 2026)</p>
 <p>To try it out or adapt the analysis, see <a href="#appendix-d">reusable prompt</a>.</p>
 <p>The work leaves open the accuracy of the model readings on field cards: both models are trained on synthetic cards, and no labelled field cards were available to test them.</p>
 <aside class="offer">AceEngineer runs analyses of this kind as fixed-scope engineering projects.</aside>
@@ -406,7 +406,7 @@ def body(f) -> str:
 <li>Gibbs, S. G. (1963). Predicting the Behavior of Sucker-Rod Pumping Systems. SPE-588-PA. <a href="https://doi.org/10.2118/588-PA">doi:10.2118/588-PA</a>.</li>
 <li>Everitt, T. A. and Jennings, J. W. (1992). An Improved Finite-Difference Calculation of Downhole Dynamometer Cards for Sucker-Rod Pumps. SPE-18189-PA. <a href="https://doi.org/10.2118/18189-PA">doi:10.2118/18189-PA</a>.</li>
 <li>Diagnostic plate of ten pump working conditions. Mendeley Data, version 1, CC0 1.0. <a href="{PLATE_DOI}">doi:10.17632/hnfwm9mjs6.1</a>, retrieved 11 Oct 2026.</li>
-<li>digitalmodel library, MIT licence, version of 12 Nov 2026. <a href="{tree(REPORT_COMMIT, "")}">github.com/vamseeachanta/digitalmodel</a>.</li>
+<li>digitalmodel library, MIT licence, version of 13 Nov 2026. <a href="{tree(APP_COMMIT, "")}">github.com/vamseeachanta/digitalmodel</a>.</li>
 </ol>
 """
 
@@ -445,7 +445,7 @@ def appendices(f) -> str:
     a = f"""
 <h2 id="appendix-a">Appendix A Example well: inputs, results and limits</h2>
 <p>The data, results and limits of the public example well are given in this appendix. The well is one anonymised field well in the digitalmodel library.</p>
-{table(["Input", "Value", "Unit"], inputs_rows, "Table A1. Example well inputs, from the well record.")}
+{table(["Input", "Value", "Unit"], inputs_rows, "Table A1. Example well inputs, from the well record; fluid density derived from its well test.")}
 {table(["Result", "Value", "Unit"], result_rows, "Table A2. Example well results, finite-difference method; displacement at 24 h/day and no slip.")}
 <ul>
 <li>The well record labels this card a shutdown card. The source system reports that its own corner detection, which finds the points where the valves open and close, failed on it, so the fillage and the fluid load rest on the corner detection of the digitalmodel library alone.</li>
@@ -481,16 +481,16 @@ def appendices(f) -> str:
 <h2 id="appendix-c">Appendix C The ten examples in detail</h2>
 <p>How the ten examples are built and their full values are given in this appendix.</p>
 <ul>
-<li>Each of the ten shapes of the public diagnostic plate [3] is scaled to an assumed {basis['stroke_in']['value']:.0f} in pump stroke and to the static fluid load of a {w['plunger_diameter_in']:.1f} in plunger at {w['pump_depth_ft']:,.0f} ft with {w['tubing_pressure_psi']:.0f} psi tubing pressure ({basis['load_range_lbf']['value']:,.0f} lbf). These are shape illustrations, not field pump cards. The plate gives shapes only, with no stroke or load.</li>
+<li>Each of the ten shapes of the public diagnostic plate [3] is scaled to an assumed {basis['stroke_in']['value']:.0f} in pump stroke and to the static fluid load of a {w['plunger_diameter_in']:.1f} in plunger at {w['pump_depth_ft']:,.0f} ft with {w['tubing_pressure_psi']:.0f} psi tubing pressure and zero pump intake pressure ({basis['load_range_lbf']['value']:,.0f} lbf). These are shape illustrations, not field pump cards. The plate gives shapes only, with no stroke or load, and does not say whether they are surface or pump cards; they are taken as pump cards by assumption.</li>
 <li>Each scaled shape is lifted to a surface card through the rod string of the example well and then analysed like a measured card. The surface cards are therefore synthesised, not measured.</li>
 <li>The plate labels insufficient supply and sand production have no model class of the same name; they are matched to fluid pound and sand wear by assumption.</li>
 <li>The shape model names {f['matches']} of the 10 conditions; the second, shipped model names {f['shipped']}. Model scores are the models' own outputs, not the chance that a fault is present.</li>
 <li>The web page reproduces the library on all ten examples: pump loads within {upper_bound(f['repro_load'])} lbf and {"the same" if f['repro_labels'] else "different"} model labels.</li>
 </ul>
 {table(["No.", "Condition", "Surface stroke (in)", "Pump stroke (in)", "Fillage (%)", "Fluid load (lbf)", "Round trip (% of load range)", "Shape model", "Shipped model"], c_rows, "Table C1. Ten worked examples, finite-difference method.")}
-<p>The probabilities of all model classes are shown in the <a href="{matrix}">diagnostics matrix</a>; each example's figure and data are in the <a href="{readme}">worked examples</a>.</p>"""
+<p>The probabilities of all model classes are shown in the <a href="{matrix}">diagnostics matrix</a>; each example's figure and data are in the <a href="{readme}">worked examples</a>. Both are versions of 13 Nov 2026.</p>"""
     prompt = blob(REPORT_COMMIT, "examples/report-evals/dynacard-pump-card/PROMPT.md")
-    fixture = blob(f["inputs"]["fixture_commit"], f["inputs"]["fixture"])
+    fixture = blob(APP_COMMIT, f["inputs"]["fixture"])
     d = f"""
 <h2 id="appendix-d">Appendix D Reusable prompts</h2>
 <p>The reusable prompt lets your team, or your assistant, rebuild this analysis from public code and then run it on a card of your own. To have a study of your own rod pump done for you instead, see below.</p>
@@ -499,10 +499,10 @@ def appendices(f) -> str:
 <li>Data required: none beyond the public data below.</li>
 <li>Data required to adapt: a surface card over one stroke, the rod string, the pump depth and plunger diameter, and the pumping speed.</li>
 <li>Paid or behind an account: none.</li>
-<li>Changes over time: none; each link is pinned to a commit.</li>
+<li>Changes over time: the prompt runs the latest version of the analysis code until that version is published; the data links are pinned to a commit.</li>
 </ul>
-<p>Give this prompt to your assistant: <a href="{prompt}">reusable prompt for the pump card analysis</a>, in the digitalmodel library.</p>
-<p>Data: public example well, file <a href="{fixture}">cleansed_well_001.json</a> of the digitalmodel library, MIT licence, version of 12 Nov 2026; public diagnostic plate, Mendeley Data, <a href="{PLATE_DOI}">doi:10.17632/hnfwm9mjs6.1</a>, CC0 1.0, retrieved 11 Oct 2026.</p>
+<p>Give this prompt to your assistant: <a href="{prompt}">reusable prompt for the pump card analysis</a>, in the digitalmodel library, version of 12 Nov 2026.</p>
+<p>Data: public example well, file <a href="{fixture}">cleansed_well_001.json</a> of the digitalmodel library, MIT licence, version of 13 Nov 2026; public diagnostic plate, Mendeley Data, <a href="{PLATE_DOI}">doi:10.17632/hnfwm9mjs6.1</a>, CC0 1.0, retrieved 11 Oct 2026.</p>
 <p>To have a study of your own rod pump done for you, write to support@aceengineer.com.</p>"""
     return a + b + c + d
 
