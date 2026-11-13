@@ -52,6 +52,7 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     # named in riser_types.yml (directories where they are dedicated, exact files
     # where the folder is shared) and the excluded models' PROVENANCE.md files.
     ("data/riser_database/", ("subsea",)),
+    ("data/riser_buoyancy/", ("subsea",)),
     ("data/line_pipe/", ("subsea",)),
     ("data/flexible_pipe/", ("subsea",)),
     ("data/soil_stiffness/", ("subsea",)),
