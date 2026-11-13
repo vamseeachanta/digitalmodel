@@ -15,6 +15,16 @@ Six generic worked configurations are evaluated with the existing open-source st
 
 Table 1. Feasibility against the stated limits; a zero feasible count retains the rank-1 violated candidate without tuning limits.
 
+## Revision history
+
+| Revision | Date | Change and reason |
+| --- | --- | --- |
+| 0 | 2026-11-12 | Initial issue: six static worked configurations and wall sensitivity. |
+| 1 | 2026-11-12 | Independent named-section stress comparison and radius/status assertions added. |
+| 2 | 2026-11-13 | Diagnostic quantisation and deterministic noise ties added for portable regeneration; report percentage precision corrected. |
+
+Table R-1. Issued revisions; earlier rows are retained on reissue.
+
 ## Scope and limitations
 
 The method is an inextensible static cable screen with frictionless mobile touchdown. No dynamics, fatigue or code compliance is established. The screen's own limitations are quoted verbatim:
@@ -23,13 +33,13 @@ The method is an inextensible static cable screen with frictionless mobile touch
 
 The single pressure pair is internal design pressure 20.0e6 Pa and external pressure 0 Pa at surface hang-off. The screen applies it to the whole line; depth-dependent internal and external hydrostatics are not established. Minimum radius uses the screen's touchdown/sag/hog local radii. Utilisation uses sampled thin-wall von Mises stress including elastic curvature bending and pressure end force; it is not a code check.
 
-Rank 1 follows the screen's ascending maximum touchdown/sag excursion-curvature range among feasible candidates; if none is feasible, rank 1 follows the screen's violated-candidate ordering. The curvature-range objective is a stress-range proxy, not fatigue damage. A governing offset is selected by the smallest signed margin divided by the absolute limit (floor 1e-12); ties retain offset order. Each constraint also retains its own controlling offset, because one offset need not control every limit. All four offset rows and input hashes are in [scr-slwr-results.json](scr-slwr-results.json). Floats are serialized to six significant figures; comparator dispositions use unrounded values. Raw workflow runtime is discarded.
+Rank 1 follows the screen's ascending maximum touchdown/sag excursion-curvature range among feasible candidates; if none is feasible, rank 1 follows the screen's violated-candidate ordering. The curvature-range objective is a stress-range proxy, not fatigue damage. A governing offset is selected by the smallest signed margin divided by the absolute limit (floor 1e-12); ties retain offset order. Each constraint also retains its own controlling offset, because one offset need not control every limit. All four offset rows and input hashes are in [scr-slwr-results.json](scr-slwr-results.json). Floats are serialized to six significant figures; comparator dispositions use unrounded values. Diagnostic differences use a resolution of 1e-8 percentage points; closure residuals, closure margins and shape coordinates use 1e-8 m, below the 1e-6 m closure criterion. Other calculated values retain calculation precision before six-significant-figure serialization. Report percentage differences use one decimal place and retain the raw-value dispositions. Raw workflow runtime is discarded.
 
 SCR comparator: H = wz sinθ/(1 − sinθ), Ttop = H + wz, s = √(z² + 2Hz/w), x = (H/w) asinh(s/(H/w)), Rtd = H/w. θ is the selected input angle from vertical at zero offset; at other offsets it is the exposed top angle, so those checks are conditional on that angle. SLWR comparator: Vtop = w Sbare + w(1 − factor) Sbuoyed, Ttop = hypot(H, Vtop), Rsag = H/w and Rhog = H/|w(1 − factor)|. Bare suspended material is split before and after the exposed buoyed interval; the grounded tail is excluded. SLWR horizontal tension is a supplied comparator input; independent agreement of H and suspended geometry is not established by this equilibrium check.
 
 The stress comparator uses the same thin-wall formulation as the screen, with an independent implementation and independent section selection. Both bending signs are evaluated at hang-off and touchdown, and at sag and hog for SLWR. Hoop stress is (pi − pe) OD/(2t), pressure end force is π(pi ID² − pe OD²)/4, axial stress is (T + Fpressure)/Asteel ± E OD κ/2, and utilisation is √(axial² + hoop² − axial × hoop)/yield. Hang-off uses Ttop and κ = w H/Ttop²; touchdown/sag use H and κ = w/H; hog uses H and κ = abs(w(1 − factor))/H. The maximum over those sections is retained (first named section on an exact tie). H and Ttop are exposed screen inputs to the comparator, so independent global equilibrium is not established by the stress comparison. Agreement establishes the named-section comparison within tolerance; continuous interior extrema are not established. It is not a code check and does not provide thick-wall or FE verification.
 
-The stress criterion is 1e-6 relative before output rounding, based on numerical-noise agreement across 24 base offset rows and 18 sensitivity runs (72 offset rows, including the base rows). The observed maximum absolute difference is 5.26164e-14 %. No sampling allowance is applied. Observed governing critical sections: hang-off. Hang-off is an explicitly sampled endpoint. A sampled screen value lower than the comparator at an unsampled critical section understates that section's utilisation; the sampled screen can miss an exact critical section or govern at an interior sample. Agreement here does not exclude that limitation for other configurations.
+The stress criterion is 1e-6 relative before output rounding, based on numerical-noise agreement across 24 base offset rows and 18 sensitivity runs (72 offset rows, including the base rows). The observed maximum absolute difference is 0.0 % at report precision. JSON diagnostic differences are quantised to 1e-8 percentage points; zero denotes a value rounded to that resolution. The maximum diagnostic row retains declared case, wall-step and offset order on a quantised tie. No sampling allowance is applied. Observed governing critical sections: hang-off. Hang-off is an explicitly sampled endpoint. A sampled screen value lower than the comparator at an unsampled critical section understates that section's utilisation; the sampled screen can miss an exact critical section or govern at an interior sample. Agreement here does not exclude that limitation for other configurations.
 
 Stress comparator not established rows: none at the stated tolerance.
 
@@ -104,26 +114,26 @@ Table scr-1000m-8in-1. Rank-1 static quantities; governing offset 50 m. Horizont
 | bend_radius_m | >= 54.7687 m | 519.803 | 694.139 | 390.05 | -50 m | 335.281 | pass | assumed screening strain limit 0.2%; OD/(2*0.002), not a code value |
 | hog_clearance_m | >= 50 m | not applicable | not applicable | not applicable | not applicable | not applicable | not_applicable | assumed minimum hog clearance of 50.0 m |
 | static_von_mises_utilisation | <= 0.67 1 | 0.301537 | 0.318359 | 0.318359 | 50 m | 0.351641 | pass | an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor |
-| shape_closure | <= 1e-06 m | 5.34328e-11 | 5.07043e-11 | 5.34328e-11 | 0 m | 9.99947e-07 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
+| shape_closure | <= 1e-06 m | 0 | 0 | 0 | 0 m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
 
 Table scr-1000m-8in-2. Each constraint is evaluated over all offsets. Margin is limit minus computed for upper limits, computed minus limit for lower limits; units follow the limit. SCR hog values are not applicable, rather than missing evidence.
 
 | Offset | Quantity (N, m or 1) | Comparator | Screen | Difference (%) | Governing critical section | Relative tolerance (1) | Status | Missing evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| zero | horizontal_tension_n | 377495 | 377495 | 2.27129e-11 | not applicable | 1e-06 | pass | none |
-| zero | top_tension_n | 1.10372e+06 | 1.10372e+06 | 7.78408e-12 | not applicable | 1e-06 | pass | none |
-| zero | suspended_length_m | 1428.15 | 1428.15 | 7.83307e-12 | not applicable | 1e-06 | pass | none |
-| zero | horizontal_span_m | 902.075 | 902.075 | 1.83497e-11 | not applicable | 1e-06 | pass | none |
-| zero | touchdown_radius_m | 519.803 | 519.803 | 3.07945e-11 | not applicable | 1e-06 | pass | none |
-| governing | horizontal_tension_n | 504102 | 504102 | -3.46404e-14 | not applicable | 1e-06 | pass | none |
-| governing | top_tension_n | 1.23033e+06 | 1.23033e+06 | -3.78485e-14 | not applicable | 1e-06 | pass | none |
-| governing | suspended_length_m | 1545.41 | 1545.41 | -7.48886e-12 | not applicable | 1e-06 | pass | none |
-| governing | horizontal_span_m | 1069.33 | 1069.33 | -1.4948e-11 | not applicable | 1e-06 | pass | none |
-| governing | touchdown_radius_m | 694.139 | 694.139 | -2.57464e-11 | not applicable | 1e-06 | pass | none |
-| -50 m | static_von_mises_utilisation | 0.289503 | 0.289503 | 3.83492e-14 | hang-off | 1e-06 | pass | none |
-| 0 m | static_von_mises_utilisation | 0.301537 | 0.301537 | 0 | hang-off | 1e-06 | pass | none |
-| 50 m | static_von_mises_utilisation | 0.318359 | 0.318359 | 0 | hang-off | 1e-06 | pass | none |
-| cross (x=0, y=50) m | static_von_mises_utilisation | 0.301789 | 0.301789 | 0 | hang-off | 1e-06 | pass | none |
+| zero | horizontal_tension_n | 377495 | 377495 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | top_tension_n | 1.10372e+06 | 1.10372e+06 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | suspended_length_m | 1428.15 | 1428.15 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | horizontal_span_m | 902.075 | 902.075 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | touchdown_radius_m | 519.803 | 519.803 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | horizontal_tension_n | 504102 | 504102 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | top_tension_n | 1.23033e+06 | 1.23033e+06 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | suspended_length_m | 1545.41 | 1545.41 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | horizontal_span_m | 1069.33 | 1069.33 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | touchdown_radius_m | 694.139 | 694.139 | 0.0 | not applicable | 1e-06 | pass | none |
+| -50 m | static_von_mises_utilisation | 0.289503 | 0.289503 | 0.0 | hang-off | 1e-06 | pass | none |
+| 0 m | static_von_mises_utilisation | 0.301537 | 0.301537 | 0.0 | hang-off | 1e-06 | pass | none |
+| 50 m | static_von_mises_utilisation | 0.318359 | 0.318359 | 0.0 | hang-off | 1e-06 | pass | none |
+| cross (x=0, y=50) m | static_von_mises_utilisation | 0.301789 | 0.301789 | 0.0 | hang-off | 1e-06 | pass | none |
 
 Table scr-1000m-8in-3. Comparator criterion: absolute relative difference ≤ 1e-6 before serialization. Signed difference = 100 × (screen − comparator)/comparator. Stress is compared at all four offsets; a difference outside tolerance is not established and requires the named evidence.
 
@@ -154,26 +164,26 @@ Table scr-1500m-10in-1. Rank-1 static quantities; governing offset 75 m. Horizon
 | bend_radius_m | >= 68.2625 m | 779.705 | 1041.21 | 585.075 | -75 m | 516.813 | pass | assumed screening strain limit 0.2%; OD/(2*0.002), not a code value |
 | hog_clearance_m | >= 50 m | not applicable | not applicable | not applicable | not applicable | not applicable | not_applicable | assumed minimum hog clearance of 50.0 m |
 | static_von_mises_utilisation | <= 0.67 1 | 0.385071 | 0.41445 | 0.41445 | 75 m | 0.25555 | pass | an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor |
-| shape_closure | <= 1e-06 m | 7.95808e-11 | 1.45519e-11 | 7.95808e-11 | 0 m | 9.9992e-07 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
+| shape_closure | <= 1e-06 m | 0 | 0 | 0 | 0 m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
 
 Table scr-1500m-10in-2. Each constraint is evaluated over all offsets. Margin is limit minus computed for upper limits, computed minus limit for lower limits; units follow the limit. SCR hog values are not applicable, rather than missing evidence.
 
 | Offset | Quantity (N, m or 1) | Comparator | Screen | Difference (%) | Governing critical section | Relative tolerance (1) | Status | Missing evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| zero | horizontal_tension_n | 828661 | 828661 | 3.73553e-11 | not applicable | 1e-06 | pass | none |
-| zero | top_tension_n | 2.42284e+06 | 2.42284e+06 | 1.27618e-11 | not applicable | 1e-06 | pass | none |
-| zero | suspended_length_m | 2142.22 | 2142.22 | 7.79062e-12 | not applicable | 1e-06 | pass | none |
-| zero | horizontal_span_m | 1353.11 | 1353.11 | 1.82489e-11 | not applicable | 1e-06 | pass | none |
-| zero | touchdown_radius_m | 779.705 | 779.705 | 3.05904e-11 | not applicable | 1e-06 | pass | none |
-| governing | horizontal_tension_n | 1.10658e+06 | 1.10658e+06 | 2.10405e-14 | not applicable | 1e-06 | pass | none |
-| governing | top_tension_n | 2.70076e+06 | 2.70076e+06 | 1.72418e-14 | not applicable | 1e-06 | pass | none |
-| governing | suspended_length_m | 2318.11 | 2318.11 | -8.98467e-12 | not applicable | 1e-06 | pass | none |
-| governing | horizontal_span_m | 1604 | 1604 | -1.79177e-11 | not applicable | 1e-06 | pass | none |
-| governing | touchdown_radius_m | 1041.21 | 1041.21 | -3.09e-11 | not applicable | 1e-06 | pass | none |
-| -75 m | static_von_mises_utilisation | 0.36382 | 0.36382 | -1.52578e-14 | hang-off | 1e-06 | pass | none |
-| 0 m | static_von_mises_utilisation | 0.385071 | 0.385071 | 0 | hang-off | 1e-06 | pass | none |
-| 75 m | static_von_mises_utilisation | 0.41445 | 0.41445 | 1.33939e-14 | hang-off | 1e-06 | pass | none |
-| cross (x=0, y=75) m | static_von_mises_utilisation | 0.385514 | 0.385514 | 1.43993e-14 | hang-off | 1e-06 | pass | none |
+| zero | horizontal_tension_n | 828661 | 828661 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | top_tension_n | 2.42284e+06 | 2.42284e+06 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | suspended_length_m | 2142.22 | 2142.22 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | horizontal_span_m | 1353.11 | 1353.11 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | touchdown_radius_m | 779.705 | 779.705 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | horizontal_tension_n | 1.10658e+06 | 1.10658e+06 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | top_tension_n | 2.70076e+06 | 2.70076e+06 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | suspended_length_m | 2318.11 | 2318.11 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | horizontal_span_m | 1604 | 1604 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | touchdown_radius_m | 1041.21 | 1041.21 | 0.0 | not applicable | 1e-06 | pass | none |
+| -75 m | static_von_mises_utilisation | 0.36382 | 0.36382 | 0.0 | hang-off | 1e-06 | pass | none |
+| 0 m | static_von_mises_utilisation | 0.385071 | 0.385071 | 0.0 | hang-off | 1e-06 | pass | none |
+| 75 m | static_von_mises_utilisation | 0.41445 | 0.41445 | 0.0 | hang-off | 1e-06 | pass | none |
+| cross (x=0, y=75) m | static_von_mises_utilisation | 0.385514 | 0.385514 | 0.0 | hang-off | 1e-06 | pass | none |
 
 Table scr-1500m-10in-3. Comparator criterion: absolute relative difference ≤ 1e-6 before serialization. Signed difference = 100 × (screen − comparator)/comparator. Stress is compared at all four offsets; a difference outside tolerance is not established and requires the named evidence.
 
@@ -204,26 +214,26 @@ Table scr-2000m-12in-1. Rank-1 static quantities; governing offset 100 m. Horizo
 | bend_radius_m | >= 80.9625 m | 1039.61 | 1388.28 | 780.1 | -100 m | 699.138 | pass | assumed screening strain limit 0.2%; OD/(2*0.002), not a code value |
 | hog_clearance_m | >= 50 m | not applicable | not applicable | not applicable | not applicable | not applicable | not_applicable | assumed minimum hog clearance of 50.0 m |
 | static_von_mises_utilisation | <= 0.67 1 | 0.359935 | 0.385021 | 0.385021 | 100 m | 0.284979 | pass | an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor |
-| shape_closure | <= 1e-06 m | 6.18456e-11 | 4.54747e-13 | 6.18456e-11 | 0 m | 9.99938e-07 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
+| shape_closure | <= 1e-06 m | 0 | 0 | 0 | 0 m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
 
 Table scr-2000m-12in-2. Each constraint is evaluated over all offsets. Margin is limit minus computed for upper limits, computed minus limit for lower limits; units follow the limit. SCR hog values are not applicable, rather than missing evidence.
 
 | Offset | Quantity (N, m or 1) | Comparator | Screen | Difference (%) | Governing critical section | Relative tolerance (1) | Status | Missing evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| zero | horizontal_tension_n | 1.04519e+06 | 1.04519e+06 | -9.04426e-12 | not applicable | 1e-06 | pass | none |
-| zero | top_tension_n | 3.05592e+06 | 3.05592e+06 | -3.09332e-12 | not applicable | 1e-06 | pass | none |
-| zero | suspended_length_m | 2856.3 | 2856.3 | -4.45785e-12 | not applicable | 1e-06 | pass | none |
-| zero | horizontal_span_m | 1804.15 | 1804.15 | -1.04603e-11 | not applicable | 1e-06 | pass | none |
-| zero | touchdown_radius_m | 1039.61 | 1039.61 | -1.75406e-11 | not applicable | 1e-06 | pass | none |
-| governing | horizontal_tension_n | 1.39573e+06 | 1.39573e+06 | 6.67267e-14 | not applicable | 1e-06 | pass | none |
-| governing | top_tension_n | 3.40646e+06 | 3.40646e+06 | 5.46798e-14 | not applicable | 1e-06 | pass | none |
-| governing | suspended_length_m | 3090.81 | 3090.81 | 6.17941e-13 | not applicable | 1e-06 | pass | none |
-| governing | horizontal_span_m | 2138.66 | 2138.66 | 1.25453e-12 | not applicable | 1e-06 | pass | none |
-| governing | touchdown_radius_m | 1388.28 | 1388.28 | 2.14553e-12 | not applicable | 1e-06 | pass | none |
-| -100 m | static_von_mises_utilisation | 0.341922 | 0.341922 | 0 | hang-off | 1e-06 | pass | none |
-| 0 m | static_von_mises_utilisation | 0.359935 | 0.359935 | -1.54225e-14 | hang-off | 1e-06 | pass | none |
-| 100 m | static_von_mises_utilisation | 0.385021 | 0.385021 | 2.88354e-14 | hang-off | 1e-06 | pass | none |
-| cross (x=0, y=100) m | static_von_mises_utilisation | 0.360312 | 0.360312 | 0 | hang-off | 1e-06 | pass | none |
+| zero | horizontal_tension_n | 1.04519e+06 | 1.04519e+06 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | top_tension_n | 3.05592e+06 | 3.05592e+06 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | suspended_length_m | 2856.3 | 2856.3 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | horizontal_span_m | 1804.15 | 1804.15 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | touchdown_radius_m | 1039.61 | 1039.61 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | horizontal_tension_n | 1.39573e+06 | 1.39573e+06 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | top_tension_n | 3.40646e+06 | 3.40646e+06 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | suspended_length_m | 3090.81 | 3090.81 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | horizontal_span_m | 2138.66 | 2138.66 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | touchdown_radius_m | 1388.28 | 1388.28 | 0.0 | not applicable | 1e-06 | pass | none |
+| -100 m | static_von_mises_utilisation | 0.341922 | 0.341922 | 0.0 | hang-off | 1e-06 | pass | none |
+| 0 m | static_von_mises_utilisation | 0.359935 | 0.359935 | 0.0 | hang-off | 1e-06 | pass | none |
+| 100 m | static_von_mises_utilisation | 0.385021 | 0.385021 | 0.0 | hang-off | 1e-06 | pass | none |
+| cross (x=0, y=100) m | static_von_mises_utilisation | 0.360312 | 0.360312 | 0.0 | hang-off | 1e-06 | pass | none |
 
 Table scr-2000m-12in-3. Comparator criterion: absolute relative difference ≤ 1e-6 before serialization. Signed difference = 100 × (screen − comparator)/comparator. Stress is compared at all four offsets; a difference outside tolerance is not established and requires the named evidence.
 
@@ -254,7 +264,7 @@ Table slwr-1500m-8in-1. Rank-1 static quantities; governing offset -75 m. Horizo
 | bend_radius_m | >= 54.7687 m | 354.355 | 329.034 | 329.034 | -75 m | 274.266 | pass | assumed screening strain limit 0.2%; OD/(2*0.002), not a code value |
 | hog_clearance_m | >= 50 m | 750 | 772.172 | 727.607 | 75 m | 677.607 | pass | assumed minimum hog clearance of 50.0 m |
 | static_von_mises_utilisation | <= 0.67 1 | 0.315205 | 0.314079 | 0.316505 | 75 m | 0.353495 | pass | an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor |
-| shape_closure | <= 1e-06 m | 8.52651e-14 | 9.09495e-13 | 1.75987e-10 | cross (x=0, y=75) m | 9.99824e-07 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
+| shape_closure | <= 1e-06 m | 0 | 0 | 0 | cross (x=0, y=75) m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
 | net_buoyancy | > 1 1 | 1.5 | 1.5 | 1.5 | -75 m | 0.5 | pass | screen domain: buoyancy_factor > 1 for a net-buoyant section |
 | hog_above_sag | > 0 1 | 0.4 | 0.4 | 0.4 | -75 m | 0.4 | pass | screen domain: hog_fraction > sag_fraction |
 
@@ -262,16 +272,16 @@ Table slwr-1500m-8in-2. Each constraint is evaluated over all offsets. Margin is
 
 | Offset | Quantity (N, m or 1) | Comparator | Screen | Difference (%) | Governing critical section | Relative tolerance (1) | Status | Missing evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| zero | top_tension_n | 1.23775e+06 | 1.23775e+06 | -1.88108e-14 | not applicable | 1e-06 | pass | none |
-| zero | sag_radius_m | 354.355 | 354.355 | 0 | not applicable | 1e-06 | pass | none |
-| zero | hog_radius_m | 708.711 | 708.711 | 0 | not applicable | 1e-06 | pass | none |
-| governing | top_tension_n | 1.2311e+06 | 1.2311e+06 | 0 | not applicable | 1e-06 | pass | none |
-| governing | sag_radius_m | 329.034 | 329.034 | 0 | not applicable | 1e-06 | pass | none |
-| governing | hog_radius_m | 658.069 | 658.069 | 0 | not applicable | 1e-06 | pass | none |
-| -75 m | static_von_mises_utilisation | 0.314079 | 0.314079 | 0 | hang-off | 1e-06 | pass | none |
-| 0 m | static_von_mises_utilisation | 0.315205 | 0.315205 | 0 | hang-off | 1e-06 | pass | none |
-| 75 m | static_von_mises_utilisation | 0.316505 | 0.316505 | 5.26164e-14 | hang-off | 1e-06 | pass | none |
-| cross (x=0, y=75) m | static_von_mises_utilisation | 0.315217 | 0.315217 | 0 | hang-off | 1e-06 | pass | none |
+| zero | top_tension_n | 1.23775e+06 | 1.23775e+06 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | sag_radius_m | 354.355 | 354.355 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | hog_radius_m | 708.711 | 708.711 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | top_tension_n | 1.2311e+06 | 1.2311e+06 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | sag_radius_m | 329.034 | 329.034 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | hog_radius_m | 658.069 | 658.069 | 0.0 | not applicable | 1e-06 | pass | none |
+| -75 m | static_von_mises_utilisation | 0.314079 | 0.314079 | 0.0 | hang-off | 1e-06 | pass | none |
+| 0 m | static_von_mises_utilisation | 0.315205 | 0.315205 | 0.0 | hang-off | 1e-06 | pass | none |
+| 75 m | static_von_mises_utilisation | 0.316505 | 0.316505 | 0.0 | hang-off | 1e-06 | pass | none |
+| cross (x=0, y=75) m | static_von_mises_utilisation | 0.315217 | 0.315217 | 0.0 | hang-off | 1e-06 | pass | none |
 
 Table slwr-1500m-8in-3. Comparator criterion: absolute relative difference ≤ 1e-6 before serialization. Signed difference = 100 × (screen − comparator)/comparator. Stress is compared at all four offsets; a difference outside tolerance is not established and requires the named evidence.
 
@@ -302,7 +312,7 @@ Table slwr-2000m-10in-1. Rank-1 static quantities; governing offset 100 m. Horiz
 | bend_radius_m | >= 68.2625 m | 472.474 | 509.986 | 438.712 | -100 m | 370.45 | pass | assumed screening strain limit 0.2%; OD/(2*0.002), not a code value |
 | hog_clearance_m | >= 50 m | 1000 | 970.142 | 970.142 | 100 m | 920.142 | pass | assumed minimum hog clearance of 50.0 m |
 | static_von_mises_utilisation | <= 0.67 1 | 0.381466 | 0.383286 | 0.383286 | 100 m | 0.286714 | pass | an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor |
-| shape_closure | <= 1e-06 m | 2.27374e-13 | 3.41061e-13 | 3.07409e-10 | cross (x=0, y=100) m | 9.99693e-07 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
+| shape_closure | <= 1e-06 m | 0 | 0 | 0 | cross (x=0, y=100) m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
 | net_buoyancy | > 1 1 | 1.5 | 1.5 | 1.5 | -100 m | 0.5 | pass | screen domain: buoyancy_factor > 1 for a net-buoyant section |
 | hog_above_sag | > 0 1 | 0.4 | 0.4 | 0.4 | -100 m | 0.4 | pass | screen domain: hog_fraction > sag_fraction |
 
@@ -310,16 +320,16 @@ Table slwr-2000m-10in-2. Each constraint is evaluated over all offsets. Margin i
 
 | Offset | Quantity (N, m or 1) | Comparator | Screen | Difference (%) | Governing critical section | Relative tolerance (1) | Status | Missing evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| zero | top_tension_n | 2.41516e+06 | 2.41516e+06 | -1.92808e-14 | not applicable | 1e-06 | pass | none |
-| zero | sag_radius_m | 472.474 | 472.474 | 0 | not applicable | 1e-06 | pass | none |
-| zero | hog_radius_m | 944.948 | 944.948 | 0 | not applicable | 1e-06 | pass | none |
-| governing | top_tension_n | 2.43033e+06 | 2.43033e+06 | 0 | not applicable | 1e-06 | pass | none |
-| governing | sag_radius_m | 509.986 | 509.986 | 0 | not applicable | 1e-06 | pass | none |
-| governing | hog_radius_m | 1019.97 | 1019.97 | 0 | not applicable | 1e-06 | pass | none |
-| -100 m | static_von_mises_utilisation | 0.379892 | 0.379892 | 0 | hang-off | 1e-06 | pass | none |
-| 0 m | static_von_mises_utilisation | 0.381466 | 0.381466 | 0 | hang-off | 1e-06 | pass | none |
-| 100 m | static_von_mises_utilisation | 0.383286 | 0.383286 | 0 | hang-off | 1e-06 | pass | none |
-| cross (x=0, y=100) m | static_von_mises_utilisation | 0.381482 | 0.381482 | 0 | hang-off | 1e-06 | pass | none |
+| zero | top_tension_n | 2.41516e+06 | 2.41516e+06 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | sag_radius_m | 472.474 | 472.474 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | hog_radius_m | 944.948 | 944.948 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | top_tension_n | 2.43033e+06 | 2.43033e+06 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | sag_radius_m | 509.986 | 509.986 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | hog_radius_m | 1019.97 | 1019.97 | 0.0 | not applicable | 1e-06 | pass | none |
+| -100 m | static_von_mises_utilisation | 0.379892 | 0.379892 | 0.0 | hang-off | 1e-06 | pass | none |
+| 0 m | static_von_mises_utilisation | 0.381466 | 0.381466 | 0.0 | hang-off | 1e-06 | pass | none |
+| 100 m | static_von_mises_utilisation | 0.383286 | 0.383286 | 0.0 | hang-off | 1e-06 | pass | none |
+| cross (x=0, y=100) m | static_von_mises_utilisation | 0.381482 | 0.381482 | 0.0 | hang-off | 1e-06 | pass | none |
 
 Table slwr-2000m-10in-3. Comparator criterion: absolute relative difference ≤ 1e-6 before serialization. Signed difference = 100 × (screen − comparator)/comparator. Stress is compared at all four offsets; a difference outside tolerance is not established and requires the named evidence.
 
@@ -350,7 +360,7 @@ Table slwr-2500m-12in-1. Rank-1 static quantities; governing offset 125 m. Horiz
 | bend_radius_m | >= 80.9625 m | 590.592 | 637.482 | 548.391 | -125 m | 467.428 | pass | assumed screening strain limit 0.2%; OD/(2*0.002), not a code value |
 | hog_clearance_m | >= 50 m | 1250 | 1212.68 | 1212.68 | 125 m | 1162.68 | pass | assumed minimum hog clearance of 50.0 m |
 | static_von_mises_utilisation | <= 0.67 1 | 0.344445 | 0.345875 | 0.345875 | 125 m | 0.324125 | pass | an assumed screening ratio of 0.67 (two thirds rounded to two decimals) on von Mises stress; a project shall replace it with the governing code design factor |
-| shape_closure | <= 1e-06 m | 5.11591e-13 | 9.09495e-13 | 4.52019e-10 | cross (x=0, y=125) m | 9.99548e-07 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
+| shape_closure | <= 1e-06 m | 0 | 0 | 0 | cross (x=0, y=125) m | 1e-06 | pass | numerical closure tolerance from riser_configuration_screen/static.py::CLOSURE_M |
 | net_buoyancy | > 1 1 | 1.5 | 1.5 | 1.5 | -125 m | 0.5 | pass | screen domain: buoyancy_factor > 1 for a net-buoyant section |
 | hog_above_sag | > 0 1 | 0.4 | 0.4 | 0.4 | -125 m | 0.4 | pass | screen domain: hog_fraction > sag_fraction |
 
@@ -358,30 +368,30 @@ Table slwr-2500m-12in-2. Each constraint is evaluated over all offsets. Margin i
 
 | Offset | Quantity (N, m or 1) | Comparator | Screen | Difference (%) | Governing critical section | Relative tolerance (1) | Status | Missing evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| zero | top_tension_n | 2.85583e+06 | 2.85583e+06 | 0 | not applicable | 1e-06 | pass | none |
-| zero | sag_radius_m | 590.592 | 590.592 | 0 | not applicable | 1e-06 | pass | none |
-| zero | hog_radius_m | 1181.18 | 1181.18 | 0 | not applicable | 1e-06 | pass | none |
-| governing | top_tension_n | 2.87378e+06 | 2.87378e+06 | -4.86114e-14 | not applicable | 1e-06 | pass | none |
-| governing | sag_radius_m | 637.482 | 637.482 | 0 | not applicable | 1e-06 | pass | none |
-| governing | hog_radius_m | 1274.96 | 1274.96 | 0 | not applicable | 1e-06 | pass | none |
-| -125 m | static_von_mises_utilisation | 0.343208 | 0.343208 | 0 | hang-off | 1e-06 | pass | none |
-| 0 m | static_von_mises_utilisation | 0.344445 | 0.344445 | 0 | hang-off | 1e-06 | pass | none |
-| 125 m | static_von_mises_utilisation | 0.345875 | 0.345875 | 0 | hang-off | 1e-06 | pass | none |
-| cross (x=0, y=125) m | static_von_mises_utilisation | 0.344458 | 0.344458 | 0 | hang-off | 1e-06 | pass | none |
+| zero | top_tension_n | 2.85583e+06 | 2.85583e+06 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | sag_radius_m | 590.592 | 590.592 | 0.0 | not applicable | 1e-06 | pass | none |
+| zero | hog_radius_m | 1181.18 | 1181.18 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | top_tension_n | 2.87378e+06 | 2.87378e+06 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | sag_radius_m | 637.482 | 637.482 | 0.0 | not applicable | 1e-06 | pass | none |
+| governing | hog_radius_m | 1274.96 | 1274.96 | 0.0 | not applicable | 1e-06 | pass | none |
+| -125 m | static_von_mises_utilisation | 0.343208 | 0.343208 | 0.0 | hang-off | 1e-06 | pass | none |
+| 0 m | static_von_mises_utilisation | 0.344445 | 0.344445 | 0.0 | hang-off | 1e-06 | pass | none |
+| 125 m | static_von_mises_utilisation | 0.345875 | 0.345875 | 0.0 | hang-off | 1e-06 | pass | none |
+| cross (x=0, y=125) m | static_von_mises_utilisation | 0.344458 | 0.344458 | 0.0 | hang-off | 1e-06 | pass | none |
 
 Table slwr-2500m-12in-3. Comparator criterion: absolute relative difference ≤ 1e-6 before serialization. Signed difference = 100 × (screen − comparator)/comparator. Stress is compared at all four offsets; a difference outside tolerance is not established and requires the named evidence.
 
 ## Size sensitivity
 
-Generic nominal wall steps (assumed), not a vendor catalogue. Each wall step reruns the unchanged grid with recomputed submerged weight and 0.6 Sy Asteel tension limit. Each row uses the rank-1 candidate; a violated row remains infeasible. The reported metrics are the maximum top tension and utilisation and minimum bend radius over all four offsets. Percentages use the six-significant-figure metric values serialized in JSON, relative to the base wall. Candidate reselection can change geometry as well as loading.
+Generic nominal wall steps (assumed), not a vendor catalogue. Each wall step reruns the unchanged grid with recomputed submerged weight and 0.6 Sy Asteel tension limit. Each row uses the rank-1 candidate; a violated row remains infeasible. The reported metrics are the maximum top tension and utilisation and minimum bend radius over all four offsets. Percentages use the six-significant-figure metric values serialized in JSON, relative to the base wall, and are displayed to one decimal place. Candidate reselection can change geometry as well as loading.
 
 ### scr-1000m-8in
 
 | Wall step | Wall (mm) | Weight (N/m) | Tension limit (kN) | Top tension maximum over offsets (kN) | ΔT (%) | Utilisation maximum over offsets (1) | ΔU (%) | Radius minimum over offsets (m) | ΔR (%) | Disposition |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| thinner | 15.875 | 630.985 | 2724.06 | 1068.98 | -13.1144 | 0.342673 | 7.63729 | 390.05 | 0 | feasible |
-| base | 18.263 | 726.226 | 3097 | 1230.33 | 0 | 0.318359 | 0 | 390.05 | 0 | feasible |
-| thicker | 22.225 | 878.819 | 3694.51 | 1488.84 | 21.0114 | 0.292419 | -8.14803 | 390.05 | 0 | feasible |
+| thinner | 15.875 | 630.985 | 2724.06 | 1068.98 | -13.1 | 0.342673 | 7.6 | 390.05 | 0.0 | feasible |
+| base | 18.263 | 726.226 | 3097 | 1230.33 | 0.0 | 0.318359 | 0.0 | 390.05 | 0.0 | feasible |
+| thicker | 22.225 | 878.819 | 3694.51 | 1488.84 | 21.0 | 0.292419 | -8.1 | 390.05 | 0.0 | feasible |
 
 Table scr-1000m-8in-4. Wall sensitivity against the base; full selected grid coordinates and individual constraint margins are retained in JSON.
 
@@ -389,9 +399,9 @@ Table scr-1000m-8in-4. Wall sensitivity against the base; full selected grid coo
 
 | Wall step | Wall (mm) | Weight (N/m) | Tension limit (kN) | Top tension maximum over offsets (kN) | ΔT (%) | Utilisation maximum over offsets (1) | ΔU (%) | Radius minimum over offsets (m) | ΔR (%) | Disposition |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| thinner | 18.263 | 903.009 | 3929.42 | 2294.73 | -15.0339 | 0.437078 | 5.45977 | 585.075 | 0 | feasible |
-| base | 21.438 | 1062.79 | 4555.07 | 2700.76 | 0 | 0.41445 | 0 | 585.075 | 0 | feasible |
-| thicker | 25.400 | 1256.07 | 5311.92 | 3191.94 | 18.1867 | 0.397091 | -4.18844 | 585.075 | 0 | feasible |
+| thinner | 18.263 | 903.009 | 3929.42 | 2294.73 | -15.0 | 0.437078 | 5.5 | 585.075 | 0.0 | feasible |
+| base | 21.438 | 1062.79 | 4555.07 | 2700.76 | 0.0 | 0.41445 | 0.0 | 585.075 | 0.0 | feasible |
+| thicker | 25.400 | 1256.07 | 5311.92 | 3191.94 | 18.2 | 0.397091 | -4.2 | 585.075 | 0.0 | feasible |
 
 Table scr-1500m-10in-4. Wall sensitivity against the base; full selected grid coordinates and individual constraint margins are retained in JSON.
 
@@ -399,9 +409,9 @@ Table scr-1500m-10in-4. Wall sensitivity against the base; full selected grid co
 
 | Wall step | Wall (mm) | Weight (N/m) | Tension limit (kN) | Top tension maximum over offsets (kN) | ΔT (%) | Utilisation maximum over offsets (1) | ΔU (%) | Radius minimum over offsets (m) | ΔR (%) | Disposition |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| thinner | 21.438 | 739.934 | 5474.73 | 2507.1 | -26.4016 | 0.385146 | 0.0324658 | 780.1 | 0 | feasible |
-| base | 25.400 | 1005.37 | 6401.54 | 3406.46 | 0 | 0.385021 | 0 | 780.1 | 0 | feasible |
-| thicker | 28.575 | 1212.59 | 7125.12 | 4108.6 | 20.612 | 0.389982 | 1.2885 | 780.1 | 0 | feasible |
+| thinner | 21.438 | 739.934 | 5474.73 | 2507.1 | -26.4 | 0.385146 | 0.0 | 780.1 | 0.0 | feasible |
+| base | 25.400 | 1005.37 | 6401.54 | 3406.46 | 0.0 | 0.385021 | 0.0 | 780.1 | 0.0 | feasible |
+| thicker | 28.575 | 1212.59 | 7125.12 | 4108.6 | 20.6 | 0.389982 | 1.3 | 780.1 | 0.0 | feasible |
 
 Table scr-2000m-12in-4. Wall sensitivity against the base; full selected grid coordinates and individual constraint margins are retained in JSON.
 
@@ -409,9 +419,9 @@ Table scr-2000m-12in-4. Wall sensitivity against the base; full selected grid co
 
 | Wall step | Wall (mm) | Weight (N/m) | Tension limit (kN) | Top tension maximum over offsets (kN) | ΔT (%) | Utilisation maximum over offsets (1) | ΔU (%) | Radius minimum over offsets (m) | ΔR (%) | Disposition |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| thinner | 15.875 | 630.985 | 2724.06 | 1082.18 | -13.1142 | 0.340953 | 7.72436 | 329.034 | 0 | feasible |
-| base | 18.263 | 726.226 | 3097 | 1245.52 | 0 | 0.316505 | 0 | 329.034 | 0 | feasible |
-| thicker | 22.225 | 878.819 | 3694.51 | 1507.23 | 21.0121 | 0.290396 | -8.24916 | 329.034 | 0 | feasible |
+| thinner | 15.875 | 630.985 | 2724.06 | 1082.18 | -13.1 | 0.340953 | 7.7 | 329.034 | 0.0 | feasible |
+| base | 18.263 | 726.226 | 3097 | 1245.52 | 0.0 | 0.316505 | 0.0 | 329.034 | 0.0 | feasible |
+| thicker | 22.225 | 878.819 | 3694.51 | 1507.23 | 21.0 | 0.290396 | -8.2 | 329.034 | 0.0 | feasible |
 
 Table slwr-1500m-8in-4. Wall sensitivity against the base; full selected grid coordinates and individual constraint margins are retained in JSON.
 
@@ -419,9 +429,9 @@ Table slwr-1500m-8in-4. Wall sensitivity against the base; full selected grid co
 
 | Wall step | Wall (mm) | Weight (N/m) | Tension limit (kN) | Top tension maximum over offsets (kN) | ΔT (%) | Utilisation maximum over offsets (1) | ΔU (%) | Radius minimum over offsets (m) | ΔR (%) | Disposition |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| thinner | 18.263 | 903.009 | 3929.42 | 2064.96 | -15.0338 | 0.408562 | 6.59455 | 438.712 | 0 | feasible |
-| base | 21.438 | 1062.79 | 4555.07 | 2430.33 | 0 | 0.383286 | 0 | 438.712 | 0 | feasible |
-| thicker | 25.400 | 1256.07 | 5311.92 | 2872.33 | 18.1868 | 0.36351 | -5.15959 | 438.712 | 0 | feasible |
+| thinner | 18.263 | 903.009 | 3929.42 | 2064.96 | -15.0 | 0.408562 | 6.6 | 438.712 | 0.0 | feasible |
+| base | 21.438 | 1062.79 | 4555.07 | 2430.33 | 0.0 | 0.383286 | 0.0 | 438.712 | 0.0 | feasible |
+| thicker | 25.400 | 1256.07 | 5311.92 | 2872.33 | 18.2 | 0.36351 | -5.2 | 438.712 | 0.0 | feasible |
 
 Table slwr-2000m-10in-4. Wall sensitivity against the base; full selected grid coordinates and individual constraint margins are retained in JSON.
 
@@ -429,9 +439,9 @@ Table slwr-2000m-10in-4. Wall sensitivity against the base; full selected grid c
 
 | Wall step | Wall (mm) | Weight (N/m) | Tension limit (kN) | Top tension maximum over offsets (kN) | ΔT (%) | Utilisation maximum over offsets (1) | ΔU (%) | Radius minimum over offsets (m) | ΔR (%) | Disposition |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| thinner | 21.438 | 739.934 | 5474.73 | 2115.06 | -26.4015 | 0.35676 | 3.14709 | 548.391 | 0 | feasible |
-| base | 25.400 | 1005.37 | 6401.54 | 2873.78 | 0 | 0.345875 | 0 | 548.391 | 0 | feasible |
-| thicker | 28.575 | 1212.59 | 7125.12 | 3466.12 | 20.6119 | 0.344078 | -0.519552 | 548.391 | 0 | feasible |
+| thinner | 21.438 | 739.934 | 5474.73 | 2115.06 | -26.4 | 0.35676 | 3.1 | 548.391 | 0.0 | feasible |
+| base | 25.400 | 1005.37 | 6401.54 | 2873.78 | 0.0 | 0.345875 | 0.0 | 548.391 | 0.0 | feasible |
+| thicker | 28.575 | 1212.59 | 7125.12 | 3466.12 | 20.6 | 0.344078 | -0.5 | 548.391 | 0.0 | feasible |
 
 Table slwr-2500m-12in-4. Wall sensitivity against the base; full selected grid coordinates and individual constraint margins are retained in JSON.
 

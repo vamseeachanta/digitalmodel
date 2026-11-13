@@ -2,10 +2,23 @@
 
 import math
 
+REVISIONS = (
+    ("0", "2026-11-12", "Initial issue: six static worked configurations and wall sensitivity."),
+    ("1", "2026-11-12", "Independent named-section stress comparison and radius/status assertions added."),
+    ("2", "2026-11-13", "Diagnostic quantisation and deterministic noise ties added for portable regeneration; report percentage precision corrected."),
+)
+
 
 def number(value):
     """Keep absent evidence distinct from a numerical zero."""
     return "not established" if value is None else format(value, ".6g")
+
+
+def percentage(value):
+    """Display percentage comparisons to one decimal without negative zero."""
+    if value is None:
+        return "not established"
+    return format(value, ".1f") if round(value, 1) else "0.0"
 
 
 def offset(value):
@@ -98,7 +111,7 @@ def comparator_table(case, zero, governing):
     comparisons += [(offset(row["offset_m"]), "static_von_mises_utilisation",
                      row["comparators"]["static_von_mises_utilisation"]) for row in case["offset_results"]]
     rows = [[label, name, number(comp["comparator_value"]), number(comp["screen_value"]),
-             number(comp["difference_percent"]), comp.get("governing_critical_section", "not applicable"),
+             percentage(comp["difference_percent"]), comp.get("governing_critical_section", "not applicable"),
              number(comp["relative_tolerance"]), comp["status"], comp.get("missing_evidence") or "none"]
             for label, name, comp in comparisons]
     return table(["Offset", "Quantity (N, m or 1)", "Comparator", "Screen", "Difference (%)",
@@ -124,7 +137,10 @@ def stress_scope(data):
     text += (f"The stress criterion is 1e-6 relative before output rounding, based on numerical-noise agreement across "
              f"{evidence['base_offset_rows']} base offset rows and {evidence['sensitivity_runs']} sensitivity runs "
              f"({evidence['sensitivity_offset_rows']} offset rows, including the base rows). The observed maximum absolute "
-             f"difference is {number(evidence['maximum_absolute_difference_percent'])} %. No sampling allowance is applied. "
+             f"difference is {percentage(evidence['maximum_absolute_difference_percent'])} % at report precision. "
+             "JSON diagnostic differences are quantised to 1e-8 percentage points; zero denotes a value rounded "
+             "to that resolution. The maximum diagnostic row retains declared case, wall-step and offset order "
+             "on a quantised tie. No sampling allowance is applied. "
              f"Observed governing critical sections: {', '.join(evidence['governing_critical_sections'])}. Hang-off is an "
              "explicitly sampled endpoint. A sampled screen value lower than the comparator at an unsampled critical "
              "section understates that section's utilisation; the sampled screen can miss an exact critical section or "
@@ -143,7 +159,8 @@ def sensitivity_section(cases):
             "Each wall step reruns the unchanged grid with recomputed submerged weight and 0.6 Sy Asteel tension limit. "
             "Each row uses the rank-1 candidate; a violated row remains infeasible. The reported metrics are the maximum "
             "top tension and utilisation and minimum bend radius over all four offsets. Percentages use the six-significant-figure "
-            "metric values serialized in JSON, relative to the base wall. Candidate reselection can change geometry as well as loading.\n\n")
+            "metric values serialized in JSON, relative to the base wall, and are displayed to one decimal place. "
+            "Candidate reselection can change geometry as well as loading.\n\n")
     for case in cases:
         text += f"### {case['case_id']}\n\n"
         rows = []
@@ -151,9 +168,9 @@ def sensitivity_section(cases):
             metrics, change = step["metrics"], step["change_percent"]
             rows.append([step["wall_step"], f"{step['wall_thickness_m']*1000:.3f}", number(step["submerged_weight_n_m"]),
                          number(step["max_top_tension_n"] / 1000),
-                         number(metrics.get("top_tension_kn")), number(change.get("top_tension_kn")),
-                         number(metrics.get("static_von_mises_utilisation")), number(change.get("static_von_mises_utilisation")),
-                         number(metrics.get("minimum_bend_radius_m")), number(change.get("minimum_bend_radius_m")),
+                         number(metrics.get("top_tension_kn")), percentage(change.get("top_tension_kn")),
+                         number(metrics.get("static_von_mises_utilisation")), percentage(change.get("static_von_mises_utilisation")),
+                         number(metrics.get("minimum_bend_radius_m")), percentage(change.get("minimum_bend_radius_m")),
                          "feasible" if step["feasible"] else "not feasible"])
         text += table(["Wall step", "Wall (mm)", "Weight (N/m)", "Tension limit (kN)", "Top tension maximum over offsets (kN)", "ΔT (%)", "Utilisation maximum over offsets (1)", "ΔU (%)", "Radius minimum over offsets (m)", "ΔR (%)", "Disposition"], rows,
                       f"Table {case['case_id']}-4. Wall sensitivity against the base; full selected grid coordinates and individual constraint margins are retained in JSON.")
@@ -215,6 +232,9 @@ def render_report(data):
                      "; ".join(descriptions) or case["missing_evidence"]])
     text += table(["Case", "Feasible / swept", "Rank-1 disposition", "Governing criterion evidence"], rows,
                   "Table 1. Feasibility against the stated limits; a zero feasible count retains the rank-1 violated candidate without tuning limits.")
+    text += "## Revision history\n\n" + table(
+        ["Revision", "Date", "Change and reason"], REVISIONS,
+        "Table R-1. Issued revisions; earlier rows are retained on reissue.")
     text += ("## Scope and limitations\n\nThe method is an inextensible static cable screen with frictionless mobile touchdown. "
              "No dynamics, fatigue or code compliance is established. The screen's own limitations are quoted verbatim:\n\n> "
              + cases[0]["limitations"] + "\n\n"
@@ -228,7 +248,11 @@ def render_report(data):
              "by the absolute limit (floor 1e-12); ties retain offset order. Each constraint also retains its own controlling "
              "offset, because one offset need not control every limit. All four offset rows and input hashes are in "
              "[scr-slwr-results.json](scr-slwr-results.json). Floats are serialized to six significant figures; comparator "
-             "dispositions use unrounded values. Raw workflow runtime is discarded.\n\n"
+             "dispositions use unrounded values. Diagnostic differences use a resolution of 1e-8 percentage points; "
+             "closure residuals, closure margins and shape coordinates use 1e-8 m, below the 1e-6 m closure criterion. "
+             "Other calculated values retain calculation precision before six-significant-figure serialization. "
+             "Report percentage differences use one decimal place and retain the raw-value dispositions. "
+             "Raw workflow runtime is discarded.\n\n"
              "SCR comparator: H = wz sinθ/(1 − sinθ), Ttop = H + wz, s = √(z² + 2Hz/w), "
              "x = (H/w) asinh(s/(H/w)), Rtd = H/w. θ is the selected input angle from vertical at zero offset; "
              "at other offsets it is the exposed top angle, so those checks are conditional on that angle. "

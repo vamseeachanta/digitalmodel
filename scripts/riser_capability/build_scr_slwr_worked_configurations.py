@@ -37,6 +37,9 @@ SIZES = {8: (.219075, [.015875, .018263, .022225]),
          12: (.323850, [.021438, .025400, .028575])}
 MODEL_SOURCE = "src/digitalmodel/subsea/catenary_riser/models.py"
 STRESS_RELATIVE_TOLERANCE = 1e-6
+# Presentation resolutions only: 10,000 times below the comparison criterion
+# in percentage points, and 100 times below the 1e-6 m closure criterion.
+DIAGNOSTIC_DECIMALS = 8
 BASES = {
     "top_tension_n": "assumed: 0.6 * specified minimum yield strength * steel area",
     "bend_radius_m": "assumed screening strain limit 0.2%; OD/(2*0.002), not a code value",
@@ -129,6 +132,22 @@ def round_values(value):
         return {key: round_values(item) for key, item in value.items()}
     if isinstance(value, list):
         return [round_values(item) for item in value]
+    return value
+
+
+def diagnostic_values(value, field=None):
+    """Quantise output diagnostics only; raw values determine every status."""
+    if isinstance(value, float) and field in {
+        "difference_percent", "maximum_absolute_difference_percent",
+        "vertical_closure_error_m", "horizontal_closure_error_m", "shape", "shape_closure",
+    }:
+        return round(value, DIAGNOSTIC_DECIMALS) or 0.0
+    if isinstance(value, dict):
+        return {key: diagnostic_values(item, "shape_closure" if field == "shape_closure"
+                                       and key in {"computed", "margin"} else key)
+                for key, item in value.items()}
+    if isinstance(value, list):
+        return [diagnostic_values(item, field) for item in value]
     return value
 
 
@@ -292,13 +311,18 @@ def stress_evidence(cases):
     """Retain empirical tolerance evidence across every selected sensitivity row."""
     records = [{"case_id": case["case_id"], "wall_step": step["wall_step"], **row}
                for case in cases for step in case["sensitivity"] for row in step["stress_comparisons"]]
-    largest = max(records, key=lambda row: abs(row["comparison"]["difference_percent"]))
+    # max retains the first row on a quantised tie: declared case, wall, offset order.
+    largest = max(records, key=lambda row: round(abs(row["comparison"]["difference_percent"]),
+                                                DIAGNOSTIC_DECIMALS))
     return {"relative_tolerance": STRESS_RELATIVE_TOLERANCE,
             "basis": "numerical-noise agreement across all base offsets and wall-step runs; no sampling allowance",
             "base_offset_rows": sum(len(case["offset_results"]) for case in cases),
             "sensitivity_runs": sum(len(case["sensitivity"]) for case in cases),
             "sensitivity_offset_rows": len(records),
-            "maximum_absolute_difference_percent": abs(largest["comparison"]["difference_percent"]),
+            "diagnostic_resolution_percent": 10**-DIAGNOSTIC_DECIMALS,
+            "maximum_difference_tie_rule": "first row in declared case, wall-step and offset order after diagnostic quantisation",
+            "maximum_absolute_difference_percent": round(abs(largest["comparison"]["difference_percent"]),
+                                                         DIAGNOSTIC_DECIMALS),
             "maximum_difference_row": {key: largest[key] for key in ("case_id", "wall_step", "offset_m")},
             "governing_critical_sections": sorted({row["comparison"]["governing_critical_section"] for row in records}),
             "not_established_rows": [{key: row[key] for key in ("case_id", "wall_step", "offset_m", "comparison")}
@@ -321,6 +345,10 @@ def build_results():
             "sensitivity_basis": "generic nominal wall steps (assumed), not a vendor catalogue",
             "sensitivity_metrics": "rank-1 candidate envelope over all offsets: maximum top tension/utilisation, minimum radius; percentages use six-significant-figure metric values",
             "comparator_criterion": "relative difference <= 1e-6 before output rounding",
+            "diagnostic_serialization": {
+                "difference_resolution_percent": 10**-DIAGNOSTIC_DECIMALS,
+                "geometry_resolution_m": 10**-DIAGNOSTIC_DECIMALS,
+                "basis": "nearest resolution for diagnostic differences, closure values/margins and shape coordinates; statuses use unrounded values"},
             "stress_comparator_evidence": stress_evidence(cases),
             "cases": cases}
 
@@ -333,7 +361,7 @@ def build_outputs():
     spec = importlib.util.spec_from_file_location("worked_report", HERE / "worked_configuration_report.py")
     report = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(report)
-    data = build_results()
+    data = diagnostic_values(build_results())
     outputs = {INPUTS / f"{case['case_id']}.yml": input_yaml(case["case_id"], case["inputs"])
                for case in data["cases"]}
     outputs[OUTPUT / "scr-slwr-results.json"] = json.dumps(round_values(data), indent=2, sort_keys=True, allow_nan=False) + "\n"

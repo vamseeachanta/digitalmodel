@@ -342,3 +342,117 @@ def test_report_and_svg_contract():
     data = json.loads((OUTPUT / "scr-slwr-results.json").read_text())
     assert "runtime_s" not in json.dumps(data)
     assert data["criteria_revision"] == "worked-config-1"
+
+
+@pytest.mark.parametrize("direction", [-math.inf, math.inf])
+def test_artifacts_ignore_one_ulp_comparator_noise(builder, results, monkeypatch, direction):
+    """Exercise both serialized outputs and diagnostic row selection."""
+    data = deepcopy(results)
+    monkeypatch.setattr(builder, "build_results", lambda: data)
+    expected = builder.build_outputs()
+
+    def perturb(value):
+        if isinstance(value, dict):
+            if {"comparator_value", "screen_value", "difference_percent"} <= value.keys():
+                value["screen_value"] = math.nextafter(value["screen_value"], direction)
+                value["difference_percent"] = 100 * (
+                    value["screen_value"] - value["comparator_value"]) / value["comparator_value"]
+            for item in value.values():
+                perturb(item)
+        elif isinstance(value, list):
+            for item in value:
+                perturb(item)
+
+    perturb(data["cases"])
+    data["stress_comparator_evidence"] = builder.stress_evidence(data["cases"])
+    assert builder.build_outputs() == expected
+
+
+def test_diagnostic_maximum_uses_quantised_ties(builder, results):
+    cases = deepcopy(results["cases"])
+    records = [row for case in cases for step in case["sensitivity"]
+               for row in step["stress_comparisons"]]
+    for row in records:
+        row["comparison"]["difference_percent"] = 0.0
+    records[0]["comparison"]["difference_percent"] = 1e-14
+    records[-1]["comparison"]["difference_percent"] = -2e-14
+    evidence = builder.stress_evidence(cases)
+    assert evidence["maximum_absolute_difference_percent"] == 0.0
+    assert evidence["maximum_difference_row"] == {
+        "case_id": CASES[0], "wall_step": "thinner", "offset_m": -50.0}
+    records[-1]["comparison"]["difference_percent"] = -.01234567
+    evidence = builder.stress_evidence(cases)
+    assert evidence["maximum_absolute_difference_percent"] == .01234567
+    assert evidence["maximum_difference_row"]["case_id"] == CASES[-1]
+
+
+@pytest.mark.parametrize("stress", [False, True])
+def test_raw_acceptance_survives_diagnostic_rounding(builder, results, stress):
+    case = results["cases"][0]
+    row = dict(case["offset_results"][0])
+    reference = row["comparators"]["static_von_mises_utilisation"]["comparator_value"] if stress else 1.0
+    boundary = reference * (1 + STRESS_RELATIVE_TOLERANCE)
+    comparisons = []
+    for actual in (math.nextafter(boundary, 0.0), math.nextafter(boundary, math.inf)):
+        if stress:
+            row["static_von_mises_utilisation"] = actual
+            comp = builder.stress_comparison(case["inputs"], case["configuration"], row)
+        else:
+            comp = builder.comparison(reference, actual, "boundary regression")
+        comparisons.append(comp)
+    assert [comp["status"] for comp in comparisons] == [
+        "pass", "not established" if stress else "violation"]
+    published = builder.diagnostic_values(comparisons)
+    assert [comp["difference_percent"] for comp in published] == [.0001, .0001]
+    assert [comp["status"] for comp in published] == [comp["status"] for comp in comparisons]
+
+
+def test_geometric_diagnostics_do_not_round_physical_results(builder):
+    raw = {"vertical_closure_error_m": 1e-12, "horizontal_closure_error_m": -1e-12,
+           "shape": [[0.0, -1e-12, 1.234567891234]],
+           "shape_closure": {"computed": 1e-12, "margin": 1e-6 - 1e-12,
+                             "status": "pass"},
+           "static_von_mises_utilisation": .1234567891234,
+           "minimum_bend_radius_m": 1.234567891234}
+    published = builder.diagnostic_values(raw)
+    assert published["vertical_closure_error_m"] == 0.0
+    assert published["horizontal_closure_error_m"] == 0.0
+    assert published["shape"][0][1] == 0.0
+    assert published["shape"][0][2] == 1.23456789
+    assert published["shape_closure"] == {"computed": 0.0, "margin": 1e-6, "status": "pass"}
+    for key in ("static_von_mises_utilisation", "minimum_bend_radius_m"):
+        assert published[key] == raw[key]
+    assert raw["vertical_closure_error_m"] == 1e-12
+
+
+@pytest.mark.parametrize("value,expected", [(12.3456, "12.3"), (-12.3456, "-12.3"),
+                                          (-1e-12, "0.0"), (0.0, "0.0"), (None, "not established")])
+def test_report_percentage_precision(renderer, value, expected):
+    assert renderer.percentage(value) == expected
+
+
+def test_report_comparison_columns_use_one_decimal(renderer, results):
+    case = deepcopy(results["cases"][0])
+    for row in case["offset_results"]:
+        for comp in row["comparators"].values():
+            comp["difference_percent"] = 12.3456
+    for step in case["sensitivity"]:
+        for key in step["change_percent"]:
+            step["change_percent"][key] = -12.3456
+    zero = case["offset_results"][case["zero_offset_index"]]
+    governing = case["offset_results"][case["governing_offset_index"]]
+    text = renderer.comparator_table(case, zero, governing) + renderer.sensitivity_section([case])
+    assert "| 12.3 |" in text and "| -12.3 |" in text
+    assert "12.3456" not in text
+
+
+def test_revision_history_follows_summary_and_retains_rows(renderer, results, monkeypatch):
+    original = renderer.render_report(results)
+    assert original.index("## Summary") < original.index("## Revision history") < original.index("## Scope")
+    revisions = renderer.REVISIONS
+    monkeypatch.setattr(renderer, "REVISIONS", (*revisions, ("next", "2026-11-14", "Additional issue.")))
+    reissued = renderer.render_report(results)
+    for row in revisions:
+        assert "| " + " | ".join(row) + " |" in original
+        assert "| " + " | ".join(row) + " |" in reissued
+    assert "| next | 2026-11-14 | Additional issue. |" in reissued
