@@ -52,7 +52,8 @@ class MooringSegment(BaseModel):
     segment_length: float = Field(default=5.0, gt=0, le=50, description="FE segment length (m)")
     seabed_lateral_friction: float | None = Field(
         default=None, ge=0,
-        description="Seabed lateral friction; None uses the material default (#3989)",
+        description="Seabed lateral friction; None uses the material default "
+        "(chain 1.0, wire 0.5, polyester 0.3: uncited, unqualified for design use; #3989)",
     )
 
     @model_validator(mode="after")

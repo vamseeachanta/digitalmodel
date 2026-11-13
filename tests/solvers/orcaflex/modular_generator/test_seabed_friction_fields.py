@@ -200,3 +200,31 @@ def test_fallback_route_round_trip_preserves_native_friction(single_riser, tmp_p
     upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
     assert upgraded["riser"]["line_types"][0]["seabed_lateral_friction"] == 0.9
     assert generated_mapping(upgraded, tmp_path / "after") == before
+
+
+def test_uncited_friction_defaults_are_recorded_as_unqualified():
+    """The standards document records each emitted default and its status.
+
+    Tripwire: a changed default must also change the documented record.
+    """
+    from pathlib import Path
+
+    doc = (Path(__file__).resolve().parents[4]
+           / "docs/domains/orcaflex/generator-standards.md").read_text(encoding="utf-8")
+    section = doc.split("## Uncited seabed friction defaults", 1)[1].split("\n## ", 1)[0]
+    assert "unqualified for design use" in section
+    rows = {line.split("|")[1].strip(): line.split("|")[2].strip()
+            for line in section.splitlines() if line.startswith("| `")}
+    lateral = _riser_line_type()["SeabedLateralFrictionCoefficient"]
+    assert any(k.startswith("`RiserLineType.seabed_lateral_friction`") and v == f"{lateral:g}"
+               for k, v in rows.items())
+    for seg_type, extra, label in [
+        (MooringSegmentType.CHAIN, {"grade": "R3"}, "chain"),
+        (MooringSegmentType.WIRE_ROPE, {}, "wire rope"),
+        (MooringSegmentType.POLYESTER, {}, "polyester"),
+    ]:
+        seg = MooringSegment(type=seg_type, diameter=0.08, length=100, **extra)
+        default = MooringRouter()._segment_to_linetype(seg)["properties"][
+            "SeabedLateralFrictionCoefficient"]
+        assert any(k.startswith("`MooringRouter._friction` default") and label in k
+                   and v == f"{default:.1f}" for k, v in rows.items()), label
