@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Towing analysis: approved-plan worked scenario</title>
+<style>
+body { max-width: 64rem; margin: 3rem auto; padding: 0 1rem; font: 17px/1.6 system-ui; color: #172b38; }
+code, pre { background: #f0f4f6; }
+pre { padding: 1rem; overflow: auto; }
+table { border-collapse: collapse; width: 100%; }
+th, td { text-align: left; padding: .5rem; border-bottom: 1px solid #ccd5db; }
+caption { caption-side: bottom; text-align: left; padding: .5rem 0; }
+</style>
+</head>
+<body>
+<h1>Towing analysis: worked static scenario</h1>
+<p>The implementation follows the five-step approved plan for
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/487">issue 487</a>
+and its owner audit comment: the package is <code>digitalmodel.marine_ops.towing</code>.
+It evaluates a synthetic 80 m × 24 m barge, an 80 tonnes-force tug and a 600 m wire.
+The fixture's historical name contains “500t”; its actual tug capacity is 80 tonnes-force.
+The fixture is regression input, with no measured vessel data or certified rope properties.</p>
+
+<h2>Run and inspect</h2>
+<p>With the project dependencies installed, execute from the repository root:</p>
+<pre>PYTHONPATH=src python examples/marine_ops/towing/towing_scenario.py
+PYTHONPATH=src python -m pytest tests/marine_ops/towing/ -m "not solver"</pre>
+<p>Set <code>MPLCONFIGDIR</code> to a writable temporary directory. Configure
+<code>LLM_WIKI_PATH</code> to the existing maintained wiki. The established citation
+resolver validates metadata at calculation time; missing or mismatched references
+raise <code>CitationResolutionError</code>. Tests provide explicitly synthetic
+metadata to exercise that behavior without distributing licensed standards text.</p>
+<p><code>run_scenario(environment="storm")</code> evaluates the storm input;
+<code>run_scenario(diameter_scale=0.8)</code> reduces diameter by 20% and scales
+weight and breaking load by 0.8², under the same-construction assumption.
+The fixed scenario verdict is retained independently of the optimizer's result.</p>
+
+<table>
+<thead><tr><th>Benign fixture quantity</th><th>Value</th><th>Criterion</th></tr></thead>
+<tbody>
+<tr><td>Required pull (kN)</td><td>80.877</td><td>Below available 784.532 kN</td></tr>
+<tr><td>Static support tension (kN)</td><td>86.262</td><td>MBL/static tension ≥ 1.67</td></tr>
+<tr><td>Amplified tension (kN)</td><td>112.140</td><td>430 kN MBL ≥ 3 × amplified tension</td></tr>
+<tr><td>Sag below level supports (m)</td><td>53.847</td><td>At least 10 m clearance in 100 m available depth</td></tr>
+<tr><td>Original strength verdict</td><td>PASS</td><td>93.579 kN positive breaking-load margin</td></tr>
+<tr><td>20% diameter reduction</td><td>FAIL</td><td>275.200 kN MBL is below the recomputed dynamic requirement</td></tr>
+<tr><td>Feasible grid candidates</td><td>27 of 36</td><td>All supplied constraints met</td></tr>
+</tbody>
+<caption>Table 1. Synthetic fixture results under the approved plan's criteria.</caption>
+</table>
+
+<h2>Interfaces and mechanics</h2>
+<ul>
+<li><code>solve_catenary(span_m, length_m, weight_n_m, elevation_m)</code>
+uses keyword arguments for a freely suspended, inextensible line. The output
+contains horizontal and maximum support tension, maximum sag below the support
+chord, scope (arc length / horizontal span), and coordinates.</li>
+<li><code>catenary_from_pull(...)</code> uses prescribed horizontal load and line
+length at level supports. Span is an output, since fixed span, length and pull
+would overconstrain equilibrium. H = w a, span = 2 a asinh(L / 2 a), and support
+tension = sqrt(H² + (w L / 2)²).</li>
+<li><code>compute_drift_force(vessel, current_profile, wind_profile)</code>
+accepts a signed uniform speed or a callable of height above bed. A callable
+requires water depth exceeding draft; midpoint quadrature integrates signed
+u|u| over occupied draft. The river-current package's power-law functions can
+be passed directly through a callable. No RiverCurrentProfile class exists.</li>
+<li>The existing <code>OCIMFLoading</code> approximate wind/current formulas are
+reused. Wind coefficient triples (Cx, Cy, Cmz) can be supplied explicitly with
+reference areas, using their tabulated signs. The existing approximation's
+cardinal-angle current artefacts are removed. The code does not retrieve or
+interpolate a licensed coefficient database.</li>
+<li><code>BollardPullCheck(tug_capacity, env_loads).check()</code> compares supplied
+capacity (N), multiplied by efficiency, with vector resultant demand multiplied
+by reserve factor. Its margin is available minus required force (N). The
+existing tug package remains the authority for optional power-to-pull estimates.</li>
+<li><code>optimize_configuration(...)</code> exhaustively enumerates included
+bridle angle, length and diameter. Weight and MBL scale with diameter squared
+for the same construction. It minimizes amplified main-line tension, then
+symmetric leg tension. A leg carries T / (2 cos(angle/2)); fitting reaction is
+2 T_leg sin(deflection/2). Clearance, scope, strength, fitting capacity and angle
+bounds filter the grid. Invalid or infeasible grids raise ValueError.</li>
+<li>Strength, fairlead and angle checks return <code>Result(passed, reason,
+margin, citations)</code>. Strength and reaction margins are N; angle margin is
+degrees. Geometry margins in the example are metres (clearance) and dimensionless
+(scope). Supplied geometric limits and fitting capacities are project inputs.</li>
+</ul>
+
+<h2>Qualification and limitations</h2>
+<p>The approved plan explicitly prescribes factors 3.0 dynamic and 1.67 static.
+Those factors are preserved. Citation metadata binds the available
+DNVGL-ST-N001 2016-06 reference, section 11. The implementation does not establish
+that those two factors alone constitute compliance with that edition, or
+with the <a href="https://www.dnv.com/energy/standards-guidelines/dnv-st-n001-marine-operations-and-marine-warranty/">current DNV-ST-N001 edition</a>.
+A PASS means the named checks meet the supplied criteria; it is not a
+marine-warranty certificate or a control/stability verdict.</p>
+<p>Dynamic tension is static tension multiplied by an explicit 1.3 example
+factor. No time-domain tug-barge interaction is solved. Line elasticity,
+seabed/water contact, buoyancy, wave loading, yaw control, girting, tug
+self-resistance and thrust degradation at speed are not established by this
+model. The line uses the plan's air-weight assumption even when its predicted
+shape would enter water. Operational acceptance requires appropriate line
+properties, vessel coefficients, dynamic response and the governing standard
+assessment.</p>
+<p>The independent OCIMF regression uses only the 90° coefficient row from
+<a href="https://www.ocimf.org/document-libary/58-static-towing-assembly-guidelines-2020/file">Static Towing Assembly Guidelines (2020)</a>, MARIN report 31746-1-PO,
+Table 5, report page 29. Synthetic geometry and wind speed yield hand-calculated
+loads; computed components meet the plan's 5% tolerance. This establishes the
+coefficient-to-load arithmetic, not the applicability of VLCC coefficients to a
+barge. The catenary analytic case meets the separate 0.5% tolerance.</p>
+<p>Unit tests cover both safety factors, the diameter reduction, storm pull
+failure, each optimizer constraint, invalid inputs and missing citations.
+The fixture is explicitly included in installed package data.</p>
+</body>
+</html>

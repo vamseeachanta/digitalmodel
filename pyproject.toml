@@ -336,6 +336,7 @@ digitalmodel = [
     # (system/controlDict, 0.orig/U, ...), so they are listed by directory.
     "solvers/openfoam/templates/**/*",
 ]
+"digitalmodel.marine_ops.towing" = ["fixtures/*.yml"]
 
 [tool.ruff]
 line-length = 88
