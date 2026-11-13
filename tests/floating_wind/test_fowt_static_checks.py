@@ -360,6 +360,12 @@ def test_run_package_rerun_keeps_saved_results(tmp_path):
         module.main(["x", str(tmp_path)])
     assert saved.read_bytes() == b"solver results"
     assert (tmp_path / "LC0_statics" / "model" / "master.yml").read_bytes() == first
+    saved.unlink()
+    flexible = tmp_path / "LC0_flexible_statics" / "model" / "LC0_flexible_statics.sim"
+    flexible.write_bytes(b"flexible results")
+    with pytest.raises(FileExistsError, match="LC0_flexible_statics.sim"):
+        module.main(["x", str(tmp_path)])
+    assert flexible.read_bytes() == b"flexible results"
 
 
 def test_case_folder_refuses_unrecorded_or_edited_content(tmp_path):

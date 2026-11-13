@@ -264,13 +264,12 @@ def main(argv: list[str]) -> int:
                       "objects_sha256": digest})
     spec, text = flexible_case(basis, data)
     folder = out / "LC0_flexible_statics"
-    if folder.exists():
-        shutil.rmtree(folder)
-    folder.mkdir(parents=True)
+    prepare_case_folder(folder)  # never deletes files the writer did not produce
     (folder / "spec.yml").write_text(yaml.safe_dump(spec, sort_keys=False, width=100),
                                      encoding="utf-8", newline="\n")
     ModularModelGenerator(folder / "spec.yml").generate(folder / "model")
     (folder / "run.md").write_text(text, encoding="utf-8", newline="\n")
+    record_case_folder(folder)
     digest = hashlib.sha256((folder / "model" / "includes" / "20_generic_objects.yml")
                             .read_bytes()).hexdigest()
     index.append({"case": "LC0_flexible_statics", "needs_wamit_import": False,
