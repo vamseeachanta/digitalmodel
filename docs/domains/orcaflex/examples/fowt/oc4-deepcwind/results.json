@@ -153,7 +153,7 @@
    "unit": "N",
    "computed": -1886852.1652528716,
    "comparator": -1839000.0,
-   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 27",
+   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 28",
    "tolerance": 0.03,
    "deviation": 0.02602075326420423,
    "within_tolerance": true
@@ -163,7 +163,7 @@
    "unit": "N/m",
    "computed": 70133.69203846087,
    "comparator": 70800.0,
-   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 27",
+   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 28",
    "tolerance": 0.03,
    "deviation": -0.009411129400270233,
    "within_tolerance": true
@@ -173,7 +173,7 @@
    "unit": "N/m",
    "computed": 19080.207577033434,
    "comparator": 19100.0,
-   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 27",
+   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 28",
    "tolerance": 0.03,
    "deviation": -0.0010362525113385306,
    "within_tolerance": true
@@ -183,7 +183,7 @@
    "unit": "N m/rad",
    "computed": 86707111.72241724,
    "comparator": 87300000.0,
-   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 27",
+   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 28",
    "tolerance": 0.03,
    "deviation": -0.006791389204842665,
    "within_tolerance": true
@@ -193,7 +193,7 @@
    "unit": "N m/rad",
    "computed": 116083652.59374808,
    "comparator": 117000000.0,
-   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 27",
+   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 28",
    "tolerance": 0.03,
    "deviation": -0.007832029113264293,
    "within_tolerance": true
@@ -203,7 +203,7 @@
    "unit": "N/rad",
    "computed": -105024.75943241734,
    "comparator": -108000.0,
-   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 27",
+   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 28",
    "tolerance": 0.05,
    "deviation": -0.02754852377391351,
    "within_tolerance": true

@@ -32,7 +32,11 @@ OC4_DESIGN: dict[str, Any] = {
         "ElastoDyn tower, nacelle and rotor. WAMIT 22, 44, 24 completed by three-fold "
         "symmetry. Radiation matrices are held as in the source; the generator emits the "
         "upper triangle mirrored (WAMIT importer symmetry policy). Mooring axial drag and axial added mass are not published and are set "
-        "to zero; no minimum breaking load is published."
+        "to zero; no minimum breaking load is published. Departures from Table 5-1: the "
+        "seabed drag coefficient 1.0 is not modelled (seabed lateral friction 0) and the 2 % "
+        "stiffness-proportional structural damping is not modelled (no line damping); "
+        "natural periods are unaffected, decay damping is. Line-type Poisson ratio 0.5 is "
+        "an assumption, not a published value."
     ),
 }
 
