@@ -91,7 +91,7 @@ def summary(rows):
 def main():
     document = reproduction_document()
     target = APP / "reproduction.json"
-    target.write_text(json.dumps(document, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    target.write_text(json.dumps(document, indent=2, allow_nan=False) + "\n", encoding="utf-8", newline="\n")
     assert json.loads(target.read_text(encoding="utf-8")) == document
     readme = APP / "README.md"
     text = readme.read_text(encoding="utf-8")
@@ -101,7 +101,7 @@ def main():
              "\n\nTable 1. Measured Python/JavaScript reproduction differences for the ten examples.\n\n" +
              summary(document["examples"]))
     rendered = before + "<!-- reproduction:start -->\n\n" + table + "\n\n<!-- reproduction:end -->" + after
-    readme.write_text(rendered, encoding="utf-8")
+    readme.write_text(rendered, encoding="utf-8", newline="\n")
     assert readme.read_text(encoding="utf-8") == rendered
     print(table)
 

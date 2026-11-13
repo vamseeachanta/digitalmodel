@@ -78,7 +78,7 @@
     "visualization/plotly_gallery.py": "c0f6016c73864c929ea7f94593db44f1db49d2a4f33c671cef5410ef51d92570",
     "visualization/rod_pump_schematic.py": "ec5f8d52e0d742a7ce190fa5d72e49ea4340e695ca68619e6bb53224a55f0dd0",
     "visualization/svg_primitives.py": "2518984e341b4cc77a5856d247b6475bb445b7b7a183cd36c69f3e4e6d70f4ae",
-    "worked_examples.py": "4fdd127e047440c316efb2fd80733127ea0349000707014fbd9975dddfa554ce"
+    "worked_examples.py": "652478d186a2e7fea0ea7cfdccbe7b0fc0dc6a7d864915260b4f16d192c53ef2"
   },
   "examples": [
     {
