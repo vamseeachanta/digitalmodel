@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """IEA 15 MW / VolturnUS-S spec for the OrcaFlex modular generator.
 
 Builds a ``ProjectInputSpec`` dictionary of model type ``fowt`` from the two
@@ -15,6 +18,10 @@ Conventions and simplifications, all stated in the returned ``source_note``:
   22, 44 and 24 are completed from the hull's three-fold symmetry
   (A22=A11, A44=A55, A24=-A15). The zero- and infinite-frequency matrices
   held in full show these relations to 0.1 % (tested).
+* The spec holds the source radiation matrices unchanged. The generator's
+  fowt router emits them with the upper triangle mirrored into the lower
+  triangle, the OrcaFlex WAMIT importer's symmetry policy, after a 1 %
+  reciprocal-pair tolerance check.
 * OrcaFlex other-damping is diagonal; the HydroDyn surge-pitch coupling
   entries of ``AddBQuad`` are not represented.
 * Seabed contact stiffness and line hydrodynamic settings that are model
@@ -103,9 +110,16 @@ IEA15_DESIGN: dict[str, Any] = {
         "basis.yml and generator_data.yml (IEA-15-240-RWT at {commit}; Allen et al. 2020 "
         "NREL/TP-5000-76773). Hull mass properties are whole-system values (rigid "
         "representation). WAMIT 22, 44, 24 completed by three-fold symmetry; AddBQuad "
-        "off-diagonals dropped (OrcaFlex other damping is diagonal). Mooring Cd 2.0/0.4 and "
+        "off-diagonals dropped (OrcaFlex other damping is diagonal). Radiation matrices are "
+        "held as in the source; the generator emits the upper triangle mirrored (WAMIT "
+        "importer symmetry policy). Mooring Cd 2.0/0.4 and "
         "Ca 0.82/0.27 from the MoorDyn input LINE TYPES at the same revision. "
-        "Nominal chain diameter {nominal} m is not used for hydrodynamics."
+        "Nominal chain diameter {nominal} m is not used for hydrodynamics. "
+        "Basis readiness {readiness}; use for analysis {use_for_analysis}. "
+        "System inertia assumes the RNA tensor is about tower top with CG tensor F-P. "
+        "Retaining F24:K24 as trusted endpoint is an additional assumption; L24:Q24 "
+        "remains the independent published comparator. The tensor-reference "
+        "discrepancy remains unresolved."
     ),
 }
 
@@ -172,7 +186,8 @@ def build_spec(basis: dict, data: dict, *, thrust_kN: float | None = None,
                                                    _v(mooring["anchors"])))
         ],
         "source_note": design["source_note"].format(
-            commit=data["reference_commit"][:7], nominal=nominal),
+            commit=data["reference_commit"][:7], nominal=nominal,
+            **basis.get("qualification", {})),
     }
     if thrust_kN is not None:
         fowt["rotor_thrust"] = {
@@ -225,6 +240,13 @@ def _sea_state(hs: float, tp: float, gamma: float, direction: float = 0.0) -> di
     }
 
 
+# Load cases whose run needs the licensed WAMIT import. The generated vessel
+# type carries no load RAOs, so first-order wave loading stays off in the
+# generated model (the schema rejects it without RAOs); run.md switches it on
+# after the import supplies them.
+WAVE_CASES = ("LC4_operating", "LC5_parked_extreme")
+
+
 def load_case_specs(basis: dict, data: dict, equilibrium: dict) -> dict[str, dict]:
     """Load-case matrix for the licensed runs.
 
@@ -260,13 +282,11 @@ def load_case_specs(basis: dict, data: dict, equilibrium: dict) -> dict[str, dic
     operating["environment"].update(_sea_state(
         _v(op["significant_wave_height"]), _v(op["peak_period"]), _v(op["jonswap_gamma"])))
     operating["environment"]["wind"] = {"speed": op_wind, "direction": 0.0}
-    operating["fowt"]["hull"]["include_wave_load_first_order"] = True
     cases["LC4_operating"] = operating
     parked = build_spec(basis, data, name="LC5_parked_extreme", stages=[100, 3600])
     parked["environment"].update(_sea_state(
         _v(ext["significant_wave_height"]), _v(ext["peak_period"]), _v(ext["jonswap_gamma"])))
     parked["environment"]["wind"] = {"speed": _v(ext["wind_speed"]), "direction": 0.0}
-    parked["fowt"]["hull"]["include_wave_load_first_order"] = True
     cases["LC5_parked_extreme"] = parked
     return cases
 

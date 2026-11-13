@@ -40,7 +40,11 @@ source. No figure is digitised and no source document is redistributed.
      displaced volume and mooring azimuths;
    - `5MW_OC4Semi_Linear/5MW_OC4Semi_Linear.1.lin`: the OpenFAST linearisation.
      The extraction takes its state-matrix eigenvalues as comparator natural
-     periods.
+     periods. The six periods and six damping ratios are serialised at nine
+     significant figures, because eigensolver round-off differs between
+     numerical environments (about 3e-12 relative was observed); this is a
+     serialization convention, not an accuracy statement. The system mass is
+     summed with `math.fsum`, which gives the same bits on Python 3.11 and 3.12.
 
 ## Notes
 

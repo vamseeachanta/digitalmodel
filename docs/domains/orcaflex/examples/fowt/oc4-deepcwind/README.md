@@ -52,7 +52,7 @@ and trims −0.07°, and each fairlead carries 1,098 kN.
 
 | Mode | This model, added mass at the mode's frequency | This model, infinite-frequency added mass | OpenFAST linearisation | Phase II paper (text) |
 |---|---|---|---|---|
-| Surge | 113.7 s (+6.4 %) | 107.9 s (+0.9 %) | 106.9 s | 0.01 Hz (100 s) |
+| Surge | 113.7 s (+6.4 %) | 107.9 s (+1.0 %) | 106.9 s | 0.01 Hz (100 s) |
 | Heave | 17.28 s (−0.03 %) | 17.20 s (−0.5 %) | 17.28 s | 0.058 Hz (17.2 s) |
 | Pitch | 25.43 s (−0.05 %) | 25.28 s (−0.7 %) | 25.45 s | 0.04 Hz (25 s) |
 | Yaw | 79.8 s (−0.5 %) | 76.4 s (−4.8 %) | 80.2 s | not quoted |
@@ -62,15 +62,15 @@ OpenFAST linearisation. The tolerances are 10 % for surge and yaw and 5 % for
 heave and pitch; all values in the first column lie within them.
 
 Heave, pitch and yaw agree with the OpenFAST linearisation to within 0.6 %.
-Surge differs by 6.4 %, because the two models represent surge added mass
-differently. The added mass at the surge frequency is 8,740 t in WAMIT, close
-to its zero-frequency value. The OpenFAST model's effective surge added mass is
-near the infinite-frequency value of 6,487 t, which indicates that its
-state-space radiation model does not recover the low-frequency added mass. With
-the infinite-frequency matrix, this model's surge period moves to within 0.9 %
-of OpenFAST. The heave, pitch and yaw periods then move further away, so the
-frequency-dependent result is kept as primary. Which surge period a time-domain
-OrcaFlex decay test reproduces is not established without a licensed run.
+Surge differs by 6.4 %; the cause of this discrepancy remains unexplained.
+Substituting the infinite-frequency added-mass matrix changes this model's
+surge period from 113.7 s to 107.9 s, a 1.0 % difference from the OpenFAST
+linearisation. This sensitivity check does not establish how the source
+state-space radiation model contributes to its surge period or explain the
+original difference. The heave, pitch and yaw periods move further away with
+the substitution, so the frequency-dependent result is kept as primary.
+Which surge period a time-domain OrcaFlex decay test reproduces is not
+established without a licensed run.
 
 The paper quotes surge, heave and pitch frequencies to one or two significant
 figures. The computed frequencies lie inside the rounding band of each quoted
@@ -91,7 +91,9 @@ Five packages, one per case, each holding `spec.yml`, the generated model
 (`model/master.yml`) and a `run.md` with the exact settings and the expected
 values with tolerances. The OC4 basis carries no rotor thrust and no sea state,
 so only still-water cases are prepared.
-`scripts/fowt/write_oc4_run_packages.py <output_dir>` regenerates them.
+`scripts/fowt/write_oc4_run_packages.py <output_dir>` regenerates them. Regeneration replaces a package only when every file in it is one
+the script wrote, unchanged; a folder holding anything else, such as saved
+solver results, is refused and left as it is.
 
 | Package | Expected comparator |
 |---|---|

@@ -8,7 +8,9 @@ report values that basis records.
 """
 from __future__ import annotations
 
+import copy
 import importlib.util
+import math
 import os
 from pathlib import Path
 
@@ -55,6 +57,13 @@ def test_source_digests_recorded(data):
     digests = data["source_sha256"]
     assert len(digests) == 4
     assert all(len(v) == 64 for v in digests.values())
+
+
+@pytest.mark.parametrize("key", ["rotor_center_of_mass_from_tower_top",
+                                 "rna_component_centre_discrepancy"])
+def test_derived_centres_have_twelve_decimal_place_precision(data, key):
+    """Derived geometry uses a fixed precision for byte reproduction."""
+    assert all(value == round(value, 12) for value in data["turbine"][key]["value"])
 
 
 def test_rotor_plus_nacelle_equals_rna_and_basis(data, basis):
@@ -152,20 +161,102 @@ def test_quadratic_damping_symmetric(data):
 
 def test_radiation_rows_cover_natural_frequencies(data):
     rows = data["hydrodynamics"]["radiation_by_period_nondimensional"]["value"]
+    columns = data["hydrodynamics"]["radiation_by_period_nondimensional"]["columns"]
+    assert columns == ["period s", "A11", "A33", "A55", "A15", "A66",
+                       "B11", "B33", "B55", "B15", "B66"]
+    assert len(rows) == 100
+    assert all(len(row) == len(columns) for row in rows)
+    assert all(math.isfinite(value) for row in rows for value in row)
     periods = [r[0] for r in rows]
+    assert len(set(periods)) == 100
+    # Source .1 rows at the first, middle and last periods, in exported column order.
+    expected = {
+        0: [1.256637, 9231.548, 24148.55, 11326590.0, -98121.86, 19268110.0,
+            13.99775, 0.00157575, -11.74371, 21.6608, 22459.44],
+        49: [2.463995, 8691.975, 23991.02, 11252500.0, -95514.23, 17933450.0,
+             325.9279, 0.03290099, 953.9129, -551.9385, 752555.2],
+        99: [125.6637, 12346.81, 26529.58, 12165730.0, -117375.5, 25324850.0,
+             0.8817627, 240.8925, 7.673256, 2.615074, 0.02889738],
+    }
+    for index, values in expected.items():
+        assert rows[index] == pytest.approx(values, rel=1e-12)
     assert periods == sorted(periods)
     # Published heave and pitch periods (about 20 s and 28 s) lie inside the table.
     assert periods[0] < 20.0 and periods[-1] > 28.0
     assert all(r[2] > 0 and r[3] > 0 for r in rows)
 
 
-@pytest.mark.skipif(not os.environ.get("DIGITALMODEL_IEA15_RAW"),
-                    reason="raw reference files not present; set DIGITALMODEL_IEA15_RAW")
-def test_extraction_reproduces_committed_file(tmp_path):
+@pytest.mark.parametrize("corruption", ["missing_periods", "nan_damping", "short_row",
+                                        "infinite_mass", "source_value", "duplicate_period"])
+def test_radiation_validation_rejects_corruption(data, corruption):
+    damaged = copy.deepcopy(data)
+    rows = damaged["hydrodynamics"]["radiation_by_period_nondimensional"]["value"]
+    if corruption == "missing_periods":
+        rows[:] = [rows[0], rows[-1]]
+    elif corruption == "nan_damping":
+        for row in rows:
+            row[6:] = [float("nan")] * 5
+    elif corruption == "short_row":
+        rows[10].pop()
+    elif corruption == "infinite_mass":
+        rows[10][1] = float("inf")
+    elif corruption == "source_value":
+        rows[49][8] *= 2.0
+    elif corruption == "duplicate_period":
+        rows[10][0] = rows[9][0]
+    with pytest.raises(AssertionError):
+        test_radiation_rows_cover_natural_frequencies(damaged)
+
+
+def test_finite_frequency_export_declares_diagnostic_subset(data):
+    radiation = data["hydrodynamics"]["radiation_by_period_nondimensional"]
+    assert radiation["coverage"] == "diagnostic subset"
+    assert "omitted entries must not be treated as zero" in radiation["limitations"]
+    assert "18" in radiation["limitations"]
+
+
+@pytest.fixture(scope="module")
+def extractor():
     script = ROOT / "scripts" / "fowt" / "extract_iea15_generator_data.py"
     spec = importlib.util.spec_from_file_location("extract_iea15", script)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    return module
+
+
+@pytest.mark.parametrize("key", ["tabular", "wamit1", "hst", "hydrodyn"])
+def test_extraction_rejects_altered_input_before_parsing(tmp_path, monkeypatch, extractor,
+                                                       data, key):
+    altered = tmp_path / Path(extractor.FILES[key]).name
+    altered.write_bytes(b"altered source bytes")
+    real_sha256 = extractor.sha256
+
+    def input_digest(path):
+        if path == altered:
+            return real_sha256(path)
+        rel = next(rel for rel in extractor.FILES.values() if Path(rel).name == path.name)
+        return data["source_sha256"][rel]
+
+    def unexpected_parse(path):
+        pytest.fail("source parsing started before digest verification completed")
+
+    monkeypatch.setattr(extractor, "sha256", input_digest)
+    monkeypatch.setattr(extractor, "read_tabular", unexpected_parse)
+    with pytest.raises(ValueError, match="source digest mismatch") as error:
+        extractor.build(tmp_path)
+    assert Path(extractor.FILES[key]).name in str(error.value)
+    assert str(tmp_path) not in str(error.value)
+
+
+def test_extractor_pins_match_recorded_digests(extractor, data):
+    assert extractor.COMMIT == data["reference_commit"] == COMMIT
+    assert {extractor.FILES[key]: digest for key, digest in
+            extractor.EXPECTED_SHA256.items()} == data["source_sha256"]
+
+
+@pytest.mark.skipif(not os.environ.get("DIGITALMODEL_IEA15_RAW"),
+                    reason="raw reference files not present; set DIGITALMODEL_IEA15_RAW")
+def test_extraction_reproduces_committed_file(tmp_path, extractor):
     out = tmp_path / "generator_data.yml"
-    module.main(["x", os.environ["DIGITALMODEL_IEA15_RAW"], str(out)])
+    extractor.main(["x", os.environ["DIGITALMODEL_IEA15_RAW"], str(out)])
     assert out.read_bytes() == DATA.read_bytes()

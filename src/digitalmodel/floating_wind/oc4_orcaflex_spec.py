@@ -30,7 +30,8 @@ OC4_DESIGN: dict[str, Any] = {
         "2014 NREL/TP-5000-60601). Hull mass properties are whole-system values (rigid "
         "representation) aggregated from the report's platform with ballast and the "
         "ElastoDyn tower, nacelle and rotor. WAMIT 22, 44, 24 completed by three-fold "
-        "symmetry. Mooring axial drag and axial added mass are not published and are set "
+        "symmetry. Radiation matrices are held as in the source; the generator emits the "
+        "upper triangle mirrored (WAMIT importer symmetry policy). Mooring axial drag and axial added mass are not published and are set "
         "to zero; no minimum breaking load is published."
     ),
 }

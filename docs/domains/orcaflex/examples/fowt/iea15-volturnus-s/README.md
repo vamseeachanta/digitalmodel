@@ -6,7 +6,7 @@ turbine, carried by the UMaine VolturnUS-S semi-submersible and moored by
 three catenary chains in 200 m of water. The generated model is compared with
 the published reference values, and the comparisons that need no OrcaFlex
 licence are complete. The time-domain runs that need a licence are prepared as
-ready packages and have not been run.
+input packages; native loading and hydrodynamic import remain unverified.
 
 Issue: [#3970](https://github.com/vamseeachanta/digitalmodel/issues/3970).
 
@@ -35,6 +35,15 @@ pitch. The upwind line tension rises to 4,389 kN, 19.7 % of its 22,286 kN
 minimum breaking load. No published table gives these offsets, so they are
 compared with the repository's earlier independent analysis of the same
 platform instead (Table 5).
+
+## Revision history
+
+| Revision | Date | Change and reason |
+|---|---|---|
+| 1 | 2026-11-12 | Corrected the wave import file and readiness wording; mirrored the added-mass upper triangle and tested repeated generation to prevent invalid native inputs. |
+| 2 | 2026-11-13 | The generator, not the spec, now mirrors the upper triangle of every radiation matrix (one policy for all fowt specs); the spec holds the source values and the emitted model is unchanged. The wave-case models keep first-order wave loading off until the licensed import supplies load RAOs, and `run.md` switches it on after the import. Package regeneration refuses a folder holding files it did not write, so saved results are never deleted. |
+
+Table 1a. Revision history.
 
 ## Reference design and sources
 
@@ -195,9 +204,13 @@ Not established:
   the model. The packages below are the next step.
 - **Time-domain decay periods and damping.** They need the LC1 to LC3 runs.
 - **Wave response in LC4 and LC5.** The generated VesselType carries no load
-  RAOs. The packages import the public WAMIT `.1`, `.3` and `.hst` files in
-  OrcaFlex before running. Mean wave drift is not included, because no QTF data
-  are imported.
+  RAOs, so the generated wave-case models have first-order wave loading
+  switched off. The wave packages require a licensed import of the first-order
+  WAMIT `.out` text file, after which `run.md` switches the vessel's Wave load
+  (1st order) effect on. The numeric `.1`, `.3` and `.hst` files are
+  retained for reference. The generated `run.md` specifies the requested data,
+  property restoration and reference-origin checks. Mean wave drift is not
+  included, because no QTF data are imported.
 - **The parked extreme case as a DLC 6.1 result.** Parked-rotor, nacelle and
   tower wind drag are not represented, so LC5 gives the first-order wave
   response of the moored hull only.
@@ -213,9 +226,16 @@ Not established:
 
 Eight packages, one per case, each holding `spec.yml`, the generated model
 (`model/master.yml`) and a `run.md`. Each `run.md` gives the exact settings and
-the expected values with tolerances. LC4 and LC5 also include the public WAMIT
-files and the import step. `scripts/fowt/write_iea15_run_packages.py <output_dir>
-<wamit_dir>` regenerates them.
+the expected values with tolerances. When the source directory is supplied,
+the two wave cases also include the three numeric WAMIT files and the pinned
+first-order text output, renamed from `.out.wamit` to `.out` without changing
+its bytes. Select that `.out` file in the vessel type importer and follow
+`run.md`; native loading, import, statics and dynamics remain unverified.
+Without the source directory, these hydrodynamic inputs are still required.
+`scripts/fowt/write_iea15_run_packages.py <output_dir>
+<wamit_dir>` regenerates them. Regeneration replaces a package only when every
+file in it is one the script wrote, unchanged; a folder holding anything else,
+such as saved solver results, is refused and left as it is.
 
 | Package | Expected comparator |
 |---|---|

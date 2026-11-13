@@ -13,7 +13,6 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-import shutil
 import sys
 from pathlib import Path
 
@@ -25,6 +24,10 @@ from digitalmodel.floating_wind.fowt_static_checks import (
     natural_periods,
 )
 from digitalmodel.floating_wind.oc4_orcaflex_spec import build_oc4_spec, load_sources
+from digitalmodel.floating_wind.run_package_folder import (
+    prepare_case_folder,
+    record_case_folder,
+)
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 
 COMMIT = "dd5feaaaa500ba7283140107806300d551cff0a7"
@@ -134,14 +137,14 @@ def main(argv: list[str]) -> int:
     index = []
     for name, spec in case_specs(basis, data, x["equilibrium"]).items():
         folder = out / name
-        if folder.exists():
-            shutil.rmtree(folder)
-        folder.mkdir(parents=True)
+        # Never delete a package wholesale: saved solver results may sit in it.
+        prepare_case_folder(folder)
         (folder / "spec.yml").write_text(yaml.safe_dump(spec, sort_keys=False, width=100),
                                          encoding="utf-8", newline="\n")
         ModularModelGenerator(folder / "spec.yml").generate(folder / "model")
         (folder / "run.md").write_text(run_md(name, spec, x, basis), encoding="utf-8",
                                        newline="\n")
+        record_case_folder(folder)
         digest = hashlib.sha256((folder / "model" / "includes" / "20_generic_objects.yml")
                                 .read_bytes()).hexdigest()
         index.append({"case": name, "objects_sha256": digest})
