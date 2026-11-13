@@ -387,24 +387,24 @@ class TestPowerConsumptionWithRealData:
     """Tests using real well card data."""
 
     @pytest.fixture
-    def well_7699227(self):
-        """Load well 7699227 test data."""
-        filepath = TEST_DATA_DIR / "7699227.json"
+    def well_echo(self):
+        """Load well field well echo test data."""
+        filepath = TEST_DATA_DIR / "field_well_echo.json"
         if filepath.exists():
             return load_from_json_file(filepath)
-        pytest.skip("Test data file 7699227.json not found")
+        pytest.skip("Test data file field_well_echo.json not found")
 
     @pytest.fixture
-    def well_5206267(self):
-        """Load well 5206267 test data."""
-        filepath = TEST_DATA_DIR / "5206267.json"
+    def well_charlie(self):
+        """Load well field well charlie test data."""
+        filepath = TEST_DATA_DIR / "field_well_charlie.json"
         if filepath.exists():
             return load_from_json_file(filepath)
-        pytest.skip("Test data file 5206267.json not found")
+        pytest.skip("Test data file field_well_charlie.json not found")
 
-    def test_power_consumption_7699227(self, well_7699227):
-        """Test power consumption with well 7699227 data."""
-        result = calculate_power_consumption(well_7699227)
+    def test_power_consumption_echo(self, well_echo):
+        """Test power consumption with well field well echo data."""
+        result = calculate_power_consumption(well_echo)
 
         # Should complete without error
         assert "error" not in result.motor_design
@@ -420,9 +420,9 @@ class TestPowerConsumptionWithRealData:
         # Typical rod pump: 5-100 HP
         assert 1 < result.prime_mover_horsepower < 500
 
-    def test_power_consumption_5206267(self, well_5206267):
-        """Test power consumption with well 5206267 data."""
-        result = calculate_power_consumption(well_5206267)
+    def test_power_consumption_charlie(self, well_charlie):
+        """Test power consumption with well field well charlie data."""
+        result = calculate_power_consumption(well_charlie)
 
         # Should complete without error
         assert "error" not in result.motor_design
@@ -431,13 +431,13 @@ class TestPowerConsumptionWithRealData:
         assert result.polished_rod_horsepower >= 0
         assert result.daily_energy_consumption >= 0
 
-    def test_card_area_relationship(self, well_7699227):
+    def test_card_area_relationship(self, well_echo):
         """Test that larger card area = more power."""
-        result = calculate_power_consumption(well_7699227)
+        result = calculate_power_consumption(well_echo)
 
         # Power is proportional to card area * SPM
         # P_PR = (card_area * SPM) / 33000
-        expected_pr = (result.card_area * well_7699227.spm) / 33000
+        expected_pr = (result.card_area * well_echo.spm) / 33000
         assert abs(result.polished_rod_horsepower - expected_pr) < 0.01
 
 

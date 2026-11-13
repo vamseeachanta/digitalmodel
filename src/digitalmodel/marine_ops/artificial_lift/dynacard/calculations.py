@@ -1,5 +1,5 @@
 # ABOUTME: Core dynacard calculations: CPIP, Pump Fillage, and Theoretical Production.
-# ABOUTME: Ported from Oxy.Cipher.DynaCard with Pydantic models.
+# ABOUTME: Ported from an operator's well-management system, with Pydantic models.
 
 import numpy as np
 from typing import Optional, Tuple

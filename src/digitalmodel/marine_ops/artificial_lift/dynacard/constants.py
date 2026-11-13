@@ -98,6 +98,7 @@ WAVE_SPEED_IN_PER_S = WAVE_SPEED_FT_PER_S * FEET_TO_INCHES
 
 GIBBS_DAMPING_COEFFICIENT = 0.012
 """
+Legacy compatibility constant; unused by the coupled Gibbs solver.
 Viscous damping coefficient for Gibbs frequency-domain solver.
 Empirical value calibrated against field data for parity with
 legacy implementation. Accounts for fluid friction, rod/tubing contact,
@@ -112,6 +113,7 @@ Dimensionless in normalized form.
 
 BUOYANCY_FACTOR = 0.825
 """
+Legacy compatibility constant; unused by the coupled Gibbs solver.
 Buoyancy correction factor for rod weight in fluid.
 Represents (1 - rho_fluid/rho_steel) for typical oil/water mixtures.
 Empirical value from legacy "gold standard" implementation.
@@ -120,6 +122,7 @@ Theoretical range: 0.80-0.90 depending on fluid density.
 
 LOAD_ATTENUATION_FACTOR = 0.88
 """
+Legacy compatibility constant; unused by the coupled Gibbs solver.
 Load attenuation correction factor for frequency-domain solver.
 Compensates for energy losses not captured by simplified wave equation.
 Empirical calibration value from legacy implementation.
@@ -128,6 +131,7 @@ Applied to downhole load calculation for parity alignment.
 
 STROKE_SCALING_FACTOR = 0.96
 """
+Legacy compatibility constant; unused by the coupled Gibbs solver.
 Stroke position scaling factor for final alignment.
 Empirical "tweak" to achieve <2% stroke error versus measured data.
 Applied after inverse FFT to synchronize calculated stroke.

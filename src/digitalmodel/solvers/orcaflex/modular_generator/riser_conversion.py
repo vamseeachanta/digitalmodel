@@ -33,6 +33,8 @@ _LINE_TYPE_FIELDS = {
     "allowable_tension": "AllowableTension",
     "stress_od": "StressOD",
     "stress_id": "StressID",
+    "seabed_lateral_friction": "SeabedLateralFrictionCoefficient",
+    "seabed_axial_friction": "SeabedAxialFrictionCoefficient",
 }
 # Native list-valued line-type data: field -> (data name, cell index, width).
 # Native saves carry EI as [x, y] and Cd/Ca as [normal x, normal y, axial]; ~ in

@@ -4,11 +4,11 @@
     "Api14": "API-CLEANSED-005",
     "CalculationMethod": "Finite Difference",
     "CalculationMethodReason": null,
-    "CardTimeStamp": "2020-04-14T06:37:12",
+    "CardTimeStamp": "2017-04-10T06:37:12",
     "CardType": "Startup",
-    "CreatedTimeStamp": "2020-04-14T07:35:58.943000",
-    "ID": 7699227,
-    "UpdatedTimeStamp": "2020-04-14T08:04:44.473000",
+    "CreatedTimeStamp": "2017-04-10T07:35:58.943000",
+    "ID": 205,
+    "UpdatedTimeStamp": "2017-04-10T08:04:44.473000",
     "WellName": "Well-E"
   },
   "InputParameters": {
@@ -83,7 +83,7 @@
     "OilRate": 13,
     "WaterCut": 78.69,
     "WaterRate": 48,
-    "WellTestDate": "2020-01-03T00:00:00",
+    "WellTestDate": "2016-12-29T00:00:00",
     "WellTestRuntime": 9.119999999999997
   },
   "cardData": {
@@ -920,7 +920,7 @@
     "Pump": {
       "Depth": 2937,
       "Diameter": 1.75,
-      "InstallId": 46756
+      "InstallId": 1005
     },
     "Rods": [
       {
@@ -931,7 +931,7 @@
         "Diameter": 0.875,
         "Grade": "KD",
         "IndividualLength": 25,
-        "InstallId": 46756,
+        "InstallId": 1005,
         "K": 4,
         "M": 0.5625,
         "Manufacturer": "Generic",
@@ -957,7 +957,7 @@
         "Diameter": 1.4999999999999998,
         "Grade": "D",
         "IndividualLength": 25,
-        "InstallId": 46756,
+        "InstallId": 1005,
         "K": 4,
         "M": 0.5625,
         "Manufacturer": "API",
@@ -983,7 +983,7 @@
         "Diameter": 0.875,
         "Grade": "KD",
         "IndividualLength": 25,
-        "InstallId": 46756,
+        "InstallId": 1005,
         "K": 4,
         "M": 0.5625,
         "Manufacturer": "Generic",
@@ -1009,7 +1009,7 @@
         "Diameter": 0.7499999999999999,
         "Grade": "KD",
         "IndividualLength": 25,
-        "InstallId": 46756,
+        "InstallId": 1005,
         "K": 4,
         "M": 0.5625,
         "Manufacturer": "Generic",
@@ -1041,7 +1041,7 @@
       "GearBoxRating": 320,
       "GearBoxStressTorque": "24",
       "GearboxSheaveSize": 0,
-      "InstallId": 46756,
+      "InstallId": 1005,
       "MaxStrokeLength": 120,
       "MotorSheaveSize": 0,
       "PhaseAngle": 0,
