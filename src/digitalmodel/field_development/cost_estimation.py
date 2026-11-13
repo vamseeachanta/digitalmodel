@@ -76,25 +76,29 @@ def estimate_topsides_cost(
     Both cited inputs shall reference resolvable wiki pages using the existing
     citation resolver.
     Missing citations or unresolved/mismatched metadata raise
-    ``CitationResolutionError``; invalid numbers or units raise ``ValueError``.
+    ``CitationResolutionError``; invalid numbers, units or dates raise ``ValueError``.
 
     Weight is dry topsides mass excluding operating fluids; the supplied rate
     shall use the same dry basis. Basis correspondence is established by review,
     not checked by this method. The price base year is a required integer from
     year 1 through the calculation year (``today``, defaulting to the current
-    date). Year 1 is only Python's calendar lower limit: no historical cost
+    date). A supplied ``today`` shall be a ``date`` instance or ``None``.
+    Year 1 is only Python's calendar lower limit: no historical cost
     validity is implied. The year is a caller assertion, not checked against
     the rate citation. Cost boundaries require basis review.
     No currency conversion, escalation, allowances or complete facility CAPEX
     are calculated. Existing aggregate estimators and DCF adapters are separate.
 
-    Each numeric input is converted once using ``Decimal(str(value))``. The
-    exact product is rounded once to USD cents with half-even rounding, in an
+    Each numeric input is converted once using ``Decimal(str(value))``.
+    Nondecimal string forms, such as ``Fraction(3, 2)`` (``3/2``), are rejected.
+    The exact product is rounded once to USD cents with half-even rounding, in an
     independent decimal context. The total and retained weight are Decimal;
     cited input records are retained unchanged. Totals outside the finite float
     range or rounding to zero cents are rejected, preserving the upper output
     range of the original method.
     """
+    if today is not None and not isinstance(today, date):
+        raise ValueError("today must be a date or None")
     current_year = (date.today() if today is None else today).year
     if (
         isinstance(price_base_year, bool)

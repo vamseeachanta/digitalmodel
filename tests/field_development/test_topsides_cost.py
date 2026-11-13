@@ -5,6 +5,7 @@
 from dataclasses import asdict, replace
 from datetime import date
 from decimal import Decimal, Inexact, ROUND_UP, localcontext
+from fractions import Fraction
 from importlib import import_module
 
 import numpy as np
@@ -38,6 +39,7 @@ def inputs(tmp_path, monkeypatch):
     return {
         "weight_tonnes": 10.0,
         "price_base_year": 2024,
+        "today": date(2026, 6, 30),
         "usd_per_tonne": CitedValue(20.0, citations["rate"], "USD/tonne"),
         "complexity_factor": CitedValue(1.5, citations["complexity"], "1"),
     }
@@ -69,7 +71,7 @@ def test_price_base_year_is_retained(inputs, year):
 
 @pytest.mark.parametrize(
     "year",
-    [None, True, False, 0, -1, 9999, 10000, date.today().year + 1,
+    [None, True, False, 0, -1, 9999, 10000, 2027,
      2024.0, 2024.5, "2024",
      float("nan"), float("inf"), Decimal("2024")],
 )
@@ -90,6 +92,13 @@ def test_price_base_year_uses_calculation_date(inputs):
     assert estimate(inputs).price_base_year == 2027
 
 
+@pytest.mark.parametrize("today", ["2026-01-01", 2026, True, 2026.0, object()])
+def test_invalid_calculation_date_is_rejected(inputs, today):
+    inputs["today"] = today
+    with pytest.raises(ValueError, match="today"):
+        estimate(inputs)
+
+
 def test_price_base_year_defaults_to_current_date(inputs, monkeypatch):
     module = import_module("digitalmodel.field_development.cost_estimation")
 
@@ -99,11 +108,15 @@ def test_price_base_year_defaults_to_current_date(inputs, monkeypatch):
             return cls(2026, 12, 31)
 
     monkeypatch.setattr(module, "date", FixedDate)
+    inputs.pop("today")
     inputs["price_base_year"] = 2026
     assert estimate(inputs).price_base_year == 2026
     inputs["price_base_year"] = 2027
     with pytest.raises(ValueError, match="price_base_year"):
         estimate(inputs)
+    inputs["today"] = None
+    inputs["price_base_year"] = 2026
+    assert estimate(inputs).price_base_year == 2026
 
 
 @pytest.mark.parametrize(
@@ -198,7 +211,8 @@ def test_incompatible_units_are_rejected(inputs, name, units):
 @pytest.mark.parametrize(
     "value", [0, -1, float("nan"), float("inf"), float("-inf"), True,
               np.bool_(True), "2", Decimal("NaN"), Decimal("sNaN"),
-              Decimal("Infinity"), Decimal("-Infinity"), Decimal("0"), Decimal("-1")]
+              Decimal("Infinity"), Decimal("-Infinity"), Decimal("0"), Decimal("-1"),
+              Fraction(3, 2)]
 )
 def test_invalid_numeric_inputs_are_rejected(inputs, name, value):
     if name == "weight_tonnes":
