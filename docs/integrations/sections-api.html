@@ -16,14 +16,16 @@
   <table>
     <tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
     <tr><td>1</td><td>2026-11-13</td><td>Add dispatch and correct modulus meanings for pipeline use.</td></tr>
+    <tr><td>2</td><td>2026-11-13</td><td>Require integer point counts, normalize oversized-number errors and cite the modulus definitions.</td></tr>
   </table>
   <p>Table 1. API guide revision history.</p>
 
   <h2>Inputs</h2>
   <p><code>dimensions</code> is a mapping copied before dispatch. Lengths are finite plain
   numbers in mm; <code>mesh_size</code> is target element area in mm². Point counts
-  <code>n</code>/<code>n_r</code>, mesh defaults and optional string <code>label</code>
-  match the direct wrappers. Unit-bearing values are rejected without conversion.</p>
+  <code>n</code>/<code>n_r</code> must be integers, excluding booleans. Defaults and
+  optional string <code>label</code> match the direct wrappers. Unit-bearing values
+  are rejected without conversion.</p>
   <table>
     <tr><th>Selector</th><th>Required dimensions (mm)</th><th>Optional point count</th></tr>
     <tr><td>i_section</td><td>d, b, t_f, t_w, r</td><td>n_r</td></tr>
@@ -39,7 +41,9 @@ properties = compute_section_properties("chs", {"d": 20, "t": 2})
 payload = json.dumps(properties.to_dict())</code></pre>
   <p>Unsupported selectors raise <code>ValueError</code>. Non-mappings, missing or extra
   keys, invalid value types and non-finite numbers raise <code>TypeError</code> before
-  meshing. Physical geometry constraints and analysis errors remain with sectionproperties.</p>
+  meshing. Oversized integers that cannot be checked for finiteness also raise
+  <code>TypeError</code> identifying the parameter. Physical geometry constraints and
+  analysis errors remain with sectionproperties.</p>
 
   <h2>Outputs and independent check</h2>
   <p><code>area</code> is in mm²; <code>ixx</code>, <code>iyy</code> and <code>j</code>
@@ -49,6 +53,10 @@ payload = json.dumps(properties.to_dict())</code></pre>
   Elastic <code>sx</code>/<code>sy</code> map to <code>get_z()[0]</code>/<code>get_z()[2]</code>
   (AISC S): these are positive-fibre values, not necessarily the minimum-fibre values
   for asymmetric axes. Inertias and moduli use centroidal x/y axes, not principal axes.</p>
+  <p>The sectionproperties 3.10.2 API documents
+  <a href="https://sectionproperties.readthedocs.io/en/v3.10.2/gen/sectionproperties.analysis.section.Section.html#sectionproperties.analysis.section.Section.get_s"><code>get_s()</code> as centroidal plastic moduli</a>
+  and <a href="https://sectionproperties.readthedocs.io/en/v3.10.2/gen/sectionproperties.analysis.section.Section.html#sectionproperties.analysis.section.Section.get_z"><code>get_z()</code> as centroidal elastic moduli</a>,
+  including the elastic tuple's fibre ordering. These definitions support the mapping above.</p>
   <p>For a synthetic rectangle of width b = 20 mm and height h = 40 mm, area integrals
   give Sx = b h² / 6 = 5333.3 mm³ and Sy = h b² / 6 = 2666.7 mm³;
   first moments of the yielded halves give Zx = b h² / 4 = 8000.0 mm³ and

@@ -13,7 +13,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import asdict, dataclass
 from inspect import signature
 from math import isfinite
-from numbers import Real
+from numbers import Integral, Real
 from typing import Optional
 
 import matplotlib
@@ -74,7 +74,8 @@ def compute_section_properties(
     """Dispatch explicit shape selectors with millimetre-based plain numbers.
 
     Dimensions and options match the selected compute_* wrapper. Mesh size is
-    an area in mm^2; n/n_r are point counts. The input mapping is copied.
+    an area in mm^2; n/n_r must be integers, excluding booleans.
+    The input mapping is copied.
     Unit-bearing values are unsupported. Elastic sx/sy use positive fibres,
     which need not govern for asymmetric sections. See the sections API guide.
 
@@ -97,12 +98,21 @@ def compute_section_properties(
         if name == "label":
             if value is not None and not isinstance(value, str):
                 raise TypeError("label must be a string or None")
-        elif (isinstance(value, bool) or hasattr(value, "units")
-              or not isinstance(value, Real) or not isfinite(value)):
-            raise TypeError(
-                f"{name} must be a finite plain number (mm; mesh_size in mm^2); "
-                "unit-bearing values are unsupported"
-            )
+        elif name in {"n", "n_r"} and not isinstance(value, Integral):
+            raise TypeError(f"{name} must be an integer point count")
+        else:
+            try:
+                valid_number = (
+                    not isinstance(value, bool) and not hasattr(value, "units")
+                    and isinstance(value, Real) and isfinite(value)
+                )
+            except OverflowError:
+                valid_number = False
+            if not valid_number:
+                raise TypeError(
+                    f"{name} must be a finite plain number (mm; mesh_size in mm^2); "
+                    "unit-bearing values are unsupported"
+                )
     return wrapper(**arguments)
 
 

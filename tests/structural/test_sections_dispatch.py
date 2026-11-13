@@ -126,11 +126,33 @@ class UnitBearingFloat(float):
     ("d", "20"), ("d", UnitBearingFloat(20)), ("t", True),
     ("mesh_size", UnitBearingFloat(20)), ("n", "64"), ("label", 20),
     ("d", float("nan")), ("d", float("inf")),
+    ("d", 10**400), ("d", -(10**400)), ("mesh_size", 10**400),
 ])
 def test_invalid_values_raise_before_analysis(no_analysis, key, value):
     dimensions = {"d": 20, "t": 2, key: value}
     with pytest.raises(TypeError, match=key):
         sections.compute_section_properties("chs", dimensions)
+    no_analysis.assert_not_called()
+
+
+@pytest.mark.parametrize("section_type,dimensions", SHAPES)
+@pytest.mark.parametrize("value", [4.5, 4.0, True, UnitBearingFloat(4)])
+def test_point_counts_require_integers_before_dispatch(
+    monkeypatch, no_analysis, section_type, dimensions, value
+):
+    """All selectors reject non-integer counts before geometry construction."""
+    key = "n" if section_type == "chs" else "n_r"
+    supplied = dict(dimensions, **{key: value})
+    builders = {
+        "i_section": "i_section", "chs": "circular_hollow_section",
+        "rhs": "rectangular_hollow_section", "angle": "angle_section",
+        "channel": "channel_section",
+    }
+    geometry = Mock(side_effect=AssertionError("geometry reached for invalid count"))
+    monkeypatch.setattr(sections, builders[section_type], geometry)
+    with pytest.raises(TypeError, match=rf"^{key} must be"):
+        sections.compute_section_properties(section_type, supplied)
+    geometry.assert_not_called()
     no_analysis.assert_not_called()
 
 
