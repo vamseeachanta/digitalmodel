@@ -40,8 +40,10 @@ def cli():
 @click.option('--tp', type=float, required=True, help='Peak period (s)')
 @click.option('--gamma', type=float, default=3.3, help='JONSWAP gamma parameter')
 @click.option('--freq-min', type=float, default=0.02, help='Minimum frequency (rad/s)')
-@click.option('--freq-max', type=float, default=2.0, help='Maximum frequency (rad/s)')
-@click.option('--n-points', type=int, default=100, help='Number of frequency points')
+@click.option('--freq-max', type=float, default=None,
+              help='Maximum frequency (rad/s); default 15 x peak frequency')
+@click.option('--n-points', type=int, default=None,
+              help='Number of frequency points; default 200 points (100 with --freq-max)')
 @click.option('--output', '-o', type=click.Path(), help='Output CSV file')
 def spectrum_cmd(spectrum_type, hs, tp, gamma, freq_min, freq_max, n_points, output):
     """Generate wave spectrum"""

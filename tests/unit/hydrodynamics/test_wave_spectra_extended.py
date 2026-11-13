@@ -73,9 +73,9 @@ class TestJonswapExtended:
         """Shorter Tp should shift spectral peak to higher frequency."""
         ws = _ws()
         omega, S_short = ws.jonswap(hs=3.0, tp=6.0, n_points=300)
-        _, S_long = ws.jonswap(hs=3.0, tp=14.0, n_points=300)
+        omega_long, S_long = ws.jonswap(hs=3.0, tp=14.0, n_points=300)
         peak_omega_short = omega[np.argmax(S_short)]
-        peak_omega_long = omega[np.argmax(S_long)]
+        peak_omega_long = omega_long[np.argmax(S_long)]
         assert peak_omega_short > peak_omega_long
 
     def test_gamma_one_equivalent_to_pm_energy(self):

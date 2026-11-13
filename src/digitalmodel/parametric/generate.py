@@ -225,10 +225,14 @@ def _spectral_fatigue_annual_damage(
         compute_spectral_moments,
         dirlik_damage,
     )
-    from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
+    from digitalmodel.hydrodynamics.wave_spectra import (
+        LEGACY_FREQ_MAX, LEGACY_N_POINTS, WaveSpectra,
+    )
 
+    # Response-grid follow-up to #2613: preserve the legacy fatigue basis.
     omega, s_omega = WaveSpectra().jonswap(
-        hs=float(point["Hs"]), tp=float(point["Tp"]), gamma=gamma
+        hs=float(point["Hs"]), tp=float(point["Tp"]), gamma=gamma,
+        freq_max=LEGACY_FREQ_MAX, n_points=LEGACY_N_POINTS,
     )  # rad/s, m^2*s
     f_hz = omega / (2.0 * np.pi)
     s_wave_hz = s_omega * 2.0 * np.pi  # m^2/Hz

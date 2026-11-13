@@ -94,7 +94,9 @@ def _stress_psd_from_rao(
     """
     import numpy as np
 
-    from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
+    from digitalmodel.hydrodynamics.wave_spectra import (
+        LEGACY_FREQ_MAX, LEGACY_N_POINTS, WaveSpectra,
+    )
 
     kind = str(wave_spectrum.get("type", "jonswap")).strip().lower()
     if kind not in _SPECTRA:
@@ -105,13 +107,15 @@ def _stress_psd_from_rao(
     tp = _positive(wave_spectrum, "Tp", f"{location_id} wave_spectrum.Tp")
 
     spectra = WaveSpectra()
+    # Response-grid follow-up to #2613: preserve each legacy fatigue basis.
+    grid = {"freq_max": LEGACY_FREQ_MAX, "n_points": LEGACY_N_POINTS}
     if kind == "jonswap":
         gamma = float(wave_spectrum.get("gamma", 3.3))
-        omega, s_omega = spectra.jonswap(hs=hs, tp=tp, gamma=gamma)
+        omega, s_omega = spectra.jonswap(hs=hs, tp=tp, gamma=gamma, **grid)
     elif kind == "pierson_moskowitz":
-        omega, s_omega = spectra.pierson_moskowitz(hs=hs, tp=tp)
+        omega, s_omega = spectra.pierson_moskowitz(hs=hs, tp=tp, **grid)
     else:
-        omega, s_omega = spectra.bretschneider(hs=hs, tp=tp)
+        omega, s_omega = spectra.bretschneider(hs=hs, tp=tp, **grid)
 
     f_hz = omega / (2.0 * np.pi)  # rad/s -> Hz
     s_wave_hz = s_omega * 2.0 * np.pi  # m^2*s (per rad/s) -> m^2/Hz
