@@ -3,7 +3,7 @@
 """Invented topsides inputs test arithmetic only; no market cost basis is implied."""
 
 from dataclasses import asdict, replace
-from datetime import date
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, Inexact, ROUND_UP, localcontext
 from fractions import Fraction
 from importlib import import_module
@@ -92,6 +92,31 @@ def test_price_base_year_uses_calculation_date(inputs):
     assert estimate(inputs).price_base_year == 2027
 
 
+@pytest.mark.parametrize(
+    "today",
+    [
+        pytest.param(datetime(2026, 12, 31, 23, 59), id="naive"),
+        pytest.param(
+            datetime(2026, 12, 31, 23, 59, tzinfo=timezone(timedelta(hours=-5))),
+            id="utc-next-year",
+        ),
+        pytest.param(
+            datetime(2027, 1, 1, 0, 1, tzinfo=timezone(timedelta(hours=5))),
+            id="utc-previous-year",
+        ),
+    ],
+)
+def test_datetime_uses_its_calendar_year_without_timezone_conversion(inputs, today):
+    inputs["today"] = today
+    inputs["price_base_year"] = today.year
+    result = estimate(inputs)
+    assert result.price_base_year == today.year
+    assert result.total_usd == Decimal("300.00")
+    inputs["price_base_year"] = today.year + 1
+    with pytest.raises(ValueError, match="price_base_year"):
+        estimate(inputs)
+
+
 @pytest.mark.parametrize("today", ["2026-01-01", 2026, True, 2026.0, object()])
 def test_invalid_calculation_date_is_rejected(inputs, today):
     inputs["today"] = today
@@ -108,6 +133,7 @@ def test_price_base_year_defaults_to_current_date(inputs, monkeypatch):
             return cls(2026, 12, 31)
 
     monkeypatch.setattr(module, "date", FixedDate)
+    # Drop the real date: the patched subclass also governs isinstance checks.
     inputs.pop("today")
     inputs["price_base_year"] = 2026
     assert estimate(inputs).price_base_year == 2026

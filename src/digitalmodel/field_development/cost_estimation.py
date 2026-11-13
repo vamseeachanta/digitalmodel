@@ -83,6 +83,8 @@ def estimate_topsides_cost(
     not checked by this method. The price base year is a required integer from
     year 1 through the calculation year (``today``, defaulting to the current
     date). A supplied ``today`` shall be a ``date`` instance or ``None``.
+    A ``datetime`` is accepted as a ``date`` subclass; its own calendar year
+    is used, with time and timezone ignored and no timezone conversion.
     Year 1 is only Python's calendar lower limit: no historical cost
     validity is implied. The year is a caller assertion, not checked against
     the rate citation. Cost boundaries require basis review.
@@ -92,8 +94,9 @@ def estimate_topsides_cost(
     Each numeric input is converted once using ``Decimal(str(value))``.
     Nondecimal string forms, such as ``Fraction(3, 2)`` (``3/2``), are rejected.
     The exact product is rounded once to USD cents with half-even rounding, in an
-    independent decimal context. The total and retained weight are Decimal;
-    cited input records are retained unchanged. Totals outside the finite float
+    independent decimal context. The total and retained weight are ``Decimal``;
+    consumers shall not mix them with ``float`` arithmetic. Cited input records
+    are retained unchanged. Totals outside the finite float
     range or rounding to zero cents are rejected, preserving the upper output
     range of the original method.
     """
