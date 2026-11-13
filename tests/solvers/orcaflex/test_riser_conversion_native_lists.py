@@ -153,6 +153,67 @@ def test_typed_ei_edit_over_anisotropic_template_is_rejected(tmp_path):
         _generated(upgraded, tmp_path / "anisotropic")
 
 
+# Native Cd/Ca are [normal x, normal y, axial]; ~ in cell 1 means "same as x".
+# The typed riser carries one normal coefficient, so cell 1 follows EI's rule.
+# Synthetic coefficients: (native, typed field, x, axial, edited value).
+_NORMAL_COEFFICIENTS = [
+    ("Cd", "drag_coefficient", 1.2, 0.008, 1.5),
+    ("Ca", "added_mass_coefficient", 1.0, 0.0, 0.9),
+]
+
+
+def _a01_with_cells(native: str, cells: list) -> dict:
+    spec = deepcopy(_spec("a01_catenary_riser"))
+    spec["generic"]["line_types"][0]["properties"][native] = cells
+    return spec
+
+
+@pytest.mark.parametrize("native,field,x,axial,edited", _NORMAL_COEFFICIENTS,
+                         ids=[c[0] for c in _NORMAL_COEFFICIENTS])
+def test_unequal_normal_coefficient_cells_are_rejected(native, field, x, axial, edited):
+    """A second normal cell that differs from the first is not one typed value."""
+    spec = _a01_with_cells(native, [x, 0.7, axial])
+    with pytest.raises(ValueError, match=native):
+        upgrade_spec(spec, DetectedModelType.RISER)
+
+
+@pytest.mark.parametrize("explicit_second", [False, True], ids=["inherited", "explicit"])
+@pytest.mark.parametrize("native,field,x,axial,edited", _NORMAL_COEFFICIENTS,
+                         ids=[c[0] for c in _NORMAL_COEFFICIENTS])
+def test_typed_normal_coefficient_edit_preserves_isotropy(
+    native, field, x, axial, edited, explicit_second, tmp_path
+):
+    """An edit updates both explicit normal cells, or retains ~ in cell 1."""
+    second = x if explicit_second else None
+    upgraded = upgrade_spec(_a01_with_cells(native, [x, second, axial]),
+                            DetectedModelType.RISER)
+    assert upgraded["riser"]["line_types"][0][field] == x
+    upgraded["riser"]["line_types"][0][field] = edited
+    original = deepcopy(upgraded)
+    reloaded = yaml.safe_load(yaml.safe_dump(upgraded))
+    objects = _generated(reloaded, tmp_path / "edited")["20_generic_objects.yml"]
+    expected = [edited, edited if explicit_second else None, axial]
+    assert objects["LineTypes"][0][native] == expected
+    assert upgraded == original
+
+
+@pytest.mark.parametrize("native,field,value", [
+    ("Cd", "drag_coefficient", 1.5),
+    ("Cd", "axial_drag_coefficient", 0.02),
+    ("Ca", "added_mass_coefficient", 0.9),
+])
+def test_typed_coefficient_edit_over_unequal_template_is_rejected(
+    native, field, value, tmp_path
+):
+    """A template edited to unequal normal cells after upgrade is not rendered."""
+    x, axial = {"Cd": (1.2, 0.008), "Ca": (1.0, 0.0)}[native]
+    upgraded = upgrade_spec(_a01_with_cells(native, [x, x, axial]), DetectedModelType.RISER)
+    upgraded["generic"]["line_types"][0]["properties"][native] = [x, 0.7, axial]
+    upgraded["riser"]["line_types"][0][field] = value
+    with pytest.raises(ValueError, match=native):
+        _generated(upgraded, tmp_path / "unequal")
+
+
 @pytest.mark.parametrize("spec_only", [False, True], ids=["generated", "spec_yml"])
 def test_campaign_sweep_keeps_unset_axial_drag_cell(spec_only, tmp_path):
     """An unrelated sweep does not author the 0.008 axial Cd default.

@@ -35,14 +35,25 @@ _LINE_TYPE_FIELDS = {
     "stress_id": "StressID",
 }
 # Native list-valued line-type data: field -> (data name, cell index, width).
-# Native saves carry EI as [x, ~] and Cd/Ca as [normal, ~, axial]; the list is
-# kept as a layout template. Explicit equal EI components are edited together.
+# Native saves carry EI as [x, y] and Cd/Ca as [normal x, normal y, axial]; ~ in
+# the y cell means "same as x". The list is kept as a layout template. The
+# typed riser carries one isotropic value per data name, so an explicit y cell
+# must equal x and is edited together with it.
 _CELL_FIELDS = {
     "bending_stiffness": ("EI", 0, 2),
     "drag_coefficient": ("Cd", 0, 3),
     "axial_drag_coefficient": ("Cd", 2, 3),
     "added_mass_coefficient": ("Ca", 0, 3),
 }
+
+
+def _check_isotropic(native: str, cells: list) -> None:
+    """Reject an explicit y cell (cell 1) that differs from the x cell."""
+    if len(cells) > 1 and cells[1] is not None and cells[1] != cells[0]:
+        raise ValueError(
+            f"Anisotropic {native} {cells} (y cell differs from x) "
+            f"is not supported by the riser schema"
+        )
 _VESSEL_FIELDS = {
     "type_name": "VesselType",
     "position": "InitialPosition",
@@ -90,8 +101,8 @@ def _extract_scalars(obj: dict, fields: dict[str, str]) -> dict[str, Any]:
     """Move effective scalar properties, respecting generic typed precedence.
 
     List-valued native data in ``_CELL_FIELDS`` stay in ``properties`` as a
-    layout template; only the mapped cell is extracted. An ``EI`` list must be
-    isotropic (second cell ``~`` or equal to the first).
+    layout template; only the mapped cell is extracted. ``EI``, ``Cd`` and
+    ``Ca`` lists must be isotropic (y cell ``~`` or equal to the x cell).
     """
     properties = obj.setdefault("properties", {})
     effective = dict(properties)
@@ -107,8 +118,7 @@ def _extract_scalars(obj: dict, fields: dict[str, str]) -> dict[str, Any]:
             _, index, width = _CELL_FIELDS[field]
             if len(value) > width:
                 raise ValueError(f"Invalid {native} list: {value}")
-            if native == "EI" and len(value) > 1 and value[1] not in (None, value[0]):
-                raise ValueError(f"Anisotropic EI {value} is not supported by the riser schema")
+            _check_isotropic(native, value)
             properties[native] = value  # layout template
             if index < len(value) and value[index] is not None:
                 extracted[field] = value[index]
@@ -190,9 +200,9 @@ def _restore_scalars(obj: dict, typed: Any, fields: dict[str, str]) -> None:
     """Overlay authored typed fields only; schema defaults add no native keys.
 
     Fields in ``_CELL_FIELDS`` replace their cell of a native list template.
-    Isotropic EI edits update both explicit components, retaining ``~`` when
-    the second component inherits the first; a template with unequal
-    explicit components is rejected.
+    Isotropic edits of ``EI``, normal ``Cd`` and ``Ca`` update both explicit
+    x and y cells, retaining ``~`` when the y cell inherits x; a template with
+    unequal explicit x and y cells is rejected, whichever cell is edited.
     An axial value without a list template becomes ``[normal, ~, axial]``.
     A list whose first (normal) cell would be undefined is rejected rather
     than emitted as ``[~, ~, axial]``.
@@ -208,14 +218,11 @@ def _restore_scalars(obj: dict, typed: Any, fields: dict[str, str]) -> None:
             _, index, width = _CELL_FIELDS[field]
             cells = list(current) if isinstance(current, list) else [current]
             cells += [None] * (width - len(cells))
+            # The typed value is isotropic: an explicit y cell must equal x in
+            # the template, and takes the edited x value too.
+            _check_isotropic(native, cells)
             cells[index] = value
-            if native == "EI" and cells[1] is not None:
-                # The typed EI is isotropic: an explicit second cell must equal
-                # the first in the template and takes the edited value too.
-                if current[1] != current[0]:
-                    raise ValueError(
-                        f"Anisotropic EI template {current} is not supported by the riser schema"
-                    )
+            if index == 0 and cells[1] is not None:
                 cells[1] = value
             if cells[0] is None:
                 raise ValueError(
