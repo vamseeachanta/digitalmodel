@@ -24,6 +24,11 @@ def analysis():
     return module('analysis').run(FIXTURE)
 
 
+def test_public_identity_matches_committed_fixture():
+    import hashlib
+    assert module('analysis').PUBLIC_SHA256 == hashlib.sha256(FIXTURE.read_bytes()).hexdigest()
+
+
 def test_public_example_uses_package_results(analysis):
     from digitalmodel.marine_ops.artificial_lift.dynacard.data_loader import load_from_json_file
     from digitalmodel.marine_ops.artificial_lift.dynacard.calculations import calculate_pump_fillage

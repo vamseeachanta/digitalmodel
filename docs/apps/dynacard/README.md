@@ -196,13 +196,11 @@ envelope for pump samples and `1e-6` absolute for fillage and load scalars;
 both classifications require exact agreement. These checks run independently
 of the live Python comparison above.
 
-Stored-result reproduction is not established for example 4, Rod parting:
-the saved fluid load is 2950.083910 lbf, while live Python and JavaScript on
-the saved surface card give 2935.332910 lbf, a 14.751000 lbf difference above
-the comparison tolerance. Surface-card rounding shifts the detected top-left
-corner from sample 21 to sample 20. The stored-result regression remains failing;
-acceptance requires reconciliation of the upstream example serialization and
-corner selection. The other nine stored examples satisfy the comparison.
+All ten stored examples satisfy the comparison. The saved examples are
+analysed at the published precision of their surface cards, so example 4, Rod
+parting, stores a fluid load of 2935.33391 lbf; live Python and JavaScript on
+the saved surface card give 2935.333911 lbf, a difference of 9.8e-07 lbf
+against a tolerance of 3.0e-05 lbf.
 
 The field fixtures `field_well_alpha.json`, `field_well_bravo.json`,
 `field_well_charlie.json` and `field_well_delta.json` are supported and compared
