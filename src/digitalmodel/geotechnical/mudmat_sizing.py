@@ -97,6 +97,7 @@ def size_mudmat(
 
     Widths shall be a nonempty strictly increasing sequence of positive finite
     numbers. Length equals aspect_ratio * width, with aspect_ratio >= 1.
+    Supply widths as a list or tuple; NumPy arrays are not supported.
     Vertical demand, shear strength and factor shall be positive; horizontal
     demand and submerged unit weight may be zero. Booleans are rejected.
     Invalid inputs or nonfinite arithmetic raise ValueError. Unsupported

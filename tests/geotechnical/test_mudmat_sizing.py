@@ -161,8 +161,11 @@ def test_arithmetic_overflow_is_an_error(sizing, inputs, changes):
         sizing.size_mudmat(**inputs)
 
 
-def test_documented_calls(sizing):
-    page = Path("docs/domains/geotechnical/mudmat-sizing.html").read_text()
+def test_documented_calls(sizing, tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    page = Path(__file__).resolve().parents[2].joinpath(
+        "docs/domains/geotechnical/mudmat-sizing.html"
+    ).read_text(encoding="utf-8")
     blocks = re.findall(r'<pre><code class="language-python">(.*?)</code></pre>',
                         page, flags=re.S)
     assert len(blocks) == 1

@@ -9,7 +9,8 @@
 This is a centred-unembedded-undrained screening operation, not complete foundation acceptance.</p>
 <h2>Revision history</h2>
 <table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
-<tbody><tr><td>1</td><td>2026-11-13</td><td>Add finite-grid sizing to reuse the existing capacity calculator.</td></tr></tbody></table>
+<tbody><tr><td>1</td><td>2026-11-13</td><td>Add finite-grid sizing to reuse the existing capacity calculator.</td></tr>
+<tr><td>2</td><td>2026-11-13</td><td>Clarify width containers and permitted factors to prevent misreading the screening inputs.</td></tr></tbody></table>
 <p>Table 1. Guide revision history.</p>
 <h2>Synthetic example</h2>
 <p>Widths and lengths are in m, loads and resistances in kN, shear strength and pressure in kPa,
@@ -31,7 +32,9 @@ allowable vertical resistance and 20.0 kN allowable sliding resistance, exceedin
 100 kN and 10 kN demands. Every supplied width is evaluated, including those after selection.</p>
 <h2>Inputs and retained evidence</h2>
 <p>Widths shall be nonempty, positive, finite and strictly increasing. Aspect ratio shall be at least one.
+Supply widths as a list or tuple; NumPy arrays are not supported.
 Vertical demand, shear strength and factor shall be positive; horizontal demand and unit weight may be zero.
+Factors below one are permitted and can make allowable capacity exceed ultimate capacity; this is not design acceptance.
 Booleans, nonfinite values and unrepresentable geometry or capacities raise ValueError.
 Unsupported condition, embedment and moment keywords raise TypeError.
 Immutable results retain detached inputs, dimensions, the existing method description, ultimate and
