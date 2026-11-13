@@ -4,9 +4,9 @@
 digitalmodel.field_development.capex_estimator
 ==============================================
 
-Estimates capital expenditure (CAPEX) for offshore host facilities based on
-GoM benchmark data from 10 reference fields. Returns a low/base/high USD range
-scaled by production capacity and water depth.
+Estimates capital expenditure (CAPEX) for offshore host facilities using
+screening assumptions, not sourced benchmarks. Returns a low/base/high USD
+range scaled by production capacity and water depth; no escalation is applied.
 
 GoM Benchmark Data (2024 basis):
 - TLP:            $2-6B (Mars 896 m, Ursa 1067 m)
@@ -132,13 +132,23 @@ def _tieback_capex(distance_km: float) -> tuple[float, float, float]:
 # Public API
 # ---------------------------------------------------------------------------
 
+def reference_capex_range(host_type: HostType) -> tuple[float, float]:
+    """Return unscaled low/high screening CAPEX in USD billions (2024 basis).
+
+    These endpoints are a screening assumption, not sourced, and not escalated.
+    No capacity, depth or tieback-distance scaling is applied.
+    """
+    low, _, high = _BASE_CAPEX[host_type]
+    return (low, high)
+
+
 def estimate_capex(
     host_type: HostType,
     production_capacity_bopd: float,
     water_depth: float,
     tieback_distance_km: Optional[float] = None,
 ) -> CAPEXEstimate:
-    """Estimate CAPEX for an offshore host facility based on GoM benchmarks.
+    """Estimate CAPEX using unsourced screening assumptions (2024 basis).
 
     Parameters
     ----------
@@ -200,7 +210,8 @@ def estimate_capex(
         base = round(base * cap_factor, 3)
         high = round(high * cap_factor, 3)
         basis = (
-            f"GoM subsea tieback benchmark; distance={tieback_distance_km:.1f} km, "
+            "screening assumption, not sourced; 2024 basis, not escalated; "
+            f"GoM subsea tieback; distance={tieback_distance_km:.1f} km, "
             f"capacity={production_capacity_bopd:,.0f} bopd, depth={water_depth:.0f} m."
         )
     else:
@@ -211,9 +222,11 @@ def estimate_capex(
         base = round(ref_base * cap_factor * dep_factor, 3)
         high = round(ref_high * cap_factor * dep_factor, 3)
         basis = (
-            f"GoM {host_type.value} benchmark (2024 basis); "
+            "screening assumption, not sourced; 2024 basis, not escalated; "
+            f"GoM {host_type.value}; "
             f"ref 100k bopd / 1500 m; capacity_factor={cap_factor:.3f}, "
             f"depth_factor={dep_factor:.3f}. "
+            "[unsourced] "
             f"Analogues: GoM-UD-Spar Spar $3-7B, Thunder Horse Semi $4-10B, "
             f"Mars TLP $2-6B."
         )
