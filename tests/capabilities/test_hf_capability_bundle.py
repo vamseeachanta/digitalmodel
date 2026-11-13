@@ -10,6 +10,14 @@ import pytest
 from scripts.hf import capability_bundle as bundles
 
 
+def test_wall_table_limits_disclose_the_pressure_only_load_case():
+    limits = bundles.SOURCES["wall_thickness"][2].lower()
+    assert "pressure-only" in limits
+    assert "zero effective tension" in limits
+    assert "zero bending moment" in limits
+    assert "combined tension and bending are not evaluated" in limits
+
+
 def test_bundle_carries_every_ipr_point_and_source_digest(tmp_path):
     """Independent count from build_ipr_explorer.py: 3 pressures * 10 PI * 11 points.
 

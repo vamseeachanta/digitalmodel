@@ -913,12 +913,12 @@ class TestRodBucklingWithRealData:
     """Tests using real well card data."""
 
     @pytest.fixture
-    def well_7699227(self):
-        """Load well 7699227 test data."""
-        filepath = TEST_DATA_DIR / "7699227.json"
+    def well_echo(self):
+        """Load well field well echo test data."""
+        filepath = TEST_DATA_DIR / "field_well_echo.json"
         if filepath.exists():
             return load_from_json_file(filepath)
-        pytest.skip("Test data file 7699227.json not found")
+        pytest.skip("Test data file field_well_echo.json not found")
 
     def test_real_card_verdict_changes_between_load_datums(self):
         """The cleansed well 005 card is safe only after datum correction."""
@@ -973,20 +973,20 @@ class TestRodBucklingWithRealData:
         assert corrected.neutral_point_depth is None
         assert corrected.compression_length is None
 
-    def test_buckling_calculation_7699227(self, well_7699227):
-        """Test buckling calculation with well 7699227 data."""
+    def test_buckling_calculation_echo(self, well_echo):
+        """Test buckling calculation with well field well echo data."""
         result = calculate_rod_buckling(
-            well_7699227,
+            well_echo,
             load_datum="net_pump_load",
         )
 
         # Should complete analysis
         assert result.analysis_method == "surface_card_estimate"
 
-    def test_critical_loads_positive_7699227(self, well_7699227):
+    def test_critical_loads_positive_echo(self, well_echo):
         """Test that critical loads are positive with real data."""
         result = calculate_rod_buckling(
-            well_7699227,
+            well_echo,
             inclination_deg=DEVIATED_INCLINATION_DEG,
             tubing_id=TUBING_ID_IN,
             load_datum="net_pump_load",
@@ -995,10 +995,10 @@ class TestRodBucklingWithRealData:
         assert result.sinusoidal_critical_load > 0
         assert result.helical_critical_load > 0
 
-    def test_no_neutral_point_depth_from_real_card_7699227(self, well_7699227):
+    def test_no_neutral_point_depth_from_real_card_echo(self, well_echo):
         """Real card data still cannot yield a neutral-point depth."""
         result = calculate_rod_buckling(
-            well_7699227,
+            well_echo,
             load_datum="net_pump_load",
         )
 
@@ -1007,10 +1007,10 @@ class TestRodBucklingWithRealData:
         assert result.compression_depth_start is None
         assert result.compression_length is None
 
-    def test_buckling_tendency_calculated_7699227(self, well_7699227):
+    def test_buckling_tendency_calculated_echo(self, well_echo):
         """Test buckling tendency is calculated."""
         result = calculate_rod_buckling(
-            well_7699227,
+            well_echo,
             load_datum="net_pump_load",
         )
 

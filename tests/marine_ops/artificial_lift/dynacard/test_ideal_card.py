@@ -599,50 +599,50 @@ class TestIdealCardWithRealData:
     """Tests using real well card data."""
 
     @pytest.fixture
-    def well_7699227(self):
-        """Load well 7699227 test data."""
-        filepath = TEST_DATA_DIR / "7699227.json"
+    def well_echo(self):
+        """Load well field well echo test data."""
+        filepath = TEST_DATA_DIR / "field_well_echo.json"
         if filepath.exists():
             return load_from_json_file(filepath)
-        pytest.skip("Test data file 7699227.json not found")
+        pytest.skip("Test data file field_well_echo.json not found")
 
-    def test_ideal_card_generation_7699227(self, well_7699227):
-        """Test ideal card generation with well 7699227 data."""
-        result = generate_ideal_card(well_7699227)
+    def test_ideal_card_generation_echo(self, well_echo):
+        """Test ideal card generation with well field well echo data."""
+        result = generate_ideal_card(well_echo)
 
         # Should complete generation
         assert result.generation_method == "simplified"
         assert len(result.ideal_pump_position) > 0
 
-    def test_fluid_load_positive_7699227(self, well_7699227):
+    def test_fluid_load_positive_echo(self, well_echo):
         """Test that fluid load is positive with real data."""
-        result = generate_ideal_card(well_7699227)
+        result = generate_ideal_card(well_echo)
 
         assert result.ideal_fluid_load > 0
 
-    def test_shape_similarity_calculated_7699227(self, well_7699227):
+    def test_shape_similarity_calculated_echo(self, well_echo):
         """Test shape similarity is calculated with real data."""
-        result = generate_ideal_card(well_7699227)
+        result = generate_ideal_card(well_echo)
 
         # Should have valid similarity
         assert result.shape_similarity is not None
         assert -1.0 <= result.shape_similarity <= 1.0
 
-    def test_surface_scalar_is_the_comparable_one_7699227(self, well_7699227):
+    def test_surface_scalar_is_the_comparable_one_echo(self, well_echo):
         """
         Domain trap guard: the measured PPRL belongs to the SURFACE domain.
         Comparing it against the pump-domain ``ideal_peak_load`` invites a
         bogus multiple (~4x here); the surface-domain scalar is the right
         reference and lands in the same ballpark as the measurement.
         """
-        result = generate_ideal_card(well_7699227)
-        measured_pprl = max(well_7699227.surface_card.load)
+        result = generate_ideal_card(well_echo)
+        measured_pprl = max(well_echo.surface_card.load)
 
         assert result.ideal_surface_peak_load > result.ideal_peak_load
         assert 0.5 < result.ideal_surface_peak_load / measured_pprl < 2.0
 
-    def test_card_area_calculated_7699227(self, well_7699227):
+    def test_card_area_calculated_echo(self, well_echo):
         """Test card area is calculated with real data."""
-        result = generate_ideal_card(well_7699227)
+        result = generate_ideal_card(well_echo)
 
         assert result.ideal_card_area > 0

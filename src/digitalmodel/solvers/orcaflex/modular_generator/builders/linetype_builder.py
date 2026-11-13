@@ -58,6 +58,22 @@ DEFAULT_HYDRO_COEFFS = {
 }
 
 
+def material_properties(material: str) -> dict:
+    """Return the default properties of a supported pipeline grade.
+
+    The lookup is case-insensitive. An unsupported grade raises ValueError:
+    a silent X65 fallback assigns the wrong yield strength (DNVSTF101Fy) to
+    any other grade, e.g. X80 (#3984).
+    """
+    grade = material.upper()
+    if grade not in MATERIAL_PROPERTIES:
+        raise ValueError(
+            f"Unsupported pipeline material '{material}'. "
+            f"Supported grades: {', '.join(sorted(MATERIAL_PROPERTIES))}"
+        )
+    return MATERIAL_PROPERTIES[grade]
+
+
 @BuilderRegistry.register("05_line_types.yml", order=40)
 class LineTypeBuilder(BaseBuilder):
     """Builds the LineTypes section of the OrcaFlex model.
@@ -99,10 +115,7 @@ class LineTypeBuilder(BaseBuilder):
         id_value = od - 2 * dimensions.wall_thickness
 
         # Get material properties
-        material_grade = pipeline.material.upper()
-        material_props = MATERIAL_PROPERTIES.get(
-            material_grade, MATERIAL_PROPERTIES["X65"]
-        )
+        material_props = material_properties(pipeline.material)
 
         # Override with spec values if provided
         youngs_modulus = (
