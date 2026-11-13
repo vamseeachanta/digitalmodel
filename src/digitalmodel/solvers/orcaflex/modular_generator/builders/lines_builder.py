@@ -287,20 +287,45 @@ class LinesBuilder(BaseBuilder):
         seabed. Catenary parameter a = h / (sec(phi) - 1); suspended length
         s = a tan(phi); suspended span x = a asinh(tan(phi)); top tension
         T = w (a + h); horizontal tension H = w a. End B span = x + (L - s).
+        Requires uniform segment coatings and a flat seabed; unused coating
+        alternatives do not contribute to weight or diameter.
         """
         from digitalmodel.installation.pipelay.integrity import G_STANDARD
-        from .linetype_builder import MATERIAL_PROPERTIES
+        from .context import BuilderContext
+        from .linetype_builder import LineTypeBuilder
+        from .vardata_builder import VarDataBuilder
 
         pipe = self.spec.pipeline
         jlay = self.spec.equipment.jlay
         vessel = self.spec.equipment.vessel
+        if self.spec.environment.seabed.slope != 0:
+            raise ValueError("J-lay seed requires a flat seabed")
+
+        # Resolve the same coating references and layers that are emitted by
+        # the other builders, without changing the caller's shared context.
+        context = BuilderContext()
+        coating_data = VarDataBuilder(self.spec, context).build()
+        coatings = {entry["Name"]: entry["LayerThickness, LayerMaterialDensity"]
+                    for entry in coating_data["VariableData"]["Coatingsorlinings"]}
+        line_types = {entry["Name"]: entry
+                      for entry in LineTypeBuilder(self.spec, context).build()["LineTypes"]}
+        segment_layers = []
+        for segment in pipe.segments:
+            reference = line_types[segment.type]["CoatingThickness"]
+            if reference not in coatings:
+                raise ValueError(f"J-lay seed has an unresolved coating: {reference}")
+            segment_layers.append(coatings[reference])
+        layers = segment_layers[0]
+        if any(other != layers for other in segment_layers[1:]):
+            raise ValueError("J-lay seed requires uniform segment coatings")
+
         od = pipe.dimensions.outer_diameter
         wall = pipe.dimensions.wall_thickness
-        density = MATERIAL_PROPERTIES["X65"]["MaterialDensity"]  # steel, same for all grades
+        density = line_types[pipe.segments[0].type]["MaterialDensity"]
         mass = density * math.pi / 4 * (od**2 - (od - 2 * wall) ** 2)
-        for coating in [pipe.coatings.corrosion, *pipe.coatings.weight]:
-            outer = od + 2 * coating.thickness
-            mass += coating.density * math.pi / 4 * (outer**2 - od**2)
+        for thickness, coating_density in layers:
+            outer = od + 2 * thickness
+            mass += coating_density * math.pi / 4 * (outer**2 - od**2)
             od = outer
         weight = (mass - self.spec.environment.water.density * math.pi / 4 * od**2) * G_STANDARD
         height = self.spec.environment.water.depth + vessel.position[2] + jlay.tower_top[2]

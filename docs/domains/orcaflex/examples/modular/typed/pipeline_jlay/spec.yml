@@ -19,6 +19,24 @@
 #   End B span 2258.13 m aft of the hang-off.
 #   Top tension T = w (a + h) = 814.3 kN; horizontal tension H = w a = 113.3 kN.
 #
+# Public method and constant basis (accessed 2026-11-13):
+# - Classical Mechanics, section 18.3, equations 18.3.2-18.3.9:
+#   https://phys.libretexts.org/Bookshelves/Classical_Mechanics/Classical_Mechanics_(Tatum)/18%3A_The_Catenary/18.03%3A_Equation_of_the_Catenary_in_Rectangular_Coordinates%2C_and_Other_Simple_Relations
+#   With the origin at the lowest point, h = a (sec(phi) - 1),
+#   s = a tan(phi), x = a asinh(tan(phi)); T = w (a + h), H = w a.
+#   Here w is the uniform submerged weight per unit length. Extending x by
+#   the grounded remainder L - s assumes a flat seabed. This flexible,
+#   inextensible seed omits bending stiffness, stretch, drag and friction;
+#   it is not a solved installation equilibrium or a strength check.
+# - NIST SP 811 (2008), appendix B.8, acceleration of free fall, standard:
+#   https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors/nist-guide-si-appendix-b8
+#   g = 9.80665 m/s2 is conventional standard gravity, not local gravity.
+# Steel and seawater densities are assumed, based on previous experience;
+# the material dictionary establishes consistency with the emitted model,
+# not independent evidence for the assumed densities. Coating density and
+# all geometry remain illustrative. The seed requires uniform coatings;
+# declared alternatives that no segment uses do not contribute to weight.
+#
 # Generate:
 #   python -m digitalmodel.solvers.orcaflex.modular_generator generate \
 #       --input spec.yml --output modular/

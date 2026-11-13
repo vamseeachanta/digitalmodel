@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ._enums import RollerType
@@ -389,6 +391,8 @@ class JLay(BaseModel):
     def validate_vector3(cls, v: list[float]) -> list[float]:
         if len(v) != 3:
             raise ValueError(f"Must have exactly 3 components, got {len(v)}")
+        if not all(math.isfinite(component) for component in v):
+            raise ValueError("Tower top components must be finite")
         return v
 
 

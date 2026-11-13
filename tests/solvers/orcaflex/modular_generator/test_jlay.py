@@ -19,6 +19,8 @@ from pydantic import ValidationError
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 from digitalmodel.solvers.orcaflex.modular_generator.builders.context import BuilderContext
 from digitalmodel.solvers.orcaflex.modular_generator.builders.lines_builder import LinesBuilder
+from digitalmodel.solvers.orcaflex.modular_generator.builders.linetype_builder import LineTypeBuilder
+from digitalmodel.solvers.orcaflex.modular_generator.builders.vardata_builder import VarDataBuilder
 from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
 
 REPO = Path(__file__).resolve().parents[4]
@@ -129,3 +131,93 @@ def test_pipeline_contents_stated_empty_as_seeded(example):
     line = _pipeline(example)
     assert line["ContentsMethod"] == "Uniform"
     assert line["ContentsDensity"] == 0
+
+
+@pytest.mark.parametrize("suffix", ["CWC80", "CWC120", None])
+@pytest.mark.parametrize("reverse", [False, True])
+def test_seed_uses_only_emitted_coating_layers(example, suffix, reverse):
+    data = copy.deepcopy(example)
+    variants = [
+        {"name": "CWC80", "thickness": 0.08, "density": 3.04},
+        {"name": "CWC120", "thickness": 0.12, "density": 3.04},
+    ]
+    data["pipeline"]["coatings"]["weight"] = variants[::-1] if reverse else variants
+    if suffix:
+        data["pipeline"]["segments"][0]["type"] = f"X65+coating+{suffix}"
+    spec = ProjectInputSpec(**data)
+    context = BuilderContext()
+    coatings = VarDataBuilder(spec, context).build()["VariableData"]["Coatingsorlinings"]
+    line_type = LineTypeBuilder(spec, context).build()["LineTypes"][0]
+    layers = next(c["LayerThickness, LayerMaterialDensity"] for c in coatings
+                  if c["Name"] == line_type["CoatingThickness"])
+    od = line_type["OD"]
+    mass = line_type["MaterialDensity"] * math.pi / 4 * (od**2 - line_type["ID"]**2)
+    for thickness, density in layers:
+        outer = od + 2 * thickness
+        mass += density * math.pi / 4 * (outer**2 - od**2)
+        od = outer
+    expected_weight = (mass - spec.environment.water.density * math.pi / 4 * od**2) * 9.80665
+    seed = _builder(data).jlay_seed()
+    assert seed["outer_diameter"] == pytest.approx(od)
+    assert seed["weight"] == pytest.approx(expected_weight)
+    assert seed["top_tension"] == pytest.approx(expected_weight * (seed["a"] + seed["height"]))
+    assert _pipeline(data)[CONN][1][3] == pytest.approx(od / 2)
+    if suffix == "CWC80":
+        assert seed["outer_diameter"] == pytest.approx(0.4899)
+        assert seed["weight"] == pytest.approx(2.7162, abs=1e-4)
+
+
+def test_unused_lightweight_coating_does_not_reject_seed(example):
+    data = copy.deepcopy(example)
+    data["pipeline"]["coatings"]["weight"] = [
+        {"name": "lightweight", "thickness": 0.5, "density": 0.5},
+    ]
+    assert _builder(data).jlay_seed() == _builder(example).jlay_seed()
+    assert _pipeline(data) == _pipeline(example)
+
+
+@pytest.mark.parametrize("second_suffix", ["CWC80", "CWC120", None])
+def test_seed_requires_uniform_segment_coatings(example, second_suffix):
+    data = copy.deepcopy(example)
+    data["pipeline"]["coatings"]["weight"] = [
+        {"name": "CWC80", "thickness": 0.08, "density": 3.04},
+        {"name": "CWC120", "thickness": 0.12, "density": 3.04},
+    ]
+    data["pipeline"]["segments"] = [
+        {"type": "X65+first+CWC80", "length": 1500, "segment_length": 5},
+        {"type": f"X65+second+{second_suffix}" if second_suffix else "X65_12in",
+         "length": 1500, "segment_length": 5},
+    ]
+    if second_suffix == "CWC80":
+        assert _builder(data).jlay_seed()["weight"] == pytest.approx(2.7162, abs=1e-4)
+    else:
+        with pytest.raises(ValueError, match="uniform segment coatings"):
+            _builder(data).jlay_seed()
+        with pytest.raises(ValueError, match="uniform segment coatings"):
+            _pipeline(data)
+
+
+def test_seed_rejects_unresolved_coating_reference(example):
+    data = copy.deepcopy(example)
+    data["pipeline"]["segments"][0]["type"] = "X65+coating+missing"
+    with pytest.raises(ValueError, match="unresolved coating"):
+        _builder(data).jlay_seed()
+
+
+@pytest.mark.parametrize("slope", [-30, 0.1, 30])
+def test_jlay_rejects_sloping_seabed(example, slope):
+    data = copy.deepcopy(example)
+    data["environment"]["seabed"]["slope"] = slope
+    with pytest.raises(ValueError, match="flat seabed"):
+        _builder(data).jlay_seed()
+    with pytest.raises(ValueError, match="flat seabed"):
+        _pipeline(data)
+
+
+@pytest.mark.parametrize("component", range(3), ids=["x", "y", "z"])
+@pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf], ids=["nan", "inf", "negative-inf"])
+def test_tower_top_rejects_nonfinite_components(example, component, value):
+    data = copy.deepcopy(example)
+    data["equipment"]["jlay"]["tower_top"][component] = value
+    with pytest.raises(ValidationError, match="finite"):
+        ProjectInputSpec(**data)
