@@ -220,3 +220,40 @@ def test_linearisation_values_are_serialised_at_documented_precision():
         assert module.canonical(v) == v
         for factor in (1 - 3e-12, 1 + 3e-12, 1 - 1e-11, 1 + 1e-11):
             assert module.canonical(v * factor) == v
+
+
+def test_extraction_pins_recorded_source_digests():
+    """The extractor carries fixed expected digests, equal to the recorded ones."""
+    module = _extraction_module()
+    recorded = yaml.safe_load(
+        (FOLDER / "generator_data.yml").read_text(encoding="utf-8"))["source_sha256"]
+    assert set(module.EXPECTED_SHA256) == set(module.FILES)
+    assert {module.FILES[k]: v for k, v in module.EXPECTED_SHA256.items()} == recorded
+
+
+def test_extraction_rejects_unpinned_source_before_parsing(tmp_path):
+    """Bytes that differ from the pinned revision are refused before any parse."""
+    module = _extraction_module()
+    for path in module.FILES.values():
+        (tmp_path / Path(path).name).write_bytes(b"not the pinned r-test file\n")
+    with pytest.raises(ValueError, match="source digest mismatch"):
+        module.build(tmp_path)
+
+
+@pytest.mark.skipif(not os.environ.get("DIGITALMODEL_OC4_RAW"),
+                    reason="raw r-test files not present; set DIGITALMODEL_OC4_RAW")
+def test_extraction_rejects_altered_reference_volume(tmp_path):
+    """PtfmVol0 changed from 13,917 to 14,017 m3 in an otherwise pinned set."""
+    import shutil
+
+    module = _extraction_module()
+    raw = Path(os.environ["DIGITALMODEL_OC4_RAW"])
+    for path in module.FILES.values():
+        shutil.copyfile(raw / Path(path).name, tmp_path / Path(path).name)
+    module.build(tmp_path)  # the pinned set is accepted
+    hydrodyn = tmp_path / Path(module.FILES["hydrodyn"]).name
+    original = hydrodyn.read_bytes()
+    assert original.count(b"13917") == 1
+    hydrodyn.write_bytes(original.replace(b"13917", b"14017"))
+    with pytest.raises(ValueError, match=f"source digest mismatch: {hydrodyn.name}"):
+        module.build(tmp_path)
