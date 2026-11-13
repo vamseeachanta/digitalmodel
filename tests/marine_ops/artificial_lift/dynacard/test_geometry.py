@@ -606,16 +606,16 @@ class TestCardGeometryWithRealData:
     """Tests using real well card data."""
 
     @pytest.fixture
-    def well_7699227(self):
-        """Load well 7699227 test data."""
-        filepath = TEST_DATA_DIR / "7699227.json"
+    def well_echo(self):
+        """Load well field well echo test data."""
+        filepath = TEST_DATA_DIR / "field_well_echo.json"
         if filepath.exists():
             return load_from_json_file(filepath)
-        pytest.skip("Test data file 7699227.json not found")
+        pytest.skip("Test data file field_well_echo.json not found")
 
-    def test_geometry_calculation_7699227(self, well_7699227):
-        """Test geometry calculation with well 7699227 data."""
-        result = calculate_card_geometry(well_7699227)
+    def test_geometry_calculation_echo(self, well_echo):
+        """Test geometry calculation with well field well echo data."""
+        result = calculate_card_geometry(well_echo)
 
         # Should have valid geometry metrics
         assert result.area > 0
@@ -623,9 +623,9 @@ class TestCardGeometryWithRealData:
         assert result.position_range > 0
         assert result.load_range > 0
 
-    def test_zoned_areas_7699227(self, well_7699227):
-        """Test zoned area calculation with well 7699227 data."""
-        result = calculate_card_geometry(well_7699227)
+    def test_zoned_areas_echo(self, well_echo):
+        """Test zoned area calculation with well field well echo data."""
+        result = calculate_card_geometry(well_echo)
 
         # Should have 4 zones
         assert len(result.zone_areas) == 4
@@ -635,13 +635,13 @@ class TestCardGeometryWithRealData:
         fraction_sum = sum(result.zone_area_fractions)
         assert abs(fraction_sum - 1.0) < 0.001
 
-    def test_centroid_within_bounds_7699227(self, well_7699227):
+    def test_centroid_within_bounds_echo(self, well_echo):
         """Test that centroid is within card bounds."""
-        result = calculate_card_geometry(well_7699227)
+        result = calculate_card_geometry(well_echo)
 
         # Get card bounds
-        pos = well_7699227.surface_card.position
-        load = well_7699227.surface_card.load
+        pos = well_echo.surface_card.position
+        load = well_echo.surface_card.load
 
         # Centroid should be within bounds
         assert min(pos) <= result.centroid_position <= max(pos)

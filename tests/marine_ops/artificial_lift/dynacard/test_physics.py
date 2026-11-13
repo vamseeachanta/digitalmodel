@@ -70,7 +70,7 @@ def create_test_context(
     )
 
     return DynacardAnalysisContext(
-        api14="12345678901234",
+        api14="TEST-PHYSICS-001",
         surface_card=surface_card,
         rod_string=rod_string,
         pump=pump,
@@ -218,7 +218,7 @@ class TestSolveWaveEquation:
         ]
 
         ctx = DynacardAnalysisContext(
-            api14="12345678901234",
+            api14="TEST-PHYSICS-001",
             surface_card=surface_card,
             rod_string=rod_string,
             pump=PumpProperties(diameter=1.5, depth=5000),
@@ -396,7 +396,7 @@ class TestPhysicsWithRealWorldValues:
         load = (peak_load + min_load) / 2 + (peak_load - min_load) / 2 * np.sin(t + load_phase)
 
         ctx = DynacardAnalysisContext(
-            api14="42301234567890",
+            api14="TEST-PHYSICS-002",
             surface_card=CardData(
                 position=position.tolist(),
                 load=load.tolist()
