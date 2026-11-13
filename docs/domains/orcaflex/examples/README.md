@@ -8,7 +8,7 @@ This directory contains the comprehensive collection of OrcaFlex examples downlo
 examples/
 |-- raw/              # 67 YAML files in 48 immediate folders
 |-- yml/              # 62 YAML files in 47 immediate folders
-|-- modular/          # 636 YAML files in 50 immediate folders
+|-- modular/          # 637 YAML files in 50 immediate folders
 |-- metadata/         # Feature analysis and metadata
 |-- catalog/          # Searchable catalog and index
 |-- qa/               # QA documentation
