@@ -291,6 +291,7 @@ jobs:
             tests/workflows/automation/test_quality_gates.py \
             tests/workflows/test_durable_workflows.py \
             tests/workflows/test_ci_triggers.py \
+            tests/riser_bom/test_ci.py \
             -q --tb=line
 
       - name: Report implementation map staleness
@@ -426,7 +427,7 @@ jobs:
               gates = yaml.safe_load(handle)["gates"]
           command = gates[os.environ["GATE_NAME"]]["command"]
           if os.environ["GATE_NAME"] == "tests-subsea":
-              command += " tests/riser_fatigue/"
+              command += " tests/riser_fatigue/ tests/riser_bom/"
           print(command)
           PY
           )

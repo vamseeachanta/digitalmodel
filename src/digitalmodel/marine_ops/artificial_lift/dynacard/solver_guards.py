@@ -16,23 +16,17 @@ COMPARISON_LOAD_NRMSE_LIMIT_PCT = 2.0 * 2.20
 # claim for a small inclination or a validated negligible-deviation angle.
 DEVIATION_REPORTING_LIMIT_DEG = 0.0
 COMPARISON_ONLY_FLAGS = {
-    "gibbs": "comparison only: load not propagated",
+    "gibbs": "comparison only: not field validated",
     "finite_difference": "comparison only: not validated",
 }
 VERTICAL_APPROXIMATION_FLAG = "deviation present, vertical approximation applied"
-# Implementation envelope for the Gibbs comparison path's empirical
-# STROKE_SCALING_FACTOR, pending its qualification and load propagation (#1857).
-# This is not a physical limit: elastic-wave solutions can exhibit overtravel.
-# The other solvers therefore have no ceiling on the ratio of pump to surface stroke.
-GIBBS_STROKE_RATIO_LIMIT = 1.0
 
 
 def validate_stroke(surface_position, downhole_position, downhole_load, method):
-    """Validate every card and restrict only the empirical Gibbs stroke.
+    """Validate finite cards without forbidding elastic plunger overtravel.
 
-    Units cancel in the Gibbs range comparison; both position arrays must use
-    the same units. No divergence opt-in can waive card validity or the Gibbs
-    implementation envelope. Overtravel alone does not invalidate other methods.
+    Surface and pump position arrays use the same units. Overtravel can occur
+    in the coupled wave solution; no empirical stroke multiplier is applied.
     """
     arrays = [np.asarray(values, dtype=np.float64)
               for values in (surface_position, downhole_position, downhole_load)]
@@ -42,12 +36,6 @@ def validate_stroke(surface_position, downhole_position, downhole_load, method):
         raise PhysicsError("downhole position and load lengths differ", solver=method)
     if any(not np.all(np.isfinite(values)) for values in arrays):
         raise PhysicsError("solver card contains non-finite values", solver=method)
-    surface_stroke, downhole_stroke = (float(np.ptp(values)) for values in arrays[:2])
-    if method == "gibbs" and downhole_stroke > surface_stroke * GIBBS_STROKE_RATIO_LIMIT:
-        raise PhysicsError(
-            "downhole stroke exceeds surface stroke", solver=method,
-            details={"surface_stroke": surface_stroke, "downhole_stroke": downhole_stroke},
-        )
 
 
 def deviation_metadata(inclination_deg, include_gravity):
@@ -65,7 +53,7 @@ def deviation_metadata(inclination_deg, include_gravity):
 
 
 def annotate_results(results, context, method):
-    """Label the unchanged comparison paths and the workflow's vertical datum.
+    """Label comparison paths and the workflow's vertical datum.
 
     The Gibbs and legacy finite-difference paths do not use the survey. The
     context adapter uses the unchanged gravity-off Everitt-Jennings default.

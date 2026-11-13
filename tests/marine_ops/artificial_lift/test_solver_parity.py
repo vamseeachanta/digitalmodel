@@ -14,6 +14,7 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.data_loader import (
     load_from_json_file,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow
+from digitalmodel.marine_ops.artificial_lift.dynacard.physics import DynacardPhysicsSolver
 
 DATA_DIR = Path(__file__).with_name("test_data")
 REFERENCE_FILES = tuple(
@@ -52,13 +53,61 @@ def test_solver_parity_with_vendor_downhole_cards():
         [comparison.position_nrmse_pct for comparison in comparisons]
     )
 
-    # The class docstring reports median load nRMSE to one decimal place.
-    # Its 0.9% claim therefore permits values below 0.9 + 0.05 = 0.95%.
+    # The default solver's recorded median load nRMSE is rounded to 0.9%.
+    # That regression measurement permits values below 0.9 + 0.05 = 0.95%.
     # The other bounds reproduce the issue's published 0.16% median position
     # and 2.15% worst load results, rounded upward by 0.05 percentage point.
     assert np.median(load_nrmse) < 0.95
     assert np.median(position_nrmse) < 0.2
     assert np.max(load_nrmse) < 2.20
+
+
+def test_coupled_gibbs_parity_with_stored_reference_cards():
+    """Check coupled transfer against five stored cards with zero rod damping."""
+    load_nrmse = []
+    correlations = []
+    affine_residuals = []
+    for reference_file in REFERENCE_FILES:
+        raw = json.loads(reference_file.read_text())
+        context = load_from_json_file(reference_file)
+        assert all(section.damping_factor == 0.0 for section in context.rod_string)
+        expected = get_expected_downhole_card(raw)
+        assert expected is not None
+        with pytest.warns(UserWarning, match="comparison only: not field validated"):
+            results = DynacardPhysicsSolver(context).solve_wave_equation(harmonic_count=15)
+        assert results.downhole_load_basis.closing_sample_dropped == (
+            reference_file == REFERENCE_FILES[-1]
+        )
+        if results.downhole_load_basis.closing_sample_dropped:
+            # The stored reference repeats the same closing sample as the input.
+            assert expected.position[0] == expected.position[-1]
+            assert expected.load[0] == expected.load[-1]
+            expected = expected.model_copy(update={
+                "position": expected.position[:-1], "load": expected.load[:-1],
+            })
+        card = results.downhole_card
+        load_nrmse.append(compare_cards(card, expected).load_nrmse_pct)
+        surface_load = np.asarray(context.surface_card.load[:len(card.load)])
+        pump_load = np.asarray(card.load)
+        correlations.append(np.corrcoef(surface_load, pump_load)[0, 1])
+        slope, intercept = np.polyfit(surface_load, pump_load, 1)
+        affine_residuals.append(
+            float(np.max(np.abs(pump_load - (slope * surface_load + intercept))))
+        )
+
+    # Measured median 1.337% and maximum 2.033% are rounded up by 0.05-0.07
+    # percentage point. These are regression bounds, not acceptance limits.
+    # All five fixtures carry zero rod damping; field calibration is untested.
+    assert np.median(load_nrmse) < 1.40
+    assert np.max(load_nrmse) < 2.10
+    # Fixture 001 measures r=0.991812 at the same sample indices: <0.99 is
+    # not established. The measured <0.995 regression bound still excludes
+    # the old affine path's r=1; this is not a field accuracy criterion.
+    assert all(correlation < 0.995 for correlation in correlations), correlations
+    # The #1857 defect was an exactly affine load map (residual 4.5e-12 lbf).
+    # A least-squares affine fit of pump load on surface load must now leave a
+    # residual far above arithmetic noise on every fixture.
+    assert all(residual > 100.0 for residual in affine_residuals), affine_residuals
 
 
 def test_corner_metrics_match_available_vendor_analyses():

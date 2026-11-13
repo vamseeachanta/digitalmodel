@@ -9,6 +9,10 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
 from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow
 from digitalmodel.marine_ops.artificial_lift.dynacard.physics import DynacardPhysicsSolver
 
+from digitalmodel.marine_ops.artificial_lift.dynacard.models import AnalysisResults
+from digitalmodel.marine_ops.artificial_lift.dynacard.solver import perform_well_troubleshooting
+from digitalmodel.marine_ops.artificial_lift.dynacard.finite_difference import FiniteDifferenceSolver
+
 @pytest.fixture
 def sample_context():
     """Provides a standard well context for testing."""
@@ -37,9 +41,9 @@ def test_physics_solver_attenuation(sample_context):
     surf_stroke = max(sample_context.surface_card.position)
     dh_stroke = max(results.downhole_card.position)
     
-    # Updated for high-fidelity physics: 0.92 attenuation for this configuration
+    # This boundary has a shorter pump stroke; exact analytical values are
+    # independently checked in test_gibbs_transfer.py, without fitted scaling.
     assert dh_stroke < surf_stroke
-    assert dh_stroke == pytest.approx(surf_stroke * 0.92, rel=1e-2)
 
 def test_buckling_detection(sample_context):
     """Ensures buckling is detected when loads are sufficiently negative."""
@@ -80,18 +84,11 @@ def test_full_workflow_integration(sample_context):
 
 # --- Additional solver.py coverage tests ---
 
-from digitalmodel.marine_ops.artificial_lift.dynacard.models import AnalysisResults
-from digitalmodel.marine_ops.artificial_lift.dynacard.solver import perform_well_troubleshooting
-from digitalmodel.marine_ops.artificial_lift.dynacard.finite_difference import FiniteDifferenceSolver
-
-
 def test_workflow_init_without_context():
     """Init DynacardWorkflow with no context, verify solver is None.
 
-    The default solver is 'everitt_jennings': it is the only one that
-    reproduces the reference downhole cards (0.9% median nRMSE across the
-    fixture wells, against 17.3% for gibbs and divergence for
-    finite_difference). See issue #1857.
+    The default remains everitt_jennings. The coupled Gibbs implementation
+    is tested analytically and remains unqualified for field diagnosis.
     """
     workflow = DynacardWorkflow()
     assert workflow.ctx is None
@@ -148,9 +145,51 @@ def test_compare_solvers(sample_context):
     assert comparison['threshold_load_nrmse_pct'] == pytest.approx(4.4)
     assert comparison['comparisons']['gibbs']['stroke_error_pct'] < 20.0
     gibbs = comparison['comparisons']['gibbs']
-    assert gibbs['load_nrmse_pct'] == pytest.approx(16.8, abs=0.05)
-    assert gibbs['load_nrmse_pct'] > comparison['threshold_load_nrmse_pct']
-    assert gibbs['within_threshold'] is False
+    # The coupled solution now passes this synthetic comparison envelope.
+    # The legacy finite-difference candidate still fails the aggregate gate.
+    assert gibbs['load_nrmse_pct'] < comparison['threshold_load_nrmse_pct']
+    # Independent uniform lossless rod solution: Applied Mechanics of Solids,
+    # undated online edition, section 4.3.3, 1-D Bar subjected to end loading:
+    # https://solidmechanics.org/Text/Chapter4_3/Chapter4_3.php
+    # For u_s=100-100*cos(theta), F_s=25000+5000*sin(theta), k=omega/a,
+    # u_p=-100*cos(kL)*cos(theta)-5000*sin(kL)/(EA*k)*sin(theta),
+    # F_p=25000-W+5000*cos(kL)*sin(theta)-100*EA*k*sin(kL)*cos(theta).
+    # W=(rho_rod-rho_fluid)*A*L/144; the input has bare-body derived weight.
+    section = sample_context.rod_string[0]
+    theta = np.linspace(0, 2 * np.pi, 100)[:-1]
+    area = np.pi * section.diameter**2 / 4
+    k = (2 * np.pi * sample_context.spm / 60) / (12 * section.speed_of_sound)
+    q = k * (12 * section.length)
+    ea_k = section.modulus_of_elasticity * area * k
+    weight = (section.density - sample_context.fluid_density) * area * section.length / 144
+    hand_position = -100 * np.cos(q) * np.cos(theta) - 5000 * np.sin(q) / ea_k * np.sin(theta)
+    hand_load = 25000 - weight + 5000 * np.cos(q) * np.sin(theta) - 100 * ea_k * np.sin(q) * np.cos(theta)
+    hand_card = CardData(
+        position=(hand_position - hand_position.min()).tolist(),
+        load=hand_load.tolist(),
+    )
+    assert comparison['solver_results']['gibbs'].downhole_load_basis.closing_sample_dropped is True
+    actual = comparison['solver_results']['gibbs'].downhole_card
+    # 50000 lb bounds the mean, surface amplitude and EA*k*100 contribution.
+    # For 99 samples, N*epsilon*50000 lb < 1.1e-9 lb; 1e-8 lb allows
+    # trigonometric/FFT roundoff. These absolute budgets qualify arithmetic only.
+    np.testing.assert_allclose(actual.load, hand_card.load, rtol=0, atol=1e-8)
+    np.testing.assert_allclose(actual.position, hand_card.position, rtol=0, atol=1e-10)
+    from digitalmodel.marine_ops.artificial_lift.dynacard.comparison import compare_cards
+
+    reference = comparison['reference_results'].downhole_card
+    assert len(reference.load) == len(hand_load) + 1
+    reference = reference.model_copy(update={
+        'position': reference.position[:-1], 'load': reference.load[:-1],
+    })
+    # compare_cards is separately tested; its expected input here is solved
+    # without the Gibbs implementation. 1e-9 percentage point covers the
+    # propagated 100*1e-8/reference_load_range percentage-point budget.
+    assert np.ptp(reference.load) >= 1000
+    expected_metric = compare_cards(hand_card, reference).load_nrmse_pct
+    assert gibbs['load_nrmse_pct'] == pytest.approx(expected_metric, rel=0, abs=1e-9)
+    assert gibbs['within_threshold'] is True
+    assert comparison['comparisons']['finite_difference']['within_threshold'] is False
     assert caught.value.details['comparisons']['gibbs'] == gibbs
 
 

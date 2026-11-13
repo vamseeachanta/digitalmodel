@@ -112,6 +112,38 @@ filtered_bp = freq_filter.bandpass_filter(signal, 5, 15, fs=1000)
 filtered_notch = freq_filter.bandstop_filter(signal, 48, 52, fs=1000)
 ```
 
+### FFT Filter Comparison
+
+`plot_filter_comparison` returns a Plotly figure with original and filtered
+time traces and one-sided amplitude spectra. Plotly is a runtime dependency.
+This synthetic example retains the 4 Hz component of amplitude 2 and removes
+the 12 Hz component of amplitude 5:
+
+```python
+import numpy as np
+from digitalmodel.signal_processing.signal_analysis.visualization import (
+    plot_filter_comparison,
+)
+
+time = np.arange(64) / 64
+signal = 2 * np.sin(2 * np.pi * 4 * time) + 5 * np.sin(2 * np.pi * 12 * time)
+figure = plot_filter_comparison(signal, 64, high_cutoff=4, units="input units")
+figure.write_html("filter_comparison.html", include_plotlyjs=True, auto_open=False)
+```
+
+An upper cutoff alone selects low pass, a lower cutoff alone selects high pass,
+and both select band pass. Bounds include their boundary bins; omitting both
+retains the signal up to floating-point roundoff. Uniform sampling is assumed;
+time is shown in seconds and frequency in Hz. Amplitude is in the input units,
+not power spectral density; DC and even-length Nyquist bins are not doubled.
+The unit label performs no conversion. The helper neither opens a browser nor
+writes files; the explicit export above embeds Plotly assets for offline viewing.
+
+The existing FFT mask treats the record as periodic without padding, windowing
+or detrending. Nonperiodic endpoints can cause leakage, and sharp masks can cause
+ringing and circular edge effects. Nonfinite time or amplitude coordinates at
+floating-point limits raise `ValueError` in this plotting helper.
+
 ## API Reference
 
 ### RainflowCounter
