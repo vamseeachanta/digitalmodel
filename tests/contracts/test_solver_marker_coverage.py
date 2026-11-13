@@ -128,13 +128,24 @@ def _close(defs: dict[str, ast.AST], api: set[str], helpers: set[str], fixtures:
 
 
 def _is_main_guard(node: ast.AST) -> bool:
-    """``if __name__ == "__main__":`` does not run when pytest imports the module."""
-    return (
-        isinstance(node, ast.If)
-        and isinstance(node.test, ast.Compare)
-        and isinstance(node.test.left, ast.Name)
-        and node.test.left.id == "__name__"
-        and any(isinstance(c, ast.Constant) and c.value == "__main__" for c in node.test.comparators)
+    """``if __name__ == "__main__":`` -- its body does not run when pytest imports the module.
+
+    Only a single exact equality between ``__name__`` and ``"__main__"`` (either
+    operand order) qualifies; ``!=``, ``not``, ``or`` and chained comparisons
+    can be true on import.  The guard's ``else``/``elif`` branches do run.
+    """
+    if not isinstance(node, ast.If) or not isinstance(node.test, ast.Compare):
+        return False
+    test = node.test
+    if len(test.ops) != 1 or not isinstance(test.ops[0], ast.Eq):
+        return False
+    operands = (test.left, test.comparators[0])
+    return any(
+        isinstance(name, ast.Name)
+        and name.id == "__name__"
+        and isinstance(value, ast.Constant)
+        and value.value == "__main__"
+        for name, value in (operands, operands[::-1])
     )
 
 
@@ -151,11 +162,14 @@ def _import_time(body: list[ast.stmt]):
     That is module-level code and every class body (at any nesting), plus the
     decorators and argument defaults of each ``def`` and the decorators, bases
     and keywords of each ``class`` among them -- including a solver-marked
-    test's ``parametrize`` arguments.  Function bodies and the ``__main__``
-    guard are not executed on import.
+    test's ``parametrize`` arguments.  Function bodies and the body of an
+    exact ``__name__ == "__main__"`` guard are not executed on import; the
+    guard's test and its ``else``/``elif`` branches are.
     """
     for node in body:
         if _is_main_guard(node):
+            yield node.test
+            yield from _import_time(node.orelse)
             continue
         if isinstance(node, FUNCS):
             yield from _definition_time(node)
@@ -449,9 +463,50 @@ def test_scan_does_not_report_call_time_code(tmp_path, body):
     assert not [f for f in found if "import time" in f]
 
 
-def test_scan_ignores_the_main_guard(tmp_path):
-    body = GATED + "if __name__ == '__main__':\n    OrcFxAPI.Model()\n"
-    assert _scan_text(tmp_path, {"tests/test_m.py": body}) == []
+@pytest.mark.parametrize(
+    "body",
+    [
+        "if __name__ == '__main__':\n    OrcFxAPI.Model()\n",
+        "if '__main__' == __name__:\n    OrcFxAPI.Model()\n",
+        "if __name__ == '__main__':\n    OrcFxAPI.Model()\nelse:\n    pass\n",
+        # An elif guard runs its body only under ``__main__`` too.
+        "if HAS:\n    pass\nelif __name__ == '__main__':\n    OrcFxAPI.Model()\n",
+        "class TestA:\n    if __name__ == '__main__':\n        m = OrcFxAPI.Model()\n",
+    ],
+)
+def test_scan_ignores_the_main_guard(tmp_path, body):
+    assert _scan_text(tmp_path, {"tests/test_m.py": GATED + body}) == []
+
+
+@pytest.mark.parametrize(
+    "body, line",
+    [
+        # Only exact equality with "__main__" is a guard; these run on import.
+        ("if __name__ != '__main__':\n    M = OrcFxAPI.Model()\n", 8),
+        ("if '__main__' != __name__:\n    M = OrcFxAPI.Model()\n", 8),
+        ("if not __name__ == '__main__':\n    M = OrcFxAPI.Model()\n", 8),
+        ("if __name__ == '__main__' or HAS:\n    M = OrcFxAPI.Model()\n", 8),
+        ("if __name__ == '__main__' == __name__:\n    M = OrcFxAPI.Model()\n", 8),
+        # The else and elif branches of a guard run on import.
+        ("if __name__ == '__main__':\n    pass\nelse:\n    M = OrcFxAPI.Model()\n", 10),
+        ("if '__main__' == __name__:\n    pass\nelse:\n    M = OrcFxAPI.Model()\n", 10),
+        ("if __name__ == '__main__':\n    pass\nelif HAS:\n    M = OrcFxAPI.Model()\n", 10),
+        ("if __name__ == '__main__':\n    pass\nelif OrcFxAPI.Model():\n    pass\n", 9),
+        (
+            "if __name__ == '__main__':\n    pass\nelif HAS:\n    pass\n"
+            "else:\n    M = OrcFxAPI.Model()\n",
+            12,
+        ),
+        (
+            "class TestA:\n    if __name__ == '__main__':\n        pass\n"
+            "    else:\n        m = OrcFxAPI.Model()\n",
+            11,
+        ),
+    ],
+)
+def test_scan_reports_code_the_main_guard_does_not_cover(tmp_path, body, line):
+    found = _scan_text(tmp_path, {"tests/test_m.py": GATED + body})
+    assert f"tests/test_m.py:{line} calls OrcFxAPI at import time" in found
 
 
 def test_scan_follows_conftest_fixtures_into_their_subtree_only(tmp_path):
