@@ -33,6 +33,8 @@ _LINE_TYPE_FIELDS = {
     "allowable_tension": "AllowableTension",
     "stress_od": "StressOD",
     "stress_id": "StressID",
+    "seabed_lateral_friction": "SeabedLateralFrictionCoefficient",
+    "seabed_axial_friction": "SeabedAxialFrictionCoefficient",
 }
 _VESSEL_FIELDS = {
     "type_name": "VesselType",

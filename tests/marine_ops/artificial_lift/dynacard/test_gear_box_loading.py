@@ -220,46 +220,46 @@ class TestGearBoxLoadingWithRealData:
     """Tests using real well card data."""
 
     @pytest.fixture
-    def well_7699227(self):
-        """Load well 7699227 test data."""
-        filepath = TEST_DATA_DIR / "7699227.json"
+    def well_echo(self):
+        """Load well field well echo test data."""
+        filepath = TEST_DATA_DIR / "field_well_echo.json"
         if filepath.exists():
             return load_from_json_file(filepath)
-        pytest.skip("Test data file 7699227.json not found")
+        pytest.skip("Test data file field_well_echo.json not found")
 
     @pytest.fixture
-    def well_5206267(self):
-        """Load well 5206267 test data."""
-        filepath = TEST_DATA_DIR / "5206267.json"
+    def well_charlie(self):
+        """Load well field well charlie test data."""
+        filepath = TEST_DATA_DIR / "field_well_charlie.json"
         if filepath.exists():
             return load_from_json_file(filepath)
-        pytest.skip("Test data file 5206267.json not found")
+        pytest.skip("Test data file field_well_charlie.json not found")
 
     @pytest.fixture
-    def well_2223782(self):
-        """Load well 2223782 test data."""
-        filepath = TEST_DATA_DIR / "2223782.json"
+    def well_bravo(self):
+        """Load well field well bravo test data."""
+        filepath = TEST_DATA_DIR / "field_well_bravo.json"
         if filepath.exists():
             return load_from_json_file(filepath)
-        pytest.skip("Test data file 2223782.json not found")
+        pytest.skip("Test data file field_well_bravo.json not found")
 
-    def test_gear_box_loading_7699227(self, well_7699227):
-        """Test gear box loading with well 7699227 data."""
-        result = calculate_gear_box_loading(well_7699227)
+    def test_gear_box_loading_echo(self, well_echo):
+        """Test gear box loading with well field well echo data."""
+        result = calculate_gear_box_loading(well_echo)
 
         # Should complete without error
         assert result.counterbalance_status in ["converged", "unconverged"]
 
         # Should have valid torque curves
-        assert len(result.crank_angle) == len(well_7699227.surface_card.position)
-        assert len(result.actual_torque_curve) == len(well_7699227.surface_card.position)
+        assert len(result.crank_angle) == len(well_echo.surface_card.position)
+        assert len(result.actual_torque_curve) == len(well_echo.surface_card.position)
 
         # Torque values should be reasonable (< 1000 M-in-lbs for most wells)
         assert abs(result.actual_torque.abs_max_torque) < 2000
 
-    def test_gear_box_loading_5206267(self, well_5206267):
-        """Test gear box loading with well 5206267 data."""
-        result = calculate_gear_box_loading(well_5206267)
+    def test_gear_box_loading_charlie(self, well_charlie):
+        """Test gear box loading with well field well charlie data."""
+        result = calculate_gear_box_loading(well_charlie)
 
         # Should complete
         assert result.counterbalance_status in ["converged", "unconverged", "error: K < I, h cannot be calculated", "error: Missing K or I dimensions"]
@@ -268,18 +268,18 @@ class TestGearBoxLoadingWithRealData:
             # Valid result
             assert len(result.actual_torque_curve) > 0
 
-    def test_gear_box_loading_2223782(self, well_2223782):
-        """Test gear box loading with well 2223782 data."""
-        result = calculate_gear_box_loading(well_2223782)
+    def test_gear_box_loading_bravo(self, well_bravo):
+        """Test gear box loading with well field well bravo data."""
+        result = calculate_gear_box_loading(well_bravo)
 
         assert result.counterbalance_status in ["converged", "unconverged", "error: K < I, h cannot be calculated", "error: Missing K or I dimensions"]
 
         if "error" not in result.counterbalance_status:
             assert len(result.actual_torque_curve) > 0
 
-    def test_balanced_torque_lower_than_actual(self, well_7699227):
+    def test_balanced_torque_lower_than_actual(self, well_echo):
         """Test that balanced torque peak is generally lower than actual."""
-        result = calculate_gear_box_loading(well_7699227)
+        result = calculate_gear_box_loading(well_echo)
 
         if "error" not in result.counterbalance_status:
             # Balanced torque should typically be lower or equal

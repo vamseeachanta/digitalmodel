@@ -353,23 +353,23 @@ class TestLoadRatioWithRealData:
     """Tests using real well card data."""
 
     @pytest.fixture
-    def well_7699227(self):
-        """Load well 7699227 test data."""
-        filepath = TEST_DATA_DIR / "7699227.json"
+    def well_echo(self):
+        """Load well field well echo test data."""
+        filepath = TEST_DATA_DIR / "field_well_echo.json"
         if filepath.exists():
             return load_from_json_file(filepath)
-        pytest.skip("Test data file 7699227.json not found")
+        pytest.skip("Test data file field_well_echo.json not found")
 
-    def test_load_ratios_from_card(self, well_7699227):
+    def test_load_ratios_from_card(self, well_echo):
         """Test extracting load ratios from real card data."""
         # Set normal loads for testing
-        if well_7699227.input_params is None:
-            well_7699227.input_params = InputParameters(strokes_per_minute=6.0)
+        if well_echo.input_params is None:
+            well_echo.input_params = InputParameters(strokes_per_minute=6.0)
 
-        well_7699227.input_params.normal_peak_load = 15000.0
-        well_7699227.input_params.normal_min_load = 5000.0
+        well_echo.input_params.normal_peak_load = 15000.0
+        well_echo.input_params.normal_min_load = 5000.0
 
-        result = calculate_load_ratios(well_7699227)
+        result = calculate_load_ratios(well_echo)
 
         # Should have extracted actual loads from card
         assert result.actual_peak_load > 0

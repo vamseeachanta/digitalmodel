@@ -31,6 +31,7 @@ from .equipment import (
     Stinger,
     StingerRoller,
     StingerSection,
+    JLay,
     Tensioner,
     TugProperties,
     Tugs,
@@ -168,6 +169,7 @@ __all__ = [
     "StingerSection",
     "StingerRoller",
     "Stinger",
+    "JLay",
     "Tensioner",
     # Simulation
     "Simulation",
