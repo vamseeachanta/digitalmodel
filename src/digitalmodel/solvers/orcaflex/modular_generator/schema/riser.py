@@ -150,11 +150,19 @@ class RiserContents(BaseModel):
 
     Attributes:
         density: Contents density (te/m3). Default 1.0 (seawater).
-        pressure: Internal pressure (kPa). Default 0. Emitted as
-            ``ContentsPressure``; the generator does not set
-            ``ContentsPressureRefZ``, so the reference height is the OrcaFlex
-            default, which is not established offline (#3983).
-        flow_rate: Contents flow rate (m/s). Default 0.
+        pressure: Internal gauge pressure (kPa = kN/m2). Default 0. Emitted
+            as ``ContentsPressure``. OrcaFlex pressures are gauge pressures,
+            and the contents pressure applies at a reference Z level, for
+            which ``~`` denotes the top end of the line in the reset state
+            [Orcina webhelp, Line data: Contents,
+            https://www.orcina.com/webhelp/OrcaFlex/Content/html/Linedata,Contents.htm
+            (retrieved 2026-11-13)]. The generator does not emit ``ContentsPressureRefZ``;
+            the value OrcaFlex applies when the key is omitted needs native
+            readback (#3983).
+        flow_rate: Default 0; non-zero values are refused by the riser
+            builder. The schema states m/s, while OrcaFlex ``Flow rate`` is a
+            mass flow rate [same source]; the conversion (contents density
+            times internal area times velocity) is not specified here.
     """
 
     density: float = Field(default=1.0, ge=0, description="Contents density (te/m3)")

@@ -4,6 +4,13 @@
 only ``ContentsDensity`` was emitted, so a pressurised riser was generated at
 zero internal pressure.  The native data names are those of the public example
 "A01 Lazy wave riser" (``ContentsPressure``, ``ContentsFlowRate``).
+
+All pressures, densities and flow rates below are synthetic sentinel inputs,
+not design values.  The tests establish scalar transfer from the schema to the
+emitted line.  The schema states kPa, and 1 kPa = 1 kN/m2 is the pressure unit
+of the OrcaFlex SI system (kN, m); that OrcaFlex interprets the emitted value
+as kPa gauge at the intended reference level is a solver-side matter that
+needs a licensed load (#3983).
 """
 
 from __future__ import annotations
@@ -38,6 +45,7 @@ def _line(pressure: float, flow_rate: float = 0.0) -> dict:
 
 
 def test_contents_pressure_is_emitted_in_kpa():
+    """Sentinel 15000 kPa (15000 kN/m2) and density 0.8 te/m3 pass through."""
     line = _line(pressure=15000.0)
     assert line["ContentsDensity"] == 0.8
     assert line["ContentsPressure"] == 15000.0
@@ -55,8 +63,9 @@ def test_contents_data_names_match_native_example():
 
 
 def test_nonzero_flow_rate_fails_closed():
-    """The schema states m/s; the OrcaFlex flow-rate unit is not established
-    offline, so a non-zero value is refused rather than emitted or dropped."""
+    """The schema states m/s; OrcaFlex flow rate is a mass flow rate and no
+    conversion is specified, so a non-zero value is refused rather than
+    emitted or dropped."""
     with pytest.raises(ValueError, match="flow_rate"):
         _line(pressure=100.0, flow_rate=1.5)
 

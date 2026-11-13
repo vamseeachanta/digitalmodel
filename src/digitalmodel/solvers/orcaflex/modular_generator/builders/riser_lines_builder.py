@@ -101,20 +101,24 @@ class RiserLinesBuilder(BaseBuilder):
             # Contents
             "ContentsMethod": "Uniform",
             "ContentsDensity": riser_line.contents.density,
-            # kPa in the OrcaFlex SI unit system (kN, m, te, s). The pressure
-            # reference height (ContentsPressureRefZ) is left to the OrcaFlex
-            # default; which height that is has not been confirmed offline.
+            # Gauge pressure, kPa (kN/m2) in the OrcaFlex SI unit system
+            # (kN, m, te, s). ContentsPressureRefZ is not emitted; OrcaFlex
+            # documents "~" as the top end in the reset state (Line data:
+            # Contents), but the value applied when the key is omitted has not
+            # been read back from a loaded model.
             "ContentsPressure": riser_line.contents.pressure,
         }
 
-        # The schema states flow rate in m/s, but the OrcaFlex unit for
-        # ContentsFlowRate is not established offline; refuse a non-zero value
-        # instead of emitting it with a possibly wrong unit or dropping it.
+        # The schema states flow rate in m/s, but OrcaFlex "Flow rate" is a
+        # mass flow rate (Line data: Contents). The velocity-to-mass-flow
+        # conversion is not specified here, so a non-zero value is refused
+        # instead of being emitted in the wrong quantity or dropped.
         if riser_line.contents.flow_rate:
             raise ValueError(
                 f"Line '{riser_line.name}': contents flow_rate "
                 f"{riser_line.contents.flow_rate} is not supported; its OrcaFlex "
-                "unit is unconfirmed (see #3983). Set flow_rate to 0."
+                "input is a mass flow rate and no conversion from the schema's "
+                "m/s is specified (see #3983). Set flow_rate to 0."
             )
 
         # Add StaticsStep2 if specified (needed for wave configurations)
