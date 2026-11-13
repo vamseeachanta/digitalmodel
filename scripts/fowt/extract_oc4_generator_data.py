@@ -54,7 +54,7 @@ EXPECTED_SHA256 = {
     "lin": "4098c8badb84b9324d2fd36193bdf23fb5fe2b5d1fd000f96979cc3521fe0660",
 }
 # NumPy 2 renamed trapz to trapezoid; support both.
-_trapz = getattr(np, "trapezoid", None) or np.trapz
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
 REPORT = "Robertson et al. (2014), NREL/TP-5000-60601"
 PHASE2 = "Robertson et al. (2014), NREL/CP-5000-61154"
 
@@ -178,9 +178,9 @@ def components(raw: Path) -> list[dict]:
     # Tower: ElastoDyn distributed mass; the report's Table 2-2 gives 249,718 kg at 43.4 m.
     tw = table(raw / Path(FILES["tower"]).name, "HtFract", 2)
     z = base + tw[:, 0] * (top - base)
-    tower_mass = float(_trapz(tw[:, 1], z))
-    tower_zc = float(_trapz(tw[:, 1] * z, z) / tower_mass)
-    tower_iyy = float(_trapz(tw[:, 1] * (z - tower_zc) ** 2, z))
+    tower_mass = float(_trapezoid(tw[:, 1], z))
+    tower_zc = float(_trapezoid(tw[:, 1] * z, z) / tower_mass)
+    tower_iyy = float(_trapezoid(tw[:, 1] * (z - tower_zc) ** 2, z))
     # Blade: ElastoDyn distributed mass with its AdjBlMs factor.
     bl = table(raw / Path(FILES["blade"]).name, "BlFract", 3)
     tip, hub_r = value(ed, "TipRad"), value(ed, "HubRad")
@@ -188,9 +188,9 @@ def components(raw: Path) -> list[dict]:
     span = bl[:, 0] * (tip - hub_r)
     radius = hub_r + span
     density = bl[:, 2] * adjust
-    blade_mass = float(_trapz(density, span))
-    blade_first = float(_trapz(density * radius, span))
-    blade_second = float(_trapz(density * radius ** 2, span))
+    blade_mass = float(_trapezoid(density, span))
+    blade_first = float(_trapezoid(density * radius, span))
+    blade_second = float(_trapezoid(density * radius ** 2, span))
     tilt = math.radians(abs(value(ed, "ShftTilt")))
     cone = math.radians(abs(value(ed, "PreCone(1)")))
     overhang = value(ed, "OverHang")
