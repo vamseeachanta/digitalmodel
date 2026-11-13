@@ -36,7 +36,7 @@ _LINE_TYPE_FIELDS = {
 }
 # Native list-valued line-type data: field -> (data name, cell index, width).
 # Native saves carry EI as [x, ~] and Cd/Ca as [normal, ~, axial]; the list is
-# kept as a layout template and only the mapped cell is read or replaced.
+# kept as a layout template. Explicit equal EI components are edited together.
 _CELL_FIELDS = {
     "bending_stiffness": ("EI", 0, 2),
     "drag_coefficient": ("Cd", 0, 3),
@@ -190,6 +190,8 @@ def _restore_scalars(obj: dict, typed: Any, fields: dict[str, str]) -> None:
     """Overlay authored typed fields only; schema defaults add no native keys.
 
     Fields in ``_CELL_FIELDS`` replace their cell of a native list template.
+    Isotropic EI edits update both explicit components, retaining ``~`` when
+    the second component inherits the first.
     An axial value without a list template becomes ``[normal, ~, axial]``.
     A list whose first (normal) cell would be undefined is rejected rather
     than emitted as ``[~, ~, axial]``.
@@ -206,6 +208,8 @@ def _restore_scalars(obj: dict, typed: Any, fields: dict[str, str]) -> None:
             cells = list(current) if isinstance(current, list) else [current]
             cells += [None] * (width - len(cells))
             cells[index] = value
+            if native == "EI" and cells[1] is not None:
+                cells[1] = value
             if cells[0] is None:
                 raise ValueError(
                     f"{native} cell {index} is authored but the normal (first) "

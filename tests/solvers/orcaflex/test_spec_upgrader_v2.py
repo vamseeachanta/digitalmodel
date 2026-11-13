@@ -367,3 +367,27 @@ def test_isotropic_native_stiffness_list_is_converted(single_riser, tmp_path, st
     assert after == generated_mapping(single_riser, tmp_path / "before")
     (line_type,) = after["includes/20_generic_objects.yml"]["LineTypes"]
     assert line_type["EI"] == stiffness
+
+
+@pytest.mark.parametrize("explicit_second", [False, True])
+@pytest.mark.parametrize("source", ["typed", "properties"])
+def test_typed_stiffness_edit_preserves_isotropy(
+    single_riser, tmp_path, explicit_second, source
+):
+    """A synthetic EI edit updates both directions or retains inheritance."""
+    native_type = single_riser["generic"]["line_types"][0]
+    stiffness = [120, 120 if explicit_second else None]
+    if source == "typed":
+        native_type["bending_stiffness"] = stiffness
+    else:
+        native_type.pop("bending_stiffness")
+        native_type["properties"]["EI"] = stiffness
+    upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
+    upgraded["riser"]["line_types"][0]["bending_stiffness"] = 150
+    original = deepcopy(upgraded)
+    reloaded = yaml.safe_load(yaml.safe_dump(upgraded))
+    after = generated_mapping(reloaded, tmp_path / "edited")
+    (line_type,) = after["includes/20_generic_objects.yml"]["LineTypes"]
+    assert line_type["EI"] == [150, 150 if explicit_second else None]
+    assert upgraded == original
+    assert reloaded == original
