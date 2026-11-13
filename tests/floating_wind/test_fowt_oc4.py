@@ -194,3 +194,29 @@ def test_run_package_rerun_keeps_saved_results(tmp_path):
         module.main(["x", str(tmp_path)])
     assert saved.read_bytes() == b"solver results"
     assert master.read_bytes() == first
+
+
+def _extraction_module():
+    script = ROOT / "scripts" / "fowt" / "extract_oc4_generator_data.py"
+    module_spec = importlib.util.spec_from_file_location("extract_oc4_precision", script)
+    module = importlib.util.module_from_spec(module_spec)
+    module_spec.loader.exec_module(module)
+    return module
+
+
+def test_linearisation_values_are_serialised_at_documented_precision():
+    """Eigensolver round-off (about 3e-12 relative between numerical environments)
+    must not change the committed bytes: the twelve linearisation-derived values
+    are held at LINEARISATION_SIGNIFICANT_FIGURES and are not near a rounding edge."""
+    module = _extraction_module()
+    digits = module.LINEARISATION_SIGNIFICANT_FIGURES
+    assert digits == 9
+    basis = yaml.safe_load((FOLDER / "basis.yml").read_text(encoding="utf-8"))
+    comparators = basis["comparators"]
+    values = [v for key in ("openfast_linearisation_periods", "openfast_linearisation_damping")
+              for v in comparators[key]["value"].values()]
+    assert len(values) == 12
+    for v in values:
+        assert module.canonical(v) == v
+        for factor in (1 - 3e-12, 1 + 3e-12, 1 - 1e-11, 1 + 1e-11):
+            assert module.canonical(v * factor) == v

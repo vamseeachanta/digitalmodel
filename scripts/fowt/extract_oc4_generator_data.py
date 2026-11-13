@@ -80,6 +80,19 @@ def table(path: Path, header_word: str, columns: int) -> np.ndarray:
     return np.array(rows)
 
 
+# Eigensolver results differ between numerical environments by round-off
+# (about 3e-12 relative was observed). The linearisation periods and damping
+# ratios are serialised at this many significant figures so the committed
+# bytes do not depend on the environment; this is a serialization convention,
+# not a statement of the accuracy of the linearisation.
+LINEARISATION_SIGNIFICANT_FIGURES = 9
+
+
+def canonical(x: float) -> float:
+    """Round to LINEARISATION_SIGNIFICANT_FIGURES significant figures."""
+    return float(f"{x:.{LINEARISATION_SIGNIFICANT_FIGURES}g}")
+
+
 def linearisation_periods(path: Path) -> dict:
     """Platform natural periods from the OpenFAST linearised state matrix.
 
@@ -105,7 +118,8 @@ def linearisation_periods(path: Path) -> dict:
     out = {}
     for d, name in enumerate(names):
         frequency, zeta, share = max(modes, key=lambda m: m[2][d])
-        out[name] = {"period": 1.0 / frequency, "damping_ratio": zeta, "share": float(share[d])}
+        out[name] = {"period": canonical(1.0 / frequency), "damping_ratio": canonical(zeta),
+                     "share": float(share[d])}
     return out
 
 
@@ -202,7 +216,7 @@ def components(raw: Path) -> list[dict]:
 
 
 def aggregate(parts: list[dict]) -> dict:
-    mass = sum(p["mass"] for p in parts)
+    mass = math.fsum(p["mass"] for p in parts)  # version-independent float sum
     centre = sum(p["mass"] * np.array(p["centre"]) for p in parts) / mass
     inertia = sum(parallel(p["mass"], np.array(p["centre"]), np.array(p["inertia"], float),
                            centre) for p in parts)

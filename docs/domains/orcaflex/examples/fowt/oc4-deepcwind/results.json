@@ -50,12 +50,12 @@
   "yaw": 76.38008958112172
  },
  "openfast_linearisation_periods": {
-  "surge": 106.8921146936897,
-  "sway": 106.97127139682905,
-  "heave": 17.283327191974045,
-  "roll": 25.326329350287732,
-  "pitch": 25.44747688506562,
-  "yaw": 80.22157268701285
+  "surge": 106.892115,
+  "sway": 106.971271,
+  "heave": 17.2833272,
+  "roll": 25.3263294,
+  "pitch": 25.4474769,
+  "yaw": 80.2215727
  },
  "mooring_stiffness": [
   [
@@ -212,40 +212,40 @@
    "quantity": "Natural period, surge",
    "unit": "s",
    "computed": 113.68403132111585,
-   "comparator": 106.8921146936897,
+   "comparator": 106.892115,
    "comparator_source": "OpenFAST linearisation in OpenFAST/r-test (basis.yml comparators)",
    "tolerance": 0.1,
-   "deviation": 0.06353992197543364,
+   "deviation": 0.06353991892775111,
    "within_tolerance": true
   },
   {
    "quantity": "Natural period, heave",
    "unit": "s",
    "computed": 17.277879364503537,
-   "comparator": 17.283327191974045,
+   "comparator": 17.2833272,
    "comparator_source": "OpenFAST linearisation in OpenFAST/r-test (basis.yml comparators)",
    "tolerance": 0.05,
-   "deviation": -0.0003152071016186139,
+   "deviation": -0.00031520756584771197,
    "within_tolerance": true
   },
   {
    "quantity": "Natural period, pitch",
    "unit": "s",
    "computed": 25.43366213014032,
-   "comparator": 25.44747688506562,
+   "comparator": 25.4474769,
    "comparator_source": "OpenFAST linearisation in OpenFAST/r-test (basis.yml comparators)",
    "tolerance": 0.05,
-   "deviation": -0.0005428732674635665,
+   "deviation": -0.0005428738540158287,
    "within_tolerance": true
   },
   {
    "quantity": "Natural period, yaw",
    "unit": "s",
    "computed": 79.79622285014078,
-   "comparator": 80.22157268701285,
+   "comparator": 80.2215727,
    "comparator_source": "OpenFAST linearisation in OpenFAST/r-test (basis.yml comparators)",
    "tolerance": 0.1,
-   "deviation": -0.0053021877111732695,
+   "deviation": -0.005302187872205808,
    "within_tolerance": true
   }
  ],
