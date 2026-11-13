@@ -16,6 +16,7 @@ coefficients, default inputs or generated models. Numerical behaviour is unchang
 | 1 | 2026-10-19 | Inventory the standards-labelled inputs and evidence gaps so that publication metadata cannot be mistaken for engineering qualification. |
 | 2 | 2026-10-19 | Record the separate uncited strength fallback, confirm the catalogue title wording and extend the inventory checks for portable paths and citation syntax. |
 | 3 | 2026-10-25 | Distinguish overlapping test selections and record their verified counts so that validation figures remain reproducible. |
+| 4 | 2026-11-13 | Record the uncited seabed friction defaults made into schema inputs by #3989, so that the defaults are not mistaken for qualified inputs. |
 
 ## Publication identities and edition boundaries
 
@@ -57,6 +58,27 @@ Table 2. Standards-labelled uses and adjacent defaults. The symbolic relation is
 transcribed from the router solely to identify the unresolved method. It is not a
 sourced design equation. No new engineering equation, coefficient or acceptance
 limit is introduced.
+
+## Uncited seabed friction defaults
+
+Issue #3989 makes seabed lateral and axial friction schema inputs. When no value
+is authored, the generator emits the defaults below, which reproduce the former
+hard-coded output. None of them carries a standard attribution, so they are
+outside the standards-labelled JSON inventory above. Their source is not
+established, and they are unqualified for design use. An analysis that relies on
+seabed friction needs an authored value with its own qualified source.
+
+| Consumer | Default | Basis and limitation |
+| --- | --- | --- |
+| `RiserLineType.seabed_lateral_friction` ([`schema/riser.py`](../../../src/digitalmodel/solvers/orcaflex/modular_generator/schema/riser.py)) | 0.5 | Uncited; reproduces the former riser line-type output. |
+| `RiserLineType.seabed_axial_friction` | `~` | `~` means the axial coefficient equals the lateral one ([OrcaFlex line type friction data](https://www.orcina.com/webhelp/OrcaFlex/Content/html/Linetypes,Frictiondata.htm), checked 2026-11-13); the lateral value remains uncited. |
+| `MooringRouter._friction` default, chain ([`mooring_router.py`](../../../src/digitalmodel/solvers/orcaflex/modular_generator/routers/mooring_router.py)) | 1.0 | Uncited; reproduces the former chain output. |
+| `MooringRouter._friction` default, wire rope | 0.5 | Uncited; reproduces the former wire-rope output. |
+| `MooringRouter._friction` default, polyester | 0.3 | Uncited; reproduces the former polyester output. |
+
+Table 4. Seabed friction defaults. Mooring axial friction is emitted as `~`.
+Reproducing the former output establishes compatibility only, not a physical
+basis.
 
 ## Citation sidecars at consumer boundaries
 

@@ -21,6 +21,9 @@ References
 
 from __future__ import annotations
 
+import math
+from numbers import Real
+
 from pydantic import BaseModel, Field
 
 from digitalmodel.cathodic_protection import _kernels as kernel
@@ -204,6 +207,17 @@ def calculate_remaining_life(
     )
 
 
+def _validate_profile_argument(
+    name: str, value: float, *, allow_zero: bool = False
+) -> None:
+    """Require a finite real scalar in the declared profile domain."""
+    if isinstance(value, bool) or not isinstance(value, Real) or not math.isfinite(value):
+        raise ValueError(f"{name} must be a finite real number; booleans are not accepted")
+    if value < 0 or (value == 0 and not allow_zero):
+        domain = "non-negative" if allow_zero else "greater than zero"
+        raise ValueError(f"{name} must be {domain}")
+
+
 def generate_depletion_profile(
     original_mass_kg: float,
     mean_current_A: float,
@@ -218,27 +232,43 @@ def generate_depletion_profile(
     constant current demand. The consumption rate is the Faraday rate
     ``I * 8760 / epsilon`` [kg/yr]; ``end_of_life_year`` is when the usable
     mass ``M * u`` is consumed, the zero crossing of ``usable_mass_kg``.
+    All inputs must be finite real scalars; booleans are not accepted.
 
     Parameters
     ----------
     original_mass_kg : float
-        Original anode net mass [kg].
+        Original anode net mass [kg], greater than zero.
     mean_current_A : float
-        Mean current demand [A].
+        Mean current demand [A], non-negative.
     design_life_years : float
-        Projection period [years].
+        Projection period [years], non-negative.
     anode_capacity_Ah_kg : float
-        Electrochemical capacity [A-h/kg].
+        Electrochemical capacity [A-h/kg], greater than zero.
     utilization_factor : float
-        Anode utilization factor.
+        Anode utilization factor, greater than zero and at most one.
     time_step_years : float
-        Time step for the profile [years].
+        Time step for the profile [years], greater than zero.
 
     Returns
     -------
     DepletionProfile
         Time series of remaining mass and depletion percentage.
+
+    Raises
+    ------
+    ValueError
+        If an argument is outside its domain, naming the offending argument
+        before any consumption calculation or profile sampling.
     """
+    _validate_profile_argument("original_mass_kg", original_mass_kg)
+    _validate_profile_argument("mean_current_A", mean_current_A, allow_zero=True)
+    _validate_profile_argument("design_life_years", design_life_years, allow_zero=True)
+    _validate_profile_argument("anode_capacity_Ah_kg", anode_capacity_Ah_kg)
+    _validate_profile_argument("utilization_factor", utilization_factor)
+    if utilization_factor > 1:
+        raise ValueError("utilization_factor must be at most one")
+    _validate_profile_argument("time_step_years", time_step_years)
+
     years: list[float] = []
     masses: list[float] = []
     usable: list[float] = []

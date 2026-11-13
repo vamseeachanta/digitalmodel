@@ -240,6 +240,7 @@ class TestTiebackStatsSegmented:
             "by_fluid_type": {
                 "gas": {"count": 1, "min": 5, "max": 5, "mean": 5},
             },
+            "by_region": {},
         }
 
     def test_empty_input(self):

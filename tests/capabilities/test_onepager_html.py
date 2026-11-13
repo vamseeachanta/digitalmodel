@@ -56,6 +56,16 @@ def test_pressure_explorer_card_keeps_its_identity_and_reference_figures():
     ]
 
 
+def test_pressure_explorer_copy_discloses_the_load_case():
+    spec = next(spec for spec in builder.SPECS if spec["id"] == "wall-thickness-explorer")
+    for text in (spec["blurb"], " ".join(spec["bullets"])):
+        assert "pressure-only" in text.lower()
+        assert "zero effective tension" in text.lower()
+        assert "zero bending moment" in text.lower()
+        assert "combined tension and bending are not evaluated" in text.lower()
+    assert "combined-loading utilizations" not in " ".join(spec["bullets"])
+
+
 def test_load_explorer_card_has_its_own_grid_figures_and_limits():
     cards = {card["id"]: card for card in builder.build_cards()}
     card = cards["wall-thickness-load-explorer"]

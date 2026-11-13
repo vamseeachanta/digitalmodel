@@ -75,6 +75,19 @@ class RiserLineType(BaseModel):
     added_mass_coefficient: float = Field(default=1.0, ge=0, description="Ca")
     axial_drag_coefficient: float = Field(default=0.008, ge=0, description="Axial Cd")
 
+    # Seabed friction (#3989); defaults reproduce the former hard-coded output.
+    # The 0.5 default is uncited and unqualified for design use; see
+    # docs/domains/orcaflex/generator-standards.md, "Uncited seabed friction
+    # defaults".
+    seabed_lateral_friction: float = Field(
+        default=0.5, ge=0,
+        description="Seabed lateral friction coefficient (default 0.5: uncited, "
+        "unqualified for design use)",
+    )
+    seabed_axial_friction: float | None = Field(
+        default=None, ge=0, description="Seabed axial friction coefficient (~ = lateral)"
+    )
+
     # Stress calculation diameters (if different from geometry)
     stress_od: float | None = Field(default=None, gt=0, description="Stress calc OD (m)")
     stress_id: float | None = Field(default=None, ge=0, description="Stress calc ID (m)")
@@ -150,8 +163,19 @@ class RiserContents(BaseModel):
 
     Attributes:
         density: Contents density (te/m3). Default 1.0 (seawater).
-        pressure: Internal pressure (kPa). Default 0.
-        flow_rate: Contents flow rate (m/s). Default 0.
+        pressure: Internal gauge pressure (kPa = kN/m2). Default 0. Emitted
+            as ``ContentsPressure``. OrcaFlex pressures are gauge pressures,
+            and the contents pressure applies at a reference Z level, for
+            which ``~`` denotes the top end of the line in the reset state
+            [Orcina webhelp, Line data: Contents,
+            https://www.orcina.com/webhelp/OrcaFlex/Content/html/Linedata,Contents.htm
+            (retrieved 2026-11-13)]. The generator does not emit ``ContentsPressureRefZ``;
+            the value OrcaFlex applies when the key is omitted needs native
+            readback (#3983).
+        flow_rate: Default 0; non-zero values are refused by the riser
+            builder. The schema states m/s, while OrcaFlex ``Flow rate`` is a
+            mass flow rate [same source]; the conversion (contents density
+            times internal area times velocity) is not specified here.
     """
 
     density: float = Field(default=1.0, ge=0, description="Contents density (te/m3)")
@@ -301,7 +325,8 @@ class RiserVessel(BaseModel):
         name: Vessel name for OrcaFlex.
         type_name: Vessel type reference.
         position: Initial position [x, y, z] (m).
-        orientation: Initial orientation [heading, pitch, roll] (deg).
+        orientation: Initial orientation [rx, ry, rz] (deg). The builder
+            emits rz as InitialHeading; rx and ry must be 0 (#3986).
         length: Optional vessel length (m).
         primary_motion: Primary motion mode. Default 'none'.
         superimposed_motion: Superimposed motion. Default 'raos_harmonics'.
@@ -327,6 +352,17 @@ class RiserVessel(BaseModel):
     def validate_vector3(cls, v: list[float]) -> list[float]:
         if len(v) != 3:
             raise ValueError(f"Must have 3 components, got {len(v)}")
+        return v
+
+    @field_validator("orientation")
+    @classmethod
+    def validate_heading_only(cls, v: list[float]) -> list[float]:
+        """The builder emits only the heading; refuse roll and pitch (#3986)."""
+        if v[0] or v[1]:
+            raise ValueError(
+                f"orientation {v}: roll and pitch are not emitted by the riser "
+                "vessel builder (only the heading, orientation[2]); set them to 0"
+            )
         return v
 
 

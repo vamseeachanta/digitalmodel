@@ -66,8 +66,8 @@ def test_quarter_wave_hand_solution(samples):
     ctx, t = quarter_wave_context(samples)
     card = solve(ctx)
     expected = -3 / np.pi * np.sin(t)
-    np.testing.assert_allclose(card.position, expected - expected.min(), atol=1e-12)
-    np.testing.assert_allclose(card.load, 5 + 8 * np.pi * np.cos(t), atol=1e-12)
+    np.testing.assert_allclose(card.position, expected - expected.min(), rtol=0, atol=1e-12)
+    np.testing.assert_allclose(card.load, 5 + 8 * np.pi * np.cos(t), rtol=0, atol=1e-12)
     assert np.ptp(card.position) < np.ptp(ctx.surface_card.position)
 
 
@@ -130,7 +130,7 @@ def test_rippled_load_changes_shape():
     ctx, t = quarter_wave_context()
     ctx.surface_card.load = (20 + 12 * np.sin(t) + 3 * np.sin(3 * t)).tolist()
     card = solve(ctx)
-    np.testing.assert_allclose(card.load, 5 + 8 * np.pi * np.cos(t), atol=1e-12)
+    np.testing.assert_allclose(card.load, 5 + 8 * np.pi * np.cos(t), rtol=0, atol=1e-12)
     assert abs(np.corrcoef(ctx.surface_card.load, card.load)[0, 1]) < 0.99
 
 
@@ -157,8 +157,8 @@ def test_damped_complex_hand_solution():
         0.75 + 1.25 * beta / (k * d)
     ) * np.sin(t)
     expected_f = 5 + (0.75 + 1.25 * k * beta) * np.cos(t) + 1.25 * k * alpha * np.sin(t)
-    np.testing.assert_allclose(card.position, expected_u - expected_u.min(), atol=1e-12)
-    np.testing.assert_allclose(card.load, expected_f, atol=1e-12)
+    np.testing.assert_allclose(card.position, expected_u - expected_u.min(), rtol=0, atol=1e-12)
+    np.testing.assert_allclose(card.load, expected_f, rtol=0, atol=1e-12)
     section.damping_factor = 0
     undamped = solve(ctx)
     assert not np.allclose(card.load, undamped.load)
@@ -180,8 +180,8 @@ def test_taper_interface_hand_solution():
     ctx.rod_string.append(second)
     card = solve(ctx)
     expected_u = -np.cos(t)
-    np.testing.assert_allclose(card.position, expected_u - expected_u.min(), atol=1e-12)
-    np.testing.assert_allclose(card.load, -25 - 24 * np.sin(t), atol=1e-12)
+    np.testing.assert_allclose(card.position, expected_u - expected_u.min(), rtol=0, atol=1e-12)
+    np.testing.assert_allclose(card.load, -25 - 24 * np.sin(t), rtol=0, atol=1e-12)
 
 
 def test_section_subdivision_preserves_solution():
@@ -192,8 +192,8 @@ def test_section_subdivision_preserves_solution():
     half.length /= 2
     ctx.rod_string = [half, half.model_copy(deep=True)]
     split = solve(ctx)
-    np.testing.assert_allclose(split.position, whole.position, atol=1e-12)
-    np.testing.assert_allclose(split.load, whole.load, atol=1e-12)
+    np.testing.assert_allclose(split.position, whole.position, rtol=0, atol=1e-12)
+    np.testing.assert_allclose(split.load, whole.load, rtol=0, atol=1e-12)
 
 
 def test_static_buoyancy_and_elastic_limit():
@@ -206,10 +206,10 @@ def test_static_buoyancy_and_elastic_limit():
     ctx.surface_card.position = np.zeros_like(t).tolist()
     ctx.surface_card.load = np.full_like(t, 20).tolist()
     card = solve(ctx)
-    np.testing.assert_allclose(card.position, 0, atol=1e-12)
-    np.testing.assert_allclose(card.load, 5, atol=1e-12)
+    np.testing.assert_allclose(card.position, 0, rtol=0, atol=1e-12)
+    np.testing.assert_allclose(card.load, 5, rtol=0, atol=1e-12)
     ctx.fluid_density = 144
-    np.testing.assert_allclose(solve(ctx).load, 20, atol=1e-12)
+    np.testing.assert_allclose(solve(ctx).load, 20, rtol=0, atol=1e-12)
 
 
 def test_static_weight_uses_supplied_weight_per_foot():
@@ -221,7 +221,7 @@ def test_static_weight_uses_supplied_weight_per_foot():
     ctx, _ = quarter_wave_context()
     ctx.rod_string[0].weight_per_foot = 2
     ctx.fluid_density = 72
-    np.testing.assert_allclose(np.mean(solve(ctx).load), -2.5, atol=1e-12)
+    np.testing.assert_allclose(np.mean(solve(ctx).load), -2.5, rtol=0, atol=1e-12)
 
 
 @pytest.mark.parametrize("samples", [63, 64])
@@ -234,8 +234,8 @@ def test_harmonic_limit_removes_high_frequency_displacement(samples):
             harmonic_count=1
         ).downhole_card
     expected = -3 / np.pi * np.sin(t)
-    np.testing.assert_allclose(card.position, expected - expected.min(), atol=1e-12)
-    np.testing.assert_allclose(card.load, 5 + 8 * np.pi * np.cos(t), atol=1e-12)
+    np.testing.assert_allclose(card.position, expected - expected.min(), rtol=0, atol=1e-12)
+    np.testing.assert_allclose(card.load, 5 + 8 * np.pi * np.cos(t), rtol=0, atol=1e-12)
     assert not np.allclose(solve(ctx).load, card.load)
 
 
@@ -245,8 +245,8 @@ def test_zero_harmonics_retains_static_load_only():
         card = DynacardPhysicsSolver(ctx).solve_wave_equation(
             harmonic_count=0
         ).downhole_card
-    np.testing.assert_allclose(card.position, 0, atol=1e-12)
-    np.testing.assert_allclose(card.load, 5, atol=1e-12)
+    np.testing.assert_allclose(card.position, 0, rtol=0, atol=1e-12)
+    np.testing.assert_allclose(card.load, 5, rtol=0, atol=1e-12)
 
 
 @pytest.mark.parametrize("value", [-1, 1.5, True, 33])
@@ -315,4 +315,61 @@ def test_nyquist_component_uses_real_projection():
     alternating = (-1.0) ** np.arange(len(t))
     ctx.surface_card.position = np.zeros_like(t).tolist()
     ctx.surface_card.load = (20 + alternating).tolist()
-    np.testing.assert_allclose(solve(ctx).load, 5 + alternating, atol=1e-12)
+    np.testing.assert_allclose(solve(ctx).load, 5 + alternating, rtol=0, atol=1e-12)
+
+
+def test_public_effective_density_matches_hand_volume():
+    from digitalmodel.marine_ops.artificial_lift.dynacard import models
+
+    assert hasattr(models, "effective_density_lb_ft3")
+    section = RodSection(diameter=2 / np.sqrt(np.pi), length=15, weight_per_foot=2)
+    # A=1 in²=1/144 ft²; rho=2/(1/144)=288 lb/ft³.
+    assert models.effective_density_lb_ft3(section) == pytest.approx(288, rel=0, abs=1e-12)
+    from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings import adapter
+
+    assert adapter._effective_density_lb_ft3 is models.effective_density_lb_ft3
+    # Static weight=2*15=30 lb; displaced-fluid weight=72*15/144=7.5 lb.
+    # Thus submerged weight=22.5 lb and pump mean tension=20-22.5=-2.5 lb.
+    ctx, _ = quarter_wave_context()
+    ctx.rod_string = [section]
+    ctx.fluid_density = 72
+    assert np.mean(solve(ctx).load) == pytest.approx(-2.5, rel=0, abs=1e-12)
+
+
+@pytest.mark.parametrize("field", ["diameter", "weight_per_foot"])
+@pytest.mark.parametrize("value", [0, -1, np.nan, np.inf, -np.inf])
+def test_public_effective_density_rejects_invalid_inputs(field, value):
+    from digitalmodel.marine_ops.artificial_lift.dynacard import models
+
+    assert hasattr(models, "effective_density_lb_ft3")
+    section = RodSection(diameter=1, length=15)
+    setattr(section, field, value)
+    with pytest.raises(ValueError, match="finite positive"):
+        models.effective_density_lb_ft3(section)
+    from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.adapter import rod_string_from_context
+
+    ctx, _ = quarter_wave_context()
+    ctx.rod_string = [section]
+    with pytest.raises(ValueError, match="finite positive"):
+        rod_string_from_context(ctx)
+
+
+def test_derived_weight_update_requires_reconstruction():
+    # A=1 in² and rho=144 lb/ft³ give w=1 lb/ft at construction.
+    section = RodSection(diameter=2 / np.sqrt(np.pi), length=15, density=144)
+    assert section.weight_per_foot == pytest.approx(1, rel=0, abs=1e-12)
+    section.diameter *= 2
+    section.density *= 2
+    # Assignment preserves the original dry line weight; the caller must
+    # reconstruct with weight_per_foot=0 to request bare-body derivation.
+    assert section.weight_per_foot == pytest.approx(1, rel=0, abs=1e-12)
+    # model_copy(update=...) also skips construction-time derivation.
+    assert section.model_copy(update={"diameter": 1}).weight_per_foot == section.weight_per_foot
+    values = section.model_dump()
+    values["weight_per_foot"] = 0
+    rebuilt = RodSection(**values)
+    # Area grows by 4 and density by 2: w=1*4*2=8 lb/ft.
+    assert rebuilt.weight_per_foot == pytest.approx(8, rel=0, abs=1e-12)
+    # A newly supplied coupling-inclusive weight takes precedence.
+    values["weight_per_foot"] = 9
+    assert RodSection(**values).weight_per_foot == 9

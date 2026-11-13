@@ -12,6 +12,7 @@ calibration and diagnostic accuracy remain **NOT_EVALUATED**.
 | 1 | 2026-10-19 | Replaced affine load scaling with coupled section transfers and independent analytical cases. |
 | 2 | 2026-10-19 | Used supplied rod weight for static tension, added harmonic selection and clarified the damping basis and relative displacement datum. |
 | 3 | 2026-11-12 | Recorded coupled load provenance, removed exact closing samples before FFT, and measured stored-card parity at 15 harmonics. |
+| 4 | 2026-11-12 | Added an independent comparison-card derivation, enforced absolute numerical tolerances, shared the density conversion, and clarified the static datum and weight update policy. |
 
 Table 1. Coupled transfer revisions and their purpose.
 
@@ -69,10 +70,26 @@ F_out = F_in - W
 ```
 
 The divisor is the exact square-inch to square-foot conversion. Effective
-density is derived by the same adapter helper as the default solver, so supplied
+density is derived by the shared public `effective_density_lb_ft3` function used
+by both solvers, so supplied
 coupling-inclusive weight is retained. When omitted, weight per foot is derived
-from the section's material density by the input model. These equilibrium
+from the section's material density by the input model at construction only.
+Changing diameter or density by assignment or `model_copy(update=...)` retains
+the stored dry line weight. To derive bare-body weight again, reconstruct with
+`RodSection(**values)` or `RodSection.model_validate(values)` and set
+`weight_per_foot=0`; supply an updated measured weight to retain coupling mass.
+The shared conversion rejects non-finite or nonpositive weight and diameter
+instead of substituting a material-density default. These equilibrium
 relations are independent hand derivations, not fitted calibration factors.
+
+The Gibbs transfer approximates displaced fluid volume by nominal rod-body area times
+length, although supplied dry weight may include couplings. Coupling displaced
+volume is omitted. For omitted volume delta_V in ft³, the neglected buoyancy is
+`density_fluid * delta_V` lbf: the subtracted submerged weight is too large and
+the mean pump tension is too low by that amount. In Gibbs this changes the static load
+datum, not the oscillatory load range. With zero fluid density the error is
+zero. A numerical correction is not established without coupling geometry;
+agreement between the solvers does not qualify the approximation.
 Static displacement is omitted because the returned card uses a zero-minimum
 datum; absolute elastic stretch cannot be recovered from this card.
 
@@ -154,17 +171,16 @@ checks that load morphology changes rather than undergoing affine scaling.
 
 Across five fixture wells with zero rod damping, 15 harmonics give median
 1.3% and maximum 2.0% load nRMSE against the stored reference cards. The old
-affine path measured 17.3% median. The per-fixture values are 0.52%, 1.74%,
-1.34%, 2.03% and 0.39%; the fifth input and reference each have one repeated
+affine path measured 17.3% median. The per-fixture values are 0.5%, 1.7%,
+1.3%, 2.0% and 0.4%; the fifth input and reference each have one repeated
 closing sample, which is excluded from the comparison. The measured median
-is 1.337% and maximum is 2.033%. Regression bounds of median <1.40% and
-maximum <2.10% add 0.05-0.07 percentage point; they are not engineering
-acceptance limits. Retaining all harmonics gives 0.65%, 2.19%, 3.45%, 4.06%
-and 1.78% (median 2.19%, maximum 4.06%). The comparison uses `compare_cards`,
+and maximum are below regression bounds of 1.4% and 2.1%, respectively;
+these are not engineering acceptance limits. Retaining all harmonics gives
+0.7%, 2.2%, 3.4%, 4.1% and 1.8% (median 2.2%, maximum 4.1%). The comparison uses `compare_cards`,
 which normalizes by reference load range and aligns traversal and sample origin.
 
 At 15 harmonics, surface/pump load Pearson correlations at the shared sample
-indices are 0.991812, 0.963179, 0.904878, 0.944531 and 0.964635. The requested
+indices are 0.992, 0.963, 0.905, 0.945 and 0.965. The requested
 <0.99 ceiling is not established for the first fixture. A measured <0.995
 regression bound excludes the affine path's correlation of 1.0; it does not
 establish field diagnostic accuracy.
@@ -181,6 +197,13 @@ static buoyancy, and subdivision invariance. It also checks the issue's
 correlation ceiling on a synthetic case and rejects invalid boundary/material inputs. Existing
 fillage tests verify dependence on the solved card; the comparison gate still
 raises on disagreement unless an explicit divergence opt-in is provided.
+
+`test_dynacard.py` derives the uniform lossless pump card directly from the
+surface sine/cosine inputs and the thin-rod equations cited above. Both axes
+are checked before the expected nRMSE is computed against the default solver's
+card. Absolute budgets are 1e-8 lbf and 1e-10 in for the card, and 1e-9
+percentage point for the secondary metric check. These qualify numerical
+arithmetic; they do not establish field accuracy or damping calibration.
 
 The original field-fillage ratio in #1857 is **NOT_EVALUATED**. The revision in
 #1855 withdraws its displacement basis and identifies unresolved timing and load
