@@ -3,6 +3,8 @@
 
 Ten worked examples relate a surface card to its pump card, analysis and diagnosis. Every surface card is synthesised from a public diagnostic plate shape, not measured. The pump-card interpretation, physical scale and illustrative well are ASSUMED. All classifier calls are HYPOTHESIS.
 
+The [browser application](../../../apps/dynacard/index.html) runs the same analysis on a reader's surface card; its reproduction of these ten examples is recorded in its [README](../../../apps/dynacard/README.md).
+
 The [results document](results.json) is the reporting source for this README and all CSVs. Sample numbers are zero-based. Each card retains its own sample index; where counts differ, the shorter card's columns are blank rather than interpolated. Browser inputs contain exactly position_in and load_lbf. Positions have four decimals and loads two.
 
 ## How to read each example

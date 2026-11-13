@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+  <title>Dynacard — surface to pump card</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="models.js"></script>
+  <script defer src="examples.js"></script>
+  <script defer src="analysis.js"></script>
+  <script defer src="dynacard-core.js"></script>
+  <script defer src="presentation.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to analysis</a>
+  <header>
+    <div class="eyebrow">DIGITALMODEL / ARTIFICIAL LIFT</div>
+    <h1>From surface card<br>to pump hypothesis.</h1>
+    <p class="intro">A local calculation of the downhole card, pump displacement and diagnostic hypotheses. Free, open source, and computed entirely in this page.</p>
+    <p class="privacy">OFFLINE BY DESIGN · No card or well data leaves the browser.</p>
+  </header>
+  <main id="main">
+    <section aria-labelledby="load-heading">
+      <div class="section-heading"><span class="step">01</span><h2 id="load-heading">Load a surface card</h2></div>
+      <p>One full stroke, uniformly timed samples, starting anywhere in the cycle. Position in inches; load in lbf. The solver requires at least four paired samples.</p>
+      <p class="hint">The reference classifier retains the stored sample origin. Its diagnosis is not established as independent of the starting phase.</p>
+      <div class="load-grid">
+        <div><label for="card-file">CSV file</label><input id="card-file" type="file" accept=".csv,text/csv"><p class="hint"><a href="template.csv" download>Download template.csv</a> — example 1, with sampling instructions.</p></div>
+        <div><label for="example-select">Worked example</label><div class="inline-control"><select id="example-select"></select><button id="load-example" type="button">Load example</button></div><p class="hint">Examples use the CC0 diagnostic plate and a modelled surface card; they are not measured field cards.</p></div>
+      </div>
+      <p id="card-status" role="status" aria-live="polite">Loading bundled examples…</p>
+      <p class="hint">Plate source: DOI 10.17632/hnfwm9mjs6.1. An example label describes its source curve, not an accepted diagnosis.</p>
+    </section>
+    <section aria-labelledby="well-heading">
+      <div class="section-heading"><span class="step">02</span><h2 id="well-heading">Well and rod string</h2></div>
+      <form id="well-form">
+        <div class="input-grid">
+          <div><label for="spm">Pumping speed (strokes/min)</label><input id="spm" type="number" min="0.000001" step="any" required></div>
+          <div><label for="pump-diameter">Pump diameter (in)</label><input id="pump-diameter" type="number" min="0.000001" step="any" required></div>
+          <div><label for="pump-depth">Pump depth (ft)</label><input id="pump-depth" type="number" min="0.000001" step="any" required></div>
+          <div><label for="fluid-density">Fluid density for wave solver (lb/ft³)</label><input id="fluid-density" type="number" min="0.000001" step="any" required></div>
+          <div><label for="tubing-pressure">Tubing pressure (psi)</label><input id="tubing-pressure" type="number" min="0.000001" step="any" required></div>
+        </div>
+        <p class="hint">CPIP follows the reference's separate fluid basis: oil 35° API, water specific gravity 1.03 and water cut 50%. The density input above affects the wave solver; it does not replace the CPIP density. Runtime is assumed to be 24 h/day.</p>
+        <h3>Steel rod tapers — surface first</h3>
+        <div class="table-scroll"><table class="rod-table"><thead><tr><th scope="col">Diameter (in)</th><th scope="col">Length (ft)</th><th scope="col">Weight (lbf/ft)</th><th scope="col">Modulus (psi)</th><th scope="col">Action</th></tr></thead><tbody id="rod-rows"></tbody></table></div>
+        <p class="caption">Table 1. Rod properties, ordered from the polished rod to the pump.</p>
+        <button id="add-rod" type="button" class="secondary">Add taper</button>
+        <div class="run-row"><button id="analyse" type="submit">Run analysis</button><p>Vertical well · Anchored tubing · 10 cP viscosity · 2.441 in tubing ID</p></div>
+      </form>
+      <p id="error" role="alert" hidden></p>
+    </section>
+    <section id="results" aria-labelledby="results-heading" hidden>
+      <div class="section-heading"><span class="step">03</span><h2 id="results-heading">Analysis results</h2></div>
+      <p id="result-basis"></p>
+      <h3>How to read the result</h3>
+      <p>The surface card is evaluated at the polished rod. The pump card is calculated at the plunger after the wave equation removes rod weight, stretch and dynamics. Fillage is effective travel divided by gross plunger travel. Fluid load is the upstroke mean load minus the downstroke mean load.</p>
+      <div class="plot-grid"><figure><svg id="surface-plot" role="img" aria-label="Surface card: position in inches against load in lbf" viewBox="0 0 600 440"></svg><figcaption>Figure 1. Input surface card at the polished rod. Position (in); load (lbf).</figcaption></figure><figure><svg id="pump-plot" role="img" aria-label="Computed pump card: travel from stroke bottom in inches against load in lbf" viewBox="0 0 600 440"></svg><figcaption>Figure 2. Computed pump card. Its minimum position is subtracted for display only, so travel starts at the bottom of its own stroke. Calculations retain the original positions. Long and short bars indicate gross and effective travel; the right bracket indicates fluid load.</figcaption></figure></div>
+      <div class="table-scroll"><table><thead><tr><th scope="col">Quantity</th><th scope="col">Result</th><th scope="col">Unit / basis</th></tr></thead><tbody id="analysis-values"></tbody></table></div>
+      <p class="caption">Table 2. Reference-workflow outputs. Displacement is not measured production.</p>
+      <p><button id="download-results" type="button">Download results (JSON)</button> <button id="download-pump" type="button">Download pump card (CSV)</button></p>
+      <h3>Solver guards</h3><ul id="guard-messages"></ul>
+      <h3>Diagnostic hypotheses</h3>
+      <p id="example-source" hidden></p>
+      <p>Both models were trained on synthetic generators. Classifier field accuracy: <strong>NOT_EVALUATED</strong>. Percentages describe model class separation; they are not established field probabilities. The shape-only plate score is <strong>5 of 8 literal</strong>.</p>
+      <div id="diagnoses" class="diagnosis-grid"></div>
+    </section>
+    <section class="limits" aria-labelledby="limits-heading">
+      <h2 id="limits-heading">What this does not check</h2>
+      <ul>
+        <li><strong>Tubing anchoring:</strong> anchored tubing is assumed; unanchored tubing is not modelled.</li>
+        <li><strong>Deviation and side load:</strong> a vertical well is assumed. A deviation survey is not solved by this application.</li>
+        <li><strong>Load-cell calibration and timing:</strong> calibration is unverified; uniformly timed samples are assumed. Sampling timestamps are not checked.</li>
+        <li><strong>Damping and friction calibration:</strong> the reference defaults are used. Measured viscosity, friction and damping calibration are missing.</li>
+        <li><strong>Fluid properties:</strong> the supplied density is not validated against fluid sampling. CPIP uses the separate stated mixture basis.</li>
+        <li><strong>Rod materials:</strong> only steel rods are supported. Material certification is not checked.</li>
+        <li><strong>Pump depth versus rod length:</strong> mismatch is not reconciled. The wave calculation uses total rod length; CPIP uses pump depth.</li>
+        <li><strong>Valve and plunger slip:</strong> leakage and slippage are not calculated.</li>
+        <li><strong>Production:</strong> displacement is not production. A well test, runtime, leakage and volume-factor evidence are needed to establish production.</li>
+        <li><strong>Classifier field accuracy:</strong> NOT_EVALUATED; training uses synthetic generators. Shape-only plate score: 5 of 8 literal.</li>
+      </ul>
+      <p>The buckling flag is the reference's minimum pump-load threshold of −500 lbf. A critical buckling load, neutral-point depth and mechanical capacity are not established by this flag.</p>
+    </section>
+    <section aria-labelledby="next-heading">
+      <h2 id="next-heading">What we would ask next</h2>
+      <p class="eyebrow">LATER INTERACTIVE STEP · STATIC QUESTIONS FOR NOW</p>
+      <ul class="questions">
+        <li>What fluid level or measured pump intake pressure applies to this card?</li>
+        <li>What well test rate and pumping runtime were recorded at the same operating condition?</li>
+        <li>Is the tubing anchored, and is a deviation survey available?</li>
+        <li>What rod tally and pump setting depth apply?</li>
+        <li>What is the load-cell calibration date?</li>
+        <li>What sampling rate and timing source were used?</li>
+        <li>What recent workovers or operating changes occurred?</li>
+        <li>What gas, oil and water ratios were measured?</li>
+      </ul>
+    </section>
+  </main>
+  <footer><p>Calculation basis: Everitt and Jennings (1992), SPE-18189-PA; Gibbs (1963), SPE-588-PA. Implementation parity is not field validation. See the bundled README for reproduction evidence and limitations.</p></footer>
+  <noscript><p class="no-script">JavaScript is required for this local calculation. No server calculation is available.</p></noscript>
+</body>
+</html>
