@@ -21,7 +21,10 @@ BLUE, ORANGE, GREEN, GREY = "#0072B2", "#D55E00", "#009E73", "#626262"
 
 def _save(fig, out, stem):
     fig.savefig(out / f"{stem}.png", dpi=150, metadata={"Software": None})
-    fig.savefig(out / f"{stem}.svg", dpi=150, metadata={"Date": None})
+    svg = out / f"{stem}.svg"
+    fig.savefig(svg, dpi=150, metadata={"Date": None})
+    # Text-mode writers emit CRLF on Windows; keep LF on every platform.
+    svg.write_bytes(svg.read_bytes().replace(b"\r\n", b"\n"))
     plt.close(fig)
 
 
