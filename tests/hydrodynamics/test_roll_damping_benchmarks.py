@@ -472,3 +472,34 @@ def test_study_main_writes_both_citation_sidecars(tmp_path: Path, monkeypatch):
     assert len(saved["illustrative"]["ship"]["base"]["citations"]) == 4
     assert all(isinstance(c, dict) for hull in ("barge", "ship")
                for c in saved["illustrative"][hull]["base"]["citations"])
+
+
+# --------------------------------------------------------------------------
+# What reproduces from public data alone (no private wiki reachable).
+# --------------------------------------------------------------------------
+def test_public_data_reproduction_scope(monkeypatch, tmp_path):
+    """Pin the public-only scope stated in data/roll_damping/README.md.
+
+    With no wiki clone reachable, the Chakrabarti (2001) reproduction grades
+    8 of its 12 items (the four Fig. 4 container-ship items need the private
+    Q6 table) and every literature benchmark is graded; the illustrative hull
+    studies fail closed because their citations need private source metadata.
+    """
+    from digitalmodel.citations.schema import CitationResolutionError
+
+    monkeypatch.setenv("LLM_WIKI_PATH", str(tmp_path))  # exists, not a wiki clone
+    mod = _study()
+    verdicts = mod.reproduction_verdicts(mod.reproduction(None))
+    not_graded = [v for v in verdicts if v["colour"] == "not graded"]
+    assert (len(verdicts), len(not_graded)) == (12, 4)
+    assert all("container-ship" in v["item"] for v in not_graded)
+    benchmarks = mod.grade_benchmarks(mod.literature())
+    assert benchmarks and all(v["colour"] != "not graded" for v in benchmarks)
+    with pytest.raises(CitationResolutionError):
+        mod.illustrative(None)
+
+    readme = " ".join((rb.REPO_ROOT / "data" / "roll_damping" / "README.md")
+                      .read_text(encoding="utf-8").split())
+    assert "regenerates every calculated number and verdict" not in readme
+    assert "8 of the 12 reproduction items" in readme
+    assert "private source metadata" in readme and "Q6 coefficient table" in readme

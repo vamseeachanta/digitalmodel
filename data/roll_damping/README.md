@@ -23,8 +23,15 @@ checks. Load them with `digitalmodel.hydrodynamics.roll_damping_benchmarks`.
 - Copyrighted coefficient tables stay in the private llm-wiki. This directory
   holds only the `wiki_path` to each.
 - `examples/hydrodynamics/roll_damping/generic_roll_damping_study.py`
-  regenerates every calculated number and verdict of the generic roll damping
-  report from these tables.
+  computes the generic roll damping report's numbers and verdicts. From public
+  data alone (these tables and the repository code, with no private wiki
+  reachable) it grades every literature benchmark and 8 of the 12 reproduction
+  items of Chakrabarti (2001). The four Fig. 4 container-ship items need the
+  Q6 coefficient table held in the private wiki and are reported as not graded
+  without it. The illustrative hull studies (sensitivity, amplitude and sweep
+  results) need private source metadata to resolve their citations and stop
+  with a citation error without it. `test_public_data_reproduction_scope`
+  pins this split.
 - Add a benchmark row when a new test or CFD result is read in full; update
   `manifest.yaml` (`scripts/roll_damping/build_manifest.py`) in the same change.
 
