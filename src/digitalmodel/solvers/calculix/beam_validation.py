@@ -15,7 +15,8 @@ def validate_beam_sections(elements, element_sets, sections, *,
     """Validate CIRC/PIPE targets without changing mesh or writer state.
 
     IDs are global zero-based indices counting only exported element groups.
-    Repeated explicit sets and generated sets of the same name form a union.
+    Names are case-insensitive, matching CalculiX: repeated explicit sets and
+    generated sets of the same name form a union, including case variants.
     Retain raw IDs until validation: True and 1.0 compare equal to integer 1.
     Other section shapes retain the writer's existing behavior.
     """
@@ -36,14 +37,14 @@ def validate_beam_sections(elements, element_sets, sections, *,
             target = f"ESHELL_{kind}"
         else:
             target = "EALL"
-        groups.setdefault(target, []).extend(range(start, len(kinds)))
+        groups.setdefault(target.upper(), []).extend(range(start, len(kinds)))
     for group in element_sets:
-        groups.setdefault(group["name"], []).extend(group["ids"])
+        groups.setdefault(group["name"].upper(), []).extend(group["ids"])
 
     for section in restricted:
         shape, target = section["section_type"], section["elset"]
         context = f"{shape} beam section target '{target}'"
-        ids = groups.get(target, [])
+        ids = groups.get(target.upper(), [])
         if not ids:
             raise ValueError(f"{context} requires a nonempty resolved element set")
         for eid in ids:

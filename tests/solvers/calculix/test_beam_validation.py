@@ -168,3 +168,50 @@ def test_pipe_explains_unsupported_b32r_and_circ_policy_is_versioned(tmp_path):
     writer = mixed_writer()
     writer.add_beam_section("EBEAM_B31", "MAT", "CIRC", (.05,))
     assert_rejected(writer, tmp_path, r"CIRC.*EBEAM_B31.*B31.*v2\.21")
+
+
+@pytest.mark.parametrize("existing", [False, True])
+@pytest.mark.parametrize("groups, target, exported", [
+    ([("ebeam_b31", [1])], "ebeam_b31", "B31"),
+    ([("EbEaM_b31", [1])], "EbEaM_b31", "B31"),
+    ([("ebeam_b32", [3])], "EBEAM_B32", "B31"),
+    ([("target", [3]), ("TARGET", [1])], "TARGET", "B31"),
+    ([("TARGET", [3]), ("target", [1])], "target", "B31"),
+    ([("eall", [1])], "eall", "C3D4"),
+    ([("eshell_s4", [1])], "eshell_s4", "S4"),
+])
+def test_case_variant_sets_cannot_hide_incompatible_members(
+    tmp_path, existing, groups, target, exported,
+):
+    writer = mixed_writer()
+    for name, ids in groups:
+        writer.add_element_set(name, ids)
+    writer.add_beam_section(target, "MAT", "CIRC", (.05,))
+    assert_rejected(writer, tmp_path, f"CIRC.*{target}.*{exported}", existing)
+
+
+@pytest.mark.parametrize("invalid", [True, 1.0, -1, 5])
+def test_case_variant_members_are_validated_before_deduplication(tmp_path, invalid):
+    writer = mixed_writer()
+    writer.add_element_set("ebeam_b32", [invalid])
+    writer.add_beam_section("EBEAM_B32", "MAT", "CIRC", (.05,))
+    assert_rejected(writer, tmp_path, "CIRC.*EBEAM_B32.*exported.*ID")
+
+
+@pytest.mark.parametrize("set_name, target", [
+    (None, "ebeam_b32"), (None, "EbEaM_b32"),
+    ("CUSTOM", "custom"), ("custom", "CUSTOM"), ("custom", "CuStOm"),
+])
+def test_circ_b32_accepts_case_variant_references_without_changing_output(
+    tmp_path, set_name, target,
+):
+    writer = mixed_writer()
+    if set_name is not None:
+        writer.add_element_set(set_name, [1, 2])
+    writer.add_beam_section(target, "MAT", "CIRC", (.05,))
+    text = writer.write(tmp_path / "deck.inp").read_text()
+    assert (f"*BEAM SECTION, ELSET={target}, MATERIAL=MAT, SECTION=CIRC\n"
+            "0.05\n0.0, 0.0, 1.0\n") in text
+    assert "*ELEMENT, TYPE=B32, ELSET=EBEAM_B32\n2, 2, 6, 4\n3, 4, 7, 8\n" in text
+    if set_name is not None:
+        assert f"*ELSET, ELSET={set_name}\n2, 3\n" in text
