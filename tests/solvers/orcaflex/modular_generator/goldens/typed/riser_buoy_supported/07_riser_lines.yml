@@ -49,6 +49,7 @@ Lines:
   LayAzimuth: 180
   ContentsMethod: Uniform
   ContentsDensity: 1.0
+  ContentsPressure: 0
   StaticsStep2: Full statics
 - Name: Jumper
   IncludeTorsion: 'No'
@@ -94,4 +95,5 @@ Lines:
   LayAzimuth: 180
   ContentsMethod: Uniform
   ContentsDensity: 1.0
+  ContentsPressure: 0
   StaticsStep2: Full statics
