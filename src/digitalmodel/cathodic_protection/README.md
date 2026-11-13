@@ -1,5 +1,33 @@
 # Cathodic protection workflows
 
+## Synthetic YAML example
+
+With digitalmodel and its runtime dependencies installed, run from the repository
+root (use `PYTHONPATH=src` for a source checkout):
+
+```bash
+PYTHONPATH=src uv run python examples/cathodic_protection/run_design.py
+PYTHONPATH=src uv run python examples/cathodic_protection/run_design.py --config custom.yml
+```
+
+The default is `examples/cathodic_protection/synthetic_design.yml`, resolved beside
+the runner regardless of the current directory. An explicit `--config` is resolved
+from the caller's directory. The runner calls `design_from_yaml`; all inputs and
+unit declarations required by `CPDesignSpec` remain mandatory. It writes no files
+and returns exit code 1 for input, YAML, validation or calculation-range errors.
+
+The fixture uses arbitrary arithmetic inputs: 120 m2, 0.05 A/m2, coating fraction
+0.2, ten years, 1500 Ah/kg and utilisation 0.8. These are test inputs, not material
+or standard values. With the existing 365-day year convention, console output is
+1.2 A mean demand, 105120.0 Ah lifetime charge and 87.6 kg required net mass.
+Results are displayed to one decimal place; small values can round to zero.
+
+This is single-zone mean-demand and net-mass screening. The printed limitation
+requires further protection-potential, anode-resistance, current-output, count,
+distribution, interference and installation checks. Multi-zone jacket design,
+buried-pipeline soil correction and hull installation qualification are outside
+this example's scope.
+
 ## Edition study
 
 From the repository root, reproduce the newsletter's F103 pipeline comparison

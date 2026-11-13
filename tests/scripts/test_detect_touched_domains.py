@@ -1530,3 +1530,46 @@ def test_bha_database_owned_and_executed_by_subsea(pytestconfig):
         require_explicit_target=True,
     )
     assert "tests/bha_database/" in gates["tests-subsea"]["test_roots"]
+
+
+@pytest.mark.parametrize("path", [
+    "data/riser_database/riser_stackup.csv",
+    "data/riser_database/config_catalog.csv",
+    "data/riser_database/rig_riser_interface.csv",
+    "data/riser_database/structure_properties/data.json",
+    "data/riser_database/material_sn_scf_dff.csv",
+    "data/riser_database/standards_crosswalk.csv",
+    "data/riser_database/new_catalogue.csv",
+    "data/line_pipe/data.json",
+    "data/flexible_pipe/data.json",
+    "data/soil_stiffness/data.json",
+    "data/geotechnical/geotech_database.yaml",
+    "data/fatigue/sn_curves.yaml",
+    "data/rao_database.parquet",
+    "data/vessels/processed/metocean_criteria.csv",
+    "docs/domains/orcaflex/risers/production/PROVENANCE.md",
+    "docs/domains/orcaflex/risers/drilling/PROVENANCE.md",
+])
+def test_riser_inventory_inputs_select_subsea(path: str) -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    selected = {d.name for d in detector.touched_domains([path], domains)}
+    assert "subsea" in selected
+
+
+def test_riser_inventory_database_paths_are_all_routed() -> None:
+    import yaml
+
+    detector = load_detector_module()
+    root = SCRIPT.parents[2]
+    inventory = yaml.safe_load(
+        (root / "data/riser_capability/riser_types.yml").read_text(encoding="utf-8")
+    )
+    paths = [row["path"] for row in inventory["databases"]]
+    paths += [f"{item}/PROVENANCE.md" for item in inventory["excluded_model_folders"]["paths"]]
+    domains = detector.parse_domains(root / "tests/DOMAINS.md")
+    unrouted = [
+        path for path in paths
+        if "subsea" not in {d.name for d in detector.touched_domains([path], domains)}
+    ]
+    assert unrouted == []
