@@ -658,3 +658,75 @@ def test_repeat_routing_reflects_domain_edits(spec_dict):
     generator._run_routers()
     assert len(generator.spec.generic.vessels) == 1
     assert generator.spec.generic.vessels[0].properties["InitialPosition"][0] == 5.0
+
+
+# ------------------------------------------------------- finite inputs
+def _set_path(data: dict, path: tuple, value: float) -> None:
+    target = data
+    for key in path[:-1]:
+        target = target[key]
+    target[path[-1]] = value
+
+
+NONFINITE_PATHS = [
+    ("hull", "mass"),
+    ("hull", "centre_of_mass", 2),
+    ("hull", "inertia_about_centre_of_mass", 0, 0),
+    ("hull", "displaced_volume"),
+    ("hull", "centre_of_buoyancy", 0),
+    ("hull", "hydrostatic_stiffness_excluding_gravity", 1, 1),
+    ("hull", "radiation", -1, "period"),
+    ("hull", "radiation", 0, "added_mass", 2, 2),
+    ("hull", "other_quadratic_damping", 0),
+    ("mooring_line_types", 0, "mass_per_length"),
+    ("mooring_lines", 0, "fairlead", 0),
+    ("mooring_lines", 0, "anchor_xy", 1),
+    ("mooring_lines", 0, "anchor_height_above_seabed"),
+    ("mooring_lines", 0, "length"),
+]
+FLEXIBLE_NONFINITE_PATHS = [
+    ("tower", "base_elevation"),
+    ("tower", "sections", 0, "bending_stiffness"),
+    ("tower", "sections", 0, "poisson_ratio"),
+    ("rna", "mass"),
+    ("rna", "centre_of_mass_from_tower_top", 0),
+    ("rna", "inertia_about_centre_of_mass", 1, 1),
+]
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf")])
+@pytest.mark.parametrize("path", NONFINITE_PATHS)
+def test_nonfinite_rigid_inputs_rejected(spec_dict, path, value):
+    """NaN or infinity must never reach the generated model."""
+    data = copy.deepcopy(spec_dict)
+    _set_path(data["fowt"], path, value)
+    with pytest.raises(ValidationError):
+        FowtSpec(**data["fowt"])
+    with pytest.raises(ValidationError):
+        ProjectInputSpec(**data)
+
+
+@pytest.mark.parametrize("value", [float("nan"), -float("inf")])
+@pytest.mark.parametrize("path", FLEXIBLE_NONFINITE_PATHS)
+def test_nonfinite_flexible_inputs_rejected(spec_dict, path, value):
+    fowt = _flexible(spec_dict)
+    _set_path(fowt, path, value)
+    with pytest.raises(ValidationError):
+        FowtSpec(**fowt)
+
+
+@pytest.mark.parametrize("value", [float("nan"), float("inf")])
+def test_nonfinite_thrust_inputs_rejected(spec_dict, value):
+    fowt = copy.deepcopy(spec_dict["fowt"])
+    fowt["rotor_thrust"] = {"thrust": 1000.0, "shaft_tilt": 6.0,
+                            "hub_position": [-10.0, 0.0, 150.0], "wind_speed": 10.0}
+    FowtSpec(**fowt)  # finite reference accepted
+    for key, index in (("thrust", None), ("shaft_tilt", None), ("wind_speed", None),
+                       ("hub_position", 2)):
+        probe = copy.deepcopy(fowt)
+        if index is None:
+            probe["rotor_thrust"][key] = value
+        else:
+            probe["rotor_thrust"][key][index] = value
+        with pytest.raises(ValidationError):
+            FowtSpec(**probe)
