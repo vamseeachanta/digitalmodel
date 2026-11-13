@@ -1398,3 +1398,14 @@ workflows:
     result:
       kind: in_memory
       key: hull_wastage_screen
+  - id: flange-analysis
+    basename: flange_analysis
+    title: Bolted-flange rating per ASME VIII-1 Appendix 2 (Taylor Forge) — analytical screening
+    input: examples/workflows/flange-analysis/input.yml
+    outputs:
+      - examples/workflows/flange-analysis/results/input.yml
+      - examples/workflows/flange-analysis/results/flange_analysis/flange_analysis_summary.json
+      - examples/workflows/flange-analysis/results/flange_analysis/flange_analysis_checks.csv
+      - examples/workflows/flange-analysis/results/flange_analysis/flange_analysis_report.html
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[flange-analysis]
+    runtime: offline
