@@ -1,6 +1,7 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 """Pytest configuration for marine engineering tests."""
+import re
 import sys
 import importlib.util
 from pathlib import Path
@@ -42,6 +43,34 @@ def store_data_marker(request):
             "store_data: <id> not available (store not reachable); "
             "run scripts/data/fetch.py <id>"
         )
+
+_SOLVER_WORD = re.compile(r"\bsolver\b")
+
+
+def selects_solver(markexpr: str) -> bool:
+    """True when a ``-m`` expression names the ``solver`` marker explicitly."""
+    return bool(_SOLVER_WORD.search(markexpr or ""))
+
+
+def pytest_collection_modifyitems(config, items):
+    """Deselect ``solver``-marked tests unless ``-m`` names ``solver``.
+
+    A ``solver`` test drives the licensed OrcFxAPI (OrcaFlex / OrcaWave).  On a
+    host where the API is installed an availability ``skipif`` does not stop it,
+    so a plain ``pytest`` must never select one.  ``pytest -m solver`` (or any
+    expression naming ``solver``) leaves selection to pytest's own ``-m``
+    handling.  ``tests/contracts/test_solver_marker_coverage.py`` checks that
+    every test reaching OrcFxAPI carries the marker.
+    """
+    if selects_solver(config.getoption("markexpr")):
+        return
+    kept, dropped = [], []
+    for item in items:
+        (dropped if item.get_closest_marker("solver") else kept).append(item)
+    if dropped:
+        config.hook.pytest_deselected(items=dropped)
+        items[:] = kept
+
 
 # Tests that fail at collection due to missing modules, deleted files, or
 # platform-specific imports. Excluded so the rest of the suite can run.
