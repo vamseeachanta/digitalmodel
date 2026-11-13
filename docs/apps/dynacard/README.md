@@ -59,7 +59,13 @@ Supply at least four paired finite numerical samples and nonzero surface
 stroke. Empty or nonnumeric cells, nonfinite values, inconsistent row lengths,
 missing required columns and zero stroke are rejected. Sampling timestamps are
 not inferred from position spacing: uniform time intervals remain an input
-assumption. The solver's periodic endpoint handling follows the reference.
+assumption. The periodic solver reads the last sample as phase zero repeated.
+A CSV whose last row repeats the first row exactly is used as supplied; any
+other CSV is read as unique phases and its first row is appended as the closing
+row before solving, as the pump-card study does. Keeping or omitting the
+closing row therefore gives the same pump card, and the loaded sample count
+includes the closing row. Cards passed directly to the core as JSON, such as
+the field fixtures below, are used as supplied, matching the Python workflow.
 
 ## Calculation basis
 
