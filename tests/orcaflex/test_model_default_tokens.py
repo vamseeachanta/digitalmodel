@@ -175,16 +175,19 @@ BASE_MODEL_VALUES = {
         'b7015949ad33ee193e7425968841fc9530253feef4bbede4e82c2c4ce60e0f0a',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/scr/modular/includes/05_riser_line_types.yml':
         '8bc87b7014ad08f758c05fe589d8b4fc558e4dabb8050ecfc82ff781be498934',
+    # #3983: the authored contents pressure 0 is now emitted (ContentsPressure: 0.0);
+    # every other parsed value is unchanged.
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/scr/modular/includes/07_riser_lines.yml':
-        '8ab8e18ca6f6126cb082ff6c1a6d0ce604dc1491d8cd709a05479a3b5f5c8a61',
+        '1ffb1b15ff3f54be29c7071285865e9d61b9558f1a61089597e52a4a59376b22',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/01_general.yml':
         'e53dcd44267107014b8b8851ae133178ffab9392ce27bb542b2f33f758573dc0',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/03_environment.yml':
         'b7015949ad33ee193e7425968841fc9530253feef4bbede4e82c2c4ce60e0f0a',
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/05_riser_line_types.yml':
         '2f02775371a8b28f77c079550c7bb920240aeac4362686ffb352c241db852096',
+    # #3983: ContentsPressure: 0.0 added, as for the SCR line above.
     'docs/domains/orcaflex/library/campaigns/generic-scr-slwr/slwr/modular/includes/07_riser_lines.yml':
-        'e84265106d695cf2117546fd586f60c03e592eb2b2c53ecb1c15a7b20fa6437e',
+        'ef94703e6ebefef7d59525030c5e2dbad11d231d8d118ac435ff17d3c0d0a503',
     'docs/domains/orcaflex/subsea/jumper/installation/generated/jumper-a/includes/01_general.yml':
         'c978c65da7cb5feb872ae8b668b26b7c348bfe00261d5d522b5fa16677e33c5c',
     'docs/domains/orcaflex/subsea/jumper/installation/generated/jumper-a/includes/03_environment.yml':
