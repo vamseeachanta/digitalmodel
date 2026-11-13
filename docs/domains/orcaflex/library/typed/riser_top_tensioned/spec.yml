@@ -15,7 +15,8 @@
 # The tensioner stiffness and
 # target tension are illustrative inputs, not sourced equipment data.
 # Tensioners: 4 linear spring/damper links, 50 kN/m each, from vessel points
-# on a 3 m radius at z +20 m to End A; target vertical total 1000 kN.
+# on a 3 m radius at z +20 m to End A; target total vertical link tension
+# in the generated geometry is 1000 kN; static equilibrium changes it.
 # Interior attachments are unsupported; arc_length must be zero.
 #
 # Hand checks (g 9.80665 m/s2, seawater 1.025 te/m3):

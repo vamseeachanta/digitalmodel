@@ -24,10 +24,13 @@ from digitalmodel.solvers.orcaflex.modular_generator.builders.context import Bui
 from digitalmodel.solvers.orcaflex.modular_generator.builders.riser_links_builder import (
     RiserLinksBuilder,
 )
-from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
+from digitalmodel.solvers.orcaflex.modular_generator.schema import (
+    ProjectInputSpec,
+    RiserTensioner,
+)
 
 REPO = Path(__file__).resolve().parents[4]
-EXAMPLE = REPO / "docs/domains/orcaflex/examples/modular/typed/riser_top_tensioned/spec.yml"
+EXAMPLE = REPO / "docs/domains/orcaflex/library/typed/riser_top_tensioned/spec.yml"
 NATIVE_LINKS = REPO / (
     "docs/domains/orcaflex/examples/modular/H03/H03 Floating and stowed lines/includes/11_links.yml"
 )
@@ -68,6 +71,17 @@ def test_target_vertical_tension_sums_to_total(example):
     units = RiserLinksBuilder.tensioner_geometry(spec.riser.tensioners[0], spec.riser)
     vertical = sum(u["tension"] * (u["z"] - 12) / u["length"] for u in units)
     assert vertical == pytest.approx(1000.0)
+
+
+def test_total_tension_schema_explains_generated_geometry_target():
+    """Expose the target and equilibrium distinction in the public schema."""
+    description = RiserTensioner.model_json_schema()["properties"]["total_tension"][
+        "description"
+    ]
+    assert "Target total vertical link tension in the generated geometry (kN)" in description
+    assert "static value" in description
+    assert "vertical tensioner stiffness" in description
+    assert "top rise" in description
 
 
 def test_vessel_heading_rotates_vessel_points(example):

@@ -319,7 +319,7 @@ class RiserTensioner(BaseModel):
         name: Prefix for the link names (``<name>_1`` ... ``<name>_<count>``).
         line: Riser line whose End A is supported. That end must be ``free``.
         count: Number of tensioner units.
-        total_tension: Target total vertical tension (kN).
+        total_tension: Target total vertical link tension in the generated geometry (kN).
         stiffness: Stiffness per unit (kN/m).
         damping: Linear damping per unit (kN.s/m). 0 means no damper.
         radius: Plan radius of the vessel points about the riser top (m).
@@ -331,7 +331,15 @@ class RiserTensioner(BaseModel):
     name: str = Field(..., min_length=1, description="Link name prefix")
     line: str = Field(..., min_length=1, description="Supported riser line")
     count: int = Field(..., ge=1, le=12, description="Number of units")
-    total_tension: float = Field(..., gt=0, description="Total vertical tension (kN)")
+    total_tension: float = Field(
+        ...,
+        gt=0,
+        description=(
+            "Target total vertical link tension in the generated geometry (kN); "
+            "the static value is lower by vertical tensioner stiffness x top rise "
+            "(linearised)."
+        ),
+    )
     stiffness: float = Field(..., gt=0, description="Stiffness per unit (kN/m)")
     damping: float = Field(default=0, ge=0, description="Damping per unit (kN.s/m)")
     radius: float = Field(..., gt=0, description="Plan radius (m)")
