@@ -132,3 +132,58 @@ def test_axial_drag_without_normal_drag_cell_is_rejected(tmp_path):
     line_type["axial_drag_coefficient"] = 0.02
     with pytest.raises(ValueError, match="normal"):
         _generated(upgraded, tmp_path / "axial_only")
+
+
+def _a01_with_ei(ei) -> dict:
+    spec = deepcopy(_spec("a01_catenary_riser"))
+    spec["generic"]["line_types"][0]["bending_stiffness"] = ei
+    return spec
+
+
+def test_typed_ei_edit_over_anisotropic_template_is_rejected(tmp_path):
+    """A template edited to unequal cells after upgrade is not rendered.
+
+    Isotropic edits are covered by test_typed_stiffness_edit_preserves_isotropy
+    in test_spec_upgrader_v2.py.
+    """
+    upgraded = upgrade_spec(_a01_with_ei([120.0, 120.0]), DetectedModelType.RISER)
+    upgraded["generic"]["line_types"][0]["properties"]["EI"] = [120.0, 130.0]
+    upgraded["riser"]["line_types"][0]["bending_stiffness"] = 150.0
+    with pytest.raises(ValueError, match="EI"):
+        _generated(upgraded, tmp_path / "anisotropic")
+
+
+@pytest.mark.parametrize("spec_only", [False, True], ids=["generated", "spec_yml"])
+def test_campaign_sweep_keeps_unset_axial_drag_cell(spec_only, tmp_path):
+    """An unrelated sweep does not author the 0.008 axial Cd default.
+
+    The native Cd [1.2, ~, ~] has no axial value, so the typed axial field is
+    unset; the authored native list is the expected output after a sweep.
+    """
+    from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+        CampaignGenerator,
+    )
+
+    spec = deepcopy(_spec("a01_catenary_riser"))
+    spec["generic"]["line_types"][0]["properties"]["Cd"] = [1.2, None, None]
+    upgraded = upgrade_spec(spec, DetectedModelType.RISER)
+    assert "axial_drag_coefficient" not in upgraded["riser"]["line_types"][0]
+    campaign = {
+        "base": upgraded,
+        "campaign": {"sweeps": [{"parameter": "environment.water.depth",
+                                 "values": [180], "alias": "wd"}]},
+        "output_naming": "{base_name}_wd{wd}",
+    }
+    campaign_file = tmp_path / "campaign.yml"
+    campaign_file.write_text(yaml.safe_dump(campaign, sort_keys=False), encoding="utf-8")
+    result = CampaignGenerator(campaign_file).generate(tmp_path / "out", spec_only=spec_only)
+    assert result.errors == [] and result.run_count == 1
+    (run_dir,) = result.run_dirs
+    if spec_only:
+        run_spec = yaml.safe_load((run_dir / "spec.yml").read_text(encoding="utf-8"))
+        assert run_spec["environment"]["water"]["depth"] == 180
+        objects = _generated(run_spec, tmp_path / "from_spec_yml")["20_generic_objects.yml"]
+    else:
+        objects = yaml.safe_load(
+            (run_dir / "includes" / "20_generic_objects.yml").read_text(encoding="utf-8"))
+    assert objects["LineTypes"][0]["Cd"] == [1.2, None, None]

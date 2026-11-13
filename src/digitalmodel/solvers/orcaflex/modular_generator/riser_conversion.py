@@ -191,7 +191,8 @@ def _restore_scalars(obj: dict, typed: Any, fields: dict[str, str]) -> None:
 
     Fields in ``_CELL_FIELDS`` replace their cell of a native list template.
     Isotropic EI edits update both explicit components, retaining ``~`` when
-    the second component inherits the first.
+    the second component inherits the first; a template with unequal
+    explicit components is rejected.
     An axial value without a list template becomes ``[normal, ~, axial]``.
     A list whose first (normal) cell would be undefined is rejected rather
     than emitted as ``[~, ~, axial]``.
@@ -209,6 +210,12 @@ def _restore_scalars(obj: dict, typed: Any, fields: dict[str, str]) -> None:
             cells += [None] * (width - len(cells))
             cells[index] = value
             if native == "EI" and cells[1] is not None:
+                # The typed EI is isotropic: an explicit second cell must equal
+                # the first in the template and takes the edited value too.
+                if current[1] != current[0]:
+                    raise ValueError(
+                        f"Anisotropic EI template {current} is not supported by the riser schema"
+                    )
                 cells[1] = value
             if cells[0] is None:
                 raise ValueError(
