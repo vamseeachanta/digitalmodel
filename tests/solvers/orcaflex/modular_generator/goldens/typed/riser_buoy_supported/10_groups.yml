@@ -1,0 +1,8 @@
+Groups:
+  Structure:
+    SCR: Model
+    Jumper: Model
+    SupportBuoy: Model
+    FPSO: Model
+  State:
+    Collapsed: []
