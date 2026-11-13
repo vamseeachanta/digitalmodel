@@ -42,6 +42,7 @@ platform instead (Table 5).
 |---|---|---|
 | 1 | 2026-11-12 | Corrected the wave import file and readiness wording; mirrored the added-mass upper triangle and tested repeated generation to prevent invalid native inputs. |
 | 2 | 2026-11-13 | The generator, not the spec, now mirrors the upper triangle of every radiation matrix (one policy for all fowt specs); the spec holds the source values and the emitted model is unchanged. The wave-case models keep first-order wave loading off until the licensed import supplies load RAOs, and `run.md` switches it on after the import. Package regeneration refuses a folder holding files it did not write, so saved results are never deleted. |
+| 3 | 2026-11-13 | The flexible representation keeps the RNA's products of inertia through a principal-axes child buoy instead of dropping them, and takes the tower Poisson ratio from the station moduli. The rigid-equivalent equilibrium comparison is split: heave differs by 0.0060 %, not within 0.0004 % as previously stated. |
 
 Table 1a. Revision history.
 
@@ -303,7 +304,9 @@ OrcaFlex applies the tower and assembly weight through their own objects.
 | Hull + tower + assembly mass | 20,266.84 t | 20,266.85 t, whole-system value of the rigid spec | 0.001 % |
 | Combined centre of mass | within 0.02 mm | rigid spec | 1 mm |
 | Combined inertia diagonal | within 0.002 % | rigid spec | 0.01 % |
-| Equilibrium and natural periods of the combined body | within 0.0004 % | rigid representation | 0.01 % |
+| Equilibrium heave of the combined body | −0.381650 m against −0.381673 m (+0.023 mm, 0.0060 %) | rigid representation | 0.01 % |
+| Equilibrium surge and pitch of the combined body | within 0.0001 % | rigid representation | 0.01 % |
+| Natural periods (surge, heave, pitch, yaw) of the combined body | within 0.0004 % | rigid representation | 0.01 % |
 | Tower-top displacement, hull axes, hull upright | −0.174 m | cantilever formula check of the method (0.1 %) | — |
 | Tower-top displacement and rotation, hull at its −1.42° equilibrium pitch | −0.222 m, −0.389° | none published | — |
 
