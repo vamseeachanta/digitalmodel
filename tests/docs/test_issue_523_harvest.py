@@ -46,6 +46,7 @@ def test_publication_observations_are_dated():
     status = text.split("## Publication status and comment drafts\n", 1)[1]
     introduction = status.split("\n### ", 1)[0]
     assert f"At the time of recording ({recorded[1]})" in introduction
+    assert "[#523](../../../../issues/523)" in introduction
 
 
 def test_readback_draft_keeps_recording_observations_outside_payload():
@@ -84,7 +85,11 @@ def test_repository_evidence_links_resolve():
     """Routing must remain reviewable from the retained artifact itself."""
     text = HARVEST.read_text(encoding="utf-8")
     targets = re.findall(r"\[[^\]]+\]\(([^)]+)\)", text)
-    local_targets = [target for target in targets if not target.startswith("https://")]
+    # The publication issue uses GitHub navigation, not a repository file.
+    local_targets = [
+        target for target in targets
+        if not target.startswith("https://") and target != "../../../../issues/523"
+    ]
     assert local_targets, "No retained repository evidence links"
     for target in local_targets:
         resolved = (HARVEST.parent / target).resolve()

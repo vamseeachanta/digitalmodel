@@ -75,7 +75,7 @@ the three harvested recommendations.
 ## Publication status and comment drafts
 
 At the time of recording (2026-11-13), these drafts had not been posted;
-plan steps 3–5 remained open on #523. These drafts preserve the requested
+plan steps 3–5 remained open on [#523](../../../../issues/523). These drafts preserve the requested
 payloads; their relative document links require a reachable blob permalink
 at the merge commit before posting.
 
