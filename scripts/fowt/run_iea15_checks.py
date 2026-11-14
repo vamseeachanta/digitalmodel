@@ -4,7 +4,8 @@
 
 Writes ``docs/domains/orcaflex/examples/fowt/iea15-volturnus-s/results.json``:
 the computed values, each comparison with its comparator, source and
-tolerance, and the atlas readout. No licensed solver is used.
+tolerance, the mass basis against the published design, and the atlas
+readout. No licensed solver is used.
 """
 from __future__ import annotations
 
@@ -16,6 +17,7 @@ import numpy as np
 import pandas as pd
 
 from digitalmodel.floating_wind.fowt_static_checks import run_checks
+from digitalmodel.floating_wind.iea15_mass_basis import mass_basis
 from digitalmodel.floating_wind.iea15_orcaflex_spec import build_spec, load_sources
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -27,11 +29,13 @@ BEM = "repository quasi-static analysis (#2473), docs/reports/fowt-volturnus-moo
 
 
 def compare(quantity: str, unit: str, computed: float, comparator: float, source: str,
-            tolerance: float | None) -> dict:
+            tolerance: float | None, absolute: bool = False) -> dict:
+    """One comparison. ``deviation`` is relative, or in ``unit`` when ``absolute``."""
     computed, comparator = float(computed), float(comparator)
-    deviation = (computed - comparator) / comparator
+    deviation = computed - comparator if absolute else (computed - comparator) / comparator
     return {"quantity": quantity, "unit": unit, "computed": computed, "comparator": comparator,
-            "comparator_source": source, "tolerance": tolerance, "deviation": deviation,
+            "comparator_source": source, "tolerance": tolerance,
+            "tolerance_kind": "absolute" if absolute else "relative", "deviation": deviation,
             "within_tolerance": None if tolerance is None else bool(abs(deviation) <= tolerance)}
 
 
@@ -47,8 +51,7 @@ def atlas_readout(offset: float) -> dict:
             "mbr_utilisation_by_mbr_limit_m": out}
 
 
-def main() -> int:
-    basis, data = load_sources()
+def build_results(basis: dict, data: dict) -> dict:
     spec = build_spec(basis, data)
     turbine = data["turbine"]
     thrust = basis["turbine"]["rated_rotor_thrust"]["value"]
@@ -62,7 +65,16 @@ def main() -> int:
     operating = next(c for c in previous["cases"] if c["sea"] == "operating"
                      and c["state"] == "intact" and c["heading"] == 0.0)
     hydro = spec["fowt"]["hull"]["hydrostatic_stiffness_excluding_gravity"]
+    masses = mass_basis(spec, basis)
     comparisons = [
+        compare("System mass", "kg", masses["system_mass"], published["system_mass"]["value"],
+                f"{ALLEN}, Table 1", 0.01),
+        compare("Still-water heave with the system mass of Allen Table 1", "m",
+                masses["still_water_heave_at_published_mass"], masses["published_draft_heave"],
+                f"{ALLEN}, section 1 and Table 1 (20 m draft, 6,065 kN vertical pretension)",
+                masses["draft_tolerance"], absolute=True),
+        compare("Mooring vertical pretension, all lines", "N", masses["vertical_pretension"],
+                masses["published_vertical_pretension"], f"{ALLEN}, section 1", 0.02),
         compare("Displaced volume", "m3", spec["fowt"]["hull"]["displaced_volume"],
                 published["displacement"]["value"], f"{ALLEN}, Table 2", 0.01),
         compare("Heave hydrostatic stiffness", "N/m", hydro[0][0] * 1000.0,
@@ -75,6 +87,10 @@ def main() -> int:
         comparisons.append(compare(f"Still-water fairlead tension, line {k + 1}", "N",
                                    line["tension"], basis["mooring"]["published_pretension"]["value"],
                                    f"{ALLEN}, Table 6", 0.02))
+    for k, tension in enumerate(masses["fairlead_tensions_undisplaced"]):
+        comparisons.append(compare(f"Fairlead tension at the undisplaced position, line {k + 1}",
+                                   "N", tension, basis["mooring"]["published_pretension"]["value"],
+                                   f"{ALLEN}, Table 6", 0.02))
     index = {"surge": 0, "heave": 2, "pitch": 4, "yaw": 5}
     tolerance = {"surge": 0.10, "heave": 0.05, "pitch": 0.05, "yaw": 0.10}
     for mode, i in index.items():
@@ -86,7 +102,7 @@ def main() -> int:
                                    previous["periods"]["at_tower_top"][i], BEM, 0.02))
     comparisons.append(compare("Mean surge at rated thrust, rotations and draft held", "m",
                                held["position"][0], operating["mean"][0], BEM, 0.05))
-    result = {
+    return {
         "description": "Licence-free checks of the generated IEA 15 MW / VolturnUS-S fowt "
                        "model (rigid representation). SI units.",
         "qualification": {
@@ -115,9 +131,14 @@ def main() -> int:
             "pitch_deg": math.degrees(loaded["position"][4]), "lines": loaded["lines"],
         },
         "rated_thrust_surge_only": {"surge": held["position"][0], "lines": held["lines"]},
+        "mass_basis": masses,
         "comparisons": comparisons,
         "atlas": atlas_readout(loaded["position"][0]),
     }
+
+
+def main() -> int:
+    result = build_results(*load_sources())
     OUT.write_text(json.dumps(result, indent=1) + "\n", encoding="utf-8", newline="\n")
     return 0
 
