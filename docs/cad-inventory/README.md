@@ -69,7 +69,7 @@ the inventory; flagged for #1007).
 | Archived folder | Active twin present? | Files in archive | Dedup action |
 |---|---|---|---|
 | private project archive (archived twin; `.preexisting-…-064502`) | yes (private project archive) | 4,522 | **drop** as duplicate |
-| `<project-archive>.preexisting-…-075928` | yes (`<project-archive>`) | 3,230 | **drop** as duplicate |
+| terminal project archive (archived twin; `.preexisting-…-075928`) | yes (terminal project archive) | 3,230 | **drop** as duplicate |
 | engineering partner archive (archived twin; `.preexisting-…-064502`) | yes (engineering partner archive) | 502 | **drop** as duplicate |
 | coiled-tubing project archive (archived twin; `.preexisting-…-064502`) | yes (coiled-tubing project archive) | 481 | **drop** as duplicate |
 | EPC project archive (archived twin; `.preexisting-…-064502`) | **no live twin** | 317 | **keep** — only copy |
@@ -125,13 +125,13 @@ Removed by dedup: **8,735** archived duplicates + **1,115** dependency files = *
 | `docs` | 473,552 | 2.0 TB | **79% is the unclassified CAD inbox flush-drive dump** (416,283 files) |
 | `digitalmodel` | 37,422 | 19.7 GB | the repo itself — mostly `.dat`/test fixtures + benchmark models |
 | private project archive (archived twin; `.preexisting-…`) | 4,522 | 59.1 GB | archived twin of private project archive → deduped |
-| `<project-archive>.preexisting-…` | 3,230 | 3.4 TB | archived twin of `<project-archive>` (OrcaFlex-heavy) → deduped |
+| terminal project archive (archived twin; `.preexisting-…`) | 3,230 | 3.4 TB | archived twin of terminal project archive (OrcaFlex-heavy) → deduped |
 | manufacturing repository | 1,115 | 30.7 MB | **all `.venv`/site-packages noise** (not real CAD) |
 | `data` | 944 | 706 MB | |
 | private project archive | 815 | 170 MB | **active** client engineering CAD |
 | engineering partner archive (archived twin; `.preexisting-…`) | 502 | 750 MB | deduped |
 | coiled-tubing project archive (archived twin; `.preexisting-…`) | 481 | 87 MB | deduped |
-| `<project-archive>` | 474 | 3.3 GB | **active** |
+| terminal project archive | 474 | 3.3 GB | **active** |
 | VIV analysis archive (archived twin; `.preexisting-…`) | 424 | 1.1 GB | no live twin → kept |
 | `gdrive` | 407 | 719 MB | mirrored Google-Drive corpus |
 | EPC project archive (archived twin; `.preexisting-…`) | 317 | 1.5 GB | no live twin → kept |
@@ -161,7 +161,7 @@ This is the curated engineering CAD that actually warrants automation analysis (
 | NetCDF (`.nc`) | 7 | 12.2 MB |
 
 > Most curated SolidWorks lives under `docs/disciplines/{misc,drilling}`; the subsea project repos
-> (private project archive, `<project-archive>`, coiled-tubing project archive, EPC project archive, VIV analysis archive, engineering partner archive) are OrcaFlex-dominant.
+> (private project archive, terminal project archive, coiled-tubing project archive, EPC project archive, VIV analysis archive, engineering partner archive) are OrcaFlex-dominant.
 > Folder→domain→client mapping is in [`project-domain-map.md`](./project-domain-map.md) (#1007).
 
 ---
