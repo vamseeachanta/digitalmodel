@@ -296,4 +296,5 @@ See [propeller-rudder-literature.md](propeller-rudder-literature.md) (WRK-1148) 
 full formulae, applicability ranges, and source citations.
 
 Implementation: `src/digitalmodel/hydrodynamics/propeller_rudder.py`
+Worked example: [drive-off diagnostics and plots](../../../examples/propeller_rudder_driveoff.py); the fallback force is not evaluated at V_A = 0.
 Tests: `tests/test_propeller_rudder_interaction.py` (36 pass)

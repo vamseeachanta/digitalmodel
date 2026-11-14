@@ -2,6 +2,7 @@
 
 WRK-1149: Implements Söding/Brix (primary) and Actuator-Disk + flat-plate
 (fallback) methods for rudder forces in propeller slipstream.
+``driveoff_sweep`` exposes their operating regimes, loading and axial inflow.
 
 References:
     - McTaggart (2005), DRDC Atlantic TM 2005-071, Sections 7-9
@@ -11,6 +12,7 @@ References:
 from __future__ import annotations
 
 import math
+from collections.abc import Iterable
 from dataclasses import dataclass
 
 
@@ -203,3 +205,91 @@ def ad_flat_plate_forces(
     F_yaw = -F_lift * math.cos(gamma) * rudder.x_R
 
     return RudderForces(F_surge, F_sway, F_yaw, method="actuator_disk_flat_plate")
+
+
+@dataclass(frozen=True)
+class DriveOffPoint:
+    """Drive-off diagnostics in SI units; coefficients and J are dimensionless.
+
+    Primary forces are the interaction increment; fallback forces are the total
+    rudder force. None denotes an undefined coefficient or unevaluated fallback.
+    Bollard coefficients are reported as inf, never passed to the force models.
+    """
+    regime: str
+    V_s: float  # ship speed [m/s]
+    V_A: float  # wake-reduced advance velocity [m/s]
+    n: float  # shaft speed [rev/s]
+    J: float | None
+    K_T: float | None
+    T: float  # thrust [N]
+    C_th_primary: float | None
+    C_T_fallback: float | None
+    primary_clamped: bool
+    slipstream_axial: float  # rudder-plane axial velocity [m/s]
+    primary: RudderForces
+    fallback: RudderForces | None
+
+
+def _bollard_slipstream_velocity(T: float, rho: float, D: float, x: float) -> float:
+    """Finite V_A -> 0 limit of actuator_disk_velocity at fixed thrust [m/s]."""
+    area = math.pi * D**2 / 4.0
+    contraction = 1.0 + x / math.sqrt(x**2 + (D / 2.0)**2)
+    return contraction / 2.0 * math.sqrt(2.0 * max(T, 0.0) / (rho * area))
+
+
+def _driveoff_point(
+    V_s: float, n: float, delta_deg: float,
+    vessel: VesselPropulsion, rudder: RudderGeometry,
+) -> DriveOffPoint:
+    """Compose unchanged force models and their diagnostics for one shaft speed."""
+    V_A = V_s * (1.0 - vessel.w)
+    J = K_T = C_th_primary = C_T_fallback = None
+    T, slipstream, regime = 0.0, V_A, "engine_off"
+    if n > 0.0:
+        J = V_A / (n * vessel.D)
+        K_T = kt_from_poly(J, vessel.kt_coeffs)
+        T = vessel.rho * n**2 * vessel.D**4 * K_T
+        if V_A == 0.0:
+            regime = "bollard"
+            C_th_primary = C_T_fallback = math.inf
+            slipstream = _bollard_slipstream_velocity(
+                T, vessel.rho, vessel.D, 0.5 * vessel.D,
+            )
+        else:
+            pressure_area = 0.5 * vessel.rho * V_A**2 * math.pi * vessel.D**2 / 4.0
+            C_th_primary = (1.0 - vessel.t) * T / pressure_area
+            C_T_fallback = T / pressure_area
+            regime = "braking" if K_T <= 0.0 else "ahead"
+            slipstream = actuator_disk_velocity(
+                V_A, C_T_fallback, 0.5 * vessel.D, vessel.D / 2.0,
+            )
+    clamped = regime in ("ahead", "braking") and 1.0 + C_th_primary < 0.0
+    primary = soding_forces(V_s, n, delta_deg, vessel, rudder)
+    fallback = (
+        None if regime == "bollard"
+        else ad_flat_plate_forces(V_s, n, delta_deg, vessel, rudder)
+    )
+    return DriveOffPoint(
+        regime, V_s, V_A, n, J, K_T, T, C_th_primary, C_T_fallback,
+        clamped, slipstream, primary, fallback,
+    )
+
+
+def driveoff_sweep(
+    V_s: float, n_values: Iterable[float], delta_deg: float,
+    vessel: VesselPropulsion, rudder: RudderGeometry,
+) -> list[DriveOffPoint]:
+    """Report a shaft-speed sweep at 0.5 D rudder separation, without new forces.
+
+    Astern quadrants are excluded. Engine-off omits propeller drag/windmilling;
+    braking reports the primary increment as computed. At bollard the fallback
+    force is not evaluated and the axial velocity uses its finite thrust limit.
+    """
+    if not math.isfinite(V_s) or V_s < 0.0:
+        raise ValueError("V_s must be finite and nonnegative")
+    points = []
+    for n in n_values:
+        if not math.isfinite(n) or n < 0.0:
+            raise ValueError("n must be finite and nonnegative")
+        points.append(_driveoff_point(V_s, n, delta_deg, vessel, rudder))
+    return points
