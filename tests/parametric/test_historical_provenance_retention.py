@@ -21,7 +21,7 @@ INDEX = "atlases/historical-provenance.json"
 
 
 @pytest.fixture
-def repository(tmp_path, monkeypatch, request):
+def repository(tmp_path, tmp_path_factory, monkeypatch, request):
     # Never let a caller's Git bindings redirect fixture mutations.
     for name in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE",
                  "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES"):
@@ -34,10 +34,12 @@ def repository(tmp_path, monkeypatch, request):
         "allow_merge_commit": True, "allow_squash_merge": False,
         "allow_rebase_merge": False,
     }, raising=False)
+    monkeypatch.delenv("GIT_CONFIG_PARAMETERS", raising=False)
     monkeypatch.setenv("GIT_CONFIG_COUNT", "1")
     monkeypatch.setenv("GIT_CONFIG_KEY_0", "core.autocrlf")
     monkeypatch.setenv("GIT_CONFIG_VALUE_0", "false")
     root = tmp_path / "repository"
+    assert root.resolve().is_relative_to(tmp_path_factory.getbasetemp().resolve())
     root.mkdir()
 
     def git(*args, data=None):
@@ -59,12 +61,14 @@ def repository(tmp_path, monkeypatch, request):
     reader = history.git_reader(ROOT, row["source_revision"])
     for name in row["sources"]:
         path = root / name
+        assert path.resolve().is_relative_to(root.resolve())
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(reader(name))
     revision = subprocess.check_output(["git", "-C", str(ROOT), "rev-parse", "HEAD"]).decode().strip()
     artifacts = history.git_reader(ROOT, revision)
     for name in row["artifacts"]:
         path = root / name
+        assert path.resolve().is_relative_to(root.resolve())
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(artifacts(name))
 
@@ -139,6 +143,7 @@ def test_workflow_local_merge_without_pull_ref(repository, monkeypatch, kind, ev
     result = history.verify_git(case["row"], case["root"])
     assert result["status"] == "VERIFIED"
     assert result["working_tree_drift"] == []
+    assert case["git"]("config", "--get", "core.autocrlf") == "false"
 
 
 @pytest.mark.parametrize("ci_merge", [False, True])
