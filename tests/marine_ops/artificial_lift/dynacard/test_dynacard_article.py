@@ -228,6 +228,21 @@ def test_pinned_figure_csv_is_the_committed_file(builder):
     assert pinned.stdout.decode("utf-8") == (FOLDER / "figure-1-cards.csv").read_text(encoding="utf-8")
 
 
+def test_pinned_app_and_examples_are_the_committed_files(builder):
+    """Links at APP_COMMIT (web page, worked examples, fixture, library) show this tree."""
+    import subprocess
+    known = subprocess.run(["git", "cat-file", "-e", f"{builder.APP_COMMIT}^{{commit}}"],
+                           cwd=ROOT, capture_output=True, check=False)
+    if known.returncode != 0:
+        pytest.skip("pinned commit not in this clone")
+    fixture = json.loads((FOLDER / "article-inputs.json").read_text(encoding="utf-8"))["fixture"]
+    paths = ["docs/apps/dynacard", "docs/domains/artificial_lift/dynacard-examples", fixture]
+    changed = subprocess.run(["git", "diff", "--name-only", builder.APP_COMMIT, "--", *paths],
+                             cwd=ROOT, capture_output=True, check=True, text=True,
+                             encoding="utf-8").stdout.split()
+    assert changed == [], changed
+
+
 def test_reproduction_bound_rounds_up(builder):
     assert builder.upper_bound(2.29e-9) == "3 × 10⁻⁹"
     assert builder.upper_bound(2.0e-9) == "2 × 10⁻⁹"

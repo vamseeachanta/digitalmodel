@@ -35,9 +35,10 @@ REPRODUCTION = Path("docs/apps/dynacard/reproduction.json")
 
 REPO = "https://github.com/vamseeachanta/digitalmodel"
 # Pinned public commits of the linked pages: the pump-card report and its prompt, and the
-# worked examples with the browser application.
+# worked examples with the browser application (the test checks that the linked app,
+# worked-example and fixture files have not changed since APP_COMMIT).
 REPORT_COMMIT = "7d02ae07248b038dcdec5e7097565c02fcd152f8"
-APP_COMMIT = "feeccc283ec431540dbd0d282b60a7a2402e5475"
+APP_COMMIT = "a3c843a3224667491b7eb5fbc64276fce70379b5"
 # Commit that added figure-1-cards.csv; the test checks the file has not changed since.
 CARDS_COMMIT = "242f931efefa8facbe337502a2cdb4cebe08fd78"
 PLATE_DOI = "https://doi.org/10.17632/hnfwm9mjs6.1"
