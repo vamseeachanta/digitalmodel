@@ -319,6 +319,24 @@ workflows:
       - examples/workflows/code-check-atlas-query/results/input_result.yml
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[code-check-atlas-query]
     runtime: offline
+  - id: riser-screening
+    basename: riser_screening
+    title: API STD 2RD riser load-case screening and ranked utilisation
+    input: examples/workflows/riser-screening/input.yml
+    outputs:
+      - examples/workflows/riser-screening/results/deepwater_production_riser_21in_calcnote.md
+      - examples/workflows/riser-screening/results/deepwater_production_riser_21in_results.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-screening]
+    runtime: offline
+  - id: riser-screening-f201
+    basename: riser_screening
+    title: DNV-ST-F201 LRFD riser load-case screening and ranked utilisation
+    input: examples/workflows/riser-screening-f201/input.yml
+    outputs:
+      - examples/workflows/riser-screening-f201/results/deepwater_production_riser_21in_calcnote.md
+      - examples/workflows/riser-screening-f201/results/deepwater_production_riser_21in_results.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-screening-f201]
+    runtime: offline
   - id: dnv-os-f201-riser
     basename: code_check
     title: DNV-OS-F201 riser LRFD combined loading utilisation check

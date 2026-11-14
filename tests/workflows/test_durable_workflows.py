@@ -103,7 +103,26 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
     for output in workflow["outputs"]:
         assert (output_root / output).exists()
 
-    if workflow["id"] == "catenary":
+    if workflow["id"] in {"riser-screening", "riser-screening-f201"}:
+        result = cfg["riser_screening"]["result"]
+        f201 = workflow["id"] == "riser-screening-f201"
+        assert result["code"] == ("DNV-ST-F201" if f201 else "API-STD-2RD")
+        assert len(result["cases"]) == 4
+        assert result["governing_case"] == "survival_1000yr"
+        assert result["governing_check"] == "combined"
+        assert result["max_utilisation"] == pytest.approx(
+            0.8745815315359612 if f201 else 1.29133127215775, rel=1e-12)
+        assert result["screening_status"] == ("pass" if f201 else "fail")
+        assert cfg["screening_status"] == result["overall_status"].lower() == result["screening_status"]
+        assert [row["max_utilisation"] for row in result["cases"]] == sorted(
+            (row["max_utilisation"] for row in result["cases"]), reverse=True)
+        checks = {"pressure_containment", "combined"} if f201 else {"burst", "collapse", "combined"}
+        assert all(set(row["checks"]) == checks for row in result["cases"])
+        saved = next(path for path in workflow["outputs"] if path.endswith("_results.json"))
+        assert json.loads((REPO_ROOT / saved).read_text()) == result
+        assert result["input_echo"]["code"] == result["code"]
+        assert result["provenance"]["sources"][0]["identifier"] == "input.yml"
+    elif workflow["id"] == "catenary":
         assert cfg["S"] == pytest.approx(173.2050808)
         assert cfg["X"] == pytest.approx(131.6957897)
         assert cfg["BendRadius"] == pytest.approx(100.0)

@@ -1,11 +1,11 @@
-"""Riser configuration screening across multiple load cases (API STD 2RD).
+"""Riser configuration screening across multiple load cases and design codes.
 
 # ABOUTME: Iterate operating/extreme/survival/accidental riser load cases.
-# ABOUTME: Run API STD 2RD burst+collapse+combined per case, rank governing case.
+# ABOUTME: Run the selected registered code per case and rank the governing case.
 
 Each load case carries its own pressures, bending moment, effective tension and
-limit-state category. For every case we run the registered API STD 2RD strategy
-(burst, collapse, combined moment-tension-pressure Method 1), pick the governing
+limit-state category. For every case the registered design-code strategy is run
+(API STD 2RD by default), to pick the governing
 check and report the max utilisation. Cases are then ranked by max utilisation so
 the governing load case for the riser configuration is the first row.
 
@@ -15,15 +15,23 @@ sampling, no synthetic placeholders -- every number traces to a declared input.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+import json
+import math
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
+from hashlib import sha256
+from pathlib import Path
 from typing import Dict, List, Optional
 
+from digitalmodel import __version__
+from digitalmodel.reporting.provenance import Provenance
 from digitalmodel.structural.analysis.wall_thickness import (
     DesignCode,
     DesignFactors,
     DesignLoads,
     PipeGeometry,
     PipeMaterial,
+    SafetyClass,
 )
 from digitalmodel.structural.analysis.wall_thickness_codes import CODE_REGISTRY
 
@@ -57,7 +65,7 @@ class CaseScreenResult:
     name: str
     category: str
     checks: Dict[str, float] = field(default_factory=dict)
-    details: Dict[str, Dict[str, float]] = field(default_factory=dict)
+    details: Dict[str, Dict[str, object]] = field(default_factory=dict)
     governing_check: Optional[str] = None
     max_utilisation: float = 0.0
     status: str = "PASS"
@@ -76,8 +84,7 @@ def screen_riser_cases(
         geometry: Riser pipe geometry.
         material: Riser pipe material.
         cases: Load cases to screen.
-        code: Design code (defaults to API STD 2RD; the only code with the
-            combined moment-tension-pressure check).
+        code: Registered design code (defaults to API STD 2RD).
         factors: Optional design factors (defaults to medium safety class).
 
     Returns:
@@ -129,9 +136,6 @@ def run_riser_screening(cfg: dict) -> dict:
     calc-note artifact (Markdown + JSON), and stores the ranked results back on
     cfg under ``riser_screening.result``.
     """
-    import json
-    from pathlib import Path
-
     rs = cfg["riser_screening"]
     g = rs["geometry"]
     m = rs["material"]
@@ -161,7 +165,8 @@ def run_riser_screening(cfg: dict) -> dict:
     ]
 
     code = DesignCode(rs.get("code", "API-STD-2RD"))
-    results = screen_riser_cases(geometry, material, cases, code=code)
+    factors = DesignFactors(safety_class=SafetyClass(rs.get("safety_class", "medium")))
+    results = screen_riser_cases(geometry, material, cases, code=code, factors=factors)
 
     rs["result"] = {
         "code": code.value,
@@ -176,6 +181,7 @@ def run_riser_screening(cfg: dict) -> dict:
                 "name": r.name,
                 "category": r.category,
                 "checks": r.checks,
+                "details": r.details,
                 "governing_check": r.governing_check,
                 "max_utilisation": r.max_utilisation,
                 "status": r.status,
@@ -183,22 +189,87 @@ def run_riser_screening(cfg: dict) -> dict:
             for r in results
         ],
     }
+    rs["result"]["screening_status"] = rs["result"]["overall_status"].lower()
+    cfg["screening_status"] = rs["result"]["screening_status"]
+    context = _report_context(geometry, material, cases, code, factors, cfg, results)
+    rs["result"].update(context)
 
     out_dir = Path(
         rs.get("output_dir")
         or cfg.get("Analysis", {}).get("result_folder", "results/riser_screening")
     )
+    if not out_dir.is_absolute() and cfg.get("_config_dir_path"):
+        out_dir = Path(cfg["_config_dir_path"]) / out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     label = rs.get("label", "riser_screening")
 
     note = build_calc_note(geometry, material, code, results, label)
+    for title, key in (("Input echo", "input_echo"), ("Provenance", "provenance")):
+        note += f"\n## {title}\n\n```json\n{json.dumps(context[key], indent=2)}\n```\n"
     (out_dir / f"{label}_calcnote.md").write_text(note, encoding="utf-8")
     (out_dir / f"{label}_results.json").write_text(
-        json.dumps(rs["result"], indent=2), encoding="utf-8"
+        json.dumps(_json_safe(rs["result"]), indent=2, allow_nan=False), encoding="utf-8"
     )
     logger.info("Riser screening calc note written to %s", out_dir)
 
     return cfg
+
+
+def _json_safe(value):
+    """Encode non-finite report numbers as named strings; keep results numeric."""
+    if isinstance(value, float) and not math.isfinite(value):
+        if math.isnan(value):
+            return "NaN"
+        return "Infinity" if value > 0 else "-Infinity"
+    if isinstance(value, dict):
+        return {key: _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(item) for item in value]
+    return value
+
+
+def _report_context(geometry, material, cases, code, factors, cfg, results):
+    """Echo resolved SI inputs; timestamp the source snapshot, not execution.
+
+    Input-file modification time is stable across consecutive runs. In-memory
+    inputs use the implementation-file modification time, explicitly labelled.
+    File locators are reduced to filenames to avoid disclosing local paths.
+    """
+    rs = cfg["riser_screening"]
+    strategy = CODE_REGISTRY[code]()
+    factor_keys = {"f_d", "f_c", "gamma_sc", "gamma_m", "gamma_dyn", "alpha_U",
+                   "f_0", "alpha_fab", "temperature_derating"}
+    applied = {name: {k: v for k, v in details.items() if k in factor_keys}
+               for name, details in results[0].details.items()} if results else {}
+    material_echo = asdict(material)
+    material_echo["fabrication_type"] = material.fabrication_type.value
+    echo = {
+        "geometry": asdict(geometry), "material": material_echo,
+        "load_cases": [asdict(case) for case in cases], "code": code.value,
+        "factors": {"safety_class": factors.safety_class.value,
+                    "strategy": getattr(strategy, "get_factors", lambda: {})(),
+                    "applied": applied},
+    }
+    input_file = cfg.get("_config_file_path")
+    source = Path(input_file) if input_file else Path(__file__)
+    timestamp = datetime.fromtimestamp(source.stat().st_mtime, timezone.utc).isoformat()
+    provenance = Provenance()
+    if input_file:
+        provenance.add("file", source.name, digest="sha256:" + sha256(source.read_bytes()).hexdigest(),
+                       retrieved_at=timestamp, description="Screening input file snapshot")
+    provenance.add(
+        "configuration", rs.get("label", "riser_screening"),
+        digest="sha256:" + sha256(json.dumps(
+            echo, sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+            allow_nan=False).encode()).hexdigest(),
+        retrieved_at=timestamp, description="Resolved screening inputs, including defaults",
+    )
+    return {"input_echo": echo, "provenance": {
+        **provenance.require().model_dump(), "package_version": __version__,
+        "timestamp_basis": ("input file modification time (UTC)" if input_file
+                            else "implementation file modification time (UTC)"),
+        "units": "SI: m, Pa, N, N*m; utilisation and factors dimensionless",
+    }}
 
 
 def build_calc_note(
@@ -214,12 +285,13 @@ def build_calc_note(
     ca_mm = geometry.corrosion_allowance * 1000
 
     lines: List[str] = []
+    check_names = CODE_REGISTRY[code].check_names
     lines.append(f"# Riser Configuration Screening - {label}")
     lines.append("")
-    lines.append(f"**Design code:** {code.value} "
-                 "(burst, collapse, combined moment-tension Method 1)")
+    lines.append(f"**Design code:** {code.value} ({', '.join(check_names)})")
     overall = "PASS" if all(r.status == "PASS" for r in results) else "FAIL"
     lines.append(f"**Overall status:** {overall}")
+    lines.append(f"**screening_status:** {overall.lower()}")
     if results:
         gov = results[0]
         lines.append(
@@ -233,8 +305,8 @@ def build_calc_note(
     lines.append("| Property | Value |")
     lines.append("|---|---|")
     lines.append(f"| Outer diameter | {od_mm:.1f} mm |")
-    lines.append(f"| Wall thickness | {wt_mm:.2f} mm |")
-    lines.append(f"| Corrosion allowance | {ca_mm:.2f} mm |")
+    lines.append(f"| Wall thickness | {wt_mm:.3f} mm |")
+    lines.append(f"| Corrosion allowance | {ca_mm:.3f} mm |")
     lines.append(f"| D/t ratio | {geometry.d_over_t:.1f} |")
     lines.append(f"| Grade | {material.grade} |")
     lines.append(f"| SMYS | {material.smys / 1e6:.0f} MPa |")
@@ -243,19 +315,25 @@ def build_calc_note(
 
     lines.append("## Per-case utilisation (ranked, governing first)")
     lines.append("")
-    lines.append("| Rank | Case | Category | Burst | Collapse | Combined | "
-                 "Governing | Max util | Status |")
-    lines.append("|---|---|---|---|---|---|---|---|---|")
+    columns = ["Rank", "Case", "Category"] + [
+        name.replace("_", " ").title() for name in check_names
+    ] + ["Governing", "Max util", "Status"]
+    lines.append("| " + " | ".join(columns) + " |")
+    lines.append("|" + "|".join("---" for _ in columns) + "|")
     for i, r in enumerate(results, start=1):
-        burst = r.checks.get("burst", float("nan"))
-        collapse = r.checks.get("collapse", float("nan"))
-        combined = r.checks.get("combined", float("nan"))
+        values = " | ".join(f"{r.checks[name]:.3f}" for name in check_names)
         lines.append(
-            f"| {i} | {r.name} | {r.category} | {burst:.3f} | {collapse:.3f} | "
-            f"{combined:.3f} | {r.governing_check} | {r.max_utilisation:.3f} | "
+            f"| {i} | {r.name} | {r.category} | {values} | "
+            f"{r.governing_check} | {r.max_utilisation:.3f} | "
             f"{r.status} |"
         )
     lines.append("")
+
+    if code == DesignCode.DNV_ST_F201:
+        lines.extend(_f201_basis(results))
+        return "\n".join(lines)
+    if code != DesignCode.API_STD_2RD:
+        return "\n".join(lines)
 
     lines.append("## Combined check basis (API STD 2RD Method 1)")
     lines.append("")
@@ -272,7 +350,43 @@ def build_calc_note(
                  "reproduces the legacy `APISTD2RDAnalyzer` Method 1 utilisation "
                  "(cross-validated to machine precision).")
     lines.append("")
-    lines.append("> Note: DNV-ST-F201 is not implemented in this engine; only "
-                 "API STD 2RD load-case screening is available here.")
-    lines.append("")
     return "\n".join(lines)
+
+
+def _f201_basis(results):
+    """Clause references and the actual strategy factors for the calc note."""
+    from digitalmodel.structural.analysis.wall_thickness_codes.dnv_st_f201 import (
+        DnvStF201Strategy,
+    )
+
+    factors = DnvStF201Strategy().get_factors()
+    lines = [
+        "## Check basis (DNV-ST-F201 LRFD)", "",
+        "DNV-ST-F201 (2021), formerly DNV-OS-F201 (2010), Sec. 5: bursting "
+        "limit state and combined loading, clause D. Eqs 5.25-5.26 give "
+        "plastic resistances Mk/Tk including the pressure-dependent flow-stress "
+        "coefficient alpha_c, recomputed for every load case.", "",
+        f"Factors: {factors}. Combined safety class medium maps to normal.",
+        "Moment and tension are design load effects (already factored Md/Td). "
+        "gamma_dyn acts on the pressure-containment demand only. Temperature "
+        "de-rating is zero because screening inputs carry no temperature.", "",
+        "For external overpressure, p_min_internal = internal_pressure; no "
+        "separate minimum-pressure input is available. Characteristic collapse "
+        "resistance p_c uses DNV-ST-F101 Eq. 5.9, with its default ovality "
+        "and the supplied material's fabrication factor. Its plastic pressure "
+        "p_p uses characteristic yield f_y = SMYS * alpha_U (Eq. 5.12), "
+        "consistent with p_b, Mk and Tk; temperature de-rating is zero. Net pressure above "
+        "characteristic burst resistance exceeds the combined criterion's "
+        "domain and is reported as a failed check with infinite utilisation. "
+        'Results JSON encodes infinity as "Infinity" or "-Infinity"; other '
+        'non-finite values also use named strings. Numerical results remain '
+        'unchanged in memory.', "",
+    ]
+    if results:
+        combined = results[0].details["combined"]
+        burst = results[0].details["pressure_containment"]
+        lines.extend([
+            f"Applied gamma_sc: burst {burst['gamma_sc']}, combined "
+            f"{combined['gamma_sc']}; gamma_m {combined['gamma_m']}.", "",
+        ])
+    return lines
