@@ -52,7 +52,7 @@ def test_record_counts_agree_with_an_independent_recount(inventory):
     assert builder.record_count(paths["riser_stackup"]) == stackup == 84
     with paths["config_catalog"].open(encoding="utf-8", newline="") as handle:
         catalog = len(list(csv.DictReader(handle)))
-    assert builder.record_count(paths["config_catalog"]) == catalog == 28
+    assert builder.record_count(paths["config_catalog"]) == catalog == 42
     line_pipe = json.loads(paths["line_pipe"].read_text(encoding="utf-8"))["records"]
     assert builder.record_count(paths["line_pipe"]) == len(line_pipe)
 

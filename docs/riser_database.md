@@ -15,7 +15,7 @@ loader refuses a table whose fingerprint drifted.
 
 | Table | Route | Content |
 |---|---|---|
-| `config_catalog` | public | Riser configuration envelopes seeded from `examples/riser_input/*.yml` (5) + `config/pipe/*riser*.yml` (22, explicit list). Depth/position for the pipe configs derive from the FILENAME (`<n>ft` → m × 0.3048); OD/WT are inches → mm × 25.4. A missing token yields an empty cell — never guessed. |
+| `config_catalog` | public | 42 configurations: 5 `examples/riser_input/*.yml` + 22 explicit `config/pipe` files + 1 lift reference + 14 public examples. Pipe filename depth uses ft → m × 0.3048; pipe OD/WT use inches → mm × 25.4. Missing evidence yields an empty cell. |
 | `standards_crosswalk` | public | Clause **identifiers** + `wiki_path` only: `api-std-2rd` (there is no `api-rp-2rd` — API reclassified RP 2RD as STD 2RD), `api-rp-16q`, `dnv-os-f201`, `dnv-rp-c203`. `registry_revision` mirrors llm-wiki `data/standards-registry.json` verbatim. |
 | `material_sn_scf_dff` | public | References into `fatigue/sn_curves.py` vocabulary (plain detail-category letters + environment — the REAL riser fatigue consumer, used by `riser_fatigue/workflow.py` and `touchdown.py`; NOT the composite ids of `sn_library_api`). `scf_ref`/`dff_ref` name getters. |
 
@@ -278,3 +278,47 @@ coverage, and populates `EnvelopeResult.dynamic_provenance` with the STUB marker
 + disclaimer so a dynamically-amplified verdict never leaves unlabeled. The
 `_provenance` surfacing of the solver block was extended for all library atlases
 (also closes the same gap for the OrcaFlex/diffraction libraries).
+
+## Public example catalogue ([issue 3955](https://github.com/vamseeachanta/digitalmodel/issues/3955))
+
+The fourteen `orcaflex_public_example` rows describe the primary named line and
+its bare section, selected explicitly in `sources.yml:public_example_configs`.
+Auxiliary lines and buoyed sections are excluded.
+Types are `catenary`, `lazy_wave`, `steep_wave`, `pliant_wave`, `lazy_s`, `steep_s`,
+`pliant_s`, `tower_jumper`, `drilling` and `running_bop`. Each master and its
+general, environment, line-type and line includes supply cited dimensions.
+SI lengths are metres; User/ft lengths use `ft_to_m` and `m_to_mm` from the spec.
+Only `Homogeneous pipe` establishes wall thickness as `(OD-ID)/2`; `General`
+wall thickness is not established, even if a nominal ID is present.
+
+| Example | Depth (m) | OD (mm) | Wall (mm) |
+|---|---:|---:|---:|
+| A01 catenary | 100 | 355.6 | not established |
+| A03 tower jumper, flat zero-slope seabed | 1350 | 381.4 | not established |
+| A05 semisub | 1999.488 | 231.775 | 25.400 |
+| A05 spar | 1798.32 | 219.075 | 19.050 |
+| A05 FPSO | 899.16 | 304.8 | 25.400 |
+| B01 drilling | 1020 | 650 | 25.000 |
+
+Table 1. Source readings before CSV rounding. Independent YAML readings test
+serialization within 0.005 m depth and 0.0005 mm OD/wall, with no relative tolerance;
+these bounds qualify serialization only. The CSV retains `%g` (semisub: `1999.49`).
+These rows are catalogue references, not qualified engineering inputs. Models in
+`docs/domains/orcaflex/risers/` are excluded: `PROVENANCE.md` records origin as
+not stated. Fourteen elevation sketches remain a separate documentation slice.
+
+## Reproduce
+
+```bash
+PYTHONPATH=src uv run python scripts/riser_database/build_tables.py
+PYTHONPATH=src uv run python scripts/riser_capability/build_riser_inventory.py
+PYTHONPATH=src uv run python scripts/riser_database/build_tables.py --check
+PYTHONPATH=src uv run python scripts/riser_capability/build_riser_inventory.py --check
+PYTHONPATH=src uv run python -m pytest tests/riser_database/ tests/riser_capability/ -q -rs -m "not solver"
+```
+
+## Run-it-yourself prompt
+
+Regenerate the public example catalogue and inventory, run both drift checks and
+the non-solver suites above, and compare dimensions with independent YAML readings.
+Report unknown wall thickness as not established; perform no licensed solver runs.

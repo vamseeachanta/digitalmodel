@@ -157,6 +157,9 @@ _STOPWORDS = {
     "installation",
     "sheets",
     "workbooks",
+    "detailed",
+    "general",
+    "running",
 }
 
 #: Round band-edge numerals used by the public ``water_depth_band`` scheme.

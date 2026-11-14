@@ -101,12 +101,13 @@ Table 1. Capability status by riser type.
 
 | Category | Path | Records | Population | Provenance mechanism |
 | --- | --- | --- | --- | --- |
-| Line pipe and tubulars | `data/riser_database/config_catalog.csv` | 28 | populated | source_path column (repository file per row) |
+| Line pipe and tubulars | `data/riser_database/config_catalog.csv` | 42 | populated | source_path column (repository file per row) |
 | Line pipe and tubulars | `data/line_pipe/data.json` | 0 | empty (schema and citation contract only) | citation_id per row resolved in sources.yml |
 | Drilling and completion stack-ups | `data/riser_database/riser_stackup.csv` | 84 | populated | wiki_path column |
 | Tensioners and rig interface | `data/riser_database/rig_riser_interface.csv` | 10 | populated | wiki_path column |
 | Flexible pipe | `data/flexible_pipe/data.json` | 0 | empty (schema and citation contract only) | citation_id per row resolved in sources.yml |
 | Structural sections | `data/riser_database/structure_properties/data.json` | 0 | empty (schema and citation contract only) | citation_id per row resolved in sources.yml |
+| Buoyancy modules | `data/riser_buoyancy/data.json` | 0 | empty (schema and citation contract only) | citation_id per row resolved in sources.yml |
 | Soil | `data/soil_stiffness/data.json` | 0 | empty (schema and citation contract only) | citation_id per row resolved in sources.yml |
 | Soil | `data/geotechnical/geotech_database.yaml` | - | format not counted | source_id, locator and licence per row |
 | S-N curves, stress concentration and design fatigue factors | `data/riser_database/material_sn_scf_dff.csv` | 3 | populated | code_id and wiki_path columns |
@@ -114,7 +115,6 @@ Table 1. Capability status by riser type.
 | Standards crosswalk | `data/riser_database/standards_crosswalk.csv` | 5 | populated | wiki_path and registry_revision columns |
 | Vessel response amplitude operators | `data/rao_database.parquet` | - | format not counted | sources list in data/rao_database.manifest.json |
 | Metocean | `data/vessels/processed/metocean_criteria.csv` | 7 | populated | n_citations column; citations in the raw JSON |
-| Buoyancy modules | none | - | absent (issue [#3953](https://github.com/vamseeachanta/digitalmodel/issues/3953)) | none |
 | Coatings, insulation and vortex-induced vibration suppression | none | - | absent (issue [#3953](https://github.com/vamseeachanta/digitalmodel/issues/3953)) | none |
 | Flex joints, stress joints and keel joints | none | - | absent (issue [#3953](https://github.com/vamseeachanta/digitalmodel/issues/3953)) | none |
 | Current profiles by region | none | - | absent (no issue yet) | none |

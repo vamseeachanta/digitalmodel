@@ -23,7 +23,7 @@ Synthetic, uncalibrated inputs do not qualify an engineering prediction.
 import importlib.util
 import json
 import re
-from html import unescape
+from html.parser import HTMLParser
 from pathlib import Path
 
 import pytest
@@ -32,6 +32,75 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/capabilities/build_pore_pressure_explorer.py"
 OUTPUT = ROOT / "docs/api/structural"
+
+
+class _BodyText(HTMLParser):
+    """Collect body text outside scripts/styles; no computed CSS visibility."""
+
+    def __init__(self, page):
+        super().__init__()
+        self.in_body = False
+        self.hidden = 0
+        self.parts = []
+        self.feed(page)
+        self.close()
+
+    def handle_starttag(self, tag, attrs):
+        if tag == "body":
+            self.in_body = True
+        if tag in ("script", "style"):
+            self.hidden += 1
+
+    def handle_endtag(self, tag):
+        if tag == "body":
+            self.in_body = False
+        if tag in ("script", "style"):
+            self.hidden -= 1
+
+    def handle_data(self, data):
+        if self.in_body and not self.hidden:
+            self.parts.append(data)
+
+
+def _body_text(page):
+    return " ".join(" ".join(_BodyText(page).parts).split())
+
+
+def _assert_disclosure(visible, phrase):
+    assert phrase in visible
+
+
+@pytest.mark.parametrize("page", [
+    "<html><head><title>{phrase}</title></head><body>Example</body></html>",
+    '<html><head><style>p::before{{content:"{phrase}"}}</style></head>'
+    "<body>Example</body></html>",
+    '<body><style>p::before{{content:"{phrase}"}}</style>Example</body>',
+    '<body><script>const disclosure = "{phrase}";</script>Example</body>',
+    "<body><!-- {phrase} -->Example</body>",
+    '<body><p title="{phrase}">Example</p></body>',
+], ids=["title", "head-style", "body-style", "body-script", "comment", "attribute"])
+def test_disclosure_rejects_non_body_text(page):
+    phrase = "no window ceiling is established"
+    with pytest.raises(AssertionError):
+        _assert_disclosure(_body_text(page.format(phrase=phrase)), phrase)
+
+
+@pytest.mark.parametrize("markup", [
+    "<p>no window ceiling is established</p>",
+    "<p>no window <em>ceiling</em> is established</p>",
+    "<p>no&#32;window&nbsp;ceiling is established</p>",
+    '<script>const example = "ignored";</script><p>no window ceiling is established</p>',
+], ids=["body", "inline", "entities", "after-script"])
+def test_disclosure_accepts_body_text(markup):
+    _assert_disclosure(_body_text(f"<body>\n{markup}\n</body>"),
+                       "no window ceiling is established")
+
+
+def test_disclosure_requires_body_markup():
+    page = "<html><head><title>no window ceiling is established</title></head></html>"
+    assert _body_text(page) == ""
+    with pytest.raises(AssertionError):
+        _assert_disclosure(_body_text(page), "no window ceiling is established")
 
 
 @pytest.fixture
@@ -214,8 +283,21 @@ def test_page_does_not_draw_an_unsupported_window(builder):
     assert "win.style" not in page
     assert ".win{" not in page
     assert "Shaded:" not in page
-    assert re.search(r"\bsafe\b", page, re.IGNORECASE) is None
+    # Unsupported-window claim vocabulary; even negated "safety" is denied.
+    claims = r"\b(?:safe|safely|safer|safest|safety)\b"
+    assert re.search(claims, page, re.IGNORECASE) is None
+    assert re.search(claims, _body_text(page), re.IGNORECASE) is None
     assert "Min. mud weight" not in page
+
+
+@pytest.mark.parametrize("word", ["safe", "safely", "safer", "safest", "safety"])
+@pytest.mark.parametrize("location", ["title", "script", "body"])
+def test_unsupported_claim_variants_are_rejected(builder, monkeypatch, word, location):
+    closing = f"</{location}>"
+    page = builder._HTML.replace(closing, f" {word.upper()}{closing}")
+    monkeypatch.setattr(builder, "_HTML", page)
+    with pytest.raises(AssertionError):
+        test_page_does_not_draw_an_unsupported_window(builder)
 
 
 @pytest.fixture
@@ -226,8 +308,7 @@ def generated_explorer(builder, monkeypatch, tmp_path):
     builder.main()
     study = json.loads((tmp_path / "pore-pressure-explorer.json").read_text(encoding="utf-8"))
     page = (tmp_path / "pore-pressure-explorer.html").read_text(encoding="utf-8")
-    visible = unescape(re.sub(r"<[^>]+>", " ", page.split("<script>", 1)[0]))
-    return study, page, " ".join(visible.split())
+    return study, page, _body_text(page)
 
 
 def test_missing_fracture_ceiling_is_disclosed(generated_explorer):
@@ -236,6 +317,7 @@ def test_missing_fracture_ceiling_is_disclosed(generated_explorer):
     assert study["meta"]["drilling_window_status"] == "NOT_EVALUATED"
     assert "no fracture gradient" in study["meta"]["drilling_window_reason"].lower()
     assert "NOT_EVALUATED" in visible
+    _assert_disclosure(visible.lower(), "no window ceiling is established")
     assert "no window ceiling is established" in visible.lower()
     assert "no fracture gradient is supplied or calculated" in visible.lower()
     assert "overburden is a vertical-stress reference" in visible.lower()

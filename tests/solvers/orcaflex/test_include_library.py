@@ -257,6 +257,7 @@ class TestCSVToLibraryConversion:
         assert result["Mass"] == 95000
 
 
+@pytest.mark.solver
 class TestOrcaFlexIntegration:
     """Integration tests with actual OrcaFlex API (requires license)."""
 

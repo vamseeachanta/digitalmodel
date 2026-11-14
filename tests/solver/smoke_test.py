@@ -18,6 +18,10 @@ import shutil
 from pathlib import Path
 
 import openpyxl
+import pytest
+
+# Runs OrcaWave through the licensed OrcFxAPI; deselected unless -m names solver.
+pytestmark = pytest.mark.solver
 
 # Repo and fixture paths (relative to repo root)
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent

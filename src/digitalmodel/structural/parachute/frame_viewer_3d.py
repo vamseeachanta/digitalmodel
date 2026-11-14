@@ -4,8 +4,11 @@ ABOUTME: Generates self-contained HTML from FrameGeometry3D for browser inspecti
 """
 
 import argparse
+import base64
+import hashlib
 import json
 import math
+import os
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -22,6 +25,14 @@ THREEJS_CDN = f"https://cdn.jsdelivr.net/npm/three@{THREEJS_VERSION}/build/three
 THREEJS_ORBIT_CDN = f"https://cdn.jsdelivr.net/npm/three@{THREEJS_VERSION}/examples/jsm/controls/OrbitControls.js"
 THREEJS_CSS2D_CDN = f"https://cdn.jsdelivr.net/npm/three@{THREEJS_VERSION}/examples/jsm/renderers/CSS2DRenderer.js"
 
+# Pinned files from the unpacked three@0.167.0 npm package; never vendored.
+THREEJS_FILES = {
+    "THREEJS_CDN": ("build/three.module.min.js", "54a7a52ddce0ad06fbd1d021fd03b1e1812d946114a2111e1260bcd490c6b840"),
+    "ORBIT_CDN": ("examples/jsm/controls/OrbitControls.js", "f260591ef315aa04888152e7f121865214e33fb54727145cf4e4445058db1297"),
+    "CSS2D_CDN": ("examples/jsm/renderers/CSS2DRenderer.js", "e900e58dbc428d8d3211f87f3ff0301e514f6dc563655c710bcda15c96397feb"),
+}
+THREEJS_LICENSE_SHA256 = "4c40a1ef62450b857c3b2aaf294936304cd552d965fbcd9d32d4c5bcf4ba4454"
+
 # ── Assembly colors ───────────────────────────────────────────────────────
 ASSEMBLY_COLORS = {
     "rear_trunk": "#4488ff",
@@ -34,6 +45,7 @@ BC_COLORS = {
     "fixed": "#cc0000",
     "bolted": "#880000",
     "free": "#999999",
+    "load": "#cc66ff",
 }
 
 
@@ -91,9 +103,33 @@ def compute_arc_midpoint(
     )
 
 
+def _arc_points(nodes, member, apex):
+    """Sample the minor circular arc through the endpoints and sag apex."""
+    a, b = nodes[member.start_node], nodes[member.end_node]
+    start, end = (a.x, a.y, a.z), (b.x, b.y, b.z)
+    mid = [(x + y) / 2 for x, y in zip(start, end)]
+    sag = math.dist(mid, apex)
+    if sag == 0:
+        return None  # Preserve compute_arc_midpoint's straight-tube fallbacks.
+    normal = [(y - x) / sag for x, y in zip(mid, apex)]
+    chord = member.length(nodes)
+    tangent = [(y - x) / chord for x, y in zip(start, end)]
+    radius = member.bend_clr
+    centre = [x - (radius - sag) * n for x, n in zip(mid, normal)]
+    half_angle = math.atan2(chord / 2, radius - sag)
+    points = [[c + radius * (math.cos(t) * n + math.sin(t) * u)
+               for c, n, u in zip(centre, normal, tangent)]
+              for t in (half_angle * (i / 8 - 1) for i in range(17))]
+    points[0], points[-1] = list(start), list(end)
+    return points
+
+
 def frame_to_json(geo: FrameGeometry3D) -> dict:
     """Serialize FrameGeometry3D to a JSON-compatible dict."""
     data: dict = {"nodes": {}, "members": [], "connections": []}
+
+    data["origin_node"] = next((nid for nid, n in geo.nodes.items()
+                                if all(abs(v) <= 1e-9 for v in (n.x, n.y, n.z))), None)
 
     for nid, node in geo.nodes.items():
         data["nodes"][str(nid)] = {
@@ -108,8 +144,17 @@ def frame_to_json(geo: FrameGeometry3D) -> dict:
             "is_bend": m.is_bend, "bend_clr": m.bend_clr,
             "od": m.section.get("OD", 1.75),
         }
+        entry["chord_in"] = round(m.length(geo.nodes), 3)
+        entry["dim_text"] = f'{entry["chord_in"]:.3f} in'
+        a, b = geo.nodes[m.start_node], geo.nodes[m.end_node]
+        entry["dim_pos"] = [(getattr(a, k) + getattr(b, k)) / 2 for k in ("x", "y", "z")]
         if m.is_bend:
             entry["arc_mid"] = list(compute_arc_midpoint(geo.nodes, m))
+            entry["dim_pos"] = entry["arc_mid"]
+            entry["dim_text"] = f'chord {entry["dim_text"]}, R {m.bend_clr:.3f} in'
+            points = _arc_points(geo.nodes, m, entry["arc_mid"])
+            if points is not None:
+                entry["arc_points"] = points
         data["members"].append(entry)
 
     for c in geo.connections:
@@ -121,20 +166,40 @@ def frame_to_json(geo: FrameGeometry3D) -> dict:
     return data
 
 
-def generate_viewer_html(geo: FrameGeometry3D, output_path: str) -> str:
-    """Generate a self-contained HTML file with three.js 3D viewer."""
+def _inline_threejs(threejs_dir):
+    """Validate all four package files before returning inline module sources."""
+    sources = {}
+    for key, (name, expected) in {**THREEJS_FILES, "LICENSE": ("LICENSE", THREEJS_LICENSE_SHA256)}.items():
+        try:
+            content = (Path(threejs_dir) / name).read_bytes()
+        except OSError as exc:
+            raise ValueError(f"{name}: expected SHA-256 {expected}; actual missing/unreadable") from exc
+        actual = hashlib.sha256(content).hexdigest()
+        if actual != expected:
+            raise ValueError(f"{name}: expected SHA-256 {expected}; actual {actual}")
+        sources[key] = (content.decode("utf-8") if key == "LICENSE" else
+                        "data:text/javascript;base64," + base64.b64encode(content).decode("ascii"))
+    return sources
+
+
+def generate_viewer_html(geo: FrameGeometry3D, output_path: str, threejs_dir=None) -> str:
+    """Generate viewer HTML; inline verified three.js when its package is supplied."""
     data = frame_to_json(geo)
     json_payload = json.dumps(data, indent=2)
 
     html = _HTML_TEMPLATE.replace("/* {{FRAME_DATA}} */", json_payload)
-    html = html.replace("{{THREEJS_CDN}}", THREEJS_CDN)
-    html = html.replace("{{ORBIT_CDN}}", THREEJS_ORBIT_CDN)
-    html = html.replace("{{CSS2D_CDN}}", THREEJS_CSS2D_CDN)
+    sources = (_inline_threejs(threejs_dir) if threejs_dir is not None else
+               {"THREEJS_CDN": THREEJS_CDN, "ORBIT_CDN": THREEJS_ORBIT_CDN, "CSS2D_CDN": THREEJS_CSS2D_CDN})
+    for key, source in sources.items():
+        html = html.replace("{{" + key + "}}", source)
+    notice = ('<script type="text/plain" id="threejs-license">' + sources["LICENSE"] + '</script>'
+              if threejs_dir is not None else "")
+    html = html.replace("{{THREEJS_LICENSE}}", notice)
     html = html.replace("{{ASSEMBLY_COLORS}}", json.dumps(ASSEMBLY_COLORS))
     html = html.replace("{{BC_COLORS}}", json.dumps(BC_COLORS))
 
     Path(output_path).parent.mkdir(parents=True, exist_ok=True)
-    Path(output_path).write_text(html)
+    Path(output_path).write_text(html, encoding="utf-8")
     return output_path
 
 
@@ -165,6 +230,7 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
   }
   .color-swatch { display: inline-block; width: 10px; height: 10px;
     border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+  .dim-label { color: #ddd; font-size: 10px; background: rgba(0,0,0,0.65); padding: 2px 4px; white-space: nowrap; }
   .node-label {
     color: #fff; font-size: 11px; background: rgba(0,0,0,0.6);
     padding: 1px 5px; border-radius: 3px; pointer-events: none;
@@ -187,12 +253,15 @@ _HTML_TEMPLATE = r"""<!DOCTYPE html>
 
   <div class="section-title">Display</div>
   <label><input type="checkbox" id="tog-labels" checked> Node Labels</label>
+  <label><input type="checkbox" id="tog-dimensions" checked> Dimensions</label>
   <label><input type="checkbox" id="tog-connections" checked> BC Markers</label>
   <label><input type="checkbox" id="tog-grid" checked> Grid</label>
+  <small>Red square: fixed | dark red triangle: bolted | gold diamond: origin | purple diamond: load</small>
 </div>
 
 <div id="info">Orbit: left-click drag | Zoom: scroll | Pan: right-click drag</div>
 
+{{THREEJS_LICENSE}}
 <script type="importmap">
 {
   "imports": {
@@ -258,6 +327,7 @@ const groups = {
   under_chassis: new THREE.Group(),
   shared: new THREE.Group(),
   labels: new THREE.Group(),
+  dimensions: new THREE.Group(),
   connections: new THREE.Group(),
 };
 Object.values(groups).forEach(g => scene.add(g));
@@ -283,9 +353,9 @@ function makeTube(p1, p2, radius, color) {
   return mesh;
 }
 
-// ── Helper: bent tube via TubeGeometry along quadratic bezier ─────────
-function makeBentTube(p1, arcMid, p2, radius, color) {
-  const curve = new THREE.QuadraticBezierCurve3(p1, arcMid, p2);
+// ── Helper: bent tube swept through circular-arc samples ──────────────
+function makeBentTube(points, radius, color) {
+  const curve = new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(...p)));
   const geo = new THREE.TubeGeometry(curve, 20, radius, 12, false);
   const mat = new THREE.MeshPhongMaterial({ color, side: THREE.DoubleSide });
   return new THREE.Mesh(geo, mat);
@@ -301,9 +371,8 @@ for (const m of FRAME.members) {
   const radius = (m.od || 1.75) / 2;
 
   let mesh;
-  if (m.is_bend && m.arc_mid) {
-    const pm = new THREE.Vector3(m.arc_mid[0], m.arc_mid[1], m.arc_mid[2]);
-    mesh = makeBentTube(p1, pm, p2, radius, color);
+  if (m.is_bend && m.arc_points) {
+    mesh = makeBentTube(m.arc_points, radius, color);
   } else {
     mesh = makeTube(p1, p2, radius, color);
   }
@@ -311,6 +380,16 @@ for (const m of FRAME.members) {
     const group = groups[m.assembly] || groups.shared;
     group.add(mesh);
   }
+}
+
+// ── Build dimension labels ───────────────────────────────────────────
+for (const m of FRAME.members) {
+  const div = document.createElement('div');
+  div.className = 'dim-label';
+  div.textContent = m.dim_text;
+  const label = new CSS2DObject(div);
+  label.position.set(...m.dim_pos);
+  groups.dimensions.add(label);
 }
 
 // ── Build node labels ─────────────────────────────────────────────────
@@ -348,7 +427,7 @@ for (const c of FRAME.connections) {
     color = BC_COLORS.bolted;
   } else if (c.conn_type === 'coupler_pin') {
     geo = new THREE.OctahedronGeometry(0.9);
-    color = '#daa520'; // gold
+    color = BC_COLORS.load;
   } else {
     continue; // skip free connections without special markers
   }
@@ -357,6 +436,14 @@ for (const c of FRAME.connections) {
   const mesh = new THREE.Mesh(geo, mat);
   mesh.position.copy(pos);
   groups.connections.add(mesh);
+}
+
+if (FRAME.origin_node !== null) {
+  const node = FRAME.nodes[FRAME.origin_node];
+  const marker = new THREE.Mesh(new THREE.OctahedronGeometry(0.9),
+    new THREE.MeshPhongMaterial({ color: '#daa520', transparent: true, opacity: 0.85 }));
+  marker.position.set(node.x, node.y, node.z);
+  groups.connections.add(marker);
 }
 
 // ── Axes helper ───────────────────────────────────────────────────────
@@ -373,10 +460,13 @@ bindToggle('tog-rear_trunk', groups.rear_trunk);
 bindToggle('tog-under_chassis', groups.under_chassis);
 bindToggle('tog-shared', groups.shared);
 bindToggle('tog-labels', groups.labels);
+bindToggle('tog-dimensions', groups.dimensions);
 bindToggle('tog-connections', groups.connections);
 document.getElementById('tog-grid')?.addEventListener('change', function() {
   grid.visible = this.checked;
 });
+
+Object.defineProperty(window, 'frameViewer', { value: Object.freeze({ groups, FRAME }) });
 
 // ── Resize ────────────────────────────────────────────────────────────
 window.addEventListener('resize', () => {
@@ -409,11 +499,14 @@ def main():
         default="outputs/frame_viewer_3d.html",
         help="Output HTML file path (default: outputs/frame_viewer_3d.html)",
     )
+    parser.add_argument("--threejs-dir", default=os.environ.get("DIGITALMODEL_THREEJS_DIR"),
+                        help="Unpacked three@0.167.0 package for self-contained output")
     args = parser.parse_args()
 
     geo = build_gt1r_frame_3d()
-    path = generate_viewer_html(geo, args.output)
-    print(f"Viewer written to: {path}")
+    generate_viewer_html(geo, args.output, threejs_dir=args.threejs_dir)
+    mode = "self-contained" if args.threejs_dir else "loads three.js from the CDN"
+    print(f"Viewer written ({mode}).")
 
 
 if __name__ == "__main__":

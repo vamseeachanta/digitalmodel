@@ -77,16 +77,16 @@ def _read(table_file: str) -> tuple[list[str], list[dict]]:
 
 
 def test_loaded_public_table_counts():
-    """Assert package output against the public manifest at revision 6476218e.
+    """Assert package output against the public manifest and source inventory.
 
     Source: data/riser_database/manifest.yaml, tables.*.rows. Independent
     inventory: configurations = five input files + twenty-two pipe files +
-    one lift reference = twenty-eight; the remaining CSVs contain five
+    one lift reference + fourteen public examples = forty-two; the remaining CSVs contain five
     crosswalk, three material, eighty-four stack-up and ten rig records
     (excluding each header). These are inventory counts, not design limits.
     """
     db = RiserDatabase.load()
-    # Public manifest, revision 6476218e, tables.*.rows (see inventory above).
+    # Public manifest, tables.*.rows (see inventory above).
     assert {
         "config_catalog": len(db.configs),
         "standards_crosswalk": len(db.crosswalk_rows),
@@ -94,7 +94,7 @@ def test_loaded_public_table_counts():
         "riser_stackup": len(db.stackups),
         "rig_riser_interface": len(db.rigs),
     } == {
-        "config_catalog": 28,
+        "config_catalog": 42,
         "standards_crosswalk": 5,
         "material_sn_scf_dff": 3,
         "riser_stackup": 84,
