@@ -312,6 +312,7 @@ digitalmodel = [
     "data_systems/data/*.yml",
     # Dynacard classifier artefacts read at inference (default and shape-only).
     "marine_ops/artificial_lift/dynacard/data/*.json",
+    "marine_ops/artificial_lift/dynacard/data/*.json.gz",
     "data_systems/data/steel_shapes*.json",
     "data_systems/data/steel_shapes_provenance.yaml",
     "foam_system/data/*.yml",

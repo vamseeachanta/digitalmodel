@@ -78,6 +78,7 @@ The correction does not establish a physical operating envelope or revalidate
 the stored classifier and its earlier calibration.
 """
 
+import gzip
 import json
 import os
 from pathlib import Path
@@ -88,7 +89,7 @@ from .card_generators import SYNTHETIC_LABEL_EXCLUSIONS, generate_training_datas
 from .feature_extraction import FeatureExtractor
 
 _MODEL_PATH = Path(__file__).parent / "data" / "dynacard_classifier.json"
-_SHAPE_MODEL_PATH = Path(__file__).parent / "data" / "dynacard_shape_classifier.json"
+_SHAPE_MODEL_PATH = Path(__file__).parent / "data" / "dynacard_shape_classifier.json.gz"
 
 
 def _extract_features_for_dataset(
@@ -132,7 +133,7 @@ def _export_model_to_json(
     feature_names: list[str] | None = None,
     training_metadata: dict | None = None,
 ) -> None:
-    """Export a trained GradientBoostingClassifier to JSON.
+    """Export a trained GradientBoostingClassifier to JSON or deterministic gzip.
 
     Stores the full tree structure so the model can be loaded
     and evaluated without sklearn at runtime.
@@ -178,8 +179,13 @@ def _export_model_to_json(
     }
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(model_dict, f, indent=2)
+    raw = json.dumps(model_dict, indent=2).encode("utf-8")
+    if output_path.suffix == ".gz":
+        with output_path.open("wb") as output:
+            with gzip.GzipFile(filename="", fileobj=output, mode="wb", mtime=0) as stream:
+                stream.write(raw)
+    else:
+        output_path.write_bytes(raw)
 
 
 def train_and_export(

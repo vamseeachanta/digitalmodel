@@ -20,6 +20,7 @@ is **96.185 %**. This measures separation of the generator population only.
 | --- | --- | --- |
 | 1 | 2026-11-12 | Recorded the public plate score, assumed-scale sweep and separate shape-only artefact. |
 | 2 | 2026-11-12 | Corrected the interval precision description to match the recorded score. |
+| 3 | 2026-11-14 | Compressed the shape artefact losslessly to satisfy the existing file-size limit; model bytes and scores are unchanged. |
 
 Table 1. Revision record.
 
@@ -41,6 +42,12 @@ interpretation is **ASSUMED throughout this report**, including literal rows.
 | Shipped model | `c3612e1f31aad740b4ebc5f81e34bf09ae7d21e42f1f18915c2a76c94337a40c` |
 
 Table 2. Exact source and model identities used for the recorded calculation.
+
+The shape artefact is stored as deterministic gzip JSON (768,441 bytes), below
+the existing 1,000 KiB file-size limit. Its decompressed JSON is byte-identical
+to the original 4,842,128-byte artefact; model digests identify those decompressed
+bytes. Inference, scoring and training export support this storage format, and
+the wheel includes the compressed artefact.
 
 The complete [machine-readable score](../../../tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json)
 contains per-card predictions, three denominator groups, confusion matrices,

@@ -1,6 +1,7 @@
 # ABOUTME: AI-driven pump diagnostics for sucker rod pumps.
 # ABOUTME: ML-based classifier with 20 failure modes, fallback to legacy thresholds.
 
+import gzip
 import json
 from pathlib import Path
 
@@ -19,7 +20,20 @@ from .constants import (
 )
 
 MODEL_PATH = Path(__file__).parent / "data" / "dynacard_classifier.json"
-SHAPE_MODEL_PATH = Path(__file__).parent / "data" / "dynacard_shape_classifier.json"
+SHAPE_MODEL_PATH = Path(__file__).parent / "data" / "dynacard_shape_classifier.json.gz"
+
+
+def read_model_bytes(path: Path) -> bytes:
+    """Read inference JSON bytes, decompressing gzip storage when requested.
+
+    Digests identify the decompressed JSON so lossless storage changes preserve
+    model identity. Missing and corrupt files propagate their read errors.
+    """
+    path = Path(path)
+    if path.suffix == ".gz":
+        with gzip.open(path, "rb") as stream:
+            return stream.read()
+    return path.read_bytes()
 
 
 class PumpDiagnostics:
@@ -318,7 +332,7 @@ def classify_shape(card: CardData) -> DiagnosticResult:
     not independently validated field probability. Missing artefacts raise;
     this opt-in path does not fall back to the default magnitude classifier.
     """
-    model = json.loads(SHAPE_MODEL_PATH.read_text(encoding="utf-8"))
+    model = json.loads(read_model_bytes(SHAPE_MODEL_PATH))
     return _classify_shape_with_model(card, model)
 
 

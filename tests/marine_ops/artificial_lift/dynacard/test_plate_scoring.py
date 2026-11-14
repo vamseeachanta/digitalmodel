@@ -96,7 +96,8 @@ def test_shape_vector_has_only_sixteen_normalised_projections():
     assert FeatureExtractor.extract_classifier_vector(card).shape == (19,)
 
 
-def test_shape_trainer_exports_current_labels_and_reproducible_metadata(tmp_path):
+@pytest.mark.parametrize("filename", ["shape.json", "shape.json.gz"])
+def test_shape_trainer_exports_current_labels_and_reproducible_metadata(tmp_path, filename):
     import json
     import sklearn
     from digitalmodel.marine_ops.artificial_lift.dynacard import training
@@ -106,9 +107,14 @@ def test_shape_trainer_exports_current_labels_and_reproducible_metadata(tmp_path
     from digitalmodel.marine_ops.artificial_lift.dynacard.feature_extraction import (
         FeatureExtractor,
     )
-    artifact = tmp_path / "shape.json"
+    artifact = tmp_path / filename
     metrics = training.train_and_export_shape(samples_per_mode=5, output_path=artifact)
-    model = json.loads(artifact.read_text(encoding="utf-8"))
+    raw = artifact.read_bytes()
+    if artifact.suffix == ".gz":
+        import gzip
+        assert raw[3:8] == b"\x00" * 5  # No filename or timestamp in the header.
+        raw = gzip.decompress(raw)
+    model = json.loads(raw)
     assert model["class_labels"] == sorted(set(ALL_GENERATORS) - set(SYNTHETIC_LABEL_EXCLUSIONS))
     metadata = model["training_metadata"]
     assert metadata["feature_names"] == FeatureExtractor.shape_feature_names()
@@ -199,14 +205,14 @@ def test_recorded_score_matches_fresh_document_and_cli():
         plate_score_document, score_shipped_model_scale_sweep,
     )
     from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import (
-        MODEL_PATH, SHAPE_MODEL_PATH,
+        MODEL_PATH, SHAPE_MODEL_PATH, read_model_bytes,
     )
     recorded = json.loads((DATA / "plate_classifier_score.json").read_text(encoding="utf-8"))
     fresh = plate_score_document(WORKBOOK)
     assert fresh == recorded
     assert fresh["source"]["sha256"] == hashlib.sha256(WORKBOOK.read_bytes()).hexdigest()
     for name, path in (("shape_only", SHAPE_MODEL_PATH), ("shipped", MODEL_PATH)):
-        assert fresh["models"][name]["sha256"] == hashlib.sha256(path.read_bytes()).hexdigest()
+        assert fresh["models"][name]["sha256"] == hashlib.sha256(read_model_bytes(path)).hexdigest()
     assert score_shipped_model_scale_sweep(WORKBOOK) == recorded["shipped_model_scale_sweep"]
     command = [sys.executable, "-m",
                "digitalmodel.marine_ops.artificial_lift.dynacard.benchmark.plate_scoring",
@@ -360,3 +366,40 @@ def test_model_artefacts_are_declared_as_package_data():
     for artefact in (MODEL_PATH, SHAPE_MODEL_PATH):
         relative = artefact.resolve().relative_to(package_root).as_posix()
         assert any(fnmatch.fnmatch(relative, pattern) for pattern in patterns), relative
+
+
+def test_shape_artefact_is_lossless_gzip_below_the_file_size_gate():
+    import gzip
+    import hashlib
+    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import SHAPE_MODEL_PATH
+    assert SHAPE_MODEL_PATH.name == "dynacard_shape_classifier.json.gz"
+    assert not SHAPE_MODEL_PATH.with_suffix("").exists()
+    stored = SHAPE_MODEL_PATH.read_bytes()
+    assert len(stored) <= 1000 * 1024
+    assert stored[3:8] == b"\x00" * 5
+    assert hashlib.sha256(gzip.decompress(stored)).hexdigest() == (
+        "4190590bd965267518f9e936ac3a315d3be9a68eac72e92b60f5b1e6bb38c94f"
+    )
+
+
+def test_model_reader_preserves_plain_and_compressed_json_bytes(tmp_path):
+    import gzip
+    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import read_model_bytes
+    raw = '{"label": "正常", "value": 0.1234567890123456}\n'.encode("utf-8")
+    plain = tmp_path / "model.json"
+    compressed = tmp_path / "model.json.gz"
+    plain.write_bytes(raw)
+    compressed.write_bytes(gzip.compress(raw, mtime=0))
+    assert read_model_bytes(plain) == raw
+    assert read_model_bytes(compressed) == raw
+
+
+def test_model_reader_propagates_missing_and_corrupt_files(tmp_path):
+    import gzip
+    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import read_model_bytes
+    with pytest.raises(FileNotFoundError):
+        read_model_bytes(tmp_path / "missing.json.gz")
+    corrupt = tmp_path / "corrupt.json.gz"
+    corrupt.write_bytes(b"invalid gzip")
+    with pytest.raises(gzip.BadGzipFile):
+        read_model_bytes(corrupt)
