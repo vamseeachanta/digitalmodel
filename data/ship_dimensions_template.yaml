@@ -1,11 +1,34 @@
-# Ship Dimensions Template
+# Canonical ship-dimensions template.
+#
+# Provenance: This YAML is adopted directly as the canonical artifact under
+# digitalmodel issue 461. WRK-1339 Child E referenced a generator; Phase 1 uses
+# manual curation and does not require one. A regenerator is deferred to future
+# work. Add entries by hand following the schema in
+# src/digitalmodel/naval_architecture/ship_dimensions.py.
+#
+# Canonical template: data/ship_dimensions_template.yaml
+# Loader: digitalmodel.naval_architecture.ship_dimensions.load_dimension_template()
+# Validator: digitalmodel.naval_architecture.ship_dimensions.validate_vessel_entry()
+#
+# Schema entry contract:
+#   hull_id (str, required): stable vessel identifier
+#   name (str, required): vessel or class name
+#   loa_ft, beam_ft, draft_ft (positive float, required by the validator)
+#   lwl_ft, displacement_lt (positive float, required for complete manual entry)
+#   speed_kt (float, optional): speed in knots
+#   source (str, optional): reference for the dimensions
+#   full_load_lt (positive float, optional): >= displacement_lt when both are set
+#   kg_ft, km_ft, gm_ft (positive float, optional)
+#   cb (float, optional): block coefficient, 0 < cb <= 1
+#
+# Optional manual-curation metadata (not enforced by the validator):
+#   entry_status (str): "draft" | "verified"
+#   verification_source (str): reference checked before marking an entry verified
+# Existing entries retain their source labels; verification is recorded separately.
+#
 # Fill in principal dimensions from ship plan PDFs.
-# Run: uv run python -c "from digitalmodel.naval_architecture.ship_dimensions import ..."
-#
 # Sources: USNA ship plan collection, Jane's Fighting Ships
-# Fields marked (required) must be filled before merging.
-#
-# Units: feet (ft) and long tons (LT)
+# Units: feet (ft), long tons (LT), and knots (kt)
 vessels:
   # ── Battleships ────────────────────────────────────────────────
   - hull_id: BB-42        # USS Missouri / Iowa-class

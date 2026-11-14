@@ -3,6 +3,7 @@
 """Tests for ship dimension templates — loading and validation."""
 
 import os
+import re
 import tempfile
 
 import pytest
@@ -37,6 +38,31 @@ SAMPLE_TEMPLATE = {
 
 class TestTemplateLoading:
     """Load and validate ship dimension templates."""
+
+    def test_default_template_documents_manual_curation_contract(self):
+        from digitalmodel.naval_architecture.ship_dimensions import (
+            default_dimension_template_path,
+        )
+
+        template = default_dimension_template_path().read_text(encoding="utf-8")
+        header, separator, _ = template.partition("\nvessels:")
+        assert separator, "The canonical template must contain vessel entries"
+        assert "canonical" in header.lower()
+        assert "WRK-1339 Child E" in header
+        assert "461" in header
+        assert "manual" in header.lower()
+        assert "load_dimension_template" in header
+        assert "validate_vessel_entry" in header
+
+        fields = {
+            "hull_id", "name", "loa_ft", "lwl_ft", "beam_ft", "draft_ft",
+            "displacement_lt", "speed_kt", "source", "entry_status",
+            "verification_source",
+        }
+        for field in fields:
+            assert re.search(rf"\b{field}\b", header), f"Undocumented field: {field}"
+        assert '"draft"' in header and '"verified"' in header
+        assert "long tons" in header
 
     def test_load_default_template(self):
         from digitalmodel.naval_architecture.ship_dimensions import (
