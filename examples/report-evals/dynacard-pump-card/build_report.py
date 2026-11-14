@@ -133,7 +133,7 @@ def sensitivity_section(data):
 
 
 def source_table(data):
-    rows = [(s['what'], s['source'], s['licence'], s['date'], f"[Source]({s['url']})")
+    rows = [(s['what'], s['source'], s['licence'], s.get('revision', s['date']), f"[Source]({s['url']})")
             for s in data['sources']]
     return table(('Data', 'Source', 'Licence', 'Version or date', 'Link'), rows,
                  'Table B1. Retained data sources; input and source digests are recorded by the analysis and eval.')
@@ -168,6 +168,7 @@ The public example well gives a pump stroke of {number(key['pump_stroke_in'])} i
 | --- | --- | --- |
 | 0 | 2026-11-12 | Initial calculation note with public-card results, assumptions and sensitivity. |
 | 1 | 2026-11-12 | Correct cycle endpoints, refresh derived results and declare metadata precision for reproducible comparison. |
+| 2 | 2026-11-14 | Bind the fixture and plate-score citations to the consumed bytes so their revisions and digests agree. |
 
 ## 1 Introduction
 

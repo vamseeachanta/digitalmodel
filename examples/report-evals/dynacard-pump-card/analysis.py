@@ -24,6 +24,24 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 FIXTURE = ROOT / 'tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json'
 PUBLIC_SHA256 = '2404c333a9f458ebdf0817dfa98e00962e48639455ae9b612766e14a39dbbd9f'
+# Source revisions are independent of the historical calculation-code pin.
+# Each immutable revision contains exactly the bytes accepted below.
+SOURCE_PINS = {
+    FIXTURE.relative_to(ROOT).as_posix(): (
+        '9680e7e1ac4a4c225b788e4308322cf87460af70', PUBLIC_SHA256),
+    SCORE: ('91e9ad115c6994d4d2546b515ba0751efa782277',
+            'cb11b1fd0399285c3a795dacc2c1c2d0b2cdb38e3103f7bc2859ca79a480743d'),
+}
+
+
+def repository_source(path, relative):
+    """Reject changed inputs rather than cite bytes from a different revision."""
+    revision, expected = SOURCE_PINS[relative]
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    if digest != expected:
+        raise ValueError(f'{relative}: source bytes do not match the cited revision')
+    return {'revision': revision, 'sha256': digest,
+            'url': f'https://api.github.com/repositories/590299785/contents/{relative}?ref={revision}'}
 
 
 def key_results(ctx, card):
@@ -113,19 +131,22 @@ def _cross_check(card, alternative, reference):
     return cross
 
 
-def sources(root, card_path, public, commit):
+def sources(root, card_path, public):
+    fixture = (repository_source(Path(card_path), FIXTURE.relative_to(ROOT).as_posix()) if public
+               else {'url': '', 'sha256': hashlib.sha256(Path(card_path).read_bytes()).hexdigest()})
+    score = repository_source(root / SCORE, SCORE)
     rows = [('Public example surface card, rod string and stored pump card' if public else 'Reader surface card and equipment',
              'Repository field fixture' if public else 'Reader supplied',
              'MIT' if public else 'Reader supplied; rights not established',
-             f'https://github.com/vamseeachanta/digitalmodel/blob/{commit}/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json' if public else '', Path(card_path)),
+             fixture),
             ('Public reference shapes', 'Public diagnostic plate', 'CC0 1.0',
-             'https://doi.org/10.17632/hnfwm9mjs6.1', root / PLATE),
+             {'url': 'https://doi.org/10.17632/hnfwm9mjs6.1',
+              'sha256': hashlib.sha256((root / PLATE).read_bytes()).hexdigest()}),
             ('Recorded shape-only plate score', 'Repository benchmark', 'MIT',
-             f'https://github.com/vamseeachanta/digitalmodel/blob/{commit}/{SCORE}', root / SCORE)]
+             score)]
     return [{'what': what, 'source': source, 'licence': licence,
-             'date': '2026-10-11' if what == 'Public reference shapes' else '2026-11-12', 'url': url,
-             'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
-            for what, source, licence, url, path in rows]
+             'date': '2026-10-11' if what == 'Public reference shapes' else '2026-11-12', **identity}
+            for what, source, licence, identity in rows]
 
 
 def run(card_path=FIXTURE, *, include_sensitivity=True, resource_root=ROOT):
@@ -145,7 +166,7 @@ def run(card_path=FIXTURE, *, include_sensitivity=True, resource_root=ROOT):
         changed, solve_default(changed))) if include_sensitivity else []
     shapes, hypotheses = shape_evidence(card, Path(resource_root))
     fluid = calculate_fluid_load(card)
-    # The historical pin identifies retained sources. Candidate eval records
+    # The historical pin identifies calculation code. Candidate eval records
     # hash the corrected code; refresh the pin after that revision is published.
     commit = PINNED_COMMIT
     cards = {'surface': ctx.surface_card, 'default': card, 'gibbs': gibbs, 'reference': reference}
@@ -164,7 +185,7 @@ def run(card_path=FIXTURE, *, include_sensitivity=True, resource_root=ROOT):
                      'perturbation_steps_pct': list(STEPS), 'default_spatial_nodes': 200},
         'validation': {'statement': VALIDATION, 'published_example': {'status': 'NOT_EVALUATED',
                        'missing_evidence': 'Openly readable published worked example with tabulated card values'}},
-        'sources': sources(Path(resource_root), card_path, public, commit),
+        'sources': sources(Path(resource_root), card_path, public),
         'missing_data': missing_data(table), 'cannot_do': CANNOT_DO,
         'checks': [{'status': 'PASS', 'criterion': 'Reported stroke ratio equals pump stroke divided by surface stroke.',
                     'scope': 'Arithmetic only; pump stroke depends on ASSUMED model inputs.'}],

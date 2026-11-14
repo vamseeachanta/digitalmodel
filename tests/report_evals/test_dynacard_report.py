@@ -29,6 +29,59 @@ def test_public_identity_matches_committed_fixture():
     assert module('analysis').PUBLIC_SHA256 == hashlib.sha256(FIXTURE.read_bytes()).hexdigest()
 
 
+@pytest.mark.parametrize('index', [0, 2])
+def test_repository_source_citation_matches_consumed_bytes(index):
+    import hashlib
+    import subprocess
+    from urllib.parse import parse_qs, urlsplit
+    report = module('analysis')
+    row = report.sources(ROOT, FIXTURE, True)[index]
+    url = urlsplit(row['url'])
+    if '/blob/' in url.path:
+        revision, _, relative = url.path.partition('/blob/')[2].partition('/')
+    else:
+        relative = url.path.partition('/contents/')[2]
+        revision = parse_qs(url.query)['ref'][0]
+    blob = subprocess.run(['git', 'show', f'{revision}:{relative}'], cwd=ROOT,
+                          check=True, capture_output=True).stdout
+    assert hashlib.sha256(blob).hexdigest() == row['sha256']
+    assert blob == (ROOT / relative).read_bytes()
+    assert row['revision'] == revision
+    assert len(revision) == 40
+    assert url.netloc == 'api.github.com'
+    assert url.path.startswith('/repositories/590299785/contents/')
+
+
+@pytest.mark.parametrize('index', [0, 2])
+def test_repository_source_rejects_bytes_outside_its_revision(tmp_path, index):
+    report = module('analysis')
+    fixture = FIXTURE
+    if index == 0:
+        fixture = tmp_path / FIXTURE.name
+        fixture.write_bytes(FIXTURE.read_bytes() + b'\n')
+    else:
+        score = tmp_path / report.SCORE
+        score.parent.mkdir(parents=True)
+        score.write_bytes((ROOT / report.SCORE).read_bytes() + b'\n')
+        plate = tmp_path / report.PLATE
+        plate.parent.mkdir(parents=True)
+        plate.write_bytes((ROOT / report.PLATE).read_bytes())
+    root = ROOT if index == 0 else tmp_path
+    with pytest.raises(ValueError, match='source bytes do not match.*revision'):
+        report.sources(root, fixture, True)
+
+
+def test_reader_source_has_no_repository_revision(tmp_path):
+    import hashlib
+    report = module('analysis')
+    path = tmp_path / 'reader.json'
+    path.write_bytes(b'reader supplied bytes')
+    row = report.sources(ROOT, path, False)[0]
+    assert row['url'] == ''
+    assert not row.get('revision')
+    assert row['sha256'] == hashlib.sha256(path.read_bytes()).hexdigest()
+
+
 def test_public_example_uses_package_results(analysis):
     from digitalmodel.marine_ops.artificial_lift.dynacard.data_loader import load_from_json_file
     from digitalmodel.marine_ops.artificial_lift.dynacard.calculations import calculate_pump_fillage

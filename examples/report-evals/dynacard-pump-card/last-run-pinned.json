@@ -2,28 +2,28 @@
  "schema_version": "1.0",
  "report_id": "dynacard-pump-card",
  "mode": "rebuild",
- "started_utc": "2026-11-14T10:45:34Z",
- "finished_utc": "2026-11-14T10:45:48Z",
+ "started_utc": "2026-11-14T12:36:31Z",
+ "finished_utc": "2026-11-14T12:36:36Z",
  "grade": "PASS",
  "pinned_commit": "c2a62ac98957044e6b34bf0c0b0c9d19900dd4fc",
  "artifacts": {
-  "results.json": "0baa2dc0062b95e78d30a78fba45984c252d39f533bc478ed60abe5a410ebc86",
+  "results.json": "17af963823e81066e7029d85bb3a9488c44b1c2eed495f766fa378034fbae339",
   "eval.py": "14e1e0ca8357b52dad97b942f3e28e41949968567b798cd5082c0749acd5982c",
   "../evalkit.py": "e52cd0ff12cd869c4e2f55ee6a5777800a4278828d28d8fc546cc7b69efe2eb3"
  },
- "python": "3.12.13",
- "platform": "Windows",
+ "python": "3.12.15",
+ "platform": "Linux",
  "context": {
   "revision": "candidate",
-  "repo_head": "da4cdbb5e9ae1bf9955d55fa66a765889a70ea74",
-  "digitalmodel_head": "da4cdbb5e9ae1bf9955d55fa66a765889a70ea74",
+  "repo_head": "a7e9a7ba9dd9a0d4061b588ea160cabcc8bffd8c",
+  "digitalmodel_head": "a7e9a7ba9dd9a0d4061b588ea160cabcc8bffd8c",
   "digitalmodel_file": "src/digitalmodel/__init__.py",
   "code_mode": "candidate",
   "sha256": {
    "tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json": "2404c333a9f458ebdf0817dfa98e00962e48639455ae9b612766e14a39dbbd9f",
-   "examples/report-evals/dynacard-pump-card/analysis.py": "a0dd9b31cb9a1257d37e7cf952e85472d1295542338a7d7464795dd0da974712",
-   "examples/report-evals/dynacard-pump-card/build_report.py": "a5315dc50c63208c200f2a91d474869ba836649cf817ee48a038b045b5a875c2",
-   "examples/report-evals/dynacard-pump-card/build_results.py": "f0ad85713705414ff9874764c3e07cbdb162ec3cca162c42190f653ca1f24f3f",
+   "examples/report-evals/dynacard-pump-card/analysis.py": "93c741c6adb9271bf51c9c1b7c0e49a31756f4a972ad99bf86cd2df9c0b2b118",
+   "examples/report-evals/dynacard-pump-card/build_report.py": "1441983f030cb27453c93b7bb9ea2c76d33a6b9dedb74b22786c1c3f35738a55",
+   "examples/report-evals/dynacard-pump-card/build_results.py": "091f0bff73b2bd888023cb43f290fd4513aa4bcc15034ee277cd142a1f6a9666",
    "examples/report-evals/dynacard-pump-card/card_input.py": "3a9ffb092f11d0dd6b0b2c99ec821f3af3f09246d95c02dcac2252b00b66a6e4",
    "examples/report-evals/dynacard-pump-card/eval.py": "14e1e0ca8357b52dad97b942f3e28e41949968567b798cd5082c0749acd5982c",
    "examples/report-evals/dynacard-pump-card/model_basis.py": "34dc2f57c8961000f22744edc8f2302b22b37693adb940dc4056da683cec453f",
@@ -110,8 +110,8 @@
   },
   "shape_hypothesis_status": "HYPOTHESIS",
   "published_example_status": "NOT_EVALUATED",
-  "artifacts_repo_head": "da4cdbb5e9ae1bf9955d55fa66a765889a70ea74",
-  "artifacts_dirty": false,
+  "artifacts_repo_head": "a7e9a7ba9dd9a0d4061b588ea160cabcc8bffd8c",
+  "artifacts_dirty": true,
   "record_note": "Candidate evidence replaces an obsolete pinned run; pinned reproduction is not established for corrected values."
  },
  "errors": [],
@@ -169,7 +169,7 @@
   {
    "id": "maximum_pump_load_lbf",
    "expected": 4661,
-   "got": 4660.536597735798,
+   "got": 4660.536597735601,
    "unit": "lbf",
    "basis": "fixed",
    "status": "MATCH",
@@ -179,7 +179,7 @@
   {
    "id": "minimum_pump_load_lbf",
    "expected": 82,
-   "got": 81.96414929949924,
+   "got": 81.96414929949586,
    "unit": "lbf",
    "basis": "fixed",
    "status": "MATCH",
@@ -189,7 +189,7 @@
   {
    "id": "fluid_load_lbf",
    "expected": 3310,
-   "got": 3310.3596975931705,
+   "got": 3310.3596975930304,
    "unit": "lbf",
    "basis": "fixed",
    "status": "MATCH",
@@ -239,7 +239,7 @@
   {
    "id": "pump_card_area_ft_lbf",
    "expected": 7904.7,
-   "got": 7904.691144818575,
+   "got": 7904.691144818237,
    "unit": "ft-lbf",
    "basis": "fixed",
    "status": "MATCH",
@@ -249,7 +249,7 @@
   {
    "id": "gibbs_default_load_nrmse_pct",
    "expected": 0.258,
-   "got": 0.2579873664147716,
+   "got": 0.2579873664147538,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -259,7 +259,7 @@
   {
    "id": "default_reference_load_nrmse_pct",
    "expected": 0.779,
-   "got": 0.7785336675258319,
+   "got": 0.7785336675250033,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -269,7 +269,7 @@
   {
    "id": "gibbs_reference_load_nrmse_pct",
    "expected": 0.737,
-   "got": 0.7372374051431841,
+   "got": 0.7372374051431838,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -309,7 +309,7 @@
   {
    "id": "sensitivity_rod_length_depth_minus5_maximum_pump_load_lbf",
    "expected": 8.18,
-   "got": 8.175000804087528,
+   "got": 8.175000804087551,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -359,7 +359,7 @@
   {
    "id": "sensitivity_rod_length_depth_minus1_maximum_pump_load_lbf",
    "expected": 1.64,
-   "got": 1.636272434069408,
+   "got": 1.6362724340693635,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -389,7 +389,7 @@
   {
    "id": "sensitivity_rod_length_depth_plus1_fluid_load_lbf",
    "expected": 0.01,
-   "got": 0.010813202026005442,
+   "got": 0.010813202025983237,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -409,7 +409,7 @@
   {
    "id": "sensitivity_rod_length_depth_plus1_maximum_pump_load_lbf",
    "expected": -1.64,
-   "got": -1.636877990597141,
+   "got": -1.6368779905971298,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -439,7 +439,7 @@
   {
    "id": "sensitivity_rod_length_depth_plus5_fluid_load_lbf",
    "expected": -0.12,
-   "got": -0.12263393214011487,
+   "got": -0.12263393214010376,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -459,7 +459,7 @@
   {
    "id": "sensitivity_rod_length_depth_plus5_maximum_pump_load_lbf",
    "expected": -8.19,
-   "got": -8.190032271134761,
+   "got": -8.19003227113475,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -489,7 +489,7 @@
   {
    "id": "factor_1pct_rod_length_depth_fluid_load_lbf",
    "expected": -0.29,
-   "got": -0.28911841387802006,
+   "got": -0.28911841387803117,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -509,7 +509,7 @@
   {
    "id": "factor_1pct_rod_length_depth_maximum_pump_load_lbf",
    "expected": -1.64,
-   "got": -1.6365752123332744,
+   "got": -1.6365752123332467,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -539,7 +539,7 @@
   {
    "id": "factor_5pct_rod_length_depth_fluid_load_lbf",
    "expected": 0.35,
-   "got": 0.35351402702543,
+   "got": 0.3535140270254311,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -559,7 +559,7 @@
   {
    "id": "factor_5pct_rod_length_depth_maximum_pump_load_lbf",
    "expected": -1.64,
-   "got": -1.6365033075222288,
+   "got": -1.63650330752223,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -589,7 +589,7 @@
   {
    "id": "sensitivity_rod_diameter_minus5_fluid_load_lbf",
    "expected": -0.27,
-   "got": -0.26513495904693096,
+   "got": -0.2651349590470531,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -609,7 +609,7 @@
   {
    "id": "sensitivity_rod_diameter_minus5_maximum_pump_load_lbf",
    "expected": 15.31,
-   "got": 15.31362382963939,
+   "got": 15.313623829639411,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -639,7 +639,7 @@
   {
    "id": "sensitivity_rod_diameter_minus1_fluid_load_lbf",
    "expected": 0.47,
-   "got": 0.46756314340603566,
+   "got": 0.46756314340599126,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -689,7 +689,7 @@
   {
    "id": "sensitivity_rod_diameter_plus1_fluid_load_lbf",
    "expected": 0.13,
-   "got": 0.13189349864801692,
+   "got": 0.13189349864803912,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -709,7 +709,7 @@
   {
    "id": "sensitivity_rod_diameter_plus1_maximum_pump_load_lbf",
    "expected": -3.16,
-   "got": -3.1569931583004807,
+   "got": -3.156993158300503,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -739,7 +739,7 @@
   {
    "id": "sensitivity_rod_diameter_plus5_fluid_load_lbf",
    "expected": -2.37,
-   "got": -2.3737309077201285,
+   "got": -2.3737309077201063,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -759,7 +759,7 @@
   {
    "id": "sensitivity_rod_diameter_plus5_maximum_pump_load_lbf",
    "expected": -16.1,
-   "got": -16.099204524703758,
+   "got": -16.099204524703726,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -789,7 +789,7 @@
   {
    "id": "factor_1pct_rod_diameter_fluid_load_lbf",
    "expected": -0.17,
-   "got": -0.16783482237900937,
+   "got": -0.16783482237897607,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -809,7 +809,7 @@
   {
    "id": "factor_1pct_rod_diameter_maximum_pump_load_lbf",
    "expected": -3.14,
-   "got": -3.1412815626374604,
+   "got": -3.141281562637471,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -839,7 +839,7 @@
   {
    "id": "factor_5pct_rod_diameter_fluid_load_lbf",
    "expected": -0.21,
-   "got": -0.21085959486731976,
+   "got": -0.21085959486730532,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -859,7 +859,7 @@
   {
    "id": "factor_5pct_rod_diameter_maximum_pump_load_lbf",
    "expected": -3.14,
-   "got": -3.141282835434315,
+   "got": -3.1412828354343136,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -889,7 +889,7 @@
   {
    "id": "sensitivity_rod_modulus_minus5_fluid_load_lbf",
    "expected": 0.37,
-   "got": 0.36979010450708394,
+   "got": 0.36979010450706173,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -909,7 +909,7 @@
   {
    "id": "sensitivity_rod_modulus_minus5_maximum_pump_load_lbf",
    "expected": -0.17,
-   "got": -0.17269874688036202,
+   "got": -0.17269874688037312,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -939,7 +939,7 @@
   {
    "id": "sensitivity_rod_modulus_minus1_fluid_load_lbf",
    "expected": -0.03,
-   "got": -0.02744054896828274,
+   "got": -0.027440548968260536,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -959,7 +959,7 @@
   {
    "id": "sensitivity_rod_modulus_minus1_maximum_pump_load_lbf",
    "expected": -0.03,
-   "got": -0.033199717757703695,
+   "got": -0.033199717757737,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -989,7 +989,7 @@
   {
    "id": "sensitivity_rod_modulus_plus1_fluid_load_lbf",
    "expected": 0.03,
-   "got": 0.026953422499165214,
+   "got": 0.02695342249914301,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1039,7 +1039,7 @@
   {
    "id": "sensitivity_rod_modulus_plus5_fluid_load_lbf",
    "expected": -2.21,
-   "got": -2.213591353308697,
+   "got": -2.213591353308708,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1089,7 +1089,7 @@
   {
    "id": "factor_1pct_rod_modulus_fluid_load_lbf",
    "expected": 0.03,
-   "got": 0.027196985733723977,
+   "got": 0.027196985733701773,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -1109,7 +1109,7 @@
   {
    "id": "factor_1pct_rod_modulus_maximum_pump_load_lbf",
    "expected": 0.03,
-   "got": 0.0328813187251642,
+   "got": 0.03288131872518085,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -1139,7 +1139,7 @@
   {
    "id": "factor_5pct_rod_modulus_fluid_load_lbf",
    "expected": -0.26,
-   "got": -0.2583381457815781,
+   "got": -0.258338145781577,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -1159,7 +1159,7 @@
   {
    "id": "factor_5pct_rod_modulus_maximum_pump_load_lbf",
    "expected": 0.03,
-   "got": 0.03294583381052374,
+   "got": 0.03294583381052485,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -1189,7 +1189,7 @@
   {
    "id": "sensitivity_pumping_speed_minus5_fluid_load_lbf",
    "expected": -3.34,
-   "got": -3.3405244227807662,
+   "got": -3.3405244227807884,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1209,7 +1209,7 @@
   {
    "id": "sensitivity_pumping_speed_minus5_maximum_pump_load_lbf",
    "expected": -0.2,
-   "got": -0.19798509348256665,
+   "got": -0.19798509348254445,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1259,7 +1259,7 @@
   {
    "id": "sensitivity_pumping_speed_minus1_maximum_pump_load_lbf",
    "expected": -0.04,
-   "got": -0.040412333750328155,
+   "got": -0.04041233375030595,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1309,7 +1309,7 @@
   {
    "id": "sensitivity_pumping_speed_plus1_maximum_pump_load_lbf",
    "expected": 0.04,
-   "got": 0.040842176083200066,
+   "got": 0.04084217608317786,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1339,7 +1339,7 @@
   {
    "id": "sensitivity_pumping_speed_plus5_fluid_load_lbf",
    "expected": -0.29,
-   "got": -0.2886937938207601,
+   "got": -0.288693793820749,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1409,7 +1409,7 @@
   {
    "id": "factor_1pct_pumping_speed_maximum_pump_load_lbf",
    "expected": 0.04,
-   "got": 0.04062725491676411,
+   "got": 0.040627254916741906,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -1439,7 +1439,7 @@
   {
    "id": "factor_5pct_pumping_speed_fluid_load_lbf",
    "expected": 0.31,
-   "got": 0.3051830628960006,
+   "got": 0.30518306289600394,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -1459,7 +1459,7 @@
   {
    "id": "factor_5pct_pumping_speed_maximum_pump_load_lbf",
    "expected": 0.04,
-   "got": 0.040682988651878915,
+   "got": 0.040682988651876695,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -1489,7 +1489,7 @@
   {
    "id": "sensitivity_surface_load_scale_minus5_fluid_load_lbf",
    "expected": -5.27,
-   "got": -5.270673673981974,
+   "got": -5.2706736739819515,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1509,7 +1509,7 @@
   {
    "id": "sensitivity_surface_load_scale_minus5_maximum_pump_load_lbf",
    "expected": -12.85,
-   "got": -12.854103949881758,
+   "got": -12.854103949881768,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1539,7 +1539,7 @@
   {
    "id": "sensitivity_surface_load_scale_minus1_fluid_load_lbf",
    "expected": -0.93,
-   "got": -0.934629830374778,
+   "got": -0.9346298303747669,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1559,7 +1559,7 @@
   {
    "id": "sensitivity_surface_load_scale_minus1_maximum_pump_load_lbf",
    "expected": -2.57,
-   "got": -2.5708207899603264,
+   "got": -2.5708207899603153,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1609,7 +1609,7 @@
   {
    "id": "sensitivity_surface_load_scale_plus1_maximum_pump_load_lbf",
    "expected": 2.57,
-   "got": 2.570820789957051,
+   "got": 2.5708207899570734,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1639,7 +1639,7 @@
   {
    "id": "sensitivity_surface_load_scale_plus5_fluid_load_lbf",
    "expected": 5.2,
-   "got": 5.198764671524936,
+   "got": 5.198764671524891,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1689,7 +1689,7 @@
   {
    "id": "factor_1pct_surface_load_scale_fluid_load_lbf",
    "expected": 1.24,
-   "got": 1.2373503459225388,
+   "got": 1.2373503459225332,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -1709,7 +1709,7 @@
   {
    "id": "factor_1pct_surface_load_scale_maximum_pump_load_lbf",
    "expected": 2.57,
-   "got": 2.570820789958689,
+   "got": 2.5708207899586943,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -1739,7 +1739,7 @@
   {
    "id": "factor_5pct_surface_load_scale_fluid_load_lbf",
    "expected": 1.05,
-   "got": 1.046943834550691,
+   "got": 1.0469438345506843,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -1759,7 +1759,7 @@
   {
    "id": "factor_5pct_surface_load_scale_maximum_pump_load_lbf",
    "expected": 2.57,
-   "got": 2.5708207899765467,
+   "got": 2.570820789976548,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -1789,7 +1789,7 @@
   {
    "id": "sensitivity_surface_position_scale_minus5_fluid_load_lbf",
    "expected": 0.17,
-   "got": 0.17325053185304196,
+   "got": 0.17325053185301975,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1809,7 +1809,7 @@
   {
    "id": "sensitivity_surface_position_scale_minus5_maximum_pump_load_lbf",
    "expected": -0.27,
-   "got": -0.26501386055590714,
+   "got": -0.26501386055594045,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1839,7 +1839,7 @@
   {
    "id": "sensitivity_surface_position_scale_minus1_fluid_load_lbf",
    "expected": 0.53,
-   "got": 0.5340646174931019,
+   "got": 0.5340646174930352,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1859,7 +1859,7 @@
   {
    "id": "sensitivity_surface_position_scale_minus1_maximum_pump_load_lbf",
    "expected": -0.05,
-   "got": -0.05300277208853954,
+   "got": -0.05300277208852844,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1889,7 +1889,7 @@
   {
    "id": "sensitivity_surface_position_scale_plus1_fluid_load_lbf",
    "expected": 0.07,
-   "got": 0.06537016963243936,
+   "got": 0.06537016963241715,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1909,7 +1909,7 @@
   {
    "id": "sensitivity_surface_position_scale_plus1_maximum_pump_load_lbf",
    "expected": 0.05,
-   "got": 0.053002772107269,
+   "got": 0.0530027721072468,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1939,7 +1939,7 @@
   {
    "id": "sensitivity_surface_position_scale_plus5_fluid_load_lbf",
    "expected": -0.3,
-   "got": -0.3018080531320355,
+   "got": -0.3018080531320466,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1959,7 +1959,7 @@
   {
    "id": "sensitivity_surface_position_scale_plus5_maximum_pump_load_lbf",
    "expected": 0.27,
-   "got": 0.2650138606004715,
+   "got": 0.2650138606004937,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -1989,7 +1989,7 @@
   {
    "id": "factor_1pct_surface_position_scale_fluid_load_lbf",
    "expected": -0.23,
-   "got": -0.23434722393033125,
+   "got": -0.23434722393030905,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -2009,7 +2009,7 @@
   {
    "id": "factor_1pct_surface_position_scale_maximum_pump_load_lbf",
    "expected": 0.05,
-   "got": 0.05300277209790427,
+   "got": 0.05300277209788762,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -2039,7 +2039,7 @@
   {
    "id": "factor_5pct_surface_position_scale_fluid_load_lbf",
    "expected": -0.05,
-   "got": -0.04750585849850775,
+   "got": -0.04750585849850664,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -2059,7 +2059,7 @@
   {
    "id": "factor_5pct_surface_position_scale_maximum_pump_load_lbf",
    "expected": 0.05,
-   "got": 0.053002772115637864,
+   "got": 0.053002772115643415,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -2109,7 +2109,7 @@
   {
    "id": "sensitivity_fluid_density_minus5_maximum_pump_load_lbf",
    "expected": -1.09,
-   "got": -1.0939005069465435,
+   "got": -1.093900506946599,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -2159,7 +2159,7 @@
   {
    "id": "sensitivity_fluid_density_minus1_maximum_pump_load_lbf",
    "expected": -0.22,
-   "got": -0.21878010138578485,
+   "got": -0.21878010138579596,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -2209,7 +2209,7 @@
   {
    "id": "sensitivity_fluid_density_plus1_maximum_pump_load_lbf",
    "expected": 0.22,
-   "got": 0.2187801013895374,
+   "got": 0.21878010138958182,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -2259,7 +2259,7 @@
   {
    "id": "sensitivity_fluid_density_plus5_maximum_pump_load_lbf",
    "expected": 1.09,
-   "got": 1.0939005069506846,
+   "got": 1.0939005069506624,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -2309,7 +2309,7 @@
   {
    "id": "factor_1pct_fluid_density_maximum_pump_load_lbf",
    "expected": 0.22,
-   "got": 0.21878010138766113,
+   "got": 0.21878010138768889,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -2359,7 +2359,7 @@
   {
    "id": "factor_5pct_fluid_density_maximum_pump_load_lbf",
    "expected": 0.22,
-   "got": 0.21878010138972281,
+   "got": 0.21878010138972614,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -2389,7 +2389,7 @@
   {
    "id": "sensitivity_pump_diameter_minus5_fluid_load_lbf",
    "expected": -0.0,
-   "got": -0.004223067872977104,
+   "got": -0.004223067872966002,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -2459,7 +2459,7 @@
   {
    "id": "sensitivity_pump_diameter_minus1_maximum_pump_load_lbf",
    "expected": -0.0,
-   "got": -0.00020334973028779402,
+   "got": -0.00020334973030999848,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -2489,7 +2489,7 @@
   {
    "id": "sensitivity_pump_diameter_plus1_fluid_load_lbf",
    "expected": 0.0,
-   "got": 0.00037632188860659,
+   "got": 0.00037632188858438553,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -2509,7 +2509,7 @@
   {
    "id": "sensitivity_pump_diameter_plus1_maximum_pump_load_lbf",
    "expected": 0.0,
-   "got": 0.00013559617106917443,
+   "got": 0.0001355961710913789,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -2539,7 +2539,7 @@
   {
    "id": "sensitivity_pump_diameter_plus5_fluid_load_lbf",
    "expected": 0.0,
-   "got": 0.00015292897548313533,
+   "got": 0.00015292897552754425,
    "unit": "%",
    "basis": "fixed",
    "status": "MATCH",
@@ -2589,7 +2589,7 @@
   {
    "id": "factor_1pct_pump_diameter_fluid_load_lbf",
    "expected": 0.0,
-   "got": 0.0004576745103290758,
+   "got": 0.00045767451031797357,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -2609,7 +2609,7 @@
   {
    "id": "factor_1pct_pump_diameter_maximum_pump_load_lbf",
    "expected": 0.0,
-   "got": 0.00016947295067848422,
+   "got": 0.00016947295070068868,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
@@ -2639,7 +2639,7 @@
   {
    "id": "factor_5pct_pump_diameter_fluid_load_lbf",
    "expected": 0.0,
-   "got": 0.00043759968484602396,
+   "got": 0.00043759968484935463,
    "unit": "% per %",
    "basis": "fixed",
    "status": "MATCH",
