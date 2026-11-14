@@ -5,6 +5,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -15,6 +16,124 @@ from digitalmodel.parametric import historical_provenance as history
 
 ROOT = Path(__file__).resolve().parents[2]
 INDEX = ROOT / "atlases" / "historical-provenance.json"
+GIT_BINDINGS = (
+    "GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE",
+    "GIT_OBJECT_DIRECTORY", "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+)
+
+
+def _checkout_metadata(env):
+    """Read only the caller metadata used by the disposable fixtures."""
+    def git(*args):
+        return subprocess.check_output(["git", "-C", str(ROOT), *args], env=env).strip()
+
+    head_ref = git("rev-parse", "--symbolic-full-name", "HEAD").decode()
+    metadata = {
+        "revisions": git("rev-parse", "HEAD"),
+        "refs": git("for-each-ref", "--format=%(refname) %(objectname)",
+                    head_ref),
+    }
+    for name in ("HEAD", "index", "config", "config.worktree"):
+        path = Path(os.fsdecode(git("rev-parse", "--git-path", name)))
+        if not path.is_absolute():
+            path = ROOT / path
+        # An absent optional worktree config must remain absent as well.
+        metadata[name] = hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
+    return metadata
+
+
+@pytest.mark.parametrize("inherited", ["true", "input", "false"])
+def test_fixture_git_settings_ignore_inherited_parameters(tmp_path, inherited):
+    """Exercise real Git in children without changing caller state."""
+    parent_env = dict(os.environ)
+    child_env = parent_env.copy()
+    for name in GIT_BINDINGS:
+        child_env.pop(name, None)
+    before = _checkout_metadata(child_env)
+    child_env["GIT_CONFIG_PARAMETERS"] = f"'core.autocrlf={inherited}'"
+    child_root = tmp_path / "child"
+    child_root.mkdir()
+    child_env["TMPDIR"] = str(child_root)
+    child_env["TEMP"] = str(child_root)
+    child_env["TMP"] = str(child_root)
+    child_env["PYTHONDONTWRITEBYTECODE"] = "1"
+    provenance = "tests/parametric/test_historical_provenance.py::"
+    retention = "tests/parametric/test_historical_provenance_retention.py::"
+    # Explicit node IDs cannot select this launcher recursively.
+    selected = [
+        provenance + "test_git_verifies_committed_artifacts_and_reports_checkout_drift[VERIFIED-crlf]",
+        provenance + "test_git_verifies_committed_artifacts_and_reports_checkout_drift[NOT_EVALUATED-crlf]",
+        provenance + "test_git_reports_no_drift_for_exact_checkout",
+        provenance + "test_git_distinguishes_autocrlf_conversion_from_content_edits",
+        retention + "test_workflow_local_merge_without_pull_ref",
+    ]
+    try:
+        result = subprocess.run(
+            [sys.executable, "-m", "pytest", *selected, "-q", "-rA",
+             "-p", "no:cacheprovider", "--basetemp=" + str(child_root / "pytest")],
+            cwd=ROOT, env=child_env, capture_output=True, text=True, timeout=180,
+        )
+    finally:
+        changed_variables = {
+            name for name in parent_env.keys() | os.environ.keys()
+            if parent_env.get(name) != os.environ.get(name)
+        }
+        assert not changed_variables, "Caller environment changed"
+        snapshot_env = parent_env.copy()
+        for name in GIT_BINDINGS:
+            snapshot_env.pop(name, None)
+        assert _checkout_metadata(snapshot_env) == before
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("detached", [False, True])
+def test_checkout_metadata_ignores_remote_tracking_refs(tmp_path, monkeypatch, detached):
+    """Missing or advancing remote refs cannot change the caller snapshot."""
+    env = dict(os.environ)
+    for name in GIT_BINDINGS:
+        env.pop(name, None)
+    checkout = tmp_path / "checkout"
+    subprocess.run(
+        ["git", "clone", "--shared", "--no-checkout", "--single-branch",
+         "--origin", "fixture", str(ROOT), str(checkout)],
+        env=env, check=True, capture_output=True,
+    )
+    monkeypatch.setattr(sys.modules[__name__], "ROOT", checkout)
+
+    def git(*args):
+        return subprocess.check_output(
+            ["git", "-C", str(checkout), *args], env=env,
+        ).strip()
+
+    if detached:
+        git("update-ref", "--no-deref", "HEAD", git("rev-parse", "HEAD").decode())
+    before = _checkout_metadata(env)
+    assert before["revisions"] == git("rev-parse", "HEAD")
+    head_ref = git("rev-parse", "--symbolic-full-name", "HEAD").decode()
+    assert before["refs"] == git(
+        "for-each-ref", "--format=%(refname) %(objectname)", head_ref,
+    )
+    for revision in ("HEAD", "HEAD^1"):
+        git("update-ref", "refs/remotes/origin/main", revision)
+        assert _checkout_metadata(env) == before
+
+
+@pytest.mark.parametrize("bytecode_setting", [None, ""])
+def test_fixture_child_disables_bytecode(tmp_path, monkeypatch, bytecode_setting):
+    """Check the real child launch when its caller permits bytecode writes."""
+    if bytecode_setting is None:
+        monkeypatch.delenv("PYTHONDONTWRITEBYTECODE", raising=False)
+    else:
+        monkeypatch.setenv("PYTHONDONTWRITEBYTECODE", bytecode_setting)
+    run = subprocess.run
+
+    def checked_run(args, **kwargs):
+        if args[:3] == [sys.executable, "-m", "pytest"]:
+            assert kwargs["env"].get("PYTHONDONTWRITEBYTECODE") == "1"
+        return run(args, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", checked_run)
+    test_fixture_git_settings_ignore_inherited_parameters(tmp_path, "input")
 
 
 def test_independent_raw_fingerprint_vector():
@@ -262,11 +381,13 @@ def test_live_artifact_tampering_is_rejected(retained_record, tmp_path):
 
 
 @pytest.fixture(params=["VERIFIED", "NOT_EVALUATED"])
-def artifact_checkout(inventory, tmp_path, monkeypatch, request):
+def artifact_checkout(inventory, tmp_path, tmp_path_factory, monkeypatch, request):
     """Share read-only Git objects while keeping artifact edits temporary."""
-    for key in ("GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR"):
+    for key in GIT_BINDINGS:
         monkeypatch.delenv(key, raising=False)
+    assert tmp_path.resolve().is_relative_to(tmp_path_factory.getbasetemp().resolve())
     # Explicit defaults make raw-CRLF drift tests independent of global config.
+    monkeypatch.delenv("GIT_CONFIG_PARAMETERS", raising=False)
     monkeypatch.setenv("GIT_CONFIG_COUNT", "1")
     monkeypatch.setenv("GIT_CONFIG_KEY_0", "core.autocrlf")
     monkeypatch.setenv("GIT_CONFIG_VALUE_0", "false")
@@ -277,6 +398,7 @@ def artifact_checkout(inventory, tmp_path, monkeypatch, request):
     (tmp_path / ".git").write_text(f"gitdir: {git_dir}\n", encoding="utf-8")
     for name in row["artifacts"]:
         path = tmp_path / name
+        assert path.resolve().is_relative_to(tmp_path.resolve())
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(subprocess.check_output(["git", "-C", str(ROOT), "show", f"HEAD:{name}"]))
     return row, tmp_path
@@ -306,6 +428,9 @@ def test_git_verifies_committed_artifacts_and_reports_checkout_drift(artifact_ch
     result = history.verify_git(row, root)
     assert result["status"] == row["status"]
     assert result["working_tree_drift"] == sorted(changed)
+    assert subprocess.check_output(
+        ["git", "-C", str(root), "config", "--get", "core.autocrlf"], text=True,
+    ).strip() == "false"
 
 
 def test_git_reports_no_drift_for_exact_checkout(artifact_checkout):
@@ -322,6 +447,7 @@ def test_git_distinguishes_autocrlf_conversion_from_content_edits(
 ):
     row, root = artifact_checkout
     # Process-local configuration leaves the shared repository config untouched.
+    monkeypatch.delenv("GIT_CONFIG_PARAMETERS", raising=False)
     monkeypatch.setenv("GIT_CONFIG_COUNT", "1")
     monkeypatch.setenv("GIT_CONFIG_KEY_0", "core.autocrlf")
     monkeypatch.setenv("GIT_CONFIG_VALUE_0", autocrlf)
@@ -335,6 +461,9 @@ def test_git_distinguishes_autocrlf_conversion_from_content_edits(
     result = history.verify_git(row, root)
     assert result["status"] == row["status"]
     assert result["working_tree_drift"] == ([row["manifest"]] if edited else [])
+    assert subprocess.check_output(
+        ["git", "-C", str(root), "config", "--get", "core.autocrlf"], text=True,
+    ).strip() == autocrlf
 
 
 def test_git_rejects_committed_artifact_digest_mismatch(artifact_checkout):
