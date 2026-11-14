@@ -29,9 +29,9 @@ def _checkout_metadata(env):
 
     head_ref = git("rev-parse", "--symbolic-full-name", "HEAD").decode()
     metadata = {
-        "revisions": git("rev-parse", "HEAD", "origin/main"),
+        "revisions": git("rev-parse", "HEAD"),
         "refs": git("for-each-ref", "--format=%(refname) %(objectname)",
-                    head_ref, "refs/remotes/origin/main"),
+                    head_ref),
     }
     for name in ("HEAD", "index", "config", "config.worktree"):
         path = Path(os.fsdecode(git("rev-parse", "--git-path", name)))
@@ -56,6 +56,7 @@ def test_fixture_git_settings_ignore_inherited_parameters(tmp_path, inherited):
     child_env["TMPDIR"] = str(child_root)
     child_env["TEMP"] = str(child_root)
     child_env["TMP"] = str(child_root)
+    child_env["PYTHONDONTWRITEBYTECODE"] = "1"
     provenance = "tests/parametric/test_historical_provenance.py::"
     retention = "tests/parametric/test_historical_provenance_retention.py::"
     # Explicit node IDs cannot select this launcher recursively.
@@ -83,6 +84,56 @@ def test_fixture_git_settings_ignore_inherited_parameters(tmp_path, inherited):
             snapshot_env.pop(name, None)
         assert _checkout_metadata(snapshot_env) == before
     assert result.returncode == 0, result.stdout + result.stderr
+
+
+@pytest.mark.parametrize("detached", [False, True])
+def test_checkout_metadata_ignores_remote_tracking_refs(tmp_path, monkeypatch, detached):
+    """Missing or advancing remote refs cannot change the caller snapshot."""
+    env = dict(os.environ)
+    for name in GIT_BINDINGS:
+        env.pop(name, None)
+    checkout = tmp_path / "checkout"
+    subprocess.run(
+        ["git", "clone", "--shared", "--no-checkout", "--single-branch",
+         "--origin", "fixture", str(ROOT), str(checkout)],
+        env=env, check=True, capture_output=True,
+    )
+    monkeypatch.setattr(sys.modules[__name__], "ROOT", checkout)
+
+    def git(*args):
+        return subprocess.check_output(
+            ["git", "-C", str(checkout), *args], env=env,
+        ).strip()
+
+    if detached:
+        git("update-ref", "--no-deref", "HEAD", git("rev-parse", "HEAD").decode())
+    before = _checkout_metadata(env)
+    assert before["revisions"] == git("rev-parse", "HEAD")
+    head_ref = git("rev-parse", "--symbolic-full-name", "HEAD").decode()
+    assert before["refs"] == git(
+        "for-each-ref", "--format=%(refname) %(objectname)", head_ref,
+    )
+    for revision in ("HEAD", "HEAD^1"):
+        git("update-ref", "refs/remotes/origin/main", revision)
+        assert _checkout_metadata(env) == before
+
+
+@pytest.mark.parametrize("bytecode_setting", [None, ""])
+def test_fixture_child_disables_bytecode(tmp_path, monkeypatch, bytecode_setting):
+    """Check the real child launch when its caller permits bytecode writes."""
+    if bytecode_setting is None:
+        monkeypatch.delenv("PYTHONDONTWRITEBYTECODE", raising=False)
+    else:
+        monkeypatch.setenv("PYTHONDONTWRITEBYTECODE", bytecode_setting)
+    run = subprocess.run
+
+    def checked_run(args, **kwargs):
+        if args[:3] == [sys.executable, "-m", "pytest"]:
+            assert kwargs["env"].get("PYTHONDONTWRITEBYTECODE") == "1"
+        return run(args, **kwargs)
+
+    monkeypatch.setattr(subprocess, "run", checked_run)
+    test_fixture_git_settings_ignore_inherited_parameters(tmp_path, "input")
 
 
 def test_independent_raw_fingerprint_vector():
