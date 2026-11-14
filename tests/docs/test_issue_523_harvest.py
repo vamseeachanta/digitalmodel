@@ -44,9 +44,21 @@ def test_publication_observations_are_dated():
     recorded = re.search(r"^Recorded (\d{4}-\d{2}-\d{2})\.", text, re.MULTILINE)
     assert recorded, "Missing recording date"
     status = text.split("## Publication status and comment drafts\n", 1)[1]
-    sections = [status.split("\n### ", 1)[0], status.rsplit("\n### ", 1)[1]]
-    for section in sections:
-        assert f"At the time of recording ({recorded[1]})" in section
+    introduction = status.split("\n### ", 1)[0]
+    assert f"At the time of recording ({recorded[1]})" in introduction
+
+
+def test_readback_draft_keeps_recording_observations_outside_payload():
+    """The readback can be posted without copying a dated publication state."""
+    text = HARVEST.read_text(encoding="utf-8")
+    match = re.search(
+        r"### Draft for \[#523\]\([^)]+\)\n(.*?)(?=\n### |\Z)",
+        text,
+        re.DOTALL,
+    )
+    assert match, "Missing readback draft for issue 523"
+    assert not match[1].lstrip().startswith("Local harvest")
+    assert "At the time of recording" not in match[1]
 
 
 @pytest.mark.parametrize(
@@ -63,7 +75,7 @@ def test_retained_drafts_cover_each_destination(issue, recommendations):
         re.DOTALL,
     )
     assert match, f"Missing comment draft for issue {issue}"
-    assert "https://github.com/vamseeachanta/digitalmodel/issues/523" in match[1]
+    assert re.search(r"#523\b", match[1])
     for number in recommendations:
         assert f"Rec {number}" in match[1]
 

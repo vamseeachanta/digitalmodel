@@ -136,11 +136,9 @@ the retained summary is reconstructed from the issue, not quoted from the review
 
 ### Draft for [#523](https://github.com/vamseeachanta/digitalmodel/issues/523)
 
-Local harvest for [#523](https://github.com/vamseeachanta/digitalmodel/issues/523):
+Harvest for #523:
 
 - Rec 1 → 517 task 3; Rec 2 → 519 task 2; Rec 3 → 517 task 3 and 519 task 3.
 - [Retained reconstruction and mapping](2026-05-05-issue-523-harvest-source.md)
   records source limitations, current code evidence, and destination drafts.
 - No new issue is required and no production code or 515 plan is changed.
-- At the time of recording (2026-11-13), publication and readback remained
-  pending; the retained drafts alone did not satisfy the publication criteria.
