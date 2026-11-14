@@ -300,6 +300,14 @@ Table 7. Licensed run packages.
   example ([#2423](https://github.com/vamseeachanta/digitalmodel/issues/2423))
   can use these packages.
 
+## Second reference case
+
+The same model type and checks are applied to the NREL 5 MW turbine on the
+OC4-DeepCwind semi-submersible: [`../oc4-deepcwind/README.md`](../oc4-deepcwind/README.md).
+Heave, pitch and yaw periods agree with an OpenFAST linearisation of that
+system to within 0.6 %, and the mooring stiffness agrees with the published
+linearised matrix to within 3 %.
+
 ## Reproduce
 
 ```

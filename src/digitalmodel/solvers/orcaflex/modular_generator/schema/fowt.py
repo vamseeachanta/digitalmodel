@@ -240,7 +240,8 @@ class FowtMooringLineType(_FiniteModel):
     outer_diameter: float = Field(..., gt=0, description="Volume-equivalent diameter (m)")
     mass_per_length: float = Field(..., gt=0, description="(te/m)")
     axial_stiffness: float = Field(..., gt=0, description="EA (kN)")
-    minimum_breaking_load: float = Field(..., gt=0, description="(kN)")
+    minimum_breaking_load: float | None = Field(
+        default=None, gt=0, description="(kN); None where the reference design publishes none")
     normal_drag_coefficient: float = Field(..., ge=0, allow_inf_nan=False)
     axial_drag_coefficient: float = Field(..., ge=0, allow_inf_nan=False)
     normal_added_mass_coefficient: float = Field(..., ge=0, allow_inf_nan=False)

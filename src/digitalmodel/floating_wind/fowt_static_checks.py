@@ -82,7 +82,7 @@ class Model:
     length: float
     w: float                    # submerged weight per length N/m
     ea: float                   # N
-    mbl: float                  # N
+    mbl: float | None           # N; None where not published
     # (period s, 6x6 added mass SI) of every spec radiation entry, as validated;
     # period 0 is infinite frequency. Checked against the data by natural_periods.
     radiation_added_mass: tuple = ()
@@ -119,7 +119,7 @@ def model_from_spec(spec: dict) -> Model:
         anchors=np.array([[*line.anchor_xy, -depth + line.anchor_height_above_seabed]
                           for line in fowt.mooring_lines]),
         length=lengths.pop(), w=w, ea=lt.axial_stiffness * KILO,
-        mbl=lt.minimum_breaking_load * KILO,
+        mbl=None if lt.minimum_breaking_load is None else lt.minimum_breaking_load * KILO,
         radiation_added_mass=tuple((entry.period, np.array(entry.added_mass) * KILO)
                                    for entry in hull.radiation))
 
@@ -151,7 +151,7 @@ def mooring_loads(model: Model, q: np.ndarray) -> tuple[np.ndarray, list[dict]]:
         tension = math.hypot(h, v)
         lines.append({"horizontal": h, "vertical": v, "tension": tension,
                       "span": span, "grounded_length": max(model.length - v / model.w, 0.0),
-                      "utilisation": tension / model.mbl})
+                      "utilisation": None if model.mbl is None else tension / model.mbl})
     return total, lines
 
 
@@ -298,13 +298,25 @@ def check_spec_radiation(model: Model, data: dict, rtol: float = 1e-9) -> None:
                              f"{period:g} s (0 = infinite frequency)")
 
 
-def natural_periods(model: Model, data: dict, q0: np.ndarray, iterations: int = 50) -> dict:
+def natural_periods(model: Model, data: dict, q0: np.ndarray, iterations: int = 50,
+                    infinite_frequency_added_mass: bool = False) -> dict:
     """Coupled surge-heave-pitch and uncoupled yaw periods (s).
 
-    The spec radiation is first checked against the data (``check_spec_radiation``).
+    By default the added mass is taken at each mode's own frequency. With
+    ``infinite_frequency_added_mass`` the infinite-frequency matrix is used
+    for every mode, which reproduces time-domain models whose radiation
+    memory does not recover the low-frequency added mass. In both cases the
+    spec radiation is first checked against the data (``check_spec_radiation``).
     """
     check_spec_radiation(model, data)
-    added = added_mass_function(data, model.rho)
+    if infinite_frequency_added_mass:
+        a_inf = model.rho * np.array(
+            data["hydrodynamics"]["added_mass_infinite_frequency_nondimensional"]["value"])
+
+        def added(omega: float) -> np.ndarray:
+            return a_inf
+    else:
+        added = added_mass_function(data, model.rho)
     stiffness = mooring_stiffness(model, q0)
     stiffness[2:5, 2:5] += model.k_hydro
     mass = rigid_mass_matrix(model)
@@ -340,14 +352,19 @@ def _hydro6(model: Model) -> np.ndarray:
     return out
 
 
-def run_checks(spec: dict, data: dict, thrust: float, hub: list[float],
-               tilt_deg: float) -> dict:
-    """All licence-free checks for one fowt spec; SI units in the result."""
+def run_checks(spec: dict, data: dict, thrust: float | None, hub: list[float] | None,
+               tilt_deg: float = 0.0) -> dict:
+    """All licence-free checks for one fowt spec; SI units in the result.
+
+    With ``thrust`` None the thrust-loaded equilibria are not computed.
+    """
     model = model_from_spec(spec)
     still = equilibrium(model)
     periods = natural_periods(model, data, still["position"])
-    loaded = equilibrium(model, thrust, np.array(hub), tilt_deg)
-    held = equilibrium(model, thrust, np.array(hub), 0.0, free=(0,))
+    loaded = held = None
+    if thrust is not None:
+        loaded = equilibrium(model, thrust, np.array(hub), tilt_deg)
+        held = equilibrium(model, thrust, np.array(hub), 0.0, free=(0,))
     return {
         "still_water": still,
         "natural": periods,
