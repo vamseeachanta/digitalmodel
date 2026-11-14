@@ -230,6 +230,35 @@ def test_pinned_eval_checks_consumed_shape_assets(monkeypatch):
         evaluator.provenance(args, {})
 
 
+def test_shape_evidence_digest_is_the_inference_json():
+    import hashlib
+    from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import generate_normal_card
+    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import SHAPE_MODEL_PATH, read_model_bytes
+    basis = module('model_basis')
+    record = json.loads((ROOT / basis.SCORE).read_text(encoding='utf-8'))
+    inference = hashlib.sha256(read_model_bytes(SHAPE_MODEL_PATH)).hexdigest()
+    assert record['models']['shape_only']['sha256'] == inference
+    _, hypothesis = basis.shape_evidence(generate_normal_card(seed=7), ROOT)
+    assert hypothesis['model_sha256'] == inference
+
+
+def test_pinned_eval_checks_the_stored_shape_model(monkeypatch):
+    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import SHAPE_MODEL_PATH
+    evaluator = module('eval')
+    pin = '1' * 40
+    args = type('Args', (), {'repo_root': ROOT, 'revision': 'pinned', 'pinned_commit': pin})()
+    monkeypatch.setattr(evaluator.evalkit, 'git_head', lambda path: pin)
+    stored = SHAPE_MODEL_PATH.resolve().relative_to(ROOT.resolve()).as_posix()
+    def blob(root, commit, rel, fetch=False):
+        assert fetch is False
+        if rel == stored:
+            return b'changed model bytes'
+        return (root / rel).read_bytes()
+    monkeypatch.setattr(evaluator.evalkit, 'git_blob', blob)
+    with pytest.raises(ImportError, match='unmodified source and inputs'):
+        evaluator.provenance(args, {})
+
+
 def test_manifest_metadata_precision_preserves_material_changes(analysis):
     import copy
     builder = module('build_results')
