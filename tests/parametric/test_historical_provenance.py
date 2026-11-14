@@ -89,7 +89,7 @@ def test_fixture_git_settings_ignore_inherited_parameters(tmp_path, inherited):
 
 @pytest.mark.parametrize("detached", [False, True])
 def test_checkout_metadata_ignores_remote_tracking_refs(tmp_path, monkeypatch, detached):
-    """Missing or advancing remote refs cannot change the caller snapshot."""
+    """Missing or moved remote refs cannot change a shallow caller snapshot."""
     env = dict(os.environ)
     for name in GIT_BINDINGS:
         env.pop(name, None)
@@ -101,11 +101,14 @@ def test_checkout_metadata_ignores_remote_tracking_refs(tmp_path, monkeypatch, d
     )
     monkeypatch.setattr(sys.modules[__name__], "ROOT", checkout)
 
-    def git(*args):
+    def git(*args, data=None):
         return subprocess.check_output(
-            ["git", "-C", str(checkout), *args], env=env,
+            ["git", "-C", str(checkout), *args], env=env, input=data,
         ).strip()
 
+    # A shallow boundary avoids copying snapshot blobs from a partial clone.
+    (checkout / ".git" / "shallow").write_bytes(git("rev-parse", "HEAD") + b"\n")
+    assert git("rev-parse", "--is-shallow-repository") == b"true"
     if detached:
         git("update-ref", "--no-deref", "HEAD", git("rev-parse", "HEAD").decode())
     before = _checkout_metadata(env)
@@ -114,7 +117,18 @@ def test_checkout_metadata_ignores_remote_tracking_refs(tmp_path, monkeypatch, d
     assert before["refs"] == git(
         "for-each-ref", "--format=%(refname) %(objectname)", head_ref,
     )
-    for revision in ("HEAD", "HEAD^1"):
+    # Reuse the retained identity without requiring contributor configuration.
+    headers = git("cat-file", "commit", "HEAD").split(b"\n\n", 1)[0].splitlines()
+    identity = [line for line in headers if line.startswith((b"author ", b"committer "))]
+    commit = b"\n".join([
+        b"tree " + git("rev-parse", "HEAD^{tree}"),
+        b"parent " + git("rev-parse", "HEAD"),
+        *identity, b"", b"Move remote ref\n",
+    ])
+    moved = git("hash-object", "-t", "commit", "-w", "--stdin", data=commit).decode()
+    assert moved != before["revisions"].decode()
+    assert git("rev-parse", moved + "^1") == before["revisions"]
+    for revision in ("HEAD", moved):
         git("update-ref", "refs/remotes/origin/main", revision)
         assert _checkout_metadata(env) == before
 
