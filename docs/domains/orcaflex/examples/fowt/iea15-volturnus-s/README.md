@@ -52,6 +52,7 @@ platform instead (Table 5).
 | 2 | 2026-11-13 | The generator, not the spec, now mirrors the upper triangle of every radiation matrix (one policy for all fowt specs); the spec holds the source values and the emitted model is unchanged. The wave-case models keep first-order wave loading off until the licensed import supplies load RAOs, and `run.md` switches it on after the import. Package regeneration refuses a folder holding files it did not write, so saved results are never deleted. |
 | 3 | 2026-11-13 | The natural-period statement and `results.json` now carry the assumed RNA inertia-tensor reading. The period check refuses a spec whose added mass differs from the WAMIT table it computes with. Supplied hydrodynamic files are checked against pinned SHA-256 digests of the public revision before any package is written. No result value changed. |
 | 4 | 2026-11-14 | The system mass is compared with Allen Table 1, and the still-water sinkage is attributed to the +0.87 % mass deviation, not to the mooring; the draft, vertical pretension and undisplaced fairlead tensions are compared with the published values (`results.json`, `mass_basis`). The LC0 `run.md` cites the published draft. Packages write the verified hydrodynamic bytes. No earlier result value changed. |
+| 5 | 2026-11-14 | The flexible representation keeps the RNA's products of inertia through a principal-axes child buoy instead of dropping them, and takes the tower Poisson ratio from the station moduli. The rigid-equivalent equilibrium comparison is split: heave differs by 0.0060 %, not within 0.0004 % as previously stated. |
 
 Table 1a. Revision history.
 
@@ -73,8 +74,10 @@ its source table or input file:
 - [`docs/domains/orcaflex/wind/fowt-volturnus/basis.yml`](../../../wind/fowt-volturnus/basis.yml):
   system mass and inertia, hull geometry, mooring, metocean ([#2473](https://github.com/vamseeachanta/digitalmodel/pull/2473));
 - [`docs/domains/orcaflex/wind/fowt-volturnus/generator_data.yml`](../../../wind/fowt-volturnus/generator_data.yml):
-  rotor and nacelle geometry and mass, the steady thrust curve, WAMIT
-  hydrostatics, added mass and radiation damping, and quadratic damping.
+  rotor and nacelle geometry and mass, the steady thrust curve, the
+  floating-tower station table, WAMIT hydrostatics, added mass and radiation
+  damping, and quadratic damping. Its sources are listed in
+  [`GENERATOR_SOURCES.md`](../../../wind/fowt-volturnus/GENERATOR_SOURCES.md).
 
 The pinned IEA repository holds no OrcaFlex input files.
 
@@ -89,8 +92,10 @@ Orcina's K03 example:
   stiffness, frequency-dependent added mass and radiation damping at 101
   periods, and the HydroDyn quadratic damping.
 - **Tower and rotor-nacelle assembly**: carried as part of one rigid body
-  (the rigid representation). The generator also supports a flexible tower
-  line with a lumped rotor-nacelle buoy; this example does not use it.
+  (the rigid representation). A second spec,
+  [`spec-flexible.yml`](spec-flexible.yml), models the tower as a
+  finite-element line with a lumped rotor-nacelle buoy; see
+  [Flexible representation](#flexible-representation).
 - **Rotor thrust**: a steady force applied at the hub along the 6° tilted
   shaft. This stands in for the OrcaFlex Turbine object for statics, decay and
   mean-offset cases. It carries no aerodynamic damping, rotor dynamics or
@@ -262,7 +267,7 @@ Not established:
 
 ## Licensed packages waiting
 
-Seven packages, one per case, each holding `spec.yml`, the generated model
+Eight packages, one per case, each holding `spec.yml`, the generated model
 (`model/master.yml`) and a `run.md`. Each `run.md` gives the exact settings and
 the expected values with tolerances. When the source directory is supplied,
 the two wave cases also include the three numeric WAMIT files and the pinned
@@ -284,6 +289,7 @@ such as saved solver results, is refused and left as it is.
 | `LC4a_rated_thrust_statics` | Surge 22.34 m, pitch 5.33°, upwind tension 4,389 kN (3 %) |
 | `LC4_operating` | Mean surge 17.46 m, mean pitch 3.26° (5 %); standard deviations recorded |
 | `LC5_parked_extreme` | No published comparator; statistics recorded |
+| `LC0_flexible_statics` | Vessel position as `LC0_statics`; tower-top displacement −0.222 m and rotation −0.389° in vessel axes (10 %); load order per #3971 recorded |
 
 Table 7. Licensed run packages.
 
@@ -300,6 +306,70 @@ Table 7. Licensed run packages.
   example ([#2423](https://github.com/vamseeachanta/digitalmodel/issues/2423))
   can use these packages.
 
+## Flexible representation
+
+[`spec-flexible.yml`](spec-flexible.yml) splits the rigid body into its three
+parts:
+
+- **Hull**: the platform alone, including ballast. It has a mass of 17,838 t,
+  a centre of mass 14.4 m below the waterline and the roll, pitch and yaw
+  inertias of the OpenFAST ElastoDyn file.
+- **Tower**: a finite-element line from 15 m to 144.386 m above the waterline.
+  Its properties come from the workbook's floating-tower table (20 stations,
+  with outer diameter, wall thickness, mass per length, EI, GJ and EA). Each
+  span of constant wall thickness becomes one section. The top span tapers
+  from 10 m to 6.5 m and is split into four sections. Their stiffnesses come
+  from tube formulas with the moduli that the table itself implies: E = 200 GPa
+  and G = 79.3 GPa at every station.
+- **Rotor-nacelle assembly**: a lumped 6D buoy of 945.8 t at the tower top. It
+  carries the adopted tower-top inertia tensor moved to the assembly's own
+  centre of mass. An OrcaFlex lumped buoy takes principal moments only
+  (Orcina, OrcaFlex help, 6D buoys: common data). The assembly buoy therefore
+  stays in tower-top axes and carries the mass and centre of mass, and a
+  massless child buoy rigidly attached at the centre of mass, oriented on the
+  tensor's principal axes (about 12.8° from the tower-top axes), carries the
+  three principal moments. The pair reproduces the full tensor, products of
+  inertia included, to 1e-9 of its largest moment (tested). That OrcaFlex adds
+  a child buoy's moments to its parent's rigid-body inertia is not stated in
+  the help pages read; the `LC0_flexible_statics` package records it as a
+  check. Statics depend only on mass and centre of mass, which the parent
+  carries.
+- **Tower Poisson's ratio**: 0.261 at every section, from the isotropic
+  relation E/(2G) − 1 with the moduli the station table implies.
+
+The VesselType's hydrostatic weight term uses the platform alone, because
+OrcaFlex applies the tower and assembly weight through their own objects.
+The three parts use the same model-input masses as the rigid spec, so the
+flexible model carries the same +0.87 % system-mass deviation from Allen
+Table 1 and the same still-water sinkage (see LC0 above).
+
+| Check | Result | Comparator | Tolerance |
+|---|---|---|---|
+| Tower mass, 13 sections | 1,483.07 t | 1,483.08 t, piecewise-linear integral of the station table (`basis.yml`) | 0.01 % |
+| Hull + tower + assembly mass | 20,266.84 t | 20,266.85 t, whole-system value of the rigid spec | 0.001 % |
+| Combined centre of mass | within 0.02 mm | rigid spec | 1 mm |
+| Combined inertia diagonal | within 0.002 % | rigid spec | 0.01 % |
+| Equilibrium heave of the combined body | −0.381650 m against −0.381673 m (+0.023 mm, 0.0060 %) | rigid representation | 0.01 % |
+| Equilibrium surge and pitch of the combined body | within 0.0001 % | rigid representation | 0.01 % |
+| Natural periods (surge, heave, pitch, yaw) of the combined body | within 0.0004 % | rigid representation | 0.01 % |
+| Tower-top displacement, hull axes, hull upright | −0.174 m | cantilever formula check of the method (0.1 %) | — |
+| Tower-top displacement and rotation, hull at its −1.42° equilibrium pitch | −0.222 m, −0.389° | none published | — |
+
+Table 8. Flexible-representation checks. The tower-top values are a first-order
+cantilever calculation with the base fixed to the hull. They include the tower's
+own weight and the assembly weight acting at its 7.32 m upwind offset; P-delta
+is excluded. A negative displacement is upwind.
+
+Dropping the assembly's products of inertia would change the system Ixz by
+4.5 %, which is 0.1 % of Ixx; the generated model keeps them.
+
+The generated model places the Tower line, whose End A connects to the
+assembly buoy, before the 6D buoys
+([#3971](https://github.com/vamseeachanta/digitalmodel/issues/3971)). Whether
+OrcaFlex loads that order is not established without a licensed load. The
+`LC0_flexible_statics` package states the expected equilibrium and tower-top
+values.
+
 ## Second reference case
 
 The same model type and checks are applied to the NREL 5 MW turbine on the
@@ -314,5 +384,5 @@ linearised matrix to within 3 %.
 python scripts/fowt/extract_iea15_generator_data.py <raw_dir> docs/domains/orcaflex/wind/fowt-volturnus/generator_data.yml
 python scripts/fowt/write_iea15_example_spec.py
 python scripts/fowt/run_iea15_checks.py
-python -m pytest tests/orcaflex/test_fowt_generator_data.py tests/solvers/orcaflex/modular_generator/test_fowt_model_type.py tests/floating_wind/test_fowt_static_checks.py -q
+python -m pytest tests/orcaflex/test_fowt_generator_data.py tests/solvers/orcaflex/modular_generator/test_fowt_model_type.py tests/solvers/orcaflex/modular_generator/test_fowt_model_physics.py tests/solvers/orcaflex/modular_generator/test_fowt_model_routing.py tests/floating_wind/test_fowt_static_checks.py tests/floating_wind/test_fowt_iea15_packages.py tests/floating_wind/test_fowt_iea15_results.py tests/floating_wind/test_fowt_iea15_flexible.py -q
 ```

@@ -180,10 +180,15 @@ class FowtTower(_FiniteModel):
 
 
 class FowtRna(_FiniteModel):
-    """Rotor-nacelle assembly in principal axes (flexible representation).
+    """Rotor-nacelle assembly (flexible representation).
 
-    The lumped buoy takes diagonal moments only. Nonzero products of inertia
-    require an axes transformation of the full model and are not supported.
+    ``inertia_about_centre_of_mass`` is the full symmetric tensor in tower-top
+    axes. An OrcaFlex lumped buoy takes moments about principal axes only
+    (Orcina help, 6D buoys: common data). A diagonal tensor goes to the RNA
+    buoy directly; with nonzero products the router keeps the RNA buoy in
+    tower-top axes carrying mass and centre of mass, and attaches a massless
+    child buoy at the centre of mass, oriented on the principal axes, that
+    carries the principal moments. Products are never dropped.
     """
 
     name: str = Field(default="RNA", min_length=1)
@@ -200,8 +205,18 @@ class FowtRna(_FiniteModel):
     @classmethod
     def _three_by_three(cls, value: list[list[float]]) -> list[list[float]]:
         _check_square(value, 3, "matrix")
-        if any(value[i][j] != 0 for i in range(3) for j in range(3) if i != j):
-            raise ValueError("RNA inertia must be in principal axes with zero products of inertia")
+        scale = max(abs(value[i][i]) for i in range(3))
+        if any(abs(value[i][j] - value[j][i]) > 1e-12 * scale
+               for i in range(3) for j in range(i + 1, 3)):
+            raise ValueError("RNA inertia tensor must be symmetric")
+        # Leading principal minors (Sylvester's criterion).
+        m = value
+        minors = (m[0][0], m[0][0] * m[1][1] - m[0][1] * m[1][0],
+                  m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1])
+                  - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0])
+                  + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]))
+        if any(minor <= 0 for minor in minors):
+            raise ValueError("RNA inertia tensor must be positive definite")
         return value
 
 

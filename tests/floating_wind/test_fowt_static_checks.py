@@ -117,8 +117,8 @@ def test_rigid_mass_matrix_symmetric(sources):
     assert mass[0, 4] == pytest.approx(model.mass * model.cog[2])
 
 
-def test_flexible_representation_rejected_by_rigid_checks(sources):
-    """A flexible hull holds the platform only; hull-only checks would drop tower and RNA."""
+def test_flexible_representation_checked_as_whole_body(sources):
+    """A flexible hull holds the platform only; the checks add tower and RNA mass."""
     spec = copy.deepcopy(build_spec(*sources))
     fowt = spec["fowt"]
     fowt["representation"] = "flexible"
@@ -128,8 +128,10 @@ def test_flexible_representation_rejected_by_rigid_checks(sources):
          "poisson_ratio": 0.3}]}  # synthetic fixture values, not reference-design data
     fowt["rna"] = {"mass": 945.77, "centre_of_mass_from_tower_top": [-7.32, 0.0, 4.6],
                    "inertia_about_centre_of_mass": [[4.0e5, 0, 0], [0, 2.7e5, 0], [0, 0, 2.9e5]]}
-    with pytest.raises(NotImplementedError, match="flexible representation"):
-        model_from_spec(spec)
+    model = model_from_spec(spec)
+    platform = fowt["hull"]["mass"]
+    assert model.mass == pytest.approx((platform + 1293.86 + 945.77) * 1000.0)
+    assert model.mass > platform * 1000.0
 
 
 # ---------------------------------------------------- still water (LC0)

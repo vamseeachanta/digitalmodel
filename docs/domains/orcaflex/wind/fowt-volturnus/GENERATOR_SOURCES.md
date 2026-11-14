@@ -15,7 +15,9 @@ from `https://raw.githubusercontent.com/IEAWindTask37/IEA-15-240-RWT/<revision>/
 
 - `Documentation/IEA-15-240-RWT_tabular.xlsx`: Overview (rotor and hub
   geometry, shaft tilt, precone, blade mass), Nacelle Mass Properties (rotor
-  and nacelle mass and centre) and Rotor Performance (steady thrust curve).
+  and nacelle mass and centre), Rotor Performance (steady thrust curve) and
+  Floating Tower Properties (rows 2:21, columns B:K: station height, outer
+  diameter, wall thickness, mass per length, section inertia, EI, GJ and EA).
 - `OpenFAST/IEA-15-240-RWT-UMaineSemi/HydroData/IEA-15-240-RWT-UMaineSemi.hst`:
   WAMIT hydrostatic stiffness, with the centre of gravity placed at the origin
   so that the gravity moment-arm term is excluded.

@@ -15,6 +15,13 @@ from typing import Any
 
 from ..schema.fowt import FowtSpec
 from .base_router import BaseRouter
+from .fowt_attitude import (  # noqa: F401  (re-exported public names)
+    RNA_ATTITUDE_DECIMAL_PLACES,
+    RNA_MOMENT_SIGNIFICANT_FIGURES,
+    buoy_attitude,
+    principal_axes,
+    vessel_rotation,
+)
 
 DRAUGHT_NAME = "Draught1"
 
@@ -65,34 +72,6 @@ def full_hydrostatic_stiffness(spec: FowtSpec) -> list[list[float]]:
     return k
 
 
-def vessel_rotation(heel: float, trim: float, heading: float) -> list[list[float]]:
-    """Vessel-to-global rotation for an OrcaFlex vessel orientation (degrees).
-
-    OrcaFlex applies heading about Z, then trim about the new y, then heel
-    about the new x (Orcina, OrcaFlex help, Vessel data), so R = Rz Ry Rx.
-    Positive angles are right-handed about each axis.
-    """
-    cx, sx = math.cos(math.radians(heel)), math.sin(math.radians(heel))
-    cy, sy = math.cos(math.radians(trim)), math.sin(math.radians(trim))
-    cz, sz = math.cos(math.radians(heading)), math.sin(math.radians(heading))
-    return [[cz * cy, cz * sy * sx - sz * cx, cz * sy * cx + sz * sx],
-            [sz * cy, sz * sy * sx + cz * cx, sz * sy * cx - cz * sx],
-            [-sy, cy * sx, cy * cx]]
-
-
-def buoy_attitude(r: list[list[float]]) -> list[float]:
-    """6D buoy rotations 1, 2, 3 (degrees) that reproduce the rotation ``r``.
-
-    A 6D buoy applies rotation 1 about x, then rotation 2 about the new y,
-    then rotation 3 about the new z (Orcina, OrcaFlex help, 6D buoys: common
-    data), so R = Rx Ry Rz; rotation 2 lies in [-90, 90] degrees.
-    """
-    r2 = math.asin(max(-1.0, min(1.0, r[0][2])))
-    r1 = math.atan2(-r[1][2], r[2][2])
-    r3 = math.atan2(-r[0][1], r[0][0])
-    return [math.degrees(r1), math.degrees(r2), math.degrees(r3)]
-
-
 class FowtRouter(BaseRouter):
     """Route a FowtSpec to vessel types, vessels, line types, lines and 6D buoys."""
 
@@ -105,7 +84,7 @@ class FowtRouter(BaseRouter):
 
         if spec.representation == "flexible":
             line_types.extend(self._tower_line_types(spec))
-            buoys.append(self._rna_buoy(spec))
+            buoys.extend(self._rna_buoys(spec))
             lines.append(self._tower_line(spec))
 
         lines.extend(self._mooring_line(spec, line) for line in spec.mooring_lines)
@@ -293,6 +272,38 @@ class FowtRouter(BaseRouter):
             },
         }
 
+    def _rna_buoys(self, spec: FowtSpec) -> list[dict[str, Any]]:
+        rna = spec.rna
+        inertia = rna.inertia_about_centre_of_mass
+        host = self._rna_buoy(spec)
+        if not any(inertia[i][j] for i in range(3) for j in range(3) if i != j):
+            return [host]
+        # Products of inertia: the host keeps mass, centre and tower-top axes
+        # (so the tower connection, hub load point and reported motions are
+        # unchanged) and a rigidly attached, massless child on the principal
+        # axes carries the moments (Orcina help, 6D buoys: common data, read
+        # 2026-11-13: buoy axes in the principal directions; object
+        # connections: a child is rigidly attached to its parent).
+        moments, axes = principal_axes(inertia)
+        host["properties"]["MomentsOfInertia"] = [0, 0, 0]
+        child = {
+            "name": f"{rna.name} inertia",
+            "properties": {
+                "BuoyType": "Lumped buoy",
+                "Connection": rna.name,
+                "InitialPosition": list(rna.centre_of_mass_from_tower_top),
+                "InitialAttitude": [round(a, RNA_ATTITUDE_DECIMAL_PLACES)
+                                    for a in buoy_attitude(axes)],
+                "Mass": 0,
+                "MomentsOfInertia": [float(f"{m:.{RNA_MOMENT_SIGNIFICANT_FIGURES}g}")
+                                     for m in moments],
+                "CentreOfMass": [0, 0, 0],
+                "Volume": 0,
+                "CentreOfVolume": [0, 0, 0],
+            },
+        }
+        return [host, child]
+
     def _rna_buoy(self, spec: FowtSpec) -> dict[str, Any]:
         rna, hull = spec.rna, spec.hull
         top = spec.tower.top_elevation
@@ -315,7 +326,8 @@ class FowtRouter(BaseRouter):
                 "InitialPosition": position,
                 "InitialAttitude": attitude,
                 "Mass": rna.mass,
-                # The schema requires principal axes: all products are zero.
+                # Diagonal tensor; with products, _rna_buoys moves the
+                # moments to a principal-axes child buoy.
                 "MomentsOfInertia": [inertia[0][0], inertia[1][1], inertia[2][2]],
                 "CentreOfMass": list(rna.centre_of_mass_from_tower_top),
                 "Volume": 0,
