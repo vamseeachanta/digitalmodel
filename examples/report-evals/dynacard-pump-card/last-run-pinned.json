@@ -2,8 +2,8 @@
  "schema_version": "1.0",
  "report_id": "dynacard-pump-card",
  "mode": "rebuild",
- "started_utc": "2026-11-14T10:41:25Z",
- "finished_utc": "2026-11-14T10:41:40Z",
+ "started_utc": "2026-11-14T10:45:34Z",
+ "finished_utc": "2026-11-14T10:45:48Z",
  "grade": "PASS",
  "pinned_commit": "c2a62ac98957044e6b34bf0c0b0c9d19900dd4fc",
  "artifacts": {
@@ -15,8 +15,8 @@
  "platform": "Windows",
  "context": {
   "revision": "candidate",
-  "repo_head": "e0e6cdbcbc0f3086677b0f4c0819b61d563d150d",
-  "digitalmodel_head": "e0e6cdbcbc0f3086677b0f4c0819b61d563d150d",
+  "repo_head": "da4cdbb5e9ae1bf9955d55fa66a765889a70ea74",
+  "digitalmodel_head": "da4cdbb5e9ae1bf9955d55fa66a765889a70ea74",
   "digitalmodel_file": "src/digitalmodel/__init__.py",
   "code_mode": "candidate",
   "sha256": {
@@ -51,7 +51,7 @@
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/data/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/data_loader.py": "33ea65a431356d61ae08298d420f55d6a52ba789580b38ae3af2d46256bac5a9",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/diagnostic_plate.py": "b3cd6189e31d36721c32e3b87201a2c26742e7998ba47d94d2376cea31c97ffa",
-   "src/digitalmodel/marine_ops/artificial_lift/dynacard/diagnostics.py": "903780d1b6f057e23c58f9332e32a9d0378d97aeb1987d16f77237821016d278",
+   "src/digitalmodel/marine_ops/artificial_lift/dynacard/diagnostics.py": "dfaee629af7f9d2b959aaae84912d0c764b9e99643c0ae4c0fa0a11cc12e7d89",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/everitt_jennings/__init__.py": "b6242b8c653595689bdb3c6e49c5f5c68da1fb5f4acd08408c8bf07e95b4594f",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/everitt_jennings/adapter.py": "15096636be812edfb900da4c2a37b1ba3edb6dee6f8687365f0535df8f640e72",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/everitt_jennings/damping.py": "46ee64b92b0466cf5c068c55bc98fe7751b5926407d978740846a258f1e73781",
@@ -88,7 +88,7 @@
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/solver.py": "a771cd02e4aec38f95b8b0fe57f00e0202ae89cfbaf36a23201ca8a82c283e3a",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/solver_guards.py": "53aa2fbc3fb03707d33da9a111835f1d7867631136005db068a2c1b606781a55",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/torque_balance.py": "758f0f30c281f2a4398976e0b3eb7dc8982db15222bee975ec08c2a863f76a1d",
-   "src/digitalmodel/marine_ops/artificial_lift/dynacard/training.py": "b831c5ae95c90637d04aa9a6a016a710332067aa428fa2b4bdd0d8f90dba52a2",
+   "src/digitalmodel/marine_ops/artificial_lift/dynacard/training.py": "8377a1bb83aba43aa1d3a8c02f9e6f594e05479506ea79e4ca7fd60529faacfc",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/troubleshooting.py": "952f90b2b4f7163838524f89d22cad3da0dc31b1efe088ac00bc6f91dc4682be",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/visualization/__init__.py": "1810618a6292673af3475e221337a47ec65707cea62b4dbf36f0a56c6f46f153",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/visualization/card_renderer.py": "d36fb760390ff577cae3e5ae8a2aa8541f1262ea61fb2cd716105978dee71fa8",
@@ -98,7 +98,7 @@
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/visualization/rod_pump_schematic.py": "ec5f8d52e0d742a7ce190fa5d72e49ea4340e695ca68619e6bb53224a55f0dd0",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/visualization/svg_primitives.py": "2518984e341b4cc77a5856d247b6475bb445b7b7a183cd36c69f3e4e6d70f4ae",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/data/dynacard_classifier.json": "c3612e1f31aad740b4ebc5f81e34bf09ae7d21e42f1f18915c2a76c94337a40c",
-   "src/digitalmodel/marine_ops/artificial_lift/dynacard/data/dynacard_shape_classifier.json.gz": "3f3c8c2f06a31e154500003b951311cd2d2ac3417ccd8d5e52eee1b76c8f39de",
+   "src/digitalmodel/marine_ops/artificial_lift/dynacard/data/dynacard_shape_classifier.json.gz": "17c6969ba9f982f570a8888000562548f16375ab29367f8d12b2ea4d3e11a5cd",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/data/example_cards.json": "19f33c77593a60fe08387ff88c5f8ef929725d40e83e2ff5ee49f3be68915355",
    "tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json": "cb11b1fd0399285c3a795dacc2c1c2d0b2cdb38e3103f7bc2859ca79a480743d",
    "tests/marine_ops/artificial_lift/dynacard/testdata/mendeley_plate/Working condition diagnosis plate.xls": "69723091c93269761a2fa79fc774a6ae7bf0eff786af439fb94c40171018058e"
@@ -110,7 +110,7 @@
   },
   "shape_hypothesis_status": "HYPOTHESIS",
   "published_example_status": "NOT_EVALUATED",
-  "artifacts_repo_head": "e0e6cdbcbc0f3086677b0f4c0819b61d563d150d",
+  "artifacts_repo_head": "da4cdbb5e9ae1bf9955d55fa66a765889a70ea74",
   "artifacts_dirty": false,
   "record_note": "Candidate evidence replaces an obsolete pinned run; pinned reproduction is not established for corrected values."
  },
