@@ -26,7 +26,12 @@ from .cpt import (
     undrained_strength,
 )
 
+from .soil_profile import SoilLayer, SoilProfile, SoilType
+from .soil_profile_yaml import dump_soil_profile, load_soil_profile
+
 __all__ = [
+    "SoilLayer", "SoilProfile", "SoilType",
+    "dump_soil_profile", "load_soil_profile",
     "EVALUATED",
     "NOT_EVALUATED",
     "CPTData",
