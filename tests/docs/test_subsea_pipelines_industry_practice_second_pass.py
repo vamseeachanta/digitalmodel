@@ -40,11 +40,11 @@ def source_ids(text):
 
 
 def load():
-    return DOC.read_text(), yaml.safe_load(SOURCES.read_text())
+    return DOC.read_text(encoding='utf-8'), yaml.safe_load(SOURCES.read_text(encoding='utf-8'))
 
 
 def catalog(data):
-    entries = yaml.safe_load(BASE.with_suffix('.sources.yaml').read_text())['sources']
+    entries = yaml.safe_load(BASE.with_suffix('.sources.yaml').read_text(encoding='utf-8'))['sources']
     entries += data['sources']
     result = {e['id']: e for e in entries}
     assert len(result) == len(entries)
@@ -89,9 +89,9 @@ def validate_document(text, data, contents):
 def validate_solitaire(text, data):
     row, = [r for r in verified_rows(text, 'contractors') if r[0] == 'Allseas: Solitaire']
     joined = ' '.join(row)
-    vessel = json.loads((ROOT / 'assets/data/vessel_specs_pipelay.json').read_text())[0]
+    vessel = json.loads((ROOT / 'assets/data/vessel_specs_pipelay.json').read_text(encoding='utf-8'))[0]
     anchors = re.findall(r'^\| Solitaire\s*\| (.*)$',
-                         (ROOT / 'assets/data/vessel_specs_README.md').read_text(), re.M)
+                         (ROOT / 'assets/data/vessel_specs_README.md').read_text(encoding='utf-8'), re.M)
     lower, = [int(m[1]) for a in anchors if (m := re.search(r'(\d+)–60 inches', a))]
     figures = re.findall(r'\d[\d,]*', re.sub(r'DP-3|2026 filename edition|\[[PS]\d+\]', '', joined))
     assert sorted(map(lambda n: int(n.replace(',', '')), figures)) == sorted([
@@ -104,7 +104,7 @@ def validate_solitaire(text, data):
                    'not an operating limit', '2026 filename edition',
                    'publication date not established', 'demonstration reference facts only'):
         assert phrase in joined
-    manifest = json.loads((ROOT / 'assets/data/vessel_specs_provenance.json').read_text())
+    manifest = json.loads((ROOT / 'assets/data/vessel_specs_provenance.json').read_text(encoding='utf-8'))
     for sid, fields in [('S1', ['tensioner_capacity_tonnes', 'max_pipe_diameter_inches', 'dp_class']),
                         ('S2', ['lay_methods', 'record_water_depth_m'])]:
         entry = catalog(data)[sid]
@@ -124,7 +124,7 @@ def derive(text, data):
         for e in items:
             read_evidence(e['evidence'], sources)
             assert e['pass'] in {'first', 'second'}
-            content = BASE.read_text() if e['pass'] == 'first' else text
+            content = BASE.read_text(encoding='utf-8') if e['pass'] == 'first' else text
             location = e['location']
             block = section(content, location['section'])
             if key == 'convergence':
@@ -175,7 +175,7 @@ def validate_status(text, data):
 
 def test_second_pass_document():
     text, data = load()
-    validate_document(text, data, [text, SOURCES.read_text(), Path(__file__).read_text()])
+    validate_document(text, data, [text, SOURCES.read_text(encoding='utf-8'), Path(__file__).read_text(encoding='utf-8')])
 
 
 def test_solitaire_row_matches_repository_data():
@@ -192,6 +192,40 @@ def test_solitaire_verified_row_rejects_unsupported_figure(change):
 
 def test_status_table_bound_to_criteria_and_evidence():
     validate_status(*load())
+
+
+@pytest.mark.parametrize('default_encoding', ['cp1252', 'ascii'])
+def test_evidence_reads_are_independent_of_locale(monkeypatch, default_encoding):
+    """Exercise the real loaders and validators with a non-UTF-8 text default."""
+    original_open = Path.open
+
+    def locale_open(path, mode='r', buffering=-1, encoding=None, errors=None, newline=None):
+        if 'b' not in mode and encoding in (None, 'locale'):
+            encoding = default_encoding
+        return original_open(path, mode, buffering, encoding, errors, newline)
+
+    monkeypatch.setattr(Path, 'open', locale_open)
+    text, data = load()
+    validate_solitaire(text, data)
+    assert catalog(data)['S6']['publisher'] == 'Dassault Syst\u00e8mes'
+    validate_status(text, data)
+    test_second_pass_document()
+
+
+def test_sage_evidence_uses_reproducible_vendor_locator():
+    """Pin the replacement opened during review remediation, without live CI I/O."""
+    text, data = load()
+    source = catalog(data)['S5']
+    assert source['url'] == 'https://www.fugro.com/expertise/sage-profile'
+    row, = [r for r in verified_rows(text, 'tools') if r[0] == 'SAGE Profile']
+    assert '[S5](' + source['url'] + ')' in row[2]
+    assert source['status'] == 'read' and 'Introduction' in source['basis']
+    validate_status(text, data)
+
+
+def test_abaqus_case_study_publication_date():
+    _, data = load()
+    assert catalog(data)['S6']['year'] == '2025-10-21'
 
 
 @pytest.fixture

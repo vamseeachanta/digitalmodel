@@ -27,8 +27,10 @@ No new Solitaire fetch. The JSON provides the upper diameter bound; the single s
 
 | Tool | Extracted facts | Source |
 |---|---|---|
-| SAGE Profile | Finite-element route optimisation, lay simulation, free-span evaluation, on-bottom stress, buckling and expansion analysis. | [S5](https://www.sage-profile.com/sage-profile/) |
-| ABAQUS | Finite-element installation and pipe-soil interaction modelling; residual tension and operating pressure/temperature loads. | Vendor case study [S6](https://blog.3ds.com/brands/simulia/hcl-tech-masters-subsea-pipeline-design-simulia/); reported use, without independent benchmark verification. |
+| SAGE Profile | Finite-element route optimisation, lay simulation, free-span evaluation, on-bottom stress, buckling and expansion analysis. | [S5](https://www.fugro.com/expertise/sage-profile) |
+| ABAQUS | Finite-element installation and pipe-soil interaction modelling; residual tension and operating pressure/temperature loads. | Vendor case study, 21 October 2025 [S6](https://blog.3ds.com/brands/simulia/hcl-tech-masters-subsea-pipeline-design-simulia/); reported use, without independent benchmark verification. |
+
+S5 was rechecked on 2026-11-13 at the vendor’s replacement page, Introduction and Features. The previous locator redirects to a missing page; the replacement directly returned HTTP 200 and supports the extracted capabilities. Tool coverage remains met through read vendor evidence.
 
 ## 3. JIP landscape updates
 

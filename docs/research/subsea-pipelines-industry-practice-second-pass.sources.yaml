@@ -41,18 +41,18 @@ sources:
   title: SAGE Profile
   publisher: Fugro
   year: not stated
-  url: https://www.sage-profile.com/sage-profile/
+  url: https://www.fugro.com/expertise/sage-profile
   checked: '2026-11-13'
   status: read
-  basis: opened vendor page, finite element solver capabilities
+  basis: opened replacement vendor page, Introduction and Features; direct HTTP 200 on recheck
 - id: S6
   title: HCL Technologies Masters Subsea Pipeline Design with SIMULIA
   publisher: Dassault Systèmes
-  year: not stated
+  year: '2025-10-21'
   url: https://blog.3ds.com/brands/simulia/hcl-tech-masters-subsea-pipeline-design-simulia/
   checked: '2026-11-13'
   status: read
-  basis: opened vendor case study, Solution and installation/operational loading paragraphs
+  basis: opened vendor case study, Solution and installation/operational loading paragraphs; publication date from visible byline and article metadata
 - id: S7
   title: 'HotPipe JIP: Design Guidelines for HP/HT Pipelines'
   publisher: ASME
