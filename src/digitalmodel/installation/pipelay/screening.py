@@ -39,6 +39,7 @@ import yaml
 from digitalmodel.citations import Citation, CitationResolutionError, validate_citation
 from digitalmodel.citations.resolver import resolve_wiki_base, resolve_wiki_path
 from digitalmodel.code_checks.dnv_os_f101 import (
+    MINIMUM_OVALITY,
     collapse_pressure,
     elastic_collapse_pressure,
     plastic_collapse_pressure,
@@ -288,7 +289,7 @@ def pressure_screen(
         raise ValueError("derived pressures are outside numerical range") from exc
     _nonnegative(collapse_utilisation=uc, propagation_utilisation=up)
     # The helper's documented imperfection floor is exposed, never hidden.
-    return PressureScreen(net, max(ovality, 0.005), pel, pp, pc, ppr, uc, up,
+    return PressureScreen(net, max(ovality, MINIMUM_OVALITY), pel, pp, pc, ppr, uc, up,
                           uc <= 1, up <= 1, (PRESSURE_SOURCE, OVALITY_SOURCE), citations)
 
 

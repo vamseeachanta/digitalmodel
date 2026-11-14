@@ -178,6 +178,9 @@ def test_ovality_floor_and_increase_are_reported():
     args["ovality"] = 0.0
     floor = pressure_screen(**args)
     assert floor.applied_ovality == 0.005
+    at_floor = pressure_screen(**{**args, "ovality": 0.005})
+    assert floor.collapse_pa == pytest.approx(at_floor.collapse_pa)
+    assert floor.collapse_utilisation == pytest.approx(at_floor.collapse_utilisation)
     args["ovality"] = 0.02
     worse = pressure_screen(**args)
     assert worse.collapse_pa < floor.collapse_pa

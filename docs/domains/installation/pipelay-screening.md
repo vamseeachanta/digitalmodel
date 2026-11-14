@@ -107,6 +107,12 @@ $env:PYTHONPATH = 'src'
 uv run python examples/workflows/pipelay-screening/example.py
 ```
 
+POSIX shell form:
+
+```sh
+PYTHONPATH=src uv run python examples/workflows/pipelay-screening/example.py
+```
+
 The S-lay case uses D=0.5 m, h=100 m, w=1000 N/m, H=200 kN and
 stinger radius 250 m. The J-lay case uses h=1000 m and H=50 kN with the same
 D and w. Pressure inputs are t=0.020 m, fy=400 MPa, E=200 GPa, nu=0.3,
