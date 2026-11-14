@@ -94,11 +94,15 @@ def _resolves(d: Any, path: str) -> bool:
 
 
 def _materialize_path(partial: dict, spec: ProjectInputSpec, path: str) -> None:
-    """Copy unset containers on ``path`` from the full dump into ``partial``.
+    """Copy the first unset container on ``path`` from the full dump into ``partial``.
 
-    Only the containers on the override path are copied, so a sweep of a
-    default-valued field still resolves; paths absent from the full dump are
-    left for ``_set_nested_safe`` to report.
+    The walk follows ``path`` through the authored dump. At the first key
+    missing from it, the whole subtree of that key is copied from the full
+    dump, so a sweep of a default-valued field still resolves. Sibling
+    defaults inside that subtree become authored too: overriding
+    ``environment.wind.speed`` with ``wind`` omitted also sets
+    ``wind.direction``. Paths absent from the full dump are left for
+    ``_set_nested_safe`` to report.
     """
     if _resolves(partial, path):
         return
