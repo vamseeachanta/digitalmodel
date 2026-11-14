@@ -1,7 +1,7 @@
-# CAD/CAM File Inventory — ace share (`/mnt/ace`)
+# CAD/CAM File Inventory — source archive
 
 **Epic:** [#1004](https://github.com/vamseeachanta/digitalmodel/issues/1004) · **Issue:** [#1005](https://github.com/vamseeachanta/digitalmodel/issues/1005) (1/5)
-**Host:** ace-linux-1 · **Scanned path:** native local disk `/mnt/ace` (no network share) · **Scan date:** 2026-06-24
+**Host:** Linux workstation · **Scanned source:** source archive on native local disk (no network share) · **Scan date:** 2026-06-24
 
 This folder holds the discovery output for the CAD/CAM automation initiative. This file (`README.md`) is the
 aggregate inventory; the per-file manifest is `cad-file-manifest-deidentified.csv.gz`.
@@ -16,17 +16,17 @@ Restore it from the repository root with `python scripts/data/fetch.py blobs/sha
 
 > **Privacy — this repo is PUBLIC.** The committed manifest is **de-identified**: the raw `path` column (which
 > embeds a personal name and client/field linkage) is replaced by `path_sha1`, and the two external-company top
-> folders are relabelled (`epc-partner`, `eng-partner`). All aggregate columns are intact. The **full raw-path
-> manifest is retained only in the private ace-linux-1 context**, not committed. `build-manifest.py` produces the
+> folders are relabelled (EPC project archive, engineering partner archive). All aggregate columns are intact. The **full raw-path
+> manifest is retained only in the private Linux workstation context**, not committed. `build-manifest.py` produces the
 > raw manifest; `deidentify-manifest.py` produces the committed one.
 
 ---
 
 ## TL;DR — what's on the share
 
-- **525,152 CAD/CAM-related files, ~5.4 TB**, found by an unbounded `find` over `/mnt/ace`.
+- **525,152 CAD/CAM-related files, ~5.4 TB**, found by an unbounded `find` over the source archive.
 - **One folder dominates everything.** A single raw flush-drive dump —
-  `docs/disciplines/knowledge_skills/projects/ri/00_inbox/` — holds **416,283 files (79%)**: almost the entire
+  the unclassified CAD inbox — holds **416,283 files (79%)**: almost the entire
   Autodesk-Inventor population (133k `.ipt` + 51k `.iam`) and the bulk of AutoCAD (227k `.dwg`). It is an
   *un-curated inbox*, not an active model tree — treat its counts as a backlog, not as 416k hand-built models.
 - **OrcaFlex is the heaviest real engineering asset by volume:** 10,204 `.sim` files ≈ **5.2 TB** — the largest
@@ -42,7 +42,7 @@ Restore it from the repository root with `python scripts/data/fetch.py blobs/sha
 
 ## Method & caveats
 
-- Command: a single `find /mnt/ace -type f` filtered (case-insensitive) to the 26 target extensions, printing
+- Command (set `SOURCE_ARCHIVE` to the authorized source archive directory): a single `find "${SOURCE_ARCHIVE:?Set SOURCE_ARCHIVE}" -type f` filtered (case-insensitive) to the 26 target extensions, printing
   `size · mtime · path`. The exact extension set and classification logic live in `build-manifest.py` (committed
   alongside, reproducible).
 - **Extensions:** `.step .stp .iges .igs .sldprt .sldasm .dwg .dxf .x_t .x_b .ipt .iam .catpart .prt .f3d .f3z
@@ -68,12 +68,12 @@ the inventory; flagged for #1007).
 
 | Archived folder | Active twin present? | Files in archive | Dedup action |
 |---|---|---|---|
-| `client_projects.preexisting-…-064502` | yes (`client_projects`) | 4,522 | **drop** as duplicate |
+| private project archive (archived twin; `.preexisting-…-064502`) | yes (private project archive) | 4,522 | **drop** as duplicate |
 | `<project-archive>.preexisting-…-075928` | yes (`<project-archive>`) | 3,230 | **drop** as duplicate |
-| `eng-partner.preexisting-…-064502` | yes (`eng-partner`) | 502 | **drop** as duplicate |
-| `seanation.preexisting-…-064502` | yes (`seanation`) | 481 | **drop** as duplicate |
-| `epc-partner.preexisting-…-064502` | **no live twin** | 317 | **keep** — only copy |
-| `rock-oil-field.preexisting-…-064502` | **no live twin** | 424 | **keep** — only copy |
+| engineering partner archive (archived twin; `.preexisting-…-064502`) | yes (engineering partner archive) | 502 | **drop** as duplicate |
+| coiled-tubing project archive (archived twin; `.preexisting-…-064502`) | yes (coiled-tubing project archive) | 481 | **drop** as duplicate |
+| EPC project archive (archived twin; `.preexisting-…-064502`) | **no live twin** | 317 | **keep** — only copy |
+| VIV analysis archive (archived twin; `.preexisting-…-064502`) | **no live twin** | 424 | **keep** — only copy |
 
 Removed by dedup: **8,735** archived duplicates + **1,115** dependency files = **9,850**.
 **Signal total = 515,302 files.**
@@ -120,28 +120,28 @@ Removed by dedup: **8,735** archived duplicates + **1,115** dependency files = *
 
 ## Aggregate 3 — by top-level project folder (all rows)
 
-| Top folder under `/mnt/ace` | Files | Size | Note |
+| Top folder in source archive | Files | Size | Note |
 |---|--:|--:|---|
-| `docs` | 473,552 | 2.0 TB | **79% is the `ri/00_inbox` flush-drive dump** (416,283 files) |
+| `docs` | 473,552 | 2.0 TB | **79% is the unclassified CAD inbox flush-drive dump** (416,283 files) |
 | `digitalmodel` | 37,422 | 19.7 GB | the repo itself — mostly `.dat`/test fixtures + benchmark models |
-| `client_projects.preexisting-…` | 4,522 | 59.1 GB | archived twin of `client_projects` → deduped |
+| private project archive (archived twin; `.preexisting-…`) | 4,522 | 59.1 GB | archived twin of private project archive → deduped |
 | `<project-archive>.preexisting-…` | 3,230 | 3.4 TB | archived twin of `<project-archive>` (OrcaFlex-heavy) → deduped |
-| `OGManufacturing` | 1,115 | 30.7 MB | **all `.venv`/site-packages noise** (not real CAD) |
+| manufacturing repository | 1,115 | 30.7 MB | **all `.venv`/site-packages noise** (not real CAD) |
 | `data` | 944 | 706 MB | |
-| `client_projects` | 815 | 170 MB | **active** client engineering CAD |
-| `eng-partner.preexisting-…` | 502 | 750 MB | deduped |
-| `seanation.preexisting-…` | 481 | 87 MB | deduped |
+| private project archive | 815 | 170 MB | **active** client engineering CAD |
+| engineering partner archive (archived twin; `.preexisting-…`) | 502 | 750 MB | deduped |
+| coiled-tubing project archive (archived twin; `.preexisting-…`) | 481 | 87 MB | deduped |
 | `<project-archive>` | 474 | 3.3 GB | **active** |
-| `rock-oil-field.preexisting-…` | 424 | 1.1 GB | no live twin → kept |
+| VIV analysis archive (archived twin; `.preexisting-…`) | 424 | 1.1 GB | no live twin → kept |
 | `gdrive` | 407 | 719 MB | mirrored Google-Drive corpus |
-| `epc-partner.preexisting-…` | 317 | 1.5 GB | no live twin → kept |
-| `aceengineer-admin` | 264 | 6.8 MB | |
+| EPC project archive (archived twin; `.preexisting-…`) | 317 | 1.5 GB | no live twin → kept |
+| administration repository | 264 | 6.8 MB | |
 | `WEC-Sim` | 258 | 88 MB | open-source tool (incl. the 10 NetCDF `.nc`) |
-| `seanation` | 225 | 269 MB | **active** subsea project |
-| `O&G-Standards` | 31 | 5.7 GB | |
-| `eng-partner` `acma-codes` `MoorDyn` `MoorPy` `openfast` `capytaine` `gmsh` … | <50 each | — | sim tools / minor |
+| coiled-tubing project archive | 225 | 269 MB | **active** subsea project |
+| standards reference archive | 31 | 5.7 GB | |
+| engineering partner archive standards reference archive `MoorDyn` `MoorPy` `openfast` `capytaine` `gmsh` … | <50 each | — | sim tools / minor |
 
-## Aggregate 4 — "signal" set, **excluding** the `ri/00_inbox` dump
+## Aggregate 4 — "signal" set, **excluding** the unclassified CAD inbox dump
 
 This is the curated engineering CAD that actually warrants automation analysis (deps + archived dups dropped,
 416k-file inbox excluded): **99,019 files.**
@@ -161,7 +161,7 @@ This is the curated engineering CAD that actually warrants automation analysis (
 | NetCDF (`.nc`) | 7 | 12.2 MB |
 
 > Most curated SolidWorks lives under `docs/disciplines/{misc,drilling}`; the subsea project repos
-> (`client_projects`, `<project-archive>`, `seanation`, `epc-partner`, `rock-oil-field`, `eng-partner`) are OrcaFlex-dominant.
+> (private project archive, `<project-archive>`, coiled-tubing project archive, EPC project archive, VIV analysis archive, engineering partner archive) are OrcaFlex-dominant.
 > Folder→domain→client mapping is in [`project-domain-map.md`](./project-domain-map.md) (#1007).
 
 ---
@@ -170,7 +170,7 @@ This is the curated engineering CAD that actually warrants automation analysis (
 
 1. **The automatable native-CAD surface is SolidWorks + AutoCAD + Inventor**, not CAM. There is no existing
    toolpath/NC corpus to mine — Phase-3 (shop-floor/CAM) automation would start from zero data here.
-2. **The `ri/00_inbox` dump is itself an automation target**: 416k unsorted Inventor/AutoCAD files = a sorting,
+2. **The unclassified CAD inbox dump is itself an automation target**: 416k unsorted Inventor/AutoCAD files = a sorting,
    de-duplication, BOM-extraction and naming-normalization problem before it is a modeling problem.
 3. **OrcaFlex (Python-scriptable) is the lowest-friction automation win** — large file base + a documented public
    API + already-present in-house `digitalmodel` tooling.

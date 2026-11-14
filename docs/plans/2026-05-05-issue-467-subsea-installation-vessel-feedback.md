@@ -59,5 +59,5 @@ This plan delivers Phase 1's gap (parametric sweep + quick-assess CLI) and Phase
 
 ## Open Questions
 
-- Are vessel cost numbers public-shareable? Default: use synthetic placeholder rates with a module-level note; real rates live in a `client_projects/` private file the loader will fall back to.
+- Are vessel cost numbers public-shareable? Default: use synthetic placeholder rates with a module-level note; real rates live in an approved file in the private project archive the loader will fall back to.
 - RAO file format: `.nc` (xarray) vs OrcaFlex YAML — pick xarray for portability, but emit a YAML round-trip helper for OrcaFlex compatibility.

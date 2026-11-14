@@ -34,13 +34,13 @@ domains_active: 7
 
 1. **Offshore Engineering Analysis** (digitalmodel, maturity 4) -- Production-grade OrcaFlex/OrcaWave/AQWA with 12-case WAMIT validation, modular model generation, 157 skills, 7 CI workflows
 2. **Data Infrastructure & Processing** (pdf-large-reader + worldenergydata, maturity 4) -- 215 tests at 93.6% coverage for large PDF streaming; global energy data aggregation with BSEE extraction and vessel hull classification
-3. **Business Automation** (aceengineer-admin, maturity 3) -- Invoice generation (85% time reduction), automated tax prep (Form 1120/K-1), 14 skills, 6 automation scripts
+3. **Business Automation** (administration repository, maturity 3) -- Invoice generation (85% time reduction), automated tax prep (Form 1120/K-1), 14 skills, 6 automation scripts
 
 ### Critical Gaps
 
 1. **Knowledge domain entirely nascent** -- All 3 KNOW repos are placeholders (maturity 1), no structured knowledge capture system exists
-2. **50% of repos lack test coverage** -- 12 repos have zero tests; engineering repos doris, contractor, seanation carry delivery risk
-3. **Weak cross-repo integration** -- assetutilities (shared library) consumed by only 1 of 23 repos; OrcaFlex integration duplicated across digitalmodel, <project-archive>, contractor
+2. **50% of repos lack test coverage** -- 12 repos have zero tests; engineering repos pipeline delivery repository, delivery partner, coiled-tubing project archive carry delivery risk
+3. **Weak cross-repo integration** -- assetutilities (shared library) consumed by only 1 of 23 repos; OrcaFlex integration duplicated across digitalmodel, <project-archive>, delivery partner
 
 ## Full Capability Table
 
@@ -49,22 +49,22 @@ domains_active: 7
 | **digitalmodel** | ENG | Digital twin modeling -- OrcaFlex/OrcaWave/AQWA, WAMIT validation | 4 | 1971+ files | 157 | 7 workflows |
 | **worldenergydata** | DATA | Global energy data aggregation, vessel hull classification, BSEE extraction | 4 | Yes (hypothesis) | 38 | 4 workflows |
 | **pdf-large-reader** | INFRA | Memory-efficient PDF processing for 100MB+ files, streaming architecture | 4 | 215 (93.6%) | 2 | -- |
-| **aceengineer-admin** | BIZ | Invoice automation (85% time save), tax prep, Form 1120/K-1 filing | 3 | Yes (80% target) | 14 | -- |
-| **aceengineer-website** | WEB | AI-native engineering portfolio, static site, GitHub Pages/Vercel | 3 | Jest | 4 | Vercel |
+| **administration repository** | BIZ | Invoice automation (85% time save), tax prep, Form 1120/K-1 filing | 3 | Yes (80% target) | 14 | -- |
+| **public portfolio repository** | WEB | AI-native engineering portfolio, static site, GitHub Pages/Vercel | 3 | Jest | 4 | Vercel |
 | **<project-archive>** | ENG | Client engineering project portfolio, OrcaFlex license management | 3 | -- | 6 | -- |
 | **assetutilities** | INFRA | Shared Python utilities -- web scraping, data processing, office automation | 3 | Yes | 13 | -- |
 | **pyproject-starter** | INFRA | Python package template (pyproject.toml, uv, pre-commit, hatchling) | 3 | Template | 5 | -- |
 | **assethold** | FIN | Stock analysis -- insider trading, institutional holders, options, technical indicators | 2 | Yes (pytest) | 6 | -- |
-| **achantas-data** | DATA | Personal/family data management (finance, health, travel, printer setup) | 2 | -- | -- | -- |
-| **client_projects** | BIZ | Client engagement tracking -- energy, pipeline, ML, legacy submodules | 2 | -- | -- | -- |
-| **doris** | ENG | Subsea pipeline design, structural analysis, DNV/API code compliance | 2 | -- | -- | -- |
-| **frontierdeepwater** | ENG | Deepwater exploration project framework, regulatory compliance | 2 | -- | -- | -- |
-| **OGManufacturing** | ENG | AI-powered CAD/CAM for O&G subsea equipment manufacturing | 2 | Basic | 5 | -- |
-| **rock-oil-field** | ENG | Oil field engineering, contract navigation, admin documentation | 2 | Coverage file | Yes | -- |
-| **sabithaandkrishnaestates** | FIN | Real estate investment tracking, corporate formation, tax filing | 2 | -- | 5 | -- |
-| **contractor** | ENG | Offshore subsea installation -- umbilical analysis, cathodic protection | 2 | -- | -- | -- |
-| **seanation** | ENG | Offshore drilling -- coiled tubing, reel handling, deepwater tech | 2 | -- | -- | -- |
-| **achantas-media** | KNOW | Media/asset storage (placeholder, RAG-to-skills feedback completed) | 1 | -- | -- | -- |
+| **personal data repository** | DATA | Personal/family data management (finance, health, travel, printer setup) | 2 | -- | -- | -- |
+| **private project archive** | BIZ | Client engagement tracking -- energy, pipeline, ML, legacy submodules | 2 | -- | -- | -- |
+| **pipeline delivery repository** | ENG | Subsea pipeline design, structural analysis, DNV/API code compliance | 2 | -- | -- | -- |
+| **deepwater project repository** | ENG | Deepwater exploration project framework, regulatory compliance | 2 | -- | -- | -- |
+| **manufacturing repository** | ENG | AI-powered CAD/CAM for O&G subsea equipment manufacturing | 2 | Basic | 5 | -- |
+| **VIV analysis archive** | ENG | Oil field engineering, contract navigation, admin documentation | 2 | Coverage file | Yes | -- |
+| **property repository** | FIN | Real estate investment tracking, corporate formation, tax filing | 2 | -- | 5 | -- |
+| **delivery partner** | ENG | Offshore subsea installation -- umbilical analysis, cathodic protection | 2 | -- | -- | -- |
+| **coiled-tubing project archive** | ENG | Offshore drilling -- coiled tubing, reel handling, deepwater tech | 2 | -- | -- | -- |
+| **personal media repository** | KNOW | Media/asset storage (placeholder, RAG-to-skills feedback completed) | 1 | -- | -- | -- |
 | **ai-native-traditional-eng** | KNOW | Engineering knowledge repository (placeholder, empty) | 1 | -- | -- | -- |
 | **hobbies** | KNOW | Personal knowledge management (arts, music theory) | 1 | -- | -- | -- |
 | **investments** | FIN | Investment tracking (placeholder, .gitignore only) | 1 | -- | -- | -- |
@@ -75,7 +75,7 @@ domains_active: 7
 
 ### Engineering Analysis (`ENG`)
 
-**Repos**: digitalmodel, <project-archive>, doris, frontierdeepwater, OGManufacturing, rock-oil-field, contractor, seanation, worldenergydata (partial)
+**Repos**: digitalmodel, <project-archive>, pipeline delivery repository, deepwater project repository, manufacturing repository, VIV analysis archive, delivery partner, coiled-tubing project archive, worldenergydata (partial)
 
 | Capability Area | Maturity | Lead Repo | Notes |
 |----------------|:--------:|-----------|-------|
@@ -87,14 +87,14 @@ domains_active: 7
 | Mooring design | 3 | digitalmodel | Chain database (R3-R5), router pattern |
 | VIV analysis | 3 | digitalmodel | Vortex-induced vibration assessment |
 | CAD/mesh generation | 3 | digitalmodel | GMSH, FreeCAD automation, BEMRosetta |
-| Subsea pipeline design | 2 | doris | MATLAB/Excel-based, DNV/API codes, no Python impl |
-| Offshore drilling | 2 | seanation | CT drilling, reel operations, Excel/VBA |
-| Manufacturing automation | 2 | OGManufacturing | AI-powered CAD/CAM concept, partial implementation |
-| Deepwater exploration | 2 | frontierdeepwater | Project framework, empty src/ |
+| Subsea pipeline design | 2 | pipeline delivery repository | MATLAB/Excel-based, DNV/API codes, no Python impl |
+| Offshore drilling | 2 | coiled-tubing project archive | CT drilling, reel operations, Excel/VBA |
+| Manufacturing automation | 2 | manufacturing repository | AI-powered CAD/CAM concept, partial implementation |
+| Deepwater exploration | 2 | deepwater project repository | Project framework, empty src/ |
 
 ### Data & Analytics (`DATA`)
 
-**Repos**: worldenergydata, achantas-data
+**Repos**: worldenergydata, personal data repository
 
 | Capability Area | Maturity | Lead Repo | Notes |
 |----------------|:--------:|-----------|-------|
@@ -103,7 +103,7 @@ domains_active: 7
 | BSEE offshore production data | 4 | worldenergydata | Binary datasets (~300MB), parallel refresh |
 | Metocean data | 3 | worldenergydata | Fetch, statistics, visualization skills |
 | Economic analysis | 3 | worldenergydata | NPV, sensitivity, production forecasting |
-| Personal data management | 2 | achantas-data | Finance, health, travel -- file-based |
+| Personal data management | 2 | personal data repository | Finance, health, travel -- file-based |
 
 ### Infrastructure & DevOps (`INFRA`)
 
@@ -120,43 +120,43 @@ domains_active: 7
 
 ### Business Operations (`BIZ`)
 
-**Repos**: aceengineer-admin, assethold, client_projects, teamresumes
+**Repos**: administration repository, assethold, private project archive, teamresumes
 
 | Capability Area | Maturity | Lead Repo | Notes |
 |----------------|:--------:|-----------|-------|
-| Invoice automation | 3 | aceengineer-admin | 85% time reduction, python-docx/ReportLab |
-| Tax preparation | 3 | aceengineer-admin | Form 1120, K-1, franchise tax automation |
-| Contract management | 3 | aceengineer-admin | OrcaFlex agreements, compliance docs |
-| Client project tracking | 2 | client_projects | Legacy submodules, consolidation in progress |
+| Invoice automation | 3 | administration repository | 85% time reduction, python-docx/ReportLab |
+| Tax preparation | 3 | administration repository | Form 1120, K-1, franchise tax automation |
+| Contract management | 3 | administration repository | OrcaFlex agreements, compliance docs |
+| Client project tracking | 2 | private project archive | Legacy submodules, consolidation in progress |
 | Team capability docs | 1 | teamresumes | Placeholder |
 
 ### Web & Frontend (`WEB`)
 
-**Repos**: aceengineer-website
+**Repos**: public portfolio repository
 
 | Capability Area | Maturity | Lead Repo | Notes |
 |----------------|:--------:|-----------|-------|
-| Engineering portfolio | 3 | aceengineer-website | Bootstrap 3.x, SEO, Vercel hosting |
-| Technical transparency | 3 | aceengineer-website | Diffraction/dynacard capabilities showcase |
+| Engineering portfolio | 3 | public portfolio repository | Bootstrap 3.x, SEO, Vercel hosting |
+| Technical transparency | 3 | public portfolio repository | Diffraction/dynacard capabilities showcase |
 
 ### Financial & Investments (`FIN`)
 
-**Repos**: assethold, investments, sabithaandkrishnaestates
+**Repos**: assethold, investments, property repository
 
 | Capability Area | Maturity | Lead Repo | Notes |
 |----------------|:--------:|-----------|-------|
 | Stock analysis | 2 | assethold | Dash/Flask UI, yfinance/Finnhub, options |
-| Real estate tracking | 2 | sabithaandkrishnaestates | CRE, corporate formation, tax filing |
+| Real estate tracking | 2 | property repository | CRE, corporate formation, tax filing |
 | Investment portfolio | 1 | investments | Empty placeholder |
 
 ### Knowledge & Documentation (`KNOW`)
 
-**Repos**: achantas-media, ai-native-traditional-eng, hobbies
+**Repos**: personal media repository, ai-native-traditional-eng, hobbies
 
 | Capability Area | Maturity | Lead Repo | Notes |
 |----------------|:--------:|-----------|-------|
 | Engineering knowledge base | 1 | ai-native-traditional-eng | Empty -- no content |
-| Media collection | 1 | achantas-media | RAG-to-skills feedback loop completed, no content |
+| Media collection | 1 | personal media repository | RAG-to-skills feedback loop completed, no content |
 | Personal learning | 1 | hobbies | Arts, music theory -- file-based |
 
 ## Cross-Domain Dependencies
@@ -165,11 +165,11 @@ domains_active: 7
 |--------|--------|------------|----------------|
 | worldenergydata | assetutilities | Git submodule for shared data processing | worldenergydata -> assetutilities |
 | digitalmodel <-> worldenergydata | -- | Tier 2 (eng reference) <-> Tier 1 (collection data) governance | Data residency policy |
-| aceengineer-admin -> <project-archive> | -- | Invoice/tax automation for consulting tracked in <project-archive> | Business ops cluster |
+| administration repository -> <project-archive> | -- | Invoice/tax automation for consulting tracked in <project-archive> | Business ops cluster |
 | pyproject-starter -> All Python repos | -- | Template for standardized pyproject.toml, uv, pytest | 16 Python repos |
-| digitalmodel + <project-archive> + contractor | -- | Engineering consulting cluster (all use OrcaFlex) | Shared solver licensing |
+| digitalmodel + <project-archive> + delivery partner | -- | Engineering consulting cluster (all use OrcaFlex) | Shared solver licensing |
 | worldenergydata -> digitalmodel | -- | Vessel hull models feed RAO mapping in hydrodynamic library | Hull geometry pipeline |
-| assethold -> aceengineer-admin | -- | Investment returns feed into tax preparation/filing | Financial reporting |
+| assethold -> administration repository | -- | Investment returns feed into tax preparation/filing | Financial reporting |
 
 ## Gap Analysis
 
@@ -185,21 +185,21 @@ domains_active: 7
 ### In Progress
 
 - Vessel hull classification and fleet expansion (WRK-135)
-- Manufacturing automation (OGManufacturing -- AI-powered CAD/CAM)
+- Manufacturing automation (manufacturing repository -- AI-powered CAD/CAM)
 - Stock analysis platform (assethold -- Dash UI, institutional tracking)
-- Knowledge indexing (aceengineer-admin Phase 1)
+- Knowledge indexing (administration repository Phase 1)
 
 ### Gaps
 
 - **Structured knowledge management** -- No system for capturing engineering decisions, lessons learned, or institutional knowledge across repos
 - **Cross-repo CI/CD** -- Only 3 repos have GitHub Actions; no unified pipeline or quality gate
-- **Shared OrcaFlex SDK** -- OrcaFlex integration duplicated in digitalmodel, <project-archive>, contractor with no shared library
+- **Shared OrcaFlex SDK** -- OrcaFlex integration duplicated in digitalmodel, <project-archive>, delivery partner with no shared library
 - **API layer** -- No FastAPI/REST endpoints exposing engineering capabilities programmatically (worldenergydata has schema but no deployed API)
 - **Monitoring/observability** -- No unified health dashboard, error tracking, or usage metrics across repos
 
 ### At Risk
 
-- **doris, contractor, seanation** -- Active engineering consulting repos with zero tests and no CI/CD; delivery risk for client projects
+- **pipeline delivery repository, delivery partner, coiled-tubing project archive** -- Active engineering consulting repos with zero tests and no CI/CD; delivery risk for client projects
 - **6 nascent repos** -- Maintenance overhead with no value delivery; should be archived or activated within 30 days
 
 ## Recommendations
@@ -207,7 +207,7 @@ domains_active: 7
 | # | Priority | Recommendation | Approach | Target |
 |---|----------|---------------|----------|--------|
 | 1 | High | Archive 6 nascent repos or set 30-day activation deadline | Review with stakeholder; archive via `git archive` + README tombstone | 2026-03-15 |
-| 2 | High | Add pytest + CI to doris, contractor, seanation | Use pyproject-starter template; add GitHub Actions ci.yml | 2026-03-31 |
+| 2 | High | Add pytest + CI to pipeline delivery repository, delivery partner, coiled-tubing project archive | Use pyproject-starter template; add GitHub Actions ci.yml | 2026-03-31 |
 | 3 | Medium | Extract shared OrcaFlex utilities to assetutilities | Identify common patterns (model loading, post-processing, RAO extraction) | 2026-04-30 |
 | 4 | Medium | Consolidate duplicated skills into workspace-hub shared library | Audit 157 + 38 + 14 + 13 skills for overlap; deduplicate | 2026-04-15 |
 | 5 | Medium | Deploy unified CI/CD pipeline across all active repos | GitHub Actions reusable workflows in workspace-hub/.github/ | 2026-04-30 |
@@ -237,14 +237,14 @@ domains_active: 7
 - **CLI**: `pdf-large-reader`
 - **Recent**: Table extraction fixes, robust extraction documentation
 
-### aceengineer-admin (BIZ, Maturity 3)
+### administration repository (BIZ, Maturity 3)
 - **Tech**: Python 3.11+, pandas, python-docx, ReportLab, Click
 - **Skills**: 14
 - **Tests**: pytest with 80% coverage target
 - **Scripts**: 6 automation scripts
 - **Recent**: OrcaFlex agreement drafting, knowledge indexing Phase 1
 
-### aceengineer-website (WEB, Maturity 3)
+### public portfolio repository (WEB, Maturity 3)
 - **Tech**: HTML5, CSS3, Bootstrap 3.x, JavaScript, jQuery, Vercel
 - **Skills**: 4
 - **Tests**: Jest
