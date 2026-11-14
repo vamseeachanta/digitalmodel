@@ -362,7 +362,7 @@
   {
     "id": "wall-thickness-explorer",
     "title": "Wall-thickness multi-code explorer",
-    "summary": "One 12.75-inch X65 deepwater line sized under all nine registered design codes at once — a wall-thickness slider drives each code's governing utilization against the 1.0 limit, with the minimum wall to pass per code. Every point is a live WallThicknessAnalyzer evaluation (369 in total), not a mock.",
+    "summary": "One 12.75-inch X65 deepwater line sized under all nine registered design codes at once — a wall-thickness slider drives each code's governing utilization against the 1.0 limit, with the minimum wall to pass per code. Every point is a live WallThicknessAnalyzer evaluation (369 in total), not a mock. Pressure-only sweep with zero effective tension and zero bending moment; combined tension and bending are not evaluated.",
     "key_figure": {
       "value": "9",
       "label": "design codes"

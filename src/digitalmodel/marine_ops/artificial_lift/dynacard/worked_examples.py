@@ -20,7 +20,7 @@ from .constants import BUCKLING_DETECTION_LOAD_THRESHOLD_LBS
 from .diagnostic_plate import _SOURCE_SHA256, load_diagnostic_plate
 from .diagnostics import (
     MODEL_PATH, SHAPE_MODEL_PATH, FeatureExtractor, PumpDiagnostics,
-    _classify_shape_with_model, _predict_from_trees,
+    _classify_shape_with_model, _predict_from_trees, read_model_bytes,
 )
 from .models import CardData, DynacardAnalysisContext
 from .power_consumption import PowerConsumptionCalculator
@@ -43,6 +43,9 @@ class _PinnedDiagnostics(PumpDiagnostics):
 # analysis shifted example 4's fluid load by 15 lbf.
 SURFACE_POSITION_DECIMALS = 4
 SURFACE_LOAD_DECIMALS = 2
+# Precision-effect deltas are reported to 0.000001 lbf and 0.000001 percentage
+# points. Significant digits alone preserve cancellation noise near zero.
+PRECISION_EFFECT_DECIMALS = 6
 
 
 def published_surface_card(card: CardData) -> CardData:
@@ -54,7 +57,7 @@ def published_surface_card(card: CardData) -> CardData:
 
 
 def example_well() -> dict:
-    """Return independent dictionaries of the fixed ASSUMED oilfield basis."""
+    """Return assumed inputs based on previous experience, not plate measurements."""
     return {
         "api14": "PLATE-EXAMPLE", "spm": 6.42, "fluid_density": 63.237,
         "pump": {"diameter": 1.500, "depth": 4844.0},
@@ -105,8 +108,8 @@ def _round_trip(actual: CardData, reference: CardData) -> dict:
         "stroke_difference_in": float(np.ptp(ax) - xr),
         "alignment": "compare_cards direction and joint position/load phase objective",
         "closing_endpoint": "Duplicate computed closing endpoint omitted for comparison only",
-        "tolerance_pct": 3.0,
-        "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom",
+        "tolerance_pct": float(100 * np.max(np.abs(np.roll(ry, -1) - ry)) / yr),
+        "tolerance_basis": "One source-sample load increment: 100 * max(abs(F[i+1]-F[i])) / range(F), including closure; illustrative sampling resolution, not a field acceptance limit",
     }
 
 
@@ -172,8 +175,8 @@ def _published_precision_effect(unrounded: CardData, published: CardData) -> dic
                        list(result.fillage.corners)))
     (load_u, fill_u, corners_u), (load_p, fill_p, corners_p) = values
     return {
-        "fluid_load_difference_lbf": load_u - load_p,
-        "fillage_difference_pct": fill_u - fill_p,
+        "fluid_load_difference_lbf": round(load_u - load_p, PRECISION_EFFECT_DECIMALS) + 0.0,
+        "fillage_difference_pct": round(fill_u - fill_p, PRECISION_EFFECT_DECIMALS) + 0.0,
         "corners_changed": corners_u != corners_p,
     }
 
@@ -222,7 +225,7 @@ def build_examples(workbook_path: str | Path) -> list[dict]:
     manifest = json.loads(workbook.with_name("manifest.json").read_text(encoding="utf-8"))
     if manifest["file"]["sha256"] != _SOURCE_SHA256:
         raise ValueError("Manifest does not identify the pinned workbook")
-    model_bytes = {"shipped": MODEL_PATH.read_bytes(), "shape_only": SHAPE_MODEL_PATH.read_bytes()}
+    model_bytes = {"shipped": read_model_bytes(MODEL_PATH), "shape_only": read_model_bytes(SHAPE_MODEL_PATH)}
     models = {key: json.loads(raw) for key, raw in model_bytes.items()}
     digests = {key: hashlib.sha256(raw).hexdigest() for key, raw in model_bytes.items()}
     return [_build_example(c, i, manifest, models, digests) for i, c in enumerate(curves, 1)]
@@ -248,7 +251,8 @@ def _basis() -> dict:
         "production": ({"runtime_hours": context.input_params.runtime, "pump_efficiency_pct": 100 * context.pump.efficiency}, "InputParameters defaults runtime to 24 h (reported source: card); no measured runtime or efficiency. Production = net displacement * runtime / 24; reported efficiency is not a multiplier."),
         "solver_defaults": ({"method": "everitt_jennings", "nodes": 200, "viscosity_cp": 10.0, "tubing_id_in": 2.441, "zero_surface_position_datum": True}, "Forward and default inverse use matching grids, damping defaults and vertical survey; inverse output smoothing remains enabled."),
     }
-    return {key: {"status": "ASSUMED", "value": value, "reason": reason}
+    return {key: {"status": "ASSUMED", "value": value, "reason": reason,
+                  "provenance": "assumed, based on previous experience"}
             for key, (value, reason) in rows.items()}
 
 
@@ -278,6 +282,8 @@ def results_document(records: list[dict]) -> dict:
     return _rounded({
         "schema_version": 1, "source": source, "basis": _basis(),
         "model_digests": digests,
+        "model_digest_basis": "SHA-256 of decompressed inference JSON bytes",
+        "precision_effect_resolution": {"fluid_load_lbf": 1e-6, "fillage_percentage_points": 1e-6},
         "examples": records,
     })
 
