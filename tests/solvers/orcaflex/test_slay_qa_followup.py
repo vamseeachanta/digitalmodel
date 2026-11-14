@@ -36,6 +36,8 @@ def test_end_a_contact_uses_support_nearest_measured_position(end_x, forces, acc
     """Moving End A shall use the new support; zero resultant means no contact."""
     reaction = slay_probe.end_a_support_reaction(end_x, [-31.1, -36.1, -41.1], forces)
     result = slay_probe.evaluate_static_acceptance(
+        diameter=TABLE["basis"]["pipeline"]["dimensions"]["outer_diameter"],
+        radius=TABLE["basis"]["equipment"]["stinger"]["radius"],
         wire_length=10, end_a_reaction=reaction, last_support_force=0,
         grounded_tension=[0, 1], overbend_strain=0.00267,
         lift_off_arc=55, departure_angle=21,
@@ -47,6 +49,8 @@ def test_end_a_contact_uses_support_nearest_measured_position(end_x, forces, acc
 def test_zero_end_a_resultant_cannot_pass_acceptance():
     with pytest.raises(ValueError, match="End A.*contact"):
         slay_probe.assert_static_acceptance(
+            diameter=TABLE["basis"]["pipeline"]["dimensions"]["outer_diameter"],
+            radius=TABLE["basis"]["equipment"]["stinger"]["radius"],
             wire_length=10, end_a_reaction=0, last_support_force=0,
             grounded_tension=[0], overbend_strain=0.00267,
             lift_off_arc=55, departure_angle=21,

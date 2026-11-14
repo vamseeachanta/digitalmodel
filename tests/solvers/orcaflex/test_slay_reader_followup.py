@@ -45,6 +45,7 @@ def test_d0_t0_shaped_reader_keeps_rejected_rows(last_force, failed):
     )
     assert min(reading["grounded_tension"]) == -4494.19
     result = evaluate_static_acceptance(
+        diameter=0.762, radius=150,
         wire_length=10, end_a_reaction=forces[0], last_support_force=forces[-1],
         grounded_tension=reading["grounded_tension"],
         # Synthetic stiffness scaling keeps overbend below the existing S1 screen.
