@@ -28,7 +28,7 @@ _LINE_TYPE_FIELDS = {
     "poisson_ratio": "PoissonRatio",
     "drag_coefficient": "Cd",
     "added_mass_coefficient": "Ca",
-    "axial_drag_coefficient": "CdAxial",
+    "axial_drag_coefficient": "Cd",
     "contact_diameter": "OuterContactDiameter",
     "allowable_tension": "AllowableTension",
     "stress_od": "StressOD",
@@ -36,6 +36,26 @@ _LINE_TYPE_FIELDS = {
     "seabed_lateral_friction": "SeabedLateralFrictionCoefficient",
     "seabed_axial_friction": "SeabedAxialFrictionCoefficient",
 }
+# Native list-valued line-type data: field -> (data name, cell index, width).
+# Native saves carry EI as [x, y] and Cd/Ca as [normal x, normal y, axial]; ~ in
+# the y cell means "same as x". The list is kept as a layout template. The
+# typed riser carries one isotropic value per data name, so an explicit y cell
+# must equal x and is edited together with it.
+_CELL_FIELDS = {
+    "bending_stiffness": ("EI", 0, 2),
+    "drag_coefficient": ("Cd", 0, 3),
+    "axial_drag_coefficient": ("Cd", 2, 3),
+    "added_mass_coefficient": ("Ca", 0, 3),
+}
+
+
+def _check_isotropic(native: str, cells: list) -> None:
+    """Reject an explicit y cell (cell 1) that differs from the x cell."""
+    if len(cells) > 1 and cells[1] is not None and cells[1] != cells[0]:
+        raise ValueError(
+            f"Anisotropic {native} {cells} (y cell differs from x) "
+            f"is not supported by the riser schema"
+        )
 _VESSEL_FIELDS = {
     "type_name": "VesselType",
     "position": "InitialPosition",
@@ -80,7 +100,12 @@ def _table(properties: dict, required: set[str]) -> tuple[str, list[str], list]:
 
 
 def _extract_scalars(obj: dict, fields: dict[str, str]) -> dict[str, Any]:
-    """Move effective scalar properties, respecting generic typed precedence."""
+    """Move effective scalar properties, respecting generic typed precedence.
+
+    List-valued native data in ``_CELL_FIELDS`` stay in ``properties`` as a
+    layout template; only the mapped cell is extracted. ``EI``, ``Cd`` and
+    ``Ca`` lists must be isotropic (y cell ``~`` or equal to the x cell).
+    """
     properties = obj.setdefault("properties", {})
     effective = dict(properties)
     for field, native in TYPED_FIELD_MAP.items():
@@ -90,8 +115,20 @@ def _extract_scalars(obj: dict, fields: dict[str, str]) -> dict[str, Any]:
     for field, native in fields.items():
         if native not in effective:
             continue
-        extracted[field] = effective[native]
-        properties.pop(native, None)
+        value = effective[native]
+        if field in _CELL_FIELDS and isinstance(value, list):
+            _, index, width = _CELL_FIELDS[field]
+            if len(value) > width:
+                raise ValueError(f"Invalid {native} list: {value}")
+            _check_isotropic(native, value)
+            properties[native] = value  # layout template
+            if index < len(value) and value[index] is not None:
+                extracted[field] = value[index]
+        elif field in _CELL_FIELDS and _CELL_FIELDS[field][1] != 0:
+            continue  # no axial cell in a scalar native value
+        else:
+            extracted[field] = value
+            properties.pop(native, None)
         for generic_field, generic_native in TYPED_FIELD_MAP.items():
             if generic_native == native:
                 obj.pop(generic_field, None)
@@ -162,15 +199,44 @@ def extract_riser(generic: dict) -> Riser:
 
 
 def _restore_scalars(obj: dict, typed: Any, fields: dict[str, str]) -> None:
-    """Overlay authored typed fields only; schema defaults add no native keys."""
+    """Overlay authored typed fields only; schema defaults add no native keys.
+
+    Fields in ``_CELL_FIELDS`` replace their cell of a native list template.
+    Isotropic edits of ``EI``, normal ``Cd`` and ``Ca`` update both explicit
+    x and y cells, retaining ``~`` when the y cell inherits x; a template with
+    unequal explicit x and y cells is rejected, whichever cell is edited.
+    An axial value without a list template becomes ``[normal, ~, axial]``.
+    A list whose first (normal) cell would be undefined is rejected rather
+    than emitted as ``[~, ~, axial]``.
+    """
     properties = obj.setdefault("properties", {})
     obj["name"] = typed.name
     for field, native in fields.items():
-        if field in typed.model_fields_set:
-            properties[native] = getattr(typed, field)
-            for generic_field, generic_native in TYPED_FIELD_MAP.items():
-                if generic_native == native:
-                    obj.pop(generic_field, None)
+        if field not in typed.model_fields_set:
+            continue
+        value = getattr(typed, field)
+        current = properties.get(native)
+        if field in _CELL_FIELDS and (isinstance(current, list) or _CELL_FIELDS[field][1]):
+            _, index, width = _CELL_FIELDS[field]
+            cells = list(current) if isinstance(current, list) else [current]
+            cells += [None] * (width - len(cells))
+            # The typed value is isotropic: an explicit y cell must equal x in
+            # the template, and takes the edited x value too.
+            _check_isotropic(native, cells)
+            cells[index] = value
+            if index == 0 and cells[1] is not None:
+                cells[1] = value
+            if cells[0] is None:
+                raise ValueError(
+                    f"{native} cell {index} is authored but the normal (first) "
+                    f"cell is undefined; author the normal value as well"
+                )
+            properties[native] = cells
+        else:
+            properties[native] = value
+        for generic_field, generic_native in TYPED_FIELD_MAP.items():
+            if generic_native == native:
+                obj.pop(generic_field, None)
 
 
 def render_riser(riser: Riser, fallback: GenericModel) -> GenericModel:
