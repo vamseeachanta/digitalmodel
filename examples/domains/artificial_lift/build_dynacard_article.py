@@ -38,7 +38,7 @@ REPO = "https://github.com/vamseeachanta/digitalmodel"
 # worked examples with the browser application (the test checks that the linked app,
 # worked-example and fixture files have not changed since APP_COMMIT).
 REPORT_COMMIT = "7d02ae07248b038dcdec5e7097565c02fcd152f8"
-APP_COMMIT = "0fa16a781fc50cc4b249ce6f9c107bb8b80ea00a"
+APP_COMMIT = "f5c0009c6dd9e009cdac636d3dfbd7ae0ec1f79c"
 APP_VERSION_DATE = "14 Nov 2026"  # UTC date of APP_COMMIT
 # Commit that added figure-1-cards.csv; the test checks the file has not changed since.
 CARDS_COMMIT = "242f931efefa8facbe337502a2cdb4cebe08fd78"
