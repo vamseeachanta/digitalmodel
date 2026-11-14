@@ -1,0 +1,10 @@
+basename: flange_analysis
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+flange_analysis: {}
