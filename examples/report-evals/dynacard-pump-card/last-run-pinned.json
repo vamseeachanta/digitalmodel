@@ -2,8 +2,8 @@
  "schema_version": "1.0",
  "report_id": "dynacard-pump-card",
  "mode": "rebuild",
- "started_utc": "2026-11-14T10:45:34Z",
- "finished_utc": "2026-11-14T10:45:48Z",
+ "started_utc": "2026-11-14T10:52:25Z",
+ "finished_utc": "2026-11-14T10:52:40Z",
  "grade": "PASS",
  "pinned_commit": "c2a62ac98957044e6b34bf0c0b0c9d19900dd4fc",
  "artifacts": {
@@ -15,8 +15,8 @@
  "platform": "Windows",
  "context": {
   "revision": "candidate",
-  "repo_head": "da4cdbb5e9ae1bf9955d55fa66a765889a70ea74",
-  "digitalmodel_head": "da4cdbb5e9ae1bf9955d55fa66a765889a70ea74",
+  "repo_head": "f2cacba6eab1d9296e2e629fe1cf47650e0ff7cd",
+  "digitalmodel_head": "f2cacba6eab1d9296e2e629fe1cf47650e0ff7cd",
   "digitalmodel_file": "src/digitalmodel/__init__.py",
   "code_mode": "candidate",
   "sha256": {
@@ -97,6 +97,7 @@
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/visualization/plotly_gallery.py": "c0f6016c73864c929ea7f94593db44f1db49d2a4f33c671cef5410ef51d92570",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/visualization/rod_pump_schematic.py": "ec5f8d52e0d742a7ce190fa5d72e49ea4340e695ca68619e6bb53224a55f0dd0",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/visualization/svg_primitives.py": "2518984e341b4cc77a5856d247b6475bb445b7b7a183cd36c69f3e4e6d70f4ae",
+   "src/digitalmodel/marine_ops/artificial_lift/dynacard/worked_examples.py": "b3991cce4a15b13fbd87967049759572ad808b8da61de03478bb787b3bd0f919",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/data/dynacard_classifier.json": "c3612e1f31aad740b4ebc5f81e34bf09ae7d21e42f1f18915c2a76c94337a40c",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/data/dynacard_shape_classifier.json.gz": "17c6969ba9f982f570a8888000562548f16375ab29367f8d12b2ea4d3e11a5cd",
    "src/digitalmodel/marine_ops/artificial_lift/dynacard/data/example_cards.json": "19f33c77593a60fe08387ff88c5f8ef929725d40e83e2ff5ee49f3be68915355",
@@ -110,7 +111,7 @@
   },
   "shape_hypothesis_status": "HYPOTHESIS",
   "published_example_status": "NOT_EVALUATED",
-  "artifacts_repo_head": "da4cdbb5e9ae1bf9955d55fa66a765889a70ea74",
+  "artifacts_repo_head": "f2cacba6eab1d9296e2e629fe1cf47650e0ff7cd",
   "artifacts_dirty": false,
   "record_note": "Candidate evidence replaces an obsolete pinned run; pinned reproduction is not established for corrected values."
  },
