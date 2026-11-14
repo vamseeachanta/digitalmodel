@@ -119,7 +119,80 @@
    }
   ]
  },
+ "mass_basis": {
+  "system_mass": 20266852.231247578,
+  "published_system_mass": 20093000.0,
+  "deviation": 0.008652378004657235,
+  "components": {
+   "platform": {
+    "model": 17838000.0,
+    "published": 17839000.0
+   },
+   "tower": {
+    "model": 1483082.5369741758,
+    "published": 1263000.0
+   },
+   "rna": {
+    "model": 945769.6942734006,
+    "published": 991000.0
+   }
+  },
+  "published_draft_heave": 0.0,
+  "draft_tolerance": 0.05,
+  "still_water_heave": -0.38167300353670075,
+  "still_water_pitch_deg": -1.4170646934098188,
+  "still_water_heave_at_published_mass": -0.003986895301371902,
+  "still_water_pitch_deg_at_published_mass": -1.4042768387147897,
+  "fairlead_tensions_at_published_mass": [
+   2426470.528038162,
+   2440780.7280457728,
+   2440780.7280457728
+  ],
+  "fairlead_tensions_undisplaced": [
+   2435559.7051367383,
+   2435583.510249032,
+   2435583.510249032
+  ],
+  "vertical_pretension": 6060238.954578817,
+  "published_vertical_pretension": 6065000.0,
+  "draft_at_model_mass_within_tolerance": false,
+  "draft_at_published_mass_within_tolerance": true,
+  "disposition": "The model's system mass is 0.87 % above Allen et al. (2020), NREL/TP-5000-76773 Table 1: the workbook tower integrates to 1,483.1 t against 1,263 t, and the workbook RNA row gives 945.8 t against 991 t. The published design floats at its 20 m draft; the model sinks 0.382 m, outside the 0.05 m draft tolerance. With only the mass set to Table 1 the heave is -0.004 m, inside it. The sinkage is a consequence of the mass basis, not a property of the published design; the source discrepancy is unresolved."
+ },
  "comparisons": [
+  {
+   "quantity": "System mass",
+   "unit": "kg",
+   "computed": 20266852.231247578,
+   "comparator": 20093000.0,
+   "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 1",
+   "tolerance": 0.01,
+   "tolerance_kind": "relative",
+   "deviation": 0.008652378004657235,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Still-water heave with the system mass of Allen Table 1",
+   "unit": "m",
+   "computed": -0.003986895301371902,
+   "comparator": 0.0,
+   "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, section 1 and Table 1 (20 m draft, 6,065 kN vertical pretension)",
+   "tolerance": 0.05,
+   "tolerance_kind": "absolute",
+   "deviation": -0.003986895301371902,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Mooring vertical pretension, all lines",
+   "unit": "N",
+   "computed": 6060238.954578817,
+   "comparator": 6065000.0,
+   "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, section 1",
+   "tolerance": 0.02,
+   "tolerance_kind": "relative",
+   "deviation": -0.0007850033670540989,
+   "within_tolerance": true
+  },
   {
    "quantity": "Displaced volume",
    "unit": "m3",
@@ -127,6 +200,7 @@
    "comparator": 20206.0,
    "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 2",
    "tolerance": 0.01,
+   "tolerance_kind": "relative",
    "deviation": 1.726665346932198e-05,
    "within_tolerance": true
   },
@@ -137,6 +211,7 @@
    "comparator": 4470000.0,
    "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 3",
    "tolerance": 0.02,
+   "tolerance_kind": "relative",
    "deviation": -0.0037040006667227636,
    "within_tolerance": true
   },
@@ -147,6 +222,7 @@
    "comparator": 2190000000.0,
    "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 3",
    "tolerance": 0.03,
+   "tolerance_kind": "relative",
    "deviation": 0.0015859205021688382,
    "within_tolerance": true
   },
@@ -157,6 +233,7 @@
    "comparator": 2437000.0,
    "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 6",
    "tolerance": 0.02,
+   "tolerance_kind": "relative",
    "deviation": -0.009078043456997411,
    "within_tolerance": true
   },
@@ -167,6 +244,7 @@
    "comparator": 2437000.0,
    "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 6",
    "tolerance": 0.02,
+   "tolerance_kind": "relative",
    "deviation": -0.0031565953317137683,
    "within_tolerance": true
   },
@@ -177,7 +255,41 @@
    "comparator": 2437000.0,
    "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 6",
    "tolerance": 0.02,
+   "tolerance_kind": "relative",
    "deviation": -0.0031565953317137683,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Fairlead tension at the undisplaced position, line 1",
+   "unit": "N",
+   "computed": 2435559.7051367383,
+   "comparator": 2437000.0,
+   "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 6",
+   "tolerance": 0.02,
+   "tolerance_kind": "relative",
+   "deviation": -0.0005910114334270612,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Fairlead tension at the undisplaced position, line 2",
+   "unit": "N",
+   "computed": 2435583.510249032,
+   "comparator": 2437000.0,
+   "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 6",
+   "tolerance": 0.02,
+   "tolerance_kind": "relative",
+   "deviation": -0.0005812432297775243,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Fairlead tension at the undisplaced position, line 3",
+   "unit": "N",
+   "computed": 2435583.510249032,
+   "comparator": 2437000.0,
+   "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 6",
+   "tolerance": 0.02,
+   "tolerance_kind": "relative",
+   "deviation": -0.0005812432297775243,
    "within_tolerance": true
   },
   {
@@ -187,6 +299,7 @@
    "comparator": 142.85714285714286,
    "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 11 (frequency to 0.001 Hz, inverted)",
    "tolerance": 0.1,
+   "tolerance_kind": "relative",
    "deviation": -0.052610502359574776,
    "within_tolerance": true
   },
@@ -197,6 +310,7 @@
    "comparator": 135.0622371098016,
    "comparator_source": "repository quasi-static analysis (#2473), docs/reports/fowt-volturnus-mooring-analysis.manifest.json",
    "tolerance": 0.02,
+   "tolerance_kind": "relative",
    "deviation": 0.0020666005683477534,
    "within_tolerance": true
   },
@@ -207,6 +321,7 @@
    "comparator": 20.408163265306122,
    "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 11 (frequency to 0.001 Hz, inverted)",
    "tolerance": 0.05,
+   "tolerance_kind": "relative",
    "deviation": 0.0021465503344773327,
    "within_tolerance": true
   },
@@ -217,6 +332,7 @@
    "comparator": 20.38763719617351,
    "comparator_source": "repository quasi-static analysis (#2473), docs/reports/fowt-volturnus-mooring-analysis.manifest.json",
    "tolerance": 0.02,
+   "tolerance_kind": "relative",
    "deviation": 0.0031555014539839062,
    "within_tolerance": true
   },
@@ -227,6 +343,7 @@
    "comparator": 27.77777777777778,
    "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 11 (frequency to 0.001 Hz, inverted)",
    "tolerance": 0.05,
+   "tolerance_kind": "relative",
    "deviation": 0.011456011560806558,
    "within_tolerance": true
   },
@@ -237,6 +354,7 @@
    "comparator": 27.927565893216368,
    "comparator_source": "repository quasi-static analysis (#2473), docs/reports/fowt-volturnus-mooring-analysis.manifest.json",
    "tolerance": 0.02,
+   "tolerance_kind": "relative",
    "deviation": 0.00603111737561279,
    "within_tolerance": true
   },
@@ -247,6 +365,7 @@
    "comparator": 90.90909090909092,
    "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 11 (frequency to 0.001 Hz, inverted)",
    "tolerance": 0.1,
+   "tolerance_kind": "relative",
    "deviation": -0.02351993618527993,
    "within_tolerance": true
   },
@@ -257,6 +376,7 @@
    "comparator": 88.54995929120521,
    "comparator_source": "repository quasi-static analysis (#2473), docs/reports/fowt-volturnus-mooring-analysis.manifest.json",
    "tolerance": 0.02,
+   "tolerance_kind": "relative",
    "deviation": 0.002495264851736907,
    "within_tolerance": true
   },
@@ -267,6 +387,7 @@
    "comparator": 23.56418039635904,
    "comparator_source": "repository quasi-static analysis (#2473), docs/reports/fowt-volturnus-mooring-analysis.manifest.json",
    "tolerance": 0.05,
+   "tolerance_kind": "relative",
    "deviation": 0.00020785254001191012,
    "within_tolerance": true
   }
