@@ -88,7 +88,7 @@ Simple reader layout (see reader-card-template.json for the complete public card
   false is rejected rather than silently interpreted as an anchored installation.
 - survey: optional object with measured_depth_ft, inclination_deg and azimuth_deg
   arrays, paired from surface through the rod string, with increasing measured depth.
-  The default solver retains the survey; the frequency-domain comparison remains vertical.
+  Both solvers treat the well as vertical; the survey is recorded and inclination flagged.
 Unknown keys are rejected. A repeated closing position/load pair is excluded from
 frequency-domain harmonic counting. The reader reports an error when the usable
 sample count is insufficient; source timing cannot be established from loop shape.
@@ -101,7 +101,7 @@ Ask me before you go on if:
 - Load-cell calibration date and method: Every pump load is the surface load less the buoyant rod weight, so a load-cell error passes straight into it. If not supplied, the surface loads are ASSUMED correct as recorded. On the public example well a 1 % error in it changes: pump stroke −0.29, fluid load 1.24 (stepped), fillage 0.47, maximum pump load 2.57, displacement 0.18 (% per %). The effect of a zero offset is NOT_EVALUATED. Supply: Give the date of the last calibration and whether the cell was zeroed unloaded.
 - Fluid density, or water cut with oil and water densities: Fluid density sets the buoyancy of the rod string. If not supplied, fluid density is ASSUMED 62.4 lb/ft3 (fresh water). On the public example well a 1 % error in it changes: pump stroke 0.00, fluid load 0.00, fillage 0.00, maximum pump load 0.22, displacement 0.00 (% per %). Supply: Give the produced-fluid density or the water cut and the two phase densities.
 - Whether the tubing is anchored: Unanchored tubing stretches with the fluid load and shortens the plunger travel relative to the barrel. If not supplied, anchored tubing is ASSUMED; pump stroke, fillage and displacement rest on it. Unanchored tubing is not modelled and its effect is NOT_EVALUATED. Supply: State anchored or unanchored, with the anchor depth.
-- Deviation survey: In a deviated well, rod weight and friction act along the well path. If not supplied, a vertical well is ASSUMED. The frequency-domain cross-check is always vertical. The effect of deviation is NOT_EVALUATED without a survey. Supply: Give measured depth, inclination and azimuth from surface to the pump.
+- Deviation survey: In a deviated well, rod weight and friction act along the well path. If not supplied, a vertical well is ASSUMED. Both solvers treat the well as vertical; a supplied survey is recorded and any inclination is flagged. The effect of deviation is NOT_EVALUATED. Supply: Give measured depth, inclination and azimuth from surface to the pump.
 - Tubing pressure: Optional. It is used for pump intake pressure, which this report does not give. If not supplied, 100 psi is ASSUMED; none of the reported card results uses it. Supply: Read it at the wellhead.
 
 Use these public-case sensitivity factors to explain which results missing or
@@ -122,7 +122,7 @@ Sensitivity factors on the public example well: % change in the result per 1 % c
 
 You cannot:
 - Name a pump fault with a stated field accuracy: every shape label is a HYPOTHESIS; field accuracy is NOT_EVALUATED because independent labelled field cards are unavailable.
-- Analyse a deviated well as vertical without saying so; the frequency-domain cross-check is vertical.
+- Model deviation: both solvers treat the well as vertical; a survey with inclination is flagged "deviation present, vertical approximation applied" and its effect is NOT_EVALUATED.
 - Correct a mis-calibrated load cell without independent calibration evidence.
 - Give production from a card alone: operating runtime and plunger/valve slip are needed.
 - Analyse a well with unanchored tubing: tubing movement is not modelled and a card marked unanchored is rejected.

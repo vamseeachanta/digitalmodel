@@ -43,13 +43,29 @@ def simple_inputs(ctx):
             'tubing_pressure_psi': ctx.input_params.tubing_pressure if ctx.input_params else 100}
 
 
-def assumptions(ctx, raw):
+def _vertical_basis(raw, deviation):
+    """Both solvers are vertical; say what the supplied survey contains."""
+    maximum = deviation['max_inclination_deg']
+    if maximum is None:
+        survey = 'No survey was supplied; a vertical well is ASSUMED.'
+    elif maximum == 0:
+        survey = ('The supplied survey has zero inclination.' if 'surface_card' in raw else
+                  'The public example well record gives a two-station survey with zero inclination.')
+    else:
+        survey = (f'The supplied survey reaches {maximum:g} degrees inclination; the default card is '
+                  f'flagged "{"; ".join(deviation["solver_flags"])}" and the effect of deviation is NOT_EVALUATED.')
+    return ('The default solver receives the survey but runs with along-hole gravity and contact '
+            'friction off, so inclination does not change its card; the frequency-domain '
+            'cross-check is vertical. ' + survey)
+
+
+def assumptions(ctx, raw, deviation):
     rods = rod_string_from_context(ctx)
     damping = estimate_damping_profile(rods.diameters, rods.coupling_diameters, rods.lengths,
                                        rods.densities, ctx.pump.diameter * U.IN2M, 2.441 * U.IN2M, 0.01)
     rows = [
-        ('vertical_well', 'Vertical cross-check; default uses supplied survey or vertical fallback',
-         'Deviation is not modelled in the frequency-domain cross-check. The public example well record gives a two-station survey with zero inclination.'),
+        ('vertical_well', 'Vertical well in both solvers; inclination is flagged, not modelled',
+         _vertical_basis(raw, deviation)),
         ('pump_boundary', {'rod_length_ft': ctx.rod_length, 'pump_depth_ft': ctx.pump.depth,
                            'unrepresented_length_ft': ctx.pump.depth - ctx.rod_length},
          'The supplied rod endpoint is identified with the pump boundary; qualification at the stated pump depth requires a reconciled as-run rod and completion tally.'),
