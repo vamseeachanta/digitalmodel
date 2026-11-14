@@ -105,6 +105,15 @@ def test_pinned_crowns_retain_fixed_end_base_forms():
     assert result.scf_brace == round(brace_crown, 3)
 
 
+def test_oblique_pinned_result_discloses_missing_upper_bound():
+    geom = scf.TubularJointGeometry(D=1000, T=50, d=500, t=25, theta=45)
+    result = scf.efthymiou_ty_axial(geom, chord_ends="pinned")
+    # Table 2 records this fallback value, not a verified general-fixity SCF.
+    assert result.scf_brace == 2.530
+    assert "upper bound not established" in result.method
+    assert "upper bound not established" not in scf.efthymiou_ty_axial(geom).method
+
+
 @pytest.mark.parametrize("chord_ends", ["free", "FIXED", "", None])
 def test_axial_rejects_unknown_fixity(chord_ends):
     geom = scf.TubularJointGeometry(D=1200, T=50, d=600, t=25)

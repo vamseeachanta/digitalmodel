@@ -19,12 +19,21 @@ deferred**. Fixed-end crowns (Eqns 2/4) are retained. No general-fixity paramete
 C is introduced. The OPB brace expression is retained without F3, and its result
 remains unverified. Method descriptions expose these limitations.
 
+An upper bound on the general-fixity SCF is **not established** for the pinned
+approximation. At oblique angles, retained fixed-end crowns may understate the
+brace SCF when the general-fixity brace crown governs. Engineering acceptance
+of that result requires source verification of Eqns 5/6/7 and validation of
+the governing saddle and crown terms. The returned pinned `method` states
+"upper bound not established". The review's proposed crown expression is not
+source-verified here and is not introduced as a calculation or a golden.
+
 ## Revision history
 
 | Revision | Date | Change and reason |
 |---|---|---|
 | 0 | 2026-11-13 | F2/F3 factors and the retained base-equation limitations were recorded. |
 | 1 | 2026-11-13 | Remaining issue scope and golden-value provenance were clarified to distinguish implemented factors from unverified base equations. |
+| 2 | 2026-11-13 | The missing upper-bound qualification was added to pinned results and tested at the oblique reference geometry; the external acceptance decision remains open. |
 
 Table 1a. Validation-record revisions.
 
@@ -114,6 +123,11 @@ Table 2. Dimensionless factor values and axial SCFs at the five reference geomet
 Table 3. Dimensionless OPB comparisons. Brace values are legacy, unverified
 outputs at the existing floor; they are not Eqn-11 validation goldens.
 
+Calls that omit `L` use `L=2.5*D`, hence `alpha=5`, and now receive F3 on the
+OPB chord saddle. For example, the default-length reference result changes
+from 4.706 to 4.288; at `beta=0.8` in Table 3 it changes from 7.439 to 6.178.
+These are changes to default-call behavior, not only to explicit short lengths.
+
 For `D=1200 mm`, `L=7200 mm` gives `alpha=12`: F2 and F3 are exactly 1.0,
 the axial chord SCF is 6.207, and the OPB chord SCF is 4.706. The same
 factor recovery is verified at `alpha=20`.
@@ -126,18 +140,21 @@ before the final SCF floor. The approved plan flags the candidate Eqn-11 form
 `tau^-0.54 * gamma^-0.05 * (0.99 - 0.47*beta + 0.08*beta^4) * SCF_chord_OPB`.
 The candidate is **not freshly source-verified and is not implemented**.
 
-Issue #1148 remains open for the unresolved base-equation scope:
+[Issue #1148](https://github.com/vamseeachanta/digitalmodel/issues/1148)
+remains open. The unresolved base-equation scope is:
 
 - Eqn 11 source verification, followed by an independently derived OPB
   brace-saddle golden and F3 application if the equation is confirmed.
 - General-fixity Eqns 5/6/7 source verification and implementation with
   parameter C, including the saddle and crown terms.
 
-This change references #1148 rather than closing it. A separate follow-up
-issue has not been created; the acceptance requirement for that issue remains
-unmet. The maintainers need to create and link that issue before closing #1148,
-or retain the remaining work explicitly in #1148. Neither the retained OPB
-brace expression nor the general-fixity base equations are validated here.
+This change references the issue rather than closing it. A separate follow-up
+issue has not been created; the approved plan's acceptance requirement remains
+unmet. Before acceptance, a maintainer must either create and link that follow-up
+issue in the PR body and this record, or record an explicit decision that the
+original issue will carry the remaining work. Keeping the issue open does not
+by itself meet that criterion. Neither the retained OPB brace expression nor
+the general-fixity base equations are validated here.
 
 ## Test changes
 
@@ -148,8 +165,13 @@ are placed in `test_short_chord_factors.py` to keep every changed module below
 
 - Before the change, the original focused gate passed 55 tests. The new tests
   then produced 28 failures and one passing IPB regression.
-- After the change, all 84 focused tests pass: 40 original SCF tests, 29 new
-  factor/fixity tests and 15 unchanged connection SCF tests; zero skips.
+- After the initial implementation, all 84 focused tests passed: 40 original
+  SCF tests, 29 new factor/fixity tests and 15 unchanged connection SCF tests;
+  zero skips.
+- The review qualification test failed first on the missing result message.
+  After the message change, all 85 focused tests pass with zero skips. The new
+  test retains the oblique fallback brace SCF of 2.530 and checks that its
+  upper-bound limitation is exposed without changing the default fixed method.
 - Coverage includes exact long-chord recovery, the short side of the alpha=12
   boundary, both pinned saddles, retained crowns, invalid fixity rejection,
   public exports, oblique OPB loading and IPB alpha independence.

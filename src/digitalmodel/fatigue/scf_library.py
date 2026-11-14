@@ -218,6 +218,8 @@ def efthymiou_ty_axial(
     Pinned approximation: F2 applied to fixed-end saddle form; Eqn-5/6/7
     general-fixity base equations deferred because the appendix is unavailable.
     Fixed-end crowns (Eqns 2/4) and saddles (Eqns 1/3) are retained.
+    An upper bound is not established: retained crowns may understate the
+    general-fixity brace SCF at oblique angles when the brace crown governs.
     """
     if chord_ends not in ("fixed", "pinned"):
         raise ValueError("chord_ends must be 'fixed' or 'pinned'")
@@ -233,7 +235,10 @@ def efthymiou_ty_axial(
     scf_brace = max(abs(scf_bs), abs(scf_bc), 1.0)
 
     factor_name = "F1" if chord_ends == "fixed" else "F2"
-    approximation = "; fixed-end base approximation" if chord_ends == "pinned" else ""
+    approximation = (
+        "; fixed-end base approximation; upper bound not established"
+        if chord_ends == "pinned" else ""
+    )
     return SCFResult(
         scf_chord=round(scf_chord, 3),
         scf_brace=round(scf_brace, 3),
