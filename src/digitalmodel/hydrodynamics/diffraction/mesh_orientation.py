@@ -456,8 +456,10 @@ def orient_outward(mesh, strict: bool = True) -> tuple[object, tuple[int, ...]]:
     """Return a copy of the mesh with every panel wound outward.
 
     Vertex positions are untouched; only the order in which a panel lists them
-    changes. The indices of the panels that were rewound are returned so the
-    caller can record exactly what the repair did.
+    changes. Quadrilaterals retain their first corner and fan diagonal, so a
+    warped panel still represents the same surface after rewinding. The indices
+    of the panels that were rewound are returned so the caller can record
+    exactly what the repair did.
 
     Raises ``UnreliableOrientation`` when the mesh does not meet the conditions
     the argument needs. Pass ``strict=False`` only when the caller has its own
@@ -468,7 +470,10 @@ def orient_outward(mesh, strict: bool = True) -> tuple[object, tuple[int, ...]]:
         _refuse_if_unreliable(report)
     panels = np.asarray(mesh.panels).copy()
     for i in report.inverted_panels:
-        panels[i] = panels[i][::-1]
+        if len(panels[i]) == 4:
+            panels[i] = panels[i][[0, 3, 2, 1]]
+        else:
+            panels[i] = panels[i][::-1]
 
     vertices = np.asarray(mesh.vertices, dtype=float)
     vec_areas, centroids = panel_vector_areas(vertices, panels)
@@ -493,12 +498,13 @@ def orient_outward(mesh, strict: bool = True) -> tuple[object, tuple[int, ...]]:
 def repair_gdf_text(text: str, strict: bool = True) -> tuple[str, tuple[int, ...]]:
     """Rewind inward-facing panels in WAMIT GDF text, preserving formatting.
 
-    A GDF file lists four vertex lines per panel, so rewinding a panel means
-    reversing its four lines. Nothing else is touched: the header, the
-    ULEN/GRAV and symmetry records, the panel count, the number formatting and
-    the line endings all survive byte-for-byte, which keeps the diff readable
-    and auditable. Re-serialising the mesh instead would rewrite every
-    coordinate.
+    A GDF file lists four vertex lines per panel. Rewinding retains the first
+    line and reverses the remaining three, preserving the corner-0 fan diagonal
+    and hence the surface of a warped quadrilateral. Nothing else is touched:
+    the header, the ULEN/GRAV and symmetry records, the panel count, the number
+    formatting and the line endings all survive byte-for-byte, which keeps the
+    diff readable and auditable. Re-serialising the mesh instead would rewrite
+    every coordinate.
     """
     eol = "\r\n" if "\r\n" in text else "\n"
     trailing = text.endswith(eol)
@@ -586,7 +592,9 @@ def repair_gdf_text(text: str, strict: bool = True) -> tuple[str, tuple[int, ...
     out_rows: list[str] = []
     for p in range(npan):
         quad = rows[p * 4:(p + 1) * 4]
-        out_rows.extend(quad[::-1] if flip[p] else quad)
+        out_rows.extend(
+            [quad[0], quad[3], quad[2], quad[1]] if flip[p] else quad
+        )
 
     rebuilt = list(head)
     it = iter(out_rows)
