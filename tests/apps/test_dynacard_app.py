@@ -240,10 +240,11 @@ def test_models_embed_exact_source_documents():
     body = model_script.split("const data = ", 1)[1].split(";\nroot.", 1)[0]
     embedded = json.loads(body)
     assert body == json.dumps(embedded, separators=(",", ":"), ensure_ascii=False)
-    package = ROOT / "src/digitalmodel/marine_ops/artificial_lift/dynacard/data"
-    for key, filename in (("context", "dynacard_classifier.json"),
-                          ("shape", "dynacard_shape_classifier.json")):
-        assert embedded[key] == json.loads((package / filename).read_text(encoding="utf-8"))
+    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import (
+        MODEL_PATH, SHAPE_MODEL_PATH, read_model_bytes,
+    )
+    for key, path in (("context", MODEL_PATH), ("shape", SHAPE_MODEL_PATH)):
+        assert embedded[key] == json.loads(read_model_bytes(path))
 
 
 @NODE_REQUIRED

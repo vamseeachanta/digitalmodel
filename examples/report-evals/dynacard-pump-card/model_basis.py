@@ -5,7 +5,7 @@ import json
 from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostic_plate import load_diagnostic_plate
 from digitalmodel.marine_ops.artificial_lift.dynacard.benchmark.plate_scoring import _GLOSSES
 from digitalmodel.marine_ops.artificial_lift.dynacard.benchmark.measurements import loop_distance
-from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import classify_shape, SHAPE_MODEL_PATH
+from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import classify_shape, read_model_bytes, SHAPE_MODEL_PATH
 from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.adapter import (
     rod_string_from_context, _effective_density_lb_ft3,
 )
@@ -91,7 +91,7 @@ def assumptions(ctx, raw):
 
 def shape_evidence(card, root):
     record = json.loads((root / SCORE).read_text(encoding='utf-8'))
-    digest = hashlib.sha256(SHAPE_MODEL_PATH.read_bytes()).hexdigest()
+    digest = hashlib.sha256(read_model_bytes(SHAPE_MODEL_PATH)).hexdigest()  # inference JSON, not its storage
     if digest != record['models']['shape_only']['sha256']:
         raise ValueError('recorded plate score does not match the shape model; rescore before reporting')
     score = {name: {key: record['shape_only'][name][key] for key in ('correct', 'count')}

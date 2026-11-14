@@ -45,7 +45,7 @@ def reproduction_document():
                            **measure(case["name"], actual, python_analysis(case["request"]))})
     source_paths = [*PACKAGE.rglob("*.py"),
                     PACKAGE / "data/dynacard_classifier.json",
-                    PACKAGE / "data/dynacard_shape_classifier.json"]
+                    PACKAGE / "data/dynacard_shape_classifier.json.gz"]
     source_hashes = {str(p.relative_to(PACKAGE)).replace("\\", "/"):
                      hashlib.sha256(p.read_bytes()).hexdigest()
                      for p in sorted(source_paths)}

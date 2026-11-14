@@ -23,8 +23,8 @@ def _save(fig, out, stem):
     fig.savefig(out / f"{stem}.png", dpi=150, metadata={"Software": None})
     svg = out / f"{stem}.svg"
     fig.savefig(svg, dpi=150, metadata={"Date": None})
-    # Text-mode writers emit CRLF on Windows; keep LF on every platform.
-    svg.write_bytes(svg.read_bytes().replace(b"\r\n", b"\n"))
+    # Matplotlib emits trailing spaces; normalize both whitespace and newlines.
+    svg.write_bytes(b"\n".join(line.rstrip() for line in svg.read_bytes().splitlines()) + b"\n")
     plt.close(fig)
 
 
@@ -77,8 +77,8 @@ def _analysis_text(record):
         f"Theoretical production: {a['theoretical_production_bpd']:.2f} bbl/day "
         f"at {a['runtime_hours']:g} h/day",
         f"Pump work: {a['pump_work_per_stroke_ft_lbf']:.0f} ft·lbf/stroke",
-        f"Round-trip load nRMSE: {record['round_trip']['load_nrmse_pct']:.3f} % "
-        "(criterion < 3.0 %)",
+        f"Round-trip load nRMSE: {record['round_trip']['load_nrmse_pct']:.1f} % "
+        f"(source-step limit {record['round_trip']['tolerance_pct']:.1f} %)",
     ])
 
 

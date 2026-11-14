@@ -7,6 +7,15 @@ The [browser application](../../../apps/dynacard/index.html) runs the same analy
 
 The [results document](results.json) is the reporting source for this README and all CSVs. Sample numbers are zero-based. Each card retains its own sample index; where counts differ, the shorter card's columns are blank rather than interpolated. Browser inputs contain exactly position_in and load_lbf. Positions have four decimals and loads two.
 
+## Revision history
+
+| Revision | Date | Change and reason |
+| --- | --- | --- |
+| 1 | 2026-11-12 | Ten dependent plate examples with assumed physical scales. |
+| 2 | 2026-11-13 | Absolute delta resolution, lossless model storage, source-derived numerical criterion and input provenance correct reproducibility and evidence gaps. |
+
+Table R1. Report revisions.
+
 ## How to read each example
 
 The surface card is what a dynamometer records at the polished rod; the pump card is the load and travel at the plunger after the wave equation removes rod weight, rod stretch and rod dynamics. Fillage is effective plunger travel divided by gross travel. Fluid load is the upstroke mean load minus the downstroke mean load. The matrix shows the shape-only model probability for each condition on the pump card computed from the synthesised surface card.
@@ -21,24 +30,24 @@ The surface card is what a dynamometer records at the polished rod; the pump car
 
 Gallery. Ten surface-card and computed-pump-card examples.
 
-Computed-card shape-only matches 6/10 expected modes; the shipped model matches 4/10; source-shape consistency is 5/8 literal and 6/10 including ASSUMED crosswalks, against the [recorded plate score](../plate-classifier-score.md) of 5/8 and 6/10. No rows differ from the source-shape call. The observed round-trip load nRMSE range is 0.402–2.422 %, below the 3.0 % inverse-consistency test limit.
+Computed-card shape-only matches 6/10 expected modes; the shipped model matches 4/10; source-shape consistency is 5/8 literal and 6/10 including ASSUMED crosswalks, against the [recorded plate score](../plate-classifier-score.md) of 5/8 and 6/10. No rows differ from the source-shape call. The observed round-trip load nRMSE range is 0.4–2.4 %; source-step resolution limits range from 3.4–5.3 %. Each unrounded error is checked against its own source-derived limit.
 
-Every analysis runs on the surface card at its published CSV precision (0.0001 in, 0.01 lbf), so rerunning a published CSV reproduces the stored values. Fluid load and fillage step with the detected corner samples: the unrounded synthesised cards give fluid loads differing by up to 34 lbf and the same fillage to one decimal, with corners moved in examples 3, 4, 9. Differences of this size between two tools reading the same card are expected unless both use identical input digits.
+Every analysis runs on the surface card at its published CSV precision (0.0001 in, 0.01 lbf), so rerunning a published CSV reproduces the stored values. Precision-effect deltas are reported at an absolute resolution of 1e-6 lbf and 1e-6 percentage points; smaller cancellation noise is reported as zero. Fluid load and fillage step with the detected corner samples: the unrounded synthesised cards give fluid loads differing by up to 34 lbf and the same fillage to one decimal, with corners moved in examples 3, 4, 9. Differences of this size between two tools reading the same card are expected unless both use identical input digits.
 
 Computed CPIP below zero: example 1: -28.764 psi; example 8: -57.485 psi. These values are retained as reported by the module; physical intake pressure is not established without a consistent dimensioned fluid-pressure basis and measured cards.
 
 | Example | Condition | Crosswalk | Pump stroke (in) | Fillage (%) | Fluid load (lbf) | Shipped HYPOTHESIS | Shape-only HYPOTHESIS (computed pump card) | Round-trip nRMSE (%) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Normal operation | LITERAL | 40.00 | 83.6 | 3711 | PLUNGER_UNDERTRAVEL | NORMAL | 0.505 |
-| 2 | Insufficient supply | ASSUMED | 40.00 | 23.1 | 3020 | FLUID_POUND | FLUID_POUND | 0.881 |
-| 3 | Gas interference | LITERAL | 40.00 | 28.3 | 3405 | VALVE_LEAK_TV | GAS_INTERFERENCE | 0.402 |
-| 4 | Rod parting | LITERAL | 40.00 | 92.4 | 2935 | PLUNGER_UNDERTRAVEL | ROD_PARTING | 0.557 |
-| 5 | Tagging up | LITERAL | 40.00 | 70.2 | 3456 | VALVE_LEAK_TV | VALVE_LEAK_TV | 0.758 |
-| 6 | Tagging down | LITERAL | 40.00 | 79.0 | 3303 | VALVE_LEAK_TV | VALVE_LEAK_TV | 0.435 |
-| 7 | Traveling valve leakage | LITERAL | 40.00 | 93.7 | 3403 | VALVE_LEAK_TV | VALVE_LEAK_TV | 0.503 |
-| 8 | Standing valve leakage | LITERAL | 40.00 | 74.5 | 3762 | VALVE_LEAK_SV | VALVE_LEAK_SV | 0.504 |
-| 9 | Plunger out of barrel | LITERAL | 40.00 | 93.6 | 2554 | PLUNGER_OUT_OF_BARREL | VALVE_LEAK_TV | 0.537 |
-| 10 | Sand production | ASSUMED | 40.00 | 77.1 | 3235 | VALVE_LEAK_TV | VALVE_LEAK_TV | 2.422 |
+| 1 | Normal operation | LITERAL | 40.00 | 83.6 | 3711 | PLUNGER_UNDERTRAVEL | NORMAL | 0.5 |
+| 2 | Insufficient supply | ASSUMED | 40.00 | 23.1 | 3020 | FLUID_POUND | FLUID_POUND | 0.9 |
+| 3 | Gas interference | LITERAL | 40.00 | 28.3 | 3405 | VALVE_LEAK_TV | GAS_INTERFERENCE | 0.4 |
+| 4 | Rod parting | LITERAL | 40.00 | 92.4 | 2935 | PLUNGER_UNDERTRAVEL | ROD_PARTING | 0.6 |
+| 5 | Tagging up | LITERAL | 40.00 | 70.2 | 3456 | VALVE_LEAK_TV | VALVE_LEAK_TV | 0.8 |
+| 6 | Tagging down | LITERAL | 40.00 | 79.0 | 3303 | VALVE_LEAK_TV | VALVE_LEAK_TV | 0.4 |
+| 7 | Traveling valve leakage | LITERAL | 40.00 | 93.7 | 3403 | VALVE_LEAK_TV | VALVE_LEAK_TV | 0.5 |
+| 8 | Standing valve leakage | LITERAL | 40.00 | 74.5 | 3762 | VALVE_LEAK_SV | VALVE_LEAK_SV | 0.5 |
+| 9 | Plunger out of barrel | LITERAL | 40.00 | 93.6 | 2554 | PLUNGER_OUT_OF_BARREL | VALVE_LEAK_TV | 0.5 |
+| 10 | Sand production | ASSUMED | 40.00 | 77.1 | 3235 | VALVE_LEAK_TV | VALVE_LEAK_TV | 2.4 |
 
 Table 1. Computed values under the ASSUMED basis; calls are hypotheses.
 
@@ -97,7 +106,8 @@ Figure 2. Synthesised surface card, not a measured card; computed pump card over
 | Polished-rod work per stroke | ft·lbf | 11587 |
 | Production runtime source | category | card |
 | Buckling compression flag | boolean | False |
-| Round-trip load nRMSE | % | 0.505 |
+| Round-trip load nRMSE | % | 0.5 |
+| Source-step resolution limit | % | 3.5 |
 | Round-trip stroke difference | in | 0.00 |
 
 Table 3. Example 1 workflow results; numeric zero is a calculated value, not missing evidence.
@@ -145,7 +155,8 @@ Figure 3. Synthesised surface card, not a measured card; computed pump card over
 | Polished-rod work per stroke | ft·lbf | 5095 |
 | Production runtime source | category | card |
 | Buckling compression flag | boolean | False |
-| Round-trip load nRMSE | % | 0.881 |
+| Round-trip load nRMSE | % | 0.9 |
+| Source-step resolution limit | % | 3.4 |
 | Round-trip stroke difference | in | 0.00 |
 
 Table 4. Example 2 workflow results; numeric zero is a calculated value, not missing evidence.
@@ -193,7 +204,8 @@ Figure 4. Synthesised surface card, not a measured card; computed pump card over
 | Polished-rod work per stroke | ft·lbf | 7186 |
 | Production runtime source | category | card |
 | Buckling compression flag | boolean | False |
-| Round-trip load nRMSE | % | 0.402 |
+| Round-trip load nRMSE | % | 0.4 |
+| Source-step resolution limit | % | 3.4 |
 | Round-trip stroke difference | in | 0.00 |
 
 Table 5. Example 3 workflow results; numeric zero is a calculated value, not missing evidence.
@@ -241,7 +253,8 @@ Figure 5. Synthesised surface card, not a measured card; computed pump card over
 | Polished-rod work per stroke | ft·lbf | 9688 |
 | Production runtime source | category | card |
 | Buckling compression flag | boolean | False |
-| Round-trip load nRMSE | % | 0.557 |
+| Round-trip load nRMSE | % | 0.6 |
+| Source-step resolution limit | % | 3.5 |
 | Round-trip stroke difference | in | 0.00 |
 
 Table 6. Example 4 workflow results; numeric zero is a calculated value, not missing evidence.
@@ -289,7 +302,8 @@ Figure 6. Synthesised surface card, not a measured card; computed pump card over
 | Polished-rod work per stroke | ft·lbf | 9599 |
 | Production runtime source | category | card |
 | Buckling compression flag | boolean | False |
-| Round-trip load nRMSE | % | 0.758 |
+| Round-trip load nRMSE | % | 0.8 |
+| Source-step resolution limit | % | 3.7 |
 | Round-trip stroke difference | in | -0.00 |
 
 Table 7. Example 5 workflow results; numeric zero is a calculated value, not missing evidence.
@@ -337,7 +351,8 @@ Figure 7. Synthesised surface card, not a measured card; computed pump card over
 | Polished-rod work per stroke | ft·lbf | 8425 |
 | Production runtime source | category | card |
 | Buckling compression flag | boolean | False |
-| Round-trip load nRMSE | % | 0.435 |
+| Round-trip load nRMSE | % | 0.4 |
+| Source-step resolution limit | % | 3.5 |
 | Round-trip stroke difference | in | 0.00 |
 
 Table 8. Example 6 workflow results; numeric zero is a calculated value, not missing evidence.
@@ -385,7 +400,8 @@ Figure 8. Synthesised surface card, not a measured card; computed pump card over
 | Polished-rod work per stroke | ft·lbf | 11474 |
 | Production runtime source | category | card |
 | Buckling compression flag | boolean | False |
-| Round-trip load nRMSE | % | 0.503 |
+| Round-trip load nRMSE | % | 0.5 |
+| Source-step resolution limit | % | 3.6 |
 | Round-trip stroke difference | in | 0.00 |
 
 Table 9. Example 7 workflow results; numeric zero is a calculated value, not missing evidence.
@@ -433,7 +449,8 @@ Figure 9. Synthesised surface card, not a measured card; computed pump card over
 | Polished-rod work per stroke | ft·lbf | 11198 |
 | Production runtime source | category | card |
 | Buckling compression flag | boolean | False |
-| Round-trip load nRMSE | % | 0.504 |
+| Round-trip load nRMSE | % | 0.5 |
+| Source-step resolution limit | % | 3.5 |
 | Round-trip stroke difference | in | 0.00 |
 
 Table 10. Example 8 workflow results; numeric zero is a calculated value, not missing evidence.
@@ -481,7 +498,8 @@ Figure 10. Synthesised surface card, not a measured card; computed pump card ove
 | Polished-rod work per stroke | ft·lbf | 8645 |
 | Production runtime source | category | card |
 | Buckling compression flag | boolean | False |
-| Round-trip load nRMSE | % | 0.537 |
+| Round-trip load nRMSE | % | 0.5 |
+| Source-step resolution limit | % | 3.5 |
 | Round-trip stroke difference | in | 0.00 |
 
 Table 11. Example 9 workflow results; numeric zero is a calculated value, not missing evidence.
@@ -529,7 +547,8 @@ Figure 11. Synthesised surface card, not a measured card; computed pump card ove
 | Polished-rod work per stroke | ft·lbf | 9289 |
 | Production runtime source | category | card |
 | Buckling compression flag | boolean | False |
-| Round-trip load nRMSE | % | 2.422 |
+| Round-trip load nRMSE | % | 2.4 |
+| Source-step resolution limit | % | 5.3 |
 | Round-trip stroke difference | in | 0.00 |
 
 Table 12. Example 10 workflow results; numeric zero is a calculated value, not missing evidence.
@@ -549,125 +568,125 @@ Source: [DOI 10.17632/hnfwm9mjs6.1](https://data.mendeley.com/datasets/hnfwm9mjs
 
 | Item | Status | Value | Reason |
 | --- | --- | --- | --- |
-| `well.api14` | ASSUMED | `"PLATE-EXAMPLE"` | Illustrative design values; no measured well is represented. Rod order is surface first; lengths ft, diameters in, weights lb/ft, moduli psi. |
-| `well.spm` | ASSUMED | `6.42` | Same ASSUMED well basis. |
-| `well.fluid_density` | ASSUMED | `63.237` | Same ASSUMED well basis. |
-| `well.pump.diameter` | ASSUMED | `1.5` | Same ASSUMED well basis. |
-| `well.pump.depth` | ASSUMED | `4844.0` | Same ASSUMED well basis. |
-| `well.input_params.strokes_per_minute` | ASSUMED | `6.42` | Same ASSUMED well basis. |
-| `well.input_params.tubing_pressure` | ASSUMED | `100.0` | Same ASSUMED well basis. |
-| `well.rod_string[0].diameter` | ASSUMED | `0.875` | Same ASSUMED well basis. |
-| `well.rod_string[0].length` | ASSUMED | `1400.0` | Same ASSUMED well basis. |
-| `well.rod_string[0].weight_per_foot` | ASSUMED | `2.224` | Same ASSUMED well basis. |
-| `well.rod_string[0].modulus_of_elasticity` | ASSUMED | `30500000.0` | Same ASSUMED well basis. |
-| `well.rod_string[1].diameter` | ASSUMED | `0.75` | Same ASSUMED well basis. |
-| `well.rod_string[1].length` | ASSUMED | `3350.0` | Same ASSUMED well basis. |
-| `well.rod_string[1].weight_per_foot` | ASSUMED | `1.634` | Same ASSUMED well basis. |
-| `well.rod_string[1].modulus_of_elasticity` | ASSUMED | `30500000.0` | Same ASSUMED well basis. |
-| `resolved_context_defaults.api14` | ASSUMED | `"PLATE-EXAMPLE"` | All unspecified context, rod, pump and surface-unit fields retain model defaults; no survey or well test was supplied. |
-| `resolved_context_defaults.rod_string[0].diameter` | ASSUMED | `0.875` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[0].length` | ASSUMED | `1400.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[0].count` | ASSUMED | `1` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[0].modulus_of_elasticity` | ASSUMED | `30500000.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[0].density` | ASSUMED | `490.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[0].speed_of_sound` | ASSUMED | `16300.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[0].damping_factor` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[0].weight_per_foot` | ASSUMED | `2.224` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[0].minimum_tensile` | ASSUMED | `115000` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[0].grade` | ASSUMED | `"KD"` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[0].manufacturer` | ASSUMED | `"Generic"` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[1].diameter` | ASSUMED | `0.75` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[1].length` | ASSUMED | `3350.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[1].count` | ASSUMED | `1` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[1].modulus_of_elasticity` | ASSUMED | `30500000.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[1].density` | ASSUMED | `490.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[1].speed_of_sound` | ASSUMED | `16300.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[1].damping_factor` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[1].weight_per_foot` | ASSUMED | `1.634` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[1].minimum_tensile` | ASSUMED | `115000` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[1].grade` | ASSUMED | `"KD"` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.rod_string[1].manufacturer` | ASSUMED | `"Generic"` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.pump.diameter` | ASSUMED | `1.5` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.pump.depth` | ASSUMED | `4844.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.pump.efficiency` | ASSUMED | `1.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.surface_unit.manufacturer` | ASSUMED | `"Generic"` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.surface_unit.unit_type` | ASSUMED | `"Conventional"` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.surface_unit.stroke_length` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.surface_unit.gear_box_rating` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.surface_unit.structural_imbalance` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.surface_unit.counterbalance_moment` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.surface_unit.geometry` | ASSUMED | `"C. Clockwise"` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.surface_unit.dimensional_a` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.surface_unit.dimensional_c` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.surface_unit.dimensional_i` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.surface_unit.dimensional_k` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.surface_unit.dimensional_p` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.surface_unit.radius` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.surface_unit.phase_angle` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.surface_unit.beam_rating` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.surface_unit.max_stroke_length` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.motor.model` | ASSUMED | `""` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.motor.prime_mover_type` | ASSUMED | `""` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.motor.horsepower` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.motor.voltage` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.motor.manufacturer` | ASSUMED | `""` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.spm` | ASSUMED | `6.42` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.fluid_density` | ASSUMED | `63.237` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.runtime` | ASSUMED | `24.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.well_test` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.survey` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.input_params.strokes_per_minute` | ASSUMED | `6.42` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.input_params.tubing_pressure` | ASSUMED | `100.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.input_params.runtime` | ASSUMED | `24.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.input_params.load_max_sp` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.input_params.load_min_sp` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.input_params.fluid_density` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.input_params.casing_pressure` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.input_params.stroke_load_peak` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.input_params.normal_peak_load` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.input_params.stroke_load_min` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.input_params.normal_min_load` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.input_params.spm_24hr_avg` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.input_params.assumed_pump_efficiency` | ASSUMED | `1.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.calc_params.acceleration_due_to_gravity` | ASSUMED | `9.81` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.calc_params.density_of_water` | ASSUMED | `1000.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.calc_params.density_of_steel` | ASSUMED | `7850.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.calc_params.coulomb_friction_coefficient` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.calc_params.num_finite_difference_nodes` | ASSUMED | `100` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.calc_params.remove_jump_value` | ASSUMED | `true` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.calc_params.use_si_units` | ASSUMED | `false` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.calc_params.efficiency_prime_mover` | ASSUMED | `0.85` | Same ASSUMED resolved_context_defaults basis. |
-| `resolved_context_defaults.calc_params.efficiency_pumping_unit` | ASSUMED | `0.9` | Same ASSUMED resolved_context_defaults basis. |
-| `stroke_in` | ASSUMED | `40.0` | Dimensionless source has no measured stroke. |
-| `minimum_load_lbf` | ASSUMED | `0.0` | Dimensionless source has no measured load datum. |
-| `load_range_lbf` | ASSUMED | `3935.82689` | Fo = (pi/4 * 1.5^2) * (63.237 * 4844 / 144 + 100); common static fluid-load scale at zero intake pressure. |
-| `scale_intake_pressure_psi` | ASSUMED | `0.0` | Defines only the static load scale; computed CPIP need not be zero. |
-| `card_space` | ASSUMED | `"pump (downhole)"` | Source does not identify surface or pump space. |
-| `sampling.samples` | ASSUMED | `100` | Arc-length samples are treated as uniformly timed; measured kinematics are unavailable. |
-| `sampling.timing` | ASSUMED | `"uniform"` | Same ASSUMED sampling basis. |
-| `sampling.preparation` | ASSUMED | `"closed, uniform normalised Euclidean arc length, clockwise, renormalised"` | Same ASSUMED sampling basis. |
-| `surface_card.origin` | ASSUMED | `"synthesised from the plate shape"` | Forward rod-string model, not a measured polished-rod card. Rounded to the published CSV precision before analysis, so the published card reproduces the stored results. |
-| `surface_card.position_decimals` | ASSUMED | `4` | Same ASSUMED surface_card basis. |
-| `surface_card.load_decimals` | ASSUMED | `2` | Same ASSUMED surface_card basis. |
-| `crosswalks.供液不足` | ASSUMED | `"FLUID_POUND"` | Supply insufficiency does not establish fluid pound; sand production does not establish abrasion. |
-| `crosswalks.出砂` | ASSUMED | `"SAND_ABRASION"` | Same ASSUMED crosswalks basis. |
-| `uniform_scale` | ASSUMED | `"All ten shapes use the same stroke and load range"` | Rod parting and other near-zero physical-load conditions are shape illustrations, not physical pump cards. |
-| `cpip_defaults.oil_api` | ASSUMED | `35.0` | CPIP derives density from this default mixture, not context fluid_density; retained as the module reports it. |
-| `cpip_defaults.water_sg` | ASSUMED | `1.03` | Same ASSUMED cpip_defaults basis. |
-| `cpip_defaults.water_cut_pct` | ASSUMED | `50.0` | Same ASSUMED cpip_defaults basis. |
-| `production.runtime_hours` | ASSUMED | `24.0` | InputParameters defaults runtime to 24 h (reported source: card); no measured runtime or efficiency. Production = net displacement * runtime / 24; reported efficiency is not a multiplier. |
-| `production.pump_efficiency_pct` | ASSUMED | `100.0` | Same ASSUMED production basis. |
-| `solver_defaults.method` | ASSUMED | `"everitt_jennings"` | Forward and default inverse use matching grids, damping defaults and vertical survey; inverse output smoothing remains enabled. |
-| `solver_defaults.nodes` | ASSUMED | `200` | Same ASSUMED solver_defaults basis. |
-| `solver_defaults.viscosity_cp` | ASSUMED | `10.0` | Same ASSUMED solver_defaults basis. |
-| `solver_defaults.tubing_id_in` | ASSUMED | `2.441` | Same ASSUMED solver_defaults basis. |
-| `solver_defaults.zero_surface_position_datum` | ASSUMED | `true` | Same ASSUMED solver_defaults basis. |
+| `well.api14` | ASSUMED | `"PLATE-EXAMPLE"` | Illustrative design values; no measured well is represented. Rod order is surface first; lengths ft, diameters in, weights lb/ft, moduli psi. Provenance: assumed, based on previous experience. |
+| `well.spm` | ASSUMED | `6.42` | Same ASSUMED well basis. Provenance: assumed, based on previous experience. |
+| `well.fluid_density` | ASSUMED | `63.237` | Same ASSUMED well basis. Provenance: assumed, based on previous experience. |
+| `well.pump.diameter` | ASSUMED | `1.5` | Same ASSUMED well basis. Provenance: assumed, based on previous experience. |
+| `well.pump.depth` | ASSUMED | `4844.0` | Same ASSUMED well basis. Provenance: assumed, based on previous experience. |
+| `well.input_params.strokes_per_minute` | ASSUMED | `6.42` | Same ASSUMED well basis. Provenance: assumed, based on previous experience. |
+| `well.input_params.tubing_pressure` | ASSUMED | `100.0` | Same ASSUMED well basis. Provenance: assumed, based on previous experience. |
+| `well.rod_string[0].diameter` | ASSUMED | `0.875` | Same ASSUMED well basis. Provenance: assumed, based on previous experience. |
+| `well.rod_string[0].length` | ASSUMED | `1400.0` | Same ASSUMED well basis. Provenance: assumed, based on previous experience. |
+| `well.rod_string[0].weight_per_foot` | ASSUMED | `2.224` | Same ASSUMED well basis. Provenance: assumed, based on previous experience. |
+| `well.rod_string[0].modulus_of_elasticity` | ASSUMED | `30500000.0` | Same ASSUMED well basis. Provenance: assumed, based on previous experience. |
+| `well.rod_string[1].diameter` | ASSUMED | `0.75` | Same ASSUMED well basis. Provenance: assumed, based on previous experience. |
+| `well.rod_string[1].length` | ASSUMED | `3350.0` | Same ASSUMED well basis. Provenance: assumed, based on previous experience. |
+| `well.rod_string[1].weight_per_foot` | ASSUMED | `1.634` | Same ASSUMED well basis. Provenance: assumed, based on previous experience. |
+| `well.rod_string[1].modulus_of_elasticity` | ASSUMED | `30500000.0` | Same ASSUMED well basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.api14` | ASSUMED | `"PLATE-EXAMPLE"` | All unspecified context, rod, pump and surface-unit fields retain model defaults; no survey or well test was supplied. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[0].diameter` | ASSUMED | `0.875` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[0].length` | ASSUMED | `1400.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[0].count` | ASSUMED | `1` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[0].modulus_of_elasticity` | ASSUMED | `30500000.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[0].density` | ASSUMED | `490.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[0].speed_of_sound` | ASSUMED | `16300.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[0].damping_factor` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[0].weight_per_foot` | ASSUMED | `2.224` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[0].minimum_tensile` | ASSUMED | `115000` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[0].grade` | ASSUMED | `"KD"` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[0].manufacturer` | ASSUMED | `"Generic"` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[1].diameter` | ASSUMED | `0.75` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[1].length` | ASSUMED | `3350.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[1].count` | ASSUMED | `1` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[1].modulus_of_elasticity` | ASSUMED | `30500000.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[1].density` | ASSUMED | `490.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[1].speed_of_sound` | ASSUMED | `16300.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[1].damping_factor` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[1].weight_per_foot` | ASSUMED | `1.634` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[1].minimum_tensile` | ASSUMED | `115000` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[1].grade` | ASSUMED | `"KD"` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.rod_string[1].manufacturer` | ASSUMED | `"Generic"` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.pump.diameter` | ASSUMED | `1.5` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.pump.depth` | ASSUMED | `4844.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.pump.efficiency` | ASSUMED | `1.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.surface_unit.manufacturer` | ASSUMED | `"Generic"` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.surface_unit.unit_type` | ASSUMED | `"Conventional"` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.surface_unit.stroke_length` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.surface_unit.gear_box_rating` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.surface_unit.structural_imbalance` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.surface_unit.counterbalance_moment` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.surface_unit.geometry` | ASSUMED | `"C. Clockwise"` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.surface_unit.dimensional_a` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.surface_unit.dimensional_c` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.surface_unit.dimensional_i` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.surface_unit.dimensional_k` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.surface_unit.dimensional_p` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.surface_unit.radius` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.surface_unit.phase_angle` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.surface_unit.beam_rating` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.surface_unit.max_stroke_length` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.motor.model` | ASSUMED | `""` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.motor.prime_mover_type` | ASSUMED | `""` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.motor.horsepower` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.motor.voltage` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.motor.manufacturer` | ASSUMED | `""` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.spm` | ASSUMED | `6.42` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.fluid_density` | ASSUMED | `63.237` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.runtime` | ASSUMED | `24.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.well_test` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.survey` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.input_params.strokes_per_minute` | ASSUMED | `6.42` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.input_params.tubing_pressure` | ASSUMED | `100.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.input_params.runtime` | ASSUMED | `24.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.input_params.load_max_sp` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.input_params.load_min_sp` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.input_params.fluid_density` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.input_params.casing_pressure` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.input_params.stroke_load_peak` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.input_params.normal_peak_load` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.input_params.stroke_load_min` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.input_params.normal_min_load` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.input_params.spm_24hr_avg` | ASSUMED | `null` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.input_params.assumed_pump_efficiency` | ASSUMED | `1.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.calc_params.acceleration_due_to_gravity` | ASSUMED | `9.81` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.calc_params.density_of_water` | ASSUMED | `1000.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.calc_params.density_of_steel` | ASSUMED | `7850.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.calc_params.coulomb_friction_coefficient` | ASSUMED | `0.0` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.calc_params.num_finite_difference_nodes` | ASSUMED | `100` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.calc_params.remove_jump_value` | ASSUMED | `true` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.calc_params.use_si_units` | ASSUMED | `false` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.calc_params.efficiency_prime_mover` | ASSUMED | `0.85` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `resolved_context_defaults.calc_params.efficiency_pumping_unit` | ASSUMED | `0.9` | Same ASSUMED resolved_context_defaults basis. Provenance: assumed, based on previous experience. |
+| `stroke_in` | ASSUMED | `40.0` | Dimensionless source has no measured stroke. Provenance: assumed, based on previous experience. |
+| `minimum_load_lbf` | ASSUMED | `0.0` | Dimensionless source has no measured load datum. Provenance: assumed, based on previous experience. |
+| `load_range_lbf` | ASSUMED | `3935.82689` | Fo = (pi/4 * 1.5^2) * (63.237 * 4844 / 144 + 100); common static fluid-load scale at zero intake pressure. Provenance: assumed, based on previous experience. |
+| `scale_intake_pressure_psi` | ASSUMED | `0.0` | Defines only the static load scale; computed CPIP need not be zero. Provenance: assumed, based on previous experience. |
+| `card_space` | ASSUMED | `"pump (downhole)"` | Source does not identify surface or pump space. Provenance: assumed, based on previous experience. |
+| `sampling.samples` | ASSUMED | `100` | Arc-length samples are treated as uniformly timed; measured kinematics are unavailable. Provenance: assumed, based on previous experience. |
+| `sampling.timing` | ASSUMED | `"uniform"` | Same ASSUMED sampling basis. Provenance: assumed, based on previous experience. |
+| `sampling.preparation` | ASSUMED | `"closed, uniform normalised Euclidean arc length, clockwise, renormalised"` | Same ASSUMED sampling basis. Provenance: assumed, based on previous experience. |
+| `surface_card.origin` | ASSUMED | `"synthesised from the plate shape"` | Forward rod-string model, not a measured polished-rod card. Rounded to the published CSV precision before analysis, so the published card reproduces the stored results. Provenance: assumed, based on previous experience. |
+| `surface_card.position_decimals` | ASSUMED | `4` | Same ASSUMED surface_card basis. Provenance: assumed, based on previous experience. |
+| `surface_card.load_decimals` | ASSUMED | `2` | Same ASSUMED surface_card basis. Provenance: assumed, based on previous experience. |
+| `crosswalks.供液不足` | ASSUMED | `"FLUID_POUND"` | Supply insufficiency does not establish fluid pound; sand production does not establish abrasion. Provenance: assumed, based on previous experience. |
+| `crosswalks.出砂` | ASSUMED | `"SAND_ABRASION"` | Same ASSUMED crosswalks basis. Provenance: assumed, based on previous experience. |
+| `uniform_scale` | ASSUMED | `"All ten shapes use the same stroke and load range"` | Rod parting and other near-zero physical-load conditions are shape illustrations, not physical pump cards. Provenance: assumed, based on previous experience. |
+| `cpip_defaults.oil_api` | ASSUMED | `35.0` | CPIP derives density from this default mixture, not context fluid_density; retained as the module reports it. Provenance: assumed, based on previous experience. |
+| `cpip_defaults.water_sg` | ASSUMED | `1.03` | Same ASSUMED cpip_defaults basis. Provenance: assumed, based on previous experience. |
+| `cpip_defaults.water_cut_pct` | ASSUMED | `50.0` | Same ASSUMED cpip_defaults basis. Provenance: assumed, based on previous experience. |
+| `production.runtime_hours` | ASSUMED | `24.0` | InputParameters defaults runtime to 24 h (reported source: card); no measured runtime or efficiency. Production = net displacement * runtime / 24; reported efficiency is not a multiplier. Provenance: assumed, based on previous experience. |
+| `production.pump_efficiency_pct` | ASSUMED | `100.0` | Same ASSUMED production basis. Provenance: assumed, based on previous experience. |
+| `solver_defaults.method` | ASSUMED | `"everitt_jennings"` | Forward and default inverse use matching grids, damping defaults and vertical survey; inverse output smoothing remains enabled. Provenance: assumed, based on previous experience. |
+| `solver_defaults.nodes` | ASSUMED | `200` | Same ASSUMED solver_defaults basis. Provenance: assumed, based on previous experience. |
+| `solver_defaults.viscosity_cp` | ASSUMED | `10.0` | Same ASSUMED solver_defaults basis. Provenance: assumed, based on previous experience. |
+| `solver_defaults.tubing_id_in` | ASSUMED | `2.441` | Same ASSUMED solver_defaults basis. Provenance: assumed, based on previous experience. |
+| `solver_defaults.zero_surface_position_datum` | ASSUMED | `true` | Same ASSUMED solver_defaults basis. Provenance: assumed, based on previous experience. |
 
 Table 13. Every assigned input and interpretation is ASSUMED; the source does not provide a dimensioned well or measured surface card.
 
 The production module reports gross displacement from pump area, gross stroke and speed; net displacement multiplies gross by fillage; theoretical production multiplies net by runtime/24. The reported pump-efficiency value is not a multiplier in that calculation. Runtime source `card` denotes the InputParameters default, not measured runtime. Both CPIP density and gradient are retained above; negative computed intake pressures are retained without clamping. The module's CPIP uses its own default mixture density (35° API oil, 1.03 water specific gravity, 50 % water cut, 58.651 lb/ft³), not the context fluid density of 63.237 lb/ft³ used to scale the load, so the computed fluid load can exceed the CPIP discharge-pressure basis; CPIP for these examples is therefore not established.
 
-Model SHA-256 digests: shipped `c3612e1f31aad740b4ebc5f81e34bf09ae7d21e42f1f18915c2a76c94337a40c`; shape_only `4190590bd965267518f9e936ac3a315d3be9a68eac72e92b60f5b1e6bb38c94f`.
+Model SHA-256 digests (decompressed inference JSON): shipped `c3612e1f31aad740b4ebc5f81e34bf09ae7d21e42f1f18915c2a76c94337a40c`; shape_only `4190590bd965267518f9e936ac3a315d3be9a68eac72e92b60f5b1e6bb38c94f`.
 
 ## What these examples do not establish
 
@@ -675,7 +694,7 @@ The surface cards are synthesised, not measured. The plate is normalised and dim
 
 All ten shapes receive the same fluid-load range. For rod parting and any condition whose physical pump load would be near zero, that uniform scale makes the result a shape illustration, not a physical pump card. Classifier probabilities describe model class separation; they are not calibrated field probabilities. Every classifier call remains **HYPOTHESIS**.
 
-The forward model is the discrete inverse of the default solver on the same grid. Round-trip load nRMSE tests inverse consistency under that basis, not physical accuracy. The test limit is 3.0 %, above the prior 0.4–2.4 % probe envelope by 0.6 percentage points. Direction and cyclic phase follow compare_cards alignment; no load offset is introduced. Computed pump position retains the solver datum (static rod stretch offset) in JSON and CSV; stroke is compared by range. Each card is plotted from the bottom of its own stroke; the computed card's solver datum (static rod stretch) is removed for display only.
+The forward model is the discrete inverse of the default solver on the same grid. Round-trip load nRMSE tests inverse consistency under that basis, not physical accuracy. The numerical criterion is derived from the source samples independently of solver output: RMS recovery error is less than the largest adjacent source-load increment, including closure. In percent of source load range, the limit is 100 * max(abs(F[i+1] - F[i])) / range(F). This compares recovery error with one sample of source-load resolution; it is not an engineering acceptance limit or evidence of field accuracy. An eight-sample hand calculation with 100 lbf steps over a 400 lbf range gives 25.0 %; constant offsets of 80 lbf and 120 lbf give RMS errors of 20.0 % and 30.0 %, respectively, on opposite sides of that limit. The former 3.0 % limit depended on an unretained prior run; it remains an additional regression ceiling, without serving as independent qualification evidence. Direction and cyclic phase follow compare_cards alignment; no load offset is introduced. Computed pump position retains the solver datum (static rod stretch offset) in JSON and CSV; stroke is compared by range. Each card is plotted from the bottom of its own stroke; the computed card's solver datum (static rod stretch) is removed for display only.
 
 ## Rebuild
 

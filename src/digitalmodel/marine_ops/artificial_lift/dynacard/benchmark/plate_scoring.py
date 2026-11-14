@@ -14,6 +14,7 @@ from ..diagnostic_plate import (
 )
 from ..diagnostics import (
     MODEL_PATH, SHAPE_MODEL_PATH, _classify_shape_with_model, classify_with_model,
+    read_model_bytes,
 )
 from ..models import CardData, DiagnosticResult
 from .measurements import wilson_interval
@@ -169,7 +170,7 @@ def score_shipped_model_scale_sweep(workbook: str | Path, *, samples: int = 100)
 def plate_score_document(workbook: str | Path) -> dict:
     """Return a deterministic score record bound to workbook and model bytes."""
     curves = [c for c in load_diagnostic_plate(workbook) if c.ordinate == "load"]
-    shape_bytes = SHAPE_MODEL_PATH.read_bytes()
+    shape_bytes = read_model_bytes(SHAPE_MODEL_PATH)
     shape_model = json.loads(shape_bytes)
     cards = [(c, prepare_plate_card(c, stroke_in=100, load_range_lbf=6000)) for c in curves]
     shape_score = score_plate(lambda c: _classify_shape_with_model(c, shape_model), cards)
