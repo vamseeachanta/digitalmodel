@@ -43,7 +43,7 @@ def inputs(builder, tmp_path):
 def test_counts_and_provenance_match_independent_sources(builder):
     rows = builder.build_register()["rows"]
     by_path = {r["path"]: r for r in rows if r["path"]}
-    for name, expected in [("riser_stackup", 84), ("config_catalog", 28), ("rig_riser_interface", 10)]:
+    for name, expected in [("riser_stackup", 84), ("config_catalog", 42), ("rig_riser_interface", 10)]:
         path = f"data/riser_database/{name}.csv"
         with (ROOT / path).open(newline="", encoding="utf-8") as stream:
             assert by_path[path]["count"] == len(list(csv.DictReader(stream))) == expected

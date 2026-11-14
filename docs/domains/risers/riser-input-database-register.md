@@ -10,7 +10,7 @@ populated means nonzero records otherwise. Absent categories come from the capab
 | Category | Path | Format | Count | Unit | Status | Provenance mechanism | Open issue |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Line pipe and tubulars | `data/line_pipe/data.json` | json | 0 | records | empty | citation_id per row resolved in sources.yml | none |
-| Line pipe and tubulars | `data/riser_database/config_catalog.csv` | csv | 28 | rows | populated | source_path | none |
+| Line pipe and tubulars | `data/riser_database/config_catalog.csv` | csv | 42 | rows | populated | source_path | none |
 | Stack-ups and rig interface | `data/riser_database/riser_stackup.csv` | csv | 84 | rows | populated | wiki_path | none |
 | Stack-ups and rig interface | `data/riser_database/rig_riser_interface.csv` | csv | 10 | rows | populated | wiki_path | none |
 | Stack-ups and rig interface | `data/drilling_rigs/udw_rig_fleet_external.yml` | yml | 9 | rigs | populated | file-level sources list | none |

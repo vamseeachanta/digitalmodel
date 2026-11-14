@@ -2,7 +2,7 @@
 "not_yet_counted": ["config/pipe/*.yml", "data/vessels/ (remaining members)", "docs/domains/orcaflex/library/buoy_types/", "docs/domains/orcaflex/library/line_types/", "src/digitalmodel/fatigue/ (including __init__.py)", "src/digitalmodel/materials/line_pipe.py"],
 "rows": [
 {"category":"Line pipe and tubulars","count":0,"format":"json","issue":null,"path":"data/line_pipe/data.json","provenance":"citation_id per row resolved in sources.yml","selector":"records","status":"empty","unit":"records"},
-{"category":"Line pipe and tubulars","count":28,"format":"csv","issue":null,"path":"data/riser_database/config_catalog.csv","provenance":"source_path","selector":"","status":"populated","unit":"rows"},
+{"category":"Line pipe and tubulars","count":42,"format":"csv","issue":null,"path":"data/riser_database/config_catalog.csv","provenance":"source_path","selector":"","status":"populated","unit":"rows"},
 {"category":"Stack-ups and rig interface","count":84,"format":"csv","issue":null,"path":"data/riser_database/riser_stackup.csv","provenance":"wiki_path","selector":"","status":"populated","unit":"rows"},
 {"category":"Stack-ups and rig interface","count":10,"format":"csv","issue":null,"path":"data/riser_database/rig_riser_interface.csv","provenance":"wiki_path","selector":"","status":"populated","unit":"rows"},
 {"category":"Stack-ups and rig interface","count":9,"format":"yml","issue":null,"path":"data/drilling_rigs/udw_rig_fleet_external.yml","provenance":"file-level sources list","selector":"rigs","status":"populated","unit":"rigs"},
