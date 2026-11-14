@@ -55,7 +55,17 @@
       card.position.push(Number(cells[pi])); card.load.push(Number(cells[li]));
     });
     validateCard(card);
-    return card;
+    return closeCycle(card);
+  }
+  // The periodic stencil reads the last sample as phase zero repeated. A CSV
+  // without an exact closing row holds unique phases; repeat its first row so
+  // dropping or keeping the closing row gives the same pump card.
+  function closeCycle(card) {
+    const last = card.position.length - 1;
+    if (card.position[last] === card.position[0] && card.load[last] === card.load[0]) {
+      return card;
+    }
+    return {position: [...card.position, card.position[0]], load: [...card.load, card.load[0]]};
   }
   function validateUnsupported(well) {
     if (well.survey != null) {

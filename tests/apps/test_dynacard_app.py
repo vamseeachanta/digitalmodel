@@ -133,16 +133,43 @@ def test_five_field_fixtures(assets, tmp_path):
 def test_csv_headers_comments_and_units(header, tmp_path):
     text = "# inches and lbf\n" + header + "\n0,10\n1,20\n2,20\n1,10\n"
     result = run_node({"operation": "parse", "text": text}, tmp_path)
-    assert result == {"position": [0, 1, 2, 1], "load": [10, 20, 20, 10]}
+    # Four unique phases; the first row is repeated to close the cycle.
+    assert result == {"position": [0, 1, 2, 1, 0], "load": [10, 20, 20, 10, 10]}
 
 
 @NODE_REQUIRED
 def test_worked_example_columns_and_template(assets, tmp_path):
     text = "sample,surface_load_lbf,surface_position_in,pump_load_lbf\n0,10,0,1\n1,20,1,2\n2,20,2,2\n3,10,1,1\n"
     assert run_node({"operation": "parse", "text": text}, tmp_path) == {
-        "position": [0, 1, 2, 1], "load": [10, 20, 20, 10]}
+        "position": [0, 1, 2, 1, 0], "load": [10, 20, 20, 10, 10]}
     template = (APP / "template.csv").read_text(encoding="utf-8")
     assert run_node({"operation": "parse", "text": template}, tmp_path) == assets["examples"][0]["card"]
+
+
+def card_csv(position, load):
+    return "position_in,load_lbf\n" + "".join(
+        f"{p!r},{f!r}\n" for p, f in zip(position, load, strict=True))
+
+
+@NODE_REQUIRED
+@pytest.mark.parametrize("index", [0, 1, 3])
+def test_open_csv_cycle_matches_its_closed_form(index, assets, tmp_path):
+    """Removing only the exact closing row must not change the pump card."""
+    card, well = assets["examples"][index]["card"], assets["well"]
+    assert card["position"][0] == card["position"][-1] and card["load"][0] == card["load"][-1]
+    closed_text = card_csv(card["position"], card["load"])
+    open_text = card_csv(card["position"][:-1], card["load"][:-1])
+    closed, opened = run_node([{"operation": "parse", "text": closed_text},
+                               {"operation": "parse", "text": open_text}], tmp_path)
+    assert closed == card
+    assert opened == card
+    results = run_node([{"card": closed, "well": well}, {"card": opened, "well": well}], tmp_path)
+    assert results[0]["downhole_card"] == results[1]["downhole_card"]
+    assert results[0]["fillage"]["fillage"] == results[1]["fillage"]["fillage"]
+    assert results[0]["shape_diagnosis"] == results[1]["shape_diagnosis"]
+    saved = json.loads((ROOT / "docs/domains/artificial_lift/dynacard-examples/results.json").read_text(encoding="utf-8"))
+    want = saved["examples"][index]["analysis"]["fillage_pct"]
+    assert results[1]["fillage"]["fillage"] == pytest.approx(want, rel=STORED_REL_TOL, abs=1e-6)
 
 
 @NODE_REQUIRED

@@ -59,7 +59,13 @@ Supply at least four paired finite numerical samples and nonzero surface
 stroke. Empty or nonnumeric cells, nonfinite values, inconsistent row lengths,
 missing required columns and zero stroke are rejected. Sampling timestamps are
 not inferred from position spacing: uniform time intervals remain an input
-assumption. The solver's periodic endpoint handling follows the reference.
+assumption. The periodic solver reads the last sample as phase zero repeated.
+A CSV whose last row repeats the first row exactly is used as supplied; any
+other CSV is read as unique phases and its first row is appended as the closing
+row before solving, as the pump-card study does. Keeping or omitting the
+closing row therefore gives the same pump card, and the loaded sample count
+includes the closing row. Cards passed directly to the core as JSON, such as
+the field fixtures below, are used as supplied, matching the Python workflow.
 
 ## Calculation basis
 
@@ -196,13 +202,10 @@ envelope for pump samples and `1e-6` absolute for fillage and load scalars;
 both classifications require exact agreement. These checks run independently
 of the live Python comparison above.
 
-Stored-result reproduction is not established for example 4, Rod parting:
-the saved fluid load is 2950.083910 lbf, while live Python and JavaScript on
-the saved surface card give 2935.332910 lbf, a 14.751000 lbf difference above
-the comparison tolerance. Surface-card rounding shifts the detected top-left
-corner from sample 21 to sample 20. The stored-result regression remains failing;
-acceptance requires reconciliation of the upstream example serialization and
-corner selection. The other nine stored examples satisfy the comparison.
+All ten stored examples satisfy the comparison. Example 4, Rod parting, now
+stores the fluid load of its saved (rounded) surface card, 2935.33391 lbf; the
+earlier stored value of 2950.083910 lbf came from the unrounded card, whose
+top-left corner falls one sample later.
 
 The field fixtures `field_well_alpha.json`, `field_well_bravo.json`,
 `field_well_charlie.json` and `field_well_delta.json` are supported and compared
