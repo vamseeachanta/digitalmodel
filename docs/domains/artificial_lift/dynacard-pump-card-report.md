@@ -27,7 +27,7 @@ One public field card is converted by the default solver and, as a cross-check b
 The analysis cannot:
 
 - Name a pump fault with a stated field accuracy: every shape label is a HYPOTHESIS; field accuracy is NOT_EVALUATED because independent labelled field cards are unavailable.
-- Analyse a deviated well as vertical without saying so; the frequency-domain cross-check is vertical.
+- Model deviation: both solvers treat the well as vertical; a survey with inclination is flagged "deviation present, vertical approximation applied" and its effect is NOT_EVALUATED.
 - Correct a mis-calibrated load cell without independent calibration evidence.
 - Give production from a card alone: operating runtime and plunger/valve slip are needed.
 - Analyse a well with unanchored tubing: tubing movement is not modelled and a card marked unanchored is rejected.
@@ -69,7 +69,7 @@ Table 1. Public example well design and operating inputs, surface-first taper or
 
 | Assumption | Status | Value or basis | Reason |
 | --- | --- | --- | --- |
-| Vertical well | ASSUMED | Vertical cross-check; default uses supplied survey or vertical fallback | Deviation is not modelled in the frequency-domain cross-check. The public example well record gives a two-station survey with zero inclination. |
+| Vertical well | ASSUMED | Vertical well in both solvers; inclination is flagged, not modelled | The default solver receives the survey but runs with along-hole gravity and contact friction off, so inclination does not change its card; the frequency-domain cross-check is vertical. The public example well record gives a two-station survey with zero inclination. |
 | Pump boundary | ASSUMED | rod length ft: 4750.000; pump depth ft: 4844.000; unrepresented length ft: 94.000 | The supplied rod endpoint is identified with the pump boundary; qualification at the stated pump depth requires a reconciled as-run rod and completion tally. |
 | Rod damping | ASSUMED | default up down s inv: 0.010; 0.011; 0.037; 0.037; gibbs s inv: 0.000; 0.000 | Default damping is estimated from assumed annular geometry and viscosity; Gibbs rates are independently prescribed, not calibrated. |
 | Viscosity cp | ASSUMED | 10.000 | Default damping viscosity is not measured. |

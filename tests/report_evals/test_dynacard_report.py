@@ -335,3 +335,36 @@ def test_periodic_reference_resampling_by_hand():
     got = module('analysis').resample_phases(source, 6)
     assert got.position == pytest.approx([0, 3, 6, 3, 0, 0])
     assert got.load == pytest.approx([100, 100, 100, 250, 400, 250])
+
+
+def test_deviated_survey_is_disclosed_as_vertical_approximation(tmp_path):
+    flag = 'deviation present, vertical approximation applied'
+    data = json.loads((HERE / 'reader-card-template.json').read_text(encoding='utf-8'))
+    depth = sum(rod['length_ft'] for rod in data['rod_string'])
+    data['survey'] = {'measured_depth_ft': [0, depth / 2, depth],
+                      'inclination_deg': [0, 30, 60], 'azimuth_deg': [0, 0, 0]}
+    path = tmp_path / 'deviated.json'
+    path.write_text(json.dumps(data), encoding='utf-8')
+    report = module('analysis')
+    deviated = report.run(path, include_sensitivity=False)
+    vertical = report.run(HERE / 'reader-card-template.json', include_sensitivity=False)
+    # The default solver runs with along-hole gravity and contact friction off,
+    # so inclination leaves the card unchanged; the result must say so.
+    assert deviated['cards']['default'] == vertical['cards']['default']
+    assert deviated['deviation'] == {'survey': data['survey'], 'max_inclination_deg': 60.0,
+                                     'solver_flags': [flag]}
+    assert vertical['deviation'] == {'survey': None, 'max_inclination_deg': None,
+                                     'solver_flags': []}
+    row = next(r for r in deviated['assumptions'] if r['id'] == 'vertical_well')
+    assert 'supplied survey' not in row['value'] and flag in row['why'] and '60' in row['why']
+    text = module('build_report').build_report(deviated)
+    assert flag in text and 'retains the survey' not in text
+
+
+def test_public_survey_flags_are_retained(analysis):
+    assert analysis['deviation']['max_inclination_deg'] == 0.0
+    assert analysis['deviation']['solver_flags'] == []
+    assert analysis['deviation']['survey']['inclination_deg'] == [0.0, 0.0]
+    manifest = module('build_results').manifest(analysis)
+    basis = next(r for r in manifest['inputs'] if r['id'] == 'calculation_basis')
+    assert json.loads(basis['description'])['deviation'] == analysis['deviation']

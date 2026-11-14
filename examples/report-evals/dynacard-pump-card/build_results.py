@@ -56,7 +56,7 @@ def manifest(data):
                'supplied_by': 'repository', 'required': True}
               for index, row in enumerate(data['sources'])]
     metadata = {key: data[key] for key in ('inputs', 'assumptions', 'settings', 'shape_hypothesis',
-                                          'validation', 'sensitivity_basis', 'geometry_basis')}
+                                          'validation', 'sensitivity_basis', 'geometry_basis', 'deviation')}
     metadata['numeric_metadata_decimal_places'] = METADATA_DECIMAL_PLACES
     inputs.append({'id': 'calculation_basis', 'description': json.dumps(canonical_metadata(metadata), ensure_ascii=False),
                    'source': 'Analysis output; includes every prompt number, model hypothesis and assumption; no engineering acceptance is graded.',

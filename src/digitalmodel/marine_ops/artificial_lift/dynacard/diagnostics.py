@@ -24,13 +24,16 @@ SHAPE_MODEL_PATH = Path(__file__).parent / "data" / "dynacard_shape_classifier.j
 
 
 def read_model_bytes(path: Path) -> bytes:
-    """Read inference JSON, decompressing gzip storage without changing its bytes.
+    """Read inference JSON bytes, decompressing gzip storage when requested.
 
-    Model digests identify the decompressed JSON used for inference, independent
-    of its storage representation. Plain JSON remains supported for training.
+    Digests identify the decompressed JSON so lossless storage changes preserve
+    model identity. Missing and corrupt files propagate their read errors.
     """
-    raw = path.read_bytes()
-    return gzip.decompress(raw) if path.suffix == ".gz" else raw
+    path = Path(path)
+    if path.suffix == ".gz":
+        with gzip.open(path, "rb") as stream:
+            return stream.read()
+    return path.read_bytes()
 
 
 class PumpDiagnostics:
