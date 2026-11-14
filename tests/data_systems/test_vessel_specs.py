@@ -3,6 +3,8 @@
 
 """Offline vessel-spec contracts using synthetic, hand-written records."""
 
+import json
+import re
 from copy import deepcopy
 from pathlib import Path
 
@@ -12,6 +14,105 @@ ROOT = Path(__file__).resolve().parents[2]
 DATA = ROOT / "assets" / "data"
 URL = "https://example.org/vessel"
 DATE = "2026-10-11T12:00:00Z"
+PIPELAY_QUEUE = (
+    ("DB50", "McDermott", ("db50", "derrickbarge50")),
+    ("DB30", "McDermott", ("db30", "derrickbarge30")),
+    ("Seven Borealis", "Subsea7", ("sevenborealis",)),
+    ("Castorone", "Saipem", ("castorone",)),
+)
+HLV_QUEUE = (
+    ("Bokalift 2", "Boskalis", ("bokalift2",)),
+    ("Bokalift 1", "Boskalis", ("bokalift1",)),
+    ("Les Alizés", "Jan De Nul", ("lesalizés", "lesalizes")),
+    ("Orion", "DEME", ("orion",)),
+    ("Gulliver", "DEME", ("gulliver",)),
+    ("Svanen", "Van Oord", ("svanen",)),
+    ("DB50", "McDermott", ("db50", "derrickbarge50")),
+)
+
+
+def test_committed_datasets_cover_batch_two():
+    readme = (DATA / "vessel_specs_README.md").read_text(encoding="utf-8")
+    manifest = json.loads(
+        (DATA / "vessel_specs_provenance.json").read_text(encoding="utf-8")
+    )
+    retrieved = {
+        s["source_url"] for s in manifest["sources"] if s["status"] == "retrieved"
+    }
+    reasons = {
+        "refused",
+        "not published",
+        "conflicting values",
+        "name differs",
+        "no headline value",
+        "batch cap",
+    }
+    counts, owners, picked, available = [], set(), set(), {}
+    for kind, queue in (("pipelay", PIPELAY_QUEUE), ("hlv", HLV_QUEUE)):
+        rows = json.loads(
+            (DATA / f"vessel_specs_{kind}.json").read_text(encoding="utf-8")
+        )
+        matches, gaps = [], []
+        for name, owner, keys in queue:
+            found = [
+                row
+                for row in rows
+                if "".join(c for c in row["vessel_name"].casefold() if c.isalnum())
+                in keys
+            ]
+            assert len(found) <= 1, f"Duplicate batch row: {name} ({kind})"
+            gap = re.findall(
+                rf"^- {re.escape(name)} \({kind}\): (.+)$", readme, re.MULTILINE
+            )
+            assert len(gap) <= 1
+            reason = gap[0].split(";", 1)[0] if gap else None
+            matches.append(bool(found))
+            gaps.append(reason)
+            assert not (found and gap), f"Row also listed as gap: {name} ({kind})"
+            if not found:
+                assert reason in reasons, f"Missing batch gap: {name} ({kind})"
+                continue
+            assert name.casefold() in readme.casefold(), f"Missing locator: {name}"
+            row = found[0]
+            assert row["owner"] == owner
+            owners.add(owner)
+            assert row["source_url"] in retrieved
+            if kind == "hlv":
+                assert row["crane_capacity_tonnes"] is not None
+                assert row["crane_capacity_basis"] in ("individual", "combined")
+            else:
+                assert any(
+                    row[field]
+                    for field in (
+                        "tensioner_capacity_tonnes",
+                        "max_pipe_diameter_inches",
+                        "lay_methods",
+                    )
+                )
+        count = sum(matches)
+        assert 1 <= count <= 4, f"New {kind} rows: {count}"
+        counts.append(count)
+        last = max(i for i, matched in enumerate(matches) if matched)
+        assert all(
+            matched or (reason is not None and reason != "batch cap")
+            for matched, reason in zip(matches[:last], gaps[:last], strict=True)
+        ), f"Queue entry skipped for batch cap before last {kind} row"
+        picked.update((kind, entry[0]) for entry, yes in zip(queue, matches) if yes)
+        available[kind] = [
+            entry[0]
+            for entry, yes, reason in zip(queue, matches, gaps, strict=True)
+            if yes or reason == "batch cap"
+        ]
+    assert 4 <= sum(counts) <= 5
+    assert len(owners) >= 2
+    expected = []
+    for preferred in ("pipelay", "hlv", "pipelay", "hlv", "hlv"):
+        alternate = "hlv" if preferred == "pipelay" else "pipelay"
+        for kind in (preferred, alternate):
+            if available[kind] and sum(k == kind for k, _ in expected) < 4:
+                expected.append((kind, available[kind].pop(0)))
+                break
+    assert picked == set(expected[: sum(counts)]), "Batch selection must alternate"
 
 
 @pytest.fixture
