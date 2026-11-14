@@ -2263,7 +2263,7 @@ const data = {
   ],
   "provenance": {
     "results_path": "docs/domains/artificial_lift/dynacard-examples/results.json",
-    "results_sha256": "238570929b4d0c0f33275fb233fdb1e97704a652d2c167ccfb24833d2da8d630",
+    "results_sha256": "0ceedd9c6671470638c7e55dc1ed6b1ca57132d2ce05d65a2162db16647c2580",
     "source": {
       "dataset_url": "https://data.mendeley.com/datasets/hnfwm9mjs6/1",
       "file_url": "https://data.mendeley.com/public-files/datasets/hnfwm9mjs6/files/53140ff5-85c3-40d1-b900-364a892e692e/file_downloaded",

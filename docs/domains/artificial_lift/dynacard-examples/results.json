@@ -1022,8 +1022,8 @@
         "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": -0.00114513661,
-        "fillage_difference_pct": 6.10070027e-05,
+        "fluid_load_difference_lbf": -0.001145,
+        "fillage_difference_pct": 6.1e-05,
         "corners_changed": false
       }
     },
@@ -1808,8 +1808,8 @@
         "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": -6.29097003e-05,
-        "fillage_difference_pct": -4.6430358e-05,
+        "fluid_load_difference_lbf": -6.3e-05,
+        "fillage_difference_pct": -4.6e-05,
         "corners_changed": false
       }
     },
@@ -2594,8 +2594,8 @@
         "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": -34.1359398,
-        "fillage_difference_pct": 0.000145721851,
+        "fluid_load_difference_lbf": -34.13594,
+        "fillage_difference_pct": 0.000146,
         "corners_changed": true
       }
     },
@@ -3380,8 +3380,8 @@
         "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": 14.7499952,
-        "fillage_difference_pct": 0.000182709048,
+        "fluid_load_difference_lbf": 14.749995,
+        "fillage_difference_pct": 0.000183,
         "corners_changed": true
       }
     },
@@ -4166,8 +4166,8 @@
         "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": 0.000247962484,
-        "fillage_difference_pct": -0.000110270825,
+        "fluid_load_difference_lbf": 0.000248,
+        "fillage_difference_pct": -0.00011,
         "corners_changed": false
       }
     },
@@ -4952,8 +4952,8 @@
         "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": 0.000149672897,
-        "fillage_difference_pct": -0.000142347073,
+        "fluid_load_difference_lbf": 0.00015,
+        "fillage_difference_pct": -0.000142,
         "corners_changed": false
       }
     },
@@ -5738,8 +5738,8 @@
         "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": -0.00196923839,
-        "fillage_difference_pct": 3.64939936e-05,
+        "fluid_load_difference_lbf": -0.001969,
+        "fillage_difference_pct": 3.6e-05,
         "corners_changed": false
       }
     },
@@ -6524,8 +6524,8 @@
         "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": -0.00167966895,
-        "fillage_difference_pct": 4.95061572e-06,
+        "fluid_load_difference_lbf": -0.00168,
+        "fillage_difference_pct": 5e-06,
         "corners_changed": false
       }
     },
@@ -7310,8 +7310,8 @@
         "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": 28.1745002,
-        "fillage_difference_pct": -8.41669586e-05,
+        "fluid_load_difference_lbf": 28.1745,
+        "fillage_difference_pct": -8.4e-05,
         "corners_changed": true
       }
     },
@@ -8096,8 +8096,8 @@
         "tolerance_basis": "Pre-task probe 0.4 to 2.4%; 0.6 percentage-point numeric headroom"
       },
       "published_precision_effect": {
-        "fluid_load_difference_lbf": -0.00142573444,
-        "fillage_difference_pct": 1.17618568e-05,
+        "fluid_load_difference_lbf": -0.001426,
+        "fillage_difference_pct": 1.2e-05,
         "corners_changed": false
       }
     }

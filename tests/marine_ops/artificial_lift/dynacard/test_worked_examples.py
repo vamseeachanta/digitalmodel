@@ -16,8 +16,8 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostic_plate import (
     load_diagnostic_plate,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.worked_examples import (
-    _round_trip, build_examples, diagnostics_matrix, example_well, fluid_load_scale_lbf,
-    results_document,
+    PRECISION_EFFECT_DECIMALS, _round_trip, build_examples, diagnostics_matrix, example_well,
+    fluid_load_scale_lbf, results_document,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.models import CardData
 
@@ -217,6 +217,18 @@ def test_document_retains_inference_digests(records, document, monkeypatch, tmp_
     monkeypatch.setattr(worked_examples, "MODEL_PATH", tmp_path / "absent.json")
     monkeypatch.setattr(worked_examples, "SHAPE_MODEL_PATH", tmp_path / "absent-shape.json")
     assert results_document(records) == document
+
+
+def test_precision_effect_is_stored_to_an_absolute_precision(document):
+    # The effect is a small difference of two loads near 3,000 lbf; nine significant
+    # digits of it are floating-point noise that differs between platforms.
+    assert PRECISION_EFFECT_DECIMALS == 6
+    for r in document["examples"]:
+        effect = r["published_precision_effect"]
+        for key in ("fluid_load_difference_lbf", "fillage_difference_pct"):
+            value = effect[key]
+            assert value == round(value, PRECISION_EFFECT_DECIMALS), (r["index"], key, value)
+            assert repr(value) != "-0.0", (r["index"], key)
 
 
 def test_saved_artifacts_equal_fresh_build(document, builder):

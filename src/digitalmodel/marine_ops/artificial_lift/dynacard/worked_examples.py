@@ -43,6 +43,11 @@ class _PinnedDiagnostics(PumpDiagnostics):
 # analysis shifted example 4's fluid load by 15 lbf.
 SURFACE_POSITION_DECIMALS = 4
 SURFACE_LOAD_DECIMALS = 2
+# The published-precision effect is a difference of two results near 3,000 lbf and
+# 60 %; it is stored to fixed decimals (lbf and percentage points) because nine
+# significant digits of so small a difference are floating-point noise that varies
+# between platforms and library builds.
+PRECISION_EFFECT_DECIMALS = 6
 
 
 def published_surface_card(card: CardData) -> CardData:
@@ -172,8 +177,9 @@ def _published_precision_effect(unrounded: CardData, published: CardData) -> dic
                        list(result.fillage.corners)))
     (load_u, fill_u, corners_u), (load_p, fill_p, corners_p) = values
     return {
-        "fluid_load_difference_lbf": load_u - load_p,
-        "fillage_difference_pct": fill_u - fill_p,
+        # Adding 0.0 stores a rounded negative zero as 0.0.
+        "fluid_load_difference_lbf": round(load_u - load_p, PRECISION_EFFECT_DECIMALS) + 0.0,
+        "fillage_difference_pct": round(fill_u - fill_p, PRECISION_EFFECT_DECIMALS) + 0.0,
         "corners_changed": corners_u != corners_p,
     }
 
