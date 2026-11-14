@@ -47,7 +47,7 @@ def provenance(args, context):
                    digitalmodel_file=package.relative_to(root).as_posix(), code_mode=args.revision)
     paths = [root / FIXTURE, *sorted((root / FOLDER).glob('*.py')),
              *sorted((root / 'src/digitalmodel/marine_ops/artificial_lift/dynacard').rglob('*.py')),
-             *sorted((root / 'src/digitalmodel/marine_ops/artificial_lift/dynacard/data').glob('*.json')),
+             *sorted((root / 'src/digitalmodel/marine_ops/artificial_lift/dynacard/data').glob('*.json*')),
              root / 'tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json',
              root / 'tests/marine_ops/artificial_lift/dynacard/testdata/mendeley_plate/Working condition diagnosis plate.xls']
     context['sha256'] = {p.relative_to(root).as_posix(): evalkit.sha256_file(p) for p in paths}
