@@ -135,6 +135,94 @@
       "role": "specification",
       "source_vintage": "June 2020, printed on the document",
       "licence_terms": "No reuse licence or explicit redistribution terms stated in the retrieved document. Extracted factual specifications only; original document excluded from Git."
+    },
+    {
+      "source_url": "https://www.jandenul.com/robots.txt",
+      "resolved_url": "https://www.jandenul.com/robots.txt",
+      "retrieved_utc": "2026-11-14T02:33:23.630963+00:00",
+      "sha256": "2cec274005fb8864f5bf5364483e653f4e29ad66bb1738c66273686aeed3e8a3",
+      "size_bytes": 1587,
+      "status": "retrieved",
+      "role": "access_policy",
+      "source_vintage": "Publication date not established",
+      "licence_terms": "Machine-readable robots access policy."
+    },
+    {
+      "source_url": "https://www.jandenul.com/fleet/heavy-lift-vessels",
+      "resolved_url": "https://www.jandenul.com/fleet/heavy-lift-vessels",
+      "retrieved_utc": "2026-11-14T02:33:27.851904+00:00",
+      "sha256": "e78961436d71aa9c04954897ba7fa877e3b934a5c4cfb3a13c7f3919f19ea106",
+      "size_bytes": 102760,
+      "status": "retrieved",
+      "role": "fleet_page",
+      "source_vintage": "Publication date not established",
+      "licence_terms": "No reuse licence stated. Extracted facts with source links only; original document excluded from Git."
+    },
+    {
+      "source_url": "https://www.jandenul.com/sites/default/files/public/Les%20Aliz%C3%A9s%20%28EN%29_2026_0.pdf",
+      "resolved_url": "https://www.jandenul.com/sites/default/files/public/Les%20Aliz%C3%A9s%20%28EN%29_2026_0.pdf",
+      "retrieved_utc": "2026-11-14T02:33:31.761309+00:00",
+      "sha256": "7abfdc3d537f0cdc901c571267ec8878a4afc4acd2929e1ba11d44a1d90b813c",
+      "size_bytes": 450735,
+      "status": "retrieved",
+      "role": "specification",
+      "source_vintage": "2026 filename edition; publication date not established",
+      "licence_terms": "No reuse licence stated. Extracted facts with source links only; original document excluded from Git."
+    },
+    {
+      "source_url": "https://www.deme-group.com/robots.txt",
+      "resolved_url": "https://www.deme-group.com/robots.txt",
+      "retrieved_utc": "2026-11-14T02:33:32.058179+00:00",
+      "sha256": "c1c13bc1964c4b7c93196a4d86fd22de62e3e76ac3379b3bfb1ed35bd627ed02",
+      "size_bytes": 4633,
+      "status": "retrieved",
+      "role": "access_policy",
+      "source_vintage": "Publication date not established",
+      "licence_terms": "Machine-readable robots access policy."
+    },
+    {
+      "source_url": "https://www.deme-group.com/technologies/orion",
+      "resolved_url": "https://www.deme-group.com/technologies/orion",
+      "retrieved_utc": "2026-11-14T02:33:36.006388+00:00",
+      "sha256": "eaedd2a0c23ae8eed15d046d41e10372d02a7e285b5470431a33a2929114a3fd",
+      "size_bytes": 113657,
+      "status": "retrieved",
+      "role": "fleet_page",
+      "source_vintage": "Publication date not established",
+      "licence_terms": "No reuse licence stated. Extracted facts with source links only; original document excluded from Git."
+    },
+    {
+      "source_url": "https://www.deme-group.com/technologies/gulliver",
+      "resolved_url": "https://www.deme-group.com/technologies/gulliver",
+      "retrieved_utc": "2026-11-14T02:33:39.672597+00:00",
+      "sha256": "b08fc613b7896569ae232c5967d7c3970cd03e6822657c13a0c019ae728bf537",
+      "size_bytes": 102532,
+      "status": "retrieved",
+      "role": "fleet_page",
+      "source_vintage": "Publication date not established",
+      "licence_terms": "No reuse licence stated. Extracted facts with source links only; original document excluded from Git."
+    },
+    {
+      "source_url": "https://www.saipem.com/robots.txt",
+      "resolved_url": "https://www.saipem.com/robots.txt",
+      "retrieved_utc": "2026-11-14T02:33:50.121247+00:00",
+      "sha256": "773fb8d35bb9a39d35335ee6db8dc5c912d2aacbfb823152d9c61cd647dd902d",
+      "size_bytes": 2027,
+      "status": "retrieved",
+      "role": "access_policy",
+      "source_vintage": "Publication date not established",
+      "licence_terms": "Machine-readable robots access policy."
+    },
+    {
+      "source_url": "https://www.saipem.com/en/solutions-energy-transition/fleet-and-yards/castorone",
+      "resolved_url": "https://www.saipem.com/en/solutions-energy-transition/fleet-and-yards/castorone",
+      "retrieved_utc": "2026-11-14T02:33:54.167562+00:00",
+      "sha256": "e9110c8cbe669bcfd39717d528eaa072c8d0a25d3f3122ddfcaa56668bcc078b",
+      "size_bytes": 153191,
+      "status": "retrieved",
+      "role": "fleet_page",
+      "source_vintage": "Publication date not established",
+      "licence_terms": "No reuse licence stated. Extracted facts with source links only; original document excluded from Git."
     }
   ]
 }

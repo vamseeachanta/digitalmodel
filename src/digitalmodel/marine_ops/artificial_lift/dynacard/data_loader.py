@@ -109,7 +109,7 @@ def load_from_json_file(filepath: Union[str, Path]) -> DynacardAnalysisContext:
 
 def parse_legacy_json(data: Dict[str, Any]) -> DynacardAnalysisContext:
     """
-    Parse legacy Oxy.Cipher.DynaCard JSON format to Pydantic models.
+    Parse the legacy JSON format of an operator's well-management system to Pydantic models.
 
     Args:
         data: Raw JSON dictionary

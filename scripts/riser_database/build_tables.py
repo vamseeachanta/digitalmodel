@@ -13,8 +13,11 @@ Run as a file (the workspace deny-list blocks ``python3 -c``):
 """
 from __future__ import annotations
 
+import argparse
 import csv
 import hashlib
+import io
+import math
 import re
 import sys
 from pathlib import Path
@@ -146,20 +149,100 @@ def _pipe_row(rel: str, rules: dict, conv: dict) -> dict:
     }
 
 
-def _write_csv(path: Path, columns: list[str], rows: list[dict]) -> dict:
-    with path.open("w", newline="") as fh:
+def _write_csv(path: Path, columns: list[str], rows: list[dict], outputs: dict) -> dict:
+    with io.StringIO(newline="") as fh:
         writer = csv.DictWriter(fh, fieldnames=columns, lineterminator="\n")
         writer.writeheader()
         for row in rows:
             writer.writerow({col: str(row.get(col, "")) for col in columns})
+        raw = fh.getvalue().encode("utf-8")
+    outputs[path] = raw
     return {
         "file": path.name,
-        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+        "sha256": hashlib.sha256(raw).hexdigest(),
         "rows": len(rows),
     }
 
 
-def main() -> int:
+def _example_document(example: str) -> dict:
+    base = REPO_ROOT / "docs/domains/orcaflex/examples/modular" / example
+    master = base / "master.yml"
+    if Path(example).is_absolute() or not master.resolve().is_relative_to(REPO_ROOT.resolve()):
+        raise ValueError("example escapes repository")
+    required = {f"includes/{name}.yml" for name in (
+        "01_general", "03_environment", "05_line_types", "07_lines")}
+    doc, seen = {}, set()
+    for entry in yaml.safe_load(master.read_text()):
+        rel = entry["includefile"]
+        path = base / rel
+        if Path(rel).is_absolute() or not path.resolve().is_relative_to(REPO_ROOT.resolve()):
+            raise ValueError("include escapes repository")
+        if rel in seen:
+            raise ValueError("duplicate include")
+        seen.add(rel)
+        if rel in required:
+            part = yaml.safe_load(path.read_text())
+            if doc.keys() & part.keys():
+                raise ValueError("duplicate example section")
+            doc.update(part)
+    if not required <= seen:
+        raise ValueError("missing example includes")
+    return doc
+
+
+def _named(values: list[dict], name: str) -> dict:
+    matches = [value for value in values if value["Name"] == name]
+    if len(matches) != 1:
+        raise ValueError("selected name must occur exactly once")
+    return matches[0]
+
+
+def _positive(value) -> float:
+    if (isinstance(value, bool) or not isinstance(value, (int, float))
+            or not math.isfinite(value) or value <= 0):
+        raise ValueError("dimension must be finite and positive")
+    return value
+
+
+def _public_example_row(selection: dict, conv: dict) -> dict:
+    doc = _example_document(selection["example"])
+    general, env = doc["General"], doc["Environment"]
+    units = general["UnitsSystem"]
+    if units == "SI" and general.get("LengthUnits", "m") == "m":
+        scale = 1
+    elif units == "User" and general.get("LengthUnits") == "ft":
+        scale = conv["ft_to_m"]
+    else:
+        raise ValueError("unsupported example units")
+    depth = env.get("WaterDepth")
+    if depth is None:
+        if (selection["example"] != "A03/A03 Jumper to high tower"
+                or env.get("SeabedType") != "Flat" or env.get("SeabedSlope") != 0):
+            raise ValueError("depth requires the flat zero-slope A03 seabed")
+        depth = env.get("SeabedOriginDepth")
+    line = _named(doc["Lines"], selection["line"])
+    lt = _named(doc["LineTypes"], selection["bare_type"])
+    if lt["Name"] not in {section[0] for section in line["LineType, Length, TargetSegmentLength"]}:
+        raise ValueError("bare type absent from selected line")
+    od, wall = _positive(lt["OD"]), None
+    if lt["Category"] == "Homogeneous pipe":
+        wall = _positive(od - _positive(lt["ID"])) * scale * conv["m_to_mm"] / 2
+    elif lt["Category"] != "General":
+        raise ValueError("unsupported line type category")
+    return {
+        "config_id": selection["config_id"], "riser_type": selection["riser_type"],
+        "source_path": f"docs/domains/orcaflex/examples/modular/{selection['example']}/master.yml",
+        "water_depth_m": _num(_positive(_positive(depth) * scale)),
+        "od_mm": _num(_positive(od * scale * conv["m_to_mm"])), "wt_mm": _num(wall),
+        "material_grade": "", "analysis_kind": "orcaflex_public_example",
+        "notes": f"public example; bare {lt['Name']} on {line['Name']}; catalogue only",
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true", help="compare outputs without writing")
+    args = parser.parse_args(argv)
     spec = yaml.safe_load(SPEC_PATH.read_text())
     conv = spec["unit_conversions"]
     rules = spec["filename_rules"]
@@ -168,6 +251,7 @@ def main() -> int:
     config_rows += [_pipe_row(rel, rules, conv) for rel in spec["config_pipe_files"]]
     # References to screening methods carry no inferred physical dimensions.
     config_rows += spec.get("reference_config_rows", [])
+    config_rows += [_public_example_row(row, conv) for row in spec["public_example_configs"]]
     config_rows.sort(key=lambda r: r["config_id"])
 
     crosswalk_rows = sorted(spec["crosswalk_rows"], key=lambda r: r["code_id"])
@@ -177,22 +261,22 @@ def main() -> int:
     for row in stackup_rows + rig_rows:
         row["wiki_path"] = REGISTRY_WIKI_PATH
 
-    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    outputs = {}
     tables = {
         "config_catalog": _write_csv(
-            OUT_DIR / "config_catalog.csv", CONFIG_COLUMNS, config_rows
+            OUT_DIR / "config_catalog.csv", CONFIG_COLUMNS, config_rows, outputs
         ),
         "standards_crosswalk": _write_csv(
-            OUT_DIR / "standards_crosswalk.csv", CROSSWALK_COLUMNS, crosswalk_rows
+            OUT_DIR / "standards_crosswalk.csv", CROSSWALK_COLUMNS, crosswalk_rows, outputs
         ),
         "material_sn_scf_dff": _write_csv(
-            OUT_DIR / "material_sn_scf_dff.csv", MATERIAL_COLUMNS, material_rows
+            OUT_DIR / "material_sn_scf_dff.csv", MATERIAL_COLUMNS, material_rows, outputs
         ),
         "riser_stackup": _write_csv(
-            OUT_DIR / "riser_stackup.csv", STACKUP_COLUMNS, stackup_rows
+            OUT_DIR / "riser_stackup.csv", STACKUP_COLUMNS, stackup_rows, outputs
         ),
         "rig_riser_interface": _write_csv(
-            OUT_DIR / "rig_riser_interface.csv", RIG_COLUMNS, rig_rows
+            OUT_DIR / "rig_riser_interface.csv", RIG_COLUMNS, rig_rows, outputs
         ),
     }
     manifest = {
@@ -202,9 +286,16 @@ def main() -> int:
         "issue": 1245,
         "tables": tables,
     }
-    (OUT_DIR / "manifest.yaml").write_text(
-        yaml.safe_dump(manifest, sort_keys=True, default_flow_style=False)
-    )
+    outputs[OUT_DIR / "manifest.yaml"] = yaml.safe_dump(
+        manifest, sort_keys=True, default_flow_style=False).encode("utf-8")
+    if args.check:
+        stale = [path.name for path, raw in outputs.items() if not path.is_file() or path.read_bytes() != raw]
+        if stale:
+            print("stale outputs: " + ", ".join(stale), file=sys.stderr)
+        return int(bool(stale))
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    for path, raw in outputs.items():
+        path.write_bytes(raw)
     for name, meta in tables.items():
         print(f"{name}: {meta['rows']} rows sha256={meta['sha256'][:12]}…")
     return 0

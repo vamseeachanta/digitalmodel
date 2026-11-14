@@ -2,10 +2,14 @@
 
 from __future__ import annotations
 
+import math
 from enum import Enum
 from typing import Literal
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+
+# RiserTensioner is re-exported from here for existing imports.
+from .riser_tensioner import RiserTensioner, validate_tensioners  # noqa: F401
 
 
 class RiserConfiguration(str, Enum):
@@ -74,6 +78,19 @@ class RiserLineType(BaseModel):
     drag_coefficient: float | str = Field(default=1.2, description="Cd or table name")
     added_mass_coefficient: float = Field(default=1.0, ge=0, description="Ca")
     axial_drag_coefficient: float = Field(default=0.008, ge=0, description="Axial Cd")
+
+    # Seabed friction (#3989); defaults reproduce the former hard-coded output.
+    # The 0.5 default is uncited and unqualified for design use; see
+    # docs/domains/orcaflex/generator-standards.md, "Uncited seabed friction
+    # defaults".
+    seabed_lateral_friction: float = Field(
+        default=0.5, ge=0,
+        description="Seabed lateral friction coefficient (default 0.5: uncited, "
+        "unqualified for design use)",
+    )
+    seabed_axial_friction: float | None = Field(
+        default=None, ge=0, description="Seabed axial friction coefficient (~ = lateral)"
+    )
 
     # Stress calculation diameters (if different from geometry)
     stress_od: float | None = Field(default=None, gt=0, description="Stress calc OD (m)")
@@ -150,8 +167,19 @@ class RiserContents(BaseModel):
 
     Attributes:
         density: Contents density (te/m3). Default 1.0 (seawater).
-        pressure: Internal pressure (kPa). Default 0.
-        flow_rate: Contents flow rate (m/s). Default 0.
+        pressure: Internal gauge pressure (kPa = kN/m2). Default 0. Emitted
+            as ``ContentsPressure``. OrcaFlex pressures are gauge pressures,
+            and the contents pressure applies at a reference Z level, for
+            which ``~`` denotes the top end of the line in the reset state
+            [Orcina webhelp, Line data: Contents,
+            https://www.orcina.com/webhelp/OrcaFlex/Content/html/Linedata,Contents.htm
+            (retrieved 2026-11-13)]. The generator does not emit ``ContentsPressureRefZ``;
+            the value OrcaFlex applies when the key is omitted needs native
+            readback (#3983).
+        flow_rate: Default 0; non-zero values are refused by the riser
+            builder. The schema states m/s, while OrcaFlex ``Flow rate`` is a
+            mass flow rate [same source]; the conversion (contents density
+            times internal area times velocity) is not specified here.
     """
 
     density: float = Field(default=1.0, ge=0, description="Contents density (te/m3)")
@@ -297,55 +325,78 @@ class RiserLink(BaseModel):
     release_stage: int | None = Field(default=None, ge=1, description="Release stage")
 
 
-class RiserTensioner(BaseModel):
-    """Top tensioner system for a top-tensioned or drilling riser (#3976).
+def _vector3(v: list[float]) -> list[float]:
+    if len(v) != 3:
+        raise ValueError(f"Must have 3 components, got {len(v)}")
+    return v
 
-    ``count`` linear spring/damper links run from points on the vessel to the
-    free End A node (``arc_length`` must be zero). Interior attachments are
-    unsupported because OrcaFlex snaps them to reference-arc-length nodes.
-    The vessel points lie on a circle of
-    ``radius`` about the riser top in plan, at height ``vessel_z``, in vessel
-    axes. The generator sets each unstretched length so that, in the initial
-    (generated) geometry, the vertical components of the link tensions sum
-    to ``total_tension``:
 
-        T_i = (total_tension / count) * L / dz,   L0 = L - T_i / stiffness
+def _require_finite(v: list[float]) -> None:
+    if not all(math.isfinite(c) for c in v):
+        raise ValueError(f"Components must be finite, got {v}")
 
-    where L is the link length and dz its vertical extent. The tension is a
-    target for the initial geometry; static equilibrium changes it by
-    stiffness x (top displacement along the link).
+
+class RiserBuoy(BaseModel):
+    """Lumped 6D buoy for buoy-supported risers, hybrid towers and arches.
+
+    Emitted as an OrcaFlex ``6DBuoys`` entry with ``BuoyType: Lumped buoy``;
+    the data names follow the public example "A02 Lazy S simple". Riser line
+    ends (``type: buoy``) and link endpoints may reference the buoy by name.
+    Hydrodynamic and inertia inputs are required: there are no silent defaults
+    for drag, added mass or inertia.
 
     Attributes:
-        name: Prefix for the link names (``<name>_1`` ... ``<name>_<count>``).
-        line: Riser line whose End A is supported. That end must be ``free``.
-        count: Number of tensioner units.
-        total_tension: Target total vertical link tension in the generated geometry (kN).
-        stiffness: Stiffness per unit (kN/m).
-        damping: Linear damping per unit (kN.s/m). 0 means no damper.
-        radius: Plan radius of the vessel points about the riser top (m).
-        vessel_z: Height of the vessel points in vessel axes (m).
-        start_angle: Plan angle of the first unit in vessel axes (deg).
-        arc_length: Attachment arc length from End A (m); only zero is supported.
+        name: Buoy name.
+        connection: ``Free`` (default), ``Fixed``, ``Anchored`` or the name of
+            the vessel the buoy is attached to.
+        position: Initial position [x, y, z] (m); relative to the connected
+            object when ``connection`` names one.
+        attitude: Initial attitude [rx, ry, rz] (deg). Default level.
+        mass: Mass (te).
+        moments_of_inertia: Moments of inertia about the buoy axes (te.m2).
+        centre_of_mass: Centre of mass in buoy axes (m). Default origin.
+        volume: Displaced volume (m3).
+        height: Height used for partial immersion (m).
+        centre_of_volume: Centre of volume in buoy axes (m). Default origin.
+        drag_area: Drag area per buoy axis [x, y, z] (m2).
+        drag_coefficient: Drag force coefficient per axis [x, y, z].
+        added_mass_coefficient: Added mass coefficient per axis [x, y, z].
     """
 
-    name: str = Field(..., min_length=1, description="Link name prefix")
-    line: str = Field(..., min_length=1, description="Supported riser line")
-    count: int = Field(..., ge=1, le=12, description="Number of units")
-    total_tension: float = Field(
-        ...,
-        gt=0,
-        description=(
-            "Target total vertical link tension in the generated geometry (kN); "
-            "the static value is lower by vertical tensioner stiffness x top rise "
-            "(linearised)."
-        ),
+    # Non-finite values would be copied unchanged into the OrcaFlex model.
+    model_config = ConfigDict(allow_inf_nan=False)
+
+    name: str = Field(..., min_length=1, description="Buoy name")
+    connection: str = Field(default="Free", min_length=1, description="Connection")
+    position: list[float] = Field(..., description="Initial position [x, y, z] (m)")
+    attitude: list[float] = Field(default=[0, 0, 0], description="Attitude [rx, ry, rz] (deg)")
+    mass: float = Field(..., ge=0, description="Mass (te)")
+    moments_of_inertia: list[float] = Field(..., description="Moments of inertia (te.m2)")
+    centre_of_mass: list[float] = Field(default=[0, 0, 0], description="CoM (m)")
+    volume: float = Field(..., gt=0, description="Displaced volume (m3)")
+    height: float = Field(..., gt=0, description="Height (m)")
+    centre_of_volume: list[float] = Field(default=[0, 0, 0], description="CoV (m)")
+    drag_area: list[float] = Field(..., description="Drag area [x, y, z] (m2)")
+    drag_coefficient: list[float] = Field(..., description="Cd [x, y, z]")
+    added_mass_coefficient: list[float] = Field(..., description="Ca [x, y, z]")
+
+    @field_validator(
+        "position", "attitude", "moments_of_inertia", "centre_of_mass",
+        "centre_of_volume", "drag_area", "drag_coefficient", "added_mass_coefficient",
     )
-    stiffness: float = Field(..., gt=0, description="Stiffness per unit (kN/m)")
-    damping: float = Field(default=0, ge=0, description="Damping per unit (kN.s/m)")
-    radius: float = Field(..., gt=0, description="Plan radius (m)")
-    vessel_z: float = Field(..., description="Vessel point height, vessel axes (m)")
-    start_angle: float = Field(default=0, description="First unit angle (deg)")
-    arc_length: float = Field(default=0, ge=0, description="Attachment arc length (m), End A only")
+    @classmethod
+    def validate_vector3(cls, v: list[float]) -> list[float]:
+        _require_finite(v)
+        return _vector3(v)
+
+    @field_validator("moments_of_inertia", "drag_area", "drag_coefficient",
+                     "added_mass_coefficient")
+    @classmethod
+    def validate_non_negative(cls, v: list[float]) -> list[float]:
+        _require_finite(v)
+        if any(c < 0 for c in v):
+            raise ValueError(f"Components must be >= 0, got {v}")
+        return v
 
 
 class RiserVessel(BaseModel):
@@ -356,7 +407,8 @@ class RiserVessel(BaseModel):
         name: Vessel name for OrcaFlex.
         type_name: Vessel type reference.
         position: Initial position [x, y, z] (m).
-        orientation: Initial orientation [heading, pitch, roll] (deg).
+        orientation: Initial orientation [rx, ry, rz] (deg). The builder
+            emits rz as InitialHeading; rx and ry must be 0 (#3986).
         length: Optional vessel length (m).
         primary_motion: Primary motion mode. Default 'none'.
         superimposed_motion: Superimposed motion. Default 'raos_harmonics'.
@@ -382,6 +434,17 @@ class RiserVessel(BaseModel):
     def validate_vector3(cls, v: list[float]) -> list[float]:
         if len(v) != 3:
             raise ValueError(f"Must have 3 components, got {len(v)}")
+        return v
+
+    @field_validator("orientation")
+    @classmethod
+    def validate_heading_only(cls, v: list[float]) -> list[float]:
+        """The builder emits only the heading; refuse roll and pitch (#3986)."""
+        if v[0] or v[1]:
+            raise ValueError(
+                f"orientation {v}: roll and pitch are not emitted by the riser "
+                "vessel builder (only the heading, orientation[2]); set them to 0"
+            )
         return v
 
 
@@ -440,6 +503,7 @@ class Riser(BaseModel):
     tensioners: list[RiserTensioner] = Field(
         default_factory=list, description="Top tensioner systems"
     )
+    buoys: list[RiserBuoy] = Field(default_factory=list, description="Lumped 6D buoys")
     lines: list[RiserLine] = Field(..., min_length=1, description="Riser lines")
 
     @model_validator(mode="after")
@@ -491,6 +555,7 @@ class Riser(BaseModel):
     def validate_link_references(self) -> "Riser":
         """Validate link connection object names reference existing entities."""
         valid_names = {"Anchored", self.vessel.name}
+        valid_names.update(buoy.name for buoy in self.buoys)
         valid_names.update(line.name for line in self.lines)
         for link in self.links:
             for conn in link.connections:
@@ -504,32 +569,32 @@ class Riser(BaseModel):
     @model_validator(mode="after")
     def validate_tensioners(self) -> "Riser":
         """Tensioners support the free End A of a defined line; names unique."""
-        lines = {line.name: line for line in self.lines}
-        names = [
-            f"{t.name}_{i}"
-            for t in self.tensioners
-            for i in range(1, t.count + 1)
-        ] + [link.name for link in self.links]
-        for tensioner in self.tensioners:
-            line = lines.get(tensioner.line)
-            if line is None:
+        validate_tensioners(self.tensioners, self.lines, self.links)
+        return self
+
+    @model_validator(mode="after")
+    def validate_buoys(self) -> "Riser":
+        """Buoy names are unique, distinct from lines and the vessel, and
+        typed buoy connections name a defined buoy or the vessel."""
+        names = [buoy.name for buoy in self.buoys]
+        if len(names) != len(set(names)):
+            raise ValueError(f"Duplicate buoy names: {names}")
+        clash = set(names) & ({self.vessel.name} | {line.name for line in self.lines})
+        if clash:
+            raise ValueError(f"Buoy names clash with vessel or line names: {sorted(clash)}")
+        builtins = {"Free", "Fixed", "Anchored"}
+        for buoy in self.buoys:
+            if buoy.connection not in builtins | {self.vessel.name}:
                 raise ValueError(
-                    f"Tensioner '{tensioner.name}' references unknown line '{tensioner.line}'"
+                    f"Buoy '{buoy.name}' connection '{buoy.connection}' must be "
+                    f"one of {sorted(builtins)} or the vessel '{self.vessel.name}'"
                 )
-            if line.end_a.type != ConnectionType.FREE:
-                raise ValueError(
-                    f"Tensioner '{tensioner.name}': End A of line '{line.name}' must be "
-                    f"'free' (got '{line.end_a.type.value}')"
-                )
-            if tensioner.arc_length > line.get_total_length():
-                raise ValueError(
-                    f"Tensioner '{tensioner.name}' arc_length beyond line '{line.name}'"
-                )
-            if tensioner.arc_length != 0:
-                raise ValueError(
-                    f"Tensioner '{tensioner.name}' supports End A only "
-                    "(arc_length must be zero); interior attachment snapping is unsupported"
-                )
-        if len(names) != len({name.casefold() for name in names}):
-            raise ValueError(f"Duplicate link or tensioner names: {names}")
+        if self.buoys:
+            for line in self.lines:
+                for end in (line.end_a, line.end_b):
+                    if end.type == ConnectionType.BUOY and end.name not in names:
+                        raise ValueError(
+                            f"Line '{line.name}' connects to buoy '{end.name}', "
+                            f"which is not in riser.buoys {names}"
+                        )
         return self

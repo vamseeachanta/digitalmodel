@@ -14,7 +14,7 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.models import (
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow
 
-LEGACY_DATA_DIR = "/mnt/github/workspace-hub/client_projects/energy_firm_data_analytics/dynacard/Code/Oxy.Cipher.DynaCard/tests/testdata"
+LEGACY_DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "..", "tests", "marine_ops", "artificial_lift", "dynacard", "testdata")
 
 def load_and_map_well(file_path):
     """Maps legacy JSON to modern Context."""
@@ -126,7 +126,7 @@ def create_health_dashboard(results):
 
     fig.update_layout(
         height=400 * (len(results) + 1),
-        title_text="Oxy Cipher: Field-Wide Sucker Rod Pump Health Dashboard",
+        title_text="Field-Wide Sucker Rod Pump Health Dashboard",
         template="plotly_white",
         showlegend=False
     )
