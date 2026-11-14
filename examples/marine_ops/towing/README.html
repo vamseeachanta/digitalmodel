@@ -15,12 +15,22 @@ caption { caption-side: bottom; text-align: left; padding: .5rem 0; }
 </head>
 <body>
 <h1>Towing analysis: worked static scenario</h1>
-<p>The implementation follows the five-step approved plan for
-<a href="https://github.com/vamseeachanta/digitalmodel/issues/487">issue 487</a>
-and its owner audit comment: the package is <code>digitalmodel.marine_ops.towing</code>.
-It evaluates a synthetic 80 m × 24 m barge, an 80 tonnes-force tug and a 600 m wire.
-The fixture's historical name contains “500t”; its actual tug capacity is 80 tonnes-force.
-The fixture is regression input, with no measured vessel data or certified rope properties.</p>
+<p>The package <code>digitalmodel.marine_ops.towing</code> evaluates a synthetic
+80 m × 24 m barge, an 80 tonnes-force tug and a 600 m wire using the criteria
+in the local #487 plan. Results are plan-criterion screening only. A favourable
+screening result does not establish standard compliance or operational acceptance.
+The fixture's historical name contains “500t”; its actual tug capacity is
+80 tonnes-force. Breaking load is assumed, based on previous experience, for
+synthetic regression only; it is not a certified rope property. The 430.0 kN
+line is weaker than the tug's 784.5 kN nominal full pull.</p>
+
+<h2>Revision history</h2>
+<table>
+<thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-11-13</td><td>Identify plan-criterion screening,
+assumed breaking load and unconfirmed coefficient qualification so that the
+example cannot be read as operational acceptance.</td></tr></tbody>
+</table>
 
 <h2>Run and inspect</h2>
 <p>With the project dependencies installed, execute from the repository root:</p>
@@ -29,22 +39,27 @@ PYTHONPATH=src python -m pytest tests/marine_ops/towing/ -m "not solver"</pre>
 <p>Set <code>MPLCONFIGDIR</code> to a writable temporary directory. Configure
 <code>LLM_WIKI_PATH</code> to the existing maintained wiki. The established citation
 resolver validates metadata at calculation time; missing or mismatched references
-raise <code>CitationResolutionError</code>. Tests provide explicitly synthetic
-metadata to exercise that behavior without distributing licensed standards text.</p>
+raise <code>CitationResolutionError</code>. Offline tests provide explicitly synthetic metadata to exercise that behavior.
+When <code>LLM_WIKI_PATH</code> is configured, a separate integration test checks
+the maintained OCIMF page without replacing its metadata. It skips only when
+that private reference checkout is unavailable. Strength-check sidecars point
+to the local plan and do not resolve or claim a standard citation.</p>
 <p><code>run_scenario(environment="storm")</code> evaluates the storm input;
 <code>run_scenario(diameter_scale=0.8)</code> reduces diameter by 20% and scales
 weight and breaking load by 0.8², under the same-construction assumption.
-The fixed scenario verdict is retained independently of the optimizer's result.</p>
+The scenario reports <code>SCREEN_PASS</code> or <code>SCREEN_FAIL</code> and
+warns when towline MBL is below nominal full tug pull. This comparison is a
+warning, not a complete tug-pull strength criterion. The fixed scenario verdict is retained independently of the optimizer's result.</p>
 
 <table>
 <thead><tr><th>Benign fixture quantity</th><th>Value</th><th>Criterion</th></tr></thead>
 <tbody>
-<tr><td>Required pull (kN)</td><td>80.877</td><td>Below available 784.532 kN</td></tr>
-<tr><td>Static support tension (kN)</td><td>86.262</td><td>MBL/static tension ≥ 1.67</td></tr>
-<tr><td>Amplified tension (kN)</td><td>112.140</td><td>430 kN MBL ≥ 3 × amplified tension</td></tr>
-<tr><td>Sag below level supports (m)</td><td>53.847</td><td>At least 10 m clearance in 100 m available depth</td></tr>
-<tr><td>Original strength verdict</td><td>PASS</td><td>93.579 kN positive breaking-load margin</td></tr>
-<tr><td>20% diameter reduction</td><td>FAIL</td><td>275.200 kN MBL is below the recomputed dynamic requirement</td></tr>
+<tr><td>Required pull (kN)</td><td>80.9</td><td>Below available 784.5 kN</td></tr>
+<tr><td>Static support tension (kN)</td><td>86.3</td><td>MBL/static tension ≥ 1.67</td></tr>
+<tr><td>Amplified tension (kN)</td><td>112.1</td><td>430 kN MBL ≥ 3 × amplified tension</td></tr>
+<tr><td>Sag below level supports (m)</td><td>53.8</td><td>At least 10 m clearance in 100 m available depth</td></tr>
+<tr><td>Original strength screening</td><td>SCREEN_PASS</td><td>93.6 kN positive breaking-load margin</td></tr>
+<tr><td>20% diameter reduction</td><td>SCREEN_FAIL</td><td>275.2 kN MBL is below the recomputed dynamic requirement</td></tr>
 <tr><td>Feasible grid candidates</td><td>27 of 36</td><td>All supplied constraints met</td></tr>
 </tbody>
 <caption>Table 1. Synthetic fixture results under the approved plan's criteria.</caption>
@@ -88,12 +103,13 @@ degrees. Geometry margins in the example are metres (clearance) and dimensionles
 
 <h2>Qualification and limitations</h2>
 <p>The approved plan explicitly prescribes factors 3.0 dynamic and 1.67 static.
-Those factors are preserved. Citation metadata binds the available
-DNVGL-ST-N001 2016-06 reference, section 11. The implementation does not establish
-that those two factors alone constitute compliance with that edition, or
-with the <a href="https://www.dnv.com/energy/standards-guidelines/dnv-st-n001-marine-operations-and-marine-warranty/">current DNV-ST-N001 edition</a>.
-A PASS means the named checks meet the supplied criteria; it is not a
-marine-warranty certificate or a control/stability verdict.</p>
+Those factors are preserved as plan criteria only; no clause or table has been
+confirmed to establish them as DNV-ST-N001 requirements. The historical module
+name <code>dnv_st_n001_checks</code> is retained for imports, while the check
+sidecars identify the local plan as their basis. Fairlead capacity and angle
+bounds are also caller criteria. A SCREEN_PASS means only that the supplied
+screening criteria are met. Full tug-pull strength and the governing standard's
+own criteria remain to be assessed before any operational acceptance.</p>
 <p>Dynamic tension is static tension multiplied by an explicit 1.3 example
 factor. No time-domain tug-barge interaction is solved. Line elasticity,
 seabed/water contact, buoyancy, wave loading, yaw control, girting, tug
@@ -102,14 +118,15 @@ model. The line uses the plan's air-weight assumption even when its predicted
 shape would enter water. Operational acceptance requires appropriate line
 properties, vessel coefficients, dynamic response and the governing standard
 assessment.</p>
-<p>The independent OCIMF regression uses only the 90° coefficient row from
-<a href="https://www.ocimf.org/document-libary/58-static-towing-assembly-guidelines-2020/file">Static Towing Assembly Guidelines (2020)</a>, MARIN report 31746-1-PO,
-Table 5, report page 29. Synthetic geometry and wind speed yield hand-calculated
-loads; computed components meet the plan's 5% tolerance. This establishes the
-coefficient-to-load arithmetic, not the applicability of VLCC coefficients to a
-barge. The catenary analytic case meets the separate 0.5% tolerance.</p>
+<p>The explicit wind-coefficient test uses synthetic coefficients and geometry
+and checks signed coefficient-to-load arithmetic. It does not qualify the default
+OCIMFLoading approximation against published data. The previously cited public
+<a href="https://www.ocimf.org/document-libary/58-static-towing-assembly-guidelines-2020/file">Static Towing Assembly Guidelines (2020)</a>
+download returned HTTP 403 on 2026-11-13. Its table has not been confirmed here,
+and the plan's independent OCIMF table acceptance item remains open. The
+catenary analytic case meets the separate 0.5% tolerance.</p>
 <p>Unit tests cover both safety factors, the diameter reduction, storm pull
-failure, each optimizer constraint, invalid inputs and missing citations.
+failure, each optimizer constraint, invalid inputs and missing environmental citations.
 The fixture is explicitly included in installed package data.</p>
 </body>
 </html>

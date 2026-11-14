@@ -3,11 +3,16 @@
 These records exercise resolver wiring only. They do not independently qualify
 any engineering factors. Production calculations resolve the maintained wiki.
 """
+import os
+from pathlib import Path
+
 import pytest
 
 
 @pytest.fixture(autouse=True)
-def citation_metadata(tmp_path, monkeypatch):
+def citation_metadata(tmp_path, monkeypatch, request):
+    if "maintained_wiki" in request.fixturenames:
+        return None
     records = [
         ('engineering', 'ocimf-meg4', 'OCIMF-MEG4', 'OCIMF', '4th-Edition-2018'),
         ('engineering-standards', 'dnvgl-st-n001', 'dnvgl-st-n001',
@@ -20,3 +25,16 @@ def citation_metadata(tmp_path, monkeypatch):
                         f'revision: "{revision}"\n---\nSynthetic resolver metadata.\n')
     monkeypatch.setenv('LLM_WIKI_PATH', str(tmp_path))
     return tmp_path
+
+
+@pytest.fixture
+def maintained_wiki(monkeypatch):
+    """Validate the maintained metadata when its private checkout is available."""
+    configured = os.environ.get('LLM_WIKI_PATH')
+    if not configured:
+        pytest.skip('private reference metadata unavailable: configure LLM_WIKI_PATH')
+    root = Path(configured)
+    if not root.is_dir():
+        pytest.fail('configured maintained wiki directory is missing')
+    monkeypatch.setenv('LLM_WIKI_PATH', str(root))
+    return root

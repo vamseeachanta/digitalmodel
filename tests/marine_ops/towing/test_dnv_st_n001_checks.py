@@ -10,8 +10,9 @@ def test_static_and_dynamic_safety_factors_and_twenty_percent_downsize():
                            dynamic_tension_n=130000)
     assert result.passed
     assert result.margin == pytest.approx(110000)
-    assert result.citations[0].code_id == 'dnvgl-st-n001'
-    assert result.citations[0].source_sibling == 'generic'
+    assert result.citations[0].code_id == 'towing-plan-criteria'
+    assert result.citations[0].document == 'docs/plans/2026-05-05-issue-487-towing-marine-operations.md'
+    assert 'screening only' in result.citations[0].note
     # Same rope construction and grade: MBL scales with diameter squared.
     reduced = check_towline(mbl_n=500000 * 0.8**2, static_tension_n=100000,
                             dynamic_tension_n=130000)
@@ -41,11 +42,12 @@ def test_fairlead_reaction_and_included_bridle_angle_limits():
     assert not check_bridle_angle(91, minimum_deg=20, maximum_deg=90).passed
 
 
-def test_missing_citation_fails_closed(citation_metadata):
-    from digitalmodel.citations.schema import CitationResolutionError
+def test_screening_criteria_do_not_depend_on_a_dnv_wiki_page(citation_metadata):
     from digitalmodel.marine_ops.towing.dnv_st_n001_checks import check_towline
 
     page = citation_metadata / 'wikis/engineering-standards/wiki/standards/dnvgl-st-n001.md'
     page.unlink()
-    with pytest.raises(CitationResolutionError, match='dnvgl-st-n001'):
-        check_towline(mbl_n=500000, static_tension_n=100000, dynamic_tension_n=130000)
+    result = check_towline(mbl_n=500000, static_tension_n=100000, dynamic_tension_n=130000)
+    assert result.passed
+    assert result.reason.startswith('plan-criterion screening:')
+    assert all('dnv' not in ref.code_id.lower() for ref in result.citations)

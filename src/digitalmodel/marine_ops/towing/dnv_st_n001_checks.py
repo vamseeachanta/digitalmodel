@@ -1,17 +1,24 @@
-"""Bounded towing checks from the issue 487 approved design basis.
+"""Plan-criterion towing screening checks; no standard compliance verdict.
 
-The plan prescribes MBL/static tension >=1.67 and MBL/dynamic tension >=3.0.
-Those plan factors are implemented verbatim, not inferred from a full N001
-assessment. Fairlead capacities and bridle limits are explicit project inputs.
-The citation binds the available 2016-06 reference; no claim of certification,
-current-edition equivalence or complete marine-warranty compliance is made.
+The historical module name is retained for imports. Factors are prescribed by
+#487's plan; their attribution to a standard has not been confirmed. Fitting
+capacities and bridle limits are caller inputs. Full tug-pull strength, dynamics
+and operational acceptance require a separate assessment.
 """
 from dataclasses import dataclass
 import math
 
-from digitalmodel.citations.schema import Citation, validate_citation
-
 from .towline_analysis import _positive
+
+
+@dataclass(frozen=True)
+class CriterionReference:
+    """Local design-basis reference, distinct from a maintained standard citation."""
+
+    code_id: str
+    document: str
+    section: str
+    note: str
 
 
 @dataclass(frozen=True)
@@ -19,20 +26,17 @@ class Result:
     passed: bool
     reason: str
     margin: float  # capacity minus demand in N, or distance to angle limit in deg
-    citations: tuple[Citation, ...]
+    citations: tuple[CriterionReference, ...]
 
 
-def _reference() -> tuple[Citation, ...]:
-    citation = Citation(
-        code_id='dnvgl-st-n001', publisher='DNV GL (now DNV)', revision='2016-06',
-        section='Section 11 (sea voyages and towing equipment)',
-        wiki_path='wikis/engineering-standards/wiki/standards/dnvgl-st-n001.md',
-        source_sibling='generic',
-        note=('DNV-ST-N001 towing reference; SF 3.0 dynamic and 1.67 static are '
-              'the issue 487 approved-plan criteria, not a full compliance assessment.'),
-    )
-    validate_citation(citation)
-    return (citation,)
+def _reference() -> tuple[CriterionReference, ...]:
+    return (CriterionReference(
+        code_id='towing-plan-criteria',
+        document='docs/plans/2026-05-05-issue-487-towing-marine-operations.md',
+        section='Context and Plan item 4; plan factors and caller-supplied limits only',
+        note=('Plan-criterion screening only; the plan is not evidence of standard '
+              'compliance or operational acceptance.'),
+    ),)
 
 
 def check_towline(*, mbl_n: float, static_tension_n: float,
@@ -48,7 +52,7 @@ def check_towline(*, mbl_n: float, static_tension_n: float,
     governing, demand = max(demands, key=lambda item: item[1])
     margin = mbl_n - demand
     return Result(margin >= 0,
-                  f'{governing}: MBL {mbl_n:.3f} N versus required {demand:.3f} N',
+                  f'plan-criterion screening: {governing}: MBL {mbl_n:.3f} N versus required {demand:.3f} N',
                   margin, _reference())
 
 
@@ -59,7 +63,7 @@ def check_fairlead(*, reaction_n: float, capacity_n: float) -> Result:
         raise ValueError('reaction_n must be finite and nonnegative')
     margin = capacity_n - reaction_n
     return Result(margin >= 0,
-                  f'fairlead reaction {reaction_n:.3f} N versus capacity {capacity_n:.3f} N',
+                  f'plan-criterion screening: fairlead reaction {reaction_n:.3f} N versus capacity {capacity_n:.3f} N',
                   margin, _reference())
 
 
@@ -72,5 +76,5 @@ def check_bridle_angle(angle_deg: float, *, minimum_deg: float,
         raise ValueError('bounds must satisfy 0 <= minimum <= maximum < 180')
     margin = min(angle_deg - minimum_deg, maximum_deg - angle_deg)
     return Result(margin >= 0,
-                  f'bridle angle {angle_deg:.3f} deg versus [{minimum_deg}, {maximum_deg}] deg',
+                  f'plan-criterion screening: bridle angle {angle_deg:.3f} deg versus [{minimum_deg}, {maximum_deg}] deg',
                   margin, _reference())

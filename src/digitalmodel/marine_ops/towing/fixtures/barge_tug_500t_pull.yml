@@ -24,6 +24,9 @@ line:
   diameter_m: 0.05
   weight_n_m: 100.0
   mbl_n: 430000.0
+  mbl_basis: >-
+    assumed, based on previous experience; synthetic regression input only,
+    not a certified breaking load or a diameter-to-strength specification
   dynamic_amplification: 1.3
   bridle_angle_deg: 60.0
   fairlead_capacity_n: 500000.0

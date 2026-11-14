@@ -75,8 +75,15 @@ def run_scenario(*, environment='benign', diameter_scale=1.0):
             fairlead_deflection_deg=line['fairlead_deflection_deg'],
             dynamic_amplification=line['dynamic_amplification'])
     passed = pull.passed and all(check.passed for check in checks.values())
-    return {'verdict': 'PASS' if passed else 'FAIL',
-            'assessment': 'approved-plan static screening; no full DNV compliance or yaw assessment',
+    below_full_pull = mbl < tug['bollard_pull_t'] * 1000 * 9.80665
+    warnings = []
+    if below_full_pull:
+        warnings.append('Towline MBL is below nominal full tug bollard pull; '
+                        'the tug can exceed the line strength. No operational acceptance.')
+    return {'verdict': 'SCREEN_PASS' if passed else 'SCREEN_FAIL',
+            'assessment': 'plan-criterion screening only; no standard compliance or operational acceptance',
+            'mbl_basis': line['mbl_basis'],
+            'towline_below_full_bollard_pull': below_full_pull, 'warnings': warnings,
             'environment': environment, 'line_length_m': line['length_m'],
             'line_diameter_m': line['diameter_m'] * diameter_scale, 'mbl_n': mbl,
             'bollard_pull': asdict(pull), 'loads': asdict(loads),

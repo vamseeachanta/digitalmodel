@@ -1,4 +1,4 @@
-"""Environmental load checks against existing physics and an independent table."""
+"""Environmental load arithmetic, failure paths and maintained metadata checks."""
 import pytest
 
 
@@ -33,22 +33,20 @@ def test_callable_profile_integrates_signed_square_over_draft():
     assert reverse.force_x_n == pytest.approx(-result.force_x_n)
 
 
-def test_ocimf_published_vlcc_table_case_within_five_percent():
+def test_explicit_synthetic_wind_coefficients_preserve_signed_components():
     from digitalmodel.hydrodynamics.models import VesselProperties
     from digitalmodel.marine_ops.towing.drift_force import compute_drift_force, WindProfile
 
-    # OCIMF Static Towing Assembly Guidelines (2020), MARIN 31746-1-PO,
-    # Table 5, report p29: 90deg row (Cx,Cy,Cmz)=(0.015,0.855,-0.077).
-    # https://www.ocimf.org/document-libary/58-static-towing-assembly-guidelines-2020/file
-    # Geometry/speed are explicit synthetic inputs, not measured VLCC data.
-    vessel = VesselProperties('table verification only', 300, 50, 20, 250000,
+    # Synthetic inputs exercise signs and reference-area arithmetic only.
+    # An independently retrievable table benchmark remains required.
+    vessel = VesselProperties('synthetic', 300, 50, 20, 250000,
                               frontal_wind_area=1000, lateral_wind_area=5000)
     wind = WindProfile(20, 90, air_density_kg_m3=1.25,
                        coefficients=(0.015, 0.855, -0.077))
     result = compute_drift_force(vessel, 0, wind)
-    assert result.wind_x_n == pytest.approx(3750, rel=0.05)
-    assert result.wind_y_n == pytest.approx(1068750, rel=0.05)
-    assert result.yaw_moment_nm == pytest.approx(-28875000, rel=0.05)
+    assert result.wind_x_n == pytest.approx(3750)
+    assert result.wind_y_n == pytest.approx(1068750)
+    assert result.yaw_moment_nm == pytest.approx(-28875000)
 
 
 @pytest.mark.parametrize('direction', [0, 90, 180, 270, -90, 360])
@@ -89,3 +87,14 @@ def test_missing_environmental_citation_fails_closed(citation_metadata):
     page.unlink()
     with pytest.raises(CitationResolutionError, match='OCIMF-MEG4'):
         compute_drift_force(VesselProperties('synthetic', 80, 24, 4, 7000), 1, WindProfile(0))
+
+
+def test_maintained_ocimf_metadata_matches_calculation_citation(maintained_wiki):
+    from digitalmodel.hydrodynamics.models import VesselProperties
+    from digitalmodel.marine_ops.towing.drift_force import compute_drift_force, WindProfile
+
+    # The autouse fixture leaves this test's maintained metadata untouched.
+    result = compute_drift_force(VesselProperties('synthetic', 80, 24, 4, 7000),
+                                 1, WindProfile(0))
+    assert result.citations[0].code_id == 'OCIMF-MEG4'
+    assert result.citations[0].revision == '4th-Edition-2018'
