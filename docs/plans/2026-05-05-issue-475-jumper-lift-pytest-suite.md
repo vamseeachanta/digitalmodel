@@ -9,7 +9,7 @@
 
 The Windows Claude-cowork conversion in the approved private jumper workbook archive carries 81 unittest-style tests covering every intermediate value from the source workbook with cell-reference traceability. The existing `tests/marine_ops/installation/test_jumper_lift.py` already has the file (599 lines) with 81 `def test_` matches and pytest imports — preliminary inspection shows the migration may already be partially executed. The work in this issue is to **finalize** the migration: confirm the imported classes resolve under the digitalmodel namespace, ensure pytest fixtures and approx-tolerances replace unittest assertions, fill any classes still missing tests, and confirm both jumper variants are exercised.
 
-Test classes called out in the issue: `TestBarePipe (9)`, `TestConnectorClamp (4)`, `TestPipeGeometry (11)`, `TestBuoyancyModule (7)`, `TestStrakeModule (7)`, `TestRigging (6)`, `TestCraneConfig (4)`, `TestWeightCheck (6)`, `TestPipeline` (end-to-end). Total: 54 explicit + 27 in `TestPipeline` ≈ 81.
+Test classes called out in the issue: `TestBarePipe (9)`, `TestConnectorClamp (4)`, `TestPipeGeometry (11)`, `TestBuoyancyModule (7)`, `TestStrakeModule (7)`, `TestRigging (6)`, `TestCraneConfig (4)`, `TestWeightCheck (6)`, `TestPipeline` (end-to-end). Total: 54 explicit + 27 in `TestPipeline` ≈ 81. Public discovery: installation specs are under `docs/domains/orcaflex/subsea/jumper/installation/`; registry entries are defined in `src/digitalmodel/marine_ops/installation/jumper_lift.py:127-153`.
 
 ## Plan
 

@@ -5,8 +5,8 @@
 
 > **Privacy note — this repository is PUBLIC.** Client / operator / field identities and any personal names are
 > **de-identified** here (coded `O`, `E1`, `V`, etc.). The code → real-identity key is kept **only** in the private
-> Linux workstation context (not committed). Internal ACE project numbers that do not, on their own, reveal an end client
-> are retained for traceability.
+> source context (not committed). Private project numbers and folder names are replaced
+> with neutral roles; aggregate inventory figures are retained for traceability.
 
 ---
 

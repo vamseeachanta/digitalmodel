@@ -211,8 +211,8 @@ The enhanced workflow integrates with the AssetUtilities hub to share components
 
 #### Supported Repositories
 
-**Engineering:** public portfolio repository, engineering code repository, digitalmodel, energy, VIV analysis archive, delivery partner
-**Project Management:** <project-archive>, private project archive, investments, teamresumes
+**Engineering:** public portfolio repository, engineering code repository, digitalmodel, energy, oil-field engineering repository, subsea installation repository
+**Project Management:** engineering project repository, client engagement repository, investments, teamresumes
 **Infrastructure:** assethold, pyproject-starter, worldenergydata
 **Development:** ai-native-traditional-eng
 **Documentation:** deepwater project repository, manufacturing repository

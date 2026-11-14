@@ -1,7 +1,10 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
-"""Keep the selected documentation free of private project locators."""
+"""Keep the nine selected documents free of private project locators.
+
+The scan is line based; tokens split across soft line wraps are not detected.
+"""
 
 from hashlib import sha256
 from pathlib import Path

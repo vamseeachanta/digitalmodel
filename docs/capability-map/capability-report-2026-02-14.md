@@ -39,8 +39,8 @@ domains_active: 7
 ### Critical Gaps
 
 1. **Knowledge domain entirely nascent** -- All 3 KNOW repos are placeholders (maturity 1), no structured knowledge capture system exists
-2. **50% of repos lack test coverage** -- 12 repos have zero tests; engineering repos pipeline delivery repository, delivery partner, coiled-tubing project archive carry delivery risk
-3. **Weak cross-repo integration** -- assetutilities (shared library) consumed by only 1 of 23 repos; OrcaFlex integration duplicated across digitalmodel, <project-archive>, delivery partner
+2. **50% of repos lack test coverage** -- 12 repos have zero tests; engineering repos pipeline delivery repository, subsea installation repository, coiled-tubing engineering repository carry delivery risk
+3. **Weak cross-repo integration** -- assetutilities (shared library) consumed by only 1 of 23 repos; OrcaFlex integration duplicated across digitalmodel, engineering project repository, subsea installation repository
 
 ## Full Capability Table
 
@@ -51,19 +51,19 @@ domains_active: 7
 | **pdf-large-reader** | INFRA | Memory-efficient PDF processing for 100MB+ files, streaming architecture | 4 | 215 (93.6%) | 2 | -- |
 | **administration repository** | BIZ | Invoice automation (85% time save), tax prep, Form 1120/K-1 filing | 3 | Yes (80% target) | 14 | -- |
 | **public portfolio repository** | WEB | AI-native engineering portfolio, static site, GitHub Pages/Vercel | 3 | Jest | 4 | Vercel |
-| **<project-archive>** | ENG | Client engineering project portfolio, OrcaFlex license management | 3 | -- | 6 | -- |
+| **engineering project repository** | ENG | Client engineering project portfolio, OrcaFlex license management | 3 | -- | 6 | -- |
 | **assetutilities** | INFRA | Shared Python utilities -- web scraping, data processing, office automation | 3 | Yes | 13 | -- |
 | **pyproject-starter** | INFRA | Python package template (pyproject.toml, uv, pre-commit, hatchling) | 3 | Template | 5 | -- |
 | **assethold** | FIN | Stock analysis -- insider trading, institutional holders, options, technical indicators | 2 | Yes (pytest) | 6 | -- |
 | **personal data repository** | DATA | Personal/family data management (finance, health, travel, printer setup) | 2 | -- | -- | -- |
-| **private project archive** | BIZ | Client engagement tracking -- energy, pipeline, ML, legacy submodules | 2 | -- | -- | -- |
+| **client engagement repository** | BIZ | Client engagement tracking -- energy, pipeline, ML, legacy submodules | 2 | -- | -- | -- |
 | **pipeline delivery repository** | ENG | Subsea pipeline design, structural analysis, DNV/API code compliance | 2 | -- | -- | -- |
 | **deepwater project repository** | ENG | Deepwater exploration project framework, regulatory compliance | 2 | -- | -- | -- |
 | **manufacturing repository** | ENG | AI-powered CAD/CAM for O&G subsea equipment manufacturing | 2 | Basic | 5 | -- |
-| **VIV analysis archive** | ENG | Oil field engineering, contract navigation, admin documentation | 2 | Coverage file | Yes | -- |
+| **oil-field engineering repository** | ENG | Oil field engineering, contract navigation, admin documentation | 2 | Coverage file | Yes | -- |
 | **property repository** | FIN | Real estate investment tracking, corporate formation, tax filing | 2 | -- | 5 | -- |
-| **delivery partner** | ENG | Offshore subsea installation -- umbilical analysis, cathodic protection | 2 | -- | -- | -- |
-| **coiled-tubing project archive** | ENG | Offshore drilling -- coiled tubing, reel handling, deepwater tech | 2 | -- | -- | -- |
+| **subsea installation repository** | ENG | Offshore subsea installation -- umbilical analysis, cathodic protection | 2 | -- | -- | -- |
+| **coiled-tubing engineering repository** | ENG | Offshore drilling -- coiled tubing, reel handling, deepwater tech | 2 | -- | -- | -- |
 | **personal media repository** | KNOW | Media/asset storage (placeholder, RAG-to-skills feedback completed) | 1 | -- | -- | -- |
 | **ai-native-traditional-eng** | KNOW | Engineering knowledge repository (placeholder, empty) | 1 | -- | -- | -- |
 | **hobbies** | KNOW | Personal knowledge management (arts, music theory) | 1 | -- | -- | -- |
@@ -75,7 +75,7 @@ domains_active: 7
 
 ### Engineering Analysis (`ENG`)
 
-**Repos**: digitalmodel, <project-archive>, pipeline delivery repository, deepwater project repository, manufacturing repository, VIV analysis archive, delivery partner, coiled-tubing project archive, worldenergydata (partial)
+**Repos**: digitalmodel, engineering project repository, pipeline delivery repository, deepwater project repository, manufacturing repository, oil-field engineering repository, subsea installation repository, coiled-tubing engineering repository, worldenergydata (partial)
 
 | Capability Area | Maturity | Lead Repo | Notes |
 |----------------|:--------:|-----------|-------|
@@ -88,7 +88,7 @@ domains_active: 7
 | VIV analysis | 3 | digitalmodel | Vortex-induced vibration assessment |
 | CAD/mesh generation | 3 | digitalmodel | GMSH, FreeCAD automation, BEMRosetta |
 | Subsea pipeline design | 2 | pipeline delivery repository | MATLAB/Excel-based, DNV/API codes, no Python impl |
-| Offshore drilling | 2 | coiled-tubing project archive | CT drilling, reel operations, Excel/VBA |
+| Offshore drilling | 2 | coiled-tubing engineering repository | CT drilling, reel operations, Excel/VBA |
 | Manufacturing automation | 2 | manufacturing repository | AI-powered CAD/CAM concept, partial implementation |
 | Deepwater exploration | 2 | deepwater project repository | Project framework, empty src/ |
 
@@ -120,14 +120,14 @@ domains_active: 7
 
 ### Business Operations (`BIZ`)
 
-**Repos**: administration repository, assethold, private project archive, teamresumes
+**Repos**: administration repository, assethold, client engagement repository, teamresumes
 
 | Capability Area | Maturity | Lead Repo | Notes |
 |----------------|:--------:|-----------|-------|
 | Invoice automation | 3 | administration repository | 85% time reduction, python-docx/ReportLab |
 | Tax preparation | 3 | administration repository | Form 1120, K-1, franchise tax automation |
 | Contract management | 3 | administration repository | OrcaFlex agreements, compliance docs |
-| Client project tracking | 2 | private project archive | Legacy submodules, consolidation in progress |
+| Client project tracking | 2 | client engagement repository | Legacy submodules, consolidation in progress |
 | Team capability docs | 1 | teamresumes | Placeholder |
 
 ### Web & Frontend (`WEB`)
@@ -165,9 +165,9 @@ domains_active: 7
 |--------|--------|------------|----------------|
 | worldenergydata | assetutilities | Git submodule for shared data processing | worldenergydata -> assetutilities |
 | digitalmodel <-> worldenergydata | -- | Tier 2 (eng reference) <-> Tier 1 (collection data) governance | Data residency policy |
-| administration repository -> <project-archive> | -- | Invoice/tax automation for consulting tracked in <project-archive> | Business ops cluster |
+| administration repository -> engineering project repository | -- | Invoice/tax automation for consulting tracked in engineering project repository | Business ops cluster |
 | pyproject-starter -> All Python repos | -- | Template for standardized pyproject.toml, uv, pytest | 16 Python repos |
-| digitalmodel + <project-archive> + delivery partner | -- | Engineering consulting cluster (all use OrcaFlex) | Shared solver licensing |
+| digitalmodel + engineering project repository + subsea installation repository | -- | Engineering consulting cluster (all use OrcaFlex) | Shared solver licensing |
 | worldenergydata -> digitalmodel | -- | Vessel hull models feed RAO mapping in hydrodynamic library | Hull geometry pipeline |
 | assethold -> administration repository | -- | Investment returns feed into tax preparation/filing | Financial reporting |
 
@@ -193,13 +193,13 @@ domains_active: 7
 
 - **Structured knowledge management** -- No system for capturing engineering decisions, lessons learned, or institutional knowledge across repos
 - **Cross-repo CI/CD** -- Only 3 repos have GitHub Actions; no unified pipeline or quality gate
-- **Shared OrcaFlex SDK** -- OrcaFlex integration duplicated in digitalmodel, <project-archive>, delivery partner with no shared library
+- **Shared OrcaFlex SDK** -- OrcaFlex integration duplicated in digitalmodel, engineering project repository, subsea installation repository with no shared library
 - **API layer** -- No FastAPI/REST endpoints exposing engineering capabilities programmatically (worldenergydata has schema but no deployed API)
 - **Monitoring/observability** -- No unified health dashboard, error tracking, or usage metrics across repos
 
 ### At Risk
 
-- **pipeline delivery repository, delivery partner, coiled-tubing project archive** -- Active engineering consulting repos with zero tests and no CI/CD; delivery risk for client projects
+- **pipeline delivery repository, subsea installation repository, coiled-tubing engineering repository** -- Active engineering consulting repos with zero tests and no CI/CD; delivery risk for client projects
 - **6 nascent repos** -- Maintenance overhead with no value delivery; should be archived or activated within 30 days
 
 ## Recommendations
@@ -207,7 +207,7 @@ domains_active: 7
 | # | Priority | Recommendation | Approach | Target |
 |---|----------|---------------|----------|--------|
 | 1 | High | Archive 6 nascent repos or set 30-day activation deadline | Review with stakeholder; archive via `git archive` + README tombstone | 2026-03-15 |
-| 2 | High | Add pytest + CI to pipeline delivery repository, delivery partner, coiled-tubing project archive | Use pyproject-starter template; add GitHub Actions ci.yml | 2026-03-31 |
+| 2 | High | Add pytest + CI to pipeline delivery repository, subsea installation repository, coiled-tubing engineering repository | Use pyproject-starter template; add GitHub Actions ci.yml | 2026-03-31 |
 | 3 | Medium | Extract shared OrcaFlex utilities to assetutilities | Identify common patterns (model loading, post-processing, RAO extraction) | 2026-04-30 |
 | 4 | Medium | Consolidate duplicated skills into workspace-hub shared library | Audit 157 + 38 + 14 + 13 skills for overlap; deduplicate | 2026-04-15 |
 | 5 | Medium | Deploy unified CI/CD pipeline across all active repos | GitHub Actions reusable workflows in workspace-hub/.github/ | 2026-04-30 |
@@ -250,7 +250,7 @@ domains_active: 7
 - **Tests**: Jest
 - **Recent**: Lighthouse optimization, diffraction/dynacard capability showcase
 
-### <project-archive> (ENG, Maturity 3)
+### engineering project repository (ENG, Maturity 3)
 - **Tech**: Documentation-driven, OrcaFlex license management
 - **Skills**: 6
 - **Recent**: OrcaFlex license admin, host migration

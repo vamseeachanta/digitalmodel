@@ -139,7 +139,7 @@ Removed by dedup: **8,735** archived duplicates + **1,115** dependency files = *
 | `WEC-Sim` | 258 | 88 MB | open-source tool (incl. the 10 NetCDF `.nc`) |
 | coiled-tubing project archive | 225 | 269 MB | **active** subsea project |
 | standards reference archive | 31 | 5.7 GB | |
-| engineering partner archive standards reference archive `MoorDyn` `MoorPy` `openfast` `capytaine` `gmsh` … | <50 each | — | sim tools / minor |
+| engineering partner archive, codes reference archive, `MoorDyn`, `MoorPy`, `openfast`, `capytaine`, `gmsh`, … | <50 each | — | sim tools / minor |
 
 ## Aggregate 4 — "signal" set, **excluding** the unclassified CAD inbox dump
 

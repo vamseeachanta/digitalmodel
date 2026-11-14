@@ -11,7 +11,7 @@ The approved PLET-PLEM entry in `KNOWN_JUMPER_CONFIGS` in `src/digitalmodel/mari
 
 The approved jumper workbook is held in the private project archive and accessed on the Windows workstation with Claude cowork. The GA sheet rows C5:C11 hold seg_a through seg_g in inches per the Excel-conversion convention used for the MF-PLET ingest.
 
-The approved companion PLET-PLEM installation spec carries the same notice ("Segment lengths need verification") and currently mirrors MF-PLET; it must move in lockstep with the Python config.
+The approved companion PLET-PLEM installation spec carries the same notice ("Segment lengths need verification") and currently mirrors MF-PLET; it must move in lockstep with the Python config. Public discovery: installation specs are under `docs/domains/orcaflex/subsea/jumper/installation/`; registry entries are defined in `src/digitalmodel/marine_ops/installation/jumper_lift.py:127-153`.
 
 ## Plan
 
