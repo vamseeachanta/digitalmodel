@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class RiserTensioner(BaseModel):
@@ -42,7 +42,12 @@ class RiserTensioner(BaseModel):
         vessel_z: Height of the vessel points in vessel axes (m).
         start_angle: Plan angle of the first unit in vessel axes (deg).
         arc_length: Attachment arc length from End A (m); only zero is supported.
+
+    Every number must be finite: NaN or infinite inputs would otherwise emit
+    NaN connection coordinates and unstretched lengths.
     """
+
+    model_config = ConfigDict(allow_inf_nan=False)
 
     name: str = Field(..., min_length=1, description="Link name prefix")
     line: str = Field(..., min_length=1, description="Supported riser line")
@@ -62,7 +67,6 @@ class RiserTensioner(BaseModel):
     vessel_z: float = Field(..., description="Vessel point height, vessel axes (m)")
     start_angle: float = Field(default=0, description="First unit angle (deg)")
     arc_length: float = Field(default=0, ge=0, description="Attachment arc length (m), End A only")
-
 
 
 def validate_tensioners(

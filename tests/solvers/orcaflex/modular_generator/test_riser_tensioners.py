@@ -207,6 +207,47 @@ def test_too_soft_tensioner_rejected(example):
         _links(data)
 
 
+FLOAT_FIELDS = [
+    "total_tension", "stiffness", "damping", "radius", "vessel_z", "start_angle", "arc_length",
+]
+
+
+@pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])
+@pytest.mark.parametrize("field", FLOAT_FIELDS)
+def test_non_finite_tensioner_input_rejected(example, field, value):
+    """NaN or infinite inputs would emit NaN coordinates and unstretched lengths."""
+    data = copy.deepcopy(example)
+    data["riser"]["tensioners"][0][field] = value
+    with pytest.raises(ValidationError, match="finite number"):
+        ProjectInputSpec(**data)
+
+
+def test_yaml_nan_vessel_z_rejected():
+    """The YAML ``.nan`` spelling reaches the schema as a float NaN."""
+    text = EXAMPLE.read_text(encoding="utf-8")
+    text, n = re.subn(r"(?m)^(\s*vessel_z:\s*)\S+", r"\g<1>.nan", text)
+    assert n == 1
+    with pytest.raises(ValidationError, match="finite number"):
+        ProjectInputSpec(**yaml.safe_load(text))
+
+
+@pytest.mark.parametrize(
+    "path, index",
+    [(("vessel", "position"), 0), (("vessel", "position"), 2),
+     (("lines", 0, "end_a", "position"), 1), (("lines", 0, "end_a", "position"), 2)],
+)
+@pytest.mark.parametrize("value", [math.nan, math.inf])
+def test_non_finite_tensioner_geometry_rejected(example, path, index, value):
+    """Positions outside the tensioner schema must not yield non-finite links."""
+    data = copy.deepcopy(example)
+    target = data["riser"]
+    for key in path:
+        target = target[key]
+    target[index] = value
+    with pytest.raises(ValueError, match="non-finite"):
+        _links(data)
+
+
 def test_example_matches_golden(example, tmp_path):
     out = tmp_path / "out"
     ModularModelGenerator.from_spec(ProjectInputSpec(**example)).generate(out)

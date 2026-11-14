@@ -17,6 +17,13 @@ from .base import BaseBuilder
 from .registry import BuilderRegistry
 
 
+def _require_finite_geometry(name: str, what: str, values) -> None:
+    """Refuse NaN or infinite tensioner geometry instead of emitting it (#3976)."""
+    values = list(values)
+    if not all(math.isfinite(v) for v in values):
+        raise ValueError(f"Tensioner '{name}': non-finite {what} {values}")
+
+
 @BuilderRegistry.register("08_riser_links.yml", order=93)
 class RiserLinksBuilder(BaseBuilder):
     """Builds the Links section for riser models.
@@ -124,6 +131,9 @@ class RiserLinksBuilder(BaseBuilder):
         top_x = math.cos(heading) * dx + math.sin(heading) * dy
         top_y = -math.sin(heading) * dx + math.cos(heading) * dy
         attach_z = line.end_a.position[2] - vessel.position[2]
+        _require_finite_geometry(
+            tensioner.name, "riser top in vessel axes", (top_x, top_y, attach_z)
+        )
         dz = tensioner.vessel_z - attach_z
         if dz <= 0:
             raise ValueError(
@@ -149,6 +159,7 @@ class RiserLinksBuilder(BaseBuilder):
                 "tension": tension,
                 "unstretched_length": unstretched,
             })
+            _require_finite_geometry(tensioner.name, f"unit {i + 1}", units[-1].values())
         return units
 
     def _build_tensioner_links(self, tensioner, riser) -> list[dict[str, Any]]:
