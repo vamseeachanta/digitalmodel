@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import warnings
+
 from pydantic import BaseModel, Field, model_validator
 
 from .metadata import Metadata
@@ -13,6 +15,7 @@ from .equipment import Equipment
 from .simulation import Simulation
 from .riser import Riser
 from .mooring import MooringSystem
+from .fowt import FowtSpec
 
 
 class ProjectInputSpec(BaseModel):
@@ -28,7 +31,7 @@ class ProjectInputSpec(BaseModel):
         from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
         import yaml
 
-        with open('spec.yml') as f:
+        with open('spec.yml', encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         spec = ProjectInputSpec(**data)
@@ -66,6 +69,9 @@ class ProjectInputSpec(BaseModel):
     pipeline: Pipeline | None = Field(default=None, description="Pipeline definition")
     riser: Riser | None = Field(default=None, description="Riser definition")
     mooring: MooringSystem | None = Field(default=None, description="Mooring system definition")
+    fowt: FowtSpec | None = Field(
+        default=None, description="Floating offshore wind turbine definition"
+    )
     generic: GenericModel | None = Field(
         default=None, description="Generic OrcaFlex model definition"
     )
@@ -94,15 +100,17 @@ class ProjectInputSpec(BaseModel):
             self.riser is not None,
             self.mooring is not None,
             self.generic is not None,
+            self.fowt is not None,
         ])
 
         if model_types_defined == 0:
             raise ValueError(
-                "Either 'pipeline', 'riser', 'mooring', or 'generic' must be defined in spec"
+                "Either 'pipeline', 'riser', 'mooring', 'generic' or 'fowt' must be "
+                "defined in spec"
             )
         riser_with_fallback = (
             self.riser is not None and self.generic is not None
-            and self.pipeline is None and self.mooring is None
+            and self.pipeline is None and self.mooring is None and self.fowt is None
         )
         if model_types_defined > 1 and not riser_with_fallback:
             defined = []
@@ -114,6 +122,8 @@ class ProjectInputSpec(BaseModel):
                 defined.append("mooring")
             if self.generic is not None:
                 defined.append("generic")
+            if self.fowt is not None:
+                defined.append("fowt")
             raise ValueError(
                 f"Cannot define multiple model types ({', '.join(defined)}) "
                 "in same spec. Create separate spec files for each model type."
@@ -139,14 +149,33 @@ class ProjectInputSpec(BaseModel):
                 tugs = self.equipment.tugs
                 max_tug_x = tugs.first_position[0] + (tugs.count - 1) * tugs.spacing
 
-                # Only warn if tugs extend significantly beyond pipeline
+                # Only warn if tugs extend significantly beyond pipeline; this
+                # can be intentional (staged installation), so it is not an error.
                 if max_tug_x > total_pipeline_length * 1.5:
-                    # This could be intentional for staged installation
-                    pass  # Could add warning logging here
+                    warnings.warn(
+                        f"Last tug at x = {max_tug_x:g} m lies beyond 1.5 times the "
+                        f"pipeline length ({total_pipeline_length:g} m); check the "
+                        "tug spacing unless the spread is intended (staged installation).",
+                        UserWarning,
+                        stacklevel=2,
+                    )
 
             # Check S-lay equipment consistency
             if self.equipment.stinger and not self.equipment.vessel:
                 raise ValueError("Stinger requires a vessel to be defined")
+            if self.equipment.jlay and not self.equipment.vessel:
+                raise ValueError("J-lay tower requires a vessel to be defined")
+            if self.equipment.jlay and self.equipment.stinger:
+                raise ValueError("J-lay tower and stinger cannot both be defined")
+            if self.equipment.jlay and self.equipment.tensioner:
+                raise ValueError(
+                    "J-lay tower carries the pipe tension at the pinned hang-off; "
+                    "a tensioner cannot also be defined"
+                )
+            if self.equipment.jlay and self.equipment.buoyancy_modules:
+                raise ValueError("J-lay seed does not support buoyancy modules")
+            if self.equipment.jlay and self.equipment.slay_end_b_x is not None:
+                raise ValueError("J-lay seed cannot use slay_end_b_x")
             if self.equipment.tensioner and not self.equipment.vessel:
                 raise ValueError("Tensioner requires a vessel to be defined")
 
@@ -210,6 +239,10 @@ class ProjectInputSpec(BaseModel):
     def is_mooring(self) -> bool:
         """Check if this is a mooring model."""
         return self.mooring is not None
+
+    def is_fowt(self) -> bool:
+        """Check if this is a floating offshore wind turbine model."""
+        return self.fowt is not None
 
     def is_generic(self) -> bool:
         """Check if this is a generic model."""

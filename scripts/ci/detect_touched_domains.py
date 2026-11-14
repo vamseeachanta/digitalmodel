@@ -52,6 +52,7 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     # named in riser_types.yml (directories where they are dedicated, exact files
     # where the folder is shared) and the excluded models' PROVENANCE.md files.
     ("data/riser_database/", ("subsea",)),
+    ("data/riser_buoyancy/", ("subsea",)),
     ("data/line_pipe/", ("subsea",)),
     ("data/flexible_pipe/", ("subsea",)),
     ("data/soil_stiffness/", ("subsea",)),
@@ -65,6 +66,7 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("docs/audits/analytical-riser-regression.json", ("subsea",)),
     ("docs/audits/analytical-riser-regression.html", ("subsea",)),
     ("docs/bha_database.md", ("subsea",)),
+    ("docs/domains/risers/worked-configurations/", ("contracts", "subsea")),
     ("scripts/corrosion/", ("specialized",)),
     ("docs/reports/modules/corrosion/", ("specialized",)),
     # Domain records bind retained inputs and outputs checked by contracts tests.

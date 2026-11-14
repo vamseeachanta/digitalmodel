@@ -214,6 +214,7 @@ def test_recorded_score_matches_fresh_document_and_cli():
                "digitalmodel.marine_ops.artificial_lift.dynacard.benchmark.plate_scoring",
                "--workbook", str(WORKBOOK)]
     output = subprocess.run(command, check=True, capture_output=True, text=True,
+                            encoding="utf-8",
                             env={**os.environ, "PYTHONPATH": SOURCE_DIR})
     assert json.loads(output.stdout) == recorded
     assert output.stdout == (DATA / "plate_classifier_score.json").read_text(encoding="utf-8")

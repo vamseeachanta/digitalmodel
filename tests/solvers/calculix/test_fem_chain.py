@@ -411,10 +411,10 @@ class TestINPWriter:
         assert "*SOLID SECTION" not in content
 
     @pytest.mark.parametrize(
-        ("section_type", "dimensions", "expected_dimensions"),
+        ("section_type", "dimensions"),
         [
-            ("CIRC", (0.05,), "0.05"),
-            ("PIPE", (0.08, 0.01), "0.08, 0.01"),
+            ("CIRC", (0.05,)),
+            ("PIPE", (0.08, 0.01)),
         ],
     )
     def test_beam_section_output_for_circular_sections(
@@ -422,9 +422,8 @@ class TestINPWriter:
         tmp_dir,
         section_type,
         dimensions,
-        expected_dimensions,
     ):
-        """Beam section output supports CIRC and PIPE cross-sections."""
+        """Issue #1676's approved policy rejects both circular B31 cases."""
         nodes = np.array([[0, 0, 0], [1, 0, 0]], dtype=float)
         elements = {
             "Line 2": {
@@ -438,15 +437,8 @@ class TestINPWriter:
             "EBEAM_B31", "STEEL", section_type, dimensions,
             direction=(0.0, 0.0, 1.0),
         )
-        out = writer.write(tmp_dir / f"beam_section_{section_type.lower()}.inp")
-        content = out.read_text()
-        assert (
-            f"*BEAM SECTION, ELSET=EBEAM_B31, MATERIAL=STEEL, SECTION={section_type}"
-            in content
-        )
-        assert expected_dimensions in content
-        assert "0.0, 0.0, 1.0" in content
-        assert "*SOLID SECTION" not in content
+        with pytest.raises(ValueError, match=f"{section_type}.*EBEAM_B31.*B31"):
+            writer.write(tmp_dir / f"beam_section_{section_type.lower()}.inp")
 
     def test_mixed_solid_and_beam(self, tmp_dir):
         """Mixed mesh writes both *SOLID SECTION and *BEAM SECTION."""

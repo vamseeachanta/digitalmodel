@@ -162,3 +162,5 @@ src/digitalmodel/marine_ops/marine_analysis/catenary/simplified.py text eol=lf
 src/digitalmodel/orcaflex/mooring_design.py text eol=lf
 tests/marine_ops/marine_engineering/catenary/test_simplified.py text eol=lf
 tests/orcaflex/test_mooring_design.py text eol=lf
+# GEBCO 2025 subset fixture: subset.asc bytes are bound by SHA-256 in provenance.json.
+tests/data_systems/fixtures/gebco_2025/* text eol=lf
