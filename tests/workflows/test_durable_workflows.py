@@ -58,6 +58,10 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
     if workflow.get("runtime", "offline") != "offline":
         pytest.skip(f"{workflow['id']} requires runtime={workflow['runtime']}")
 
+    if workflow["id"] == "flange-analysis":
+        monkeypatch.delenv("LLM_WIKI_PATH", raising=False)
+        monkeypatch.delenv("DIGITALMODEL_REPO_ROOT", raising=False)
+
     output_root = REPO_ROOT
     input_path = REPO_ROOT / workflow["input"]
     if workflow["id"] == "hull-wastage-screen":
@@ -1523,6 +1527,25 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
             summary_path = REPO_ROOT / summary_path
         summary = yaml.safe_load(summary_path.read_text(encoding="utf-8"))
         assert summary["groups"][0]["label"] == "uta1_clump_weight"
+    elif workflow["id"] == "flange-analysis":
+        from digitalmodel.citations import resolve_wiki_path
+        block = cfg["flange_analysis"]
+        for key, value in {"Wm1": 32941, "Wm2": 164849, "Am": 8.242, "Ab": 9.056}.items():
+            assert block["bolt_loads"][key] == pytest.approx(value, rel=0.001)
+        for condition, values in {
+            "operating": {"S_H": 5945, "S_R": 1759, "S_T": 1444},
+            "seating": {"S_H": 28577, "S_R": 8454, "S_T": 6943},
+        }.items():
+            for name, value in values.items():
+                assert block["conditions"][condition][name] == pytest.approx(value, rel=0.005)
+        assert block["governing_utilization"] == pytest.approx(28577 / 30000, rel=0.005)
+        assert block["screening_status"] == cfg["screening_status"] == "pass"
+        for citation in block["citations"]:
+            assert citation["code_id"] == "asme-viii-1-app2"
+            assert citation["publisher"] == "ASME"
+            assert citation["revision"] == "2019"
+            assert citation["section"]
+            assert resolve_wiki_path(citation["wiki_path"]) == REPO_ROOT / "knowledge" / citation["wiki_path"]
     elif workflow["id"] == "lifting-lug-design":
         block = cfg["lifting_lug"]
         # P = static * DAF * skew = 420 * 2.0 * 1.1

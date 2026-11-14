@@ -60,8 +60,8 @@ def test_load_happy_path_typed_rows():
 
 def test_row_counts_pinned():
     db = RiserDatabase.load()
-    # 5 riser inputs + 22 pipe configs + one dimension-free lift-screen reference.
-    assert len(db.configs) == 28
+    # 5 riser inputs + 22 pipe configs + 1 lift reference + 14 public examples.
+    assert len(db.configs) == 42
     assert len(db.crosswalk_rows) == 5
     assert len(db.materials) >= 2
 
