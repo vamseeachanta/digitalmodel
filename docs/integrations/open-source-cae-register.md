@@ -32,6 +32,8 @@ Licences were each checked on 5 Nov 2026 against the project's own repository or
 
 Related open solver already in the repo but not in the post: MYSTRAN (NASTRAN-compatible linear FEA; MIT, as checked 5 Nov 2026: [LICENSE.txt](https://github.com/MYSTRAN/MYSTRAN/blob/master/LICENSE.txt)), `src/digitalmodel/solvers/mystran` (BDF writer, result parser, convergence, FEM chain), 106 tests in `tests/solvers/mystran`.
 
+OpenDrift 1.14.7 (GPL-2.0, as checked 13 Nov 2026) has an optional constant-forcing OceanDrift adapter and a synthetic hand-displacement comparison. The [evaluation note](opendrift-evaluation.md) records the pinned source, installation, licence boundary and passing backend criteria; oil weathering and operational forcing remain deferred.
+
 ## Adoption of open-source solvers
 
 An open solver is adopted only when it reproduces a trusted number, not because it is free. The post that started this register makes the same point: AI can help with scripting and post-processing, but verification, validation and engineering judgement stay with the engineer. In practice:
