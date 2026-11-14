@@ -1,0 +1,57 @@
+basename: flange_analysis
+
+default:
+  log_level: INFO
+  config:
+    generate_plots: false
+    overwrite:
+      output: true
+
+flange_analysis:
+  flange_type: integral
+  units: US_customary
+  source:
+    title: "Pressure Vessel Engineering — Loads on Flanges - The ASME Way"
+    version: "2008-09-09; Flanges v4.26"
+    pages: "12-14"
+    url: https://www.pveng.com/wp-content/uploads/2016/06/Loads_On_Flanges.pdf
+    sha256: 484eddde158c83509ce57635b4068105348392b866148148df436bae2deb2681
+    neck_allowables: "assumed, based on previous experience; engineering confirmation required"
+  geometry:  # net of corrosion; lengths in inches
+    A: 22.0
+    B: 16.0
+    C: 20.25
+    t: 1.75
+    g0: 0.75
+    g1: 0.75
+    h: 0.375
+  bolts:
+    count: 16
+    diameter: 1.0
+    root_area: 0.566  # square inches, source table value; no thread lookup
+    root_area_source: "PVEng, p. 13, 1-8 UNC 2A"
+    Sa: 20000.0  # psi
+    Sb: 20000.0  # psi
+  gasket:
+    m: 3.0
+    y: 10000.0  # psi
+    b0: 0.375  # Table 2-5.2: half the radial contact width
+    outer_diameter: 17.75
+    inner_diameter: 16.25
+  design:
+    P: 100.0  # psi, internal pressure
+    temperature_F: null  # not reported; the published allowables/moduli are supplied
+    Sf_operating: 20000.0
+    Sf_seating: 20000.0
+    # Neck basis is assumed, based on previous experience; not a published input.
+    Sn_operating: 20000.0
+    Sn_seating: 20000.0
+    hub_stress_multiplier: 1.5  # caller confirms the applicable Figure 2-4 sketch
+    E_operating: 27900000.0
+    E_seating: 27900000.0
+    apply_bolt_spacing_correction: false  # non-lethal strength/rigidity screen
+  outputs:
+    directory: results/flange_analysis
+    summary_json: flange_analysis_summary.json
+    checks_csv: flange_analysis_checks.csv
+    report_html: flange_analysis_report.html

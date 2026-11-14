@@ -77,6 +77,7 @@ class TestOrcaFlexConverterEnhanced:
     # Single File Conversion Tests
     # ===========================
 
+    @pytest.mark.solver  # use_mock=False builds OrcFxAPI.Model() where the API is installed
     def test_single_dat_to_yml(self, converter_real, sample_dat_files, temp_output_dir):
         """Test converting single .dat file to .yml."""
         if not sample_dat_files:
@@ -92,6 +93,7 @@ class TestOrcaFlexConverterEnhanced:
         assert output_file.suffix == '.yml'
         assert output_file.stat().st_size > 0
 
+    @pytest.mark.solver  # use_mock=False builds OrcFxAPI.Model() where the API is installed
     def test_single_yml_to_dat(self, converter_real, sample_dat_files, temp_output_dir):
         """Test converting .yml back to .dat."""
         if not sample_dat_files:
@@ -122,6 +124,7 @@ class TestOrcaFlexConverterEnhanced:
         assert dat_file_new.suffix == '.dat'
         assert dat_file_new.stat().st_size > 0
 
+    @pytest.mark.solver  # use_mock=False builds OrcFxAPI.Model() where the API is installed
     def test_conversion_skip_existing(self, converter_real, sample_dat_files, temp_output_dir):
         """Test that converter skips already converted files."""
         if not sample_dat_files:
@@ -143,6 +146,7 @@ class TestOrcaFlexConverterEnhanced:
     # Batch Conversion Tests
     # ===========================
 
+    @pytest.mark.solver  # use_mock=False builds OrcFxAPI.Model() where the API is installed
     def test_batch_conversion_dat_to_yml(self, converter_real, sample_dat_files):
         """Test batch conversion of multiple .dat files to .yml."""
         if not sample_dat_files:
@@ -237,6 +241,7 @@ class TestOrcaFlexConverterEnhanced:
     # Validation Tests
     # ===========================
 
+    @pytest.mark.solver  # use_mock=False builds OrcFxAPI.Model() where the API is installed
     def test_yaml_validation(self, converter_real, sample_dat_files, temp_output_dir):
         """Test YAML file validation after conversion."""
         if not sample_dat_files:
@@ -253,6 +258,7 @@ class TestOrcaFlexConverterEnhanced:
         if not converter_real.use_mock:
             assert is_valid, "YAML validation failed"
 
+    @pytest.mark.solver  # use_mock=False builds OrcFxAPI.Model() where the API is installed
     def test_round_trip_validation(self, temp_output_dir, sample_dat_files):
         """Test round-trip conversion .dat → .yml → .dat."""
         if not sample_dat_files:
@@ -290,6 +296,7 @@ class TestOrcaFlexConverterEnhanced:
     # Error Handling Tests
     # ===========================
 
+    @pytest.mark.solver  # use_mock=False builds OrcFxAPI.Model() where the API is installed
     def test_missing_file_error(self, converter_real):
         """Test handling of missing input file."""
         missing_file = Path("nonexistent_file.dat")
@@ -330,6 +337,7 @@ class TestOrcaFlexConverterEnhanced:
     # Statistics and Reporting Tests
     # ===========================
 
+    @pytest.mark.solver  # use_mock=False builds OrcFxAPI.Model() where the API is installed
     def test_statistics_tracking(self, converter_real, sample_dat_files):
         """Test that conversion statistics are properly tracked."""
         if not sample_dat_files:

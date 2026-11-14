@@ -65,9 +65,9 @@ turbine:
       and Hub_System column B; summed; commit e4993d63de10f165389534461dd544006750fe60
   rotor_center_of_mass_from_tower_top:
     value:
-    - -11.42028264121408
+    - -11.420282641214
     - 0.0
-    - 5.549779487770752
+    - 5.549779487771
     unit: m
     source: IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Nacelle Mass Properties rows Blades
       and Hub_System C:E; mass-weighted; commit e4993d63de10f165389534461dd544006750fe60
@@ -99,9 +99,9 @@ turbine:
       C:E; commit e4993d63de10f165389534461dd544006750fe60
   rna_component_centre_discrepancy:
     value:
-    - 0.5334186963479404
-    - 2.7755575615628914e-17
-    - -0.0560645641560642
+    - 0.533418696348
+    - 0.0
+    - -0.056064564156
     unit: m
     source: IEA-15-240-RWT; Documentation/IEA-15-240-RWT_tabular.xlsx; Nacelle Mass Properties; mass-weighted
       centre of rows nacelle, Blades and Hub_System minus row RNA C:E. The RNA row is not the mass-weighted

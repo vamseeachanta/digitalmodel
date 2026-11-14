@@ -82,10 +82,13 @@ from digitalmodel.hydrodynamics.diffraction.orcawave_runner import (
 
 _HAS_ORCFXAPI = importlib.util.find_spec("OrcFxAPI") is not None
 
-pytestmark = pytest.mark.skipif(
-    not _HAS_ORCFXAPI,
-    reason="OrcFxAPI not available (licensed Windows host only; see #610)",
-)
+pytestmark = [
+    pytest.mark.solver,
+    pytest.mark.skipif(
+        not _HAS_ORCFXAPI,
+        reason="OrcFxAPI not available (licensed Windows host only; see #610)",
+    ),
+]
 
 # Repo-managed mesh + spec fixture pair (criterion 2).
 _FIXTURE_DIR = (
