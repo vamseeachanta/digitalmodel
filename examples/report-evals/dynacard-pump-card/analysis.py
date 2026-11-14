@@ -23,7 +23,7 @@ from report_contract import missing_data, CANNOT_DO, PINNED_COMMIT
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 FIXTURE = ROOT / 'tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json'
-PUBLIC_SHA256 = '6bb1139455b95d0f27ce254b1e10571d454f3fd0535de732bd73813b9a09adc5'
+PUBLIC_SHA256 = '2404c333a9f458ebdf0817dfa98e00962e48639455ae9b612766e14a39dbbd9f'
 
 
 def key_results(ctx, card):
