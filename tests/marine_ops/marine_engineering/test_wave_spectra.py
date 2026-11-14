@@ -181,9 +181,10 @@ class TestJONSWAPSpectrum:
             "Peak frequency does not match omega_p"
         )
 
-    def test_frequency_range_coverage(self, ws, jonswap_standard):
+    def test_frequency_range_coverage(self, ws):
         """Validate spectrum covers appropriate frequency range."""
-        omega, S = jonswap_standard
+        # This test checks the legacy 0.02 to 2.0 rad/s grid.
+        omega, S = ws.jonswap(hs=4.0, tp=10.0, gamma=3.3, freq_max=2.0, n_points=100)
 
         # Peak should be well within range
         omega_p = 2 * np.pi / 10.0
@@ -262,7 +263,8 @@ class TestSpectralMoments:
 
     def test_higher_moments(self, ws):
         """Validate higher moment calculations (m2, m4)."""
-        omega, S = ws.jonswap(hs=4.0, tp=10.0, gamma=3.3)
+        # This test checks the legacy 0.02 to 2.0 rad/s grid.
+        omega, S = ws.jonswap(hs=4.0, tp=10.0, gamma=3.3, freq_max=2.0, n_points=100)
 
         m0 = ws.spectral_moment(omega, S, n=0)
         m2 = ws.spectral_moment(omega, S, n=2)
@@ -283,7 +285,8 @@ class TestSpectralMoments:
 
     def test_spectral_bandwidth_parameter(self, ws):
         """Validate spectral bandwidth epsilon calculation."""
-        omega, S = ws.jonswap(hs=4.0, tp=10.0, gamma=3.3)
+        # This test checks the legacy 0.02 to 2.0 rad/s grid.
+        omega, S = ws.jonswap(hs=4.0, tp=10.0, gamma=3.3, freq_max=2.0, n_points=100)
         stats = ws.spectrum_statistics(omega, S)
 
         epsilon = stats['spectral_width']
@@ -348,7 +351,8 @@ class TestIrregularWaveSynthesis:
 
     def test_wave_synthesis_gaussian_distribution(self, ws):
         """Validate wave elevations follow Gaussian distribution."""
-        omega, S = ws.jonswap(hs=4.0, tp=10.0, gamma=3.3)
+        # This test checks the legacy 0.02 to 2.0 rad/s grid.
+        omega, S = ws.jonswap(hs=4.0, tp=10.0, gamma=3.3, freq_max=2.0, n_points=100)
         synth = IrregularWaveSynthesizer(omega, S)
 
         time, elevation = synth.generate_wave_elevation(
@@ -442,7 +446,8 @@ class TestPublishedBenchmarks:
         Reference: DNV-RP-C205, Hasselmann et al. (1973)
         """
         # Standard North Sea conditions
-        omega, S = ws.jonswap(hs=6.0, tp=12.0, gamma=3.3)
+        # This test checks the legacy 0.02 to 2.0 rad/s grid.
+        omega, S = ws.jonswap(hs=6.0, tp=12.0, gamma=3.3, freq_max=2.0, n_points=100)
 
         # Peak should occur at omega_p
         omega_p = 2 * np.pi / 12.0

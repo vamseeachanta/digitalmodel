@@ -35,7 +35,9 @@ from digitalmodel.hydrodynamics.models import (
     WaveParameters,
     WaveSpectrumType,
 )
-from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
+from digitalmodel.hydrodynamics.wave_spectra import (
+    LEGACY_FREQ_MAX, LEGACY_N_POINTS, WaveSpectra,
+)
 
 _trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
@@ -429,11 +431,14 @@ class HullCatalog:
     ) -> tuple[np.ndarray, np.ndarray]:
         """Generate a wave spectrum from a ``SeaStateDefinition``."""
         spectrum_type = WaveSpectrumType(sea_state.spectrum_type)
+        # Response-grid follow-up to #2613: preserve the legacy motion basis.
         params = WaveParameters(
             spectrum_type=spectrum_type,
             significant_height=sea_state.significant_height,
             peak_period=sea_state.peak_period,
             gamma=sea_state.gamma,
+            freq_max=LEGACY_FREQ_MAX,
+            n_frequencies=LEGACY_N_POINTS,
         )
         return self._wave_spectra.generate_spectrum(params)
 

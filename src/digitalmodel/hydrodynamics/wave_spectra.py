@@ -10,6 +10,32 @@ from .models import WaveParameters, WaveSpectrumType
 
 _trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
+DEFAULT_FREQ_MAX_PEAK_MULTIPLE = 15.0
+DEFAULT_N_POINTS_TP_GRID = 200
+LEGACY_FREQ_MAX = 2.0
+LEGACY_N_POINTS = 100
+
+
+def default_frequency_grid(
+    tp: float, freq_max: Optional[float] = None, n_points: Optional[int] = None
+) -> Tuple[float, int]:
+    """Resolve the Tp-based grid, preserving explicit upper limits exactly.
+
+    The PM m2 tail share above k * omega_p is approximately 1.262/k**2.
+    Maximum relative errors (%) over PM and JONSWAP gamma=3.3, Hs=4 m,
+    Tp=5, 6, 10, 15 s, against analytic PM moments and JONSWAP quadrature::
+
+        upper limit   points    m1     m2    m_-1     Tz     T1     Te
+        2.0 rad/s       100   14.21  35.30   9.03   24.32  16.57   9.03
+        9 * omega_p     100    0.16   1.54   0.04    0.78   0.16   0.04
+        15 * omega_p    100    0.61   1.06   0.39    0.53   0.61   0.39
+        15 * omega_p    200    0.04   0.56   0.02    0.28   0.04   0.02
+    """
+    default_points = LEGACY_N_POINTS if freq_max is not None else DEFAULT_N_POINTS_TP_GRID
+    if freq_max is None:
+        freq_max = DEFAULT_FREQ_MAX_PEAK_MULTIPLE * 2 * np.pi / tp
+    return freq_max, default_points if n_points is None else n_points
+
 
 class WaveSpectra:
     """
@@ -20,6 +46,9 @@ class WaveSpectra:
     - Pierson-Moskowitz (fully developed seas)
     - Bretschneider (two-parameter spectrum)
     - ISSC (modified Pierson-Moskowitz)
+
+    Default grids use 15 x peak frequency and 200 points. An explicit freq_max
+    retains the legacy 100-point default; an explicit n_points is always used.
 
     Reference: DNV-RP-C205 Environmental Conditions and Environmental Loads
     """
@@ -51,8 +80,8 @@ class WaveSpectra:
         tp: float,
         gamma: float = 3.3,
         freq_min: float = 0.02,
-        freq_max: float = 2.0,
-        n_points: int = 100
+        freq_max: Optional[float] = None,
+        n_points: Optional[int] = None
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Generate JONSWAP wave spectrum
@@ -74,6 +103,7 @@ class WaveSpectra:
             DNV-RP-C205 Section 3.5.2
         """
         # Frequency array
+        freq_max, n_points = default_frequency_grid(tp, freq_max, n_points)
         omega = np.linspace(freq_min, freq_max, n_points)
 
         # Peak frequency
@@ -102,8 +132,8 @@ class WaveSpectra:
         hs: float,
         tp: float,
         freq_min: float = 0.02,
-        freq_max: float = 2.0,
-        n_points: int = 100
+        freq_max: Optional[float] = None,
+        n_points: Optional[int] = None
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Generate Pierson-Moskowitz wave spectrum (fully developed seas)
@@ -124,6 +154,7 @@ class WaveSpectra:
             DNV-RP-C205 Section 3.5.1
         """
         # Frequency array
+        freq_max, n_points = default_frequency_grid(tp, freq_max, n_points)
         omega = np.linspace(freq_min, freq_max, n_points)
 
         # Peak frequency
@@ -143,8 +174,8 @@ class WaveSpectra:
         hs: float,
         tp: float,
         freq_min: float = 0.02,
-        freq_max: float = 2.0,
-        n_points: int = 100
+        freq_max: Optional[float] = None,
+        n_points: Optional[int] = None
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Generate Bretschneider two-parameter wave spectrum
@@ -162,6 +193,7 @@ class WaveSpectra:
             (frequencies, spectral_densities) in rad/s and m²·s
         """
         # Frequency array
+        freq_max, n_points = default_frequency_grid(tp, freq_max, n_points)
         omega = np.linspace(freq_min, freq_max, n_points)
 
         # Peak frequency
@@ -180,8 +212,8 @@ class WaveSpectra:
         hs: float,
         tp: float,
         freq_min: float = 0.02,
-        freq_max: float = 2.0,
-        n_points: int = 100
+        freq_max: Optional[float] = None,
+        n_points: Optional[int] = None
     ) -> Tuple[np.ndarray, np.ndarray]:
         """
         Generate ISSC modified Pierson-Moskowitz spectrum
@@ -200,6 +232,7 @@ class WaveSpectra:
             (frequencies, spectral_densities) in rad/s and m²·s
         """
         # Frequency array
+        freq_max, n_points = default_frequency_grid(tp, freq_max, n_points)
         omega = np.linspace(freq_min, freq_max, n_points)
         f = omega / (2 * np.pi)  # Convert to Hz
 
@@ -327,6 +360,33 @@ class WaveSpectra:
 
         return 2 * np.pi * np.sqrt(m0 / m2)
 
+    def energy_period_from_spectrum(
+        self, frequencies: np.ndarray, spectrum: np.ndarray
+    ) -> float:
+        """Return Te = 2*pi*m_-1/m0 in seconds for angular frequencies (rad/s).
+
+        EPRI (2011), Mapping and Assessment of the United States Ocean Wave
+        Energy Resource, Appendix A, equation A-5 (converted from Hz):
+        https://www1.eere.energy.gov/water/pdfs/mappingandassessment.pdf#page=109
+        """
+        m_minus1 = self.spectral_moment(frequencies, spectrum, n=-1)
+        m0 = self.spectral_moment(frequencies, spectrum, n=0)
+        return 2 * np.pi * m_minus1 / m0
+
+    def wave_power(
+        self, frequencies: np.ndarray, spectrum: np.ndarray, rho: float = 1025.0
+    ) -> float:
+        """Return deep-water power per metre of wave crest (W/m).
+
+        P = rho*g**2*m0*Te/(4*pi); rho is water density (kg/m**3).
+        Deep water requires depth greater than half the wavelength.
+        EPRI (2011), Appendix A, equation A-7:
+        https://www1.eere.energy.gov/water/pdfs/mappingandassessment.pdf#page=112
+        """
+        m0 = self.spectral_moment(frequencies, spectrum, n=0)
+        te = self.energy_period_from_spectrum(frequencies, spectrum)
+        return rho * self.g**2 * m0 * te / (4 * np.pi)
+
     def peak_frequency_from_spectrum(
         self,
         frequencies: np.ndarray,
@@ -353,6 +413,9 @@ class WaveSpectra:
         """
         Calculate comprehensive spectrum statistics
 
+        For omega^-5 tails, m4 and spectral_width depend on the upper cutoff;
+        moments of order four and above do not converge as it tends to infinity.
+
         Args:
             frequencies: Frequency array (rad/s)
             spectrum: Spectral density array (m²·s)
@@ -364,6 +427,7 @@ class WaveSpectra:
         m1 = self.spectral_moment(frequencies, spectrum, n=1)
         m2 = self.spectral_moment(frequencies, spectrum, n=2)
         m4 = self.spectral_moment(frequencies, spectrum, n=4)
+        m_minus1 = self.spectral_moment(frequencies, spectrum, n=-1)
 
         hs = 4.0 * np.sqrt(m0)
         tz = 2 * np.pi * np.sqrt(m0 / m2)
@@ -378,6 +442,8 @@ class WaveSpectra:
             'm1': m1,
             'm2': m2,
             'm4': m4,
+            'm_minus1': m_minus1,
+            'Te_s': 2 * np.pi * m_minus1 / m0,
             'Hs_m': hs,
             'Tz_s': tz,
             'Tp_s': tp,

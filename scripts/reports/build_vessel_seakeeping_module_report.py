@@ -34,7 +34,9 @@ CHANGES = [{"revision": "A", "date": "2026-10-21", "change":
            {"revision": "F", "date": "2026-11-05", "change":
             "Occurrence weights are divided before conversion to percent so valid threshold equality is retained; independent literal and spectral boundary controls cover the correction."},
            {"revision": "G", "date": "2026-11-05", "change":
-            "Occurrence weights are accumulated in input order to preserve the spectral engine's threshold disposition across Python versions; literal and spectral four-state controls retain authentic failed screening."}]
+            "Occurrence weights are accumulated in input order to preserve the spectral engine's threshold disposition across Python versions; literal and spectral four-state controls retain authentic failed screening."},
+           {"revision": "H", "date": "2026-11-13", "change":
+            "The wave-spectrum module source digest is refreshed after the default frequency grid change; the workflow passes its own frequency grid, so calculation inputs and results are unchanged."}]
 SOURCES = [EXAMPLE, "examples/workflows/vessel-seakeeping/README.md",
            "src/digitalmodel/vessel_seakeeping/workflow.py",
            "src/digitalmodel/hydrodynamics/seakeeping.py",
