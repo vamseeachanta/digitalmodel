@@ -55,7 +55,8 @@ it as evidence or acting on a recommendation.
 The [runner](../../../scripts/automation/claude_subprocess_review.sh) executes:
 
 ```bash
-claude -p --max-turns 3 --output-format text < "$prompt"
+timeout --kill-after=1 "${REVIEW_TIMEOUT:-600}" \
+  claude -p --max-turns 3 --output-format text < "$prompt"
 ```
 
 `-p` is the `--print` alias for non-interactive output. The prompt file is
@@ -65,6 +66,14 @@ documented in the [official CLI reference](https://code.claude.com/docs/en/cli-r
 Use `claude -p` without `--bare`: the historical experiment reported auth
 invisibility with `--bare`. That observation is specific to the recorded
 experiment; it does not establish a defect in every CLI version.
+
+The runner requires Bash and the GNU coreutils `timeout` and `date` utilities,
+plus `mkdir` and `grep`. `REVIEW_TIMEOUT` sets the review's wall-clock limit in
+positive whole seconds; unset or empty values use 600 seconds. Zero, negative
+and malformed values fail before launch. On expiry, `timeout` sends SIGTERM
+to the child process group, then SIGKILL after one further second if necessary.
+The turn budget and the wall-clock limit apply independently. Output size is
+not capped.
 
 Run from the repository root, using an already configured CLI session. The
 output directory shall be new and its parent shall exist. Existing directories
@@ -83,9 +92,24 @@ bash scripts/automation/claude_subprocess_review.sh \
 
 Each attempted CLI invocation writes `review.md` (stdout), `stderr.log` and
 `manifest.txt` into its output directory. The manifest records the command,
-the original `claude_exit_code` and the effective runner `exit_code`.
-Nonzero CLI exits are preserved. A zero CLI exit becomes 3 if either stream
+the Bash-escaped `prompt_file`, UTC `started_utc`, `cli_version`, configured
+`review_timeout_seconds`, `claude_exit_code`, effective runner `exit_code`
+and named `status`. The prompt locator is recorded as supplied, relative to
+the caller's working directory when applicable. It is evidence, not shell code.
+The CLI version is queried separately after the review, with a one-second
+timeout and one-second kill grace. The first output line is retained; a failed
+or timed-out version probe records `unavailable` without discarding the review
+or changing its result. The two supervised calls can therefore take up to the
+review limit plus three seconds of timeout/kill grace, plus local processing.
+
+`claude_exit_code` records the review supervisor's raw status: 124 on timeout
+or 137 after kill escalation becomes runner exit 5 with `status=timeout`.
+These statuses are reserved by the wrapper; an explicit CLI exit of 124 or
+137 is classified the same way. Other nonzero CLI exits are preserved.
+A zero CLI exit becomes 3 if either stream
 contains `Reached max turns`, or 4 if the review is empty or whitespace only.
+Those failures record `status=turn_exhausted` and `status=empty_review`,
+respectively; other failures record `cli_failure`, and success `completed`.
 Invalid arguments or a missing, unreadable or empty prompt fail before launch.
 No retry is performed. A zero runner exit establishes only nonempty subprocess
 output without the known exhaustion symptom; semantic validity is not established.
@@ -136,8 +160,8 @@ reports repeated turn-budget exhaustion for
 On 13 November 2026 the original input/output directory was unavailable and
 no matching preserved prompt or output was found in repository history.
 The plan's recovery fallback therefore applies: no verbatim prompt, copied
-historical output or semantically equivalent replay is claimed. This job
-prohibits calls to another assistant, so no live review was performed. Offline
+historical output or semantically equivalent replay is claimed. No live replay
+was run for this change. Offline
 runner tests use an inert executable and do not establish model completion
 within the chosen budget. A future authorized replay will require recovery of
 the original pair before equivalence can be assessed.
@@ -149,6 +173,7 @@ the original pair before equivalence can be assessed.
 | Auth unavailable with `--bare` | Historical experiment reports auth invisibility; no exact auth diagnostic was preserved. | Omit `--bare`; inspect the original CLI exit and stderr. Do not retry with embedded credentials. |
 | Turn budget exhausted | `Reached max turns` in stdout or stderr, including when the CLI exits zero. | Reject the run; compress the question or allowlist before manual rerun. |
 | Empty review | No non-whitespace stdout after a zero CLI exit. | Reject the run and inspect stderr. |
+| Wall-clock limit reached | Supervisor status 124 or 137; runner exit 5 and `status=timeout`. Partial stdout and stderr are retained. | Reject the incomplete review and diagnose the stall before a manual rerun. |
 | Other CLI failure | Nonzero `claude_exit_code` and captured stderr. | Preserve the code and diagnose that failure before rerunning. |
 
 Table 1. Known historical failures and runner failure classifications.
