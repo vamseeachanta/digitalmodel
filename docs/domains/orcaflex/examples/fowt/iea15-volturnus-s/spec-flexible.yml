@@ -7684,18 +7684,17 @@ fowt:
     length: 850.0
   source_note: 'basis.yml and generator_data.yml (IEA-15-240-RWT at e4993d6; Allen et al. 2020 NREL/TP-5000-76773).
     Hull mass properties are whole-system values (rigid representation). WAMIT 22, 44, 24 completed by
-    three-fold symmetry; AddBQuad off-diagonals dropped (OrcaFlex other damping is diagonal). Radiation
-    matrices are held as in the source; the generator emits the upper triangle mirrored (WAMIT importer
-    symmetry policy). Mooring Cd 2.0/0.4 and Ca 0.82/0.27 from the MoorDyn input LINE TYPES at the same
-    revision. Nominal chain diameter 0.185 m is not used for hydrodynamics. Basis readiness partial; use
-    for analysis assumed. System inertia assumes the RNA tensor is about tower top with CG tensor F-P.
-    Retaining F24:K24 as trusted endpoint is an additional assumption; L24:Q24 remains the independent
-    published comparator. The tensor-reference discrepancy remains unresolved. Flexible representation:
-    hull = platform (ElastoDyn PtfmMass, PtfmCM, PtfmRIner, PtfmPIner, PtfmYIner); tower from generator_data.yml
-    floating_tower (tapered top span in four sections, tube formulas); RNA lumped at its centre of mass
-    with the adopted tower-top tensor moved to that centre. The tensor''s products of inertia are kept:
-    a massless child buoy on its principal axes carries the moments. Tower Poisson ratio E/(2G)-1 from
-    the moduli implied by the station table.'
+    three-fold symmetry; AddBQuad off-diagonals dropped (OrcaFlex other damping is diagonal). Mooring
+    Cd 2.0/0.4 and Ca 0.82/0.27 from the MoorDyn input LINE TYPES at the same revision. Nominal chain
+    diameter 0.185 m is not used for hydrodynamics. Basis readiness partial; use for analysis assumed.
+    System inertia assumes the RNA tensor is about tower top with CG tensor F-P. Retaining F24:K24 as
+    trusted endpoint is an additional assumption; L24:Q24 remains the independent published comparator.
+    The tensor-reference discrepancy remains unresolved. Flexible representation: hull = platform (ElastoDyn
+    PtfmMass, PtfmCM, PtfmRIner, PtfmPIner, PtfmYIner); tower from generator_data.yml floating_tower (tapered
+    top span in four sections, tube formulas); RNA lumped at its centre of mass with the adopted tower-top
+    tensor moved to that centre. The tensor''s products of inertia are kept: a massless child buoy on
+    its principal axes carries the moments. Tower Poisson ratio E/(2G)-1 from the moduli implied by the
+    station table.'
   tower:
     base_elevation: 15.0
     target_segment_length: 5.0
