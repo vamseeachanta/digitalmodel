@@ -38,13 +38,24 @@ def test_reconstructed_source_exposes_its_evidence_limit():
     assert "no stronger equivalence claim" in text
 
 
+def test_publication_observations_are_dated():
+    """Publication observations describe the recording date, not current state."""
+    text = HARVEST.read_text(encoding="utf-8")
+    recorded = re.search(r"^Recorded (\d{4}-\d{2}-\d{2})\.", text, re.MULTILINE)
+    assert recorded, "Missing recording date"
+    status = text.split("## Publication status and comment drafts\n", 1)[1]
+    sections = [status.split("\n### ", 1)[0], status.rsplit("\n### ", 1)[1]]
+    for section in sections:
+        assert f"At the time of recording ({recorded[1]})" in section
+
+
 @pytest.mark.parametrize(
     "issue,recommendations",
     [(515, [1, 2, 3]), (517, [1, 3]), (518, [1, 2, 3]),
      (519, [2, 3]), (523, [1, 2, 3])],
 )
-def test_unposted_drafts_cover_each_destination(issue, recommendations):
-    """The local handoff must contain every required GitHub routing payload."""
+def test_retained_drafts_cover_each_destination(issue, recommendations):
+    """The retained drafts must contain every required GitHub routing payload."""
     text = HARVEST.read_text(encoding="utf-8")
     match = re.search(
         rf"### Draft for \[#{issue}\]\([^)]+\)\n(.*?)(?=\n### |\Z)",
@@ -52,7 +63,6 @@ def test_unposted_drafts_cover_each_destination(issue, recommendations):
         re.DOTALL,
     )
     assert match, f"Missing comment draft for issue {issue}"
-    assert "not posted" in text.lower()
     assert "https://github.com/vamseeachanta/digitalmodel/issues/523" in match[1]
     for number in recommendations:
         assert f"Rec {number}" in match[1]

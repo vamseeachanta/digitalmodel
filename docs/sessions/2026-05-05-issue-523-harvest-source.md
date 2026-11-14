@@ -74,11 +74,10 @@ the three harvested recommendations.
 
 ## Publication status and comment drafts
 
-**Not posted.** This job authorizes files only. No issue, comment, label, PR,
-or remote branch has been changed. The GitHub publication and readback criteria
-in plan steps 3–5 remain unperformed. These drafts preserve the requested
-payloads for a separately authorized publishing step; their relative document
-links require an integrated, reachable permalink before posting.
+At the time of recording (2026-11-13), these drafts had not been posted;
+plan steps 3–5 remained open on #523. These drafts preserve the requested
+payloads; their relative document links require a reachable blob permalink
+at the merge commit before posting.
 
 No change to the [#515 plan](https://github.com/vamseeachanta/digitalmodel/issues/515)
 is proposed. Routing stays with the existing children. The retained May plan's
@@ -143,5 +142,5 @@ Local harvest for [#523](https://github.com/vamseeachanta/digitalmodel/issues/52
 - [Retained reconstruction and mapping](2026-05-05-issue-523-harvest-source.md)
   records source limitations, current code evidence, and destination drafts.
 - No new issue is required and no production code or 515 plan is changed.
-- GitHub publication/readback remains pending; this local artifact does not
-  satisfy the issue's GitHub-publication acceptance criteria by itself.
+- At the time of recording (2026-11-13), publication and readback remained
+  pending; the retained drafts alone did not satisfy the publication criteria.
