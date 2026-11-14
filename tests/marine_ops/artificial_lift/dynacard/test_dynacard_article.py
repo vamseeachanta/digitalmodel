@@ -243,6 +243,22 @@ def test_pinned_app_and_examples_are_the_committed_files(builder):
     assert changed == [], changed
 
 
+def test_app_link_dates_are_the_pinned_commit_utc_date(builder, page):
+    """Links at APP_COMMIT are labelled with that commit's UTC date."""
+    import subprocess
+    from datetime import datetime, timezone
+    known = subprocess.run(["git", "cat-file", "-e", f"{builder.APP_COMMIT}^{{commit}}"],
+                           cwd=ROOT, capture_output=True, check=False)
+    if known.returncode != 0:
+        pytest.skip("pinned commit not in this clone")
+    seconds = subprocess.run(["git", "show", "-s", "--format=%ct", builder.APP_COMMIT], cwd=ROOT,
+                             capture_output=True, check=True, text=True, encoding="utf-8").stdout
+    when = datetime.fromtimestamp(int(seconds), tz=timezone.utc)
+    assert builder.APP_VERSION_DATE == f"{when.day} {when:%b %Y}"
+    assert page.count(f"version of {builder.APP_VERSION_DATE}") >= 3
+    assert f"versions of {builder.APP_VERSION_DATE}" in page
+
+
 def test_reproduction_bound_rounds_up(builder):
     assert builder.upper_bound(2.29e-9) == "3 × 10⁻⁹"
     assert builder.upper_bound(2.0e-9) == "2 × 10⁻⁹"

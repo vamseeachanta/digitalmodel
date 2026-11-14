@@ -38,7 +38,8 @@ REPO = "https://github.com/vamseeachanta/digitalmodel"
 # worked examples with the browser application (the test checks that the linked app,
 # worked-example and fixture files have not changed since APP_COMMIT).
 REPORT_COMMIT = "7d02ae07248b038dcdec5e7097565c02fcd152f8"
-APP_COMMIT = "a3c843a3224667491b7eb5fbc64276fce70379b5"
+APP_COMMIT = "0fa16a781fc50cc4b249ce6f9c107bb8b80ea00a"
+APP_VERSION_DATE = "14 Nov 2026"  # UTC date of APP_COMMIT
 # Commit that added figure-1-cards.csv; the test checks the file has not changed since.
 CARDS_COMMIT = "242f931efefa8facbe337502a2cdb4cebe08fd78"
 PLATE_DOI = "https://doi.org/10.17632/hnfwm9mjs6.1"
@@ -340,7 +341,7 @@ def examples_view(f) -> str:
             '<p class="hint">Point at a row, or select it, to show that example.</p></div>'
             f'<div class="examples-panels" aria-live="polite">{panels}</div></div>'
             '<figcaption><b>Figure 2. Ten pump conditions: model reading and cards.</b> '
-            f'Data: one CSV per example in the <a href="{readme}">worked examples</a>, version of 13 Nov 2026.</figcaption></figure>')
+            f'Data: one CSV per example in the <a href="{readme}">worked examples</a>, version of {APP_VERSION_DATE}.</figcaption></figure>')
 
 
 def contents(sections) -> str:
@@ -395,7 +396,7 @@ def body(f) -> str:
 {examples_view(f)}
 <p>How the ten examples are built, and the full values, are given in Appendix C.</p>
 <h2 id="own-card">Run the analysis on your own card</h2>
-<p>The same analysis runs in a web page in the <a href="{app}">digitalmodel library</a> (version of 13 Nov 2026); it needs no installation and no network once its files are on disk. Load a surface card with the well's rod and pump data, and the page draws the pump card and reads fillage, fluid load and the model readings.</p>
+<p>The same analysis runs in a web page in the <a href="{app}">digitalmodel library</a> (version of {APP_VERSION_DATE}); it needs no installation and no network once its files are on disk. Load a surface card with the well's rod and pump data, and the page draws the pump card and reads fillage, fluid load and the model readings.</p>
 <p><a href="{report_md}">Read the full study</a> (version of 12 Nov 2026)</p>
 <p>To try it out or adapt the analysis, see <a href="#appendix-d">reusable prompt</a>.</p>
 <p>The work leaves open the accuracy of the model readings on field cards: both models are trained on synthetic cards, and no labelled field cards were available to test them.</p>
@@ -407,7 +408,7 @@ def body(f) -> str:
 <li>Gibbs, S. G. (1963). Predicting the Behavior of Sucker-Rod Pumping Systems. SPE-588-PA. <a href="https://doi.org/10.2118/588-PA">doi:10.2118/588-PA</a>.</li>
 <li>Everitt, T. A. and Jennings, J. W. (1992). An Improved Finite-Difference Calculation of Downhole Dynamometer Cards for Sucker-Rod Pumps. SPE-18189-PA. <a href="https://doi.org/10.2118/18189-PA">doi:10.2118/18189-PA</a>.</li>
 <li>Diagnostic plate of ten pump working conditions. Mendeley Data, version 1, CC0 1.0. <a href="{PLATE_DOI}">doi:10.17632/hnfwm9mjs6.1</a>, retrieved 11 Oct 2026.</li>
-<li>digitalmodel library, MIT licence, version of 13 Nov 2026. <a href="{tree(APP_COMMIT, "")}">github.com/vamseeachanta/digitalmodel</a>.</li>
+<li>digitalmodel library, MIT licence, version of {APP_VERSION_DATE}. <a href="{tree(APP_COMMIT, "")}">github.com/vamseeachanta/digitalmodel</a>.</li>
 </ol>
 """
 
@@ -489,7 +490,7 @@ def appendices(f) -> str:
 <li>The web page reproduces the library on all ten examples: pump loads within {upper_bound(f['repro_load'])} lbf and {"the same" if f['repro_labels'] else "different"} model labels.</li>
 </ul>
 {table(["No.", "Condition", "Surface stroke (in)", "Pump stroke (in)", "Fillage (%)", "Fluid load (lbf)", "Round trip (% of load range)", "Shape model", "Shipped model"], c_rows, "Table C1. Ten worked examples, finite-difference method.")}
-<p>The probabilities of all model classes are shown in the <a href="{matrix}">diagnostics matrix</a>; each example's figure and data are in the <a href="{readme}">worked examples</a>. Both are versions of 13 Nov 2026.</p>"""
+<p>The probabilities of all model classes are shown in the <a href="{matrix}">diagnostics matrix</a>; each example's figure and data are in the <a href="{readme}">worked examples</a>. Both are versions of {APP_VERSION_DATE}.</p>"""
     prompt = blob(REPORT_COMMIT, "examples/report-evals/dynacard-pump-card/PROMPT.md")
     fixture = blob(APP_COMMIT, f["inputs"]["fixture"])
     d = f"""
@@ -503,7 +504,7 @@ def appendices(f) -> str:
 <li>Changes over time: the prompt runs the latest version of the analysis code until that version is published; the data links are pinned to a commit.</li>
 </ul>
 <p>Give this prompt to your assistant: <a href="{prompt}">reusable prompt for the pump card analysis</a>, in the digitalmodel library, version of 12 Nov 2026.</p>
-<p>Data: public example well, file <a href="{fixture}">cleansed_well_001.json</a> of the digitalmodel library, MIT licence, version of 13 Nov 2026; public diagnostic plate, Mendeley Data, <a href="{PLATE_DOI}">doi:10.17632/hnfwm9mjs6.1</a>, CC0 1.0, retrieved 11 Oct 2026.</p>
+<p>Data: public example well, file <a href="{fixture}">cleansed_well_001.json</a> of the digitalmodel library, MIT licence, version of {APP_VERSION_DATE}; public diagnostic plate, Mendeley Data, <a href="{PLATE_DOI}">doi:10.17632/hnfwm9mjs6.1</a>, CC0 1.0, retrieved 11 Oct 2026.</p>
 <p>To have a study of your own rod pump done for you, write to support@aceengineer.com.</p>"""
     return a + b + c + d
 
