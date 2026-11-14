@@ -212,6 +212,7 @@ def test_recorded_score_matches_fresh_document_and_cli():
                "digitalmodel.marine_ops.artificial_lift.dynacard.benchmark.plate_scoring",
                "--workbook", str(WORKBOOK)]
     output = subprocess.run(command, check=True, capture_output=True, text=True,
+                            encoding="utf-8",
                             env={**os.environ, "PYTHONPATH": SOURCE_DIR})
     assert json.loads(output.stdout) == recorded
     assert output.stdout == (DATA / "plate_classifier_score.json").read_text(encoding="utf-8")
@@ -343,3 +344,19 @@ def test_shape_dimension_mismatch_names_the_shape_artefact(tmp_path, monkeypatch
     monkeypatch.setattr(diagnostics, "SHAPE_MODEL_PATH", artifact)
     with pytest.raises(ValueError, match="train_and_export_shape"):
         diagnostics.classify_shape(CardData(position=[0, 0, 1, 1], load=[0, 1, 1, 0]))
+
+
+def test_model_artefacts_are_declared_as_package_data():
+    """A wheel must carry both classifier artefacts; classify_shape has no fallback."""
+    import fnmatch
+    import tomllib
+    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import (
+        MODEL_PATH, SHAPE_MODEL_PATH,
+    )
+    root = Path(__file__).resolve().parents[4]
+    patterns = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))[
+        "tool"]["setuptools"]["package-data"]["digitalmodel"]
+    package_root = root / "src" / "digitalmodel"
+    for artefact in (MODEL_PATH, SHAPE_MODEL_PATH):
+        relative = artefact.resolve().relative_to(package_root).as_posix()
+        assert any(fnmatch.fnmatch(relative, pattern) for pattern in patterns), relative
