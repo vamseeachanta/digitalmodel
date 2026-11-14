@@ -96,7 +96,8 @@ def test_shape_vector_has_only_sixteen_normalised_projections():
     assert FeatureExtractor.extract_classifier_vector(card).shape == (19,)
 
 
-def test_shape_trainer_exports_current_labels_and_reproducible_metadata(tmp_path):
+@pytest.mark.parametrize("suffix", [".json", ".json.gz"])
+def test_shape_trainer_exports_current_labels_and_reproducible_metadata(tmp_path, suffix):
     import json
     import sklearn
     from digitalmodel.marine_ops.artificial_lift.dynacard import training
@@ -106,9 +107,10 @@ def test_shape_trainer_exports_current_labels_and_reproducible_metadata(tmp_path
     from digitalmodel.marine_ops.artificial_lift.dynacard.feature_extraction import (
         FeatureExtractor,
     )
-    artifact = tmp_path / "shape.json"
+    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import read_model_bytes
+    artifact = tmp_path / f"shape{suffix}"
     metrics = training.train_and_export_shape(samples_per_mode=5, output_path=artifact)
-    model = json.loads(artifact.read_text(encoding="utf-8"))
+    model = json.loads(read_model_bytes(artifact))
     assert model["class_labels"] == sorted(set(ALL_GENERATORS) - set(SYNTHETIC_LABEL_EXCLUSIONS))
     metadata = model["training_metadata"]
     assert metadata["feature_names"] == FeatureExtractor.shape_feature_names()
@@ -199,14 +201,14 @@ def test_recorded_score_matches_fresh_document_and_cli():
         plate_score_document, score_shipped_model_scale_sweep,
     )
     from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import (
-        MODEL_PATH, SHAPE_MODEL_PATH,
+        MODEL_PATH, SHAPE_MODEL_PATH, read_model_bytes,
     )
     recorded = json.loads((DATA / "plate_classifier_score.json").read_text(encoding="utf-8"))
     fresh = plate_score_document(WORKBOOK)
     assert fresh == recorded
     assert fresh["source"]["sha256"] == hashlib.sha256(WORKBOOK.read_bytes()).hexdigest()
     for name, path in (("shape_only", SHAPE_MODEL_PATH), ("shipped", MODEL_PATH)):
-        assert fresh["models"][name]["sha256"] == hashlib.sha256(path.read_bytes()).hexdigest()
+        assert fresh["models"][name]["sha256"] == hashlib.sha256(read_model_bytes(path)).hexdigest()
     assert score_shipped_model_scale_sweep(WORKBOOK) == recorded["shipped_model_scale_sweep"]
     command = [sys.executable, "-m",
                "digitalmodel.marine_ops.artificial_lift.dynacard.benchmark.plate_scoring",
@@ -360,3 +362,34 @@ def test_model_artefacts_are_declared_as_package_data():
     for artefact in (MODEL_PATH, SHAPE_MODEL_PATH):
         relative = artefact.resolve().relative_to(package_root).as_posix()
         assert any(fnmatch.fnmatch(relative, pattern) for pattern in patterns), relative
+
+
+def test_shipped_shape_model_is_lossless_and_below_large_file_limit():
+    import gzip
+    import hashlib
+    import json
+    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import (
+        SHAPE_MODEL_PATH, read_model_bytes,
+    )
+    assert SHAPE_MODEL_PATH.suffixes[-2:] == [".json", ".gz"]
+    stored = SHAPE_MODEL_PATH.read_bytes()
+    assert len(stored) <= 1000 * 1024
+    assert stored[4:8] == bytes(4)  # No build timestamp in the gzip header.
+    raw = read_model_bytes(SHAPE_MODEL_PATH)
+    assert raw == gzip.decompress(stored)
+    recorded = json.loads((DATA / "plate_classifier_score.json").read_text(encoding="utf-8"))
+    assert hashlib.sha256(raw).hexdigest() == recorded["models"]["shape_only"]["sha256"]
+
+
+def test_model_reader_supports_plain_json_and_rejects_corrupt_gzip(tmp_path):
+    import gzip
+    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import read_model_bytes
+    path = tmp_path / "model.json"
+    path.write_bytes(b'{"trees": []}\n')
+    assert read_model_bytes(path) == path.read_bytes()
+    compressed = tmp_path / "model.json.gz"
+    compressed.write_bytes(gzip.compress(path.read_bytes(), mtime=0))
+    assert read_model_bytes(compressed) == path.read_bytes()
+    compressed.write_bytes(b"invalid")
+    with pytest.raises(gzip.BadGzipFile):
+        read_model_bytes(compressed)
