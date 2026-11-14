@@ -120,6 +120,7 @@ repos:
     hooks:
       - id: orcaflex-spec-validate
         name: OrcaFlex spec.yml strict validation
+        description: Requires bash and uv on PATH; the first run needs network access to populate the uv cache.
         entry: scripts/check_spec_validity.sh
         language: script
         files: '(^|/)([^/]+\.)?spec\.yml$'
