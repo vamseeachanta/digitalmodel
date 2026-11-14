@@ -91,27 +91,62 @@ def hull_length(basis: dict) -> float:
     return radius * 1.5 + _v(g["outer_column_diameter"])
 
 
+IEA15_DESIGN: dict[str, Any] = {
+    "hull_name": "VolturnUS-S",
+    "line_type_name": "Chain R3 185mm",
+    # MoorDyn input LINE TYPES at the pinned revision: Cd, CdAx, Ca, CaAx.
+    "mooring_coefficients": {"normal_drag": 2.0, "axial_drag": 0.4,
+                             "normal_added_mass": 0.82, "axial_added_mass": 0.27},
+    "description": "IEA 15 MW reference turbine on the UMaine VolturnUS-S "
+                   "semi-submersible; rigid floating wind model",
+    "source_note": (
+        "basis.yml and generator_data.yml (IEA-15-240-RWT at {commit}; Allen et al. 2020 "
+        "NREL/TP-5000-76773). Hull mass properties are whole-system values (rigid "
+        "representation). WAMIT 22, 44, 24 completed by three-fold symmetry; AddBQuad "
+        "off-diagonals dropped (OrcaFlex other damping is diagonal). Mooring Cd 2.0/0.4 and "
+        "Ca 0.82/0.27 from the MoorDyn input LINE TYPES at the same revision. "
+        "Nominal chain diameter {nominal} m is not used for hydrodynamics. "
+        "Basis readiness {readiness}; use for analysis {use_for_analysis}. "
+        "System inertia assumes the RNA tensor is about tower top with CG tensor F-P. "
+        "Retaining F24:K24 as trusted endpoint is an additional assumption; L24:Q24 "
+        "remains the independent published comparator. The tensor-reference "
+        "discrepancy remains unresolved."
+    ),
+}
+
+
 def build_spec(basis: dict, data: dict, *, thrust_kN: float | None = None,
                wind_speed: float | None = None, name: str = "iea15_volturnus_s_lc0_statics",
-               stages: list[float] | None = None, time_step: float = 0.1) -> dict:
-    """Return a ProjectInputSpec dictionary for the rigid IEA 15 MW FOWT."""
+               stages: list[float] | None = None, time_step: float = 0.1,
+               design: dict[str, Any] | None = None) -> dict:
+    """Return a ProjectInputSpec dictionary for a rigid three-line semi-submersible FOWT.
+
+    ``design`` holds the names, mooring hydrodynamic coefficients and notes
+    that differ between reference designs; the default is the IEA 15 MW one.
+    A design may give ``hull_length`` directly; otherwise it is derived from
+    the column footprint in ``basis['geometry']``.
+    """
+    design = design or IEA15_DESIGN
     env = basis["environment"]
     system = basis["system"]
     mooring = basis["mooring"]
-    turbine = data["turbine"]
+    turbine = data.get("turbine", {})
     hydro = data["hydrodynamics"]
     rho = _v(env["water_density"]) / 1000.0
     g = ORCAFLEX_GRAVITY
     hst = _v(hydro["hydrostatic_stiffness_nondimensional"])
     block = [[rho * g * hst[i][j] for j in (2, 3, 4)] for i in (2, 3, 4)]
     quad = _v(hydro["additional_quadratic_damping"])
-    nominal = _v(mooring["nominal_diameter"])
+    nominal = _v(mooring["nominal_diameter"]) if "nominal_diameter" in mooring else None
+    mbl = mooring.get("minimum_breaking_load")
+    coefficients = design["mooring_coefficients"]
+    line_type = design["line_type_name"]
     fowt: dict[str, Any] = {
         "representation": "rigid",
         "gravity": g,
         "hull": {
-            "name": "VolturnUS-S",
-            "length": hull_length(basis),
+            "name": design["hull_name"],
+            "length": design.get("hull_length") or hull_length(basis),
             "mass": _v(system["mass"]) / 1000.0,
             "centre_of_mass": list(_v(system["center_of_gravity"])),
             "inertia_about_centre_of_mass": [[x / 1000.0 for x in row]
@@ -123,39 +158,27 @@ def build_spec(basis: dict, data: dict, *, thrust_kN: float | None = None,
             "other_quadratic_damping": [quad[i][i] / 1000.0 for i in range(6)],
         },
         "mooring_line_types": [{
-            "name": "Chain R3 185mm",
+            "name": line_type,
             "outer_diameter": _v(mooring["volume_equivalent_diameter"]),
             "mass_per_length": _v(mooring["mass_per_length"]) / 1000.0,
             "axial_stiffness": _v(mooring["axial_stiffness"]) / 1000.0,
-            "minimum_breaking_load": _v(mooring["minimum_breaking_load"]) / 1000.0,
-            "normal_drag_coefficient": 2.0,
-            "axial_drag_coefficient": 0.4,
-            "normal_added_mass_coefficient": 0.82,
-            "axial_added_mass_coefficient": 0.27,
+            "minimum_breaking_load": None if mbl is None else _v(mbl) / 1000.0,
+            "normal_drag_coefficient": coefficients["normal_drag"],
+            "axial_drag_coefficient": coefficients["axial_drag"],
+            "normal_added_mass_coefficient": coefficients["normal_added_mass"],
+            "axial_added_mass_coefficient": coefficients["axial_added_mass"],
         }],
         "mooring_lines": [
-            {"name": f"Mooring{k + 1}", "line_type": "Chain R3 185mm",
+            {"name": f"Mooring{k + 1}", "line_type": line_type,
              "fairlead": list(fair), "anchor_xy": [anchor[0], anchor[1]],
              "anchor_height_above_seabed": anchor[2] + _v(env["water_depth"]),
              "length": _v(mooring["unstretched_length"])}
             for k, (fair, anchor) in enumerate(zip(_v(mooring["fairleads"]),
                                                    _v(mooring["anchors"])))
         ],
-        "source_note": (
-            "basis.yml and generator_data.yml (IEA-15-240-RWT at "
-            f"{data['reference_commit'][:7]}; Allen et al. 2020 NREL/TP-5000-76773). "
-            "Hull mass properties are whole-system values (rigid representation). "
-            "WAMIT 22, 44, 24 completed by three-fold symmetry; AddBQuad off-diagonals "
-            "dropped (OrcaFlex other damping is diagonal). Mooring Cd 2.0/0.4 and Ca "
-            "0.82/0.27 from the MoorDyn input LINE TYPES at the same revision. "
-            f"Nominal chain diameter {nominal} m is not used for hydrodynamics. "
-            f"Basis readiness {basis['qualification']['readiness']}; "
-            f"use for analysis {basis['qualification']['use_for_analysis']}. "
-            "System inertia assumes the RNA tensor is about tower top with CG tensor F-P. "
-            "Retaining F24:K24 as trusted endpoint is an additional assumption; L24:Q24 "
-            "remains the independent published comparator. The tensor-reference "
-            "discrepancy remains unresolved."
-        ),
+        "source_note": design["source_note"].format(
+            commit=data["reference_commit"][:7], nominal=nominal,
+            **basis.get("qualification", {})),
     }
     if thrust_kN is not None:
         fowt["rotor_thrust"] = {
@@ -167,8 +190,7 @@ def build_spec(basis: dict, data: dict, *, thrust_kN: float | None = None,
     return {
         "metadata": {
             "name": name,
-            "description": "IEA 15 MW reference turbine on the UMaine VolturnUS-S "
-                           "semi-submersible; rigid floating wind model",
+            "description": design["description"],
             "structure": "floating_wind_turbine",
             "operation": "in-place",
             "project": "public reference design",
@@ -192,3 +214,69 @@ def thrust_at(data: dict, wind_speed: float) -> float:
             f = (wind_speed - lower[0]) / (upper[0] - lower[0])
             return lower[3] + f * (upper[3] - lower[3])
     raise ValueError(f"wind speed {wind_speed} m/s outside the rotor performance table")
+
+
+def _sea_state(hs: float, tp: float, gamma: float, direction: float = 0.0) -> dict:
+    """JONSWAP train given by Hs, Tp and gamma.
+
+    Tp and gamma go through the raw wave-train layer so that the environment
+    builder emits ``WaveTp`` (not ``WaveTz``) and keeps gamma = 1.0, which the
+    spec-level gamma field (gamma > 1) does not accept.
+    """
+    return {
+        "waves": {"type": "jonswap", "height": hs, "period": tp, "direction": direction},
+        "raw_properties": {"WaveTrains": [{
+            "Name": "Wave 1", "WaveJONSWAPParameters": "Partially specified",
+            "WaveTp": tp, "WaveGamma": gamma}]},
+    }
+
+
+# Load cases whose run needs the licensed WAMIT import. The generated vessel
+# type carries no load RAOs, so first-order wave loading stays off in the
+# generated model (the schema rejects it without RAOs); run.md switches it on
+# after the import supplies them.
+WAVE_CASES = ("LC4_operating", "LC5_parked_extreme")
+
+
+def load_case_specs(basis: dict, data: dict, equilibrium: dict) -> dict[str, dict]:
+    """Load-case matrix for the licensed runs.
+
+    ``equilibrium`` holds the still-water position from the licence-free
+    checks: ``surge`` (m), ``heave`` (m) and ``pitch`` (deg). Decay cases
+    start from that position plus the stated offset and are excluded from
+    statics so the offset is held at the start of dynamics.
+    """
+    env = basis["environment"]
+    rated = _v(basis["turbine"]["rated_rotor_thrust"]) / 1000.0
+    op, ext = env["operating"], env["extreme"]
+    op_wind = _v(op["wind_speed"])
+    cases: dict[str, dict] = {}
+    cases["LC0_statics"] = build_spec(basis, data, name="LC0_statics", stages=[10, 100])
+    decays = {
+        "LC1_surge_decay": ([10.0, 0.0, 0.0], [0.0, 0.0, 0.0], 1200),
+        "LC2_heave_decay": ([0.0, 0.0, -2.0], [0.0, 0.0, 0.0], 300),
+        "LC3_pitch_decay": ([0.0, 0.0, 0.0], [0.0, 5.0, 0.0], 400),
+    }
+    for name, (offset, rotation, duration) in decays.items():
+        spec = build_spec(basis, data, name=name, stages=[1, duration])
+        hull = spec["fowt"]["hull"]
+        hull["initial_position"] = [equilibrium["surge"] + offset[0], 0.0,
+                                    equilibrium["heave"] + offset[2]]
+        hull["initial_orientation"] = [0.0, equilibrium["pitch"] + rotation[1], 0.0]
+        hull["included_in_statics"] = "None"
+        cases[name] = spec
+    cases["LC4a_rated_thrust_statics"] = build_spec(
+        basis, data, name="LC4a_rated_thrust_statics", stages=[10, 100],
+        thrust_kN=rated, wind_speed=_v(basis["turbine"]["rated_wind_speed"]))
+    operating = build_spec(basis, data, name="LC4_operating", stages=[100, 3600],
+                           thrust_kN=thrust_at(data, op_wind) / 1000.0, wind_speed=op_wind)
+    operating["environment"].update(_sea_state(
+        _v(op["significant_wave_height"]), _v(op["peak_period"]), _v(op["jonswap_gamma"])))
+    operating["environment"]["wind"] = {"speed": op_wind, "direction": 0.0}
+    cases["LC4_operating"] = operating
+    parked = build_spec(basis, data, name="LC5_parked_extreme", stages=[100, 3600])
+    parked["environment"].update(_sea_state(
+        _v(ext["significant_wave_height"]), _v(ext["peak_period"]), _v(ext["jonswap_gamma"])))
+    parked["environment"]["wind"] = {"speed": _v(ext["wind_speed"]), "direction": 0.0}
+    cases["LC5_parked_extreme"] = parked
+    return cases
