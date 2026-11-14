@@ -17,6 +17,7 @@ from digitalmodel.fatigue.assessment import AssessmentInput, AssessmentResult, a
 from digitalmodel.fatigue.c203_editions import (
     DNV_RP_C203_IMPLEMENTED_EDITION, DNV_RP_C203_VERIFIED_EDITION,
 )
+from digitalmodel.reporting._metadata import package_code_edition
 from digitalmodel.reporting import (
     DocumentMeta, Provenance, ReportArtifacts, ReportSpec, Section, StandardLabel,
     StatusBlock, TableBlock, TextBlock, write_report,
@@ -170,7 +171,11 @@ def export_assessment(
     native_path = output_dir / "fatigue-native.json"
     readback, digest = _native_readback(native_path, inp, result)
     result = AssessmentResult.model_validate(readback["result"])
-    provenance = Provenance().add("native_calculation", native_path.name, digest=digest)
+    provenance = Provenance(
+        code_edition=package_code_edition(),
+        units_system="SI",
+        validated_path="screening",
+    ).add("native_calculation", native_path.name, digest=digest)
     spec = ReportSpec(document=document, sections=_report_sections(result, document),
                       standards=[StandardLabel(code_id=inp.design_code,
                                                edition=DNV_RP_C203_IMPLEMENTED_EDITION,

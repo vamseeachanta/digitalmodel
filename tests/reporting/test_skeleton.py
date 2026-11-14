@@ -70,7 +70,9 @@ def test_completeness_tracks_required_blocks_and_provenance() -> None:
     assert c1.required_filled == 2 and not c1.complete and not c1.provenance_ok
 
     # filled + provenance -> complete
-    prov = Provenance().add("spec", "spec.yml")
+    prov = Provenance(
+        code_edition="test", units_system="SI", validated_path="screening"
+    ).add("spec", "spec.yml")
     c2 = sk.completeness(filled, provenance=prov)
     assert c2.complete and c2.provenance_ok and c2.missing_blocks == []
 
@@ -83,7 +85,11 @@ def test_require_provenance_false_completes_without_source() -> None:
 
 
 def test_provenance_block_appended_when_supplied() -> None:
-    html = _skeleton().build_html(provenance=Provenance().add("spec", "s.yml"))
+    html = _skeleton().build_html(
+        provenance=Provenance(
+            code_edition="test", units_system="SI", validated_path="screening"
+        ).add("spec", "s.yml")
+    )
     assert 'id="provenance"' in html and "s.yml" in html
 
 
@@ -133,6 +139,8 @@ def test_cli_check_complete_with_content_and_provenance(tmp_path) -> None:
     content = tmp_path / "c.yml"
     content.write_text("a: '<p>filled</p>'\n")
     prov = tmp_path / "p.yml"
-    prov.write_text("sources:\n  - {kind: spec, identifier: s.yml}\n")
+    prov.write_text(
+        "code_edition: test\nunits_system: SI\nvalidated_path: screening\nsources:\n  - {kind: spec, identifier: s.yml}\n"
+    )
     rc = cli_main([sk, "--content", str(content), "--provenance", str(prov), "--check"])
     assert rc == 0

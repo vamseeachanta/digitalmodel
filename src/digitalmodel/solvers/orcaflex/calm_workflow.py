@@ -24,6 +24,7 @@ from digitalmodel.solvers.orcaflex.yaml_utils import OrcaFlexDumper
 from digitalmodel.solvers.orcaflex.yaml_validator import OrcaFlexYAMLValidator
 
 if TYPE_CHECKING:
+    from digitalmodel.reporting._metadata import package_code_edition
     from digitalmodel.reporting import ReportSpec, Section
 
 DOMAIN = Path("docs/domains/orcaflex")
@@ -451,7 +452,11 @@ def build_report(prepared: dict, assessment: dict) -> ReportSpec:
             project="Generic worked example",
             client="Not applicable",
         ),
-        provenance=Provenance()
+        provenance=Provenance(
+            code_edition=package_code_edition(),
+            units_system="SI",
+            validated_path="screening",
+        )
         .add(
             "input",
             "supplied configuration with explicit criteria",
