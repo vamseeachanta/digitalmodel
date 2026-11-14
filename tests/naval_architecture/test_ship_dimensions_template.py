@@ -108,6 +108,43 @@ class TestTemplateLoading:
         assert "speed_kts -> speed_kt" in template_header
         assert "entry_status: pending -> draft" in template_header
 
+    def test_generator_identifier_mapping_requires_a_full_string_id(self, template_header):
+        assert "hull_number is an integer or null" in template_header
+        assert (
+            "hull_id = upper(hull_code) + '-' + str(hull_number)"
+            in template_header
+        )
+        assert (
+            "For null hull_number, resolve the identifier from the source"
+            in template_header
+        )
+        assert "Do not copy the integer into the hull_number alias" in template_header
+
+    def test_numbered_generator_migration_example_validates(self, template_header):
+        from digitalmodel.naval_architecture.ship_dimensions import validate_vessel_entry
+
+        example = re.search(
+            r'^#   (\{hull_code:.*?\}) -> (\{hull_id:.*?\})$',
+            template_header,
+            re.MULTILINE,
+        )
+        assert example, "A numbered generator migration example is required"
+        original = yaml.safe_load(example.group(1))
+        migrated = yaml.safe_load(example.group(2))
+        assert original == {"hull_code": "bb", "hull_number": 34}
+        assert migrated == {"hull_id": "BB-34"}
+        # Synthetic dimensions exercise the real validator, not source data.
+        dimensions = {
+            "name": "Migration example",
+            "loa_ft": 100.0,
+            "beam_ft": 20.0,
+            "draft_ft": 8.0,
+        }
+        assert "Missing required field: hull_id" in validate_vessel_entry(
+            {**dimensions, **original}
+        )
+        assert validate_vessel_entry({**dimensions, **migrated}) == []
+
     def test_load_default_template(self):
         from digitalmodel.naval_architecture.ship_dimensions import (
             load_dimension_template,

@@ -9,7 +9,13 @@
 #   scripts/data/doc_intelligence/generate_ship_dimension_template.py
 # Migration to this schema: entries -> vessels; flatten dimensions: per entry;
 # length_overall_ft -> loa_ft; speed_kts -> speed_kt; retain depth_ft.
-# Use hull_number as the identifier alias, source_plan -> source, and add name.
+# Generator hull_number is an integer or null; hull_code holds the type letters.
+# For numbered hulls, create a string identifier:
+#   hull_id = upper(hull_code) + '-' + str(hull_number)
+#   {hull_code: bb, hull_number: 34} -> {hull_id: "BB-34"}
+# Do not copy the integer into the hull_number alias (it requires a full string).
+# For null hull_number, resolve the identifier from the source before migration.
+# Map source_plan -> source, and add name.
 # Map entry_status: pending -> draft; verification requires a separate check.
 # The generator output is not a drop-in replacement for this template.
 #

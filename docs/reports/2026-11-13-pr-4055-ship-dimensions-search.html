@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ship-dimensions artifact search — review of PR 4055</title>
+<style>
+body { max-width: 76rem; margin: 2rem auto; padding: 0 1rem; font: 1rem/1.5 system-ui, sans-serif; color: #172b38; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #b8c7ce; padding: .6rem; text-align: left; vertical-align: top; }
+code { overflow-wrap: anywhere; }
+caption { caption-side: bottom; text-align: left; margin: .5rem 0 1.5rem; }
+</style>
+</head>
+<body>
+<h1>Ship-dimensions artifact search</h1>
+<p>13 November 2026 (America/Chicago). Scope:
+<a href="https://github.com/vamseeachanta/digitalmodel/pull/4055">PR 4055</a>,
+reviewed head <code>5ba3f9db66f8e8f8f59defeb803c719fdddc0f1b</code>, and
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/461">issue 461</a>, plan step 1.
+This report records code provenance and schema compatibility; it does not qualify vessel dimensions.</p>
+<h2>Finding and canonical decision</h2>
+<p>The sibling <code>workspace-hub</code> repository contains both the generator wrapper
+and implementation. The earlier negative search conclusion is superseded by this
+positive evidence and issue 461 comments 5–10. Under the approved plan's default decision,
+<code>digitalmodel/data/ship_dimensions_template.yaml</code> remains canonical for Phase 1
+manual curation. The sibling generator is superseded for this contract; its output
+has a different schema and cannot directly replace the canonical YAML.</p>
+<h2>Search coverage and source evidence</h2>
+<p>The issue bodies and all conversation comments for issues 461 and 463, both approved plans
+and their existing 6 May approval markers, every PR comment, and the empty inline-comment
+response were read. The current tracked-file search returns the canonical template;
+the available dimension-file history and branch names were inspected. This scoped search
+does not establish absence from every historical branch or repository.</p>
+<p>The three files below were read through the GitHub contents API at the same
+<code>workspace-hub</code> revision, <code>b84f97e6856bf889e818034dd60a056b8d40b4ec</code>.
+SHA-256 values cover the decoded source bytes, which were read back after local capture.</p>
+<table>
+<caption>Table 1. Revision-pinned generator and identifier-source evidence.</caption>
+<thead><tr><th>Source</th><th>SHA-256</th></tr></thead>
+<tbody>
+<tr><td><a href="https://github.com/vamseeachanta/workspace-hub/blob/b84f97e6856bf889e818034dd60a056b8d40b4ec/scripts/data/doc-intelligence/generate-ship-dimension-template.py"><code>scripts/data/doc-intelligence/generate-ship-dimension-template.py</code></a></td><td><code>fa5183350938185b126b50d6e30e4c36d4a7f50280886106b77abf6edbfcd8cf</code></td></tr>
+<tr><td><a href="https://github.com/vamseeachanta/workspace-hub/blob/b84f97e6856bf889e818034dd60a056b8d40b4ec/scripts/data/doc_intelligence/generate_ship_dimension_template.py"><code>scripts/data/doc_intelligence/generate_ship_dimension_template.py</code></a></td><td><code>697849c726cbb942e70bb60c1bfb760c76286f6f006744397f761c93a37c4617</code></td></tr>
+<tr><td><a href="https://github.com/vamseeachanta/workspace-hub/blob/b84f97e6856bf889e818034dd60a056b8d40b4ec/scripts/data/doc-intelligence/build-ship-plans-index.py"><code>scripts/data/doc-intelligence/build-ship-plans-index.py</code></a></td><td><code>38b348c9026dc8ae03690fc5f7109c0b19872079558582797be4a4e486f8d030</code></td></tr>
+</tbody>
+</table>
+<p><code>build_dimension_entries</code> copies <code>hull_code</code> and
+<code>hull_number</code>, emits <code>entry_status: pending</code> and nested null
+<code>dimensions</code>, and omits text-extractable plans. The index builder's
+<code>_classify_hull</code> returns <code>int(number) if number else None</code>.
+The wrapper's default output is <code>workspace-hub/data/doc-intelligence/ship-dimensions.yaml</code>.
+Current availability and engineering validity of that generated dataset are not established
+by this code inspection; its historical generation is recorded in the issue thread.</p>
+<h2>Migration contract</h2>
+<table>
+<caption>Table 2. Manual migration requirements; no converter is introduced.</caption>
+<thead><tr><th>Generator representation</th><th>Canonical representation</th></tr></thead>
+<tbody>
+<tr><td><code>entries</code></td><td><code>vessels</code></td></tr>
+<tr><td>Nested <code>dimensions</code></td><td>Flatten into each vessel entry.</td></tr>
+<tr><td><code>length_overall_ft</code>, <code>speed_kts</code></td><td><code>loa_ft</code>, <code>speed_kt</code></td></tr>
+<tr><td><code>beam_ft</code>, <code>draft_ft</code>, <code>depth_ft</code>, <code>displacement_lt</code></td><td>Retain names and units (ft, LT).</td></tr>
+<tr><td><code>hull_code: bb</code>, integer <code>hull_number: 34</code></td><td>String <code>hull_id: "BB-34"</code>: uppercase code, hyphen, decimal number. Do not copy the integer into the string alias.</td></tr>
+<tr><td>Null <code>hull_number</code></td><td>Resolve a stable identifier from the source before migration; do not invent a number.</td></tr>
+<tr><td><code>source_plan</code></td><td><code>source</code>; add the vessel or class <code>name</code> and cite the dimension basis.</td></tr>
+<tr><td><code>entry_status: pending</code></td><td><code>entry_status: draft</code>; independent verification is still required.</td></tr>
+</tbody>
+</table>
+<p>The canonical header selects design speed in knots; trial or maximum speed cannot
+be substituted. Six-field completeness includes depth and speed, while runtime
+validation requires only <code>hull_id</code>, <code>name</code>, <code>loa_ft</code>,
+<code>beam_ft</code> and <code>draft_ft</code>. The header's string <code>hull_number</code>
+alias remains valid for canonical entries.</p>
+<h2>Disposition and limits</h2>
+<p>The identifier example is synthetic and is exercised against the existing validator.
+All ten stored entries and their comments remain unchanged. The BB-42 identity/comment
+conflict and Liberty displacement/source basis require source-backed curation under
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/463">issue 463</a>.
+This report does not establish a verified dimension dataset.</p>
+<p>The PR-description replacement and corrected review-comment draft are supplied to the
+publishing workflow. Applying those drafts, cross-referencing this search report in issue 461,
+updating downstream canonical paths and posting the issue 463 unblock remain external
+publication steps. Issue 461 is not closed by this local change. Independent provider
+acceptance of the new bytes remains pending; this job invokes no other model.</p>
+</body>
+</html>
