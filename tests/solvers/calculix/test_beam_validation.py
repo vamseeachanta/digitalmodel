@@ -119,6 +119,40 @@ def test_same_named_sets_are_unions(tmp_path, shape, generated):
     assert_rejected(writer, tmp_path, f"{shape}.*{target}.*B31")
 
 
+@pytest.mark.parametrize("existing", [False, True])
+@pytest.mark.parametrize("target", ["ebeam_b31", "Ebeam_B31"])
+def test_case_variant_generated_set_cannot_hide_b31(tmp_path, existing, target):
+    writer = writer_for({
+        "Line 2": {"connectivity": np.array([[0, 1]])},
+        "Line 3": {"connectivity": np.array([[1, 2, 3]])},
+    })
+    writer.add_element_set(target, [1])
+    writer.add_beam_section(target, "MAT", "CIRC", (.05,))
+    assert_rejected(writer, tmp_path, f"CIRC.*{target}.*B31", existing)
+
+
+@pytest.mark.parametrize("shape", ["CIRC", "PIPE"])
+@pytest.mark.parametrize("target", ["TARGET", "target", "TaRgEt"])
+def test_case_variant_explicit_sets_are_unions(tmp_path, shape, target):
+    writer = mixed_writer()
+    writer.add_element_set("TARGET", [3])
+    writer.add_element_set("target", [1])
+    writer.add_beam_section(target, "MAT", shape, (.05,))
+    assert_rejected(writer, tmp_path, f"{shape}.*{target}.*B31")
+
+
+@pytest.mark.parametrize("target", ["ebeam_b32", "Ebeam_B32", "CUSTOM", "Custom"])
+def test_case_variant_circ_b32_reference_preserves_spelling(tmp_path, target):
+    writer = mixed_writer()
+    writer.add_element_set("custom", [1, 2])
+    writer.add_beam_section(target, "MAT", "CIRC", (.05,))
+    text = writer.write(tmp_path / "deck.inp").read_text()
+    assert "*ELEMENT, TYPE=B32, ELSET=EBEAM_B32\n" in text
+    assert "*ELSET, ELSET=custom\n2, 3\n" in text
+    assert (f"*BEAM SECTION, ELSET={target}, MATERIAL=MAT, SECTION=CIRC\n"
+            "0.05\n") in text
+
+
 @pytest.mark.parametrize("shape", ["CIRC", "PIPE"])
 def test_generated_solid_group_cannot_be_replaced_by_beams(tmp_path, shape):
     writer = mixed_writer()
