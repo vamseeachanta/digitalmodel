@@ -384,5 +384,5 @@ linearised matrix to within 3 %.
 python scripts/fowt/extract_iea15_generator_data.py <raw_dir> docs/domains/orcaflex/wind/fowt-volturnus/generator_data.yml
 python scripts/fowt/write_iea15_example_spec.py
 python scripts/fowt/run_iea15_checks.py
-python -m pytest tests/orcaflex/test_fowt_generator_data.py tests/solvers/orcaflex/modular_generator/test_fowt_model_type.py tests/floating_wind/test_fowt_static_checks.py tests/floating_wind/test_fowt_iea15_flexible.py -q
+python -m pytest tests/orcaflex/test_fowt_generator_data.py tests/solvers/orcaflex/modular_generator/test_fowt_model_type.py tests/solvers/orcaflex/modular_generator/test_fowt_model_physics.py tests/solvers/orcaflex/modular_generator/test_fowt_model_routing.py tests/floating_wind/test_fowt_static_checks.py tests/floating_wind/test_fowt_iea15_packages.py tests/floating_wind/test_fowt_iea15_results.py tests/floating_wind/test_fowt_iea15_flexible.py -q
 ```
