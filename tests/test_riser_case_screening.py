@@ -2,10 +2,16 @@
 # ABOUTME: Includes cross-validation against the legacy APISTD2RDAnalyzer Method 1.
 
 import importlib.util
+import copy
+import hashlib
+import json
+from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
+import yaml
 
+from digitalmodel import __version__
 from digitalmodel.structural.analysis.wall_thickness import (
     DesignCode,
     DesignFactors,
@@ -21,6 +27,7 @@ from digitalmodel.subsea.riser.riser_case_screening import (
     RiserLoadCase,
     build_calc_note,
     screen_riser_cases,
+    run_riser_screening,
 )
 
 
@@ -280,3 +287,83 @@ def test_screen_and_calc_note_follow_selected_code(geometry, material, code, nam
             assert text in note
     else:
         assert "F_d_corr" in note and "APISTD2RDAnalyzer" in note
+
+
+@pytest.mark.parametrize("workflow", ["riser-screening", "riser-screening-f201"])
+@pytest.mark.parametrize("fallback", [False, True])
+def test_workflow_output_anchor_report_contract_and_determinism(tmp_path, monkeypatch, workflow, fallback):
+    root = Path(__file__).resolve().parents[1]
+    source = root / "examples/workflows" / workflow / "input.yml"
+    input_dir = tmp_path / "input"
+    input_dir.mkdir()
+    input_file = input_dir / "input.yml"
+    input_file.write_bytes(source.read_bytes())
+    cfg = yaml.safe_load(input_file.read_text())
+    cfg.update(_config_dir_path=str(input_dir), _config_file_path=str(input_file))
+    if fallback:
+        cfg["riser_screening"].pop("output_dir")
+        cfg["Analysis"] = {"result_folder": "results"}
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    monkeypatch.chdir(elsewhere)
+    run = run_riser_screening(copy.deepcopy(cfg))
+    result = run["riser_screening"]["result"]
+    assert result["screening_status"] == result["overall_status"].lower() == run["screening_status"]
+    assert result["screening_status"] in {"pass", "fail"}
+    echo = result["input_echo"]
+    assert echo["geometry"]["outer_diameter"] == cfg["riser_screening"]["geometry"]["outer_diameter"]
+    assert echo["material"]["smys"] == cfg["riser_screening"]["material"]["smys"]
+    assert echo["load_cases"] == cfg["riser_screening"]["load_cases"]
+    assert echo["code"] == cfg["riser_screening"]["code"]
+    assert echo["factors"]["safety_class"] == "medium"
+    provenance = result["provenance"]
+    assert provenance["package_version"] == __version__
+    source_record = provenance["sources"][0]
+    assert source_record["digest"] == "sha256:" + hashlib.sha256(input_file.read_bytes()).hexdigest()
+    assert source_record["retrieved_at"] == datetime.fromtimestamp(input_file.stat().st_mtime, timezone.utc).isoformat()
+    assert provenance["timestamp_basis"] == "input file modification time (UTC)"
+    assert source_record["identifier"] == "input.yml"
+    canonical = json.dumps(echo, sort_keys=True, separators=(",", ":"),
+                           ensure_ascii=False, allow_nan=False).encode()
+    assert provenance["sources"][-1]["digest"] == "sha256:" + hashlib.sha256(canonical).hexdigest()
+    stem = input_dir / "results" / cfg["riser_screening"]["label"]
+    json_file = stem.with_name(stem.name + "_results.json")
+    before = json_file.read_bytes()
+    assert json.loads(before) == result
+    second = run_riser_screening(copy.deepcopy(cfg))
+    assert second["riser_screening"]["result"] == result
+    assert json_file.read_bytes() == before
+    assert not (elsewhere / "results").exists()
+    note = stem.with_name(stem.name + "_calcnote.md").read_text()
+    for text in ("Input echo", "Provenance", __version__, source_record["digest"],
+                 source_record["retrieved_at"], result["screening_status"]):
+        assert text in note
+    if workflow.endswith("f201"):
+        assert echo["factors"]["strategy"]["combined_gamma_SC"]["normal"] == 1.14
+        assert all("Mk" in row["details"]["combined"] for row in result["cases"])
+
+
+def test_screening_examples_registered():
+    root = Path(__file__).resolve().parents[1]
+    registry = yaml.safe_load((root / "docs/registry/workflows.yaml").read_text())
+    rows = {row["id"]: row for row in registry["workflows"]}
+    for name in ("riser-screening", "riser-screening-f201"):
+        row = rows[name]
+        assert row["basename"] == "riser_screening"
+        assert row["runtime"] == "offline"
+        assert row["input"] == f"examples/workflows/{name}/input.yml"
+        assert row["test"].endswith(f"test_workflow_registry[{name}]")
+        assert len(row["outputs"]) == 2
+        assert all(path.startswith(f"examples/workflows/{name}/results/")
+                   for path in row["outputs"])
+
+
+def test_workflow_honours_high_safety_class(tmp_path):
+    source = Path(__file__).resolve().parents[1] / "examples/workflows/riser-screening-f201/input.yml"
+    cfg = yaml.safe_load(source.read_text())
+    cfg["riser_screening"].update(safety_class="high", output_dir=str(tmp_path))
+    result = run_riser_screening(cfg)["riser_screening"]["result"]
+    assert result["input_echo"]["factors"]["safety_class"] == "high"
+    for row in result["cases"]:
+        assert row["details"]["combined"]["gamma_sc"] == 1.26
+        assert row["details"]["pressure_containment"]["gamma_sc"] == 1.308

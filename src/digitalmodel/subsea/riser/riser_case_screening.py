@@ -15,15 +15,22 @@ sampling, no synthetic placeholders -- every number traces to a declared input.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+import json
+from dataclasses import asdict, dataclass, field
+from datetime import datetime, timezone
+from hashlib import sha256
+from pathlib import Path
 from typing import Dict, List, Optional
 
+from digitalmodel import __version__
+from digitalmodel.reporting.provenance import Provenance
 from digitalmodel.structural.analysis.wall_thickness import (
     DesignCode,
     DesignFactors,
     DesignLoads,
     PipeGeometry,
     PipeMaterial,
+    SafetyClass,
 )
 from digitalmodel.structural.analysis.wall_thickness_codes import CODE_REGISTRY
 
@@ -57,7 +64,7 @@ class CaseScreenResult:
     name: str
     category: str
     checks: Dict[str, float] = field(default_factory=dict)
-    details: Dict[str, Dict[str, float]] = field(default_factory=dict)
+    details: Dict[str, Dict[str, object]] = field(default_factory=dict)
     governing_check: Optional[str] = None
     max_utilisation: float = 0.0
     status: str = "PASS"
@@ -128,9 +135,6 @@ def run_riser_screening(cfg: dict) -> dict:
     calc-note artifact (Markdown + JSON), and stores the ranked results back on
     cfg under ``riser_screening.result``.
     """
-    import json
-    from pathlib import Path
-
     rs = cfg["riser_screening"]
     g = rs["geometry"]
     m = rs["material"]
@@ -160,7 +164,8 @@ def run_riser_screening(cfg: dict) -> dict:
     ]
 
     code = DesignCode(rs.get("code", "API-STD-2RD"))
-    results = screen_riser_cases(geometry, material, cases, code=code)
+    factors = DesignFactors(safety_class=SafetyClass(rs.get("safety_class", "medium")))
+    results = screen_riser_cases(geometry, material, cases, code=code, factors=factors)
 
     rs["result"] = {
         "code": code.value,
@@ -175,6 +180,7 @@ def run_riser_screening(cfg: dict) -> dict:
                 "name": r.name,
                 "category": r.category,
                 "checks": r.checks,
+                "details": r.details,
                 "governing_check": r.governing_check,
                 "max_utilisation": r.max_utilisation,
                 "status": r.status,
@@ -182,15 +188,23 @@ def run_riser_screening(cfg: dict) -> dict:
             for r in results
         ],
     }
+    rs["result"]["screening_status"] = rs["result"]["overall_status"].lower()
+    cfg["screening_status"] = rs["result"]["screening_status"]
+    context = _report_context(geometry, material, cases, code, factors, cfg, results)
+    rs["result"].update(context)
 
     out_dir = Path(
         rs.get("output_dir")
         or cfg.get("Analysis", {}).get("result_folder", "results/riser_screening")
     )
+    if not out_dir.is_absolute() and cfg.get("_config_dir_path"):
+        out_dir = Path(cfg["_config_dir_path"]) / out_dir
     out_dir.mkdir(parents=True, exist_ok=True)
     label = rs.get("label", "riser_screening")
 
     note = build_calc_note(geometry, material, code, results, label)
+    for title, key in (("Input echo", "input_echo"), ("Provenance", "provenance")):
+        note += f"\n## {title}\n\n```json\n{json.dumps(context[key], indent=2)}\n```\n"
     (out_dir / f"{label}_calcnote.md").write_text(note, encoding="utf-8")
     (out_dir / f"{label}_results.json").write_text(
         json.dumps(rs["result"], indent=2), encoding="utf-8"
@@ -198,6 +212,50 @@ def run_riser_screening(cfg: dict) -> dict:
     logger.info("Riser screening calc note written to %s", out_dir)
 
     return cfg
+
+
+def _report_context(geometry, material, cases, code, factors, cfg, results):
+    """Echo resolved SI inputs; timestamp the source snapshot, not execution.
+
+    Input-file modification time is stable across consecutive runs. In-memory
+    inputs use the implementation-file modification time, explicitly labelled.
+    File locators are reduced to filenames to avoid disclosing local paths.
+    """
+    rs = cfg["riser_screening"]
+    strategy = CODE_REGISTRY[code]()
+    factor_keys = {"f_d", "f_c", "gamma_sc", "gamma_m", "gamma_dyn", "alpha_U",
+                   "f_0", "alpha_fab", "temperature_derating"}
+    applied = {name: {k: v for k, v in details.items() if k in factor_keys}
+               for name, details in results[0].details.items()} if results else {}
+    material_echo = asdict(material)
+    material_echo["fabrication_type"] = material.fabrication_type.value
+    echo = {
+        "geometry": asdict(geometry), "material": material_echo,
+        "load_cases": [asdict(case) for case in cases], "code": code.value,
+        "factors": {"safety_class": factors.safety_class.value,
+                    "strategy": getattr(strategy, "get_factors", lambda: {})(),
+                    "applied": applied},
+    }
+    input_file = cfg.get("_config_file_path")
+    source = Path(input_file) if input_file else Path(__file__)
+    timestamp = datetime.fromtimestamp(source.stat().st_mtime, timezone.utc).isoformat()
+    provenance = Provenance()
+    if input_file:
+        provenance.add("file", source.name, digest="sha256:" + sha256(source.read_bytes()).hexdigest(),
+                       retrieved_at=timestamp, description="Screening input file snapshot")
+    provenance.add(
+        "configuration", rs.get("label", "riser_screening"),
+        digest="sha256:" + sha256(json.dumps(
+            echo, sort_keys=True, separators=(",", ":"), ensure_ascii=False,
+            allow_nan=False).encode()).hexdigest(),
+        retrieved_at=timestamp, description="Resolved screening inputs, including defaults",
+    )
+    return {"input_echo": echo, "provenance": {
+        **provenance.require().model_dump(), "package_version": __version__,
+        "timestamp_basis": ("input file modification time (UTC)" if input_file
+                            else "implementation file modification time (UTC)"),
+        "units": "SI: m, Pa, N, N*m; utilisation and factors dimensionless",
+    }}
 
 
 def build_calc_note(
@@ -219,6 +277,7 @@ def build_calc_note(
     lines.append(f"**Design code:** {code.value} ({', '.join(check_names)})")
     overall = "PASS" if all(r.status == "PASS" for r in results) else "FAIL"
     lines.append(f"**Overall status:** {overall}")
+    lines.append(f"**screening_status:** {overall.lower()}")
     if results:
         gov = results[0]
         lines.append(
