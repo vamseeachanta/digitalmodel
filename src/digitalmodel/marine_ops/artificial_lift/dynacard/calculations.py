@@ -199,6 +199,19 @@ def calculate_tubing_gradient(
     return tubing_gradient, fluid_density
 
 
+def _cpip_density_basis(ctx: DynacardAnalysisContext) -> Tuple[float, float, str]:
+    """Select calculation input provenance, not measurement provenance."""
+    if "fluid_density" in ctx.model_fields_set:
+        density = ctx.fluid_density
+        if not np.isfinite(density) or density <= 0:
+            raise ValueError("fluid_density must be finite and positive for CPIP")
+        return density, density / 144.0, "context"
+    water_cut = ctx.well_test.water_cut if ctx.well_test is not None else 50.0
+    gradient, density = calculate_tubing_gradient(water_cut=water_cut)
+    source = "well_test_mixture" if ctx.well_test is not None else "assumed_50pct_mixture"
+    return density, gradient, source
+
+
 def calculate_cpip(
     ctx: DynacardAnalysisContext,
     downhole_card: CardData,
@@ -216,26 +229,14 @@ def calculate_cpip(
         base_load_ref: Reference base load for calibration
 
     Returns:
-        CPIPAnalysis with PIP, PDP, and fluid density
+        CPIPAnalysis with signed PIP, PDP, density basis and pressure status
     """
-    # Get well test data for fluid properties
-    if ctx.well_test is not None:
-        water_cut = ctx.well_test.water_cut
-    else:
-        water_cut = 50.0  # Default assumption
-
+    fluid_density, tubing_gradient, density_source = _cpip_density_basis(ctx)
     # Get tubing pressure from input parameters
     if ctx.input_params is not None and ctx.input_params.tubing_pressure:
         tubing_pressure = ctx.input_params.tubing_pressure
     else:
         tubing_pressure = 100.0  # Default psi
-
-    # Calculate tubing gradient and fluid density
-    tubing_gradient, fluid_density = calculate_tubing_gradient(
-        oil_api=35.0,
-        water_sg=1.03,
-        water_cut=water_cut
-    )
 
     # Get pump depth and area
     pump_depth = ctx.pump.depth  # feet
@@ -252,12 +253,21 @@ def calculate_cpip(
     # Calculate Pump Intake Pressure
     # PIP = PDP - F_0 / A_pump
     pip = pdp - (fluid_load / pump_area)
+    pressure_status = "negative_calculated_pressure" if pip < 0 else "calculated"
+    warnings = []
+    if pip < 0:
+        warnings.append(
+            "Negative calculated pressure: physical intake pressure is not established."
+        )
 
     return CPIPAnalysis(
         pump_intake_pressure=float(pip),
         pump_discharge_pressure=float(pdp),
         fluid_density=float(fluid_density),
-        tubing_gradient=float(tubing_gradient)
+        tubing_gradient=float(tubing_gradient),
+        density_source=density_source,
+        pressure_status=pressure_status,
+        warnings=warnings,
     )
 
 
