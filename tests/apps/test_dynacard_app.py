@@ -236,16 +236,7 @@ def test_assets_are_reproducible():
     assert result.returncode == 0, result.stdout + result.stderr
 
 
-def test_models_embed_exact_source_documents():
-    model_script = (APP / "models.js").read_text(encoding="utf-8")
-    body = model_script.split("const data = ", 1)[1].split(";\nroot.", 1)[0]
-    embedded = json.loads(body)
-    assert body == json.dumps(embedded, separators=(",", ":"), ensure_ascii=False)
-    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import (
-        MODEL_PATH, SHAPE_MODEL_PATH, read_model_bytes,
-    )
-    for key, path in (("context", MODEL_PATH), ("shape", SHAPE_MODEL_PATH)):
-        assert embedded[key] == json.loads(read_model_bytes(path))
+# Model asset content, size and loading: test_dynacard_app_assets.py.
 
 
 @NODE_REQUIRED
