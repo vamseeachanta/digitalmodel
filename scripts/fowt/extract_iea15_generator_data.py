@@ -33,6 +33,12 @@ FILES = {
     "hydrodyn": "OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_HydroDyn.dat",
 }
 
+# Derived centres and centre differences are serialized to 12 decimal places
+# in metres. Use fsum rather than sum (whose float algorithm changed in Python
+# 3.12), and round only the final reported quantity, not intermediate centres.
+# Source values, matrices and digests retain their original precision.
+DERIVED_DECIMAL_PLACES = 12
+
 # Expected bytes at COMMIT, independently pinned from the generated output.
 EXPECTED_SHA256 = {
     "tabular": "9ed6ee219a97c443d0b900498e3ef4fefa12d855d9a7c9e4c5b9bc0702b9078a",
@@ -128,9 +134,9 @@ def build(raw: Path) -> dict:
             raise ValueError(f"source digest mismatch: {names[key].name}")
     overview, nacelle, performance = read_tabular(names["tabular"])
     rotor_rows = [nacelle["Blades"], nacelle["Hub_System"]]
-    # Keep accumulation independent of Python's built-in sum implementation.
     rotor_mass = math.fsum(float(r[1]) for r in rotor_rows)
-    rotor_cm = [math.fsum(float(r[1]) * float(r[c]) for r in rotor_rows) / rotor_mass
+    rotor_cm = [round(math.fsum(float(r[1]) * float(r[c]) for r in rotor_rows) / rotor_mass,
+                      DERIVED_DECIMAL_PLACES)
                 for c in (2, 3, 4)]
     parts = rotor_rows + [nacelle["nacelle"]]
     total_mass = math.fsum(float(r[1]) for r in parts)
@@ -188,7 +194,8 @@ def build(raw: Path) -> dict:
                 [float(nacelle["RNA"][c]) for c in (2, 3, 4)], "m",
                 src("tabular", f"{nms} row RNA C:E")),
             "rna_component_centre_discrepancy": item(
-                [combined[k] - float(nacelle["RNA"][c]) for k, c in enumerate((2, 3, 4))], "m",
+                [round(combined[k] - float(nacelle["RNA"][c]), DERIVED_DECIMAL_PLACES)
+                 for k, c in enumerate((2, 3, 4))], "m",
                 src("tabular", f"{nms}; mass-weighted centre of rows nacelle, Blades and "
                                "Hub_System minus row RNA C:E. The RNA row is not the "
                                "mass-weighted combination of its component rows; the "
