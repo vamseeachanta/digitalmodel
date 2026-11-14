@@ -16,6 +16,7 @@ from bs4 import BeautifulSoup
 
 from digitalmodel.drilling_riser import generic_campaign as campaign
 from digitalmodel.reporting.engine import render_html
+from digitalmodel.reporting._metadata import package_code_edition
 from digitalmodel.reporting.provenance import DataSource, Provenance
 from digitalmodel.reporting.spec import (
     DocumentMeta,
@@ -207,7 +208,8 @@ def build_spec(folder: Path) -> ReportSpec:
                 rev='00', date='2026-10-20', description='Initial preparation analysis',
             )],
         ), sections=sections,
-        provenance=Provenance(sources=[DataSource(
+        provenance=Provenance(code_edition=package_code_edition(), units_system='SI',
+            validated_path='screening', sources=[DataSource(
             kind='prepared inputs', identifier='case-table.yml',
             digest=campaign.digest(folder / 'case-table.yml'),
         ), DataSource(

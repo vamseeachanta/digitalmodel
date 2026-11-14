@@ -12,7 +12,8 @@ def result_provenance(paths: Iterable[str | Path], *, units_system: str) -> Prov
     """Declare actual result files, hashing only files that exist.
 
     Comparison or extraction alone does not establish pipeline validation;
-    these reports are screening views. Identifiers use portable filenames.
+    these reports are screening views. Identifiers retain the supplied paths
+    so declared reads match them and equal basenames remain distinguishable.
     """
     provenance = Provenance(
         code_edition=package_code_edition(),
@@ -25,5 +26,5 @@ def result_provenance(paths: Iterable[str | Path], *, units_system: str) -> Prov
         if path.is_file():
             with path.open("rb") as stream:
                 digest = "sha256:" + file_digest(stream, "sha256").hexdigest()
-        provenance.add("file", path.name, digest=digest)
+        provenance.add("file", str(item), digest=digest)
     return provenance

@@ -24,7 +24,6 @@ from digitalmodel.solvers.orcaflex.yaml_utils import OrcaFlexDumper
 from digitalmodel.solvers.orcaflex.yaml_validator import OrcaFlexYAMLValidator
 
 if TYPE_CHECKING:
-    from digitalmodel.reporting._metadata import package_code_edition
     from digitalmodel.reporting import ReportSpec, Section
 
 DOMAIN = Path("docs/domains/orcaflex")
@@ -428,6 +427,7 @@ def assess_results(prepared: dict, responses: list[dict], criteria: dict) -> dic
 
 def build_report(prepared: dict, assessment: dict) -> ReportSpec:
     """Populate the repository standard report form, preserving evidence limits."""
+    from digitalmodel.reporting._metadata import package_code_edition
     from digitalmodel.reporting import (
         DocumentMeta,
         Provenance,

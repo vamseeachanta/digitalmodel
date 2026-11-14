@@ -453,6 +453,8 @@ def _benchmark_block(key: str):
 # Module-level backbone: the diffraction physics causal chain.
 # Geometry -> Hydrostatics -> Stability -> Natural Periods ->
 # Coefficients -> Excitation -> Response -> Damping -> Summary.
+# Reads here are metadata only: this generator uses ReportBackbone.render.
+# Declared reads are validated only by assemble_report, used by report_catalog.
 _DIFFRACTION_BACKBONE = ReportBackbone(
     title="Diffraction Analysis Report",
     sections=[

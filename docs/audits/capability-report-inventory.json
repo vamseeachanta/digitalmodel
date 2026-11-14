@@ -62,16 +62,16 @@
       "docs/domains/openfoam/calm-water-resistance-study.html": "c384dafce539fedd11b8f36cece1e231f09adc7a9babfeb067a91a3adbb0c427",
       "docs/reports/padeye-lift-point-analysis.html": "72fa87b7be27807b51dd785441381245bc7ea8398892460154a0ae9163c23959",
       "docs/reports/pipeline-ffs-assessment.html": "488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f",
-      "docs/reports/pipeline-ffs-assessment.manifest.json": "d94c2fe29c609fd5fe565f05496e7c8fe50069575525108d5c2e78511c917a4c",
+      "docs/reports/pipeline-ffs-assessment.manifest.json": "9e23f960f90e7a0ab6df53ae2671e44b83e45046082c4414ff503ae914284d77",
       "docs/subsea/cross_sections/offshore_cross_section_report.html": "2e1a8b71a26797d3a34414e79b6e216b010364d126da79048eadbafb1abfa79b",
       "examples/workflows/pipeline-ffs-assessment/assumptions.yml": "f5f5cfb581b9305d5fdf040f160389a34f0f0d497816a6fd4b1d109c20db3952",
       "examples/workflows/pipeline-ffs-assessment/input.yml": "af5b5d739b9f84066fcb55ecdb3dc399eed9497e23826db4045f262ddbca152b",
       "scripts/cfd/build_calm_water_study.py": "4d5c29b600ede9eed46e378f0281cf4604cb6d1224d5798d132ed40fa8ae7975",
-      "scripts/reporting/build_pipeline_ffs_report.py": "194ae54694b1b9575bba8f29a8cdb2b20508605d7ef45160e7d1134cfac1f578",
+      "scripts/reporting/build_pipeline_ffs_report.py": "82acc1d344a0ae3de06a993051bbc164caf8ad806eb3ef1fa9214b647bce5c52",
       "src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py": "19f1cfada0003dbd1560dbf144d3ac87fed8309c540057d25de4119cc8d588d2",
       "src/digitalmodel/lifting_lug/report.py": "445c19750756ed643884cc2ad0e46f2c23d2c067fa6bdbd7078d3b4470b7b40f",
       "src/digitalmodel/subsea/cross_sections/reporting.py": "a2644995057ad0634ebb8503afb8071b1a67c9118124b277a6292547af25ce0e",
-      "tests/asset_integrity/test_pipeline_ffs_assessment.py": "60cbd464c0be6b2ba62553fea9710aaa0896cb396b5fead651856d8ce8154396",
+      "tests/asset_integrity/test_pipeline_ffs_assessment.py": "1532653b3db31ce3965d321c69ac6493d076dc09bd8c03824f9a3839a9f37a0b",
       "tests/hydrodynamics/diffraction/test_unit_box_benchmark.py": "0de9c11cf8db9e8fa4a156138b3d916f196cff98f36d01c34a66f9f241082e79",
       "tests/hydrodynamics/diffraction/test_unit_box_report_pipeline_labels.py": "43c37403e9b52b2911459ffd2473fdb2dd49dcb449732388a5165bc19325ba55",
       "tests/lifting_lug/test_assessment.py": "71fca544bdba226b4c99d5c542cf16a3832c7628fb04de002956e29feaaee20d",
@@ -83,7 +83,7 @@
     "unreviewed_report_count": 35
   },
   "observations": {
-    "observed_at": "2026-11-14T03:44:16+00:00",
+    "observed_at": "2026-11-14T05:42:45+00:00",
     "reports": [
       {
         "capability": "CFD calm-water resistance",
@@ -261,11 +261,11 @@
         "report_path": "docs/reports/pipeline-ffs-assessment.html",
         "source_digests": {
           "docs/reports/pipeline-ffs-assessment.html": "488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f",
-          "docs/reports/pipeline-ffs-assessment.manifest.json": "d94c2fe29c609fd5fe565f05496e7c8fe50069575525108d5c2e78511c917a4c",
+          "docs/reports/pipeline-ffs-assessment.manifest.json": "9e23f960f90e7a0ab6df53ae2671e44b83e45046082c4414ff503ae914284d77",
           "examples/workflows/pipeline-ffs-assessment/assumptions.yml": "f5f5cfb581b9305d5fdf040f160389a34f0f0d497816a6fd4b1d109c20db3952",
           "examples/workflows/pipeline-ffs-assessment/input.yml": "af5b5d739b9f84066fcb55ecdb3dc399eed9497e23826db4045f262ddbca152b",
-          "scripts/reporting/build_pipeline_ffs_report.py": "194ae54694b1b9575bba8f29a8cdb2b20508605d7ef45160e7d1134cfac1f578",
-          "tests/asset_integrity/test_pipeline_ffs_assessment.py": "60cbd464c0be6b2ba62553fea9710aaa0896cb396b5fead651856d8ce8154396"
+          "scripts/reporting/build_pipeline_ffs_report.py": "82acc1d344a0ae3de06a993051bbc164caf8ad806eb3ef1fa9214b647bce5c52",
+          "tests/asset_integrity/test_pipeline_ffs_assessment.py": "1532653b3db31ce3965d321c69ac6493d076dc09bd8c03824f9a3839a9f37a0b"
         },
         "test_paths": [
           "tests/asset_integrity/test_pipeline_ffs_assessment.py"
@@ -295,7 +295,7 @@
       "docs/reports",
       "docs/subsea/cross_sections"
     ],
-    "source_revision": "571936f6ccc79dfff052cd6958da1dc29d91aaaa"
+    "source_revision": "d5fe731af6c06b2e20de9e9b513446d253e9d2fd"
   },
   "reports": [
     {
@@ -474,11 +474,11 @@
       "report_path": "docs/reports/pipeline-ffs-assessment.html",
       "source_digests": {
         "docs/reports/pipeline-ffs-assessment.html": "488443a7431139d95447519d18199a6feaa8dd832f52cc56cdcf10bdf623a59f",
-        "docs/reports/pipeline-ffs-assessment.manifest.json": "d94c2fe29c609fd5fe565f05496e7c8fe50069575525108d5c2e78511c917a4c",
+        "docs/reports/pipeline-ffs-assessment.manifest.json": "9e23f960f90e7a0ab6df53ae2671e44b83e45046082c4414ff503ae914284d77",
         "examples/workflows/pipeline-ffs-assessment/assumptions.yml": "f5f5cfb581b9305d5fdf040f160389a34f0f0d497816a6fd4b1d109c20db3952",
         "examples/workflows/pipeline-ffs-assessment/input.yml": "af5b5d739b9f84066fcb55ecdb3dc399eed9497e23826db4045f262ddbca152b",
-        "scripts/reporting/build_pipeline_ffs_report.py": "194ae54694b1b9575bba8f29a8cdb2b20508605d7ef45160e7d1134cfac1f578",
-        "tests/asset_integrity/test_pipeline_ffs_assessment.py": "60cbd464c0be6b2ba62553fea9710aaa0896cb396b5fead651856d8ce8154396"
+        "scripts/reporting/build_pipeline_ffs_report.py": "82acc1d344a0ae3de06a993051bbc164caf8ad806eb3ef1fa9214b647bce5c52",
+        "tests/asset_integrity/test_pipeline_ffs_assessment.py": "1532653b3db31ce3965d321c69ac6493d076dc09bd8c03824f9a3839a9f37a0b"
       },
       "test_paths": [
         "tests/asset_integrity/test_pipeline_ffs_assessment.py"
@@ -486,5 +486,5 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "571936f6ccc79dfff052cd6958da1dc29d91aaaa"
+  "source_revision": "d5fe731af6c06b2e20de9e9b513446d253e9d2fd"
 }

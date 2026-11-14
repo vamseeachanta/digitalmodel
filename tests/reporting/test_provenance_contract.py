@@ -84,6 +84,18 @@ def test_declared_reads_match_identifiers_or_exact_kind(reads):
 
 
 @pytest.mark.parametrize(
+    "identifier", ["results/run[1].json", "results/a?.json", "results/a*.json"]
+)
+def test_literal_read_matches_its_exact_identifier(identifier):
+    prov = reporting.Provenance(code_edition="test", validated_path="screening").add(
+        "file", identifier
+    )
+    assert "RESULT" in reporting.assemble_report(
+        "R", provenance=prov, sections=[section([identifier])]
+    )
+
+
+@pytest.mark.parametrize(
     "reads",
     [["elsewhere/*.json"], ["workflow_*"], ["workflow_results", "missing"]],
 )

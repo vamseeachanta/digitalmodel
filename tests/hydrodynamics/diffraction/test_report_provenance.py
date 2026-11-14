@@ -69,7 +69,7 @@ def test_benchmark_declares_real_result_files(
     assert prov is not None and prov.is_complete()
     assert prov.validated_path == "screening"
     for path in (result.report_json_path, result.hydro_data_yaml_path):
-        source = next(s for s in prov.sources if s.identifier == path.name)
+        source = next(s for s in prov.sources if s.identifier == str(path))
         assert (
             source.digest == "sha256:" + hashlib.sha256(path.read_bytes()).hexdigest()
         )
@@ -137,6 +137,66 @@ def test_structured_report_checks_declared_result_source(tmp_path):
         render_structured_report("barge", data, provenance=prov)
 
 
+@pytest.mark.parametrize("source_file", ["results/run[1].json", None])
+def test_structured_report_accepts_literal_source_and_fallback(source_file):
+    from digitalmodel.hydrodynamics.diffraction.report_catalog import (
+        render_structured_report,
+    )
+
+    data, _ = _full_basic()
+    data.source_file = source_file
+    prov = Provenance(code_edition="test", validated_path="screening").add(
+        "file", "results/run[1].json"
+    )
+    document, _ = render_structured_report("barge", data, provenance=prov)
+    assert 'id="provenance"' in document
+    assert "results/run[1].json" in document
+
+
+def test_result_provenance_preserves_directory_identity(tmp_path):
+    from digitalmodel.hydrodynamics.diffraction.report_catalog import (
+        render_structured_report,
+    )
+    from digitalmodel.hydrodynamics.diffraction.report_provenance import (
+        result_provenance,
+    )
+    from digitalmodel.reporting import ContractError
+
+    source = tmp_path / "results" / "run[1].json"
+    source.parent.mkdir()
+    source.write_bytes(b"constructed result fixture")
+    prov = result_provenance([source], units_system="SI")
+    assert prov.sources[0].identifier == str(source)
+    assert (
+        prov.sources[0].digest
+        == "sha256:" + hashlib.sha256(source.read_bytes()).hexdigest()
+    )
+    data, _ = _full_basic()
+    data.source_file = str(source)
+    document, _ = render_structured_report("barge", data, provenance=prov)
+    assert 'id="provenance"' in document
+    data.source_file = str(tmp_path / "other" / source.name)
+    with pytest.raises(ContractError):
+        render_structured_report("barge", data, provenance=prov)
+
+
+def test_result_provenance_retains_supplied_relative_path_spelling():
+    from digitalmodel.hydrodynamics.diffraction.report_catalog import (
+        render_structured_report,
+    )
+    from digitalmodel.hydrodynamics.diffraction.report_provenance import (
+        result_provenance,
+    )
+
+    identifier = "./unavailable-results/run[1].json"
+    prov = result_provenance([identifier], units_system="SI")
+    assert prov.sources[0].identifier == identifier
+    data, _ = _full_basic()
+    data.source_file = identifier
+    document, _ = render_structured_report("barge", data, provenance=prov)
+    assert 'id="provenance"' in document
+
+
 def test_source_stamp_does_not_fabricate_digest_or_validation(tmp_path):
     from digitalmodel.hydrodynamics.diffraction.report_provenance import (
         result_provenance,
@@ -145,4 +205,4 @@ def test_source_stamp_does_not_fabricate_digest_or_validation(tmp_path):
     prov = result_provenance([tmp_path / "unavailable.owr"], units_system="native")
     assert prov.is_complete() and prov.validated_path == "screening"
     assert prov.units_system == "native" and prov.sources[0].digest is None
-    assert prov.sources[0].identifier == "unavailable.owr"
+    assert prov.sources[0].identifier == str(tmp_path / "unavailable.owr")

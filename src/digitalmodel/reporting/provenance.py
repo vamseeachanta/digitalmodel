@@ -14,7 +14,7 @@ Authoring rules (#1019):
   standard edition), and validated_path: validated, screening or unvalidated.
   Supply units_system when known; assumptions travel in the existing ledger.
   Construction remains permissive; require() gates completed reports.
-* Declare ReportSection.reads as identifier fnmatch patterns or exact source
+* Declare ReportSection.reads as literal identifiers, fnmatch patterns or exact source
   kinds. Every read must match a declared source before any builder runs.
   This validation lives ONLY in assemble_report; ReportBackbone.render treats
   reads as inert metadata. It does not intercept file I/O or detect literals.
@@ -219,7 +219,7 @@ def assemble_report(
     """Assemble a provenance-gated report on the shared backbone.
 
     Fails closed via :meth:`Provenance.require` on missing mandatory metadata.
-    Every declared section read must match a source identifier (fnmatch) or
+    Every declared section read must match a source identifier (literal or fnmatch) or
     exact kind; unmatched reads raise :class:`ContractError` before rendering.
     Sections without reads retain their existing behavior. Body
     ``sections`` (:class:`ReportSection` builders over ``data``) render
@@ -231,7 +231,9 @@ def assemble_report(
     for section in sections or []:
         for read in section.reads or []:
             if not any(
-                read == source.kind or fnmatch(source.identifier, read)
+                read == source.kind
+                or read == source.identifier
+                or fnmatch(source.identifier, read)
                 for source in provenance.sources
             ):
                 raise ContractError(
