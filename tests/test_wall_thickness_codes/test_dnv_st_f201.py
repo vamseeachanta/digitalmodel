@@ -233,8 +233,9 @@ def test_combined_delegation_machine_precision(pi, pe, safety_class):
     else:
         f0 = EDITION_FACTORS[LATEST_EDITION]["f_0"]
         p_el = 2 * material.youngs_modulus * (t2 / diameter)**3 / (1 - material.poissons_ratio**2)
-        p_p = material.smys * material.alpha_fab * 2 * t2 / diameter
-        pc = DnvStF101Strategy._solve_collapse_pressure(p_el, p_p, f0, diameter, t2)
+        p_p = fy * material.alpha_fab * 2 * t2 / diameter
+        pc = DnvStF101Strategy._solve_collapse_pressure(
+            p_el, p_p, f0, diameter, t2, tol=1e-3)
         expected = legacy.combined_loading_external_overpressure(
             *args, pe, pi, pc, gamma_sc=gamma_sc, gamma_m=1.15)
     checks = DnvStF201Strategy().run_checks(

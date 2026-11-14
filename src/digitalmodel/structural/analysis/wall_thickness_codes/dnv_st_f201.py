@@ -5,6 +5,7 @@
 
 import math
 import logging
+from dataclasses import replace
 from typing import Dict, Optional, Tuple
 
 from digitalmodel.structural.analysis.wall_thickness import (
@@ -68,6 +69,15 @@ DEFAULT_FACTORS: Dict[str, float] = {
 }
 
 
+class _F201CollapseStrategy(DnvStF101Strategy):
+    """Reuse F101 collapse with sub-Pascal accuracy for the F201 interaction."""
+
+    @staticmethod
+    def _solve_collapse_pressure(p_el, p_p, f_0, D, t):
+        return DnvStF101Strategy._solve_collapse_pressure(
+            p_el, p_p, f_0, D, t, tol=1e-3)
+
+
 @register_code(DesignCode.DNV_ST_F201)
 class DnvStF201Strategy:
     """DNV-ST-F201 pressure containment and combined loading, LRFD.
@@ -109,6 +119,8 @@ class DnvStF201Strategy:
     because DesignLoads carries no separate minimum-pressure field. Collapse
     resistance is characteristic p_c from DNV-ST-F101 Eq. 5.9, using that
     strategy's ovality and the supplied material's fabrication factor.
+    Its Eq. 5.12 plastic pressure uses f_y = SMYS * alpha_U, consistent
+    with p_b, Mk and Tk; the shared F101 strategy is unchanged.
     """
 
     code_name = "DNV-ST-F201"
@@ -204,14 +216,16 @@ class DnvStF201Strategy:
                     gamma_sc=gamma_sc, gamma_m=self.gamma_m,
                 )
         else:
-            _, collapse = DnvStF101Strategy()._check_collapse(
-                geometry, material, loads, factors)
+            _, collapse = _F201CollapseStrategy()._check_collapse(
+                geometry, replace(material, smys=details["f_y"], smts=details["f_u"]),
+                loads, factors)
             details.update({key: collapse[key] for key in ("p_c", "p_el", "p_p", "f_0")})
             details.update({
                 "alpha_fab": material.alpha_fab,
                 "youngs_modulus": material.youngs_modulus,
                 "poissons_ratio": material.poissons_ratio,
                 "collapse_smys": material.smys,
+                "collapse_f_y": details["f_y"],
                 "collapse_reference": "DNV-ST-F101 Eq. 5.9",
                 "p_min_internal": pi,
             })

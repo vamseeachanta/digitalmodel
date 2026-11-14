@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import logging
 import json
+import math
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from hashlib import sha256
@@ -207,11 +208,24 @@ def run_riser_screening(cfg: dict) -> dict:
         note += f"\n## {title}\n\n```json\n{json.dumps(context[key], indent=2)}\n```\n"
     (out_dir / f"{label}_calcnote.md").write_text(note, encoding="utf-8")
     (out_dir / f"{label}_results.json").write_text(
-        json.dumps(rs["result"], indent=2), encoding="utf-8"
+        json.dumps(_json_safe(rs["result"]), indent=2, allow_nan=False), encoding="utf-8"
     )
     logger.info("Riser screening calc note written to %s", out_dir)
 
     return cfg
+
+
+def _json_safe(value):
+    """Encode non-finite report numbers as named strings; keep results numeric."""
+    if isinstance(value, float) and not math.isfinite(value):
+        if math.isnan(value):
+            return "NaN"
+        return "Infinity" if value > 0 else "-Infinity"
+    if isinstance(value, dict):
+        return {key: _json_safe(item) for key, item in value.items()}
+    if isinstance(value, (list, tuple)):
+        return [_json_safe(item) for item in value]
+    return value
 
 
 def _report_context(geometry, material, cases, code, factors, cfg, results):
@@ -359,9 +373,14 @@ def _f201_basis(results):
         "For external overpressure, p_min_internal = internal_pressure; no "
         "separate minimum-pressure input is available. Characteristic collapse "
         "resistance p_c uses DNV-ST-F101 Eq. 5.9, with its default ovality "
-        "and the supplied material's fabrication factor. Net pressure above "
+        "and the supplied material's fabrication factor. Its plastic pressure "
+        "p_p uses characteristic yield f_y = SMYS * alpha_U (Eq. 5.12), "
+        "consistent with p_b, Mk and Tk; temperature de-rating is zero. Net pressure above "
         "characteristic burst resistance exceeds the combined criterion's "
-        "domain and is reported as a failed check with infinite utilisation.", "",
+        "domain and is reported as a failed check with infinite utilisation. "
+        'Results JSON encodes infinity as "Infinity" or "-Infinity"; other '
+        'non-finite values also use named strings. Numerical results remain '
+        'unchanged in memory.', "",
     ]
     if results:
         combined = results[0].details["combined"]

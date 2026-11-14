@@ -1,9 +1,10 @@
 # Riser configuration screening - DNV-ST-F201 LRFD (pressure containment, combined M-T).
 #
 # Representative deepwater top-tensioned production riser:
-#   21 in OD x 0.875 in WT, API 5L X80, ~3000 m water depth class.
+#   21 in OD x 0.875 in WT, X80-class screening, ~1200 m water depth class.
 # Geometry/material follow the existing config/pipe/*_21OD_0875in_*_riser.yml
 # pipe definitions (generic engineering, no project/client identifiers).
+# Strengths are illustrative rounded ksi inputs, not certified API 5L grade minima.
 #
 # Load cases span the four standard categories. Pressures, moments and tensions
 # are realistic screening-level values for a deepwater production riser; they
@@ -26,9 +27,9 @@ riser_screening:
     corrosion_allowance: 0.003    # m  (3 mm)
 
   material:
-    grade: API 5L X80
-    smys: 552000000.0             # Pa (80 ksi)
-    smts: 621000000.0             # Pa (90 ksi)
+    grade: X80-class screening (rounded ksi)
+    smys: 552000000.0             # Pa (rounded 80 ksi screening input)
+    smts: 621000000.0             # Pa (rounded 90 ksi screening input)
     youngs_modulus: 207000000000.0
     poissons_ratio: 0.3
 
