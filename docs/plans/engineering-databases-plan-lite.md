@@ -2,8 +2,9 @@
 
 ## Summary
 
-Four catalogues will separate reusable engineering inputs from calculation code:
-line pipe, flexible pipe, structural section properties and pipe-soil stiffness.
+Five catalogues will separate reusable engineering inputs from calculation code:
+line pipe, flexible pipe, structural section properties, pipe-soil stiffness
+and riser buoyancy modules.
 The initial delivery will contain schemas, empty production files, citation
 contracts and validated loaders. Invented test fixtures will exercise the
 contracts; engineering values will require a later source and suitability review.
@@ -14,6 +15,7 @@ contracts; engineering values will require a later source and suitability review
 | --- | --- | --- |
 | 1 | 2026-10-26 | Define catalogue boundaries, units and citation checks before population. |
 | 2 | 2026-10-26 | Specify citation URI validation, the numerical precision basis, soil interpretation limits and validation-error handling. |
+| 3 | 2026-11-13 | Add the empty riser buoyancy catalogue, signed force convention and explicit engineering-check dispatch (#3953). |
 
 Table 1. Plan issue history.
 
@@ -89,13 +91,14 @@ from digitalmodel.data_systems.engineering_databases import (
     load_flexible_pipe,
     load_structure_properties,
     load_soil_stiffness,
+    load_riser_buoyancy,
 )
 
 rows = load_line_pipe("data/line_pipe")
 rows = load_database("soil_stiffness", "data/soil_stiffness")
 ```
 
-All five functions will accept an explicit catalogue directory. The four named
+All six functions will accept an explicit catalogue directory. The five named
 wrappers will select the matching schema. The directory will supply the reviewed
 schema together with its data; schema changes will require review alongside data
 changes. Successful reads will return a list of row dictionaries with a resolved
@@ -237,6 +240,38 @@ comparison. Nodal spring stiffness will require multiplication by a documented
 tributary length in a future adapter. N/m and N/m^2 will not be interchanged.
 Site-specific application, signed unloading, suction and hysteresis will need
 additional qualification and potentially a schema revision.
+
+## Riser buoyancy modules
+
+Directory: `data/riser_buoyancy`; API: `load_riser_buoyancy(directory)`.
+Production `records` and `citations` remain empty in this slice of #3953.
+
+| Fields | Units | Validation |
+| --- | --- | --- |
+| `module_od_m`, `length_m` | m | Positive outer diameter and module length. |
+| `module_id_m` | m | Nonnegative and strictly less than OD; zero permits a solid can. |
+| `foam_density_kg_m3` | kg/m3 | Positive foam density under the cited condition. |
+| `depth_rating_m` | m | Positive cited depth rating. |
+| `mass_in_air_kg` | kg | Nonnegative mass in air. |
+| `net_buoyancy_n` | N | Finite signed force under the rating condition in the citation locator. |
+| `application` | text | `drilling_riser`, `distributed_lazy_wave` or `buoyancy_can`. |
+
+Table 7. Buoyancy-module row fields in addition to shared metadata.
+
+Every engineering field is required; numbers must be finite, units exact and
+unknown fields rejected. Net buoyancy retains its cited sign and rating condition;
+it is not derived from foam density and no seawater density is assumed.
+Permitted source classes are mill or manufacturer catalogues, public papers or
+theses, public agency reports and publishable generic design bases
+(`own_design_basis`), subject to the shared source and reuse review. Standards
+are never sources. Invented `synthetic_fixture` citations require matching
+`status: synthetic` rows and explicit `allow_synthetic=True`.
+
+The catalogue establishes structure and declared provenance only. Product
+performance and engineering suitability are not established; qualified source
+values and application conditions are unavailable in this empty delivery.
+Coatings and vortex-induced vibration suppression, joints and tensioners remain
+later slices of #3953; population and consumer adapters are outside this slice.
 
 ## Numerical validation basis
 

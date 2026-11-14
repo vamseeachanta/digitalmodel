@@ -1,0 +1,279 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Riser buoyancy module catalogue",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "database",
+    "units",
+    "records"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "database": {
+      "const": "riser_buoyancy"
+    },
+    "units": {
+      "const": {
+        "module_od_m": "m",
+        "module_id_m": "m",
+        "length_m": "m",
+        "foam_density_kg_m3": "kg/m3",
+        "depth_rating_m": "m",
+        "mass_in_air_kg": "kg",
+        "net_buoyancy_n": "N"
+      }
+    },
+    "records": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "status",
+          "citation_id",
+          "module_od_m",
+          "module_id_m",
+          "length_m",
+          "foam_density_kg_m3",
+          "depth_rating_m",
+          "mass_in_air_kg",
+          "net_buoyancy_n",
+          "application"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "status": {
+            "enum": [
+              "cited",
+              "synthetic"
+            ]
+          },
+          "citation_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "module_od_m": {
+            "$ref": "#/$defs/positive"
+          },
+          "module_id_m": {
+            "type": "number",
+            "minimum": 0
+          },
+          "length_m": {
+            "$ref": "#/$defs/positive"
+          },
+          "foam_density_kg_m3": {
+            "$ref": "#/$defs/positive"
+          },
+          "depth_rating_m": {
+            "$ref": "#/$defs/positive"
+          },
+          "mass_in_air_kg": {
+            "type": "number",
+            "minimum": 0
+          },
+          "net_buoyancy_n": {
+            "type": "number",
+            "description": "Signed force under the rating condition identified in the citation; no seawater density is assumed."
+          },
+          "application": {
+            "enum": [
+              "drilling_riser",
+              "distributed_lazy_wave",
+              "buoyancy_can"
+            ]
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "positive": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "title",
+        "publisher",
+        "url",
+        "catalogue_number",
+        "revision",
+        "date",
+        "page",
+        "table",
+        "source_class",
+        "reuse_terms"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "publisher": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "url": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uri",
+              "pattern": "^https?://[^/\\s?#]+(?:[/?#]|$)"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "catalogue_number": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        },
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "page": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "table": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source_class": {
+          "enum": [
+            "mill_catalogue",
+            "manufacturer_catalogue",
+            "public_paper",
+            "public_thesis",
+            "public_agency_report",
+            "own_design_basis",
+            "synthetic_fixture"
+          ]
+        },
+        "reuse_terms": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "\\S"
+        }
+      },
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "url": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            },
+            {
+              "properties": {
+                "catalogue_number": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "properties": {
+                "page": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            },
+            {
+              "properties": {
+                "table": {
+                  "type": "string",
+                  "minLength": 1,
+                  "pattern": "\\S"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "description": "A locator for the values in each referencing row; class declarations require independent source review."
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema_version",
+        "citation_schema",
+        "citations"
+      ],
+      "properties": {
+        "schema_version": {
+          "const": 1
+        },
+        "citation_schema": {
+          "const": "schema.json#/$defs/citation"
+        },
+        "citations": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/citation"
+          }
+        }
+      }
+    }
+  }
+}

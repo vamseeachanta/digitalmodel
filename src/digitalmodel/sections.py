@@ -1,12 +1,19 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Cross-section property computation via sectionproperties.
 
 Provides a standardized API for computing structural section properties
-for I-sections, CHS, RHS, angles, channels, and custom polygons.
+for I-sections, CHS, RHS, angles and channels using millimetre inputs.
 
 Reference: vamseeachanta/workspace-hub#1498
 """
 
-from dataclasses import asdict, dataclass, field
+from collections.abc import Callable, Mapping
+from dataclasses import asdict, dataclass
+from inspect import signature
+from math import isfinite
+from numbers import Integral, Real
 from typing import Optional
 
 import matplotlib
@@ -32,10 +39,10 @@ class SectionProperties:
         ixx   : mm^4  (second moment of area, centroidal x)
         iyy   : mm^4  (second moment of area, centroidal y)
         zx    : mm^3  (plastic section modulus, x — AISC "Z")
-        sx    : mm^3  (elastic section modulus, x — AISC "S")
+        sx    : mm^3  (positive-fibre elastic modulus, x — AISC "S")
         j     : mm^4  (St. Venant torsion constant)
         cw    : mm^6  (warping constant)
-        zy/sy : mm^3  (y-axis moduli, when applicable)
+        zy/sy : mm^3  (plastic / positive-fibre elastic y-axis moduli)
         rx/ry : mm    (radii of gyration)
     """
 
@@ -61,6 +68,54 @@ class SectionProperties:
         return asdict(self)
 
 
+def compute_section_properties(
+    section_type: str, dimensions: Mapping[str, object]
+) -> SectionProperties:
+    """Dispatch explicit shape selectors with millimetre-based plain numbers.
+
+    Dimensions and options match the selected compute_* wrapper. Mesh size is
+    an area in mm^2; n/n_r must be integers, excluding booleans.
+    The input mapping is copied.
+    Unit-bearing values are unsupported. Elastic sx/sy use positive fibres,
+    which need not govern for asymmetric sections. See the sections API guide.
+
+    Raises:
+        ValueError: If the section selector is unsupported.
+        TypeError: If dimensions, keys or value types are invalid.
+    """
+    wrappers: dict[str, Callable[..., SectionProperties]] = {
+        "i_section": compute_i_section, "chs": compute_chs, "rhs": compute_rhs,
+        "angle": compute_angle, "channel": compute_channel,
+    }
+    if not isinstance(section_type, str) or section_type not in wrappers:
+        raise ValueError(f"Unsupported section type; choose from {', '.join(wrappers)}")
+    if not isinstance(dimensions, Mapping):
+        raise TypeError("dimensions must be a mapping")
+    arguments = dict(dimensions)
+    wrapper = wrappers[section_type]
+    signature(wrapper).bind(**arguments)
+    for name, value in arguments.items():
+        if name == "label":
+            if value is not None and not isinstance(value, str):
+                raise TypeError("label must be a string or None")
+        elif name in {"n", "n_r"} and not isinstance(value, Integral):
+            raise TypeError(f"{name} must be an integer point count")
+        else:
+            try:
+                valid_number = (
+                    not isinstance(value, bool) and not hasattr(value, "units")
+                    and isinstance(value, Real) and isfinite(value)
+                )
+            except OverflowError:
+                valid_number = False
+            if not valid_number:
+                raise TypeError(
+                    f"{name} must be a finite plain number (mm; mesh_size in mm^2); "
+                    "unit-bearing values are unsupported"
+                )
+    return wrapper(**arguments)
+
+
 def _analyze_section(geom, label: str, section_type: str, mesh_size: float) -> SectionProperties:
     """Internal helper: mesh, analyze, and extract properties.
 
@@ -71,8 +126,8 @@ def _analyze_section(geom, label: str, section_type: str, mesh_size: float) -> S
 
     API notes (sectionproperties without Material):
         - get_ic()    -> (ixx_c, iyy_c, ixy_c)
-        - get_z()     -> (sxx+, sxx-, syy+, syy-)  plastic moduli (AISC "Z")
-        - get_s()     -> (zxx+, zxx-)               elastic moduli (AISC "S")
+        - get_z()     -> (zxx+, zxx-, zyy+, zyy-)  elastic moduli (AISC "S")
+        - get_s()     -> (sxx, syy)                plastic moduli (AISC "Z")
         - get_j()     -> J (torsion constant)
         - get_gamma() -> Cw (warping constant)
         - get_area()  -> A
@@ -84,8 +139,8 @@ def _analyze_section(geom, label: str, section_type: str, mesh_size: float) -> S
     sec.calculate_plastic_properties()
 
     ic = sec.get_ic()  # (ixx_c, iyy_c, ixy_c)
-    z_plastic = sec.get_z()  # (sxx+, sxx-, syy+, syy-)
-    s_elastic = sec.get_s()  # (zxx+, zxx-)
+    z_plastic = sec.get_s()  # (sxx, syy)
+    s_elastic = sec.get_z()  # (zxx+, zxx-, zyy+, zyy-)
 
     area = sec.get_area()
     ixx = ic[0]
@@ -101,12 +156,12 @@ def _analyze_section(geom, label: str, section_type: str, mesh_size: float) -> S
         area=area,
         ixx=ixx,
         iyy=iyy,
-        zx=z_plastic[0],  # sxx+ (plastic, x)
-        sx=s_elastic[0],  # zxx+ (elastic, x)
+        zx=z_plastic[0],  # sxx (plastic, x)
+        sx=s_elastic[0],  # zxx+ (positive-fibre elastic, x)
         j=sec.get_j(),
         cw=sec.get_gamma(),
-        zy=z_plastic[2],  # syy+ (plastic, y)
-        sy=None,  # sectionproperties get_s() only returns x-axis elastic moduli
+        zy=z_plastic[1],  # syy (plastic, y)
+        sy=s_elastic[2],  # zyy+ (positive-fibre elastic, y)
         rx=rx,
         ry=ry,
     )

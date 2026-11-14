@@ -17,7 +17,7 @@ from .models import (
 class FiniteDifferenceSolver:
     """
     Time-domain finite difference solver for the sucker rod wave equation.
-    Ported from legacy Oxy.Cipher.DynaCard implementation.
+    Ported from the legacy implementation in an operator's well-management system.
 
     Solves: rho * A * u_tt = E * A * u_xx - c * u_t + F_gravity + F_friction
 

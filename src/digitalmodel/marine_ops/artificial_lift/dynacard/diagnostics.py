@@ -161,7 +161,13 @@ class PumpDiagnostics:
         Returns:
             DiagnosticResult with classification, confidence, and differential.
         """
-        if results.downhole_card is None:
+        # A populated diagnostic card represents an explicit solver opt-in.
+        # Default workflows, older results and other solvers use downhole_card.
+        card = (
+            results.diagnostic_card
+            if results.diagnostic_card is not None else results.downhole_card
+        )
+        if card is None:
             return DiagnosticResult(
                 classification="NORMAL",
                 confidence=0.0,
@@ -171,7 +177,7 @@ class PumpDiagnostics:
         model = self._load_model()
         if model is not None:
             features = FeatureExtractor.extract_classifier_vector(
-                results.downhole_card
+                card
             )
             _check_feature_count(features, model)
             features_norm = FeatureExtractor.normalize(features, model["scaling"])
@@ -195,7 +201,7 @@ class PumpDiagnostics:
             )
 
         # Fallback
-        mode = self._classify_legacy(results.downhole_card)
+        mode = self._classify_legacy(card)
         return DiagnosticResult(
             classification=mode,
             confidence=1.0 if mode == "NORMAL" else 0.8,
@@ -248,7 +254,7 @@ class PumpDiagnostics:
             return None
 
         try:
-            with open(MODEL_PATH) as f:
+            with open(MODEL_PATH, encoding="utf-8") as f:
                 model = json.load(f)
             # Convert scaling arrays to numpy
             model["scaling"] = {

@@ -372,6 +372,10 @@ def engine(
         )
 
         cfg_base = vessel_seakeeping(cfg_base)
+    elif basename == "flange_analysis":
+        from digitalmodel.structural.flange_analysis.workflow import router as flange_analysis
+
+        cfg_base = flange_analysis(cfg_base)
     elif basename == "lifting_lug":
         from digitalmodel.lifting_lug.workflow import router as lifting_lug
 

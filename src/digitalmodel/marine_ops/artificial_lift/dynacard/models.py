@@ -43,6 +43,12 @@ class RodSection(BaseModel):
     do not imply the same dynamic mass. Both solver adapters use supplied
     weight_per_foot to derive coupling-inclusive density for static weight;
     the coupled transfer still uses the prescribed speed for dynamic response.
+
+    Weight is derived only during construction when weight_per_foot is zero.
+    Assignment and model_copy(update=...) retain the stored dry line weight;
+    changing diameter or density does not recalculate it. To request bare-body
+    derivation again, pass updated values with weight_per_foot=0 to RodSection
+    or model_validate. Supply a new measured weight to retain coupling mass.
     """
     diameter: float  # inches
     length: float  # feet
@@ -57,11 +63,31 @@ class RodSection(BaseModel):
     manufacturer: str = "Generic"
 
     def model_post_init(self, __context: Any) -> None:
-        """Calculate weight per foot if not provided."""
+        """Derive bare-body dry line weight once, when zero is supplied."""
         if self.weight_per_foot == 0.0:
             # Steel weight: pi * r^2 * density / 144 (convert sq in to sq ft)
             r_in = self.diameter / 2.0
             self.weight_per_foot = np.pi * (r_in ** 2) * self.density / SQUARE_FEET_TO_SQUARE_INCHES
+
+
+def effective_density_lb_ft3(section: RodSection) -> float:
+    """Return dry line weight divided by nominal rod-body area, in lb/ft³.
+
+    With A=pi*d²/4 in², density=weight_per_foot*144/A. Supplied coupling
+    weight is included in this effective density; coupling displaced volume
+    is not represented. See gibbs-transfer.md, Equations and source.
+    Non-finite or nonpositive weight and diameter are rejected.
+    """
+    values = [section.weight_per_foot, section.diameter]
+    if not np.all(np.isfinite(values)) or min(values) <= 0:
+        raise ValueError("density conversion requires finite positive weight and diameter")
+    try:
+        density = section.weight_per_foot * 576.0 / (np.pi * section.diameter ** 2)
+    except (OverflowError, ZeroDivisionError) as exc:
+        raise ValueError("density conversion requires finite positive effective density") from exc
+    if not np.isfinite(density) or density <= 0:
+        raise ValueError("density conversion requires finite positive effective density")
+    return density
 
 
 class PumpProperties(BaseModel):
@@ -476,6 +502,9 @@ class AnalysisResults(BaseModel):
     """Output results from the dynacard analysis."""
     ctx: Optional[DynacardAnalysisContext] = None
     downhole_card: Optional[CardData] = None
+    # Unsmoothed solver strain card for the raw-card-trained classifier.
+    # downhole_card remains the existing smoothed calculation input.
+    diagnostic_card: Optional[CardData] = None
     # None means provenance was not recorded, including older saved results.
     downhole_load_basis: Optional[DownholeLoadBasis] = None
     peak_polished_rod_load: float = 0.0

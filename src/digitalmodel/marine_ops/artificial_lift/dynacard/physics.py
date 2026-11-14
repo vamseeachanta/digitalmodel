@@ -4,9 +4,11 @@
 import numpy as np
 from .calculations import calculate_pump_fillage
 from .exceptions import PhysicsError
-from .everitt_jennings.adapter import _effective_density_lb_ft3
 from .solver_guards import annotate_results, validate_stroke
-from .models import DynacardAnalysisContext, CardData, AnalysisResults, DownholeLoadBasis
+from .models import (
+    DynacardAnalysisContext, CardData, AnalysisResults, DownholeLoadBasis,
+    effective_density_lb_ft3,
+)
 from .constants import (
     FEET_TO_INCHES,
     SQUARE_FEET_TO_SQUARE_INCHES,
@@ -136,9 +138,11 @@ class DynacardPhysicsSolver:
                     force[1:] = cosine * old_f - ea * gamma * sine * old_u
 
                     # Static equilibrium includes the supplied coupling weight,
-                    # using the same effective density as the default solver.
+                    # but displaces fluid by nominal body volume only.
+                    # Omitting coupling buoyancy overstates
+                    # the subtracted weight and lowers the pump tension datum.
                     weight = (
-                        (_effective_density_lb_ft3(section) - self.ctx.fluid_density)
+                        (effective_density_lb_ft3(section) - self.ctx.fluid_density)
                         * area
                         * section.length
                         / SQUARE_FEET_TO_SQUARE_INCHES

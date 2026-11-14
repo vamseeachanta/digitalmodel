@@ -62,6 +62,7 @@ def plot_damage_histogram(damage_result: pd.DataFrame, ax=None, **kwargs):
     ----------
     damage_result : pd.DataFrame
         Output of miner_damage() with 'stress_range' and 'damage' columns.
+        Uses 'total_damage' metadata when present, otherwise sums bin damage.
     ax : matplotlib.axes.Axes, optional
         Axes to plot on. Created if None.
 
@@ -76,8 +77,13 @@ def plot_damage_histogram(damage_result: pd.DataFrame, ax=None, **kwargs):
     ax.bar(stress_labels, damage_result["damage"], **kwargs)
     ax.set_xlabel("Stress Range (MPa)")
     ax.set_ylabel("Damage (n/N)")
+    total_damage = (
+        damage_result.attrs["total_damage"]
+        if "total_damage" in damage_result.attrs
+        else damage_result["damage"].sum()
+    )
     ax.set_title(
-        f"Damage per Bin — Total D = {damage_result.attrs.get('total_damage', 0):.4f}"
+        f"Damage per Bin — Total D = {total_damage:.4f}"
     )
     ax.grid(True, axis="y", ls="--", alpha=0.5)
     return ax

@@ -139,6 +139,7 @@ class TestConvertAQWACommand:
         assert_cli_success(result)
 
 
+@pytest.mark.solver
 class TestConvertOrcaWaveCommand:
     """Tests for the 'convert-orcawave' command"""
 
