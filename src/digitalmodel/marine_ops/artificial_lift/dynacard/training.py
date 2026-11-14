@@ -88,7 +88,7 @@ from .card_generators import SYNTHETIC_LABEL_EXCLUSIONS, generate_training_datas
 from .feature_extraction import FeatureExtractor
 
 _MODEL_PATH = Path(__file__).parent / "data" / "dynacard_classifier.json"
-_SHAPE_MODEL_PATH = Path(__file__).parent / "data" / "dynacard_shape_classifier.json"
+_SHAPE_MODEL_PATH = Path(__file__).parent / "data" / "dynacard_shape_classifier.json.gz"
 
 
 def _extract_features_for_dataset(
@@ -178,8 +178,11 @@ def _export_model_to_json(
     }
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(model_dict, f, indent=2)
+    raw = json.dumps(model_dict, indent=2).encode("utf-8")
+    if output_path.suffix == ".gz":
+        import gzip
+        raw = gzip.compress(raw, mtime=0)
+    output_path.write_bytes(raw)
 
 
 def train_and_export(
