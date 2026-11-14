@@ -77,7 +77,7 @@
     "owner": "Saipem",
     "lay_methods": null,
     "tensioner_capacity_tonnes": null,
-    "max_pipe_diameter_inches": 60,
+    "max_pipe_diameter_inches": 48,
     "dp_class": null,
     "water_depth_min_m": null,
     "water_depth_max_m": null,

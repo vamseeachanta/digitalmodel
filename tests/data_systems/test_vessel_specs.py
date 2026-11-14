@@ -31,14 +31,17 @@ HLV_QUEUE = (
 )
 
 
-def test_committed_datasets_cover_batch_two():
-    readme = (DATA / "vessel_specs_README.md").read_text(encoding="utf-8")
-    manifest = json.loads(
-        (DATA / "vessel_specs_provenance.json").read_text(encoding="utf-8")
-    )
-    retrieved = {
-        s["source_url"] for s in manifest["sources"] if s["status"] == "retrieved"
-    }
+def batch_row_match(name, keys, rows, kind, readme):
+    found = [
+        row
+        for row in rows
+        if "".join(c for c in row["vessel_name"].casefold() if c.isalnum()) in keys
+    ]
+    assert len(found) <= 1, f"Duplicate batch row: {name} ({kind})"
+    gap = re.findall(rf"^- {re.escape(name)} \({kind}\): (.+)$", readme, re.MULTILINE)
+    assert len(gap) <= 1
+    reason = gap[0].split(";", 1)[0] if gap else None
+    assert not (found and gap), f"Row also listed as gap: {name} ({kind})"
     reasons = {
         "refused",
         "not published",
@@ -47,62 +50,75 @@ def test_committed_datasets_cover_batch_two():
         "no headline value",
         "batch cap",
     }
+    if not found:
+        assert reason in reasons, f"Missing batch gap: {name} ({kind})"
+    else:
+        assert name.casefold() in readme.casefold(), f"Missing locator: {name}"
+    return found[0] if found else None, reason
+
+
+def assert_batch_row(row, kind, owner, retrieved):
+    assert row["owner"] == owner
+    assert row["source_url"] in retrieved
+    if kind == "hlv":
+        assert row["crane_capacity_tonnes"] is not None
+        assert row["crane_capacity_basis"] in ("individual", "combined")
+    else:
+        assert any(
+            row[field]
+            for field in (
+                "tensioner_capacity_tonnes",
+                "max_pipe_diameter_inches",
+                "lay_methods",
+            )
+        )
+
+
+def assert_queue_rows(kind, queue, rows, readme, retrieved):
+    matches, gaps, owners, picked = [], [], set(), set()
+    for name, owner, keys in queue:
+        row, reason = batch_row_match(name, keys, rows, kind, readme)
+        matches.append(row is not None)
+        gaps.append(reason)
+        if row is not None:
+            assert_batch_row(row, kind, owner, retrieved)
+            owners.add(owner)
+            picked.add((kind, name))
+    count = sum(matches)
+    assert 1 <= count <= 4, f"New {kind} rows: {count}"
+    last = max(i for i, matched in enumerate(matches) if matched)
+    assert all(
+        matched or (reason is not None and reason != "batch cap")
+        for matched, reason in zip(matches[:last], gaps[:last], strict=True)
+    ), f"Queue entry skipped for batch cap before last {kind} row"
+    available = [
+        entry[0]
+        for entry, yes, reason in zip(queue, matches, gaps, strict=True)
+        if yes or reason == "batch cap"
+    ]
+    return count, owners, picked, available
+
+
+def assert_batch_two(data_dir):
+    """Apply the same acceptance contract to committed and synthetic batches."""
+    readme = (data_dir / "vessel_specs_README.md").read_text(encoding="utf-8")
+    manifest = json.loads(
+        (data_dir / "vessel_specs_provenance.json").read_text(encoding="utf-8")
+    )
+    retrieved = {
+        s["source_url"] for s in manifest["sources"] if s["status"] == "retrieved"
+    }
     counts, owners, picked, available = [], set(), set(), {}
     for kind, queue in (("pipelay", PIPELAY_QUEUE), ("hlv", HLV_QUEUE)):
         rows = json.loads(
-            (DATA / f"vessel_specs_{kind}.json").read_text(encoding="utf-8")
+            (data_dir / f"vessel_specs_{kind}.json").read_text(encoding="utf-8")
         )
-        matches, gaps = [], []
-        for name, owner, keys in queue:
-            found = [
-                row
-                for row in rows
-                if "".join(c for c in row["vessel_name"].casefold() if c.isalnum())
-                in keys
-            ]
-            assert len(found) <= 1, f"Duplicate batch row: {name} ({kind})"
-            gap = re.findall(
-                rf"^- {re.escape(name)} \({kind}\): (.+)$", readme, re.MULTILINE
-            )
-            assert len(gap) <= 1
-            reason = gap[0].split(";", 1)[0] if gap else None
-            matches.append(bool(found))
-            gaps.append(reason)
-            assert not (found and gap), f"Row also listed as gap: {name} ({kind})"
-            if not found:
-                assert reason in reasons, f"Missing batch gap: {name} ({kind})"
-                continue
-            assert name.casefold() in readme.casefold(), f"Missing locator: {name}"
-            row = found[0]
-            assert row["owner"] == owner
-            owners.add(owner)
-            assert row["source_url"] in retrieved
-            if kind == "hlv":
-                assert row["crane_capacity_tonnes"] is not None
-                assert row["crane_capacity_basis"] in ("individual", "combined")
-            else:
-                assert any(
-                    row[field]
-                    for field in (
-                        "tensioner_capacity_tonnes",
-                        "max_pipe_diameter_inches",
-                        "lay_methods",
-                    )
-                )
-        count = sum(matches)
-        assert 1 <= count <= 4, f"New {kind} rows: {count}"
+        count, queue_owners, queue_picked, available[kind] = assert_queue_rows(
+            kind, queue, rows, readme, retrieved
+        )
         counts.append(count)
-        last = max(i for i, matched in enumerate(matches) if matched)
-        assert all(
-            matched or (reason is not None and reason != "batch cap")
-            for matched, reason in zip(matches[:last], gaps[:last], strict=True)
-        ), f"Queue entry skipped for batch cap before last {kind} row"
-        picked.update((kind, entry[0]) for entry, yes in zip(queue, matches) if yes)
-        available[kind] = [
-            entry[0]
-            for entry, yes, reason in zip(queue, matches, gaps, strict=True)
-            if yes or reason == "batch cap"
-        ]
+        owners.update(queue_owners)
+        picked.update(queue_picked)
     assert 4 <= sum(counts) <= 5
     assert len(owners) >= 2
     expected = []
@@ -113,6 +129,10 @@ def test_committed_datasets_cover_batch_two():
                 expected.append((kind, available[kind].pop(0)))
                 break
     assert picked == set(expected[: sum(counts)]), "Batch selection must alternate"
+
+
+def test_committed_datasets_cover_batch_two():
+    assert_batch_two(DATA)
 
 
 @pytest.fixture

@@ -49,8 +49,19 @@ Requests used one connection, a descriptive User-Agent, a 30-second timeout,
 one retry maximum and a three-second same-site pause. The initial two robots policies
 allowed the requested pages. No site refused access on 2026-10-11.
 The 2026-11-14 UTC batch retained three further robots policies allowing the selected
-URLs; three access stops are recorded below. Jan De Nul also advertises a ten-second
-crawl delay; the unchanged helper applies its fixed three-second pause instead.
+URLs; three access stops are recorded below. Two policies advertise crawl delays:
+
+- Jan De Nul: 10 seconds advertised; 4.221, 3.909 seconds between consecutive
+  manifest retrieval instants (robots policy, fleet page, specification sheet).
+- DEME: 30 seconds advertised; 3.948, 3.666 seconds between consecutive
+  manifest retrieval instants (robots policy, Orion page, Gulliver page).
+
+The unchanged helper applied its fixed three-second same-site pause. The batch
+did not meet either advertised crawl delay; robots permission for the URLs does
+not establish compliance with those delays. The intervals above describe recorded
+observations, not measured request-start spacing.
+Follow-up: `scripts/fetch_vessel_specs.py` must honor advertised crawl delays
+before further collection. Historical observations are retained without alteration.
 
 The committed `scripts/fetch_vessel_specs.py` reads source URLs and human
 statements from the manifest and emits the same manifest structure, with new
@@ -71,21 +82,21 @@ transport; the command is never run by tests. Documents and extracted text
 are retained outside Git and shall not be committed to this public repository.
 Factual transcription remains a separate readback with a page locator.
 
-| Vessel            | Observed specification                                               | Source locator                                                                                                                                            |
-| ----------------- | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Thialf            | 14,200 metric tonnes combined crane lifting capacity                 | [Heerema fleet page](https://www.heerema.com/heerema-marine-contractors/fleet/thialf), Main data / Lift Capacity; tandem basis in June 2020 sheet, page 2 |
-| Thialf            | DP-3                                                                 | [June 2020 operator sheet](https://www.heerema.com/hubfs/HMC%20Equipment%20Folder%20-%20Thialf.pdf), printed page 3                                       |
-| Sleipnir          | 20,000 metric tonnes combined; two 10,000-tonne cranes               | [Heerema fleet page](https://www.heerema.com/heerema-marine-contractors/fleet/sleipnir), Main data and vessel description                                 |
-| Solitaire         | 1,050 t tension capacity; 2–60 inches outside diameter; DP-3         | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/solitaire-vessel-specs-2026_0.pdf), printed page 09                    |
-| Solitaire         | S-lay; achieved depth 2,775 m                                        | [Operator fleet page](https://www.allseas.com/en/who-we-are/our-fleet/solitaire), Setting the pipelay standard                                            |
-| Lorelay           | 165 t installed tension capacity; 2–41 inches outside diameter; DP-3 | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/lorelay-vessel-specs-2026.pdf), printed page 11                        |
-| Pioneering Spirit | 2,000 t tension capacity; 6–68 inches outside diameter; DP-3         | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/pioneering-spirit-vessel-specs-2026.pdf), printed page 08              |
-| Pioneering Spirit | S-lay                                                                | [Operator fleet page](https://www.allseas.com/en/who-we-are/our-fleet/pioneering-spirit), Unmatched pipelay capacity                                      |
-| Les Alizés | Name and operator | [Fleet page](https://www.jandenul.com/fleet/heavy-lift-vessels), Les Alizés entry and site identity |
-| Les Alizés | Individual crane 5,000 t at 34.7 m radius; deck 9,300 m²; DP-2 | [2026 operator sheet](https://www.jandenul.com/sites/default/files/public/Les%20Aliz%C3%A9s%20%28EN%29_2026_0.pdf), PDF page 2 (unnumbered), Technical specifications / Classification and Crane system |
-| Orion | Individual main crane 5,000 ton as labelled; deck 8,000 m²; DP-3; name and operator | [Fleet page](https://www.deme-group.com/technologies/orion), Facts / Crane, Operational conditions, Power & propulsion; page title and site identity |
-| Gulliver | Combined tandem crane capacity 4,000 t; name and operator | [Fleet page](https://www.deme-group.com/technologies/gulliver), Facts / Lifting capacity; page title and site identity |
-| Castorone | Maximum pipe diameter 60 inches including coating (48 inches without coating); name and operator | [Fleet page](https://www.saipem.com/en/solutions-energy-transition/fleet-and-yards/castorone), Pipelaying capacity; page title and site identity |
+| Vessel            | Observed specification                                                                           | Source locator                                                                                                                                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Thialf            | 14,200 metric tonnes combined crane lifting capacity                                             | [Heerema fleet page](https://www.heerema.com/heerema-marine-contractors/fleet/thialf), Main data / Lift Capacity; tandem basis in June 2020 sheet, page 2                                               |
+| Thialf            | DP-3                                                                                             | [June 2020 operator sheet](https://www.heerema.com/hubfs/HMC%20Equipment%20Folder%20-%20Thialf.pdf), printed page 3                                                                                     |
+| Sleipnir          | 20,000 metric tonnes combined; two 10,000-tonne cranes                                           | [Heerema fleet page](https://www.heerema.com/heerema-marine-contractors/fleet/sleipnir), Main data and vessel description                                                                               |
+| Solitaire         | 1,050 t tension capacity; 2–60 inches outside diameter; DP-3                                     | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/solitaire-vessel-specs-2026_0.pdf), printed page 09                                                                  |
+| Solitaire         | S-lay; achieved depth 2,775 m                                                                    | [Operator fleet page](https://www.allseas.com/en/who-we-are/our-fleet/solitaire), Setting the pipelay standard                                                                                          |
+| Lorelay           | 165 t installed tension capacity; 2–41 inches outside diameter; DP-3                             | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/lorelay-vessel-specs-2026.pdf), printed page 11                                                                      |
+| Pioneering Spirit | 2,000 t tension capacity; 6–68 inches outside diameter; DP-3                                     | [2026 operator sheet](https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/pioneering-spirit-vessel-specs-2026.pdf), printed page 08                                                            |
+| Pioneering Spirit | S-lay                                                                                            | [Operator fleet page](https://www.allseas.com/en/who-we-are/our-fleet/pioneering-spirit), Unmatched pipelay capacity                                                                                    |
+| Les Alizés        | Name and operator                                                                                | [Fleet page](https://www.jandenul.com/fleet/heavy-lift-vessels), Les Alizés entry and site identity                                                                                                     |
+| Les Alizés        | Individual crane 5,000 t at 34.7 m radius; deck 9,300 m²; DP-2                                   | [2026 operator sheet](https://www.jandenul.com/sites/default/files/public/Les%20Aliz%C3%A9s%20%28EN%29_2026_0.pdf), PDF page 2 (unnumbered), Technical specifications / Classification and Crane system |
+| Orion             | Individual main crane 5,000 ton as labelled; deck 8,000 m²; DP-3; name and operator              | [Fleet page](https://www.deme-group.com/technologies/orion), Facts / Crane, Operational conditions, Power & propulsion; page title and site identity                                                    |
+| Gulliver          | Combined tandem crane capacity 4,000 t; name and operator                                        | [Fleet page](https://www.deme-group.com/technologies/gulliver), Facts / Lifting capacity; page title and site identity                                                                                  |
+| Castorone         | Maximum pipe diameter 48 inches without coating (60 inches including coating); name and operator | [Fleet page](https://www.saipem.com/en/solutions-energy-transition/fleet-and-yards/castorone), Pipelaying capacity; page title and site identity                                                        |
 
 Table 2. Readback anchors; exact URLs and per-source retrieval instants appear in JSON.
 
@@ -100,11 +111,14 @@ June 2020. The live fleet page corroborates the lift rating.
 All three pipe ranges explicitly state outside diameter (`OD`), in inches;
 none of those printed lines adds a coating qualifier. Their upper bounds
 match the maximum-outside-diameter field definition; 60, 41 and 68 are confirmed.
-Castorone's 60-inch limit includes coating; it is not a 60-inch uncoated pipe rating.
+Castorone's JSON value is 48 inches without coating; the separate 60-inch limit
+includes coating and is excluded from the pipe-diameter field.
 The page describes a future J-lay tower, so no active lay method is inferred.
 Its tensioner capacity, positioning class and depth bounds remain null.
 Les Alizés and Orion have no numbered printed-page positioning locator, so
 `dp_notation_source` remains null. Gulliver's deck area and DP class remain null.
+Gulliver is listed by both DEME and Jan De Nul in the retrieved fleet pages;
+`owner` retains the DEME source brand without establishing exclusive ownership.
 Orion's capacity is transcribed without conversion from the source's `ton` label;
 the metric-tonne interpretation is assumed, not independently established.
 
