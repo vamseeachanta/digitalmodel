@@ -269,3 +269,14 @@ def test_examples_body_says_cards_are_illustrations(page):
     section = _visible(_body(page)[_body(page).index('id="ten-conditions"'):])
     assert "illustrate shapes rather than field wells" in section
     assert "lifts a fluid load" not in section
+
+
+def test_capacity_statement_is_qualified_by_the_shutdown_card(page):
+    """The unused capacity describes the shutdown card, not normal operation."""
+    import re
+    items = re.findall(r"<li>(.*?)</li>", page, re.S)
+    capacity = [item for item in items if "full pump" in item]
+    assert len(capacity) == 1
+    assert "shutdown" in capacity[0] and "not established" in capacity[0]
+    assert sum("fills to" in item for item in items) == 1
+    assert "Both methods treat the well as vertical" in page
