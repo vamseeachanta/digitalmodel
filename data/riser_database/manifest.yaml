@@ -5,8 +5,8 @@ sources_spec: scripts/riser_database/sources.yml
 tables:
   config_catalog:
     file: config_catalog.csv
-    rows: 28
-    sha256: 0a46d59fa1821268ba50eebc74ce1aba14bdd8b2948049896133c0fdb8461d76
+    rows: 42
+    sha256: 83ab17d0518b33146470b8db55a7463f64c5cf9f4d6295daac8c72ddc829b395
   material_sn_scf_dff:
     file: material_sn_scf_dff.csv
     rows: 3
