@@ -1,21 +1,36 @@
 # Canonical ship-dimensions template.
 #
-# Provenance: This YAML is adopted directly as the canonical artifact under
-# digitalmodel issue 461. WRK-1339 Child E referenced a generator; Phase 1 uses
-# manual curation and does not require one. A regenerator is deferred to future
-# work. Add entries by hand following the schema in
+# Provenance: This YAML is adopted directly as the canonical artifact under #461.
+# Phase 1 uses manual curation. Add entries by hand following the schema in
 # src/digitalmodel/naval_architecture/ship_dimensions.py.
+#
+# Superseded generator (not canonical): workspace-hub
+#   scripts/data/doc-intelligence/generate-ship-dimension-template.py
+#   scripts/data/doc_intelligence/generate_ship_dimension_template.py
+# Migration to this schema: entries -> vessels; flatten dimensions: per entry;
+# length_overall_ft -> loa_ft; speed_kts -> speed_kt; retain depth_ft.
+# Use hull_number as the identifier alias, source_plan -> source, and add name.
+# Map entry_status: pending -> draft; verification requires a separate check.
+# The generator output is not a drop-in replacement for this template.
 #
 # Canonical template: data/ship_dimensions_template.yaml
 # Loader: digitalmodel.naval_architecture.ship_dimensions.load_dimension_template()
 # Validator: digitalmodel.naval_architecture.ship_dimensions.validate_vessel_entry()
 #
-# Schema entry contract:
-#   hull_id (str, required): stable vessel identifier
-#   name (str, required): vessel or class name
-#   loa_ft, beam_ft, draft_ft (positive float, required by the validator)
-#   lwl_ft, displacement_lt (positive float, required for complete manual entry)
-#   speed_kt (float, optional): speed in knots
+# Required by the validator:
+#   hull_id (str): stable vessel identifier; hull_number is an alias for hull_id
+#   name (str): vessel or class name
+#   loa_ft, beam_ft, draft_ft (positive float)
+#
+# Complete manual entry (not enforced by the validator):
+#   loa_ft, beam_ft, draft_ft, depth_ft, displacement_lt, speed_kt
+#   depth_ft (positive float); displacement_lt (positive float)
+#   speed_kt (positive float): design speed in knots; cite the basis in source.
+#   Do not substitute trial or maximum speed for design speed.
+#   Leave unknown values blank; depth_ft and speed_kt are not validated.
+#
+# Optional fields:
+#   lwl_ft (positive float): waterline length; not required for completeness
 #   source (str, optional): reference for the dimensions
 #   full_load_lt (positive float, optional): >= displacement_lt when both are set
 #   kg_ft, km_ft, gm_ft (positive float, optional)

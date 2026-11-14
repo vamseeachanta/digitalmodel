@@ -36,19 +36,24 @@ SAMPLE_TEMPLATE = {
 }
 
 
+@pytest.fixture
+def template_header():
+    from digitalmodel.naval_architecture.ship_dimensions import (
+        default_dimension_template_path,
+    )
+
+    template = default_dimension_template_path().read_text(encoding="utf-8")
+    header, separator, _ = template.partition("\nvessels:")
+    assert separator, "The canonical template must contain vessel entries"
+    return header
+
+
 class TestTemplateLoading:
     """Load and validate ship dimension templates."""
 
-    def test_default_template_documents_manual_curation_contract(self):
-        from digitalmodel.naval_architecture.ship_dimensions import (
-            default_dimension_template_path,
-        )
-
-        template = default_dimension_template_path().read_text(encoding="utf-8")
-        header, separator, _ = template.partition("\nvessels:")
-        assert separator, "The canonical template must contain vessel entries"
+    def test_default_template_documents_manual_curation_contract(self, template_header):
+        header = template_header
         assert "canonical" in header.lower()
-        assert "WRK-1339 Child E" in header
         assert "461" in header
         assert "manual" in header.lower()
         assert "load_dimension_template" in header
@@ -56,7 +61,7 @@ class TestTemplateLoading:
 
         fields = {
             "hull_id", "name", "loa_ft", "lwl_ft", "beam_ft", "draft_ft",
-            "displacement_lt", "speed_kt", "source", "entry_status",
+            "depth_ft", "displacement_lt", "speed_kt", "source", "entry_status",
             "verification_source",
         }
         for field in fields:
@@ -64,14 +69,57 @@ class TestTemplateLoading:
         assert '"draft"' in header and '"verified"' in header
         assert "long tons" in header
 
+    def test_documented_validator_requirements_match_runtime(self, template_header):
+        from digitalmodel.naval_architecture.ship_dimensions import _REQUIRED_FIELDS
+
+        required = template_header.split("# Required by the validator:\n", 1)[1]
+        required = required.split("#\n", 1)[0]
+        groups = re.findall(r"^#   ([a-z][a-z0-9_, ]*) \(", required, re.MULTILINE)
+        fields = {field.strip() for group in groups for field in group.split(",")}
+        assert fields == set(_REQUIRED_FIELDS)
+        assert "hull_number" in required and "alias for hull_id" in required
+
+    def test_manual_completeness_and_speed_convention(self, template_header):
+        complete = template_header.split(
+            "# Complete manual entry (not enforced by the validator):\n", 1
+        )[1].split("#\n", 1)[0]
+        fields = {field.strip() for field in complete.splitlines()[0][4:].split(",")}
+        assert fields == {
+            "loa_ft", "beam_ft", "draft_ft", "depth_ft", "displacement_lt", "speed_kt",
+        }
+        assert "depth_ft (positive float)" in complete
+        assert "speed_kt (positive float): design speed" in complete
+        assert "trial or maximum speed" in complete
+        assert "Leave unknown values blank" in complete
+
+    def test_superseded_generator_schema_mapping(self, template_header):
+        assert "Superseded generator (not canonical): workspace-hub" in template_header
+        assert (
+            "scripts/data/doc-intelligence/generate-ship-dimension-template.py"
+            in template_header
+        )
+        assert (
+            "scripts/data/doc_intelligence/generate_ship_dimension_template.py"
+            in template_header
+        )
+        assert "entries -> vessels" in template_header
+        assert "flatten dimensions:" in template_header
+        assert "length_overall_ft -> loa_ft" in template_header
+        assert "speed_kts -> speed_kt" in template_header
+        assert "entry_status: pending -> draft" in template_header
+
     def test_load_default_template(self):
         from digitalmodel.naval_architecture.ship_dimensions import (
             load_dimension_template,
+            validate_vessel_entry,
         )
 
         vessels = load_dimension_template()
         assert len(vessels) >= 1
         assert any(v["hull_id"] == "BB-42" for v in vessels)
+        assert len({v["hull_id"] for v in vessels}) == len(vessels)
+        for vessel in vessels:
+            assert validate_vessel_entry(vessel) == []
 
     def test_load_template(self):
         from digitalmodel.naval_architecture.ship_dimensions import (
