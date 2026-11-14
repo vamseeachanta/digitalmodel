@@ -68,7 +68,7 @@
       "examples/workflows/pipeline-ffs-assessment/input.yml": "af5b5d739b9f84066fcb55ecdb3dc399eed9497e23826db4045f262ddbca152b",
       "scripts/cfd/build_calm_water_study.py": "4d5c29b600ede9eed46e378f0281cf4604cb6d1224d5798d132ed40fa8ae7975",
       "scripts/reporting/build_pipeline_ffs_report.py": "194ae54694b1b9575bba8f29a8cdb2b20508605d7ef45160e7d1134cfac1f578",
-      "src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py": "2dcbb5fcae95eca0016087d3cfc4fab5ffae5183726df67dabc7e042940a1ee6",
+      "src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py": "19f1cfada0003dbd1560dbf144d3ac87fed8309c540057d25de4119cc8d588d2",
       "src/digitalmodel/lifting_lug/report.py": "445c19750756ed643884cc2ad0e46f2c23d2c067fa6bdbd7078d3b4470b7b40f",
       "src/digitalmodel/subsea/cross_sections/reporting.py": "a2644995057ad0634ebb8503afb8071b1a67c9118124b277a6292547af25ce0e",
       "tests/asset_integrity/test_pipeline_ffs_assessment.py": "60cbd464c0be6b2ba62553fea9710aaa0896cb396b5fead651856d8ce8154396",
@@ -83,7 +83,7 @@
     "unreviewed_report_count": 35
   },
   "observations": {
-    "observed_at": "2026-11-05T02:34:44Z",
+    "observed_at": "2026-11-14T03:44:16+00:00",
     "reports": [
       {
         "capability": "CFD calm-water resistance",
@@ -189,7 +189,7 @@
         "source_digests": {
           "docs/benchmarks/unit_box/benchmark_report.html": "1519db4683059bdde303d7bfe9a459ea18762d0475f11624d2f7828bd7a2b3bd",
           "docs/benchmarks/unit_box/benchmark_report.json": "29cb712e76793365fb53763b25b0b3f069151a8f271d8777e095ef3974b1252d",
-          "src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py": "2dcbb5fcae95eca0016087d3cfc4fab5ffae5183726df67dabc7e042940a1ee6",
+          "src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py": "19f1cfada0003dbd1560dbf144d3ac87fed8309c540057d25de4119cc8d588d2",
           "tests/hydrodynamics/diffraction/test_unit_box_benchmark.py": "0de9c11cf8db9e8fa4a156138b3d916f196cff98f36d01c34a66f9f241082e79",
           "tests/hydrodynamics/diffraction/test_unit_box_report_pipeline_labels.py": "43c37403e9b52b2911459ffd2473fdb2dd49dcb449732388a5165bc19325ba55"
         },
@@ -282,6 +282,11 @@
         "change": "Refresh the pipeline manifest observation after calculation sources changed; retain synthetic scope and qualification limits.",
         "date": "2026-11-05",
         "revision": "1"
+      },
+      {
+        "change": "Refresh generator source digests after provenance wiring (#1019); report evidence classifications and qualification limits are unchanged.",
+        "date": "2026-11-13",
+        "revision": "#1019"
       }
     ],
     "scope_roots": [
@@ -290,7 +295,7 @@
       "docs/reports",
       "docs/subsea/cross_sections"
     ],
-    "source_revision": "69d72c8473f088151c07f2fc705d1a5228b98d60"
+    "source_revision": "571936f6ccc79dfff052cd6958da1dc29d91aaaa"
   },
   "reports": [
     {
@@ -397,7 +402,7 @@
       "source_digests": {
         "docs/benchmarks/unit_box/benchmark_report.html": "1519db4683059bdde303d7bfe9a459ea18762d0475f11624d2f7828bd7a2b3bd",
         "docs/benchmarks/unit_box/benchmark_report.json": "29cb712e76793365fb53763b25b0b3f069151a8f271d8777e095ef3974b1252d",
-        "src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py": "2dcbb5fcae95eca0016087d3cfc4fab5ffae5183726df67dabc7e042940a1ee6",
+        "src/digitalmodel/hydrodynamics/diffraction/benchmark_runner.py": "19f1cfada0003dbd1560dbf144d3ac87fed8309c540057d25de4119cc8d588d2",
         "tests/hydrodynamics/diffraction/test_unit_box_benchmark.py": "0de9c11cf8db9e8fa4a156138b3d916f196cff98f36d01c34a66f9f241082e79",
         "tests/hydrodynamics/diffraction/test_unit_box_report_pipeline_labels.py": "43c37403e9b52b2911459ffd2473fdb2dd49dcb449732388a5165bc19325ba55"
       },
@@ -481,5 +486,5 @@
     }
   ],
   "schema_version": 1,
-  "source_revision": "69d72c8473f088151c07f2fc705d1a5228b98d60"
+  "source_revision": "571936f6ccc79dfff052cd6958da1dc29d91aaaa"
 }
