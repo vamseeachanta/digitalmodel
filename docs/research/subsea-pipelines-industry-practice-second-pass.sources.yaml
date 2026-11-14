@@ -1,0 +1,87 @@
+issue: 1815
+checked: '2026-11-13'
+sources:
+- id: S1
+  title: Solitaire vessel specification sheet
+  publisher: Allseas
+  year: 2026 filename edition; publication date not established
+  url: https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/solitaire-vessel-specs-2026_0.pdf
+  checked: '2026-11-13'
+  status: read
+  basis: repository readback, assets/data/vessel_specs_README.md Table 2
+  retrieved_utc: '2026-10-11T19:45:55.835429+00:00'
+  sha256: c00e9fe8acd8df4607bf6e447228b78ccb8470047413658dedb148357d6d8d7c
+- id: S2
+  title: Solitaire fleet page
+  publisher: Allseas
+  year: not stated
+  url: https://www.allseas.com/en/who-we-are/our-fleet/solitaire
+  checked: '2026-11-13'
+  status: read
+  basis: repository readback, assets/data/vessel_specs_README.md Table 2
+  retrieved_utc: '2026-10-11T19:45:43.989759+00:00'
+  sha256: 548e02d0f7d60b8dcf04058ad54b002febf7da873cdf472e2924c0d9b1d1f446
+- id: S3
+  title: Seven Borealis vessel data sheet
+  publisher: Subsea7
+  year: 2025-05
+  url: https://www.subsea7.com/content/dam/subsea7-corporate2018/Datasheets/Vessel/2025/Seven_Borealis-300dpi.pdf.downloadasset.pdf
+  checked: '2026-11-13'
+  status: read
+  basis: opened operator PDF, pages 1-2, Pipelaying System
+- id: S4
+  title: 'Fleet: Deep Energy'
+  publisher: TechnipFMC
+  year: not stated
+  url: https://www.technipfmc.com/en/what-we-do/fleet
+  checked: '2026-11-13'
+  status: read
+  basis: opened operator fleet page, Deep Energy section
+- id: S5
+  title: SAGE Profile
+  publisher: Fugro
+  year: not stated
+  url: https://www.sage-profile.com/sage-profile/
+  checked: '2026-11-13'
+  status: read
+  basis: opened vendor page, finite element solver capabilities
+- id: S6
+  title: HCL Technologies Masters Subsea Pipeline Design with SIMULIA
+  publisher: Dassault Systèmes
+  year: not stated
+  url: https://blog.3ds.com/brands/simulia/hcl-tech-masters-subsea-pipeline-design-simulia/
+  checked: '2026-11-13'
+  status: read
+  basis: opened vendor case study, Solution and installation/operational loading paragraphs
+- id: S7
+  title: 'HotPipe JIP: Design Guidelines for HP/HT Pipelines'
+  publisher: ASME
+  year: '2005'
+  url: https://doi.org/10.1115/OMAE2005-67523
+  checked: '2026-11-13'
+  status: located_not_read
+  basis: 'DOI open returned: URL is not accessible via this tool; abstract not read'
+coverage:
+  papers:
+  - {item: P1, pass: first, evidence: [P1], location: {section: 3. Key state-of-the-art papers (2024 onwards), row: 0}}
+  - {item: P2, pass: first, evidence: [P2], location: {section: 3. Key state-of-the-art papers (2024 onwards), row: 1}}
+  - {item: P3, pass: first, evidence: [P3], location: {section: 3. Key state-of-the-art papers (2024 onwards), row: 2}}
+  - {item: P4, pass: first, evidence: [P4], location: {section: 3. Key state-of-the-art papers (2024 onwards), row: 3}}
+  - {item: P5, pass: first, evidence: [P5], location: {section: 3. Key state-of-the-art papers (2024 onwards), row: 4}}
+  contractors:
+  - {item: Saipem, pass: first, evidence: [P21], location: {section: 4. Contractor and vessel capability matrix, row: 0}}
+  - {item: McDermott, pass: first, evidence: [P22], location: {section: 4. Contractor and vessel capability matrix, row: 1}}
+  - {item: Heerema, pass: first, evidence: [P23], location: {section: 4. Contractor and vessel capability matrix, row: 2}}
+  - {item: Subsea7, pass: first, evidence: [P24], location: {section: 4. Contractor and vessel capability matrix, row: 3}}
+  - {item: Allseas, pass: second, evidence: [S1, S2], location: {section: 1. Contractor matrix updates, row: 0}}
+  - {item: TechnipFMC, pass: second, evidence: [S4], location: {section: 1. Contractor matrix updates, row: 2}}
+  tools:
+  - {item: StableLines, pass: first, evidence: [P8], location: {section: 1. Tool landscape, row: 1}}
+  - {item: OrcaFlex, pass: first, evidence: [P26, P27, P25], location: {section: 1. Tool landscape, row: 7}}
+  - {item: SAGE Profile, pass: second, evidence: [S5], location: {section: 2. Tool matrix updates, row: 0}}
+  - {item: ABAQUS, pass: second, evidence: [S6], location: {section: 2. Tool matrix updates, row: 1}}
+  jips:
+  - {item: SAFEBUCK, pass: first, evidence: [P17, P19], location: {section: 6. Joint-industry project landscape, row: 0}}
+  convergence:
+  - {item: Converging, pass: first, evidence: [P3], location: {section: 2. Method convergence versus divergence, row: 0}}
+  - {item: Diverging or unresolved, pass: first, evidence: [P1], location: {section: 2. Method convergence versus divergence, row: 0}}
