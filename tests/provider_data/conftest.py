@@ -61,8 +61,11 @@ def irs_15k_yaml_path(workspace_hub_root: Path) -> Path:
 
 @pytest.fixture
 def irs_15k_record(irs_15k_yaml_path):
+    """Require the pilot when the second stage explicitly configures its library."""
     from digitalmodel.provider_data import load_provider_yaml
 
     if not irs_15k_yaml_path.exists():
+        if os.environ.get("WORKSPACE_HUB_ROOT"):
+            pytest.fail("WORKSPACE_HUB_ROOT is set but companion IRS YAML is missing")
         pytest.skip("Companion provider library has not supplied the IRS YAML yet")
     return load_provider_yaml(irs_15k_yaml_path)

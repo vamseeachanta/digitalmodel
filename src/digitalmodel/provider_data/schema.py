@@ -35,6 +35,7 @@ class ProviderDataSource:
             "vendor",
             "vendor_slug",
             "document_name",
+            "revision_date",
             "origin_url",
             "private_mount_path",
             "inventory_ref",
@@ -43,6 +44,9 @@ class ProviderDataSource:
             value = getattr(self, name)
             if not isinstance(value, str) or not value.strip():
                 raise ValueError(f"ProviderDataSource.{name} must be non-empty string")
+        for name in ("sha256", "note"):
+            if not isinstance(getattr(self, name), str):
+                raise ValueError(f"ProviderDataSource.{name} must be a string")
 
 
 @dataclass(frozen=True)
@@ -56,6 +60,8 @@ class SpecValue:
     def __post_init__(self) -> None:
         if not isinstance(self.unit, str) or not self.unit.strip():
             raise ValueError("SpecValue.unit must be non-empty string")
+        if not isinstance(self.note, str):
+            raise ValueError("SpecValue.note must be a string")
         if isinstance(self.value, bool) or not isinstance(
             self.value, (int, float, str)
         ):
@@ -120,8 +126,21 @@ class ProviderDataRecord:
                         raise ValueError(
                             f"Spec {key!r} must be finite non-negative numeric value"
                         )
-        if not isinstance(self.orcaflex_mapping, dict):
-            raise ValueError("ProviderDataRecord.orcaflex_mapping must be a mapping")
+        _validate_orcaflex_mapping(self.orcaflex_mapping, self.specifications)
+
+
+def _validate_orcaflex_mapping(mapping: object, specifications: dict) -> None:
+    if not isinstance(mapping, dict):
+        raise ValueError("ProviderDataRecord.orcaflex_mapping must be a mapping")
+    for key, description in mapping.items():
+        if not isinstance(key, str) or not key.strip():
+            raise ValueError("orcaflex_mapping keys must be non-empty strings")
+        if key not in specifications:
+            raise ValueError(f"orcaflex_mapping key {key!r} has no specification")
+        if not isinstance(description, str) or not description.strip():
+            raise ValueError(
+                f"orcaflex_mapping description for {key!r} must be non-empty string"
+            )
 
 
 def _mapping(value: object, name: str) -> dict:
