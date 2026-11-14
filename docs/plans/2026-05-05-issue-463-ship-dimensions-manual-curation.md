@@ -26,7 +26,7 @@ The blocker call-out is correct: until #461 confirms the canonical template arti
 
 3. **Build extraction queue.** Run (or write then run) `scripts/ship-dimensions/build-priority-queue.py` against `data/ship_dimensions_template.yaml` to emit `data/ship_dimensions_extraction_queue.yaml` ordered by class priority. The queue is committed alongside data updates so reviewers see extraction order.
 
-4. **Populate dimensions.** For each vessel in the queue, open the corresponding ship-plan PDF (location: `client_projects/sname-ship-plans/` or per #461's resolved path), read off LOA / beam / draft / depth / displacement / speed, write into the YAML under the existing schema. **Do not invent missing values** — leave blank (per #457's WRK-1380 Final Plan: "leaving unknown fields blank rather than inventing values"). Add `source: "USNA ship plan: <pdf-name>"` per entry.
+4. **Populate dimensions.** For each vessel in the queue, open the corresponding ship-plan PDF (location: the approved private ship-plan archive or per #461's resolved path), read off LOA / beam / draft / depth / displacement / speed, write into the YAML under the existing schema. **Do not invent missing values** — leave blank (per #457's final plan: "leaving unknown fields blank rather than inventing values"). Add `source: "USNA ship plan: <pdf-name>"` per entry.
 
 5. **Cross-reference against Jane's.** For ≥ 5 vessels, look up the entry in Jane's Fighting Ships 2009-2010 (manifest path resolved via #461). When dimensions match within published tolerance, set `entry_status: verified` and add `verification_source: "Jane's Fighting Ships 2009-2010, p. <n>"`.
 
@@ -52,5 +52,5 @@ The blocker call-out is correct: until #461 confirms the canonical template arti
 
 ## Open Questions
 
-- Where do the SNAME ship-plan PDFs live? Likely `client_projects/sname-ship-plans/` but #461 must confirm. Default: pause data work until path is locked.
+- Where do the SNAME ship-plan PDFs live? The approved private ship-plan archive is to be confirmed by #461. Default: pause data work until path is locked.
 - "Speed" field: design speed vs trial speed vs sustained speed — Jane's typically reports max speed; ship plans typically report design speed. Document the convention chosen at the top of the YAML.
