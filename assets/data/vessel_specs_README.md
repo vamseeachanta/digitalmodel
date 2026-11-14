@@ -113,6 +113,8 @@ none of those printed lines adds a coating qualifier. Their upper bounds
 match the maximum-outside-diameter field definition; 60, 41 and 68 are confirmed.
 Castorone's JSON value is 48 inches without coating; the separate 60-inch limit
 includes coating and is excluded from the pipe-diameter field.
+The source calls the uncoated limit "pipe size" rather than explicitly stating
+outside diameter; the field retains that source terminology limitation.
 The page describes a future J-lay tower, so no active lay method is inferred.
 Its tensioner capacity, positioning class and depth bounds remain null.
 Les Alizés and Orion have no numbered printed-page positioning locator, so
@@ -140,7 +142,9 @@ The research issue links in issue 1773 now point to unrelated hydrodynamics work
   sheet statement is excluded.
 - Batch two retained the first four sourceable rows in the approved alternating
   selection: Castorone, Les Alizés, Orion, Gulliver. The projected fifth row would
-  exceed 400 changed lines and is omitted. Access stops were not retried or bypassed.
+  exceed the collection cap and was omitted. That 400-line cap applied to the
+  collected batch, not the full pull request including regression tests.
+  Access stops were not retried or bypassed.
 - DB50 (pipelay): refused; McDermott robots policy returned HTTP 403.
 - DB30 (pipelay): refused; collection stopped for McDermott after HTTP 403.
 - Seven Borealis (pipelay): refused; Subsea7 robots policy returned HTTP 403.
