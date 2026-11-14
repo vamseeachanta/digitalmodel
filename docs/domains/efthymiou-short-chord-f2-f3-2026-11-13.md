@@ -41,6 +41,7 @@ source-verified here and is not introduced as a calculation or a golden.
 | 3 | 2026-11-14 | Follow-up issue #4068 was confirmed to cover the deferred equations; the obsolete missing-issue statement was corrected without changing the equation qualifications. |
 | 4 | 2026-11-14 | The deferred-equation references were linked to their issue so the remaining scope can be opened from this record. |
 | 5 | 2026-11-14 | The summary now distinguishes the satisfied tracking requirement from the unfinished equation work; the focused-test dependency limit is recorded. |
+| 6 | 2026-11-14 | The focused-test dependency note now records the import requirements and points to the recorded results without retaining a temporary environment narrative. |
 
 Table 1a. Validation-record revisions.
 
@@ -186,13 +187,8 @@ are placed in `test_short_chord_factors.py` to keep every changed module below
 
 ### Focused-test dependency limit
 
-The focused factor and SCF-library tests were attempted on 2026-11-14 with
-Python 3.12. Collection produced two errors because pandas was absent; no
-tests ran. Resolving the declared dependencies with source builds disabled
-then found no usable pyLife wheel for the Arm platform. These attempts do not
-establish a new passing test count or supersede the earlier recorded results.
-No calculation, test assertion or package import was changed to avoid the
-dependency requirement.
+The focused tests import `digitalmodel.fatigue`, which requires pandas and
+pyLife. The last recorded result is in the list above.
 
 ## Functions reviewed but NOT changed
 
