@@ -21,10 +21,12 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional
 
 from digitalmodel.reporting import (
+    Provenance,
     ReportBackbone,
     ReportRenderer,
     ReportSection,
     SectionMode,
+    provenance_block,
 )
 
 # --- Re-exports from report_data_models ---
@@ -451,32 +453,34 @@ def _benchmark_block(key: str):
 # Module-level backbone: the diffraction physics causal chain.
 # Geometry -> Hydrostatics -> Stability -> Natural Periods ->
 # Coefficients -> Excitation -> Response -> Damping -> Summary.
+# Reads here are metadata only: this generator uses ReportBackbone.render.
+# Declared reads are validated only by assemble_report, used by report_catalog.
 _DIFFRACTION_BACKBONE = ReportBackbone(
     title="Diffraction Analysis Report",
     sections=[
         ReportSection("toc", "Table of Contents", SectionMode.ALWAYS, _sec_toc),
-        ReportSection("header", "Header & Identification", SectionMode.ALWAYS, _sec_header),
-        ReportSection("executive_summary", "Executive Summary", SectionMode.ALWAYS, _sec_executive_summary),
-        ReportSection("validation_sanity", "Validation Sanity Check", SectionMode.ALWAYS, _sec_validation),
-        ReportSection("assumptions", "Assumptions", SectionMode.ALWAYS, _sec_assumptions),
-        ReportSection("hull_description", "Hull Description & Mesh Quality", SectionMode.COMPACT_SKIP, _sec_hull_description),
-        ReportSection("mesh_schematic", "Mesh Schematic", SectionMode.BENCHMARK_ONLY, _benchmark_block("mesh_schematic")),
-        ReportSection("input_comparison", "Input Comparison", SectionMode.BENCHMARK_ONLY, _benchmark_block("input_comparison")),
-        ReportSection("input_files", "Input Files", SectionMode.BENCHMARK_ONLY, _benchmark_block("input_files")),
-        ReportSection("stability", "Hydrostatic Properties & Stability", SectionMode.ALWAYS, _sec_stability),
-        ReportSection("natural_periods", "Natural Period Estimates", SectionMode.COMPACT_SKIP, _sec_natural_periods),
-        ReportSection("added_mass_diagonal", "Added Mass Diagonal", SectionMode.COMPACT_SKIP, _sec_added_mass),
-        ReportSection("damping_diagonal", "Radiation Damping Diagonal", SectionMode.COMPACT_SKIP, _sec_damping),
-        ReportSection("coupling_assessment", "Coupling Assessment", SectionMode.COMPACT_SKIP, _sec_coupling),
-        ReportSection("infinite_added_mass", "Infinite Frequency Added Mass", SectionMode.COMPACT_SKIP, _sec_infinite_added_mass),
-        ReportSection("hydro_coefficients", "Hydrodynamic Coefficients", SectionMode.BENCHMARK_ONLY, _benchmark_block("hydro_coefficients")),
-        ReportSection("load_raos", "Wave Excitation Forces (Load RAOs)", SectionMode.COMPACT_SKIP, _sec_load_raos),
-        ReportSection("consensus_summary", "Displacement RAOs — Consensus", SectionMode.BENCHMARK_ONLY, _benchmark_block("consensus_summary")),
-        ReportSection("dof_sections", "Displacement RAOs — Per-DOF", SectionMode.BENCHMARK_ONLY, _benchmark_block("dof_sections")),
-        ReportSection("roll_damping", "Roll Critical Damping Analysis", SectionMode.ALWAYS, _sec_roll_damping),
-        ReportSection("raw_rao_data", "Raw Data", SectionMode.BENCHMARK_ONLY, _benchmark_block("raw_rao_data")),
-        ReportSection("overlay_plots", "Overlay Plots", SectionMode.BENCHMARK_ONLY, _benchmark_block("overlay_plots")),
-        ReportSection("notes", "Notes", SectionMode.ALWAYS, _sec_notes),
+        ReportSection("header", "Header & Identification", SectionMode.ALWAYS, _sec_header, reads=["file"]),
+        ReportSection("executive_summary", "Executive Summary", SectionMode.ALWAYS, _sec_executive_summary, reads=["file"]),
+        ReportSection("validation_sanity", "Validation Sanity Check", SectionMode.ALWAYS, _sec_validation, reads=["file"]),
+        ReportSection("assumptions", "Assumptions", SectionMode.ALWAYS, _sec_assumptions, reads=["file"]),
+        ReportSection("hull_description", "Hull Description & Mesh Quality", SectionMode.COMPACT_SKIP, _sec_hull_description, reads=["file"]),
+        ReportSection("mesh_schematic", "Mesh Schematic", SectionMode.BENCHMARK_ONLY, _benchmark_block("mesh_schematic"), reads=["file"]),
+        ReportSection("input_comparison", "Input Comparison", SectionMode.BENCHMARK_ONLY, _benchmark_block("input_comparison"), reads=["file"]),
+        ReportSection("input_files", "Input Files", SectionMode.BENCHMARK_ONLY, _benchmark_block("input_files"), reads=["file"]),
+        ReportSection("stability", "Hydrostatic Properties & Stability", SectionMode.ALWAYS, _sec_stability, reads=["file"]),
+        ReportSection("natural_periods", "Natural Period Estimates", SectionMode.COMPACT_SKIP, _sec_natural_periods, reads=["file"]),
+        ReportSection("added_mass_diagonal", "Added Mass Diagonal", SectionMode.COMPACT_SKIP, _sec_added_mass, reads=["file"]),
+        ReportSection("damping_diagonal", "Radiation Damping Diagonal", SectionMode.COMPACT_SKIP, _sec_damping, reads=["file"]),
+        ReportSection("coupling_assessment", "Coupling Assessment", SectionMode.COMPACT_SKIP, _sec_coupling, reads=["file"]),
+        ReportSection("infinite_added_mass", "Infinite Frequency Added Mass", SectionMode.COMPACT_SKIP, _sec_infinite_added_mass, reads=["file"]),
+        ReportSection("hydro_coefficients", "Hydrodynamic Coefficients", SectionMode.BENCHMARK_ONLY, _benchmark_block("hydro_coefficients"), reads=["file"]),
+        ReportSection("load_raos", "Wave Excitation Forces (Load RAOs)", SectionMode.COMPACT_SKIP, _sec_load_raos, reads=["file"]),
+        ReportSection("consensus_summary", "Displacement RAOs — Consensus", SectionMode.BENCHMARK_ONLY, _benchmark_block("consensus_summary"), reads=["file"]),
+        ReportSection("dof_sections", "Displacement RAOs — Per-DOF", SectionMode.BENCHMARK_ONLY, _benchmark_block("dof_sections"), reads=["file"]),
+        ReportSection("roll_damping", "Roll Critical Damping Analysis", SectionMode.ALWAYS, _sec_roll_damping, reads=["file"]),
+        ReportSection("raw_rao_data", "Raw Data", SectionMode.BENCHMARK_ONLY, _benchmark_block("raw_rao_data"), reads=["file"]),
+        ReportSection("overlay_plots", "Overlay Plots", SectionMode.BENCHMARK_ONLY, _benchmark_block("overlay_plots"), reads=["file"]),
+        ReportSection("notes", "Notes", SectionMode.ALWAYS, _sec_notes, reads=["file"]),
         ReportSection("phase_guide", "Phase Interpretation Guide", SectionMode.COMPACT_SKIP, _sec_phase_guide),
         ReportSection("appendices", "Appendices", SectionMode.COMPACT_SKIP, _sec_appendices),
     ],
@@ -515,6 +519,7 @@ def generate_diffraction_report(
     hull_id: Optional[str] = None,
     solver_results: Optional[Dict[str, Any]] = None,
     catalog: Any = None,
+    provenance: Optional[Provenance] = None,
 ) -> Path:
     """Generate a self-contained HTML diffraction report.
 
@@ -524,6 +529,8 @@ def generate_diffraction_report(
 
     Args:
         report_data: Populated DiffractionReportData (original API).
+        provenance: Optional source declaration, checked before rendering and
+            appended after the body. None preserves legacy output exactly.
         hull_id: Alternative hull-keyed API; requires catalog and solver_results.
         solver_results: Non-empty mapping of solver names to already extracted
             DiffractionResults. No native result files are opened. The existing
@@ -546,6 +553,8 @@ def generate_diffraction_report(
     Returns:
         Path to the generated HTML file.
     """
+    if provenance is not None:
+        provenance.require()
     catalogue_html = None
     if hull_id is not None:
         if report_data is not None:
@@ -603,6 +612,9 @@ def generate_diffraction_report(
             sections.insert(0, revision)
         sections.append(catalogue_html)
 
+    if provenance is not None:
+        sections.append(provenance_block(provenance))
+
     plotly_src = (
         '<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>'
         if include_plotlyjs == "cdn"
@@ -653,11 +665,14 @@ def generate_report_from_owr(
         output_path = owr_path.parent / f"{owr_path.stem}_diffraction_report.html"
 
     data = extract_report_data_from_owr(owr_path)
+    from digitalmodel.hydrodynamics.diffraction.report_provenance import result_provenance
+
     return generate_diffraction_report(
         data,
         output_path,
         include_plotlyjs,
         validation_report=validation_report,
+        provenance=result_provenance([owr_path], units_system="OrcaWave native (te, kN, m, s)"),
     )
 
 

@@ -95,6 +95,7 @@ from digitalmodel.cathodic_protection.report_verification import (
     aggregate_table, measured_options, published_outputs, published_recommendations, published_status, verification_summary,
 )
 from digitalmodel.citations.schema import Citation
+from digitalmodel.reporting._metadata import package_code_edition
 from digitalmodel.reporting.adapters import report_adapter
 from digitalmodel.reporting.figures import figure_from_columns
 from digitalmodel.reporting.provenance import Provenance
@@ -181,7 +182,11 @@ def _provenance(
     cfg: Mapping[str, Any], results: Mapping[str, Any], what: str
 ) -> Provenance:
     """Input YAML (relative to the config dir, sha256) plus the results digest."""
-    prov = Provenance()
+    prov = Provenance(
+        code_edition=package_code_edition(),
+        units_system="SI",
+        validated_path="screening",
+    )
     raw_path = cfg.get("_config_file_path")
     if raw_path:
         path = Path(str(raw_path))
@@ -1978,7 +1983,11 @@ def build_assessment_spec(
             "no document control supplied"
         )
     if provenance is None:
-        provenance = Provenance().add(
+        provenance = Provenance(
+            code_edition=package_code_edition(),
+            units_system="SI",
+            validated_path="screening",
+        ).add(
             "results",
             "CPAssessmentReport",
             digest=_sha256(report.model_dump_json().encode("utf-8")),

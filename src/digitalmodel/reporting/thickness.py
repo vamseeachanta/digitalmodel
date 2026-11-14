@@ -15,6 +15,7 @@ import hashlib
 import json
 import math
 
+from digitalmodel.reporting._metadata import package_code_edition
 from digitalmodel.reporting.figures import figure_from_columns
 from digitalmodel.reporting.provenance import Provenance
 from digitalmodel.reporting.spec import DocumentMeta, Section, TableBlock
@@ -131,7 +132,11 @@ def input_provenance(identifier: str, inputs: dict) -> Provenance:
         inputs, sort_keys=True, separators=(",", ":"), allow_nan=False
     ).encode()
     digest = "sha256:" + hashlib.sha256(canonical).hexdigest()
-    return Provenance().add(
+    return Provenance(
+        code_edition=package_code_edition(),
+        units_system="Per input echo and table labels",
+        validated_path="screening",
+    ).add(
         "calculation-inputs",
         identifier,
         digest=digest,

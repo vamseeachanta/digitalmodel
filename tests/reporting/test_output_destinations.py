@@ -24,7 +24,7 @@ def _spec():
             project="Example", client="Example", date="2026-10-19",
         ),
         sections=[Section(key="example", title="Example", blocks=[TextBlock(markdown="Example")])],
-        provenance=Provenance().add("fixture", "inputs.json", digest="synthetic"),
+        provenance=Provenance(code_edition="test", units_system="SI", validated_path="screening").add("fixture", "inputs.json", digest="synthetic"),
     )
 
 

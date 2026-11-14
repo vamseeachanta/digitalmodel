@@ -109,7 +109,7 @@ def fixture_spec(*, plotly: bool = False) -> ReportSpec:
                      section="Table 10-1", wiki_path=WIKI, note="coating breakdown"),
         ],
         sections=[Section(key="design", title="Anode design", subtitle="Basis", blocks=blocks)],
-        provenance=Provenance().add("file", "inputs.yml", digest="sha256:abc",
+        provenance=Provenance(code_edition="test", units_system="SI", validated_path="screening").add("file", "inputs.yml", digest="sha256:abc",
                                     description="routed config"),
         input_echo={"environment": {"depth_m": 100.0, "temp_c": 12}, "zones": ["Splash", "Submerged"]},
         appendices=[Section(key="records", title="Calculation records",

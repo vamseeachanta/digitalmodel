@@ -49,7 +49,7 @@ def _spec(**overrides):
     base = dict(
         document=_doc(),
         sections=[_section()],
-        provenance=Provenance().add("file", "inputs.yml"),
+        provenance=Provenance(code_edition="test", units_system="SI", validated_path="screening").add("file", "inputs.yml"),
     )
     base.update(overrides)
     return ReportSpec(**base)

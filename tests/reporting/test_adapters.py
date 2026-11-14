@@ -55,7 +55,7 @@ def _dummy(cfg: dict) -> ReportSpec:
                 ],
             )
         ],
-        provenance=Provenance().add("results", "cfg[dummy]"),
+        provenance=Provenance(code_edition="test", units_system="SI", validated_path="screening").add("results", "cfg[dummy]"),
         input_echo=dict(results),
         tool_version="test",
     )

@@ -80,6 +80,10 @@ def test_worked_offset_example_is_independent(builder):
 
 
 def test_html_is_deterministic_and_example_is_current(builder):
+    provenance = builder.build_spec(ROOT / generic_campaign.DEST).provenance
+    provenance.require()
+    assert provenance.units_system == 'SI'
+    assert provenance.validated_path == 'screening'
     first = builder.render(ROOT / generic_campaign.DEST)
     assert first == builder.render(ROOT / generic_campaign.DEST)
     expected = ROOT / generic_campaign.DEST / 'preparation-report.html'

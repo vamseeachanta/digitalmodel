@@ -58,20 +58,26 @@ def load_results_bundle(bundle_dir: str | Path) -> DiffractionResults:
     Prefers a well-known ``diffraction_results.json``; otherwise picks the first
     JSON that looks like a serialized DiffractionResults. Raises if none found.
     """
+    path = _results_bundle_path(bundle_dir)
+    return DiffractionResults.from_dict(json.loads(path.read_text()))
+
+
+def _results_bundle_path(bundle_dir: str | Path) -> Path:
+    """Locate the actual SSOT file, retaining it for report provenance."""
     bundle = Path(bundle_dir)
     if not bundle.is_dir():
         raise NotADirectoryError(f"bundle dir not found: {bundle}")
     for name in RESULTS_JSON_NAMES:
         candidate = bundle / name
         if candidate.is_file():
-            return DiffractionResults.from_dict(json.loads(candidate.read_text()))
+            return candidate
     for candidate in sorted(bundle.rglob("*.json")):
         try:
             obj = json.loads(candidate.read_text())
         except (ValueError, OSError):
             continue
         if isinstance(obj, dict) and _RESULT_KEYS <= set(obj):
-            return DiffractionResults.from_dict(obj)
+            return candidate
     raise FileNotFoundError(f"no diffraction results JSON found under {bundle}")
 
 
@@ -109,7 +115,10 @@ def postprocess_diffraction_run(
     # 4) Standardized self-contained HTML report (the same generator the
     #    benchmark path uses; a view over the bundle, never a copy). Optional
     #    like the plots — a missing plotly/report dep never fails postprocess.
-    report_path = _build_html_report(results, out, report, environment=environment)
+    report_path = _build_html_report(
+        results, out, report, environment=environment,
+        source_file=_results_bundle_path(bundle_dir),
+    )
 
     # 5) Index manifest.
     index = {
@@ -140,6 +149,7 @@ def postprocess_diffraction_run(
 def _build_html_report(
     results: DiffractionResults, out: Path, validation_report: Dict[str, Any],
     *, environment: EnvironmentSpec | None = None,
+    source_file: Path | None = None,
 ) -> Path | None:
     """Render the standardized diffraction HTML report from the bundle.
 
@@ -209,11 +219,15 @@ def _build_html_report(
                 )
 
         report_path = out / f"{results.vessel_name}_diffraction_report.html"
+        from digitalmodel.hydrodynamics.diffraction.report_provenance import result_provenance
+
         return generate_diffraction_report(
             report_data,
             report_path,
             include_plotlyjs=True,
             validation_report=validation_report,
+            provenance=(result_provenance([source_file], units_system=results.unit_system)
+                        if source_file is not None else None),
         )
     except Exception:  # noqa: BLE001 - report is optional, never fatal
         return None

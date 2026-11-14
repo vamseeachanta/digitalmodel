@@ -308,6 +308,7 @@ def render_report(cases, assessments, *, revision, date) -> str:
     Assessments are keyed by case ID and contain assess_case outputs. A report
     cannot assert full native result acceptance; native readback is a later gate.
     """
+    from digitalmodel.reporting._metadata import package_code_edition
     from digitalmodel.reporting.engine import render_html
     from digitalmodel.reporting.provenance import Provenance
     from digitalmodel.reporting.spec import (
@@ -329,7 +330,11 @@ def render_report(cases, assessments, *, revision, date) -> str:
     if len(versions) > 1:
         raise ValueError("all stored results must use one solver version")
     rows = []
-    provenance = Provenance()
+    provenance = Provenance(
+        code_edition=package_code_edition(),
+        units_system="SI",
+        validated_path="screening",
+    )
     for case in cases:
         item = assessments.get(case["case_id"], assess_case(case))
         if item["case_id"] != case["case_id"]:

@@ -23,7 +23,11 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import Field
 
-from digitalmodel.reporting._backbone import ReportBackbone, ReportSection, SectionMode
+from digitalmodel.reporting._backbone import (
+    ReportBackbone,
+    ReportSection,
+    SectionMode,
+)
 from digitalmodel.reporting._base import ReportDataModel
 from digitalmodel.reporting._renderer import ReportRenderer
 from digitalmodel.reporting.provenance import Provenance, provenance_block
@@ -183,7 +187,7 @@ class ReportSkeleton(ReportDataModel):
         required = self.required_block_keys()
         missing = [k for k in required if not content.get(k)]
         provenance_ok = (not self.require_provenance) or bool(
-            provenance and provenance.sources
+            provenance is not None and provenance.is_complete()
         )
         return Completeness(
             complete=(not missing) and provenance_ok,
