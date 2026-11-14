@@ -28,6 +28,7 @@ from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import (
 def readings():
     """Supply the synthetic inputs enumerated in the module hand calculation."""
     return dict(
+        diameter=0.762, radius=150,
         wire_length=10, end_a_reaction=1, last_support_force=0,
         grounded_tension=[0], overbend_strain=0, lift_off_arc=0,
         departure_angle=0, reference=dict(lift_off_arc=0, departure_angle=0),
