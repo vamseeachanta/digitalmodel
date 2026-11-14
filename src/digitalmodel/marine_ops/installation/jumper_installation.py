@@ -62,7 +62,7 @@ class PipelineConfig:
     spec_path: str
     output_dir: str = "./output"
     run_orcaflex: bool = False
-    generate_report: bool = True
+    generate_report: bool = False
     run_go_no_go: bool = True
     go_no_go_criteria: Optional[Dict[str, float]] = None
 
@@ -332,7 +332,7 @@ def stage_5_write_outputs(output_dir: str, output: PipelineOutput) -> List[str]:
 
 def run_pipeline(spec_path: str, output_dir: str = "./output",
                  run_orcaflex: bool = False,
-                 generate_report: bool = True,
+                 generate_report: bool = False,
                  run_go_no_go: bool = True,
                  go_no_go_criteria: Optional[Dict[str, float]] = None) -> PipelineOutput:
     """Execute the full jumper installation analysis pipeline.
@@ -355,22 +355,18 @@ def run_pipeline(spec_path: str, output_dir: str = "./output",
         go_no_go_criteria: Optional criterion limit overrides forwarded to
             evaluate_go_no_go (this is the consumer of
             PipelineConfig.go_no_go_criteria).
-
     Returns:
         PipelineOutput with all results and output file paths.
     """
     config_name = Path(spec_path).parent.name
     output = PipelineOutput(config_name=config_name)
-    
     # Stage 1: Load and validate spec
     print(f"[Pipeline] Stage 1/5: Loading spec from {spec_path}")
     spec = stage_1_load_spec(spec_path)
-    
     # Stage 2: Calculate jumper properties
     print(f"[Pipeline] Stage 2/5: Running jumper analysis ({config_name})")
     results = stage_2_calculate(spec)
     output.jumper_analysis = results
-    
     # Stage 3: Go/No-Go Decision — evaluated at the spec's own metocean
     # conditions (splash-zone Hs), not the benign default.
     if run_go_no_go:
@@ -384,16 +380,20 @@ def run_pipeline(spec_path: str, output_dir: str = "./output",
         print(print_decision(output.go_no_go))
     else:
         print(f"[Pipeline] Stage 3/5: Skipped (run_go_no_go=False)")
-    
     # Stage 4: Generate OrcaFlex YAML
     print(f"[Pipeline] Stage 4/5: Generating OrcaFlex line sections")
     output.line_sections_yaml = stage_4_generate_yaml(results)
-    
     # Stage 5: Write outputs
     print(f"[Pipeline] Stage 5/5: Writing outputs to {output_dir}")
     output.output_files = stage_5_write_outputs(output_dir, output)
-    
+    if generate_report:
+        try:
+            from .jumper_report import write_installation_report
+            report_path = write_installation_report(output, output_dir)
+        except Exception as exc:
+            raise RuntimeError("Report generation failed") from exc
+        output.report_path = str(report_path)
+        output.output_files.append(output.report_path)
     print(f"\n[Pipeline] Complete - {len(output.output_files)} files written to {output_dir}")
     print(f"[Pipeline] Output files: {output.output_files}")
-    
     return output

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 from datetime import datetime
 
 from .geometry import GeometryData
@@ -46,6 +46,7 @@ class OrcaFlexAnalysisReport(BaseModel):
     # Summary
     recommendations: List[str] = Field(default_factory=list)
     summary_notes: Optional[str] = None
+    jumper_installation: Optional[Dict[str, Any]] = None
 
     @property
     def overall_pass(self) -> Optional[bool]:
