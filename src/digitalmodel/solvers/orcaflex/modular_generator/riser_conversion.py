@@ -253,6 +253,10 @@ def render_riser(riser: Riser, fallback: GenericModel) -> GenericModel:
         raise ValueError("Riser fallback requires one line and one vessel")
     if riser.links or riser.clump_types:
         raise ValueError("Typed links and clumps are not supported by riser fallback")
+    if riser.tensioners:
+        # The fallback emits no tensioner links; rendering the line without
+        # them would drop the top support silently (#3976).
+        raise ValueError("Typed tensioners are not supported by riser fallback")
     if riser.buoys:
         # No generic template carries a typed buoy here; emitting the line
         # without it would drop the buoy silently (#3974).
