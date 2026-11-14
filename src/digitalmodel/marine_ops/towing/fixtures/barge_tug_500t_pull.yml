@@ -1,0 +1,56 @@
+# Historical fixture name from the approved plan; tug capacity is 80 tonnes-force.
+# Synthetic inputs for regression/screening, not measured or certified vessel data.
+metadata:
+  dataset_id: towing-487-synthetic-barge-v1
+  version: 1
+  source: issue-487-approved-plan-and-explicit-example-assumptions
+  readiness: synthetic-regression-only
+  units: SI (N, m, kg/m3, m/s, degrees); bollard_pull_t is tonnes-force
+vessel:
+  name: synthetic 80 m barge
+  length_overall: 80.0
+  beam: 24.0
+  draft: 4.0
+  displacement: 7000.0  # tonnes; illustrative only
+  freeboard: 4.0
+  frontal_wind_area: 96.0
+  lateral_wind_area: 320.0
+tug:
+  bollard_pull_t: 80.0
+  efficiency: 1.0
+  reserve_factor: 1.0
+line:
+  length_m: 600.0
+  diameter_m: 0.05
+  weight_n_m: 100.0
+  mbl_n: 430000.0
+  mbl_source: >-
+    Explicit synthetic regression assumption, selected to exercise the plan's
+    screening PASS and 20% diameter-reduction FAIL. No manufacturer, rope grade
+    or certificate establishes 430 kN as the MBL of a 50 mm wire. This assumed
+    MBL is below the tug's 784.532 kN nominal bollard pull; operational towline
+    selection is not established.
+  dynamic_amplification: 1.3
+  bridle_angle_deg: 60.0
+  fairlead_capacity_n: 500000.0
+  fairlead_deflection_deg: 180.0
+constraints:
+  available_depth_m: 100.0
+  minimum_clearance_m: 10.0
+  scope_bounds: [1.0, 1.1]
+  bridle_angle_bounds_deg: [20.0, 90.0]
+grid:
+  bridle_angles_deg: [30.0, 45.0, 60.0]
+  line_lengths_m: [500.0, 600.0, 700.0]
+  line_diameters_m: [0.04, 0.045, 0.05, 0.055]
+environments:
+  benign:
+    current_speed_m_s: 1.5
+    current_direction_deg: 0.0
+    wind_speed_m_s: 20.0
+    wind_direction_deg: 0.0
+  storm:
+    current_speed_m_s: 4.0
+    current_direction_deg: 90.0
+    wind_speed_m_s: 40.0
+    wind_direction_deg: 90.0
