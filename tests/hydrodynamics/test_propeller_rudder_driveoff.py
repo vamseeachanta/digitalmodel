@@ -153,9 +153,13 @@ def test_example_writes_csv_and_plots(tmp_path):
     assert rows[0]["C_T_fallback"] == ""
     assert rows[0]["label"] == "engine off: propeller drag and windmilling not modelled"
     assert all(
-        row["label"] == "K_T <= 0: primary increment reported as computed"
+        row["label"] == (
+            "K_T <= 0: illustrative polynomial extrapolation; fitted J range unknown; "
+            "thrust and primary increment omitted; four-quadrant data required"
+        )
         for row in rows[1:4]
     )
+    assert all(row["T"] == row["primary_F_sway_N"] == "" for row in rows[1:4])
     plots = list(tmp_path.glob("*.png"))
     assert len(plots) == 2
     assert all(

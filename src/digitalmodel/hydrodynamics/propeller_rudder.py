@@ -249,7 +249,7 @@ def _driveoff_point(
         J = V_A / (n * vessel.D)
         K_T = kt_from_poly(J, vessel.kt_coeffs)
         T = vessel.rho * n**2 * vessel.D**4 * K_T
-        if V_A == 0.0:
+        if abs(V_A) < 1e-12:
             regime = "bollard"
             C_th_primary = C_T_fallback = math.inf
             slipstream = _bollard_slipstream_velocity(
@@ -284,9 +284,12 @@ def driveoff_sweep(
     Astern quadrants are excluded. Engine-off omits propeller drag/windmilling;
     braking reports the primary increment as computed. At bollard the fallback
     force is not evaluated and the axial velocity uses its finite thrust limit.
+    Bollard uses abs(V_A) < 1e-12, matching the fallback's inflow guard.
     """
     if not math.isfinite(V_s) or V_s < 0.0:
         raise ValueError("V_s must be finite and nonnegative")
+    if not math.isfinite(delta_deg):
+        raise ValueError("delta_deg must be finite")
     points = []
     for n in n_values:
         if not math.isfinite(n) or n < 0.0:

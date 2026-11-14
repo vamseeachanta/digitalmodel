@@ -1,9 +1,13 @@
 """Drive-off at 12 kn and 20 deg; write SI diagnostics and headless plots.
 
 The primary model gives an interaction increment, the fallback a total force.
-Engine-off propeller drag and windmilling are not modelled. Braking increments
-are reported as computed; fallback forces at bollard are not evaluated.
+Engine-off propeller drag and windmilling are not modelled. Braking thrust and
+primary forces are omitted: the illustrative K_T curve has no known fitted J
+range or source, and four-quadrant data are required. Fallback forces at bollard
+are not evaluated. The remaining values are illustrative arithmetic, not
+validated propeller predictions.
 CSV speeds are m/s, n is rev/s, T is N, and J and loading are dimensionless.
+Yaw is omitted because the existing models use an incorrect aft-rudder sign.
 """
 import csv
 import math
@@ -25,7 +29,13 @@ WORKFLOW = Path(__file__).resolve().parent / "workflows/propeller-rudder-interac
 CAPTION = (
     "Primary: interaction increment; fallback: total rudder force.\n"
     "Engine off: propeller drag and windmilling not modelled.\n"
-    "K_T <= 0: primary increment reported as computed."
+    "Braking: thrust and primary omitted; fitted J range unknown.\n"
+    "Fallback at braking uses freestream only; four-quadrant data required.\n"
+    "Bollard primary mathematical limit: not validated; fallback not evaluated."
+)
+BRAKING_LABEL = (
+    "K_T <= 0: illustrative polynomial extrapolation; fitted J range unknown; "
+    "thrust and primary increment omitted; four-quadrant data required"
 )
 
 
@@ -33,13 +43,21 @@ def _csv_row(point):
     row = asdict(point)
     for method in ("primary", "fallback"):
         forces = row.pop(method)
-        for component, unit in (("F_surge", "N"), ("F_sway", "N"), ("F_yaw", "Nm")):
+        for component, unit in (("F_surge", "N"), ("F_sway", "N")):
             row[f"{method}_{component}_{unit}"] = (
                 None if forces is None else forces[component]
             )
+    row["yaw_status"] = "yaw omitted: existing aft-rudder moment sign is incorrect"
+    if point.regime == "braking":
+        for field in ("K_T", "T", "C_th_primary", "C_T_fallback", "primary_clamped",
+                      "primary_F_surge_N", "primary_F_sway_N"):
+            row[field] = None
     row["label"] = {
         "engine_off": "engine off: propeller drag and windmilling not modelled",
-        "braking": "K_T <= 0: primary increment reported as computed",
+        "braking": BRAKING_LABEL,
+        "bollard": (
+            "bollard: primary mathematical limit, not validated; fallback not evaluated"
+        ),
     }.get(point.regime, point.regime)
     return row
 
@@ -59,7 +77,10 @@ def _write_plots(points, output_dir):
                     ("primary", "Interaction increment"),
                     ("fallback", "Total rudder force"),
                 ):
-                    values = [getattr(point, method) for point in points]
+                    values = [
+                        None if method == "primary" and point.regime == "braking"
+                        else getattr(point, method) for point in points
+                    ]
                     axis.plot(
                         shaft_speeds, [v.F_sway if v else math.nan for v in values],
                         "o-", label=label,
