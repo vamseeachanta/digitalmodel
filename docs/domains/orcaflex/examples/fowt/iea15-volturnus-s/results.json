@@ -1,0 +1,283 @@
+{
+ "description": "Licence-free checks of the generated IEA 15 MW / VolturnUS-S fowt model (rigid representation). SI units.",
+ "qualification": {
+  "readiness": "partial",
+  "use_for_analysis": "assumed",
+  "natural_periods": "The system inertia, and so the pitch and yaw periods and, through coupling, the surge period, uses the adopted tower-top reading of the RNA inertia tensor, which is assumed: the published tensors disagree and the discrepancy is unresolved (basis.yml qualification)."
+ },
+ "gravity": 9.80665,
+ "rated_thrust": 2457229.448975228,
+ "hub_position": [
+  -12.0313,
+  0.0,
+  150.0
+ ],
+ "shaft_tilt_deg": 6.0,
+ "net_buoyancy_minus_weight": 4360579.692107439,
+ "still_water": {
+  "surge": 0.3868343604198386,
+  "heave": -0.38167300353670075,
+  "pitch_deg": -1.4170646934098188,
+  "lines": [
+   {
+    "horizontal": 1339443.7485705127,
+    "vertical": 2009358.2166184068,
+    "tension": 2414876.8080952973,
+    "span": 780.3507915022874,
+    "grounded_length": 506.05680370505735,
+    "utilisation": 0.10835846756238433
+   },
+   {
+    "horizontal": 1341314.8938672256,
+    "vertical": 2025440.3689802052,
+    "tension": 2429307.3771766135,
+    "span": 779.2386759997632,
+    "grounded_length": 503.3040108775405,
+    "utilisation": 0.10900598479658143
+   },
+   {
+    "horizontal": 1341314.8938672256,
+    "vertical": 2025440.3689802052,
+    "tension": 2429307.3771766135,
+    "span": 779.2386759997632,
+    "grounded_length": 503.3040108775405,
+    "utilisation": 0.10900598479658143
+   }
+  ]
+ },
+ "natural_periods": {
+  "surge": 135.34135680577504,
+  "heave": 20.451970414989333,
+  "pitch": 28.096000321133516,
+  "yaw": 88.77091489224729
+ },
+ "mooring_stiffness_diagonal": [
+  71721.21302451706,
+  71266.88061240129,
+  60633.72511100024,
+  259271255.0035119,
+  255690050.59219885,
+  250604146.8473221
+ ],
+ "rated_thrust_free": {
+  "surge": 22.34294024138551,
+  "heave": -0.5717259689235092,
+  "pitch_deg": 5.331421558330244,
+  "lines": [
+   {
+    "horizontal": 3275154.0146209104,
+    "vertical": 2921733.005997143,
+    "tension": 4388981.382715194,
+    "span": 800.893021592674,
+    "grounded_length": 349.8849978605239,
+    "utilisation": 0.19693894744302223
+   },
+   {
+    "horizontal": 902894.9521222428,
+    "vertical": 1751282.520266026,
+    "tension": 1970332.398443763,
+    "span": 769.3554766869216,
+    "grounded_length": 550.2317940852508,
+    "utilisation": 0.08841121773506969
+   },
+   {
+    "horizontal": 902894.9521222428,
+    "vertical": 1751282.520266026,
+    "tension": 1970332.398443763,
+    "span": 769.3554766869216,
+    "grounded_length": 550.2317940852508,
+    "utilisation": 0.08841121773506969
+   }
+  ]
+ },
+ "rated_thrust_surge_only": {
+  "surge": 23.56907827110772,
+  "lines": [
+   {
+    "horizontal": 3337422.0749810096,
+    "vertical": 2902154.257067484,
+    "tension": 4422768.978636061,
+    "span": 803.1690782711078,
+    "grounded_length": 353.2363054723922,
+    "utilisation": 0.19845503807933504
+   },
+   {
+    "horizontal": 923003.3384243805,
+    "vertical": 1784587.6451225658,
+    "tension": 2009151.120714083,
+    "span": 768.0872422755074,
+    "grounded_length": 544.5309334813917,
+    "utilisation": 0.09015306114664287
+   },
+   {
+    "horizontal": 923003.3384243805,
+    "vertical": 1784587.6451225658,
+    "tension": 2009151.120714083,
+    "span": 768.0872422755074,
+    "grounded_length": 544.5309334813917,
+    "utilisation": 0.09015306114664287
+   }
+  ]
+ },
+ "comparisons": [
+  {
+   "quantity": "Displaced volume",
+   "unit": "m3",
+   "computed": 20206.34889,
+   "comparator": 20206.0,
+   "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 2",
+   "tolerance": 0.01,
+   "deviation": 1.726665346932198e-05,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Heave hydrostatic stiffness",
+   "unit": "N/m",
+   "computed": 4453443.117019749,
+   "comparator": 4470000.0,
+   "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 3",
+   "tolerance": 0.02,
+   "deviation": -0.0037040006667227636,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Pitch hydrostatic stiffness, weight term excluded",
+   "unit": "N m/rad",
+   "computed": 2193473165.8997498,
+   "comparator": 2190000000.0,
+   "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 3",
+   "tolerance": 0.03,
+   "deviation": 0.0015859205021688382,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Still-water fairlead tension, line 1",
+   "unit": "N",
+   "computed": 2414876.8080952973,
+   "comparator": 2437000.0,
+   "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 6",
+   "tolerance": 0.02,
+   "deviation": -0.009078043456997411,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Still-water fairlead tension, line 2",
+   "unit": "N",
+   "computed": 2429307.3771766135,
+   "comparator": 2437000.0,
+   "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 6",
+   "tolerance": 0.02,
+   "deviation": -0.0031565953317137683,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Still-water fairlead tension, line 3",
+   "unit": "N",
+   "computed": 2429307.3771766135,
+   "comparator": 2437000.0,
+   "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 6",
+   "tolerance": 0.02,
+   "deviation": -0.0031565953317137683,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Natural period, surge",
+   "unit": "s",
+   "computed": 135.34135680577504,
+   "comparator": 142.85714285714286,
+   "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 11 (frequency to 0.001 Hz, inverted)",
+   "tolerance": 0.1,
+   "deviation": -0.052610502359574776,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Natural period, surge",
+   "unit": "s",
+   "computed": 135.34135680577504,
+   "comparator": 135.0622371098016,
+   "comparator_source": "repository quasi-static analysis (#2473), docs/reports/fowt-volturnus-mooring-analysis.manifest.json",
+   "tolerance": 0.02,
+   "deviation": 0.0020666005683477534,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Natural period, heave",
+   "unit": "s",
+   "computed": 20.451970414989333,
+   "comparator": 20.408163265306122,
+   "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 11 (frequency to 0.001 Hz, inverted)",
+   "tolerance": 0.05,
+   "deviation": 0.0021465503344773327,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Natural period, heave",
+   "unit": "s",
+   "computed": 20.451970414989333,
+   "comparator": 20.38763719617351,
+   "comparator_source": "repository quasi-static analysis (#2473), docs/reports/fowt-volturnus-mooring-analysis.manifest.json",
+   "tolerance": 0.02,
+   "deviation": 0.0031555014539839062,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Natural period, pitch",
+   "unit": "s",
+   "computed": 28.096000321133516,
+   "comparator": 27.77777777777778,
+   "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 11 (frequency to 0.001 Hz, inverted)",
+   "tolerance": 0.05,
+   "deviation": 0.011456011560806558,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Natural period, pitch",
+   "unit": "s",
+   "computed": 28.096000321133516,
+   "comparator": 27.927565893216368,
+   "comparator_source": "repository quasi-static analysis (#2473), docs/reports/fowt-volturnus-mooring-analysis.manifest.json",
+   "tolerance": 0.02,
+   "deviation": 0.00603111737561279,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Natural period, yaw",
+   "unit": "s",
+   "computed": 88.77091489224729,
+   "comparator": 90.90909090909092,
+   "comparator_source": "Allen et al. (2020), NREL/TP-5000-76773, Table 11 (frequency to 0.001 Hz, inverted)",
+   "tolerance": 0.1,
+   "deviation": -0.02351993618527993,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Natural period, yaw",
+   "unit": "s",
+   "computed": 88.77091489224729,
+   "comparator": 88.54995929120521,
+   "comparator_source": "repository quasi-static analysis (#2473), docs/reports/fowt-volturnus-mooring-analysis.manifest.json",
+   "tolerance": 0.02,
+   "deviation": 0.002495264851736907,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Mean surge at rated thrust, rotations and draft held",
+   "unit": "m",
+   "computed": 23.56907827110772,
+   "comparator": 23.56418039635904,
+   "comparator_source": "repository quasi-static analysis (#2473), docs/reports/fowt-volturnus-mooring-analysis.manifest.json",
+   "tolerance": 0.05,
+   "deviation": 0.00020785254001191012,
+   "within_tolerance": true
+  }
+ ],
+ "atlas": {
+  "atlas": "atlases/fowt_mooring/1f1871cd817d",
+  "watch_circle_radius": 22.34294024138551,
+  "mbr_utilisation_by_mbr_limit_m": {
+   "4": 0.028712958413152925,
+   "5": 0.03589119801644115,
+   "6": 0.04306943761972939
+  }
+ }
+}
