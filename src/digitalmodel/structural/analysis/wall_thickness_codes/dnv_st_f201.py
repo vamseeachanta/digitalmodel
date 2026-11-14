@@ -5,7 +5,7 @@
 
 import math
 import logging
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, Optional, Tuple
 
 from digitalmodel.structural.analysis.wall_thickness import (
     DesignFactors,
@@ -14,7 +14,11 @@ from digitalmodel.structural.analysis.wall_thickness import (
     PipeMaterial,
 )
 from digitalmodel.structural.analysis.wall_thickness import DesignCode
+from digitalmodel.structural.pipe_capacity.custom.DNV_OS_F201 import (
+    dnv_os_f201_lrfd_wsd as lrfd,
+)
 from .base import register_code
+from .dnv_st_f101 import DnvStF101Strategy
 
 logger = logging.getLogger(__name__)
 
@@ -66,7 +70,7 @@ DEFAULT_FACTORS: Dict[str, float] = {
 
 @register_code(DesignCode.DNV_ST_F201)
 class DnvStF201Strategy:
-    """DNV-ST-F201 (Dynamic risers) pressure-containment (burst) check, LRFD.
+    """DNV-ST-F201 pressure containment and combined loading, LRFD.
 
     Encodes the DNV-ST-F201 bursting limit state in the Load and Resistance
     Factor Design (LRFD) format:
@@ -92,10 +96,23 @@ class DnvStF201Strategy:
 
     The safety-class factor gamma_SC is selected from the DesignFactors
     SafetyClass at check time, matching the DnvStF101Strategy convention.
+
+    Combined loading delegates to DNV-OS-F201 (2010) Sec. 5, clause D,
+    with Eqs 5.25-5.26 resistances and pressure-dependent alpha_c. Moment
+    and effective tension are design (already factored) load effects Md/Td;
+    gamma_dyn amplifies only the separate pressure-containment demand.
+    Temperature de-rating is zero: screening inputs carry no temperature.
+    The combined gamma_SC table is 1.04/1.14/1.26 (medium maps to normal),
+    distinct from the pressure-containment table above.
+
+    For external overpressure, p_min_internal equals internal_pressure
+    because DesignLoads carries no separate minimum-pressure field. Collapse
+    resistance is characteristic p_c from DNV-ST-F101 Eq. 5.9, using that
+    strategy's ovality and the supplied material's fabrication factor.
     """
 
     code_name = "DNV-ST-F201"
-    check_names = ["pressure_containment"]
+    check_names = ["pressure_containment", "combined"]
 
     def __init__(
         self,
@@ -120,6 +137,7 @@ class DnvStF201Strategy:
             "gamma_m": self.gamma_m,
             "gamma_dyn": self.gamma_dyn,
             "gamma_SC": dict(self.gamma_SC),
+            "combined_gamma_SC": dict(lrfd.SAFETY_CLASS_FACTOR),
         }
 
     def _gamma_sc(self, factors: DesignFactors) -> float:
@@ -137,8 +155,72 @@ class DnvStF201Strategy:
         return {
             "pressure_containment": self._check_pressure_containment(
                 geometry, material, loads, factors
-            )
+            ),
+            "combined": self._check_combined(geometry, material, loads, factors),
         }
+
+    def _combined_resistances(self, geometry, material, loads):
+        """Compute the legacy resistance pipeline in SI, in its original order."""
+        diameter, t2 = geometry.outer_diameter, geometry.t2
+        if t2 <= 0:
+            raise ValueError("F201 combined loading requires positive corroded thickness")
+        f_y = lrfd.yield_strength(material.smys, 0.0, self.alpha_U)
+        f_u = lrfd.tensile_strength(material.smts, 0.0, self.alpha_U)
+        p_b = lrfd.bursting_resistance(diameter, t2, f_y, f_u)
+        alpha_c = lrfd.flow_stress_coefficient(
+            diameter, t2, f_y, f_u, loads.internal_pressure,
+            loads.external_pressure, p_b,
+        )
+        return {
+            "t2": t2, "f_y": f_y, "f_u": f_u, "alpha_U": self.alpha_U,
+            "temperature_derating": 0.0, "p_b": p_b, "alpha_c": alpha_c,
+            "Mk": lrfd.plastic_moment_resistance(diameter, t2, f_y, alpha_c),
+            "Tk": lrfd.plastic_axial_resistance(diameter, t2, f_y, alpha_c),
+        }
+
+    def _check_combined(self, geometry, material, loads, factors):
+        """Return the Sec. 5 clause D criterion; its LRFD limit is 1.0."""
+        details = self._combined_resistances(geometry, material, loads)
+        sc = factors.safety_class.value
+        gamma_sc = lrfd.SAFETY_CLASS_FACTOR["normal" if sc == "medium" else sc]
+        pi, pe = loads.internal_pressure, loads.external_pressure
+        details.update({
+            "gamma_sc": gamma_sc, "gamma_m": self.gamma_m,
+            "Md": loads.bending_moment, "Td": loads.effective_tension,
+            "p_internal": pi, "p_external": pe,
+            "regime": "internal" if pi > pe else "external",
+        })
+        args = (loads.bending_moment, details["Mk"],
+                loads.effective_tension, details["Tk"])
+        if pi > pe:
+            if pi - pe > details["p_b"]:
+                # The legacy square root is undefined beyond characteristic
+                # burst resistance. Fail closed; never clip its pressure term.
+                details["criterion_domain_exceeded"] = True
+                result = lrfd.CombinedLoadingResult(float("inf"), 1.0, False)
+            else:
+                result = lrfd.combined_loading_internal_overpressure(
+                    *args, pi, pe, details["p_b"],
+                    gamma_sc=gamma_sc, gamma_m=self.gamma_m,
+                )
+        else:
+            _, collapse = DnvStF101Strategy()._check_collapse(
+                geometry, material, loads, factors)
+            details.update({key: collapse[key] for key in ("p_c", "p_el", "p_p", "f_0")})
+            details.update({
+                "alpha_fab": material.alpha_fab,
+                "youngs_modulus": material.youngs_modulus,
+                "poissons_ratio": material.poissons_ratio,
+                "collapse_smys": material.smys,
+                "collapse_reference": "DNV-ST-F101 Eq. 5.9",
+                "p_min_internal": pi,
+            })
+            result = lrfd.combined_loading_external_overpressure(
+                *args, pe, pi, details["p_c"],
+                gamma_sc=gamma_sc, gamma_m=self.gamma_m,
+            )
+        details.update(utilisation=result.utilisation, limit=result.limit)
+        return result.utilisation, details
 
     def compute_plastic_moment(self, geometry: PipeGeometry, material: PipeMaterial) -> float:
         """Plastic moment capacity M_p in N*m (same definition as DNV-ST-F101)."""

@@ -1,11 +1,11 @@
-"""Riser configuration screening across multiple load cases (API STD 2RD).
+"""Riser configuration screening across multiple load cases and design codes.
 
 # ABOUTME: Iterate operating/extreme/survival/accidental riser load cases.
-# ABOUTME: Run API STD 2RD burst+collapse+combined per case, rank governing case.
+# ABOUTME: Run the selected registered code per case and rank the governing case.
 
 Each load case carries its own pressures, bending moment, effective tension and
-limit-state category. For every case we run the registered API STD 2RD strategy
-(burst, collapse, combined moment-tension-pressure Method 1), pick the governing
+limit-state category. For every case the registered design-code strategy is run
+(API STD 2RD by default), to pick the governing
 check and report the max utilisation. Cases are then ranked by max utilisation so
 the governing load case for the riser configuration is the first row.
 
@@ -76,8 +76,7 @@ def screen_riser_cases(
         geometry: Riser pipe geometry.
         material: Riser pipe material.
         cases: Load cases to screen.
-        code: Design code (defaults to API STD 2RD; the only code with the
-            combined moment-tension-pressure check).
+        code: Registered design code (defaults to API STD 2RD).
         factors: Optional design factors (defaults to medium safety class).
 
     Returns:
@@ -214,10 +213,10 @@ def build_calc_note(
     ca_mm = geometry.corrosion_allowance * 1000
 
     lines: List[str] = []
+    check_names = CODE_REGISTRY[code].check_names
     lines.append(f"# Riser Configuration Screening - {label}")
     lines.append("")
-    lines.append(f"**Design code:** {code.value} "
-                 "(burst, collapse, combined moment-tension Method 1)")
+    lines.append(f"**Design code:** {code.value} ({', '.join(check_names)})")
     overall = "PASS" if all(r.status == "PASS" for r in results) else "FAIL"
     lines.append(f"**Overall status:** {overall}")
     if results:
@@ -233,8 +232,8 @@ def build_calc_note(
     lines.append("| Property | Value |")
     lines.append("|---|---|")
     lines.append(f"| Outer diameter | {od_mm:.1f} mm |")
-    lines.append(f"| Wall thickness | {wt_mm:.2f} mm |")
-    lines.append(f"| Corrosion allowance | {ca_mm:.2f} mm |")
+    lines.append(f"| Wall thickness | {wt_mm:.3f} mm |")
+    lines.append(f"| Corrosion allowance | {ca_mm:.3f} mm |")
     lines.append(f"| D/t ratio | {geometry.d_over_t:.1f} |")
     lines.append(f"| Grade | {material.grade} |")
     lines.append(f"| SMYS | {material.smys / 1e6:.0f} MPa |")
@@ -243,19 +242,25 @@ def build_calc_note(
 
     lines.append("## Per-case utilisation (ranked, governing first)")
     lines.append("")
-    lines.append("| Rank | Case | Category | Burst | Collapse | Combined | "
-                 "Governing | Max util | Status |")
-    lines.append("|---|---|---|---|---|---|---|---|---|")
+    columns = ["Rank", "Case", "Category"] + [
+        name.replace("_", " ").title() for name in check_names
+    ] + ["Governing", "Max util", "Status"]
+    lines.append("| " + " | ".join(columns) + " |")
+    lines.append("|" + "|".join("---" for _ in columns) + "|")
     for i, r in enumerate(results, start=1):
-        burst = r.checks.get("burst", float("nan"))
-        collapse = r.checks.get("collapse", float("nan"))
-        combined = r.checks.get("combined", float("nan"))
+        values = " | ".join(f"{r.checks[name]:.3f}" for name in check_names)
         lines.append(
-            f"| {i} | {r.name} | {r.category} | {burst:.3f} | {collapse:.3f} | "
-            f"{combined:.3f} | {r.governing_check} | {r.max_utilisation:.3f} | "
+            f"| {i} | {r.name} | {r.category} | {values} | "
+            f"{r.governing_check} | {r.max_utilisation:.3f} | "
             f"{r.status} |"
         )
     lines.append("")
+
+    if code == DesignCode.DNV_ST_F201:
+        lines.extend(_f201_basis(results))
+        return "\n".join(lines)
+    if code != DesignCode.API_STD_2RD:
+        return "\n".join(lines)
 
     lines.append("## Combined check basis (API STD 2RD Method 1)")
     lines.append("")
@@ -272,7 +277,38 @@ def build_calc_note(
                  "reproduces the legacy `APISTD2RDAnalyzer` Method 1 utilisation "
                  "(cross-validated to machine precision).")
     lines.append("")
-    lines.append("> Note: DNV-ST-F201 is not implemented in this engine; only "
-                 "API STD 2RD load-case screening is available here.")
-    lines.append("")
     return "\n".join(lines)
+
+
+def _f201_basis(results):
+    """Clause references and the actual strategy factors for the calc note."""
+    from digitalmodel.structural.analysis.wall_thickness_codes.dnv_st_f201 import (
+        DnvStF201Strategy,
+    )
+
+    factors = DnvStF201Strategy().get_factors()
+    lines = [
+        "## Check basis (DNV-ST-F201 LRFD)", "",
+        "DNV-ST-F201 (2021), formerly DNV-OS-F201 (2010), Sec. 5: bursting "
+        "limit state and combined loading, clause D. Eqs 5.25-5.26 give "
+        "plastic resistances Mk/Tk including the pressure-dependent flow-stress "
+        "coefficient alpha_c, recomputed for every load case.", "",
+        f"Factors: {factors}. Combined safety class medium maps to normal.",
+        "Moment and tension are design load effects (already factored Md/Td). "
+        "gamma_dyn acts on the pressure-containment demand only. Temperature "
+        "de-rating is zero because screening inputs carry no temperature.", "",
+        "For external overpressure, p_min_internal = internal_pressure; no "
+        "separate minimum-pressure input is available. Characteristic collapse "
+        "resistance p_c uses DNV-ST-F101 Eq. 5.9, with its default ovality "
+        "and the supplied material's fabrication factor. Net pressure above "
+        "characteristic burst resistance exceeds the combined criterion's "
+        "domain and is reported as a failed check with infinite utilisation.", "",
+    ]
+    if results:
+        combined = results[0].details["combined"]
+        burst = results[0].details["pressure_containment"]
+        lines.extend([
+            f"Applied gamma_sc: burst {burst['gamma_sc']}, combined "
+            f"{combined['gamma_sc']}; gamma_m {combined['gamma_m']}.", "",
+        ])
+    return lines

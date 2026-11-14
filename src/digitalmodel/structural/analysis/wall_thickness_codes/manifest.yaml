@@ -37,3 +37,11 @@ functions:
     inputs: [PipeGeometry, PipeMaterial, DesignLoads, DesignFactors]
     outputs: [Dict of utilisation results]
     assumed_factors: "alpha_U=0.96, gamma_m=1.15, gamma_dyn=1.0, gamma_SC={low:1.046, normal:1.138, high:1.308} (all overridable)"
+  - name: DnvStF201Strategy._check_combined
+    standard: "DNV-ST-F201 (2021); DNV-OS-F201 (2010)"
+    clause: "Sec. 5, combined loading clause D; DNV-ST-F101 Eq. 5.9 for characteristic collapse"
+    equation: "Eqs 5.25-5.26: Mk/Tk with pressure-dependent alpha_c; internal/external LRFD criteria delegated to dnv_os_f201_lrfd_wsd"
+    description: "Combined moment-tension-pressure check; SI design (already factored) Md/Td; p_min_internal=internal_pressure"
+    inputs: [PipeGeometry, PipeMaterial, DesignLoads, DesignFactors]
+    outputs: [utilisation, details]
+    assumed_factors: "alpha_U=0.96; gamma_m=1.15; combined gamma_SC={low:1.04, normal:1.14, high:1.26}, medium maps to normal; zero temperature de-rating; F101 default ovality, material alpha_fab; gamma_dyn applies only to burst demand"

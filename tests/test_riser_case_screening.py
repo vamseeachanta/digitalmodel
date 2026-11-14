@@ -2,7 +2,6 @@
 # ABOUTME: Includes cross-validation against the legacy APISTD2RDAnalyzer Method 1.
 
 import importlib.util
-import math
 from pathlib import Path
 
 import pytest
@@ -20,6 +19,7 @@ from digitalmodel.structural.analysis.wall_thickness_codes.api_std_2rd import (
 from digitalmodel.subsea.riser.riser_case_screening import (
     CaseScreenResult,
     RiserLoadCase,
+    build_calc_note,
     screen_riser_cases,
 )
 
@@ -253,3 +253,30 @@ def test_screen_explicit_api_std_2rd(geometry, material):
     assert [r.max_utilisation for r in default] == [
         r.max_utilisation for r in explicit
     ]
+
+
+@pytest.mark.parametrize("code,names,basis", [
+    (DesignCode.DNV_ST_F201, ["pressure_containment", "combined"], "Eqs 5.25-5.26"),
+    (DesignCode.API_STD_2RD, ["burst", "collapse", "combined"], "API STD 2RD Method 1"),
+])
+def test_screen_and_calc_note_follow_selected_code(geometry, material, code, names, basis):
+    results = screen_riser_cases(geometry, material, _representative_cases(), code=code)
+    assert len(results) == 4
+    assert [r.max_utilisation for r in results] == sorted(
+        (r.max_utilisation for r in results), reverse=True)
+    assert all(list(r.checks) == names for r in results)
+    assert results == screen_riser_cases(geometry, material, _representative_cases(), code=code)
+    note = build_calc_note(geometry, material, code, results, "screening")
+    assert basis in note
+    assert "not implemented" not in note
+    assert "nan" not in note.lower()
+    for name in names:
+        assert name.replace("_", " ").title() in note
+    if code == DesignCode.DNV_ST_F201:
+        assert "| Burst |" not in note and "| Collapse |" not in note
+        for text in ("DNV-OS-F201 (2010)", "Sec. 5", "clause D", "alpha_c",
+                     "design load effects", "p_min_internal", "DNV-ST-F101 Eq. 5.9",
+                     "1.14", "1.15", "1.138", "0.96"):
+            assert text in note
+    else:
+        assert "F_d_corr" in note and "APISTD2RDAnalyzer" in note

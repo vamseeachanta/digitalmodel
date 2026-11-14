@@ -18,6 +18,14 @@ from digitalmodel.structural.analysis.wall_thickness_codes import CODE_REGISTRY
 from digitalmodel.structural.analysis.wall_thickness_codes.dnv_st_f201 import (
     DnvStF201Strategy,
 )
+from digitalmodel.structural.analysis.wall_thickness_codes.dnv_st_f101 import (
+    DnvStF101Strategy,
+    EDITION_FACTORS,
+    LATEST_EDITION,
+)
+from digitalmodel.structural.pipe_capacity.custom.DNV_OS_F201 import (
+    dnv_os_f201_lrfd_wsd as legacy,
+)
 
 
 def make_x65():
@@ -42,7 +50,7 @@ class TestF201Registration:
         assert DnvStF201Strategy.code_name == "DNV-ST-F201"
 
     def test_check_names(self):
-        assert DnvStF201Strategy.check_names == ["pressure_containment"]
+        assert DnvStF201Strategy.check_names == ["pressure_containment", "combined"]
 
     def test_protocol_attributes(self):
         inst = DnvStF201Strategy()
@@ -104,7 +112,7 @@ class TestF201WorkedExample:
             DesignCode.DNV_ST_F201,
         )
         result = analyzer.perform_analysis()
-        assert set(result.checks) == {"pressure_containment"}
+        assert set(result.checks) == {"pressure_containment", "combined"}
         assert result.checks["pressure_containment"] < 1.0
         assert result.is_safe is True
 
@@ -182,3 +190,136 @@ class TestF201Determinism:
             for _ in range(5)
         ]
         assert all(r == results[0] for r in results)
+
+
+def test_combined_spreadsheet_oracle_in_si():
+    """Rounded sheet values use in, ksi, kip.ft; the legacy oracle uses rtol=1e-3.
+
+    One inch is 0.0254 m; one kip is 4448.2216152605 N; one foot is 0.3048 m.
+    The resistance thickness is t2, without a fabrication-tolerance deduction.
+    """
+    inch = 0.0254
+    kip = 4448.2216152605
+    ksi = kip / inch**2
+    geometry = PipeGeometry(20 * inch, 0.82678 * inch)
+    material = PipeMaterial("X65", 65 * ksi, 77 * ksi)
+    loads = DesignLoads(internal_pressure=3 * ksi,
+                        bending_moment=-1252.8 * kip * 0.3048)
+    utilisation, details = DnvStF201Strategy(gamma_m=1.0).run_checks(
+        geometry, material, loads, DesignFactors(safety_class=SafetyClass.HIGH)
+    )["combined"]
+    assert utilisation == pytest.approx(0.999883, rel=1e-3)
+    assert utilisation <= details["limit"] == 1.0
+    assert details["gamma_sc"] == 1.26
+
+
+@pytest.mark.parametrize("pi,pe", [(20e6, 2e6), (2e6, 20e6), (2e6, 2e6)])
+@pytest.mark.parametrize("safety_class", list(SafetyClass))
+def test_combined_delegation_machine_precision(pi, pe, safety_class):
+    geometry, material = make_10inch(), make_x65()
+    diameter, t2 = geometry.outer_diameter, geometry.t2
+    fy = legacy.yield_strength(material.smys, 0.0, 0.96)
+    fu = legacy.tensile_strength(material.smts, 0.0, 0.96)
+    pb = legacy.bursting_resistance(diameter, t2, fy, fu)
+    alpha_c = legacy.flow_stress_coefficient(diameter, t2, fy, fu, pi, pe, pb)
+    mk = legacy.plastic_moment_resistance(diameter, t2, fy, alpha_c)
+    tk = legacy.plastic_axial_resistance(diameter, t2, fy, alpha_c)
+    sc = "normal" if safety_class == SafetyClass.MEDIUM else safety_class.value
+    gamma_sc = legacy.SAFETY_CLASS_FACTOR[sc]
+    args = (125e3, mk, 900e3, tk)
+    if pi > pe:
+        expected = legacy.combined_loading_internal_overpressure(
+            *args, pi, pe, pb, gamma_sc=gamma_sc, gamma_m=1.15)
+    else:
+        f0 = EDITION_FACTORS[LATEST_EDITION]["f_0"]
+        p_el = 2 * material.youngs_modulus * (t2 / diameter)**3 / (1 - material.poissons_ratio**2)
+        p_p = material.smys * material.alpha_fab * 2 * t2 / diameter
+        pc = DnvStF101Strategy._solve_collapse_pressure(p_el, p_p, f0, diameter, t2)
+        expected = legacy.combined_loading_external_overpressure(
+            *args, pe, pi, pc, gamma_sc=gamma_sc, gamma_m=1.15)
+    checks = DnvStF201Strategy().run_checks(
+        geometry, material, DesignLoads(pi, pe, 125e3, 900e3),
+        DesignFactors(safety_class=safety_class))
+    actual, details = checks["combined"]
+    assert actual == expected.utilisation
+    assert (details["Mk"], details["Tk"], details["alpha_c"], details["p_b"]) == (mk, tk, alpha_c, pb)
+    assert details["gamma_sc"] == gamma_sc
+    assert details["gamma_m"] == 1.15
+    assert details["regime"] == ("internal" if pi > pe else "external")
+    assert details["utilisation"] == actual
+    assert details["limit"] == expected.limit == 1.0
+    assert checks["pressure_containment"][1]["gamma_sc"] == DnvStF201Strategy().get_factors()["gamma_SC"][safety_class.value]
+    if pi <= pe:
+        assert details["p_c"] == pc
+        assert details["p_min_internal"] == pi
+        assert details["f_0"] == f0
+        assert details["alpha_fab"] == material.alpha_fab
+        assert details["collapse_reference"] == "DNV-ST-F101 Eq. 5.9"
+
+
+def test_combined_zero_loads_and_monotonic_moment():
+    strategy = DnvStF201Strategy()
+    geometry, material, factors = make_10inch(), make_x65(), DesignFactors()
+    zero, _ = strategy.run_checks(geometry, material, DesignLoads(), factors)["combined"]
+    assert zero == 0.0
+    loads = [DesignLoads(20e6, 2e6, moment, 900e3) for moment in (0, 100e3, 200e3)]
+    values = [strategy.run_checks(geometry, material, load, factors)["combined"][0]
+              for load in loads]
+    assert values[0] < values[1] < values[2]
+
+
+def test_combined_pressure_changes_flow_stress_and_runs_are_deterministic():
+    strategy = DnvStF201Strategy()
+    args = (make_10inch(), make_x65())
+    low = strategy.run_checks(*args, DesignLoads(10e6, 2e6, 100e3, 900e3), DesignFactors())
+    loads = DesignLoads(30e6, 2e6, 100e3, 900e3)
+    high = strategy.run_checks(*args, loads, DesignFactors())
+    assert high == strategy.run_checks(*args, loads, DesignFactors())
+    assert high["combined"][1]["alpha_c"] > low["combined"][1]["alpha_c"]
+    assert strategy.get_factors()["combined_gamma_SC"] == legacy.SAFETY_CLASS_FACTOR
+
+
+def test_combined_above_burst_domain_fails_without_square_root_error():
+    result = DnvStF201Strategy().run_checks(
+        make_10inch(wall_thickness=0.008), make_x65(),
+        DesignLoads(internal_pressure=100e6), DesignFactors())
+    assert result["pressure_containment"][0] > 1.0
+    utilisation, details = result["combined"]
+    assert utilisation > details["limit"] == 1.0
+    assert details["criterion_domain_exceeded"] is True
+
+
+def test_combined_consistent_with_simplified_code_check_example():
+    """Full pressure-corrected and simplified pressure-free criteria differ.
+
+    The example's three points must share verdicts and agree within a factor
+    of two (not numerical equality: simplified moment terms are quadratic).
+    """
+    import numpy as np
+    import yaml
+    from pathlib import Path
+    from digitalmodel.orcaflex.code_check_engine import (
+        DNVOSF201Input, check_dnv_os_f201,
+    )
+
+    source = Path(__file__).resolve().parents[2] / "examples/workflows/dnv-os-f201-riser/input.yml"
+    inputs = yaml.safe_load(source.read_text())["code_check"]["inputs"]
+    simplified = check_dnv_os_f201(
+        DNVOSF201Input(**inputs), np.array(inputs["arc_lengths"]),
+        np.array(inputs["effective_tension_kN"]),
+        np.array(inputs["bending_moment_kNm"]),
+        np.array(inputs["external_pressure_MPa"]),
+        np.array(inputs["internal_pressure_MPa"]),
+    )
+    geometry = PipeGeometry(inputs["outer_diameter"], inputs["wall_thickness"])
+    material = PipeMaterial("X65", inputs["smys"], inputs["smts"])
+    for i, reference in enumerate(simplified):
+        loads = DesignLoads(
+            inputs["internal_pressure_MPa"][i] * 1e6,
+            inputs["external_pressure_MPa"][i] * 1e6,
+            inputs["bending_moment_kNm"][i] * 1e3,
+            inputs["effective_tension_kN"][i] * 1e3)
+        utilisation, _ = DnvStF201Strategy().run_checks(
+            geometry, material, loads, DesignFactors())["combined"]
+        assert (utilisation <= 1.0) == reference.pass_
+        assert 0.5 <= utilisation / reference.utilisation <= 2.0
