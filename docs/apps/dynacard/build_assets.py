@@ -1,6 +1,7 @@
 """Build local classic-script assets from pinned repository source data."""
 
 import argparse
+import gzip
 import hashlib
 import json
 from pathlib import Path
@@ -9,6 +10,15 @@ APP = Path(__file__).resolve().parent
 ROOT = APP.parents[2]
 PACKAGE = ROOT / "src/digitalmodel/marine_ops/artificial_lift/dynacard"
 RESULTS = ROOT / "docs/domains/artificial_lift/dynacard-examples/results.json"
+
+
+MODEL_FILES = (("context", "dynacard_classifier.json"), ("shape", "dynacard_shape_classifier.json.gz"))
+
+
+def read_model(path):
+    """Inference JSON bytes; gzip storage is decompressed as diagnostics.read_model_bytes does."""
+    raw = path.read_bytes()
+    return gzip.decompress(raw) if path.suffix == ".gz" else raw
 
 
 def build_examples():
@@ -44,9 +54,8 @@ def generated_assets():
     examples = build_examples()
     # Compact serialization preserves every parsed model value without pruning.
     models = {}
-    for key, filename in (("context", "dynacard_classifier.json"),
-                          ("shape", "dynacard_shape_classifier.json")):
-        models[key] = json.loads((PACKAGE / "data" / filename).read_text(encoding="utf-8"))
+    for key, filename in MODEL_FILES:
+        models[key] = json.loads(read_model(PACKAGE / "data" / filename))
     first = examples["examples"][0]["card"]
     template = ("# position_in (in), load_lbf (lbf); one full stroke; uniformly timed samples; start anywhere\n"
                 "position_in,load_lbf\n")

@@ -7,7 +7,7 @@ import numpy as np
 
 from digitalmodel.marine_ops.artificial_lift.dynacard.data_loader import load_from_json_file
 from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import (
-    MODEL_PATH, SHAPE_MODEL_PATH, _predict_from_trees, classify_shape,
+    MODEL_PATH, SHAPE_MODEL_PATH, _predict_from_trees, classify_shape, read_model_bytes,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.feature_extraction import FeatureExtractor
 from digitalmodel.marine_ops.artificial_lift.dynacard.models import DynacardAnalysisContext
@@ -30,7 +30,7 @@ NESTED_SCALARS = {
 
 
 def full_diagnosis(card, result, path, shape=False):
-    model = json.loads(path.read_text(encoding="utf-8"))
+    model = json.loads(read_model_bytes(path))
     extract = FeatureExtractor.extract_shape_vector if shape else FeatureExtractor.extract_classifier_vector
     _, probabilities = _predict_from_trees(FeatureExtractor.normalize(extract(card), model["scaling"]), model)
     answer = result.model_dump(include={"classification", "confidence", "differential"})

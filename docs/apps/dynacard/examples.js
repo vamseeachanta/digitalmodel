@@ -2263,7 +2263,7 @@ const data = {
   ],
   "provenance": {
     "results_path": "docs/domains/artificial_lift/dynacard-examples/results.json",
-    "results_sha256": "238570929b4d0c0f33275fb233fdb1e97704a652d2c167ccfb24833d2da8d630",
+    "results_sha256": "0932c32ab2225482bcc1b0906e6ca6fa455d3ea3d61d05b9eaf3c491d5c7c23b",
     "source": {
       "dataset_url": "https://data.mendeley.com/datasets/hnfwm9mjs6/1",
       "file_url": "https://data.mendeley.com/public-files/datasets/hnfwm9mjs6/files/53140ff5-85c3-40d1-b900-364a892e692e/file_downloaded",
@@ -2317,7 +2317,8 @@ const data = {
             }
           ]
         },
-        "reason": "Illustrative design values; no measured well is represented. Rod order is surface first; lengths ft, diameters in, weights lb/ft, moduli psi."
+        "reason": "Illustrative design values; no measured well is represented. Rod order is surface first; lengths ft, diameters in, weights lb/ft, moduli psi.",
+        "provenance": "assumed, based on previous experience"
       },
       "resolved_context_defaults": {
         "status": "ASSUMED",
@@ -2413,32 +2414,38 @@ const data = {
             "efficiency_pumping_unit": 0.9
           }
         },
-        "reason": "All unspecified context, rod, pump and surface-unit fields retain model defaults; no survey or well test was supplied."
+        "reason": "All unspecified context, rod, pump and surface-unit fields retain model defaults; no survey or well test was supplied.",
+        "provenance": "assumed, based on previous experience"
       },
       "stroke_in": {
         "status": "ASSUMED",
         "value": 40.0,
-        "reason": "Dimensionless source has no measured stroke."
+        "reason": "Dimensionless source has no measured stroke.",
+        "provenance": "assumed, based on previous experience"
       },
       "minimum_load_lbf": {
         "status": "ASSUMED",
         "value": 0.0,
-        "reason": "Dimensionless source has no measured load datum."
+        "reason": "Dimensionless source has no measured load datum.",
+        "provenance": "assumed, based on previous experience"
       },
       "load_range_lbf": {
         "status": "ASSUMED",
         "value": 3935.82689,
-        "reason": "Fo = (pi/4 * 1.5^2) * (63.237 * 4844 / 144 + 100); common static fluid-load scale at zero intake pressure."
+        "reason": "Fo = (pi/4 * 1.5^2) * (63.237 * 4844 / 144 + 100); common static fluid-load scale at zero intake pressure.",
+        "provenance": "assumed, based on previous experience"
       },
       "scale_intake_pressure_psi": {
         "status": "ASSUMED",
         "value": 0.0,
-        "reason": "Defines only the static load scale; computed CPIP need not be zero."
+        "reason": "Defines only the static load scale; computed CPIP need not be zero.",
+        "provenance": "assumed, based on previous experience"
       },
       "card_space": {
         "status": "ASSUMED",
         "value": "pump (downhole)",
-        "reason": "Source does not identify surface or pump space."
+        "reason": "Source does not identify surface or pump space.",
+        "provenance": "assumed, based on previous experience"
       },
       "sampling": {
         "status": "ASSUMED",
@@ -2447,7 +2454,8 @@ const data = {
           "timing": "uniform",
           "preparation": "closed, uniform normalised Euclidean arc length, clockwise, renormalised"
         },
-        "reason": "Arc-length samples are treated as uniformly timed; measured kinematics are unavailable."
+        "reason": "Arc-length samples are treated as uniformly timed; measured kinematics are unavailable.",
+        "provenance": "assumed, based on previous experience"
       },
       "surface_card": {
         "status": "ASSUMED",
@@ -2456,7 +2464,8 @@ const data = {
           "position_decimals": 4,
           "load_decimals": 2
         },
-        "reason": "Forward rod-string model, not a measured polished-rod card. Rounded to the published CSV precision before analysis, so the published card reproduces the stored results."
+        "reason": "Forward rod-string model, not a measured polished-rod card. Rounded to the published CSV precision before analysis, so the published card reproduces the stored results.",
+        "provenance": "assumed, based on previous experience"
       },
       "crosswalks": {
         "status": "ASSUMED",
@@ -2464,12 +2473,14 @@ const data = {
           "供液不足": "FLUID_POUND",
           "出砂": "SAND_ABRASION"
         },
-        "reason": "Supply insufficiency does not establish fluid pound; sand production does not establish abrasion."
+        "reason": "Supply insufficiency does not establish fluid pound; sand production does not establish abrasion.",
+        "provenance": "assumed, based on previous experience"
       },
       "uniform_scale": {
         "status": "ASSUMED",
         "value": "All ten shapes use the same stroke and load range",
-        "reason": "Rod parting and other near-zero physical-load conditions are shape illustrations, not physical pump cards."
+        "reason": "Rod parting and other near-zero physical-load conditions are shape illustrations, not physical pump cards.",
+        "provenance": "assumed, based on previous experience"
       },
       "cpip_defaults": {
         "status": "ASSUMED",
@@ -2478,7 +2489,8 @@ const data = {
           "water_sg": 1.03,
           "water_cut_pct": 50.0
         },
-        "reason": "CPIP derives density from this default mixture, not context fluid_density; retained as the module reports it."
+        "reason": "CPIP derives density from this default mixture, not context fluid_density; retained as the module reports it.",
+        "provenance": "assumed, based on previous experience"
       },
       "production": {
         "status": "ASSUMED",
@@ -2486,7 +2498,8 @@ const data = {
           "runtime_hours": 24.0,
           "pump_efficiency_pct": 100.0
         },
-        "reason": "InputParameters defaults runtime to 24 h (reported source: card); no measured runtime or efficiency. Production = net displacement * runtime / 24; reported efficiency is not a multiplier."
+        "reason": "InputParameters defaults runtime to 24 h (reported source: card); no measured runtime or efficiency. Production = net displacement * runtime / 24; reported efficiency is not a multiplier.",
+        "provenance": "assumed, based on previous experience"
       },
       "solver_defaults": {
         "status": "ASSUMED",
@@ -2497,7 +2510,8 @@ const data = {
           "tubing_id_in": 2.441,
           "zero_surface_position_datum": true
         },
-        "reason": "Forward and default inverse use matching grids, damping defaults and vertical survey; inverse output smoothing remains enabled."
+        "reason": "Forward and default inverse use matching grids, damping defaults and vertical survey; inverse output smoothing remains enabled.",
+        "provenance": "assumed, based on previous experience"
       }
     },
     "units": {
