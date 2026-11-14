@@ -282,10 +282,10 @@ hull derivatives + propeller thrust + rudder baseline + rudder-propeller interac
 | **Layered total** | F_total = AD_baseline + Söding_interaction |
 | **Engine-off** | Only AD baseline survives (Söding correctly returns zero) |
 | **Braking quadrant** | Guard clamp on C_th < -1; fall back to AD baseline only |
-| **J range covered** | 0.0–1.1 (both models) + engine-off (AD only) |
+| **J range covered** | Ahead arithmetic + engine-off (AD only); bollard is a mathematical limit, not validated coverage |
 | **Key inputs** | K_T(J), t, w, C^(rp), D, rudder area/AR/x_R |
 | **Expected accuracy** | ±10–20% on interaction; ±5–10% on baseline (single-screw) |
-| **Implementation** | `propeller_rudder.py` — 150 lines, 36 tests pass |
+| **Implementation** | `propeller_rudder.py` — force models and drive-off diagnostics; test files listed below |
 | **Next WRK** | WRK-1150 (integration into maneuvering model) |
 
 ---
@@ -296,4 +296,34 @@ See [propeller-rudder-literature.md](propeller-rudder-literature.md) (WRK-1148) 
 full formulae, applicability ranges, and source citations.
 
 Implementation: `src/digitalmodel/hydrodynamics/propeller_rudder.py`
-Tests: `tests/test_propeller_rudder_interaction.py` (36 pass)
+Worked example: [drive-off diagnostics and plots](../../../examples/propeller_rudder_driveoff.py).
+
+### Drive-off diagnostic limitations
+
+The registry polynomial is illustrative: fitted J range unknown, with no source
+or fitted data supplied. The braking rows at J = 1.543332, 2.314998 and 4.629996
+therefore omit K_T, thrust, both loading coefficients and primary forces from the
+example CSV, and omit primary force plot points. Four-quadrant data are required
+before those values can be treated as braking predictions. The fallback at those
+rows uses freestream inflow only; propeller braking drag is not modelled. The
+remaining ahead values are arithmetic examples, not validation of a fitted curve.
+The raw `driveoff_sweep` API retains the polynomial diagnostics for arithmetic
+checks; a finite computed value does not establish applicability.
+
+At abs(V_A) < 1e-12 m/s the sweep reports the bollard primary mathematical limit,
+not validated rudder loading. The fallback force is not evaluated there; the axial
+slipstream uses a finite actuator-disk thrust limit. This qualification supersedes
+the earlier full-J-range coverage statements for the worked example. The
+[research note](propeller-rudder-research-note-2026-10.md) records the need for
+separate treatment of the as-written slipstream forms at bollard.
+
+The example's yaw columns are omitted because the existing force models use the
+wrong moment sign for an aft rudder with unsigned x_R: the physical relation is
+N = -x_R * F_sway. Correcting the underlying models and their existing registry
+expectations remains separate work; the example exports surge and sway only.
+
+Tests (counts will vary as regression coverage grows):
+
+- `tests/test_propeller_rudder_interaction.py`
+- `tests/hydrodynamics/test_propeller_rudder_driveoff.py`
+- `tests/hydrodynamics/test_propeller_rudder_review.py`
