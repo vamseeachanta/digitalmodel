@@ -2,6 +2,8 @@
 import json
 from pathlib import Path
 
+from digitalmodel.marine_ops.artificial_lift.dynacard.solver_guards import VERTICAL_APPROXIMATION_FLAG
+
 TITLE = ('Rod pump dynamometer card analysis: pump card, fluid load and fillage '
          'from a surface card by the wave equation')
 REPO = 'https://github.com/vamseeachanta/digitalmodel'
@@ -23,7 +25,7 @@ METRICS = {
 }
 CANNOT_DO = [
     'Name a pump fault with a stated field accuracy: every shape label is a HYPOTHESIS; field accuracy is NOT_EVALUATED because independent labelled field cards are unavailable.',
-    'Analyse a deviated well as vertical without saying so; the frequency-domain cross-check is vertical.',
+    f'Model deviation: both solvers treat the well as vertical; a survey with inclination is flagged "{VERTICAL_APPROXIMATION_FLAG}" and its effect is NOT_EVALUATED.',
     'Correct a mis-calibrated load cell without independent calibration evidence.',
     'Give production from a card alone: operating runtime and plunger/valve slip are needed.',
     'Analyse a well with unanchored tubing: tubing movement is not modelled and a card marked unanchored is rejected.',
@@ -96,7 +98,7 @@ def missing_data(sensitivity):
          'State anchored or unanchored, with the anchor depth.'),
         ('survey', 'Deviation survey',
          'In a deviated well, rod weight and friction act along the well path.',
-         'If not supplied, a vertical well is ASSUMED. The frequency-domain cross-check is always vertical. The effect of deviation is NOT_EVALUATED without a survey.',
+         'If not supplied, a vertical well is ASSUMED. Both solvers treat the well as vertical; a supplied survey is recorded and any inclination is flagged. The effect of deviation is NOT_EVALUATED.',
          'Give measured depth, inclination and azimuth from surface to the pump.'),
         ('pressure', 'Tubing pressure',
          'Optional. It is used for pump intake pressure, which this report does not give.',

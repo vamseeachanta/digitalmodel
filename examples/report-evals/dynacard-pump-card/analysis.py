@@ -57,10 +57,17 @@ def unique_phases(card):
 
 
 def solve_default(ctx):
+    """Return the default pump card; see solve_default_with_flags."""
+    return solve_default_with_flags(ctx)[0]
+
+
+def solve_default_with_flags(ctx):
     """Give the periodic finite-difference stencil its repeated endpoint.
 
     Return unique phases so neither metrics nor comparison weight phase zero
-    twice. The frequency-domain solver consumes unique phases directly.
+    twice. The frequency-domain solver consumes unique phases directly. Also
+    return the solver's deviation disclosure: it runs with along-hole gravity
+    and contact friction off, so any inclination is flagged, not modelled.
     """
     surface = unique_phases(ctx.surface_card)
     closed = surface.model_copy(update={
@@ -68,7 +75,18 @@ def solve_default(ctx):
         'load': [*surface.load, surface.load[0]],
     })
     closed_ctx = ctx.model_copy(update={'surface_card': closed})
-    return unique_phases(EverittJenningsContextSolver(closed_ctx).solve().downhole_card)
+    result = EverittJenningsContextSolver(closed_ctx).solve()
+    return unique_phases(result.downhole_card), {
+        'max_inclination_deg': result.max_inclination_deg,
+        'solver_flags': list(result.solver_flags)}
+
+
+def survey_record(ctx):
+    """The survey as supplied to the default solver, in feet and degrees."""
+    s = ctx.survey
+    return None if s is None else {'measured_depth_ft': list(s.measured_depth),
+                                   'inclination_deg': list(s.inclination),
+                                   'azimuth_deg': list(s.azimuth)}
 
 
 def resample_phases(card, count):
@@ -114,7 +132,8 @@ def run(card_path=FIXTURE, *, include_sensitivity=True, resource_root=ROOT):
     """Analyse one card; resource_root supplies version-selected public plate evidence."""
     ctx, raw = load_card(card_path)
     ctx = ctx.model_copy(update={'surface_card': unique_phases(ctx.surface_card)})
-    card = solve_default(ctx)
+    card, flags = solve_default_with_flags(ctx)
+    deviation = {'survey': survey_record(ctx), **flags}
     with warnings.catch_warnings():
         warnings.filterwarnings('ignore', message='.*comparison only: not field validated.*')
         alternative = DynacardPhysicsSolver(ctx).solve_wave_equation(harmonic_count=15)
@@ -132,7 +151,8 @@ def run(card_path=FIXTURE, *, include_sensitivity=True, resource_root=ROOT):
     cards = {'surface': ctx.surface_card, 'default': card, 'gibbs': gibbs, 'reference': reference}
     return {
         'condition_name': 'public example well' if public else 'reader card', 'commit': commit,
-        'key_results': key, 'inputs': simple_inputs(ctx), 'assumptions': assumptions(ctx, raw),
+        'key_results': key, 'inputs': simple_inputs(ctx), 'assumptions': assumptions(ctx, raw, deviation),
+        'deviation': deviation,
         'geometry_basis': {'rod_length_ft': ctx.rod_length, 'pump_depth_ft': ctx.pump.depth,
                            'unrepresented_length_ft': ctx.pump.depth - ctx.rod_length},
         'solver_cross_check': _cross_check(card, alternative, reference),
