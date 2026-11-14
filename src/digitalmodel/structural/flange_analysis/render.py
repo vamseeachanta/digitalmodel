@@ -52,7 +52,8 @@ def _summary(data, **_):
         f'<p>Governing check: {html.escape(result["governing_check"])}; '
         f'utilization {result["governing_utilization"]:.6f} against a limit of 1.0.</p>'
         "<p>Integral non-cast flange strength and rigidity screening; geometry is net of corrosion. "
-        "Material selection, neck and weld qualification, external loads, external pressure, "
+        "The hub limit includes caller-supplied neck allowables and the sketch multiplier. "
+        "Material selection, independent neck and weld qualification, external loads, external pressure, "
         "fatigue and leakage assessment are outside this calculation. "
         "Engineer sign-off on the golden values is required before use.</p>")
 
@@ -113,6 +114,10 @@ def _ledger(inputs):
         "gasket.width_rule": "Table 2-5.2: b0 supplied for the selected facing; US customary width rule and reaction diameter applied",
         "bolts.root_area": inputs["bolts"].get("root_area_source", "Caller-supplied root area; thread table is not embedded"),
         "material.allowables": "Caller-supplied allowables and elastic moduli; no temperature lookup or material qualification",
+        "hub.material_bound": ("Hub allowable is the smaller flange/neck bound; "
+                               f"caller-selected hub_stress_multiplier = {inputs['design']['hub_stress_multiplier']} "
+                               "must match the applicable Figure 2-4 sketch; "
+                               "neck allowables are supplied at both conditions"),
         "stress.magnitudes": "Combined averages use absolute stress magnitudes; both conditions are checked",
         "rigidity.factor": "App 2-14 integral rigidity factor KI = 0.3",
         "bolt_spacing": "App 2-6: correction applied only when explicitly requested; lethal-service qualification is outside this screen",

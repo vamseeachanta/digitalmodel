@@ -129,8 +129,9 @@ def _stress_checks(condition, moment, settings, factors):
                 "average_HR": (abs(SH)+abs(SR))/2,
                 "average_HT": (abs(SH)+abs(ST))/2}
     Sf = design[f"Sf_{condition}"]
+    hub_limit = min(1.5 * Sf, design["hub_stress_multiplier"] * design[f"Sn_{condition}"])
     checks = [_check(f"{condition}.{name}", abs(value),
-                     1.5*Sf if name == "S_H" else Sf,
+                     hub_limit if name == "S_H" else Sf,
                      STRESS_CLAUSES[name], "psi") for name, value in stresses.items()]
     J = (52.14 * abs(moment) * factors["V"] /
          (L * design[f"E_{condition}"] * geo["g0"]**2 * factors["h0"] * 0.3))
@@ -160,7 +161,8 @@ def _validated(settings):
     groups = {"geometry": ("A", "B", "C", "t", "g0", "g1", "h"),
               "bolts": ("diameter", "root_area", "Sa", "Sb"),
               "gasket": ("b0", "m", "y", "outer_diameter", "inner_diameter"),
-              "design": ("P", "Sf_operating", "Sf_seating", "E_operating", "E_seating")}
+              "design": ("P", "Sf_operating", "Sf_seating", "Sn_operating", "Sn_seating",
+                         "hub_stress_multiplier", "E_operating", "E_seating")}
     try:
         for group, keys in groups.items():
             for key in keys:
@@ -174,6 +176,8 @@ def _validated(settings):
             raise ValueError("temperature_F must be finite or null if unreported")
     except (KeyError, TypeError) as exc:
         raise ValueError("Required flange inputs are missing or malformed") from exc
+    if data["design"]["hub_stress_multiplier"] not in (1.5, 2.5):
+        raise ValueError("hub_stress_multiplier must be 1.5 or 2.5 for the selected sketch")
     correction = data["design"].get("apply_bolt_spacing_correction", False)
     if type(correction) is not bool:
         raise ValueError("apply_bolt_spacing_correction must be boolean")

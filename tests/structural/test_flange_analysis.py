@@ -20,6 +20,8 @@ def case():
                    "outer_diameter": 17.75, "inner_diameter": 16.25},
         "design": {"P": 100.0, "temperature_F": None,
                    "Sf_operating": 20000.0, "Sf_seating": 20000.0,
+                   "Sn_operating": 20000.0, "Sn_seating": 20000.0,
+                   "hub_stress_multiplier": 1.5,
                    "E_operating": 27900000.0, "E_seating": 27900000.0,
                    "apply_bolt_spacing_correction": False},
     }
@@ -40,21 +42,64 @@ def test_published_stresses_and_rigidity(case):
     from digitalmodel.structural.flange_analysis.calculations import analyze
 
     result = analyze(case)
-    assert result["moments"]["operating"] == pytest.approx(55998, rel=0.002)
-    assert result["moments"]["seating"] == pytest.approx(269196, rel=0.002)
+    for name, value in {"T": 1.765, "U": 6.877, "Y": 6.258, "Z": 3.246}.items():
+        assert result["factors"][name] == pytest.approx(value, abs=0.0006)
+    assert result["moments"]["operating"] == pytest.approx(55998, rel=0.001)
+    assert result["moments"]["seating"] == pytest.approx(269196, rel=0.001)
     expected = {
         "operating": {"S_H": 5945, "S_R": 1759, "S_T": 1444, "J": 0.094},
         "seating": {"S_H": 28577, "S_R": 8454, "S_T": 6943, "J": 0.452},
     }
     for condition, values in expected.items():
         for name, value in values.items():
-            assert result["conditions"][condition][name] == pytest.approx(value, rel=0.005)
+            assert result["conditions"][condition][name] == pytest.approx(value, rel=0.001)
     assert result["screening_status"] == "pass"
     assert result["governing_check"] == "seating.S_H"
-    assert result["governing_utilization"] == pytest.approx(28577 / 30000, rel=0.005)
+    assert result["governing_utilization"] == pytest.approx(28577 / 30000, rel=0.001)
     assert len(result["checks"]) == 13  # area + five stresses + rigidity at each condition
     assert all(row["clause"] and row["passes"] for row in result["checks"])
     assert {row["units"] for row in result["checks"]} == {"in^2", "psi", "dimensionless"}
+
+
+@pytest.mark.parametrize("condition,neck_allowable,multiplier,limit", [
+    ("seating", 17100.0, 1.5, 25650.0),
+    ("seating", 10000.0, 2.5, 25000.0),
+    ("operating", 3000.0, 1.5, 4500.0),
+    ("operating", 2000.0, 2.5, 5000.0),
+])
+def test_neck_material_governs_hub_stress(case, condition, neck_allowable, multiplier, limit):
+    from digitalmodel.structural.flange_analysis.calculations import analyze
+
+    case["design"][f"Sn_{condition}"] = neck_allowable
+    case["design"]["hub_stress_multiplier"] = multiplier
+    result = analyze(case)
+    check = next(row for row in result["checks"] if row["name"] == f"{condition}.S_H")
+    assert check["allowable"] == limit
+    assert check["utilization"] > 1
+    assert not check["passes"]
+    assert result["screening_status"] == "fail"
+    assert result["governing_check"] == f"{condition}.S_H"
+
+
+@pytest.mark.parametrize("multiplier", [1.5, 2.5])
+def test_flange_material_can_still_govern_hub_stress(case, multiplier):
+    from digitalmodel.structural.flange_analysis.calculations import analyze
+
+    case["design"].update(Sn_operating=40000.0, Sn_seating=40000.0,
+                          hub_stress_multiplier=multiplier)
+    result = analyze(case)
+    assert all(row["allowable"] == 30000.0 for row in result["checks"]
+               if row["name"].endswith(".S_H"))
+    assert result["screening_status"] == "pass"
+
+
+@pytest.mark.parametrize("key", ["Sn_operating", "Sn_seating", "hub_stress_multiplier"])
+def test_neck_material_basis_is_required(case, key):
+    from digitalmodel.structural.flange_analysis.calculations import analyze
+
+    del case["design"][key]
+    with pytest.raises(ValueError):
+        analyze(case)
 
 
 def test_published_diameter_and_tapered_hub_factors():
@@ -94,6 +139,11 @@ def test_insufficient_bolt_area_fails_even_with_small_stresses(case):
     ("design", "P", -1), ("design", "Sf_operating", 0),
     ("design", "E_seating", float("nan")),
     ("design", "apply_bolt_spacing_correction", "false"),
+    ("design", "Sn_operating", 0), ("design", "Sn_seating", -1),
+    ("design", "Sn_operating", True), ("design", "Sn_seating", float("nan")),
+    ("design", "hub_stress_multiplier", 2.0),
+    ("design", "hub_stress_multiplier", float("inf")),
+    ("design", "hub_stress_multiplier", True),
 ])
 def test_invalid_inputs_fail_closed(case, group, key, value):
     from digitalmodel.structural.flange_analysis.calculations import analyze
@@ -147,11 +197,15 @@ def test_missing_or_mismatched_citation_stops_calculation(case, monkeypatch, tmp
         analyze(case)
 
 
-def test_workflow_emits_consistent_csv_json_and_deterministic_html(case, tmp_path):
+@pytest.mark.parametrize("neck_allowable,status", [(20000.0, "pass"), (17100.0, "fail")])
+def test_workflow_emits_consistent_csv_json_and_deterministic_html(
+    case, tmp_path, monkeypatch, neck_allowable, status,
+):
     import csv
     import json
     import sys
     from html.parser import HTMLParser
+    from pathlib import Path
     from digitalmodel.structural.flange_analysis.workflow import router
 
     class ResourceParser(HTMLParser):
@@ -160,19 +214,29 @@ def test_workflow_emits_consistent_csv_json_and_deterministic_html(case, tmp_pat
             if tag in {"script", "link", "iframe"}:
                 assert not attrs.get("src") and not attrs.get("href")
 
+    case["design"]["Sn_seating"] = neck_allowable
     case["source"] = {"title": "Published vendor example", "pages": "12-14"}
     cfg = {"basename": "flange_analysis", "_config_dir_path": str(tmp_path),
            "_config_file_path": str(tmp_path / "input.yml"),
            "flange_analysis": deepcopy(case)}
     result = router(cfg)["flange_analysis"]
     out = tmp_path / "results/flange_analysis"
-    summary = json.loads((out / "flange_analysis_summary.json").read_text())
-    with (out / "flange_analysis_checks.csv").open() as stream:
+    original_read_text = Path.read_text
+
+    def locale_read_text(path, *args, **kwargs):
+        # Model a legacy Windows locale when reading the UTF-8 workflow outputs.
+        if path.parent == out and not args and "encoding" not in kwargs:
+            kwargs["encoding"] = "cp1252"
+        return original_read_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", locale_read_text)
+    summary = json.loads((out / "flange_analysis_summary.json").read_text(encoding="utf-8"))
+    with (out / "flange_analysis_checks.csv").open(encoding="utf-8", newline="") as stream:
         rows = list(csv.DictReader(stream))
-    report = (out / "flange_analysis_report.html").read_text()
+    report = (out / "flange_analysis_report.html").read_text(encoding="utf-8")
     assert len(rows) == len(summary["checks"]) == 13
     assert summary == result
-    assert cfg["screening_status"] == "pass"
+    assert cfg["screening_status"] == status
     assert {row["name"] for row in rows} == {row["name"] for row in summary["checks"]}
     for row, check in zip(rows, summary["checks"]):
         assert float(row["utilization"]) == check["utilization"]
@@ -182,10 +246,16 @@ def test_workflow_emits_consistent_csv_json_and_deterministic_html(case, tmp_pat
                  "Assumptions", "Citations", "Plotly.newPlot", "App 2-8", "root_area_source"):
         assert text in report
     assert str(tmp_path) not in report and str(tmp_path) not in json.dumps(summary)
+    assert f"<strong>{status.upper()}</strong>" in report
+    hub_check = next(row for row in summary["checks"] if row["name"] == "seating.S_H")
+    assert hub_check["allowable"] == min(30000.0, 1.5 * neck_allowable)
+    assert "Hub allowable is the smaller flange/neck bound" in report
+    assert "neck allowables" in report
+    assert "hub_stress_multiplier" in report
     ResourceParser().feed(report)
     assert "OrcFxAPI" not in sys.modules
     router({**cfg, "flange_analysis": deepcopy(case)})
-    assert (out / "flange_analysis_report.html").read_text() == report
+    assert (out / "flange_analysis_report.html").read_text(encoding="utf-8") == report
 
 
 def test_report_requires_provenance(case):
@@ -239,3 +309,40 @@ def test_root_area_cannot_exceed_nominal_bolt_cross_section(case):
     case["bolts"]["root_area"] = 1.0  # impossible for a 1-inch bolt
     with pytest.raises(ValueError, match="root_area"):
         analyze(case)
+
+
+def test_tapered_hub_rating_against_published_stress_response(case):
+    """Carry the published tapered factors through both loading conditions.
+
+    The vendor case includes a partition gasket, which is outside this workflow.
+    Published stresses (printed p. 14) are scaled by the moment ratio; the net
+    geometry is identical. This checks stress response, not a full reproduction
+    of the vendor's partition-gasket rating.
+    """
+    from digitalmodel.structural.flange_analysis.calculations import analyze
+
+    case["geometry"].update(A=23.5, B=18.25, C=21.75, g0=0.125, g1=0.5, h=1.125)
+    case["bolts"].update(diameter=0.625, root_area=0.202, Sa=25000.0, Sb=25000.0,
+                          root_area_source="Synthetic area for the tapered stress-response test")
+    case["gasket"].update(outer_diameter=19.125, inner_diameter=18.25,
+                           b0=0.21875, m=2.5, y=2900.0)
+    case["design"].update(P=150.0, Sf_operating=17800.0,
+                          Sn_operating=17800.0, apply_bolt_spacing_correction=True)
+    result = analyze(case)
+    assert result["factors"]["f"] == pytest.approx(2.9303, abs=0.0001)
+    expected = {
+        "operating": (97547.0, {"S_H": 19821.01, "S_R": 1180.33, "S_T": 8883.92}),
+        "seating": (125214.0, {"S_H": 25442.91, "S_R": 1515.11, "S_T": 11403.70}),
+    }
+    # Published beta = 2.1376 uses a less-rounded radial coefficient. Normalize
+    # that response to the method's 1.33 using the independently printed e.
+    radial_ratio = (1 + 1.33 * 1.75 * 0.4875) / 2.1376
+    for condition, (published_moment, stresses) in expected.items():
+        published_radial = stresses["S_R"]
+        stresses = {**stresses, "S_R": published_radial * radial_ratio,
+                    "S_T": stresses["S_T"] + 4.0391 * published_radial * (1 - radial_ratio)}
+        ratio = result["moments"][condition] * result["factors"]["Bsc"] / published_moment
+        for name, stress in stresses.items():
+            assert result["conditions"][condition][name] == pytest.approx(stress * ratio, rel=0.001)
+    assert result["screening_status"] == "pass"
+    assert result["governing_check"] == "seating.average_HT"

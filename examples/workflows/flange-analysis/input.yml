@@ -16,6 +16,7 @@ flange_analysis:
     pages: "12-14"
     url: https://www.pveng.com/wp-content/uploads/2016/06/Loads_On_Flanges.pdf
     sha256: 484eddde158c83509ce57635b4068105348392b866148148df436bae2deb2681
+    neck_allowables: "assumed, based on previous experience; engineering confirmation required"
   geometry:  # net of corrosion; lengths in inches
     A: 22.0
     B: 16.0
@@ -42,6 +43,10 @@ flange_analysis:
     temperature_F: null  # not reported; the published allowables/moduli are supplied
     Sf_operating: 20000.0
     Sf_seating: 20000.0
+    # Neck basis is assumed, based on previous experience; not a published input.
+    Sn_operating: 20000.0
+    Sn_seating: 20000.0
+    hub_stress_multiplier: 1.5  # caller confirms the applicable Figure 2-4 sketch
     E_operating: 27900000.0
     E_seating: 27900000.0
     apply_bolt_spacing_correction: false  # non-lethal strength/rigidity screen
