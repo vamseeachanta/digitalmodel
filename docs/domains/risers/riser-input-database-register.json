@@ -1,0 +1,25 @@
+{
+"not_yet_counted": ["config/pipe/*.yml", "data/vessels/ (remaining members)", "docs/domains/orcaflex/library/buoy_types/", "docs/domains/orcaflex/library/line_types/", "src/digitalmodel/fatigue/ (including __init__.py)", "src/digitalmodel/materials/line_pipe.py"],
+"rows": [
+{"category":"Line pipe and tubulars","count":0,"format":"json","issue":null,"path":"data/line_pipe/data.json","provenance":"citation_id per row resolved in sources.yml","selector":"records","status":"empty","unit":"records"},
+{"category":"Line pipe and tubulars","count":28,"format":"csv","issue":null,"path":"data/riser_database/config_catalog.csv","provenance":"source_path","selector":"","status":"populated","unit":"rows"},
+{"category":"Stack-ups and rig interface","count":84,"format":"csv","issue":null,"path":"data/riser_database/riser_stackup.csv","provenance":"wiki_path","selector":"","status":"populated","unit":"rows"},
+{"category":"Stack-ups and rig interface","count":10,"format":"csv","issue":null,"path":"data/riser_database/rig_riser_interface.csv","provenance":"wiki_path","selector":"","status":"populated","unit":"rows"},
+{"category":"Stack-ups and rig interface","count":9,"format":"yml","issue":null,"path":"data/drilling_rigs/udw_rig_fleet_external.yml","provenance":"file-level sources list","selector":"rigs","status":"populated","unit":"rigs"},
+{"category":"Stack-ups and rig interface","count":18,"format":"yml","issue":null,"path":"data/drilling_rigs/udw_rig_fleet_external.yml","provenance":"source_keys","selector":"contracts","status":"populated","unit":"contracts"},
+{"category":"Flexible pipe","count":0,"format":"json","issue":null,"path":"data/flexible_pipe/data.json","provenance":"citation_id per row resolved in sources.yml","selector":"records","status":"empty","unit":"records"},
+{"category":"Structural sections","count":0,"format":"json","issue":null,"path":"data/riser_database/structure_properties/data.json","provenance":"citation_id per row resolved in sources.yml","selector":"records","status":"empty","unit":"records"},
+{"category":"Buoyancy modules","count":0,"format":"json","issue":null,"path":"data/riser_buoyancy/data.json","provenance":"citation_id per row resolved in sources.yml","selector":"records","status":"empty","unit":"records"},
+{"category":"Soil","count":0,"format":"json","issue":null,"path":"data/soil_stiffness/data.json","provenance":"citation_id per row resolved in sources.yml","selector":"records","status":"empty","unit":"records"},
+{"category":"Soil","count":60,"format":"yaml","issue":null,"path":"data/geotechnical/geotech_database.yaml","provenance":"source_id, locator","selector":"parameters","status":"populated","unit":"parameter rows"},
+{"category":"S-N, SCF, DFF","count":23,"format":"yaml","issue":null,"path":"data/fatigue/sn_curves.yaml","provenance":"file-level metadata.source only","selector":"curves","status":"populated","unit":"curves"},
+{"category":"S-N, SCF, DFF","count":3,"format":"csv","issue":null,"path":"data/riser_database/material_sn_scf_dff.csv","provenance":"wiki_path, code_id","selector":"","status":"populated","unit":"rows"},
+{"category":"Vessel RAOs","count":4,"format":"parquet","issue":null,"path":"data/rao_database.parquet","provenance":"sources in rao_database.manifest.json entries","selector":"","status":"populated","unit":"rows"},
+{"category":"Metocean","count":7,"format":"csv","issue":null,"path":"data/vessels/processed/metocean_criteria.csv","provenance":"n_citations","selector":"","status":"populated","unit":"rows"},
+{"category":"Standards crosswalk","count":5,"format":"csv","issue":null,"path":"data/riser_database/standards_crosswalk.csv","provenance":"wiki_path, code_id, registry_revision","selector":"","status":"populated","unit":"rows"},
+{"category":"Vessels (drillship basis)","count":50,"format":"json","issue":null,"path":"data/vessels/processed/drillship_basis.json","provenance":"source block (repository, file, revision, SHA-256)","selector":"dimensions_m","status":"populated","unit":"drillship dimension rows"},
+{"category":"Coatings, insulation and vortex-induced vibration suppression","count":null,"format":null,"issue":3953,"path":null,"provenance":"none","selector":null,"status":"absent","unit":null},
+{"category":"Flex joints, stress joints and keel joints","count":null,"format":null,"issue":3953,"path":null,"provenance":"none","selector":null,"status":"absent","unit":null},
+{"category":"Current profiles by region","count":null,"format":null,"issue":null,"path":null,"provenance":"none","selector":null,"status":"absent","unit":null}
+]
+}
