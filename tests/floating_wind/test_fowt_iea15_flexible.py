@@ -143,7 +143,11 @@ def test_rigid_equivalent_matches_rigid_representation(flexible, rigid, sources)
     _, data = sources
     model_f, model_r = model_from_spec(flexible), model_from_spec(rigid)
     eq_f, eq_r = equilibrium(model_f), equilibrium(model_r)
-    assert eq_f["position"] == pytest.approx(eq_r["position"], abs=1e-3)
+    # The README states 0.01 % for surge, heave and pitch; sway, roll and yaw are zero.
+    for dof in (0, 2, 4):
+        assert eq_f["position"][dof] == pytest.approx(eq_r["position"][dof], rel=1e-4), dof
+    for dof in (1, 3, 5):
+        assert abs(eq_f["position"][dof]) < 1e-9 and abs(eq_r["position"][dof]) < 1e-9, dof
     periods_f = natural_periods(model_f, data, eq_f["position"])["periods"]
     periods_r = natural_periods(model_r, data, eq_r["position"])["periods"]
     for mode in ("surge", "heave", "pitch", "yaw"):
