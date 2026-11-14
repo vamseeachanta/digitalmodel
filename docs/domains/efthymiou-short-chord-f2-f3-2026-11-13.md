@@ -34,6 +34,7 @@ source-verified here and is not introduced as a calculation or a golden.
 | 0 | 2026-11-13 | F2/F3 factors and the retained base-equation limitations were recorded. |
 | 1 | 2026-11-13 | Remaining issue scope and golden-value provenance were clarified to distinguish implemented factors from unverified base equations. |
 | 2 | 2026-11-13 | The missing upper-bound qualification was added to pinned results and tested at the oblique reference geometry; the external acceptance decision remains open. |
+| 3 | 2026-11-14 | Follow-up issue #4068 was confirmed to cover the deferred equations; the obsolete missing-issue statement was corrected without changing the equation qualifications. |
 
 Table 1a. Validation-record revisions.
 
@@ -141,20 +142,17 @@ before the final SCF floor. The approved plan flags the candidate Eqn-11 form
 The candidate is **not freshly source-verified and is not implemented**.
 
 [Issue #1148](https://github.com/vamseeachanta/digitalmodel/issues/1148)
-remains open. The unresolved base-equation scope is:
+remains open. Follow-up issue #4068 tracks the unresolved base-equation scope:
 
 - Eqn 11 source verification, followed by an independently derived OPB
   brace-saddle golden and F3 application if the equation is confirmed.
 - General-fixity Eqns 5/6/7 source verification and implementation with
   parameter C, including the saddle and crown terms.
 
-This change references the issue rather than closing it. A separate follow-up
-issue has not been created; the approved plan's acceptance requirement remains
-unmet. Before acceptance, a maintainer must either create and link that follow-up
-issue in the PR body and this record, or record an explicit decision that the
-original issue will carry the remaining work. Keeping the issue open does not
-by itself meet that criterion. Neither the retained OPB brace expression nor
-the general-fixity base equations are validated here.
+The separate-follow-up requirement is satisfied by issue #4068, which is also
+referenced in the PR description. Issue #1148 remains open; this record does
+not claim its closure or completion of the deferred work. Neither the retained
+OPB brace expression nor the general-fixity base equations are validated here.
 
 ## Test changes
 
