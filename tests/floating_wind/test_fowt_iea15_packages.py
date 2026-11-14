@@ -97,13 +97,16 @@ def test_run_packages_written(tmp_path):
     spec.loader.exec_module(module)
     assert module.main(["x", str(tmp_path)]) == 0
     index = json.loads((tmp_path / "index.json").read_text())
-    assert len(index["cases"]) == 7
+    assert len(index["cases"]) == 8
     for case in index["cases"]:
         folder = tmp_path / case["case"]
         assert (folder / "model" / "master.yml").exists()
         text = (folder / "run.md").read_text()
         assert "## Expected" in text or "## Limitations" in text
         assert "validated" in text  # the do-not-overclaim instruction is present
+    flexible = (tmp_path / "LC0_flexible_statics" / "run.md").read_text(encoding="utf-8")
+    assert "#3971" in flexible and "-0.222 m" in flexible and "-0.389 deg" in flexible
+    assert "`RNA inertia`" in flexible  # the principal-axes child is flagged for checking
 
 
 def test_wave_packages_include_wamit_import_output(tmp_path, monkeypatch):
@@ -176,6 +179,12 @@ def test_run_package_rerun_keeps_saved_results(tmp_path):
         module.main(["x", str(tmp_path)])
     assert saved.read_bytes() == b"solver results"
     assert (tmp_path / "LC0_statics" / "model" / "master.yml").read_bytes() == first
+    saved.unlink()
+    flexible = tmp_path / "LC0_flexible_statics" / "model" / "LC0_flexible_statics.sim"
+    flexible.write_bytes(b"flexible results")
+    with pytest.raises(FileExistsError, match="LC0_flexible_statics.sim"):
+        module.main(["x", str(tmp_path)])
+    assert flexible.read_bytes() == b"flexible results"
 
 
 def test_case_folder_refuses_unrecorded_or_edited_content(tmp_path):

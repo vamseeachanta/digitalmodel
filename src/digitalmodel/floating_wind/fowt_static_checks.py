@@ -96,10 +96,6 @@ def model_from_spec(spec: dict) -> Model:
     from digitalmodel.solvers.orcaflex.modular_generator.schema.fowt import FowtSpec
 
     fowt = FowtSpec(**spec["fowt"])
-    if fowt.representation != "rigid":
-        raise NotImplementedError(
-            "the checks treat the hull as the whole system; the flexible representation "
-            "carries tower and RNA mass outside the hull and is not supported")
     hull = fowt.hull
     rho = spec["environment"]["water"]["density"] * KILO
     depth = spec["environment"]["water"]["depth"]
@@ -111,9 +107,19 @@ def model_from_spec(spec: dict) -> Model:
     lengths = {line.length for line in fowt.mooring_lines}
     if len(lengths) != 1:
         raise NotImplementedError("equal line lengths are assumed by the checks")
+    mass, cog = hull.mass * KILO, np.array(hull.centre_of_mass)
+    inertia = np.array(hull.inertia_about_centre_of_mass) * KILO
+    if fowt.representation == "flexible":
+        # Rigid-equivalent body: tower and RNA lumped with the hull, and the
+        # weight moment-arm term taken for the whole assembly.
+        from digitalmodel.floating_wind.fowt_flexible_body import flexible_mass_properties
+
+        mass, cog, inertia = flexible_mass_properties(fowt)
+        k = np.array(hull.hydrostatic_stiffness_excluding_gravity) * KILO
+        k[1, 1] += mass * fowt.gravity * (-cog[2])
+        k[2, 2] += mass * fowt.gravity * (-cog[2])
     return Model(
-        mass=hull.mass * KILO, cog=np.array(hull.centre_of_mass),
-        inertia_cg=np.array(hull.inertia_about_centre_of_mass) * KILO,
+        mass=mass, cog=cog, inertia_cg=inertia,
         volume=hull.displaced_volume, rho=rho, g=fowt.gravity, k_hydro=k,
         fairleads=np.array([line.fairlead for line in fowt.mooring_lines]),
         anchors=np.array([[*line.anchor_xy, -depth + line.anchor_height_above_seabed]
@@ -373,3 +379,17 @@ def run_checks(spec: dict, data: dict, thrust: float | None, hub: list[float] | 
         "loaded_surge_only": held,
         "net_buoyancy": model.rho * model.g * model.volume - model.mass * model.g,
     }
+
+
+# The flexible-body helpers live in fowt_flexible_body, which imports this
+# module; their names stay importable from here without an import cycle.
+_FLEXIBLE_NAMES = ("combine_mass_properties", "flexible_mass_properties",
+                   "tower_top_deflection")
+
+
+def __getattr__(name: str):
+    if name in _FLEXIBLE_NAMES:
+        from digitalmodel.floating_wind import fowt_flexible_body
+
+        return getattr(fowt_flexible_body, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

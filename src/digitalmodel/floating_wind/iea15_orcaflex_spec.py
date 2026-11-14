@@ -280,3 +280,17 @@ def load_case_specs(basis: dict, data: dict, equilibrium: dict) -> dict[str, dic
     parked["environment"]["wind"] = {"speed": _v(ext["wind_speed"]), "direction": 0.0}
     cases["LC5_parked_extreme"] = parked
     return cases
+
+
+# The flexible representation lives in iea15_flexible_spec, which imports this
+# module; its public names stay importable from here without an import cycle.
+_FLEXIBLE_NAMES = ("STEP_SPAN", "build_flexible_spec", "rna_about_own_centre",
+                   "tower_moduli", "tower_sections")
+
+
+def __getattr__(name: str) -> Any:
+    if name in _FLEXIBLE_NAMES:
+        from digitalmodel.floating_wind import iea15_flexible_spec
+
+        return getattr(iea15_flexible_spec, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
