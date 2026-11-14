@@ -1,0 +1,119 @@
+# Public bibliographic evidence only; the historical inventory is unchanged.
+# Field states describe the verification scope, without promoting calculation citations.
+meta:
+  inventory_sha256: 73bdbcbf0c28e1103fc0fb0464b1ad1177b46bffa984b8a464fd34fc1ee79076
+  observed_on: '2026-11-13'
+  limitation: No normative content, amendment completeness or governing design edition is established.
+records:
+  - code_id: DNV-OS-C301
+    publisher: DNV
+    observed_on: '2026-11-13'
+    evidence:
+      url: https://rules.dnv.com/
+      locator: Rules and standards landing page; JavaScript-required message.
+      outcome: HTTP 200; application shell only, with no document title or edition metadata.
+      supports: []
+    title: {state: unresolved, value: null}
+    edition: {state: unresolved, value: null}
+    amendment_currency: {state: unresolved, value: null}
+    supersession: {state: unresolved, value: null}
+    applicability: {state: unresolved, value: null}
+    verification_scope: Public landing-page access outcome only.
+    limitation: No C301 catalogue record was available in the returned HTML.
+    next_checkpoint: Obtain an issuer catalogue record explicitly naming C301 and its edition.
+  - code_id: DNV-OS-E301
+    publisher: DNV
+    observed_on: '2026-11-13'
+    evidence:
+      url: https://rules.dnv.com/
+      locator: Rules and standards landing page; JavaScript-required message.
+      outcome: HTTP 200; application shell only, with no document title or edition metadata.
+      supports: []
+    title: {state: unresolved, value: null}
+    edition: {state: unresolved, value: null}
+    amendment_currency: {state: unresolved, value: null}
+    supersession: {state: unresolved, value: null}
+    applicability: {state: unresolved, value: null}
+    verification_scope: Public landing-page access outcome only.
+    limitation: No E301 catalogue record was available in the returned HTML.
+    next_checkpoint: Obtain an issuer catalogue record explicitly naming E301 and its edition.
+  - code_id: DNV-ST-0119
+    publisher: DNV
+    observed_on: '2026-11-13'
+    evidence:
+      url: https://www.dnv.com/energy/standards-guidelines/dnv-st-0119-floating-wind-turbines/
+      locator: Document heading and Edition line beneath the Standard label.
+      outcome: HTTP 200; catalogue heading and edition line inspected.
+      supports: [title, edition]
+    title: {state: verified, value: Floating wind turbines}
+    edition: {state: verified, value: '2026-10'}
+    amendment_currency: {state: unresolved, value: null}
+    supersession: {state: unresolved, value: null}
+    applicability: {state: unresolved, value: null}
+    verification_scope: Catalogue title and edition metadata only.
+    limitation: No amendment history, supersession or intended-use determination was checked.
+    next_checkpoint: Check issuer amendment history and the governing design basis before use.
+  - code_id: IMO MODU Code
+    publisher: IMO
+    observed_on: '2026-11-13'
+    evidence:
+      url: https://www.imo.org/en/publications/pages/currentpublications.aspx
+      locator: English PUBLICATIONS list; 2009 MODU Code entry, publication IA810E.
+      outcome: HTTP 200; publication listing inspected.
+      supports: [title, edition]
+    title: {state: partial, value: 2009 MODU Code}
+    edition: {state: partial, value: '2020'}
+    amendment_currency: {state: unresolved, value: null}
+    supersession: {state: unresolved, value: null}
+    applicability: {state: unresolved, value: null}
+    verification_scope: Short publication title and publication edition in the issuer list.
+    limitation: The listing does not establish the complete amendment state or full formal title.
+    next_checkpoint: Reconcile issuer supplements and adopted amendments before statutory use.
+  - code_id: ABS Guidance Notes on Air Gap and Wave Impact Analysis for Semi-Submersibles
+    publisher: ABS
+    observed_on: '2026-11-13'
+    evidence:
+      url: https://ww2.eagle.org/content/dam/eagle/rules-and-guides/current/offshore/249-gn-airgapanalysis-semisubmersibles-2018/air-gap-analysis-gn-may20.pdf
+      locator: Linked PDF title page; publication title and date lines only.
+      outcome: HTTP 200; title-page text inspected.
+      supports: [title, edition]
+    title: {state: verified, value: Guidance Notes on Air Gap and Wave Impact Analysis for Semi-Submersibles}
+    edition: {state: partial, value: May 2020}
+    amendment_currency: {state: unresolved, value: null}
+    supersession: {state: unresolved, value: null}
+    applicability: {state: unresolved, value: null}
+    verification_scope: Publication title and date of the linked document only.
+    limitation: The title-page date does not exclude a newer edition or subsequent amendments.
+    next_checkpoint: Check the issuer publication register and amendment notices before use.
+  - code_id: ABS Guidance Notes on Global Performance and Integrated Load Analysis for Offshore Wind Turbines
+    publisher: ABS
+    observed_on: '2026-11-13'
+    evidence:
+      url: https://ww2.eagle.org/content/dam/eagle/rules-and-guides/current/design_and_analysis/206-guidance-notes-on-global-performance-and-integrated-load-analysis-for-offshore-wind-turbines/206-fowt-gpa-gn-aug23.pdf
+      locator: Linked PDF title page; publication title and date lines only.
+      outcome: HTTP 200; title-page text inspected.
+      supports: [title, edition]
+    title: {state: verified, value: Guidance Notes on Global Performance and Integrated Load Analysis for Offshore Wind Turbines}
+    edition: {state: partial, value: August 2023}
+    amendment_currency: {state: unresolved, value: null}
+    supersession: {state: unresolved, value: null}
+    applicability: {state: unresolved, value: null}
+    verification_scope: Publication title and date of the linked document only.
+    limitation: No supersession relationship or applicability to a design basis is established.
+    next_checkpoint: Check the issuer publication register and amendment notices before use.
+  - code_id: '"ABS Guidance Notes on Wave Loads"'
+    publisher: ABS
+    observed_on: '2026-11-13'
+    evidence:
+      url: https://ww2.eagle.org/en/rules-and-resources/rules-and-guides-v2.html
+      locator: ABS Rule Manager landing page returned by the rules-and-guides address.
+      outcome: HTTP 200 after redirect; no matching publication title in the returned page text.
+      supports: []
+    title: {state: unresolved, value: null}
+    edition: {state: unresolved, value: null}
+    amendment_currency: {state: unresolved, value: null}
+    supersession: {state: unresolved, value: null}
+    applicability: {state: unresolved, value: null}
+    verification_scope: Landing-page inspection only; no exhaustive catalogue search is claimed.
+    limitation: The historical identity remains unmatched; neighbouring guidance is not substituted.
+    next_checkpoint: Obtain an explicit issuer identity mapping or retain the unresolved entry.

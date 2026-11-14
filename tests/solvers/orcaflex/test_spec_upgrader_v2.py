@@ -349,3 +349,22 @@ def test_multiple_referenced_line_types_preserve_order(single_riser, tmp_path):
     upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
     assert [s["line_type"] for s in upgraded["riser"]["lines"][0]["sections"]] == [row[0] for row in rows]
     assert generated_mapping(upgraded, tmp_path / "after") == generated_mapping(single_riser, tmp_path / "before")
+
+
+def test_typed_buoys_are_rejected_on_fallback_route(single_riser, tmp_path):
+    """Typed buoys must not be dropped silently on the riser-plus-generic route.
+
+    The fallback renders only the line and vessel templates; a typed buoy
+    (#3974) has no generic template there, so generation must refuse it.
+    """
+    upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
+    upgraded["riser"]["buoys"] = [{
+        "name": "SupportBuoy", "position": [0, 0, -100], "mass": 150,
+        "moments_of_inertia": [1245.2, 1245.2, 1590.5], "volume": 400, "height": 6,
+        "drag_area": [55.3, 55.3, 66.6], "drag_coefficient": [1.0, 1.0, 1.0],
+        "added_mass_coefficient": [1.0, 1.0, 1.0],
+    }]
+    original = deepcopy(upgraded)
+    with pytest.raises(ValueError, match="buoys"):
+        generated_mapping(upgraded, tmp_path / "out")
+    assert upgraded == original

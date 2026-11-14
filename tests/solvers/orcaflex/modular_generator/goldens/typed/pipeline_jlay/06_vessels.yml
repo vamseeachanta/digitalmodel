@@ -1,0 +1,13 @@
+Vessels:
+- Name: LayVessel
+  VesselType: LayVessel Type
+  Length: 180.0
+  Connection: Free
+  InitialPosition:
+  - 0.0
+  - 0.0
+  - 0.0
+  InitialHeading: 0
+  PrimaryMotion: Calculated (6 DOF)
+  SuperimposedMotion: None
+  IncludedInStatics: None

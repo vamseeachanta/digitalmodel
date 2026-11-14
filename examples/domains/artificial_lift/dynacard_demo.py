@@ -99,7 +99,7 @@ def run_mixed_suite():
         all_results.append(workflow.run_full_analysis())
     
     # 2. Run Real Data Analysis
-    real_data_path = "/mnt/github/workspace-hub/client_projects/energy_firm_data_analytics/dynacard/Code/Oxy.Cipher.DynaCard/tests/testdata/11708328.json"
+    real_data_path = os.path.join(os.path.dirname(__file__), "..", "..", "..", "tests", "marine_ops", "artificial_lift", "dynacard", "testdata", "field_well_alpha.json")
     if os.path.exists(real_data_path):
         try:
             ctx_real = load_legacy_json(real_data_path)

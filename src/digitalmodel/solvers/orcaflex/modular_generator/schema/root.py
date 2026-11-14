@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import warnings
+
 from pydantic import BaseModel, Field, model_validator
 
 from .metadata import Metadata
@@ -28,7 +30,7 @@ class ProjectInputSpec(BaseModel):
         from digitalmodel.solvers.orcaflex.modular_generator.schema import ProjectInputSpec
         import yaml
 
-        with open('spec.yml') as f:
+        with open('spec.yml', encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         spec = ProjectInputSpec(**data)
@@ -139,14 +141,33 @@ class ProjectInputSpec(BaseModel):
                 tugs = self.equipment.tugs
                 max_tug_x = tugs.first_position[0] + (tugs.count - 1) * tugs.spacing
 
-                # Only warn if tugs extend significantly beyond pipeline
+                # Only warn if tugs extend significantly beyond pipeline; this
+                # can be intentional (staged installation), so it is not an error.
                 if max_tug_x > total_pipeline_length * 1.5:
-                    # This could be intentional for staged installation
-                    pass  # Could add warning logging here
+                    warnings.warn(
+                        f"Last tug at x = {max_tug_x:g} m lies beyond 1.5 times the "
+                        f"pipeline length ({total_pipeline_length:g} m); check the "
+                        "tug spacing unless the spread is intended (staged installation).",
+                        UserWarning,
+                        stacklevel=2,
+                    )
 
             # Check S-lay equipment consistency
             if self.equipment.stinger and not self.equipment.vessel:
                 raise ValueError("Stinger requires a vessel to be defined")
+            if self.equipment.jlay and not self.equipment.vessel:
+                raise ValueError("J-lay tower requires a vessel to be defined")
+            if self.equipment.jlay and self.equipment.stinger:
+                raise ValueError("J-lay tower and stinger cannot both be defined")
+            if self.equipment.jlay and self.equipment.tensioner:
+                raise ValueError(
+                    "J-lay tower carries the pipe tension at the pinned hang-off; "
+                    "a tensioner cannot also be defined"
+                )
+            if self.equipment.jlay and self.equipment.buoyancy_modules:
+                raise ValueError("J-lay seed does not support buoyancy modules")
+            if self.equipment.jlay and self.equipment.slay_end_b_x is not None:
+                raise ValueError("J-lay seed cannot use slay_end_b_x")
             if self.equipment.tensioner and not self.equipment.vessel:
                 raise ValueError("Tensioner requires a vessel to be defined")
 
