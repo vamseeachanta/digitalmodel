@@ -19,6 +19,15 @@ caption { caption-side: bottom; text-align: left; margin: .5rem 0 1.5rem; }
 reviewed head <code>5ba3f9db66f8e8f8f59defeb803c719fdddc0f1b</code>, and
 <a href="https://github.com/vamseeachanta/digitalmodel/issues/461">issue 461</a>, plan step 1.
 This report records code provenance and schema compatibility; it does not qualify vessel dimensions.</p>
+<h2>Revision history</h2>
+<table>
+<caption>Revision history.</caption>
+<thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>13 November 2026</td><td>The generator evidence and migration contract were recorded to supersede the negative search conclusion.</td></tr>
+<tr><td>1</td><td>14 November 2026</td><td>Dimension bases and public definitions were added to prevent unsupported loading assumptions; transient process wording was removed.</td></tr>
+</tbody>
+</table>
 <h2>Finding and canonical decision</h2>
 <p>The sibling <code>workspace-hub</code> repository contains both the generator wrapper
 and implementation. The earlier negative search conclusion is superseded by this
@@ -71,16 +80,40 @@ be substituted. Six-field completeness includes depth and speed, while runtime
 validation requires only <code>hull_id</code>, <code>name</code>, <code>loa_ft</code>,
 <code>beam_ft</code> and <code>draft_ft</code>. The header's string <code>hull_number</code>
 alias remains valid for canonical entries.</p>
+<h2>Dimension bases and reference limits</h2>
+<p>For manual curation, <code>displacement_lt</code> denotes total ship weight at
+the source-stated design condition. The source must identify standard, lightship
+or full-load explicitly, with the included payload and consumables. Deadweight is
+not displacement. Mean molded design draft and waterline length must share that
+loading condition; molded depth is taken amidships to the uppermost continuous
+deck at side. The molded datum and deck are curation conventions, recorded in
+<code>source</code> with water density and trim. An unknown basis leaves the value
+blank; comparisons require matched bases. Equality between <code>full_load_lt</code>
+and <code>displacement_lt</code> is permitted for a full-load basis, so the validator's
+inequality does not prove that the two fields have different loading conditions.</p>
+<p>The public USNA EN400 references define the underlying geometry and total-weight
+concepts; they do not prescribe the curation conventions or verify stored entries.
+<a href="https://www.usna.edu/NAOE/_files/documents/Courses/EN400/02.02%20Chapter%202.pdf">Chapter 2,
+sections 2.3.2 and 2.5.1</a> covers waterlines, depth and draft;
+<a href="https://www.usna.edu/NAOE/_files/documents/Courses/EN400/02.03%20Chapter%203.pdf">Chapter 3,
+section 3.1.1.1</a> defines displacement as total ship weight. Both PDFs were read
+text-first on 14 November 2026, with HTTP 200 responses. Their revision dates
+are not established by the retrieved documents. These citations support definitions,
+not computational input qualification.</p>
+<p>The generator schema and identifier sentence checks are documentation checks.
+The numbered migration example separately exercises the existing validator.
+The added dimension-basis check also checks documentation, without adding runtime
+validation. The focused suite contains 27 tests: 26 passed at the starting revision;
+the new documentation check failed before the header changed; all 27 then passed
+with no failures or skips. Stored dimension bases are not validated by that result.</p>
 <h2>Disposition and limits</h2>
 <p>The identifier example is synthetic and is exercised against the existing validator.
 All ten stored entries and their comments remain unchanged. The BB-42 identity/comment
 conflict and Liberty displacement/source basis require source-backed curation under
 <a href="https://github.com/vamseeachanta/digitalmodel/issues/463">issue 463</a>.
 This report does not establish a verified dimension dataset.</p>
-<p>The PR-description replacement and corrected review-comment draft are supplied to the
-publishing workflow. Applying those drafts, cross-referencing this search report in issue 461,
-updating downstream canonical paths and posting the issue 463 unblock remain external
-publication steps. Issue 461 is not closed by this local change. Independent provider
-acceptance of the new bytes remains pending; this job invokes no other model.</p>
+<p>Cross-referencing this search report in issue 461, updating downstream canonical
+paths and posting the issue 463 unblock remain external publication steps.
+Issue 461 remains open until those steps are completed.</p>
 </body>
 </html>

@@ -35,9 +35,33 @@
 #   Do not substitute trial or maximum speed for design speed.
 #   Leave unknown values blank; depth_ft and speed_kt are not validated.
 #
-# Optional fields:
+# Dimension basis for manual curation:
+#   displacement_lt: total ship weight at the source-stated design condition (LT).
+#   Record standard, lightship or full-load explicitly in source, including the
+#   included payload and consumables; no one condition is assumed from the key.
+#   Do not substitute deadweight for displacement or mix loading conditions.
+#   draft_ft: mean molded design draft at that same loading condition (ft),
+#   from the molded baseline to the design waterline; record trim in source.
+#   depth_ft: molded baseline to the uppermost continuous deck at side (ft),
+#   measured amidships; identify that deck and the molded datum in source.
+#   lwl_ft: waterline length at draft_ft and the same loading condition (ft).
+#   The molded datum and deck above are curation conventions; the references
+#   define the underlying waterline, keel-to-deck and ship-weight concepts.
+#   Cite the loading condition, water density, datum and deck in source.
+#   Leave a value blank when its basis is unknown; compare only matched bases.
+#   full_load_lt denotes total ship weight with full payload and consumables.
+#   Equality with displacement_lt is allowed when its cited basis is full-load;
+#   the >= constraint alone does not establish a different loading condition.
+#   The validator does not check loading condition or dimension basis.
+#   Existing entries are not qualified to these bases; source checks remain #463.
+#   Definitions: USNA EN400, Ch. 2, sections 2.3.2 and 2.5.1 (waterlines, depth,
+#   draft); Ch. 3, section 3.1.1.1 (displacement as total ship weight):
+#   https://www.usna.edu/NAOE/_files/documents/Courses/EN400/02.02%20Chapter%202.pdf
+#   https://www.usna.edu/NAOE/_files/documents/Courses/EN400/02.03%20Chapter%203.pdf
+#
+# Optional fields (not required by the validator):
 #   lwl_ft (positive float): waterline length; not required for completeness
-#   source (str, optional): reference for the dimensions
+#   source (str): dimension references, loading condition, datum and deck
 #   full_load_lt (positive float, optional): >= displacement_lt when both are set
 #   kg_ft, km_ft, gm_ft (positive float, optional)
 #   cb (float, optional): block coefficient, 0 < cb <= 1

@@ -92,7 +92,27 @@ class TestTemplateLoading:
         assert "trial or maximum speed" in complete
         assert "Leave unknown values blank" in complete
 
-    def test_superseded_generator_schema_mapping(self, template_header):
+    def test_documented_dimension_bases_and_references(self, template_header):
+        """Check curation guidance; loading bases are not runtime validation."""
+        basis = template_header.split("# Dimension basis for manual curation:\n", 1)[1]
+        basis = basis.split("#\n", 1)[0]
+        for guidance in (
+            "displacement_lt: total ship weight at the source-stated design condition",
+            "Record standard, lightship or full-load explicitly in source",
+            "Do not substitute deadweight for displacement",
+            "draft_ft: mean molded design draft at that same loading condition",
+            "depth_ft: molded baseline to the uppermost continuous deck at side",
+            "lwl_ft: waterline length at draft_ft and the same loading condition",
+            "Leave a value blank when its basis is unknown",
+            "The validator does not check loading condition or dimension basis",
+        ):
+            assert guidance in basis
+        for chapter in ("02.02%20Chapter%202.pdf", "02.03%20Chapter%203.pdf"):
+            reference = "https://www.usna.edu/NAOE/_files/documents/Courses/EN400/"
+            assert reference + chapter in basis
+
+    def test_superseded_generator_schema_mapping_documentation(self, template_header):
+        """Check documentation text; no generator or migration is executed."""
         assert "Superseded generator (not canonical): workspace-hub" in template_header
         assert (
             "scripts/data/doc-intelligence/generate-ship-dimension-template.py"
@@ -108,7 +128,8 @@ class TestTemplateLoading:
         assert "speed_kts -> speed_kt" in template_header
         assert "entry_status: pending -> draft" in template_header
 
-    def test_generator_identifier_mapping_requires_a_full_string_id(self, template_header):
+    def test_generator_identifier_mapping_documentation(self, template_header):
+        """Check identifier guidance; validator behavior is exercised separately."""
         assert "hull_number is an integer or null" in template_header
         assert (
             "hull_id = upper(hull_code) + '-' + str(hull_number)"
