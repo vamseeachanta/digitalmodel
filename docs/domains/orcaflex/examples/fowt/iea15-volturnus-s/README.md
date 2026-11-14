@@ -14,21 +14,29 @@ Issue: [#3970](https://github.com/vamseeachanta/digitalmodel/issues/3970).
 
 | Quantity | This model (hand calculation) | Published | Difference | Tolerance |
 |---|---|---|---|---|
+| System mass | 20,266.9 t | 20,093 t | +0.87 % | 1 % |
+| Still-water heave, system mass set to 20,093 t | −0.004 m | 0 m (20 m draft) | −0.004 m | 0.05 m |
+| Mooring vertical pretension, all lines | 6,060 kN | 6,065 kN | −0.08 % | 2 % |
 | Displaced volume | 20,206.3 m³ | 20,206 m³ | 0.00 % | 1 % |
 | Heave hydrostatic stiffness | 4.453 MN/m | 4.47 MN/m | -0.37 % | 2 % |
 | Pitch hydrostatic stiffness (weight term excluded) | 2.193 GN·m/rad | 2.19 GN·m/rad | +0.16 % | 3 % |
 | Still-water fairlead tension (lines 1; 2 and 3) | 2,415 kN; 2,429 kN | 2,437 kN | -0.91 %; -0.32 % | 2 % |
+| Fairlead tension at the undisplaced position | 2,436 kN | 2,437 kN | −0.06 % | 2 % |
 | Surge natural period | 135.3 s | 142.9 s | -5.3 % | 10 % |
 | Heave natural period | 20.45 s | 20.41 s | +0.2 % | 5 % |
 | Pitch natural period | 28.10 s | 27.78 s | +1.2 % | 5 % |
 | Yaw natural period | 88.8 s | 90.9 s | -2.4 % | 10 % |
 
-Table 1. Licence-free results against Allen et al. (2020) Tables 2, 3, 6 and 11.
+Table 1. Licence-free results against Allen et al. (2020) section 1 and
+Tables 1, 2, 3, 6 and 11.
 Published natural periods are the inverse of frequencies given to 0.001 Hz.
 That rounding alone allows the surge period to lie between 133 s and 154 s,
 heave 20.2 s to 20.6 s, pitch 27.4 s to 28.2 s and yaw 87 s to 95 s.
 
-Every value in Table 1 lies within its tolerance. All four periods also lie
+Every value in Table 1 lies within its tolerance. The system mass is within
+its 1 % tolerance, but its +0.87 % deviation is what sets the still-water
+draft: at the model's own mass the platform sits 0.382 m below the published
+20 m draft, outside the 0.05 m draft tolerance (LC0 below). All four periods also lie
 inside the rounding band of the published frequency. Under the steady rated
 rotor thrust of 2.457 MN, the platform settles 22.3 m downwind with a 5.3° mean
 pitch. The upwind line tension rises to 4,389 kN, 19.7 % of its 22,286 kN
@@ -43,6 +51,7 @@ platform instead (Table 5).
 | 1 | 2026-11-12 | Corrected the wave import file and readiness wording; mirrored the added-mass upper triangle and tested repeated generation to prevent invalid native inputs. |
 | 2 | 2026-11-13 | The generator, not the spec, now mirrors the upper triangle of every radiation matrix (one policy for all fowt specs); the spec holds the source values and the emitted model is unchanged. The wave-case models keep first-order wave loading off until the licensed import supplies load RAOs, and `run.md` switches it on after the import. Package regeneration refuses a folder holding files it did not write, so saved results are never deleted. |
 | 3 | 2026-11-13 | The natural-period statement and `results.json` now carry the assumed RNA inertia-tensor reading. The period check refuses a spec whose added mass differs from the WAMIT table it computes with. Supplied hydrodynamic files are checked against pinned SHA-256 digests of the public revision before any package is written. No result value changed. |
+| 4 | 2026-11-14 | The system mass is compared with Allen Table 1, and the still-water sinkage is attributed to the +0.87 % mass deviation, not to the mooring; the draft, vertical pretension and undisplaced fairlead tensions are compared with the published values (`results.json`, `mass_basis`). The LC0 `run.md` cites the published draft. Packages write the verified hydrodynamic bytes. No earlier result value changed. |
 
 Table 1a. Revision history.
 
@@ -121,9 +130,22 @@ is in [`results.json`](results.json).
 
 ### Still-water equilibrium (LC0)
 
-The model's buoyancy exceeds its weight by 4.36 MN. The three lines pull down
-with 6.06 MN at the fairleads, so the platform settles 0.382 m deeper. The
-upwind overhang of the rotor-nacelle assembly puts the system centre of gravity
+The published design floats at its 20 m draft: Allen et al. (section 1 and
+Table 1) give a 20,206 m³ displacement, a system mass of 20,093 t (1,263 t
+tower, 991 t RNA, 17,839 t platform) and 6,065 kN of mooring vertical
+pretension; buoyancy then equals weight plus that pretension to within 3 kN,
+inside the rounding of the published values. The model's system mass is 20,266.9 t, 0.87 % above Table 1. It is built
+from the public model inputs: the workbook's Floating Tower Properties
+integrate to 1,483.1 t against Allen's 1,263 t, the workbook RNA row gives
+945.8 t against 991 t, and ElastoDyn gives a 17,838 t platform. The model's
+buoyancy therefore exceeds its weight by 4.36 MN instead of 6.07 MN, and the
+platform settles 0.382 m below the published draft until the lines' vertical
+pull (6.06 MN) balances it. This is outside the 0.05 m draft tolerance. With
+only the system mass set to 20,093 t, the same calculation gives a heave of
+−0.004 m and fairlead tensions of 2,426 kN and 2,441 kN. The sinkage is a
+consequence of the mass basis, not a property of the published design. The
+source discrepancy between the public model inputs and Allen's Table 1 is
+unresolved, and `basis.yml` keeps the model-input mass. The upwind overhang of the rotor-nacelle assembly puts the system centre of gravity
 0.342 m upwind of the hull centre, which trims the platform by −1.42° (upwind
 side down). Allen et al. do not tabulate a still-water trim, so this value has
 no published comparator. A ballast trim in the reference design, if any, is not
@@ -134,7 +156,8 @@ represented.
 | 1 (upwind, 180°) | 2,415 kN | 1,339 kN | 2,009 kN | 506 m | 2,437 kN (Table 6), −0.91 % |
 | 2 and 3 | 2,429 kN | 1,341 kN | 2,025 kN | 503 m | 2,437 kN (Table 6), −0.32 % |
 
-Table 4. Still-water fairlead tensions.
+Table 4. Still-water fairlead tensions, at the sunk and trimmed equilibrium.
+At the undisplaced position the computed tensions are 2,436 kN (−0.06 %).
 
 ### Natural periods (LC1 to LC3, and yaw)
 
@@ -188,7 +211,10 @@ Established without a licence, within the stated tolerances:
 
 - the generated hull data reproduce the published displacement and
   hydrostatic stiffness;
-- the generated mooring reproduces the published pretension;
+- the generated mooring reproduces the published pretension and the
+  published total vertical pretension;
+- the generated hull and mooring reproduce the published 20 m draft when the
+  system mass is Allen's 20,093 t (heave −0.004 m against a 0.05 m tolerance);
 - the generated mass, stiffness and added mass give natural periods consistent
   with the published values and with an independent earlier analysis. This
   holds for the system inertia built from the adopted tower-top reading of the
@@ -221,6 +247,11 @@ Not established:
 - **Rotor aerodynamics and control.** Thrust is a steady force. The OrcaFlex
   Turbine object would need the 50 blade stations, aerofoil polars and the
   ROSCO controller from the IEA repository. That is not built.
+- **The published draft at the model's own mass.** The model's system mass is
+  0.87 % above Allen Table 1, chiefly through the workbook tower mass, so the
+  still-water equilibrium sits 0.382 m below the published draft. The LC0 to
+  LC3 starting positions and the LC0 expected heave carry this sinkage. Which
+  mass the reference design intends is unresolved at source.
 - **The rotor-nacelle inertia tensor.** The published tensors disagree; the
   tower-top reading is adopted as assumed and the discrepancy is unresolved.
   The natural periods above carry this assumption.
@@ -246,7 +277,7 @@ such as saved solver results, is refused and left as it is.
 
 | Package | Expected comparator |
 |---|---|
-| `LC0_statics` | Surge 0.387 m, heave −0.382 m, pitch −1.42°; fairlead tensions 2,415 and 2,429 kN (2 %) |
+| `LC0_statics` | Surge 0.387 m, heave −0.382 m (set by the +0.87 % system mass; −0.004 m at Allen's mass), pitch −1.42°; fairlead tensions 2,415 and 2,429 kN (2 %) |
 | `LC1_surge_decay` | Period 135.3 s (5 %); Allen 142.9 s (10 %) |
 | `LC2_heave_decay` | Period 20.45 s (5 %); Allen 20.41 s (5 %) |
 | `LC3_pitch_decay` | Period 28.10 s (5 %); Allen 27.78 s (5 %) |
