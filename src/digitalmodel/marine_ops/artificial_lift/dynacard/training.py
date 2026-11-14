@@ -78,6 +78,7 @@ The correction does not establish a physical operating envelope or revalidate
 the stored classifier and its earlier calibration.
 """
 
+import gzip
 import json
 import os
 from pathlib import Path
@@ -132,7 +133,7 @@ def _export_model_to_json(
     feature_names: list[str] | None = None,
     training_metadata: dict | None = None,
 ) -> None:
-    """Export a trained GradientBoostingClassifier to JSON.
+    """Export a trained GradientBoostingClassifier to JSON or deterministic gzip.
 
     Stores the full tree structure so the model can be loaded
     and evaluated without sklearn at runtime.
@@ -180,9 +181,11 @@ def _export_model_to_json(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     raw = json.dumps(model_dict, indent=2).encode("utf-8")
     if output_path.suffix == ".gz":
-        import gzip
-        raw = gzip.compress(raw, mtime=0)
-    output_path.write_bytes(raw)
+        with output_path.open("wb") as output:
+            with gzip.GzipFile(filename="", fileobj=output, mode="wb", mtime=0) as stream:
+                stream.write(raw)
+    else:
+        output_path.write_bytes(raw)
 
 
 def train_and_export(

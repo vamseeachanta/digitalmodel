@@ -14,7 +14,10 @@ from a static host. No build, server calculation, account, package installation,
 or paid service is required. All script and stylesheet files must remain beside
 the page. A current browser with JavaScript enabled is required.
 
-The model asset `models.js` is 4.217150 MB (4,217,150 bytes; decimal MB).
+The models are stored in six part scripts, `models-part-1.js` to
+`models-part-6.js` (4,257,106 bytes together; the largest is 819,204 bytes),
+joined by the 966-byte loader `models.js`. Each file is below the repository's
+1,000 KB file-size limit.
 The page needs no network after its files are on disk.
 
 Example 1 is loaded and analysed automatically on page load. Its surface card,
@@ -248,9 +251,13 @@ python scripts/enforcement/check-engineering-register.py docs/apps/dynacard/READ
 node docs/apps/dynacard/test/page_smoke.cjs
 ```
 
-`build_assets.py --check` rejects generated asset drift. `models.js` embeds the
-two reference JSON documents as compact JSON, with no indentation. Parsed
-equality with both module documents is tested; no model values are pruned.
+`build_assets.py --check` rejects generated asset drift, including a stale part
+file. The part scripts hold the two reference JSON documents as compact JSON,
+with no indentation, cut into string pieces of at most 900,000 bytes; `index.html`
+loads them in order before `models.js`, which joins and parses them and stops
+with an error naming any missing part. Parsed equality with both module
+documents, the page load order and the file-size limit are tested; no model
+values are pruned.
 `examples.js` and `template.csv` derive from the
 committed worked-example `results.json`. `test/run_core.cjs` accepts a JSON file containing
 `{card:{position,load},well:{...}}` or an array of requests and emits results JSON

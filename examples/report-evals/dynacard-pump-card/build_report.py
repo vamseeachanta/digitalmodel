@@ -271,7 +271,7 @@ def reader_layout():
   false is rejected rather than silently interpreted as an anchored installation.
 - survey: optional object with measured_depth_ft, inclination_deg and azimuth_deg
   arrays, paired from surface through the rod string, with increasing measured depth.
-  The default solver retains the survey; the frequency-domain comparison remains vertical.
+  Both solvers treat the well as vertical; the survey is recorded and inclination flagged.
 Unknown keys are rejected. A repeated closing position/load pair is excluded from
 frequency-domain harmonic counting. The reader reports an error when the usable
 sample count is insufficient; source timing cannot be established from loop shape.

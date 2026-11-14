@@ -96,8 +96,8 @@ def test_shape_vector_has_only_sixteen_normalised_projections():
     assert FeatureExtractor.extract_classifier_vector(card).shape == (19,)
 
 
-@pytest.mark.parametrize("suffix", [".json", ".json.gz"])
-def test_shape_trainer_exports_current_labels_and_reproducible_metadata(tmp_path, suffix):
+@pytest.mark.parametrize("filename", ["shape.json", "shape.json.gz"])
+def test_shape_trainer_exports_current_labels_and_reproducible_metadata(tmp_path, filename):
     import json
     import sklearn
     from digitalmodel.marine_ops.artificial_lift.dynacard import training
@@ -107,10 +107,14 @@ def test_shape_trainer_exports_current_labels_and_reproducible_metadata(tmp_path
     from digitalmodel.marine_ops.artificial_lift.dynacard.feature_extraction import (
         FeatureExtractor,
     )
-    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import read_model_bytes
-    artifact = tmp_path / f"shape{suffix}"
+    artifact = tmp_path / filename
     metrics = training.train_and_export_shape(samples_per_mode=5, output_path=artifact)
-    model = json.loads(read_model_bytes(artifact))
+    raw = artifact.read_bytes()
+    if artifact.suffix == ".gz":
+        import gzip
+        assert raw[3:8] == b"\x00" * 5  # No filename or timestamp in the header.
+        raw = gzip.decompress(raw)
+    model = json.loads(raw)
     assert model["class_labels"] == sorted(set(ALL_GENERATORS) - set(SYNTHETIC_LABEL_EXCLUSIONS))
     metadata = model["training_metadata"]
     assert metadata["feature_names"] == FeatureExtractor.shape_feature_names()
@@ -364,32 +368,38 @@ def test_model_artefacts_are_declared_as_package_data():
         assert any(fnmatch.fnmatch(relative, pattern) for pattern in patterns), relative
 
 
-def test_shipped_shape_model_is_lossless_and_below_large_file_limit():
+def test_shape_artefact_is_lossless_gzip_below_the_file_size_gate():
     import gzip
     import hashlib
-    import json
-    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import (
-        SHAPE_MODEL_PATH, read_model_bytes,
-    )
-    assert SHAPE_MODEL_PATH.suffixes[-2:] == [".json", ".gz"]
+    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import SHAPE_MODEL_PATH
+    assert SHAPE_MODEL_PATH.name == "dynacard_shape_classifier.json.gz"
+    assert not SHAPE_MODEL_PATH.with_suffix("").exists()
     stored = SHAPE_MODEL_PATH.read_bytes()
     assert len(stored) <= 1000 * 1024
-    assert stored[4:8] == bytes(4)  # No build timestamp in the gzip header.
-    raw = read_model_bytes(SHAPE_MODEL_PATH)
-    assert raw == gzip.decompress(stored)
-    recorded = json.loads((DATA / "plate_classifier_score.json").read_text(encoding="utf-8"))
-    assert hashlib.sha256(raw).hexdigest() == recorded["models"]["shape_only"]["sha256"]
+    assert stored[3:8] == b"\x00" * 5
+    assert hashlib.sha256(gzip.decompress(stored)).hexdigest() == (
+        "4190590bd965267518f9e936ac3a315d3be9a68eac72e92b60f5b1e6bb38c94f"
+    )
 
 
-def test_model_reader_supports_plain_json_and_rejects_corrupt_gzip(tmp_path):
+def test_model_reader_preserves_plain_and_compressed_json_bytes(tmp_path):
     import gzip
     from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import read_model_bytes
-    path = tmp_path / "model.json"
-    path.write_bytes(b'{"trees": []}\n')
-    assert read_model_bytes(path) == path.read_bytes()
+    raw = '{"label": "正常", "value": 0.1234567890123456}\n'.encode("utf-8")
+    plain = tmp_path / "model.json"
     compressed = tmp_path / "model.json.gz"
-    compressed.write_bytes(gzip.compress(path.read_bytes(), mtime=0))
-    assert read_model_bytes(compressed) == path.read_bytes()
-    compressed.write_bytes(b"invalid")
+    plain.write_bytes(raw)
+    compressed.write_bytes(gzip.compress(raw, mtime=0))
+    assert read_model_bytes(plain) == raw
+    assert read_model_bytes(compressed) == raw
+
+
+def test_model_reader_propagates_missing_and_corrupt_files(tmp_path):
+    import gzip
+    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import read_model_bytes
+    with pytest.raises(FileNotFoundError):
+        read_model_bytes(tmp_path / "missing.json.gz")
+    corrupt = tmp_path / "corrupt.json.gz"
+    corrupt.write_bytes(b"invalid gzip")
     with pytest.raises(gzip.BadGzipFile):
-        read_model_bytes(compressed)
+        read_model_bytes(corrupt)
