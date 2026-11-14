@@ -78,7 +78,8 @@ ol.refs{font-size:14px}
 <h2 id="key-conclusions">Key conclusions</h2>
 <p>The key conclusions for the example well are as follows:</p>
 <ul>
-<li>On this shutdown card the pump fills to 60 % of its stroke: 40.0 bbl/day at 24 hours a day and no slip, against 66.6 bbl/day for a full pump. The 27 bbl/day difference describes this card only; fillage in normal operation is not established. The cause, whether inflow, gas, valve leakage or a corner-detection error, is a check for the well.</li>
+<li>The pump fills to 60 % of its stroke. At 24 hours a day and no slip, it displaces 40.0 bbl/day, against 66.6 bbl/day for a full pump, so about 27 bbl/day of pump capacity is not used.</li>
+<li>On this card the pump fills to 60 %. The cause, whether inflow, gas, valve leakage or a corner-detection error, is a check for the well.</li>
 <li>The plunger lifts a fluid load of 3,310 lbf on each upstroke.</li>
 <li>The pump stroke is 39.6 in, 73 % of the surface stroke. Rod stretch and rod dynamics take the rest, which the surface card alone does not separate.</li>
 <li>The card shape reads as tagging up, the plunger striking at the top of its stroke. This reading is a hypothesis to check at the well; the pump card, the fillage and the fluid load are the result.</li>
@@ -119,7 +120,7 @@ ol.refs{font-size:14px}
 <li>The rod string in the record ends at 4,750 ft and the pump is at 4,844 ft. The end of the rod string is taken as the pump; the 94 ft between them is not represented.</li>
 <li>The shape model gives tagging up a model score of 99.91 %. The score is the model's own output, not the chance that the fault is present. The model is trained on synthetic cards; on the ten plate shapes it is correct on 6 of 10 (5 of the 8 whose plate label has the same name as a model class). The plate shapes also shape the synthetic training cards, so they are not an independent test.</li>
 <li>The inputs that matter most: a 1 % larger rod diameter lowers the maximum pump load by about 3.1 % and the fillage by about 0.9 %; a 1 % load-cell gain error raises the maximum pump load by about 2.6 %; a 1 % surface position scale error moves the pump stroke by about 1.3 %. The full sensitivity table is in the full study.</li>
-<li>Limits: unanchored tubing is not modelled and only steel rods are accepted. Both methods treat the well as vertical. A card alone does not give production; run time and slip are needed. The web page assumes a vertical well, anchored tubing and samples evenly spaced in time. Fluid load and fillage step with the detected corner samples, so rounding the last digit of a card can move the fluid load by tens of lbf: 34 lbf at most in the ten examples.</li>
+<li>Limits: unanchored tubing is not modelled and only steel rods are accepted. The frequency-domain method treats the well as vertical. A card alone does not give production; run time and slip are needed. The web page assumes a vertical well, anchored tubing and samples evenly spaced in time. Fluid load and fillage step with the detected corner samples, so rounding the last digit of a card can move the fluid load by tens of lbf: 34 lbf at most in the ten examples.</li>
 </ul>
 <h2 id="appendix-b">Appendix B The two numerical methods compared</h2>
 <p>The two methods that compute the pump card are compared in this appendix.</p>
