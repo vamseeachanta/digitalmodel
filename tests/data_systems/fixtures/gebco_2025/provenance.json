@@ -1,6 +1,7 @@
 {
   "edition": "GEBCO_2025",
   "dataset_id": "GEBCO_2025",
+  "product_variant": "ice_surface_elevation",
   "owner_repo": "digitalmodel",
   "source_url": "https://dap.ceda.ac.uk/bodc/gebco/global/gebco_2025/ice_surface_elevation/esri_ascii_raster/gebco_2025_n90.0_s0.0_w-90.0_e0.0.asc",
   "retrieved_utc": "2026-11-14T03:28:09.223285+00:00",
