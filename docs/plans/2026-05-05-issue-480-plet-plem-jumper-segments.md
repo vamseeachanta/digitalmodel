@@ -7,7 +7,7 @@
 
 ## Context
 
-The approved PLET-PLEM entry in `KNOWN_JUMPER_CONFIGS` in `src/digitalmodel/marine_ops/installation/jumper_lift.py` carries placeholder segment lengths copied wholesale from MF-PLET. The TODO in that entry documents this: "Verify these from the approved jumper workbook." Identical seg_a-g (336/160/525/1046.3/370/160/352) produce a misleading 71.64 m total — the same value MF-PLET computes — so any analysis run on the PLET-PLEM config currently re-derives MF-PLET geometry and silently ships wrong results downstream (line sections, weights, COG, OrcaFlex sections).
+The approved PLET-PLEM entry in `KNOWN_JUMPER_CONFIGS` in `src/digitalmodel/marine_ops/installation/jumper_lift.py` carries placeholder segment lengths copied wholesale from MF-PLET. The TODO in that entry asks for verification against the approved jumper workbook. Identical seg_a-g (336/160/525/1046.3/370/160/352) produce a misleading 71.64 m total — the same value MF-PLET computes — so any analysis run on the PLET-PLEM config currently re-derives MF-PLET geometry and silently ships wrong results downstream (line sections, weights, COG, OrcaFlex sections).
 
 The approved jumper workbook is held in the client engagement repository and accessed on the Windows workstation with Claude cowork. The GA sheet rows C5:C11 hold seg_a through seg_g in inches per the Excel-conversion convention used for the MF-PLET ingest.
 

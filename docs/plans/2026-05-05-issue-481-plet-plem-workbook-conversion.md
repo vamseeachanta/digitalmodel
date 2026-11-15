@@ -9,7 +9,7 @@
 
 Convert the approved jumper workbook from the client engagement repository to a Python module + pytest suite using the established `excel-workbook-to-python-cowork` skill. Template precedent: MF-PLET converter at `src/digitalmodel/marine_ops/installation/jumper_lift.py` (1,200+ lines, 24 functions, 81 tests, the `KNOWN_JUMPER_CONFIGS` registry).
 
-Current state of PLEM consumer: the approved PLET-PLEM installation spec exists but warns "NOTE: Segment lengths need verification from approved jumper workbook. Current values use MF-PLET baseline (same pipe, geometry TBD from workbook conversion)." This issue closes that gap. Cross-repo: workbook lives in client engagement repository (private), Python module lands in `digitalmodel`, segment lengths flow into `KNOWN_JUMPER_CONFIGS`. Public discovery: installation specs are under `docs/domains/orcaflex/subsea/jumper/installation/`; registry entries are defined by `KNOWN_JUMPER_CONFIGS` in `src/digitalmodel/marine_ops/installation/jumper_lift.py`.
+Current state of PLEM consumer: the approved PLET-PLEM installation spec exists but warns "NOTE: Segment lengths need verification from approved jumper workbook. Current values use MF-PLET baseline (same pipe, geometry TBD from workbook conversion)." This issue closes that gap. Cross-repo: workbook lives in the client engagement repository (private), Python module lands in `digitalmodel`, segment lengths flow into `KNOWN_JUMPER_CONFIGS`. Public discovery: installation specs are under `docs/domains/orcaflex/subsea/jumper/installation/`; registry entries are defined by `KNOWN_JUMPER_CONFIGS` in `src/digitalmodel/marine_ops/installation/jumper_lift.py`.
 
 ## Plan
 
@@ -36,4 +36,4 @@ Current state of PLEM consumer: the approved PLET-PLEM installation spec exists 
 
 1. Is the Windows workstation currently online and licensed for Excel + Claude cowork? Confirm before dispatch.
 2. Does the workbook contain VBA macros or external data links? If yes, document and decide whether to convert them or freeze cached values — block on user input.
-3. The workbook lives in client engagement repository (private). Confirm the executor has push rights to that repo before starting; otherwise plan reduces to an extract-and-handoff.
+3. The workbook lives in the client engagement repository (private). Confirm the executor has push rights to that repo before starting; otherwise plan reduces to an extract-and-handoff.

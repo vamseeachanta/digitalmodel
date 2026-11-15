@@ -5,7 +5,6 @@
 
 The scan is line based; tokens split across soft line wraps are not detected.
 """
-
 from hashlib import sha256
 from pathlib import Path
 
@@ -71,7 +70,6 @@ TOKENS = (
     (7, "8fc0a5d0931f13f177d7df9056b060e1d08926561cbeeba4cb53a6e74edbfa1a"),  # T44
     (9, "ac56656ee0f5d330809a143ff69d841805871b8952dc8b97a0740ee94b31d9eb"),  # T45
 )
-
 def assert_neutral(path, tokens=TOKENS):
     assert path.is_file(), f"Missing regular document: {path.name}"
     offenders = []
