@@ -289,6 +289,15 @@ docs/reports/*
 !/docs/reports/modules/passing_ship/build_worked_example.py
 !/docs/reports/modules/passing_ship/README.md
 
+# Fender design generic method report: report, workbook, results and charts.
+!/docs/reports/modules/fender_design/
+/docs/reports/modules/fender_design/*
+!/docs/reports/modules/fender_design/fender-design-generic.md
+!/docs/reports/modules/fender_design/fender-design-generic.html
+!/docs/reports/modules/fender_design/fender-design-generic.xlsx
+!/docs/reports/modules/fender_design/results.json
+!/docs/reports/modules/fender_design/charts/
+
 !/docs/reports/modules/pipe_capacity/
 /docs/reports/modules/pipe_capacity/*
 !/docs/reports/modules/pipe_capacity/build_worked_example.py

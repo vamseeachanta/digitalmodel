@@ -1,0 +1,389 @@
+{
+  "selected": "pianc2002",
+  "design_energy_knm": 680.8385800390707,
+  "energy_per_fender_knm": 680.8385800390707,
+  "capacity_knm": 700.0,
+  "utilisation": 0.9726265429129582,
+  "methods": [
+    {
+      "method": "pianc2002",
+      "label": "PIANC WG33 (2002)",
+      "velocity": 0.11159401052929946,
+      "cm": 1.75,
+      "ce": 0.5950658584780236,
+      "cs": 1.0,
+      "cc": 1.0,
+      "other": 1.0,
+      "normal": 389.05061716518327,
+      "factor": 1.75,
+      "design": 680.8385800390707,
+      "divisor": 1.0,
+      "flags": [],
+      "sources": {
+        "velocity_m_s": "pianc2002-velocity: curve b (difficult berthing, sheltered) at 48,000 DWT",
+        "cm": "pianc2002-cm: pianc2002; KC/D = 0.167",
+        "ce": "pianc2002-ce: K 48.76 m, R 47.76 m, phi 65.4 deg",
+        "cs": "pianc2002-cs: fender deflection 1.56 m",
+        "cc": "pianc2002-cc: open structure, angle 5 deg",
+        "abnormal_factor": "pianc2002: PIANC 2002 Table 4.2.5, bulk, smallest ships"
+      }
+    },
+    {
+      "method": "wg211",
+      "label": "PIANC WG211 (2024)",
+      "velocity": 0.15,
+      "cm": 1.75,
+      "ce": 0.5950658584780236,
+      "cs": 1.0,
+      "cc": 1.0,
+      "other": 1.0,
+      "normal": 702.9215453271654,
+      "factor": 1.5889073460411245,
+      "design": 1116.8772070609123,
+      "divisor": 1.1,
+      "flags": [
+        "WG211 factors from the 2024 background papers; final guideline tables not read"
+      ],
+      "sources": {
+        "velocity_m_s": "pianc-wg211: moderate: R24B default without site data (pp. 976-979)",
+        "cm": "pianc2002-cm: keel clearance rule (as in the R24B example); KC/D = 0.167",
+        "ce": "pianc2002-ce: K 48.76 m, R 47.76 m, phi 65.4 deg",
+        "cs": "pianc-wg211: removed in WG211",
+        "cc": "pianc-wg211: removed in WG211",
+        "partial_energy_factor": "pianc-wg211: gamma_Eref 1.59 (class B, moderate, CoV_M high, single contact) x gamma_n 0.999 (100/yr); gamma_p = gamma_c = 1.0"
+      }
+    },
+    {
+      "method": "bs6349",
+      "label": "BS 6349-4:2014",
+      "velocity": 0.10249358909696749,
+      "cm": 1.75,
+      "ce": 0.5950658584780236,
+      "cs": 1.0,
+      "cc": 1.0,
+      "other": 1.0,
+      "normal": 328.1842537911438,
+      "factor": 1.75,
+      "design": 574.3224441345017,
+      "divisor": 1.0,
+      "flags": [],
+      "sources": {
+        "velocity_m_s": "bs6349-4-velocity: curve b (difficult berthing, sheltered) at 60,000 t",
+        "cm": "vasco-costa-1964: vasco_costa; KC/D = 0.167",
+        "ce": "pianc2002-ce: K 48.76 m, R 47.76 m, phi 65.4 deg",
+        "cs": "pianc2002-cs: fender deflection 1.56 m",
+        "cc": "pianc2002-cc: open structure, angle 5 deg",
+        "abnormal_factor": "pianc2002: PIANC 2002 Table 4.2.5, bulk, smallest ships; BS 6349-4 own factor table not read"
+      }
+    },
+    {
+      "method": "eau",
+      "label": "EAU 2012",
+      "velocity": 0.15256265037787817,
+      "cm": 1.75,
+      "ce": 0.5950658584780236,
+      "cs": 1.0,
+      "cc": 1.0,
+      "other": 1.0,
+      "normal": 727.1446057405892,
+      "factor": 1.75,
+      "design": 1272.5030600460311,
+      "divisor": 1.0,
+      "flags": [
+        "EAU velocities digitized at two sizes only"
+      ],
+      "sources": {
+        "velocity_m_s": "eau-2012: moderate (normal), characteristic value, digitized",
+        "cm": "pianc2002-cm: pianc2002; KC/D = 0.167",
+        "ce": "pianc2002-ce: K 48.76 m, R 47.76 m, phi 65.4 deg",
+        "cs": "pianc2002-cs: fender deflection 1.56 m",
+        "cc": "pianc2002-cc: open structure, angle 5 deg",
+        "abnormal_factor": "eau-2012: PIANC 2002 Table 4.2.5, bulk, smallest ships"
+      }
+    },
+    {
+      "method": "rom",
+      "label": "ROM 2.0-11 (2012)",
+      "velocity": 0.15,
+      "cm": 1.75,
+      "ce": 0.5950658584780236,
+      "cs": 1.0,
+      "cc": 1.0,
+      "other": 0.95,
+      "normal": 667.7754680608072,
+      "factor": 1.5,
+      "design": 1001.6632020912107,
+      "divisor": 1.0,
+      "flags": [],
+      "sources": {
+        "velocity_m_s": "rom-2.0-11: Table 4.6.4.36, moderate, digitized",
+        "cm": "rom-2.0-11: 1.8 / 1.5 keel-clearance rule (p. 265); KC/D = 0.167",
+        "ce": "rom-2.0-11: K 48.76 m, R 47.76 m, phi 65.4 deg",
+        "cs": "rom-2.0-11: p. 272",
+        "cc": "rom-2.0-11: p. 271, 274",
+        "cg": "rom-2.0-11: 0.95 continuous berth",
+        "accidental_factor": "rom-2.0-11: Table 4.6.4.43 product (with tugs, 100 calls/yr, T_R 500 yr)"
+      }
+    },
+    {
+      "method": "ufc",
+      "label": "UFC 4-152-01 (2017 C1)",
+      "velocity": 0.09884951278705814,
+      "cm": 3.8755158267397025,
+      "ce": 0.5400727886754333,
+      "cs": 1.0,
+      "cc": 1.0,
+      "other": 0.95,
+      "normal": 582.8754141976701,
+      "factor": 1.5,
+      "design": 874.3131212965052,
+      "divisor": 1.0,
+      "flags": [
+        "below 0.10 m/s: use with caution (TFADM p. 23)"
+      ],
+      "sources": {
+        "velocity_m_s": "ufc-4-152-01: Fig. 5-3/5-4, moderate (sheltered/moderate/exposed), digitized",
+        "cm": "ufc-4-152-01: 5-2.1.1 e surface vessels",
+        "ce": "ufc-4-152-01: k^2/(a^2 + k^2), k 48.76 m, a 45.00 m",
+        "cs": "ufc-4-152-01: Cd 1.0 for larger ships on energy-absorbing fenders",
+        "cc": "ufc-4-152-01: open berth or angled approach",
+        "cg": "ufc-4-152-01: 0.95 at or beyond the quarter points",
+        "accidental_factor": "ufc-4-152-01: 5-1.5.3: increase by at least 50 %"
+      }
+    },
+    {
+      "method": "ueda",
+      "label": "Ueda Cm (Japan), PIANC 2002 v and factor",
+      "velocity": 0.11159401052929946,
+      "cm": 1.69554861350478,
+      "ce": 0.5950658584780236,
+      "cs": 1.0,
+      "cc": 1.0,
+      "other": 1.0,
+      "normal": 376.9452768672031,
+      "factor": 1.75,
+      "design": 659.6542345176055,
+      "divisor": 1.0,
+      "flags": [],
+      "sources": {
+        "velocity_m_s": "pianc2002-velocity: curve b (difficult berthing, sheltered) at 48,000 DWT",
+        "cm": "ueda-1981: ueda; KC/D = 0.167",
+        "ce": "pianc2002-ce: K 48.76 m, R 47.76 m, phi 65.4 deg",
+        "cs": "pianc2002-cs: fender deflection 1.56 m",
+        "cc": "pianc2002-cc: open structure, angle 5 deg",
+        "abnormal_factor": "pianc2002: PIANC 2002 Table 4.2.5, bulk, smallest ships"
+      }
+    },
+    {
+      "method": "is4651",
+      "label": "IS 4651-3:1974 (withdrawn)",
+      "velocity": 0.2,
+      "cm": 1.75,
+      "ce": 0.503798061746948,
+      "cs": 0.9,
+      "cc": 1.0,
+      "other": 1.0,
+      "normal": 952.178336701732,
+      "factor": 1.0,
+      "design": 952.178336701732,
+      "divisor": 1.0,
+      "flags": [
+        "withdrawn standard; comparison only"
+      ],
+      "sources": {
+        "velocity_m_s": "is-4651-3-1974: Table 2",
+        "cm": "is-4651-3-1974: 5.2.1.2: 1 + 2D/B",
+        "ce": "is-4651-3-1974: 5.2.1.3, r = L/4, l 45.00 m, theta 5 deg",
+        "cs": "is-4651-3-1974: 5.2.1.4",
+        "cc": "is-4651-3-1974: not in the method",
+        "factor": "is-4651-3-1974: no abnormal factor in the method"
+      }
+    }
+  ],
+  "skipped": {},
+  "sweeps": [
+    {
+      "parameter": "velocity_m_s",
+      "base": 0.11159401052929946,
+      "low": 0.0537,
+      "high": 0.172,
+      "basis": "Brolsma conditions a to c at 48,000 DWT",
+      "change_low": -76.84382623738117,
+      "change_high": 137.56098769053384,
+      "util_low": 0.22522309233827706,
+      "util_high": 2.3105812218843176,
+      "limit_value": 0.11314547614015484
+    },
+    {
+      "parameter": "displacement_t",
+      "base": 60000.0,
+      "low": 45000.0,
+      "high": 66000.0,
+      "basis": "part-loaded to 10 % above the base",
+      "change_low": -25.0,
+      "change_high": 9.999999999999986,
+      "util_low": 0.7294699071847187,
+      "util_high": 1.069889197204254,
+      "limit_value": 61688.631096066536
+    },
+    {
+      "parameter": "water_depth_m",
+      "base": 14.0,
+      "low": 12.6,
+      "high": 18.0,
+      "basis": "KC/D 0.05 to 0.5, the PIANC Cm range",
+      "change_low": 2.857142857142869,
+      "change_high": -14.28571428571428,
+      "util_low": 1.0004158727104715,
+      "util_high": 0.8336798939253928,
+      "limit_value": 13.159857011836177
+    },
+    {
+      "parameter": "contact_x_over_lbp",
+      "base": 0.25,
+      "low": 0.2,
+      "high": 0.35,
+      "basis": "SFT p. 17 side berthing contact 20 to 35 % from the bow",
+      "change_low": -15.09233559914862,
+      "change_high": 35.54742993167239,
+      "util_low": 0.8258344809301372,
+      "util_high": 1.3183702817517895,
+      "limit_value": 0.2585525634307494
+    },
+    {
+      "parameter": "berthing_angle_deg",
+      "base": 5.0,
+      "low": 0.0,
+      "high": 10.0,
+      "basis": "TFADM p. 22 side berthing angles",
+      "change_low": -4.994498807460312,
+      "change_high": 5.812146049911093,
+      "util_low": 0.924048721826128,
+      "util_high": 1.0291570181072607,
+      "limit_value": 7.499123807882226
+    },
+    {
+      "parameter": "cs",
+      "base": 1.0,
+      "low": 0.9,
+      "high": 1.0,
+      "basis": "PIANC 2002 4.2.6 hard to soft fenders",
+      "change_low": -9.999999999999998,
+      "change_high": 0.0,
+      "util_low": 0.8753638886216624,
+      "util_high": 0.9726265429129582,
+      "limit_value": null
+    },
+    {
+      "parameter": "cc",
+      "base": 1.0,
+      "low": 0.8,
+      "high": 1.0,
+      "basis": "PIANC 2002 4.2.7 (SFT p. 20) solid quay to open berth",
+      "change_low": -19.999999999999986,
+      "change_high": 0.0,
+      "util_low": 0.7781012343303666,
+      "util_high": 0.9726265429129582,
+      "limit_value": null
+    },
+    {
+      "parameter": "factor",
+      "base": 1.75,
+      "low": 1.25,
+      "high": 1.75,
+      "basis": "PIANC 2002 Table 4.2.5 bulk carriers, largest to smallest",
+      "change_low": -28.57142857142857,
+      "change_high": 0.0,
+      "util_low": 0.6947332449378273,
+      "util_high": 0.9726265429129582,
+      "limit_value": 1.7992517403019406
+    }
+  ],
+  "tornado": [
+    {
+      "parameter": "velocity_m_s",
+      "span_pct": 214.404813927915
+    },
+    {
+      "parameter": "contact_x_over_lbp",
+      "span_pct": 50.63976553082101
+    },
+    {
+      "parameter": "displacement_t",
+      "span_pct": 34.999999999999986
+    },
+    {
+      "parameter": "factor",
+      "span_pct": 28.57142857142857
+    },
+    {
+      "parameter": "cc",
+      "span_pct": 19.999999999999986
+    },
+    {
+      "parameter": "water_depth_m",
+      "span_pct": 17.14285714285715
+    },
+    {
+      "parameter": "berthing_angle_deg",
+      "span_pct": 10.806644857371406
+    },
+    {
+      "parameter": "cs",
+      "span_pct": 9.999999999999998
+    }
+  ],
+  "geometry": {
+    "cb": 0.8468834688346886,
+    "k_m": 48.76341463414635,
+    "r_m": 47.75981574503821,
+    "phi_deg": 65.42687416958981,
+    "ce": 0.5950658584780236
+  },
+  "charts": {
+    "methods": "methods.png",
+    "cm": "cm_methods.png",
+    "velocity": "velocity_methods.png",
+    "sweep_velocity_m_s": "sweep_velocity_m_s.png",
+    "sweep_displacement_t": "sweep_displacement_t.png",
+    "sweep_water_depth_m": "sweep_water_depth_m.png",
+    "sweep_contact_x_over_lbp": "sweep_contact_x_over_lbp.png",
+    "sweep_berthing_angle_deg": "sweep_berthing_angle_deg.png",
+    "sweep_cs": "sweep_cs.png",
+    "sweep_cc": "sweep_cc.png",
+    "sweep_factor": "sweep_factor.png",
+    "tornado": "tornado.png",
+    "sizes": "sizes.png",
+    "database": "database_coverage.png"
+  },
+  "database_rows": 4652,
+  "database_by_type": {
+    "cone": 1747,
+    "cell": 1021,
+    "element": 644,
+    "arch": 378,
+    "pneumatic": 179,
+    "v": 161,
+    "foam": 117,
+    "cylindrical": 97,
+    "foam-donut": 63,
+    "pneumatic-fixed-air-block": 60,
+    "roller": 30,
+    "pi (paired leg element)": 24,
+    "d": 21,
+    "cf-composite": 20,
+    "foam-filled": 19,
+    "square": 19,
+    "hydropneumatic": 10,
+    "fender-bar": 10,
+    "shear": 10,
+    "pneumatic-vertical": 7,
+    "keyhole": 4,
+    "m": 3,
+    "w": 3,
+    "wing": 2,
+    "pneumatic-low-pressure": 2,
+    "parallel-motion": 1
+  },
+  "database_sources": 14
+}
