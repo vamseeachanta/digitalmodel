@@ -18,6 +18,8 @@
       "factor": 1.75,
       "design": 680.8385800390707,
       "divisor": 1.0,
+      "capacity": 700.0,
+      "utilisation": 0.9726265429129582,
       "flags": [
         "citation not resolved against the wiki: PIANC-WG33-2002 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
       ],
@@ -79,6 +81,8 @@
       "factor": 1.5889073460411245,
       "design": 1116.8772070609123,
       "divisor": 1.1,
+      "capacity": 636.3636363636363,
+      "utilisation": 1.7550927539528625,
       "flags": [
         "WG211 factors from the 2024 background papers; final guideline tables not read",
         "citation not resolved against the wiki: PIANC-WG211-2024 (page_missing), PIANC-WG33-2002 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
@@ -127,6 +131,8 @@
       "factor": 1.75,
       "design": 574.3224441345017,
       "divisor": 1.0,
+      "capacity": 700.0,
+      "utilisation": 0.8204606344778596,
       "flags": [
         "citation not resolved against the wiki: BS-6349-4 (page_missing), vasco-costa-1964 (page_missing), PIANC-WG33-2002 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
       ],
@@ -190,6 +196,8 @@
       "factor": 1.75,
       "design": 1272.5030600460311,
       "divisor": 1.0,
+      "capacity": 700.0,
+      "utilisation": 1.8178615143514731,
       "flags": [
         "EAU velocities digitized at two sizes only",
         "citation not resolved against the wiki: EAU-2012 (page_missing), PIANC-WG33-2002 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
@@ -248,6 +256,8 @@
       "factor": 1.5,
       "design": 1001.6632020912107,
       "divisor": 1.0,
+      "capacity": 700.0,
+      "utilisation": 1.4309474315588724,
       "flags": [
         "citation not resolved against the wiki: ROM-2.0-11 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
       ],
@@ -285,6 +295,8 @@
       "factor": 1.5,
       "design": 773.0229332293281,
       "divisor": 1.0,
+      "capacity": 700.0,
+      "utilisation": 1.1043184760418974,
       "flags": [
         "below 0.10 m/s: use with caution (TFADM p. 23)",
         "citation not resolved against the wiki: UFC-4-152-01 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
@@ -323,6 +335,8 @@
       "factor": 1.75,
       "design": 659.6542345176055,
       "divisor": 1.0,
+      "capacity": 700.0,
+      "utilisation": 0.9423631921680078,
       "flags": [
         "citation not resolved against the wiki: PIANC-WG33-2002 (page_missing), ueda-1981 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
       ],
@@ -385,6 +399,8 @@
       "factor": 1.0,
       "design": 952.178336701732,
       "divisor": 1.0,
+      "capacity": 700.0,
+      "utilisation": 1.36025476671676,
       "flags": [
         "withdrawn standard; comparison only",
         "citation not resolved against the wiki: IS-4651-3 (page_missing); values carry the source register only (citations='record', explicit opt-out)"

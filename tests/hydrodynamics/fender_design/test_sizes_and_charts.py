@@ -182,3 +182,92 @@ def test_compute_applies_the_curve_peak_to_sweeps_and_sizes(tmp_path):
         for p in s.points:
             if p.reaction_kn is not None and p.energy_per_fender_knm >= 0.40 * s.capacity_knm:
                 assert p.reaction_kn == pytest.approx(1.10 * res.base_fender.reaction_kn * res.reaction_factor)
+
+
+# ------------------------------------------- method comparison: own capacity
+
+#: velocity at which WG211 gives 660 kNm on the generic case: above the WG211
+#: design capacity 700 / 1.10 = 636.364 kNm of the base fender, below its 700 kNm
+V_660 = 0.115308285
+WG211 = "PIANC WG211 (2024)"
+
+
+def _crossing_case():
+    case = load_case(EXAMPLE / "generic_case.yaml")
+    case["design"]["velocity_m_s"] = V_660
+    return compute(case, citations="record")
+
+
+def test_method_capacity_carries_each_method_divisor():
+    res = _crossing_case()
+    by = {r.method: r for r in res.methods}
+    assert res.method_capacity_knm(by["pianc2002"]) == pytest.approx(700.0)
+    assert res.method_capacity_knm(by["wg211"]) == pytest.approx(636.364, abs=5e-4)
+    assert by["wg211"].design_energy_knm == pytest.approx(660.0, abs=1e-3)
+    u = res.method_utilisation(by["wg211"])
+    assert round(u, 3) == 1.037 and u > 1.0
+    assert res.method_utilisation(by["pianc2002"]) == pytest.approx(by["pianc2002"].design_energy_knm / 700.0)
+
+
+def _bars(ax):
+    """{y tick label: bar length} of a horizontal bar chart."""
+    labels = {round(t, 6): lab.get_text() for t, lab in zip(ax.get_yticks(), ax.get_yticklabels())}
+    return {labels[round(p.get_y() + p.get_height() / 2, 6)]: p.get_width() for p in ax.patches
+            if round(p.get_y() + p.get_height() / 2, 6) in labels}
+
+
+def test_method_chart_plots_utilisation_against_one(tmp_path, monkeypatch):
+    import fender_study
+    res = _crossing_case()
+    figs = {}
+
+    def keep(fig, path):
+        figs[Path(path).name] = fig
+        return Path(path)
+    monkeypatch.setattr(fc, "_save", keep)
+    fender_study.method_chart(res, tmp_path / "methods.png", res.base_fender.fender_id)
+    ax = figs["methods.png"].axes[0]
+    bars = _bars(ax)
+    assert len(bars) == len(res.methods)
+    # WG211 demand 660 kNm lies between 636.364 and 700 kNm: the bar is over the limit 1.0
+    assert bars[WG211] == pytest.approx(660.0 / (700.0 / 1.10), abs=1e-4)
+    assert bars[WG211] > 1.0
+    for r in res.methods:
+        assert bars[r.label] == pytest.approx(res.method_utilisation(r))
+    # one limit, utilisation 1.0; no energy line drawn from one method's capacity
+    limits = {round(float(ln.get_xdata()[0]), 9) for ln in ax.lines}
+    assert limits == {1.0}
+    assert "utilisation" in ax.get_xlabel()
+    # the bar label says so in words as well (colour is not the only cue)
+    assert any(t.get_text().strip().startswith("1.04") and "over capacity" in t.get_text() for t in ax.texts)
+
+
+def test_methods_table_and_results_carry_the_method_capacity():
+    import fender_study
+    res = _crossing_case()
+    row = next(ln for ln in fender_study.tables(res)["methods_table"].splitlines() if ln.startswith(f"| {WG211}"))
+    assert "| 1.04 |" in row
+    m = {x["method"]: x for x in fender_study.results_dict(res)["methods"]}
+    assert m["wg211"]["capacity"] == pytest.approx(636.364, abs=5e-4)
+    assert m["wg211"]["utilisation"] > 1.0
+    assert m["pianc2002"]["capacity"] == pytest.approx(700.0)
+
+
+def test_common_capacity_line_refused_for_mixed_divisors(tmp_path):
+    res = _crossing_case()
+    with pytest.raises(ValueError, match="method_utilisation_chart"):
+        fc.method_chart(res.methods, tmp_path / "m.png", "t", capacity_knm=700.0, capacity_label="cap")
+
+
+def test_common_capacity_line_kept_for_bars_sharing_one_capacity(tmp_path, monkeypatch):
+    # energy steps of one method on one fender (no capacity divisor) keep the energy chart
+    class Bar:
+        def __init__(self, label, e):
+            self.label, self.design_energy_knm = label, e
+    figs = []
+    monkeypatch.setattr(fc, "_save", lambda fig, path: figs.append(fig) or Path(path))
+    fc.method_chart([Bar("a", 500.0), Bar("b", 650.0)], tmp_path / "steps.png", "t",
+                    capacity_knm=663.0, capacity_label="cap")
+    ax = figs[0].axes[0]
+    assert {round(float(ln.get_xdata()[0]), 6) for ln in ax.lines} == {663.0}
+    assert ax.get_xlabel() == "design energy (kNm)"

@@ -121,6 +121,63 @@ def test_standard_sweeps_carry_reaction_factor():
                 assert pb.hull_pressure_kpa == pytest.approx(1.10 * 210.0)
 
 
+# ------------------------------------------------- default sweep capacity
+
+#: velocity at which WG211 gives 660 kNm on the generic ship (second-provider
+#: review at 6c4bfd70): between the design capacity 700 / 1.10 = 636.364 kNm
+#: and the rated energy 700 kNm of the generic fender
+V_660 = 0.115308285
+
+
+def test_wg211_default_sweep_capacity_is_divided_by_gamma_m():
+    sweeps = fd.standard_sweeps(CASE, "wg211", FENDER, RANGES, velocity_m_s=V_660, citations="off")
+    assert sweeps
+    for s in sweeps:
+        assert s.capacity_knm == pytest.approx(700.0 / fd.WG211_GAMMA_M)
+        assert s.capacity_knm == pytest.approx(636.364, abs=5e-4)
+    v = next(s for s in sweeps if s.parameter == "velocity_m_s")
+    base = v.at(v.base_value)
+    assert base.design_energy_knm == pytest.approx(660.0, abs=1e-3)
+    assert base.utilisation == pytest.approx(660.0 / 636.364, abs=1e-4)
+    assert round(base.utilisation, 3) == 1.037
+    assert base.utilisation > 1.0
+    # over capacity: the curve does not rate the reaction there
+    assert base.reaction_kn is None
+    # utilisation 1 is reached below the base velocity
+    assert v.limit_value() < V_660
+
+
+def test_wg211_default_capacity_equals_the_explicit_design_capacity():
+    kw = dict(velocity_m_s=V_660, citations="off")
+    dflt = fd.standard_sweeps(CASE, "wg211", FENDER, RANGES, **kw)
+    expl = fd.standard_sweeps(CASE, "wg211", FENDER, RANGES, capacity_knm=700.0 / 1.10, **kw)
+    for a, b in zip(dflt, expl):
+        assert a.capacity_knm == pytest.approx(b.capacity_knm)
+        assert [p.utilisation for p in a.points] == pytest.approx([p.utilisation for p in b.points])
+
+
+def test_explicit_sweep_capacity_is_not_divided_again():
+    # a caller's capacity is already the design capacity (fender_case.compute
+    # passes rated x reductions / gamma_m): it is used as given
+    s = fd.standard_sweeps(CASE, "wg211", FENDER, RANGES, velocity_m_s=V_660, capacity_knm=636.364,
+                           citations="off")[0]
+    assert s.capacity_knm == 636.364
+
+
+def test_wg33_default_sweep_capacity_is_unchanged():
+    # PIANC 2002 (WG33) has no material divisor: the default stays the rated energy
+    sweeps = fd.standard_sweeps(CASE, "pianc2002", FENDER, RANGES, citations="off")
+    for s in sweeps:
+        assert s.capacity_knm == 700.0
+    v = next(s for s in sweeps if s.parameter == "velocity_m_s")
+    base = v.at(v.base_value)
+    assert base.utilisation == pytest.approx(base.energy_per_fender_knm / 700.0)
+    assert base.utilisation == pytest.approx(0.9726, abs=1e-4)
+    # at the WG211 crossing velocity a WG33 utilisation is energy / 700 as before
+    w = fd.standard_sweeps(CASE, "pianc2002", FENDER, RANGES, velocity_m_s=V_660, citations="off")[0]
+    assert w.at(w.base_value).utilisation == pytest.approx(w.at(w.base_value).design_energy_knm / 700.0)
+
+
 # ------------------------------------------------------------------ citations
 
 

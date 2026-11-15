@@ -56,14 +56,24 @@ def md_table(header, rows):
     return "\n".join(out)
 
 
+def method_chart(res, path: Path, fender_label: str) -> Path:
+    """Utilisation of the base fender by method, each against its own
+    capacity (:meth:`CaseResult.method_capacity_knm`), with the limit 1.0."""
+    n = res.case["design"].get("fenders_in_contact", 1)
+    caps = sorted({(r.capacity_divisor, res.method_capacity_knm(r)) for r in res.methods})
+    note = (f"Capacity of {fender_label} per fender ({n} in contact): "
+            + "; ".join(f"{c:,.0f} kNm" + (f" where the method divides by {d:.2f} (WG211 gamma_m)" if d != 1.0
+                                            else " (no capacity divisor)") for d, c in caps) + ".")
+    return fc.method_utilisation_chart(
+        res.methods, [res.method_utilisation(r) for r in res.methods], path,
+        "Base fender utilisation by method (same ship and berth)", note=note)
+
+
 def charts(res, out: Path, fender_label: str, db_counts=None) -> dict[str, str]:
     cdir = out / "charts"
     made = {}
-    cap_label = f"capacity of {fender_label} per fender x {res.case['design'].get('fenders_in_contact', 1)}"
     n = res.case["design"].get("fenders_in_contact", 1)
-    made["methods"] = fc.method_chart(
-        res.methods, cdir / "methods.png", "Design berthing energy by method (same ship and berth)",
-        capacity_knm=res.capacity_knm * n, capacity_label=cap_label).name
+    made["methods"] = method_chart(res, cdir / "methods.png", fender_label).name
     # Cm against keel clearance for the ship's draught and beam
     s = res.ship
     ratios = [0.02 + 0.01 * i for i in range(99)]
@@ -166,7 +176,8 @@ def results_dict(res) -> dict:
                       ce=r.ce.value, cs=r.cs.value, cc=r.cc.value,
                       other=math.prod(c.value for c in r.extra) if r.extra else 1.0,
                       normal=r.normal_energy_knm, factor=r.factor.value, design=r.design_energy_knm,
-                      divisor=r.capacity_divisor, flags=list(r.flags),
+                      divisor=r.capacity_divisor, capacity=res.method_capacity_knm(r),
+                      utilisation=res.method_utilisation(r), flags=list(r.flags),
                       outside_validity=fc.outside_validity(r),
                       sources={c.name: f"{c.source}: {c.note}" for c in r.coefficients()},
                       citations=[dict(code_id=c.code_id, section=c.section, wiki_path=c.wiki_path)
@@ -212,7 +223,6 @@ def _r(x):
 
 
 def tables(res) -> dict[str, str]:
-    n = res.case["design"].get("fenders_in_contact", 1)
     t = {}
     t["methods_table"] = md_table(
         ["Method", "v (m/s)", "Cm", "Ce", "Cs", "Cc", "Other", "Normal (kNm)", "Factor", "Design (kNm)",
@@ -221,7 +231,7 @@ def tables(res) -> dict[str, str]:
           f"{r.cm.value:.3f}", f"{r.ce.value:.3f}", f"{r.cs.value:.2f}",
           f"{r.cc.value:.2f}", f"{math.prod(c.value for c in r.extra) if r.extra else 1.0:.2f}",
           _f(r.normal_energy_knm), f"{r.factor.value:.2f}", _f(r.design_energy_knm),
-          f"{r.design_energy_knm / n / (res.capacity_knm * res.selected.capacity_divisor / r.capacity_divisor):.2f}",
+          f"{res.method_utilisation(r):.2f}",
           method_notes(r)]
          for r in res.methods])
     t["citations_table"] = md_table(

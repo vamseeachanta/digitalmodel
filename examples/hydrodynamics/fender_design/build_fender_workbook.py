@@ -436,7 +436,10 @@ def _sensitivity(wb, res):
     note = ws.cell(row=1, column=1, value=(
         "REGENERATE AFTER ANY INPUT CHANGE: one-at-a-time sensitivity around the selected method, written "
         "by the generator from the Python module (not live formulas). Capacity = rated energy x "
-        "(1 - tolerance) x angular factor of the base fender. Reaction = curve reaction x reaction factor "
+        "(1 - tolerance) x angular factor of the base fender"
+        + ("" if res.selected.capacity_divisor == 1.0 else
+           f" / {res.selected.capacity_divisor:.2f} ({res.selected.label} capacity divisor)")
+        + ". Reaction = curve reaction x reaction factor "
         f"{res.reaction_factor:.3f} (1 + tolerance)."))
     note.alignment = WRAP
     note.font = WARN_FONT
@@ -541,7 +544,9 @@ def _readme(wb, res):
         f"Selected method: {res.selected.label}. Design energy {res.selected.design_energy_knm:,.1f} kNm "
         f"({res.case['design'].get('fenders_in_contact', 1)} fender(s) in contact).",
         f"Base fender: {res.base_fender.fender_id} ({res.base_fender.fender_type}); capacity after tolerance "
-        f"and angular factor {res.capacity_knm:,.1f} kNm.",
+        + ("and angular factor" if res.selected.capacity_divisor == 1.0 else
+           f"angular factor and the {res.selected.label} capacity divisor {res.selected.capacity_divisor:.2f}")
+        + f" {res.capacity_knm:,.1f} kNm.",
         "",
         "Yellow cells on Inputs are inputs. Calc, Velocity, Methods and Fenders recalculate in Excel. "
         "The choices listed on Inputs as fixed at generation (red), and the Sensitivity, Tornado and Sizes "

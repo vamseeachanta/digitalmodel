@@ -20,8 +20,9 @@ no result here clears a fender for any berth.
   ROM 2.0-11, UFC 4-152-01, the Ueda added mass used in Japanese practice, and IS 4651-3:1974
   (withdrawn, for comparison).
 - For the same ship and berth the design energy ranges from the lowest to the highest method
-  by about a factor of two (Table 3, Figure 1). The spread comes mostly from the velocity each
-  method assigns, then from the design factor; the energy equation itself is common.
+  by about a factor of two (Table 3; Figure 1 gives the fender utilisation by method). The
+  spread comes mostly from the velocity each method assigns, then from the design factor; the
+  energy equation itself is common.
 - For the generic case the PIANC 2002 design energy is {{E_design}} kNm (normal energy
   {{E_normal}} kNm). The illustrative base fender has a capacity of {{capacity}} kNm, a
   utilisation of {{util}}.
@@ -217,15 +218,18 @@ computes φ from the geometry and the test suite checks it equals this form).
 {{methods_table}}
 
 Table 3 – Design berthing energy by method for the generic case (same ship and berth). The
-"per fender / capacity" column is energy per fender over the base fender capacity (for WG211
-the capacity is divided by γ_m). Flags in bold put a formula outside its stated validity;
-such a result is outside the method's basis and is shown for comparison only. The citation
-qualification common to all rows is in Table 9.
+"per fender / capacity" column is energy per fender over the base fender capacity under that
+method (for WG211 the capacity is divided by γ_m). Flags in bold put a formula outside its
+stated validity; such a result is outside the method's basis and is shown for comparison
+only. The citation qualification common to all rows is in Table 9.
 
 ![Methods](charts/methods.png)
 
-Figure 1 – Design energy by method. A hatched bar is outside the stated validity of a
-formula it uses (note below the chart).
+Figure 1 – Utilisation of the base fender by method: energy per fender over the fender
+capacity under that method (for WG211 divided by γ_m), against the limit 1.0. Each method is
+compared with its own capacity, and a bar beyond 1.0 is over capacity. The bar label gives
+the design energy. A hatched bar is outside the stated validity of a formula it uses (note
+below the chart).
 
 {{method_sources_table}}
 

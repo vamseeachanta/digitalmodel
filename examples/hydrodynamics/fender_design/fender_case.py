@@ -156,6 +156,17 @@ class CaseResult:
     def energy_per_fender_knm(self) -> float:
         return self.selected.design_energy_knm / self.case["design"].get("fenders_in_contact", 1)
 
+    def method_capacity_knm(self, result: fd.MethodResult) -> float:
+        """Design capacity of the base fender per fender under ``result``'s
+        method: rated x (1 - energy tolerance) x angular factor / that
+        method's capacity divisor (WG211 gamma_m; 1.0 elsewhere)."""
+        return self.design.energy_knm / result.capacity_divisor
+
+    def method_utilisation(self, result: fd.MethodResult) -> float:
+        """Energy per fender of ``result`` over its own method's design capacity."""
+        n = self.case["design"].get("fenders_in_contact", 1)
+        return result.design_energy_knm / n / self.method_capacity_knm(result)
+
 
 def load_curves(path) -> dict[str, fd.PerformanceCurve]:
     """Curves CSV: curve, deflection_pct, reaction_pct, energy_pct, source."""

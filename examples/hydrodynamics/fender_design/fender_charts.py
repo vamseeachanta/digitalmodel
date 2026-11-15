@@ -166,9 +166,17 @@ def method_chart(results, path, title: str, capacity_knm: float | None = None,
                  capacity_label: str = ""):
     """Design energy by method (horizontal bars), with an optional capacity line.
 
-    A result with a flag that puts a formula outside its stated validity is
-    hatched, labelled "(outside validity)" and explained in a note below.
+    The capacity line is common to every bar, so it only applies to bars that
+    share one capacity (for example steps of one method on one fender). Method
+    results whose capacity divisors differ (WG211 gamma_m) are refused with a
+    capacity line: use :func:`method_utilisation_chart`, which compares each
+    method with its own capacity. A result with a flag that puts a formula
+    outside its stated validity is hatched, labelled "(outside validity)" and
+    explained in a note below.
     """
+    if capacity_knm and len({getattr(r, "capacity_divisor", 1.0) for r in results}) > 1:
+        raise ValueError("results have different capacity divisors; one capacity line would compare a "
+                         "method with another method's capacity: use method_utilisation_chart")
     fig, ax = _fig(1, height=0.5 * len(results) + 1.6, width=8.5)
     _style(ax)
     ys = list(range(len(results)))[::-1]
@@ -191,6 +199,48 @@ def method_chart(results, path, title: str, capacity_knm: float | None = None,
                 fontsize=7.5, color=INK, va="center")
     ax.set_xlabel("design energy (kNm)")
     ax.set_xlim(0, max(r.design_energy_knm for r in results) * 1.3)
+    ax.set_ylim(ys[-1] - 1.2, ys[0] + 0.6)
+    ax.set_title(title, fontsize=9.5, color=INK, loc="left")
+    return _save(fig, path)
+
+
+def method_utilisation_chart(results, utilisations, path, title: str, note: str = ""):
+    """Utilisation by method (horizontal bars) against the limit 1.0.
+
+    ``utilisations`` pairs with ``results``: each method's energy per fender
+    over the fender capacity under that method (its own capacity divisor,
+    WG211 gamma_m), so no method is compared with another method's capacity.
+    Each bar is labelled with the utilisation and the design energy; a bar
+    above 1.0 also says "over capacity". A result with a flag that puts a
+    formula outside its stated validity is hatched, labelled "(outside
+    validity)" and explained in a note below, after ``note``.
+    """
+    if len(utilisations) != len(results):
+        raise ValueError("one utilisation per method result")
+    fig, ax = _fig(1, height=0.5 * len(results) + 1.8, width=8.5)
+    _style(ax)
+    ys = list(range(len(results)))[::-1]
+    notes = []
+    for y, res, u in zip(ys, results, utilisations):
+        bad = outside_validity(res)
+        ax.barh(y, u, height=0.55, color=SERIES[0], edgecolor=SURFACE,
+                hatch="///" if bad else None, alpha=0.55 if bad else 1.0)
+        ax.text(u, y, f"  {u:.2f} ({res.design_energy_knm:,.0f} kNm)"
+                + ("  over capacity" if u > 1.0 else "")
+                + ("  (outside validity)" if bad else ""), va="center", fontsize=7.5, color=INK,
+                bbox=dict(facecolor=SURFACE, edgecolor="none", pad=0.4))
+        notes += [f"{res.label}: {f}" for f in bad]
+    below = ([note] if note else []) + (["Hatched: " + "; ".join(notes) + "."] if notes else [])
+    if below:
+        ax.text(1.0, -0.12 - 0.5 / max(len(results), 1), " ".join(below),
+                transform=ax.transAxes, ha="right", va="top", fontsize=6.5, color=INK2, wrap=True)
+    ax.set_yticks(ys)
+    ax.set_yticklabels([res.label for res in results], fontsize=8, color=INK)
+    ax.axvline(1.0, color=LIMIT, linestyle="--", linewidth=1.5)
+    ax.text(1.0, ys[-1] - 0.75, " utilisation 1.0: each method's own fender capacity",
+            fontsize=7.5, color=INK, va="center")
+    ax.set_xlabel("utilisation: energy per fender / design capacity under the method (-)")
+    ax.set_xlim(0, max(max(utilisations), 1.0) * 1.6)
     ax.set_ylim(ys[-1] - 1.2, ys[0] + 0.6)
     ax.set_title(title, fontsize=9.5, color=INK, loc="left")
     return _save(fig, path)

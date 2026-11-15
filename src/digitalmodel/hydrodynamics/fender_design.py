@@ -1574,7 +1574,9 @@ def parameter_sweep(
     ``design_energy`` maps one value of the parameter to design energy (kNm)
     with all other inputs at base. Energy per fender = design energy /
     ``fenders_in_contact``; utilisation = energy per fender / capacity
-    (default rated energy). Reaction = largest curve reaction reached up to
+    (default rated energy: this bare function knows no method, so a method
+    with a capacity divisor, WG211 gamma_m, needs ``capacity_knm``;
+    :func:`standard_sweeps` derives it). Reaction = largest curve reaction reached up to
     that energy (a curve may fall after buckling) x
     ``reaction_factor`` (1 + reaction tolerance, times any velocity and
     temperature factors: :class:`DesignPerformance` reaction / rated
@@ -1726,6 +1728,13 @@ def standard_sweeps(
     is clipped to :data:`SWEEP_COEFFICIENT_LIMITS` (the range basis then
     says so).
 
+    ``capacity_knm`` is the design energy capacity per fender, used as
+    given. When it is omitted, the capacity is the rated energy divided by
+    the method's ``capacity_divisor`` (WG211 gamma_m; 1.0 for the other
+    methods), so a WG211 utilisation is never taken against the
+    characteristic energy. Tolerances and the angular factor are not known
+    here; a caller that applies them passes the capacity.
+
     ``velocity_m_s`` and ``factor`` are the caller's overrides of the base
     case (as in :func:`energy_by_method`). ``reaction_factor`` multiplies the
     reactions and hull pressures before they are compared with the limits.
@@ -1757,6 +1766,9 @@ def standard_sweeps(
     v0, f0 = base.velocity_m_s.value, base.factor.value
     cs0, cc0 = base.cs.value, base.cc.value
     e0 = base.design_energy_knm
+    if capacity_knm is None:
+        # the method's divisor applies to the default as to a caller's capacity
+        capacity_knm = fender.rated_energy_knm / base.capacity_divisor
     m0 = ship.displacement_t
     excluded = inapplicable_sweeps(method)
     limits = SWEEP_COEFFICIENT_LIMITS[method]

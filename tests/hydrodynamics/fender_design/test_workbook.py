@@ -231,3 +231,26 @@ def test_fenders_sheet_design_reaction_formula_unchanged_for_a_monotonic_curve(b
     ws = openpyxl.load_workbook(out)["Fenders"]
     for i in range(2, len(res.catalogue) + 2):
         assert ws.cell(row=i, column=13).value == f"=H{i}*(1+RTOL)"
+
+
+def test_capacity_text_names_the_wg211_divisor(tmp_path):
+    case = load_case(EXAMPLE / "generic_case.yaml")
+    case["design"]["method"] = "wg211"
+    res = compute(case, citations="record")
+    out = tmp_path / "wg211.xlsx"
+    build_workbook(res, out)
+    wb = openpyxl.load_workbook(out)
+    readme = " ".join(str(c.value) for c in wb["README"]["A"] if c.value)
+    assert f"capacity divisor 1.10 {res.capacity_knm:,.1f} kNm" in readme
+    assert res.capacity_knm == pytest.approx(700.0 / 1.10)
+    assert "/ 1.10 (PIANC WG211 (2024) capacity divisor)" in wb["Sensitivity"]["A1"].value
+    for s in res.sweeps:
+        assert s.capacity_knm == pytest.approx(res.capacity_knm)
+
+
+def test_capacity_text_unchanged_without_a_divisor(built):
+    res, out = built
+    wb = openpyxl.load_workbook(out)
+    readme = " ".join(str(c.value) for c in wb["README"]["A"] if c.value)
+    assert f"capacity after tolerance and angular factor {res.capacity_knm:,.1f} kNm." in readme
+    assert "capacity divisor" not in wb["Sensitivity"]["A1"].value
