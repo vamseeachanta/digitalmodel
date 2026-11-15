@@ -223,7 +223,7 @@ def render(template: Path, values: dict, out_md: Path, out_html: Path, title: st
     if missing:
         raise KeyError(f"template fields without values: {missing}")
     text = re.sub(r"\{\{(\w+)\}\}", lambda m: str(values[m.group(1)]), text)
-    out_md.write_text(text, encoding="utf-8")
+    out_md.write_text(text, encoding="utf-8", newline="\n")
     import markdown
     body = markdown.markdown(text, extensions=["tables", "toc"])
     css = ("body{font-family:Segoe UI,Helvetica,Arial,sans-serif;max-width:60rem;margin:2rem auto;padding:0 1rem;"
@@ -233,7 +233,7 @@ def render(template: Path, values: dict, out_md: Path, out_html: Path, title: st
            "h1,h2,h3{line-height:1.2}")
     out_html.write_text(
         f"<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>{title}</title>"
-        f"<style>{css}</style></head><body>{body}</body></html>", encoding="utf-8")
+        f"<style>{css}</style></head><body>{body}</body></html>", encoding="utf-8", newline="\n")
 
 
 def main(argv=None) -> int:
@@ -261,7 +261,7 @@ def main(argv=None) -> int:
         data["database_rows"] = n_rows
         data["database_by_type"] = dict(cnt.most_common())
         data["database_sources"] = n_src
-    (a.out / "results.json").write_text(json.dumps(data, indent=2, default=str), encoding="utf-8")
+    (a.out / "results.json").write_text(json.dumps(data, indent=2, default=str), encoding="utf-8", newline="\n")
     build_workbook(res, a.out / f"{a.stem}.xlsx")
     if a.template:
         values = tables(res)
