@@ -429,7 +429,13 @@
       "reaction_low": 534.680832279552,
       "reaction_high": null,
       "reaction_base": 1560.0714687569348,
-      "reaction_limit_value": null
+      "reaction_limit_value": null,
+      "citation_status": {
+        "PIANC-WG33-2002": "unresolved: page_missing"
+      },
+      "flags": [
+        "citation not resolved against the wiki: PIANC-WG33-2002 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
+      ]
     },
     {
       "parameter": "displacement_t",
@@ -446,7 +452,13 @@
       "reaction_low": 1249.8036015677012,
       "reaction_high": null,
       "reaction_base": 1560.0714687569348,
-      "reaction_limit_value": null
+      "reaction_limit_value": null,
+      "citation_status": {
+        "PIANC-WG33-2002": "unresolved: page_missing"
+      },
+      "flags": [
+        "citation not resolved against the wiki: PIANC-WG33-2002 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
+      ]
     },
     {
       "parameter": "water_depth_m",
@@ -463,7 +475,13 @@
       "reaction_low": null,
       "reaction_high": 1382.7755446488013,
       "reaction_base": 1560.0714687569348,
-      "reaction_limit_value": null
+      "reaction_limit_value": null,
+      "citation_status": {
+        "PIANC-WG33-2002": "unresolved: page_missing"
+      },
+      "flags": [
+        "citation not resolved against the wiki: PIANC-WG33-2002 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
+      ]
     },
     {
       "parameter": "contact_x_over_lbp",
@@ -480,7 +498,13 @@
       "reaction_low": 1372.764797666855,
       "reaction_high": null,
       "reaction_base": 1560.0714687569348,
-      "reaction_limit_value": null
+      "reaction_limit_value": null,
+      "citation_status": {
+        "PIANC-WG33-2002": "unresolved: page_missing"
+      },
+      "flags": [
+        "citation not resolved against the wiki: PIANC-WG33-2002 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
+      ]
     },
     {
       "parameter": "berthing_angle_deg",
@@ -497,7 +521,13 @@
       "reaction_low": 1498.0861690501395,
       "reaction_high": null,
       "reaction_base": 1560.0714687569348,
-      "reaction_limit_value": null
+      "reaction_limit_value": null,
+      "citation_status": {
+        "PIANC-WG33-2002": "unresolved: page_missing"
+      },
+      "flags": [
+        "citation not resolved against the wiki: PIANC-WG33-2002 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
+      ]
     },
     {
       "parameter": "cs",
@@ -514,7 +544,13 @@
       "reaction_low": 1435.9643218812414,
       "reaction_high": 1560.0714687569348,
       "reaction_base": 1560.0714687569348,
-      "reaction_limit_value": null
+      "reaction_limit_value": null,
+      "citation_status": {
+        "PIANC-WG33-2002": "unresolved: page_missing"
+      },
+      "flags": [
+        "citation not resolved against the wiki: PIANC-WG33-2002 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
+      ]
     },
     {
       "parameter": "factor",
@@ -531,7 +567,13 @@
       "reaction_low": 1205.4796205406676,
       "reaction_high": 1560.0714687569348,
       "reaction_base": 1560.0714687569348,
-      "reaction_limit_value": null
+      "reaction_limit_value": null,
+      "citation_status": {
+        "PIANC-WG33-2002": "unresolved: page_missing"
+      },
+      "flags": [
+        "citation not resolved against the wiki: PIANC-WG33-2002 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
+      ]
     }
   ],
   "sweeps_skipped": {
@@ -587,6 +629,7 @@
       "meets_energy": true,
       "meets_reaction": true,
       "meets_pressure": false,
+      "pressure_missing": false,
       "meets_all": false
     },
     {
@@ -601,6 +644,7 @@
       "meets_energy": false,
       "meets_reaction": true,
       "meets_pressure": true,
+      "pressure_missing": false,
       "meets_all": false
     },
     {
@@ -615,6 +659,7 @@
       "meets_energy": false,
       "meets_reaction": true,
       "meets_pressure": true,
+      "pressure_missing": false,
       "meets_all": false
     },
     {
@@ -629,6 +674,7 @@
       "meets_energy": true,
       "meets_reaction": false,
       "meets_pressure": true,
+      "pressure_missing": false,
       "meets_all": false
     },
     {
@@ -643,6 +689,7 @@
       "meets_energy": true,
       "meets_reaction": true,
       "meets_pressure": true,
+      "pressure_missing": false,
       "meets_all": true
     }
   ],

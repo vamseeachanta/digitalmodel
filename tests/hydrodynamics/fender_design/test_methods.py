@@ -253,7 +253,8 @@ def test_standard_sweeps_base_matches_method():
         "berthing_angle_deg": fd.SweepRange(0.0, 10.0, "test"),
         "factor": fd.SweepRange(1.25, 1.75, "test"),
     }
-    sweeps = fd.standard_sweeps(fd.Case(SHIP, BERTH), "pianc2002", fender, ranges, factor_position="largest")
+    sweeps = fd.standard_sweeps(fd.Case(SHIP, BERTH), "pianc2002", fender, ranges, factor_position="largest",
+                                citations="off")
     base = fd.energy_by_method(SHIP, BERTH, "pianc2002", factor_position="largest", citations="off").design_energy_knm
     for s in sweeps:
         assert s.base_design_energy_knm == pytest.approx(base, rel=1e-9), s.parameter

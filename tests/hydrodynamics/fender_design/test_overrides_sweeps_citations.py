@@ -8,6 +8,8 @@ Ship and berth values are the generic round numbers of the method report.
 
 from __future__ import annotations
 
+import math
+
 import pytest
 
 from digitalmodel.citations.schema import CitationResolutionError
@@ -72,7 +74,7 @@ RANGES = {
 
 
 def test_sweeps_leave_out_coefficients_the_method_removes():
-    keys = lambda method: [s.parameter for s in fd.standard_sweeps(CASE, method, FENDER, RANGES)]  # noqa: E731
+    keys = lambda method: [s.parameter for s in fd.standard_sweeps(CASE, method, FENDER, RANGES, citations="off")]  # noqa: E731
     assert keys("wg211") == ["velocity_m_s", "factor"]
     assert keys("pianc2002") == ["velocity_m_s", "cs", "factor"]      # keel-clearance Cm pairs with Cc = 1
     assert keys("eau") == ["velocity_m_s", "cs", "factor"]
@@ -84,17 +86,17 @@ def test_sweeps_leave_out_coefficients_the_method_removes():
 
 
 def test_sweep_coefficient_ranges_clipped_to_method_rule():
-    rom = {s.parameter: s for s in fd.standard_sweeps(CASE, "rom", FENDER, RANGES)}
+    rom = {s.parameter: s for s in fd.standard_sweeps(CASE, "rom", FENDER, RANGES, citations="off")}
     cc = rom["cc"]
     assert (cc.range_low, cc.range_high) == (0.9, 1.0)
     assert "clipped to 0.9 to 1" in cc.range_basis
     assert min(p.value for p in cc.points) >= 0.9 and max(p.value for p in cc.points) <= 1.0
-    bs = {s.parameter: s for s in fd.standard_sweeps(CASE, "bs6349", FENDER, RANGES)}
+    bs = {s.parameter: s for s in fd.standard_sweeps(CASE, "bs6349", FENDER, RANGES, citations="off")}
     assert (bs["cc"].range_low, bs["cc"].range_high) == (0.8, 1.0) and "clipped" not in bs["cc"].range_basis
 
 
 def test_velocity_sweep_recomputes_rom_factor():
-    sw = next(s for s in fd.standard_sweeps(CASE, "rom", FENDER, RANGES) if s.parameter == "velocity_m_s")
+    sw = next(s for s in fd.standard_sweeps(CASE, "rom", FENDER, RANGES, citations="off") if s.parameter == "velocity_m_s")
     for p in sw.points:
         expect = fd.energy_by_method(CASE, method="rom", velocity_m_s=p.value, citations="off").design_energy_knm
         assert p.design_energy_knm == pytest.approx(expect, rel=1e-12)
@@ -107,7 +109,7 @@ def test_velocity_sweep_recomputes_rom_factor():
 
 def test_standard_sweeps_carry_reaction_factor():
     curve = fd.PerformanceCurve("c", ((0, 0, 0), (30, 27, 16), (60, 100, 100)), "fictional")
-    kw = dict(curve=curve, reaction_limit_kn=1600.0, capacity_knm=700.0)
+    kw = dict(curve=curve, reaction_limit_kn=1600.0, capacity_knm=700.0, citations="off")
     nom = fd.standard_sweeps(CASE, "pianc2002", FENDER, RANGES, **kw)
     tol = fd.standard_sweeps(CASE, "pianc2002", FENDER, RANGES, reaction_factor=1.10, **kw)
     for a, b in zip(nom, tol):
@@ -218,3 +220,178 @@ def test_caller_values_carry_no_citation():
 def test_citation_mode_validated():
     with pytest.raises(ValueError):
         fd.energy_by_method(CASE, method="pianc2002", citations="lenient")
+
+
+# ------------------------------------------- UFC Cc sweep: dependent added mass
+
+#: The generic ship at a solid quay, parallel approach (5 deg): UFC Cc 0.8.
+CLOSED = fd.Case(SHIP, fd.Berth(water_depth_m=14.0, contact_x_from_bow_m=45.0, berthing_angle_deg=5.0,
+                                navigation="b", structure="closed", fender_deflection_m=1.56),
+                 condition="moderate")
+
+
+def _ufc_by_hand(cc):
+    """UFC 4-152-01 (2017, Change 1 2024) 5-2.1.1 worked by hand for CLOSED.
+
+    E = 1/2 M V^2 Cb Cm (Eqs. 5-1, 5-2), Cb = Ce Cg Cd Cc (p. 106);
+    Cm = C_M0 + (C_m1 - C_M0)(T/d)^3.5, C_M0 = 1.3 + 1.5 T/B,
+    C_m1 = F [12.4 (T/B)^0.3 - 50 T/L], F = 1.5 Cb for Cb < 0.6, else 0.9,
+    "Cb = berthing coefficient as defined previously" (p. 109). Design energy
+    is 1.5 x normal (5-1.5.3).
+    """
+    m, l, b, t, d = 60_000.0, 180.0, 32.0, 12.0, 14.0
+    c_bl = m / (l * b * t * 1.025)                  # block coefficient 0.8469
+    k = (0.19 * c_bl + 0.11) * l                    # 48.763 m
+    a = 90.0 - 45.0                                 # contact 45 m from bow, 45 m from midships
+    ce = k * k / (a * a + k * k)                    # 0.54007
+    cg, cd = 0.95, 1.0                              # at the quarter point; larger ship
+    # Fig. 5-4, moderate: 0.35 ft/s at 50,000 LT, 0.30 ft/s at 70,000 LT, log-log
+    lt = m / 1.0160469088
+    s = math.log(lt / 50_000) / math.log(70_000 / 50_000)
+    v = math.exp(math.log(0.35) + s * math.log(0.30 / 0.35)) * 0.3048   # 0.09885 m/s
+    cb = ce * cg * cd * cc
+    f = 1.5 * cb if cb < 0.6 else 0.9
+    cm0 = 1.3 + 1.5 * t / b
+    cm1 = f * (12.4 * (t / b) ** 0.3 - 50.0 * t / l)
+    cm = cm0 + (cm1 - cm0) * (t / d) ** 3.5
+    return 1.5 * 0.5 * m * v * v * cb * cm, cm
+
+
+def test_ufc_hand_check_closed_berth():
+    e08, cm08 = _ufc_by_hand(0.8)
+    e10, cm10 = _ufc_by_hand(1.0)
+    assert (e08, cm08) == (pytest.approx(522.767, abs=1e-3), pytest.approx(2.89655, abs=1e-5))
+    assert (e10, cm10) == (pytest.approx(773.023, abs=1e-3), pytest.approx(3.42653, abs=1e-5))
+    base = fd.energy_by_method(CLOSED, method="ufc", citations="off")
+    assert base.cc.value == 0.8
+    assert base.design_energy_knm == pytest.approx(e08, rel=1e-9)
+    assert base.cm.value == pytest.approx(cm08, rel=1e-9)
+
+
+def test_ufc_cc_override_recomputes_added_mass():
+    e10, cm10 = _ufc_by_hand(1.0)
+    r = fd.energy_by_method(CLOSED, method="ufc", cc=1.0, citations="off")
+    assert r.cc.value == 1.0 and r.cc.source == "caller"
+    assert r.cm.value == pytest.approx(cm10, rel=1e-9)
+    assert r.geometry["cb_berthing"] == pytest.approx(r.ce.value * 0.95 * 1.0 * 1.0, rel=1e-12)
+    assert r.design_energy_knm == pytest.approx(e10, rel=1e-9)
+    # the same as UFC's own result where its rule gives Cc 1.0 (open berth)
+    open_ = fd.energy_by_method(CASE, method="ufc", citations="off")
+    assert open_.cc.value == 1.0
+    assert r.design_energy_knm == pytest.approx(open_.design_energy_knm, rel=1e-12)
+
+
+def test_ufc_cc_sweep_recomputes_cm_and_crosses_capacity():
+    # Codex review at 319e3d45: holding Cm gave 653.5 kNm (0.934) at Cc 1.0; recomputed it is 773.0 (1.104)
+    sw = next(s for s in fd.standard_sweeps(CLOSED, "ufc", FENDER, {"cc": fd.SweepRange(0.8, 1.0, "test")},
+                                            capacity_knm=700.0, citations="off"))
+    assert sw.parameter == "cc"
+    for p in sw.points:
+        assert p.design_energy_knm == pytest.approx(_ufc_by_hand(p.value)[0], rel=1e-9), p.value
+    hi = sw.at(sw.range_high)
+    assert hi.design_energy_knm == pytest.approx(773.023, abs=1e-3)
+    assert hi.utilisation == pytest.approx(773.023 / 700.0, abs=1e-6)
+    assert hi.utilisation > 1.0 > sw.at(sw.base_value).utilisation
+    # capacity reached at Cc 0.9454 (bisection of the hand formula); the linear scaling never reached it
+    assert sw.limit_value() == pytest.approx(0.9454, abs=0.002)
+
+
+def test_cc_override_scales_linearly_where_nothing_depends_on_cc():
+    bs = fd.energy_by_method(CLOSED, method="bs6349", citations="off")
+    hi = fd.energy_by_method(CLOSED, method="bs6349", cc=1.0, citations="off")
+    assert bs.cc.value == 0.8 and hi.cm.value == bs.cm.value
+    assert hi.design_energy_knm == pytest.approx(bs.design_energy_knm / 0.8, rel=1e-12)
+
+
+@pytest.mark.parametrize("method", ["pianc2002", "eau", "wg211", "is4651"])
+def test_cc_override_refused_where_the_method_fixes_cc(method):
+    with pytest.raises(ValueError, match="Cc"):
+        fd.energy_by_method(CASE, method=method, cc=0.9, citations="off")
+
+
+# ------------------------------------------------ sweeps: citation enforcement
+
+
+def _counting_rejector(calls):
+    def reject(citation, repo_root=None):
+        calls.append(citation.code_id)
+        raise CitationResolutionError(code_id=citation.code_id, wiki_path=citation.wiki_path,
+                                      reason="frontmatter_mismatch: forced by the test")
+    return reject
+
+
+@pytest.mark.parametrize("mode", ["strict", "record"])
+def test_standard_sweeps_call_the_resolver_and_raise_when_validation_rejects(monkeypatch, mode):
+    calls = []
+    monkeypatch.setattr(fd, "validate_citation", _counting_rejector(calls))
+    with pytest.raises(CitationResolutionError, match="frontmatter_mismatch"):
+        fd.standard_sweeps(CASE, "pianc2002", FENDER, RANGES, citations=mode)
+    assert calls
+
+
+def test_standard_sweeps_fail_closed_by_default(tmp_path):
+    assert fd.standard_sweeps.__kwdefaults__["citations"] == "strict"
+    with pytest.raises(CitationResolutionError, match="page_missing"):
+        fd.standard_sweeps(CASE, "pianc2002", FENDER, RANGES, citation_root=tmp_path)
+
+
+def test_standard_sweeps_record_mode_carries_the_qualification(tmp_path):
+    sweeps = fd.standard_sweeps(CASE, "ufc", FENDER, RANGES, citations="record", citation_root=tmp_path)
+    assert sweeps
+    for s in sweeps:
+        assert s.citation_status and all(st == "unresolved: page_missing" for _, st in s.citation_status)
+        assert any(f.startswith("citation not resolved") and "UFC-4-152-01" in f for f in s.flags)
+
+
+def test_standard_sweeps_resolved_pages_carry_no_flag(tmp_path):
+    for c in fd.energy_by_method(CASE, method="ufc", citations="off").citations:
+        _page(tmp_path, c)
+    for s in fd.standard_sweeps(CASE, "ufc", FENDER, RANGES, citation_root=tmp_path):
+        assert s.citation_status and all(st == "resolved" for _, st in s.citation_status)
+        assert not s.flags
+
+
+def test_standard_sweeps_off_is_explicit_and_flagged(monkeypatch):
+    calls = []
+    monkeypatch.setattr(fd, "validate_citation", _counting_rejector(calls))
+    sweeps = fd.standard_sweeps(CASE, "pianc2002", FENDER, RANGES, citations="off")
+    assert sweeps and not calls
+    for s in sweeps:
+        assert fd.CITATIONS_NOT_CHECKED in s.flags
+        assert all(st == "not checked" for _, st in s.citation_status)
+
+
+def test_standard_sweeps_reuse_a_checked_base(tmp_path, monkeypatch):
+    base = fd.energy_by_method(CASE, method="ufc", citations="record", citation_root=tmp_path)
+    calls = []
+    monkeypatch.setattr(fd, "validate_citation", _counting_rejector(calls))
+    sweeps = fd.standard_sweeps(CASE, "ufc", FENDER, RANGES, base=base, citations="record",
+                                citation_root=tmp_path)
+    # every swept result cites a subset of the base's sources, already checked
+    assert not calls
+    assert all(s.citation_status == base.citation_status for s in sweeps)
+    assert all(s.base_design_energy_knm == pytest.approx(base.design_energy_knm, rel=1e-12) for s in sweeps)
+
+
+def test_standard_sweeps_refuse_a_base_that_does_not_meet_the_mode(tmp_path):
+    unchecked = fd.energy_by_method(CASE, method="ufc", citations="off")
+    with pytest.raises(ValueError, match="not checked"):
+        fd.standard_sweeps(CASE, "ufc", FENDER, RANGES, base=unchecked)
+    raw = fd.METHODS["ufc"].evaluate(CASE, "smallest", None)       # no citation sidecar at all
+    with pytest.raises(ValueError, match="not checked"):
+        fd.standard_sweeps(CASE, "ufc", FENDER, RANGES, base=raw, citations="record")
+    # an explicit opt-out accepts it, and says so
+    assert all(fd.CITATIONS_NOT_CHECKED in s.flags
+               for s in fd.standard_sweeps(CASE, "ufc", FENDER, RANGES, base=unchecked, citations="off"))
+    recorded = fd.energy_by_method(CASE, method="ufc", citations="record", citation_root=tmp_path)
+    with pytest.raises(CitationResolutionError, match="page_missing"):
+        fd.standard_sweeps(CASE, "ufc", FENDER, RANGES, base=recorded, citation_root=tmp_path)
+
+
+def test_standard_sweeps_refuse_a_base_of_another_case(tmp_path):
+    other = fd.energy_by_method(CASE, method="rom", citations="record", citation_root=tmp_path)
+    with pytest.raises(ValueError, match="method"):
+        fd.standard_sweeps(CASE, "ufc", FENDER, RANGES, base=other, citations="record", citation_root=tmp_path)
+    stale = fd.energy_by_method(CASE, method="ufc", velocity_m_s=0.12, citations="record", citation_root=tmp_path)
+    with pytest.raises(ValueError, match="does not match"):
+        fd.standard_sweeps(CASE, "ufc", FENDER, RANGES, base=stale, citations="record", citation_root=tmp_path)

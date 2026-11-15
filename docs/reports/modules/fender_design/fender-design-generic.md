@@ -323,7 +323,9 @@ reaction per fender, multiplied by the reaction factor 1.10, with the reaction l
 credible range is shaded and the base is marked. Above the rated energy the catalogue does
 not rate the reaction, and the chart says so. A velocity sweep re-evaluates the method at
 each velocity, so velocity-dependent coefficients (the ROM accidental factor and C_c) follow
-it. Only coefficients the method uses are swept, within the values its own rule gives;
+it. A C_c sweep re-evaluates the method with C_c given, so terms derived from C_c follow it
+(the UFC 4-152-01 added mass, through the berthing coefficient C_e C_g C_d C_c in its factor
+F). Only coefficients the method uses are swept, within the values its own rule gives;
 the inputs left out for this method are:
 
 | Input | Why it is not swept for this method |

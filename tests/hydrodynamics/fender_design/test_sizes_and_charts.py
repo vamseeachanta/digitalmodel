@@ -59,6 +59,25 @@ def test_no_limit_gives_no_check():
     c = size_checks([PN5], "GEN-PN-5", 500.0, dict(energy_tolerance=0.0, reaction_tolerance=0.10))[0]
     assert c.meets_reaction is None and c.meets_pressure is None
     assert c.meets_all
+    assert not c.pressure_missing
+
+
+def test_missing_hull_pressure_with_a_limit_does_not_meet_it():
+    # adequate energy and reaction, no hull-pressure datum, 200 kPa limit: compliance cannot be shown
+    row = FenderRating("GEN-FM-X", "generic", "foam", 2800, 5000, None, 1000.0, 1400.0, None, 60.0, "fictional")
+    c = size_checks([row], "GEN-FM-X", 500.0, DESIGN)[0]
+    assert c.meets_energy and c.meets_reaction is True
+    assert c.hull_pressure_kpa is None
+    assert c.meets_pressure is False and c.pressure_missing
+    assert not c.meets_all
+    # the same row as select_fenders treats it: excluded under the limit, kept without one
+    from digitalmodel.hydrodynamics.berthing_energy import select_fenders
+    kw = dict(reaction_tolerance=0.10, max_reaction_kn=1600.0)
+    assert select_fenders([row], 500.0, max_hull_pressure_kpa=200.0, **kw) == []
+    assert len(select_fenders([row], 500.0, **kw)) == 1
+    # without a pressure limit the missing datum is not checked and does not fail
+    free = size_checks([row], "GEN-FM-X", 500.0, dict(DESIGN, hull_pressure_limit_kpa=None))[0]
+    assert free.meets_pressure is None and not free.pressure_missing and free.meets_all
 
 
 def test_generic_case_size_checks_match_the_base_fender_capacity():

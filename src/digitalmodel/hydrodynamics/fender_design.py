@@ -812,14 +812,24 @@ def _m_ufc(case: Case, position: str, velocity_m_s: float | None = None) -> Meth
     else:
         cc_v, note = 0.9, "between open and solid (UFC: 'in between'); midpoint assumed"
     cc = Coefficient("cc", cc_v, "ufc-4-152-01", note)
-    cb_berth = ce.value * cg.value * cd.value * cc.value
-    geo["cb_berthing"] = cb_berth
-    f = 1.5 * cb_berth if cb_berth < 0.6 else 0.9
-    cm = Coefficient("cm", ufc_added_mass(s, b.water_depth_m, cb_berth), "ufc-4-152-01",
-                     f"5-2.1.1 e surface vessels; F {f:.3f} from berthing coefficient "
-                     f"Ce Cg Cd Cc = {cb_berth:.3f} (Eq. 5-2, p. 106; p. 109)")
+    cm, geo["cb_berthing"] = _ufc_cm(case, ce, cg, cd, cc)
     fac = Coefficient("accidental_factor", 1.5, "ufc-4-152-01", "5-1.5.3: increase by at least 50 %")
     return _result("ufc", "UFC 4-152-01 (2017 C1)", case, v, cm, ce, cd, cc, fac, geo, extra=(cg,))
+
+
+def _ufc_cm(case: Case, ce: Coefficient, cg: Coefficient, cd: Coefficient,
+            cc: Coefficient) -> tuple[Coefficient, float]:
+    """UFC Cm and the berthing coefficient Ce Cg Cd Cc it depends on (F, p. 109).
+
+    The one place the UFC Cm is derived, so an override of Cc (or of any
+    other factor of the berthing coefficient) recomputes Cm through F.
+    """
+    cb_berth = ce.value * cg.value * cd.value * cc.value
+    f = 1.5 * cb_berth if cb_berth < 0.6 else 0.9
+    cm = Coefficient("cm", ufc_added_mass(case.ship, case.berth.water_depth_m, cb_berth), "ufc-4-152-01",
+                     f"5-2.1.1 e surface vessels; F {f:.3f} from berthing coefficient "
+                     f"Ce Cg Cd Cc = {cb_berth:.3f} (Eq. 5-2, p. 106; p. 109)")
+    return cm, cb_berth
 
 
 # ---- ROM 2.0-11 -------------------------------------------------------------
@@ -1077,21 +1087,43 @@ def resolve_citations(citations, *, mode: str = "strict",
     return tuple(out)
 
 
-def _cite(res: MethodResult, mode: str, wiki_root: Path | None) -> MethodResult:
-    cites = result_citations(res.coefficients())
-    status = resolve_citations(cites, mode=mode, wiki_root=wiki_root)
+def _citation_flags(status, mode: str) -> list[str]:
+    """The flags an explicit opt-out adds for these citation statuses."""
     seen, pending = set(), []
     for code_id, st in status:
         if st.startswith("unresolved") and code_id not in seen:
             seen.add(code_id)
             pending.append(f"{code_id} ({st.split(': ', 1)[1]})")
-    flags = list(res.flags)
+    flags = []
     if pending:
         flags.append("citation not resolved against the wiki: " + ", ".join(pending)
                      + "; values carry the source register only (citations='record', explicit opt-out)")
-    if mode == "off" and cites:
+    if mode == "off" and any(st == "not checked" for _, st in status):
         flags.append(CITATIONS_NOT_CHECKED)
+    return flags
+
+
+def _cite(res: MethodResult, mode: str, wiki_root: Path | None) -> MethodResult:
+    cites = result_citations(res.coefficients())
+    status = resolve_citations(cites, mode=mode, wiki_root=wiki_root)
+    flags = list(res.flags) + _citation_flags(status, mode)
     return replace(res, citations=cites, citation_status=status, flags=tuple(flags))
+
+
+def _with_cc(case: Case, res: MethodResult, cc_value: float) -> MethodResult:
+    """``res`` with the caller's Cc and every term derived from Cc recomputed."""
+    reason = SWEEP_EXCLUSIONS[res.method].get("cc")
+    if reason is not None:
+        raise ValueError(f"{res.label} does not take a Cc override: {reason}")
+    cc = Coefficient("cc", _finite("cc", cc_value, positive=True), "caller",
+                     "given by the caller; terms derived from Cc recomputed at this value")
+    cm, geo = res.cm, dict(res.geometry)
+    if res.method == "ufc":
+        cg = next(c for c in res.extra if c.name == "cg")
+        cm, geo["cb_berthing"] = _ufc_cm(case, res.ce, cg, res.cs, cc)
+    return _result(res.method, res.label, case, res.velocity_m_s, cm, res.ce, res.cs, cc, res.factor, geo,
+                   extra=res.extra, divisor=res.capacity_divisor,
+                   flags=[x for x in res.flags if not x.startswith("below 0.")])
 
 
 def energy_by_method(
@@ -1102,6 +1134,7 @@ def energy_by_method(
     velocity_m_s: float | None = None,
     factor: float | None = None,
     factor_position: str = "smallest",
+    cc: float | None = None,
     citations: str = "strict",
     citation_root: Path | None = None,
     **case_kw,
@@ -1109,12 +1142,16 @@ def energy_by_method(
     """Normal and design berthing energy by ``method`` (a key of :data:`METHODS`).
 
     Accepts a :class:`Case`, or a Ship and Berth (with :class:`Case` keywords).
-    ``velocity_m_s`` and ``factor`` override the method's own values; the
-    result then names "caller" as their source. A velocity override is
+    ``velocity_m_s``, ``cc`` and ``factor`` override the method's own values;
+    the result then names "caller" as their source. A velocity override is
     applied before the method derives its velocity-dependent coefficients
     (ROM accidental factor and Cc, validity flags), so they follow the
-    effective velocity. ``factor_position`` chooses the largest- or
-    smallest-ship PIANC abnormal factor where a method uses it.
+    effective velocity. A Cc override replaces the method's berth
+    configuration factor and every term derived from it is recomputed (UFC
+    4-152-01: Cm through F of the berthing coefficient Ce Cg Cd Cc); a
+    method that fixes or removes Cc (:func:`inapplicable_sweeps`) refuses it.
+    ``factor_position`` chooses the largest- or smallest-ship PIANC abnormal
+    factor where a method uses it.
 
     The result carries its citation sidecar, resolved against
     ``citation_root`` per ``citations`` (see :func:`resolve_citations`). The
@@ -1126,6 +1163,8 @@ def energy_by_method(
         raise ValueError(f"unknown method {method!r}; one of {tuple(METHODS)}")
     case = _as_case(ship_or_case, berth, **case_kw)
     res = METHODS[method].evaluate(case, factor_position, velocity_m_s)
+    if cc is not None:
+        res = _with_cc(case, res, cc)
     if factor is not None:
         f = Coefficient(res.factor.name, _finite("factor", factor, positive=True), "caller")
         res = _result(res.method, res.label, case, res.velocity_m_s, res.cm, res.ce, res.cs, res.cc, f,
@@ -1398,6 +1437,11 @@ class Sweep:
     ``reaction_factor`` multiplies every reaction and hull pressure before
     the comparison with ``reaction_limit_kn`` and
     ``hull_pressure_limit_kpa``, the limits drawn.
+
+    ``citation_status`` and ``flags`` carry the citation qualification of the
+    method results behind the sweep (:func:`standard_sweeps`): the status of
+    each citation and the flag of an explicit opt-out (``record``, ``off``).
+    Both are empty for a sweep built from a bare function.
     """
 
     parameter: str
@@ -1414,6 +1458,8 @@ class Sweep:
     hull_pressure_limit_kpa: float | None
     fenders_in_contact: int
     reaction_factor: float = 1.0
+    citation_status: tuple[tuple[str, str], ...] = ()
+    flags: tuple[str, ...] = ()
 
     def at(self, value: float) -> SweepPoint:
         for p in self.points:
@@ -1607,6 +1653,9 @@ def standard_sweeps(
     factor: float | None = None,
     factor_position: str = "smallest",
     points: int = 25,
+    citations: str = "strict",
+    citation_root: Path | None = None,
+    base: MethodResult | None = None,
 ) -> list[Sweep]:
     """The standard set of sweeps around the ``method`` result for this case.
 
@@ -1619,35 +1668,69 @@ def standard_sweeps(
     * ``water_depth_m`` (Cm through keel clearance, and Cc where the method
       uses it), ``contact_x_over_lbp`` and ``berthing_angle_deg`` (Ce): the
       method is re-evaluated with the berth changed;
-    * ``cs``, ``cc``, ``factor``: the coefficient alone, others held, and
-      only where the method uses it: a sweep in :func:`inapplicable_sweeps`
-      is left out, and a Cs or Cc range is clipped to
-      :data:`SWEEP_COEFFICIENT_LIMITS` (the range basis then says so).
+    * ``cc``: the method is re-evaluated with Cc given (the ``cc`` override
+      of :func:`energy_by_method`), so terms derived from Cc follow (UFC Cm
+      through F of the berthing coefficient Ce Cg Cd Cc);
+    * ``cs``, ``factor``: the coefficient alone, others held (no method
+      derives another term from them where the sweep applies).
+
+    A sweep in :func:`inapplicable_sweeps` is left out, and a Cs or Cc range
+    is clipped to :data:`SWEEP_COEFFICIENT_LIMITS` (the range basis then
+    says so).
 
     ``velocity_m_s`` and ``factor`` are the caller's overrides of the base
     case (as in :func:`energy_by_method`). ``reaction_factor`` multiplies the
     reactions and hull pressures before they are compared with the limits.
     The swept values span a little wider than each range.
+
+    Citations follow ``citations`` and ``citation_root`` as in
+    :func:`energy_by_method`: the default ``strict`` raises
+    :class:`CitationResolutionError` when a cited page is missing or no wiki
+    is configured; ``record`` and ``off`` are explicit, flagged opt-outs.
+    The base result is checked once; a swept result citing a source the base
+    does not is checked as well. ``base`` is a result already checked for
+    this case, method and overrides (as the case loader holds): it is
+    verified against a recomputation, then reused if its citation status
+    meets ``citations`` (re-checked if it was ``record`` and ``strict`` is
+    asked; refused if it was not checked and a check is asked). Each sweep
+    carries the citation status and opt-out flags of its results.
     """
+    if citations not in CITATION_MODES:
+        raise ValueError(f"citation mode must be one of {CITATION_MODES}")
     ship, berth = case.ship, case.berth
     kw = dict(velocity_m_s=velocity_m_s, factor=factor, factor_position=factor_position, citations="off")
-    base = energy_by_method(case, method=method, **kw)
+    if base is None:
+        base = energy_by_method(case, method=method, **{**kw, "citations": citations},
+                                citation_root=citation_root)
+        status = base.citation_status
+    else:
+        status = _checked_base_status(case, method, kw, base, citations, citation_root)
+    checked = {c: st for c, (_, st) in zip(base.citations, status)}
     v0, f0 = base.velocity_m_s.value, base.factor.value
     cs0, cc0 = base.cs.value, base.cc.value
     e0 = base.design_energy_knm
     m0 = ship.displacement_t
     excluded = inapplicable_sweeps(method)
     limits = SWEEP_COEFFICIENT_LIMITS[method]
+    base_keys = set(checked)
+    used: list[Citation] = []   # citations of the current sweep beyond the base's
 
-    def at_velocity(x):
-        return energy_by_method(case, method=method, **{**kw, "velocity_m_s": x}).design_energy_knm
+    def energy(c, **o):
+        """Design energy of one swept result; any citation the base lacks is checked."""
+        res = energy_by_method(c, method=method, **{**kw, **o})
+        for cit in res.citations:
+            if cit not in checked:
+                checked[cit] = resolve_citations((cit,), mode=citations, wiki_root=citation_root)[0][1]
+            if cit not in used and cit not in base_keys:
+                used.append(cit)
+        return res.design_energy_knm
 
     def with_berth(**b_kw):
         b = Berth(**{**berth.__dict__, **b_kw})
-        return energy_by_method(replace(case, berth=b), method=method, **kw).design_energy_knm
+        return energy(replace(case, berth=b))
 
     builders = {
-        "velocity_m_s": ("berthing velocity", "m/s", v0, at_velocity),
+        "velocity_m_s": ("berthing velocity", "m/s", v0, lambda x: energy(case, velocity_m_s=x)),
         "displacement_t": ("displacement", "t", m0, lambda x: e0 * x / m0),
         "water_depth_m": ("water depth (Cm through keel clearance)", "m", berth.water_depth_m,
                           lambda x: with_berth(water_depth_m=x)),
@@ -1657,7 +1740,7 @@ def standard_sweeps(
         "berthing_angle_deg": ("berthing angle (Ce)", "deg", berth.berthing_angle_deg,
                                lambda x: with_berth(berthing_angle_deg=x)),
         "cs": ("softness factor Cs", "-", cs0, lambda x: e0 * x / cs0),
-        "cc": ("berth configuration factor Cc", "-", cc0, lambda x: e0 * x / cc0),
+        "cc": ("berth configuration factor Cc", "-", cc0, lambda x: energy(case, cc=x)),
         "factor": ("abnormal / partial energy factor", "-", f0, lambda x: e0 * x / f0),
     }
     out = []
@@ -1666,6 +1749,7 @@ def standard_sweeps(
             raise KeyError(f"unknown sweep {key!r}")
         if key in excluded:
             continue
+        used.clear()
         label, unit, b0, fn = builders[key]
         r_lo, r_hi, basis = rng.low, rng.high, rng.basis
         if key in limits:
@@ -1685,10 +1769,39 @@ def standard_sweeps(
         if key in limits:
             lo_s, hi_s = max(lo_s, limits[key][0]), min(hi_s, limits[key][1])
         values = [lo_s + (hi_s - lo_s) * i / (points - 1) for i in range(points)]
-        out.append(parameter_sweep(
+        sw = parameter_sweep(
             key, label, unit, b0, values, fn, fender, range_low=r_lo, range_high=r_hi,
             range_basis=basis, fenders_in_contact=fenders_in_contact, capacity_knm=capacity_knm,
             curve=curve, reaction_limit_kn=reaction_limit_kn, hull_pressure_limit_kpa=hull_pressure_limit_kpa,
             reaction_factor=reaction_factor,
-        ))
+        )
+        st = tuple(status) + tuple((c.code_id, checked[c]) for c in used)
+        out.append(replace(sw, citation_status=st, flags=tuple(_citation_flags(st, citations))))
     return out
+
+
+def _checked_base_status(case: Case, method: str, kw: dict, base: MethodResult, mode: str,
+                         wiki_root: Path | None) -> tuple[tuple[str, str], ...]:
+    """Citation status of a caller's ``base`` for :func:`standard_sweeps`.
+
+    Raises ValueError when ``base`` is not this case's ``method`` result with
+    these overrides, or was not checked while ``mode`` asks for a check.
+    A ``record`` base is re-checked when ``mode`` is ``strict``.
+    """
+    if base.method != method:
+        raise ValueError(f"base result is for method {base.method!r}, not {method!r}")
+    fresh = energy_by_method(case, method=method, **kw)
+    same = [(c.name, c.value, c.source) for c in fresh.coefficients()] == \
+           [(c.name, c.value, c.source) for c in base.coefficients()]
+    if not same or not math.isclose(fresh.design_energy_knm, base.design_energy_knm, rel_tol=1e-12):
+        raise ValueError("base result does not match this case and overrides; recompute it or omit base")
+    status = base.citation_status
+    if mode == "off":
+        return status
+    if (base.citations != fresh.citations or len(status) != len(base.citations)
+            or any(st == "not checked" for _, st in status)):
+        raise ValueError("base result's citations were not checked (citations='off', or no sidecar); "
+                         f"pass a base checked in mode {mode!r}, or citations='off' explicitly")
+    if mode == "strict" and any(st != "resolved" for _, st in status):
+        status = resolve_citations(base.citations, mode="strict", wiki_root=wiki_root)
+    return status

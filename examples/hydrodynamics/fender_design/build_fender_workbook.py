@@ -505,7 +505,7 @@ def _sizes(wb, res):
         r = rows[c.fender_id]
         vals = [c.fender_id, "base" if c.is_base else "", c.rated_energy_knm, c.capacity_knm, c.utilisation,
                 c.rated_reaction_kn, c.reaction_kn, c.hull_pressure_kpa, yn(c.meets_energy), yn(c.meets_reaction),
-                yn(c.meets_pressure), r.deflection_mm, r.change_pct["rated_energy"], r.change_pct["reaction"]]
+                "no (no datum)" if c.pressure_missing else yn(c.meets_pressure), r.deflection_mm, r.change_pct["rated_energy"], r.change_pct["reaction"]]
         for j, v in enumerate(vals, start=1):
             ws.cell(row=i, column=j, value=v)
     from fender_case import size_basis

@@ -31,7 +31,10 @@ class SizeCheck:
     / the selected method's capacity divisor (WG211 gamma_m), the same basis
     as the base fender's capacity. ``reaction_kn`` and ``hull_pressure_kpa``
     are the rated-deflection values x (1 + reaction tolerance), compared with
-    the limits as given. A check without a limit is None.
+    the limits as given. A check without a limit is None. A row without a
+    hull pressure fails a set pressure limit (``meets_pressure`` False,
+    :attr:`pressure_missing`), because compliance cannot be shown; this is
+    how :func:`select_fenders` excludes the same row.
     """
 
     fender_id: str
@@ -48,7 +51,13 @@ class SizeCheck:
 
     @property
     def meets_all(self) -> bool:
+        """Every check with a limit is met (a check without a limit is None and not counted)."""
         return self.meets_energy and self.meets_reaction is not False and self.meets_pressure is not False
+
+    @property
+    def pressure_missing(self) -> bool:
+        """A hull-pressure limit is set but the row gives no hull pressure."""
+        return self.meets_pressure is False and self.hull_pressure_kpa is None
 
 
 def size_checks(fenders, base_id: str, energy_per_fender_knm: float, design: dict,
@@ -76,7 +85,8 @@ def size_checks(fenders, base_id: str, energy_per_fender_knm: float, design: dic
             rated_reaction_kn=f.reaction_kn, reaction_kn=dp.reaction_kn, hull_pressure_kpa=p,
             meets_energy=cap >= energy_per_fender_knm,
             meets_reaction=None if r_lim is None else dp.reaction_kn <= r_lim,
-            meets_pressure=None if (p_lim is None or p is None) else p <= p_lim,
+            # a set limit with no datum is not met: compliance cannot be shown (as select_fenders)
+            meets_pressure=None if p_lim is None else (p is not None and p <= p_lim),
         ))
     return out
 
@@ -239,6 +249,7 @@ def compute(case: dict, catalogue_path: str | Path | None = None, citations: str
         curve=curve, reaction_limit_kn=d.get("reaction_limit_kn"),
         hull_pressure_limit_kpa=d.get("hull_pressure_limit_kpa"),
         reaction_factor=design.reaction_kn / base_fender.reaction_kn, **kw,
+        base=selected, **ckw,
     )
     excluded = fd.inapplicable_sweeps(d["method"])
     sweeps_skipped = {k: excluded[k] for k in ranges if k in excluded}

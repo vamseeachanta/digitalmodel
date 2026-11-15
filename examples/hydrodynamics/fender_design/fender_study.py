@@ -183,7 +183,8 @@ def results_dict(res) -> dict:
                      limit_value=s.limit_value(), reaction_factor=s.reaction_factor,
                      reaction_low=s.at(s.range_low).reaction_kn, reaction_high=s.at(s.range_high).reaction_kn,
                      reaction_base=s.at(s.base_value).reaction_kn,
-                     reaction_limit_value=s.reaction_limit_value()) for s in res.sweeps],
+                     reaction_limit_value=s.reaction_limit_value(),
+                     citation_status=dict(s.citation_status), flags=list(s.flags)) for s in res.sweeps],
         sweeps_skipped=res.sweeps_skipped,
         tornado=[dict(parameter=b.parameter, span_pct=b.span_pct) for b in res.bars],
         geometry=res.selected.geometry,
@@ -191,7 +192,8 @@ def results_dict(res) -> dict:
                           capacity=c.capacity_knm, utilisation=c.utilisation, rated_reaction=c.rated_reaction_kn,
                           reaction=c.reaction_kn, hull_pressure=c.hull_pressure_kpa,
                           meets_energy=c.meets_energy, meets_reaction=c.meets_reaction,
-                          meets_pressure=c.meets_pressure, meets_all=c.meets_all) for c in res.size_checks],
+                          meets_pressure=c.meets_pressure, pressure_missing=c.pressure_missing,
+                          meets_all=c.meets_all) for c in res.size_checks],
         citation_mode=res.citation_mode,
     )
     return out
@@ -258,7 +260,8 @@ def tables(res) -> dict[str, str]:
              "Energy", f"Reaction <= {_f(r_lim, 0)} kN", f"Pressure <= {_f(p_lim, 0)} kPa"],
             [[c.fender_id + (" (base)" if c.is_base else ""), _f(c.rated_energy_knm, 0), _f(c.capacity_knm, 0),
               f"{c.utilisation:.2f}", _f(c.rated_reaction_kn, 0), _f(c.reaction_kn, 0),
-              _f(c.hull_pressure_kpa, 0), yn(c.meets_energy), yn(c.meets_reaction), yn(c.meets_pressure)]
+              _f(c.hull_pressure_kpa, 0), yn(c.meets_energy), yn(c.meets_reaction),
+              "**no** (no datum)" if c.pressure_missing else yn(c.meets_pressure)]
              for c in res.size_checks])
         t["sizes_basis"] = size_basis(res)
     t["sources_table"] = md_table(
