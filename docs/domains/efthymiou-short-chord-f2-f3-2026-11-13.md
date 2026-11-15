@@ -42,6 +42,7 @@ source-verified here and is not introduced as a calculation or a golden.
 | 4 | 2026-11-14 | The deferred-equation references were linked to their issue so the remaining scope can be opened from this record. |
 | 5 | 2026-11-14 | The summary now distinguishes the satisfied tracking requirement from the unfinished equation work; the focused-test dependency limit is recorded. |
 | 6 | 2026-11-14 | The focused-test dependency note now records the import requirements and points to the recorded results without retaining a temporary environment narrative. |
+| 7 | 2026-11-14 | The focused-test dependency note now includes numpy, scipy and pydantic to describe the eager package imports. |
 
 Table 1a. Validation-record revisions.
 
@@ -187,8 +188,9 @@ are placed in `test_short_chord_factors.py` to keep every changed module below
 
 ### Focused-test dependency limit
 
-The focused tests import `digitalmodel.fatigue`, which requires pandas and
-pyLife. The last recorded result is in the list above.
+The focused tests import `digitalmodel.fatigue`, whose package import loads
+numpy, pandas, scipy, pydantic and pyLife. The last recorded result is in the
+list above.
 
 ## Functions reviewed but NOT changed
 
