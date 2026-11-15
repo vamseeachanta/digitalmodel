@@ -105,7 +105,7 @@ def test_checkout_metadata_ignores_remote_tracking_refs(tmp_path, monkeypatch, d
             ["git", "-C", str(checkout), *args], env=env, input=data,
         ).strip()
 
-    # The shallow boundary ensures the snapshot needs no parent of HEAD.
+    # The shallow boundary makes parent lookups fail; the snapshot must not need one.
     (checkout / ".git" / "shallow").write_bytes(git("rev-parse", "HEAD") + b"\n")
     assert git("rev-parse", "--is-shallow-repository") == b"true"
     if detached:
