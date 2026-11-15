@@ -185,7 +185,12 @@ computes φ from the geometry and the test suite checks it equals this form).
 - Reaction at part energy is read from a normalised curve when one is supplied; without a
   curve the rated reaction is used as an upper bound. A curve must run from 0 % to at least
   100 % of rated energy; a shorter curve is refused, because a reaction outside its data is
-  not supported by them. Every reaction compared with a limit
+  not supported by them. A curve may fall after buckling and rise again, so the reaction at
+  part energy is the largest reached along the curve up to that energy, not the value at the
+  final energy; for a reaction that does not fall the two are the same. Where a curve exceeds
+  100 % before the rated point, the rated reaction of every row of its fender type is
+  multiplied by that peak over 100 % (neighbouring sizes and the workbook Fenders sheet).
+  Every reaction compared with a limit
   (selection, sweeps, charts) is multiplied by the reaction factor, here {{rf}} (the +10 %
   manufacturing tolerance): the rated-deflection design reaction of the base fender is
   {{R_design}} kN.
@@ -353,7 +358,8 @@ Figure 12 – Abnormal (or partial) energy factor.
 
 Table 7 – Illustrative fenders against the energy per fender and the limits, with the same
 design adjustments as the base fender. {{sizes_basis}} The reaction and pressure are the
-values at rated deflection, an upper bound for part load.
+values at rated deflection, an upper bound for part load when the curve does not exceed the
+rated reaction before the rated point (Section 3.6).
 
 ![Sizes](charts/sizes.png)
 

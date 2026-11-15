@@ -1260,6 +1260,37 @@ def _interp(x, xs, ys):
     return ys[-1]
 
 
+def peak_reaction_pct(curve: PerformanceCurve, energy_pct: float) -> float:
+    """Largest reaction (% of rated) reached along ``curve`` from 0 % up to
+    ``energy_pct`` energy.
+
+    A curve may fall after buckling and rise again, so the reaction at the
+    final energy can be below a peak already passed during compression. The
+    structure carries the largest reaction of the compression, so the peak
+    is the value compared with a limit. For a reaction that does not fall it
+    equals the value at ``energy_pct``.
+    """
+    e = _finite("energy_pct", energy_pct, nonneg=True)
+    energies = [p[2] for p in curve.points]
+    reactions = [p[1] for p in curve.points]
+    passed = [r for en, r in zip(energies, reactions) if en <= e]
+    return max([_interp(e, energies, reactions), *passed])
+
+
+def rated_peak_factor(curve: PerformanceCurve | None) -> float:
+    """Largest reaction along ``curve`` up to the rated point (100 % energy)
+    over the rated reaction, and never below 1.
+
+    The rated-deflection reaction of a catalogue row is an upper bound for
+    any demand within the rating only when the curve does not exceed 100 %
+    before the rated point; where it does, the rated value times this factor
+    is. A rise beyond the rated point is not read. Without a curve: 1.
+    """
+    if curve is None:
+        return 1.0
+    return max(1.0, peak_reaction_pct(curve, 100.0) / 100.0)
+
+
 def reaction_at_energy(
     fender: FenderRating,
     energy_knm: float,
@@ -1268,11 +1299,15 @@ def reaction_at_energy(
 ) -> tuple[float | None, float | None]:
     """Reaction (kN) and deflection (%) when the fender absorbs ``energy_knm``.
 
-    With a curve the reaction is interpolated on the energy fraction of
-    ``energy_capacity_knm`` (default: rated energy) and scaled by the rated
-    reaction. Without a curve the rated reaction is returned, an upper bound
-    for a reaction that rises to the rated point, and deflection is None.
-    Above the capacity both are None: the reaction is not rated there.
+    With a curve the energy fraction is taken of ``energy_capacity_knm``
+    (default: rated energy). The reaction is the largest reached along the
+    curve up to that fraction (:func:`peak_reaction_pct`), scaled by the
+    rated reaction: after buckling the reaction can fall, and the value at
+    the final energy would hide the earlier peak. The deflection is the
+    value at that fraction. Without a curve the rated reaction is returned,
+    an upper bound for a reaction that rises to the rated point, and
+    deflection is None. Above the capacity both are None: the reaction is
+    not rated there.
     """
     e = _finite("energy_knm", energy_knm, nonneg=True)
     if energy_capacity_knm is None:
@@ -1285,7 +1320,7 @@ def reaction_at_energy(
         return fender.reaction_kn, None
     frac = 100.0 * e / cap
     energies = [p[2] for p in curve.points]
-    r_pct = _interp(frac, energies, [p[1] for p in curve.points])
+    r_pct = peak_reaction_pct(curve, frac)
     d_pct = _interp(frac, energies, [p[0] for p in curve.points])
     return fender.reaction_kn * r_pct / 100.0, d_pct
 
@@ -1422,8 +1457,9 @@ def temperature_factor(temperature_c: float, compound: str = "blend") -> float:
 
 @dataclass(frozen=True)
 class SweepPoint:
-    """One swept value. ``reaction_kn`` is the curve reaction at this energy
-    times the sweep's ``reaction_factor`` (tolerance, velocity, temperature);
+    """One swept value. ``reaction_kn`` is the largest curve reaction reached
+    up to this energy (:func:`reaction_at_energy`) times the sweep's
+    ``reaction_factor`` (tolerance, velocity, temperature);
     ``hull_pressure_kpa`` is the catalogue hull pressure at rated deflection
     times the same factor: the pressure at part load is not calculated,
     because no pressure-deflection relationship is sourced. Both are None
@@ -1538,7 +1574,8 @@ def parameter_sweep(
     ``design_energy`` maps one value of the parameter to design energy (kNm)
     with all other inputs at base. Energy per fender = design energy /
     ``fenders_in_contact``; utilisation = energy per fender / capacity
-    (default rated energy). Reaction = curve reaction at that energy x
+    (default rated energy). Reaction = largest curve reaction reached up to
+    that energy (a curve may fall after buckling) x
     ``reaction_factor`` (1 + reaction tolerance, times any velocity and
     temperature factors: :class:`DesignPerformance` reaction / rated
     reaction). Hull pressure = catalogue hull pressure (at rated deflection)

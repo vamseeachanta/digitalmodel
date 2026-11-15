@@ -202,3 +202,32 @@ def test_formulas_recompute_to_module_values(built):
     row = ids.index(res.base_fender.fender_id) + 2
     per = res.selected.design_energy_knm / res.case["design"]["fenders_in_contact"]
     assert vals[f"FENDERS!L{row}"] == pytest.approx(per / res.capacity_knm, rel=1e-9)
+
+
+def test_fenders_sheet_design_reaction_carries_the_curve_peak(tmp_path):
+    # second-provider review at 944a85c7: a curve peaking above the rated reaction
+    # before the rated point raises the design reaction of rows of its type
+    import dataclasses
+
+    from digitalmodel.hydrodynamics import fender_design as fd
+    res = compute(load_case(EXAMPLE / "generic_case.yaml"), citations="record")
+    above = fd.PerformanceCurve("fictional above rated", ((0, 0, 0), (30, 110, 40), (60, 100, 100)),
+                                "fictional test curve")
+    res = dataclasses.replace(res, curve=above)
+    out = tmp_path / "peak.xlsx"
+    build_workbook(res, out)
+    ws = openpyxl.load_workbook(out)["Fenders"]
+    vals = _calculate(out)
+    rtol = res.case["design"].get("reaction_tolerance", 0.10)
+    for i, f in enumerate(res.catalogue, start=2):
+        k = 1.10 if f.fender_type == res.base_fender.fender_type else 1.0
+        assert vals[f"FENDERS!M{i}"] == pytest.approx(f.reaction_kn * k * (1 + rtol), rel=1e-9), f.fender_id
+        if k == 1.0:
+            assert ws.cell(row=i, column=13).value == f"=H{i}*(1+RTOL)"
+
+
+def test_fenders_sheet_design_reaction_formula_unchanged_for_a_monotonic_curve(built):
+    res, out = built
+    ws = openpyxl.load_workbook(out)["Fenders"]
+    for i in range(2, len(res.catalogue) + 2):
+        assert ws.cell(row=i, column=13).value == f"=H{i}*(1+RTOL)"

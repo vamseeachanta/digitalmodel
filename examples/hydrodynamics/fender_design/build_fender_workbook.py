@@ -415,7 +415,10 @@ def _fenders(wb, res):
             ws.cell(row=i, column=j, value=v)
         ws.cell(row=i, column=11, value=f"=G{i}*(1-ETOL)*ANG/GAMMA_M")
         ws.cell(row=i, column=12, value=f"=E_FENDER/K{i}")
-        ws.cell(row=i, column=13, value=f"=H{i}*(1+RTOL)")
+        # a curve above the rated reaction before the rated point raises rows of its type
+        # (fender_case.size_checks); otherwise the rated-deflection value x (1 + tolerance)
+        k = res.reaction_peak_factor(f)
+        ws.cell(row=i, column=13, value=f"=H{i}*(1+RTOL)" if k == 1.0 else f"=H{i}*{k:.12g}*(1+RTOL)")
         ws.cell(row=i, column=14, value=f'=IF(I{i}="","",I{i}*(1+RTOL))')
         ws.cell(row=i, column=15, value=f'=IF(L{i}<=1,"yes","no")')
         ws.cell(row=i, column=16, value=f'=IF(RLIM="","-",IF(M{i}<=RLIM,"yes","no"))')

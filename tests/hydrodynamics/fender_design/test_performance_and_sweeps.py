@@ -14,6 +14,8 @@ from digitalmodel.hydrodynamics.fender_design import (
     PerformanceCurve,
     design_performance,
     parameter_sweep,
+    peak_reaction_pct,
+    rated_peak_factor,
     reaction_at_energy,
     tornado,
 )
@@ -187,3 +189,82 @@ def test_tornado_orders_by_span():
     assert bars[0].high_change_pct == pytest.approx(125.0)
     assert bars[1].high_change_pct == pytest.approx(20.0)
     assert math.isclose(bars[1].low_change_pct, 0.0, abs_tol=1e-12)
+
+
+# ------------------------------------------- reaction falling after buckling
+# Second-provider review at 944a85c7: a curve may fall after buckling, so the
+# reaction at the final energy can hide an earlier, higher compression peak.
+# Every reaction compared with a limit is the largest reaction reached along
+# the curve up to the demand energy (fictional curve below).
+BUCKLING = PerformanceCurve(
+    "fictional buckling",
+    ((0, 0, 0), (30, 100, 40), (50, 60, 80), (60, 100, 100)),
+    "fictional test curve",
+)
+
+
+def test_reaction_is_the_peak_reached_up_to_the_demand_energy():
+    # 320 kNm = 80 % of 400: the end value is 60 % (660 kN), but compression
+    # passed the 100 % peak (1,100 kN) at 40 % energy
+    r, d = reaction_at_energy(FENDER, 320.0, BUCKLING)
+    assert r == pytest.approx(1100.0)
+    assert d == pytest.approx(50.0)                   # deflection is at the demand energy
+    assert peak_reaction_pct(BUCKLING, 80.0) == pytest.approx(100.0)
+    # before the peak the reaction is still the value at the energy: 20 % -> 50 %
+    assert reaction_at_energy(FENDER, 80.0, BUCKLING)[0] == pytest.approx(550.0)
+    assert peak_reaction_pct(BUCKLING, 0.0) == 0.0
+
+
+def test_buckling_sweep_reports_the_peak_and_is_over_the_limit():
+    # review reproduction: 320 kNm demand, factor 1.10, limit 900 kN; the end
+    # value gave 660 x 1.10 = 726 kN and no exceedance
+    s = parameter_sweep(
+        "demand", "demand", "kNm", 320.0, [320.0], lambda v: v, FENDER,
+        range_low=320.0, range_high=320.0, range_basis="review reproduction",
+        curve=BUCKLING, reaction_limit_kn=900.0, reaction_factor=1.10,
+    )
+    p = s.at(320.0)
+    assert p.reaction_kn == pytest.approx(1210.0)     # 1,100 x 1.10
+    assert p.deflection_pct == pytest.approx(50.0)
+    assert s.over_reaction_limit() == [320.0]
+
+
+def test_buckling_sweep_reaction_does_not_fall_with_energy():
+    s = parameter_sweep(
+        "demand", "demand", "kNm", 200.0, [80.0, 160.0, 240.0, 320.0, 400.0], lambda v: v, FENDER,
+        range_low=80.0, range_high=400.0, range_basis="test", curve=BUCKLING,
+        reaction_limit_kn=900.0, reaction_factor=1.10,
+    )
+    r = [p.reaction_kn for p in s.points]
+    assert r == sorted(r)
+    assert r[0] == pytest.approx(605.0)               # 20 % energy: 50 % x 1,100 x 1.10
+    assert all(x == pytest.approx(1210.0) for x in r[2:])
+    assert s.over_reaction_limit() == [160.0, 200.0, 240.0, 320.0, 400.0]
+    # the factored reaction reaches 900 kN between 80 and 160 kNm
+    assert 80.0 < s.reaction_limit_value() < 160.0
+
+
+def test_monotonic_curve_reaction_is_unchanged():
+    # with a reaction that does not fall, the peak is the value at the demand energy
+    for e in (0.0, 20.0, 40.0, 100.0, 160.0, 250.0, 337.5, 400.0):
+        frac = 100.0 * e / 400.0
+        end = None
+        pts = CURVE.points
+        for a, b in zip(pts, pts[1:]):
+            if a[2] <= frac <= b[2]:
+                end = 1100.0 * (a[1] + (frac - a[2]) / (b[2] - a[2]) * (b[1] - a[1])) / 100.0
+                break
+        assert reaction_at_energy(FENDER, e, CURVE)[0] == pytest.approx(end), e
+    assert rated_peak_factor(CURVE) == 1.0
+    s = _velocity_sweep()
+    assert s.at(0.10).reaction_kn == pytest.approx(1100.0 * (50.0 + (84.375 - 40.0) / 60.0 * 50.0) / 100.0)
+
+
+def test_rated_peak_factor():
+    # the peak up to the rated point over the rated reaction, never below 1
+    assert rated_peak_factor(BUCKLING) == 1.0
+    above = PerformanceCurve("fictional above rated", ((0, 0, 0), (30, 110, 40), (60, 100, 100)), "x")
+    assert rated_peak_factor(above) == pytest.approx(1.10)
+    # a rise beyond the rated point (energy above 100 %) is not read
+    past = PerformanceCurve("fictional past rated", ((0, 0, 0), (60, 100, 100), (70, 160, 130)), "x")
+    assert rated_peak_factor(past) == 1.0

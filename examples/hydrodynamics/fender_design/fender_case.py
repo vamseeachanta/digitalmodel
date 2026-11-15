@@ -31,7 +31,12 @@ class SizeCheck:
     / the selected method's capacity divisor (WG211 gamma_m), the same basis
     as the base fender's capacity. ``reaction_kn`` and ``hull_pressure_kpa``
     are the rated-deflection values x (1 + reaction tolerance), compared with
-    the limits as given. A check without a limit is None. A row without a
+    the limits as given. For a row of the case curve's fender type the
+    reaction is also multiplied by ``reaction_peak_factor``
+    (:func:`~digitalmodel.hydrodynamics.fender_design.rated_peak_factor`):
+    where the curve exceeds the rated reaction before the rated point, the
+    rated value is not the largest reaction reached. A check without a limit
+    is None. A row without a
     hull pressure fails a set pressure limit (``meets_pressure`` False,
     :attr:`pressure_missing`), because compliance cannot be shown; this is
     how :func:`select_fenders` excludes the same row.
@@ -48,6 +53,7 @@ class SizeCheck:
     meets_energy: bool
     meets_reaction: bool | None
     meets_pressure: bool | None
+    reaction_peak_factor: float = 1.0
 
     @property
     def meets_all(self) -> bool:
@@ -61,10 +67,14 @@ class SizeCheck:
 
 
 def size_checks(fenders, base_id: str, energy_per_fender_knm: float, design: dict,
-                capacity_divisor: float = 1.0) -> list[SizeCheck]:
+                capacity_divisor: float = 1.0, curve: fd.PerformanceCurve | None = None,
+                curve_type: str | None = None) -> list[SizeCheck]:
     """Check each fender in ``fenders`` against the case demand and limits,
     with the configured tolerances, angular factor and capacity divisor
-    (``design`` is the case's ``design`` block)."""
+    (``design`` is the case's ``design`` block). ``curve`` is the normalised
+    curve of fender type ``curve_type``; the reaction of a row of that type
+    carries the curve's peak up to the rated point (``rated_peak_factor``)."""
+    peak = fd.rated_peak_factor(curve)
     r_lim = design.get("reaction_limit_kn")
     p_lim = design.get("hull_pressure_limit_kpa")
     out = []
@@ -77,16 +87,20 @@ def size_checks(fenders, base_id: str, energy_per_fender_knm: float, design: dic
         )
         cap = dp.energy_knm / capacity_divisor
         rf = dp.reaction_kn / f.reaction_kn
+        k = peak if curve is not None and f.fender_type == curve_type else 1.0
+        r = dp.reaction_kn * k
+        # hull pressure stays the rated-deflection value x the tolerance (not scaled by the peak)
         p = None if f.hull_pressure_kpa is None else f.hull_pressure_kpa * rf
         out.append(SizeCheck(
             fender_id=f.fender_id, is_base=f.fender_id == base_id,
             rated_energy_knm=f.rated_energy_knm, capacity_knm=cap,
             utilisation=energy_per_fender_knm / cap,
-            rated_reaction_kn=f.reaction_kn, reaction_kn=dp.reaction_kn, hull_pressure_kpa=p,
+            rated_reaction_kn=f.reaction_kn, reaction_kn=r, hull_pressure_kpa=p,
             meets_energy=cap >= energy_per_fender_knm,
-            meets_reaction=None if r_lim is None else dp.reaction_kn <= r_lim,
+            meets_reaction=None if r_lim is None else r <= r_lim,
             # a set limit with no datum is not met: compliance cannot be shown (as select_fenders)
             meets_pressure=None if p_lim is None else (p is not None and p <= p_lim),
+            reaction_peak_factor=k,
         ))
     return out
 
@@ -95,9 +109,12 @@ def size_basis(res) -> str:
     """One sentence: the adjustments applied to every neighbouring size."""
     d = res.case["design"]
     div = res.selected.capacity_divisor
+    k = res.reaction_peak_factor(res.base_fender)
     return (f"Energy: rated x (1 - {d.get('energy_tolerance', 0.0):.2f}) x angular {d.get('angular_factor', 1.0):.2f}"
             + (f" / {div:.2f} ({res.selected.label} capacity divisor)" if div != 1.0 else "")
-            + f". Reaction and hull pressure: rated-deflection value x (1 + {d.get('reaction_tolerance', 0.10):.2f}).")
+            + f". Reaction and hull pressure: rated-deflection value x (1 + {d.get('reaction_tolerance', 0.10):.2f})."
+            + (f" Reaction of {res.base_fender.fender_type} rows also x {k:.3f}, the curve's largest reaction "
+               "before the rated point over the rated reaction." if k != 1.0 else ""))
 
 
 @dataclass
@@ -126,6 +143,14 @@ class CaseResult:
     def reaction_factor(self) -> float:
         """Design reaction / rated reaction of the base fender (1 + tolerance, x any factors)."""
         return self.design.reaction_kn / self.base_fender.reaction_kn
+
+    def reaction_peak_factor(self, fender: FenderRating) -> float:
+        """Multiplier on the rated-deflection reaction of ``fender``: the case
+        curve's peak up to the rated point over the rated reaction for a row of
+        the base fender's type (the curve's type), else 1."""
+        if self.curve is None or fender.fender_type != self.base_fender.fender_type:
+            return 1.0
+        return fd.rated_peak_factor(self.curve)
 
     @property
     def energy_per_fender_knm(self) -> float:
@@ -260,7 +285,7 @@ def compute(case: dict, catalogue_path: str | Path | None = None, citations: str
         per = selected.design_energy_knm / d.get("fenders_in_contact", 1)
         sizes = fender_size_sensitivity(catalogue, base_fender.fender_id, per, fender_ids=ids)
         checks = size_checks([r.fender for r in sizes], base_fender.fender_id, per, d,
-                             selected.capacity_divisor)
+                             selected.capacity_divisor, curve=curve, curve_type=base_fender.fender_type)
     return CaseResult(case, ship, berth, methods, skipped, selected, catalogue, base_fender,
                       capacity, design, curve, sweeps, bars, sizes, fcase, sweeps_skipped,
                       {f.fender_id: bases.get(f.fender_id, "") for f in catalogue} if bases else {},

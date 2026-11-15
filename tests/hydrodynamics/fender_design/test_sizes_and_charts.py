@@ -126,3 +126,59 @@ def test_water_depth_shading_leaves_the_base_point_unshaded():
         assert shaded == (p.reaction_kn is None), p.value
     assert sw.at(sw.base_value).reaction_kn is not None
     assert not any(lo <= sw.base_value <= hi for lo, hi in spans)
+
+
+# ------------------------------------------- curve peak above the rated reaction
+# A normalised curve whose reaction exceeds 100 % before the rated point means
+# the rated-deflection reaction is not the largest reaction the fender reaches.
+# Rows of the curve's fender type then carry the curve peak (second-provider
+# review at 944a85c7: limits are checked against the peak, not an end value).
+ABOVE = fd.PerformanceCurve("fictional above rated", ((0, 0, 0), (30, 110, 40), (60, 100, 100)),
+                            "fictional test curve")
+FM6 = FenderRating("GEN-FM-6", "generic", "foam", 2800, 5000, None, 1000.0, 1400.0, 180.0, 60.0, "fictional")
+
+
+def test_neighbour_reaction_carries_the_curve_peak_for_the_curve_type():
+    c = {x.fender_id: x for x in size_checks([PN4, PN5, FM6], "GEN-PN-4", 500.0, DESIGN,
+                                             curve=ABOVE, curve_type="pneumatic")}
+    assert c["GEN-PN-4"].reaction_kn == pytest.approx(1450.0 * 1.10 * 1.10)   # 1,754.5 kN
+    assert c["GEN-PN-4"].meets_reaction is False                               # 1,595 kN alone passes
+    assert c["GEN-PN-4"].reaction_peak_factor == pytest.approx(1.10)
+    assert c["GEN-PN-5"].reaction_kn == pytest.approx(1600.0 * 1.10 * 1.10)
+    # another type: the curve does not describe it, so the rated value stands
+    assert c["GEN-FM-6"].reaction_kn == pytest.approx(1540.0)
+    assert c["GEN-FM-6"].reaction_peak_factor == 1.0
+    # hull pressure stays the rated-deflection value x the tolerance
+    assert c["GEN-PN-4"].hull_pressure_kpa == pytest.approx(231.0)
+
+
+def test_neighbour_reaction_is_unchanged_by_a_curve_peaking_at_rated():
+    flat = fd.PerformanceCurve("fictional buckling", ((0, 0, 0), (30, 100, 40), (50, 60, 80), (60, 100, 100)),
+                               "fictional test curve")
+    a = size_checks([PN4, PN5], "GEN-PN-4", 500.0, DESIGN)
+    b = size_checks([PN4, PN5], "GEN-PN-4", 500.0, DESIGN, curve=flat, curve_type="pneumatic")
+    assert [x.reaction_kn for x in a] == [x.reaction_kn for x in b]
+
+
+def test_compute_applies_the_curve_peak_to_sweeps_and_sizes(tmp_path):
+    case = load_case(EXAMPLE / "generic_case.yaml")
+    plain = compute(case, citations="record")
+    curves = tmp_path / "curves.csv"
+    curves.write_text(
+        "curve,deflection_pct,reaction_pct,energy_pct,source\n"
+        + "".join(f"{case['design']['curve']},{d},{r},{e},fictional test curve\n"
+                  for d, r, e in ABOVE.points),
+        encoding="utf-8")
+    case["database"]["curves"] = str(curves)
+    res = compute(case, citations="record")
+    assert res.reaction_peak_factor(res.base_fender) == pytest.approx(1.10)
+    base_type = res.base_fender.fender_type
+    for a, b in zip(plain.size_checks, res.size_checks):
+        f = next(x for x in res.catalogue if x.fender_id == b.fender_id)
+        k = 1.10 if f.fender_type == base_type else 1.0
+        assert b.reaction_kn == pytest.approx(a.reaction_kn * k), b.fender_id
+    # every sweep reaction below the curve peak's energy share is at least the peak x factor
+    for s in res.sweeps:
+        for p in s.points:
+            if p.reaction_kn is not None and p.energy_per_fender_knm >= 0.40 * s.capacity_knm:
+                assert p.reaction_kn == pytest.approx(1.10 * res.base_fender.reaction_kn * res.reaction_factor)
