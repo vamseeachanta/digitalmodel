@@ -183,7 +183,9 @@ computes φ from the geometry and the test suite checks it equals this form).
   other values in `HULL_PRESSURE_KPA`. The sources disagree for bulk carriers (one paper lists
   200 to 320 kPa for WG33); the module uses 200 kPa and records the conflict.
 - Reaction at part energy is read from a normalised curve when one is supplied; without a
-  curve the rated reaction is used as an upper bound. Every reaction compared with a limit
+  curve the rated reaction is used as an upper bound. A curve must run from 0 % to at least
+  100 % of rated energy; a shorter curve is refused, because a reaction outside its data is
+  not supported by them. Every reaction compared with a limit
   (selection, sweeps, charts) is multiplied by the reaction factor, here {{rf}} (the +10 %
   manufacturing tolerance): the rated-deflection design reaction of the base fender is
   {{R_design}} kN.

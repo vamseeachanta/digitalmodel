@@ -64,6 +64,33 @@ def test_curve_validation():
         PerformanceCurve("bad", ((0, 0, 0), (10, 10, 20), (20, 20, 10)), "x")
 
 
+def test_curve_ending_below_rated_energy_is_refused():
+    # second-provider review at e57362bb: data up to 10 % energy only. Interpolation
+    # used to clamp to the last point and report 680/700 kNm as 20 % reaction
+    # (1100 x 0.20 = 220 kN; 319 kN after tolerances), a reaction the data do not support.
+    with pytest.raises(ValueError, match="100 %"):
+        PerformanceCurve("short", ((0, 0, 0), (20, 20, 10)), "fictional")
+    with pytest.raises(ValueError, match="100 %"):
+        PerformanceCurve("short", ((0, 0, 0), (40, 50, 40), (58, 95, 99.5)), "fictional")
+
+
+def test_curve_starting_above_zero_energy_is_refused():
+    # below the first point the reaction is equally unsupported
+    with pytest.raises(ValueError, match="0 %"):
+        PerformanceCurve("late", ((20, 20, 10), (60, 100, 100)), "fictional")
+
+
+def test_curve_reaching_rated_energy_is_accepted_and_reads_at_the_rated_point():
+    c = PerformanceCurve("full", ((0, 0, 0), (20, 20, 10), (60, 100, 100)), "fictional")
+    r, d = reaction_at_energy(FENDER, 400.0, c)      # 100 % of rated energy: last point
+    assert r == pytest.approx(1100.0) and d == pytest.approx(60.0)
+    r, d = reaction_at_energy(FENDER, 40.0, c)       # 10 % energy: second point
+    assert r == pytest.approx(220.0) and d == pytest.approx(20.0)
+    # a curve continuing beyond the rated point is also complete
+    beyond = PerformanceCurve("beyond", ((0, 0, 0), (60, 100, 100), (65, 120, 112)), "fictional")
+    assert reaction_at_energy(FENDER, 400.0, beyond)[0] == pytest.approx(1100.0)
+
+
 def test_design_performance_factors():
     # 400 x 0.9 x 0.95 x 1.05 x 0.98 = 351.918 ; 1100 x 1.1 x 1.08 x 1.02 = 1332.936
     p = design_performance(

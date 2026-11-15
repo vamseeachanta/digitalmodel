@@ -132,6 +132,59 @@ def test_fixed_choices_marked_for_regeneration(built):
     assert "REGENERATE" in wb["Tornado"]["I1"].value
 
 
+def _strings(path, cells):
+    """Evaluate the workbook and return the text values of ``cells`` (``SHEET!A1``)."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        formulas = pytest.importorskip("formulas")
+        sol = formulas.ExcelModel().loads(str(path)).finish().calculate()
+    out = {}
+    for k, v in sol.items():
+        key = str(k).upper().replace("'", "").split("]")[-1]
+        if key in cells:
+            out[key] = v.value[0][0]
+    return out
+
+
+@pytest.fixture(scope="module")
+def no_datum_row(tmp_path_factory):
+    """The generic case with one extra catalogue row that has no hull-pressure datum
+    (fictional; energy and reaction adequate) under the case's 200 kPa limit."""
+    import dataclasses
+
+    from digitalmodel.hydrodynamics.berthing_energy import FenderRating
+    res = compute(load_case(EXAMPLE / "generic_case.yaml"), citations="record")
+    assert res.case["design"]["hull_pressure_limit_kpa"] == 200.0
+    row = FenderRating("GEN-FM-X", "generic", "foam", 2800, 5000, None, 1000.0, 1400.0, None, 60.0,
+                       "fictional test row")
+    res = dataclasses.replace(res, catalogue=[*res.catalogue, row])
+    out = tmp_path_factory.mktemp("wbnd") / "no_datum.xlsx"
+    build_workbook(res, out)
+    return res, out, len(res.catalogue) + 1
+
+
+def test_fenders_sheet_missing_pressure_under_a_limit_is_not_met(no_datum_row):
+    # second-provider review at e57362bb: the Fenders sheet showed "-" here, while
+    # size_checks, the Sizes sheet and fender_study.py report "no (no datum)"
+    _, out, i = no_datum_row
+    ws = openpyxl.load_workbook(out)["Fenders"]
+    assert ws.cell(row=1, column=17).value == "Pressure OK"
+    assert ws.cell(row=i, column=1).value == "GEN-FM-X" and ws.cell(row=i, column=9).value is None
+    assert "no (no datum)" in ws.cell(row=i, column=17).value
+    vals = _strings(out, {f"FENDERS!Q{i}", "FENDERS!Q2"})
+    assert vals[f"FENDERS!Q{i}"] == "no (no datum)"
+    assert vals["FENDERS!Q2"] in ("yes", "no")          # rows with a datum are compared as before
+
+
+def test_fenders_sheet_missing_pressure_without_a_limit_is_not_checked(no_datum_row, tmp_path):
+    _, out, i = no_datum_row
+    free = tmp_path / "no_limit.xlsx"
+    _set_inputs(out, free, dict(PLIM=None))
+    vals = _strings(free, {f"FENDERS!Q{i}", "FENDERS!Q2"})
+    assert vals[f"FENDERS!Q{i}"] == "-"
+    assert vals["FENDERS!Q2"] == "-"
+
+
 def test_formulas_recompute_to_module_values(built):
     res, out = built
     vals = _calculate(out)

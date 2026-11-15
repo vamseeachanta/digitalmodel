@@ -1215,8 +1215,11 @@ class PerformanceCurve:
     """Normalised load-deflection curve of a fender type.
 
     ``points`` are (deflection %, reaction % of rated, energy % of rated),
-    deflection increasing and energy not decreasing, ending at or beyond the
-    rated point (energy 100 %).
+    deflection increasing and energy not decreasing, starting at energy 0 %
+    and ending at or beyond the rated point (energy 100 %). A curve that does
+    not cover 0 % to 100 % energy is refused: :func:`reaction_at_energy` reads
+    it up to 100 % of the capacity, and a reaction outside the data is not
+    supported by them.
     """
 
     name: str
@@ -1235,6 +1238,14 @@ class PerformanceCurve:
             if prev is not None and (p[0] <= prev[0] or p[2] < prev[2]):
                 raise ValueError("curve deflection must increase and energy must not fall")
             prev = p
+        if self.points[0][2] != 0.0:
+            raise ValueError(
+                f"curve {self.name!r} starts at {self.points[0][2]:g} % energy; it must start at 0 % "
+                "(below its first point the reaction is not covered by the data)")
+        if self.points[-1][2] < 100.0:
+            raise ValueError(
+                f"curve {self.name!r} ends at {self.points[-1][2]:g} % energy; it must reach the rated "
+                "point (100 % energy), or the reaction above its last point is not covered by the data")
 
 
 def _interp(x, xs, ys):

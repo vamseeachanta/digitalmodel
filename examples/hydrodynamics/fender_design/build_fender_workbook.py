@@ -419,7 +419,9 @@ def _fenders(wb, res):
         ws.cell(row=i, column=14, value=f'=IF(I{i}="","",I{i}*(1+RTOL))')
         ws.cell(row=i, column=15, value=f'=IF(L{i}<=1,"yes","no")')
         ws.cell(row=i, column=16, value=f'=IF(RLIM="","-",IF(M{i}<=RLIM,"yes","no"))')
-        ws.cell(row=i, column=17, value=f'=IF(OR(PLIM="",N{i}=""),"-",IF(N{i}<=PLIM,"yes","no"))')
+        # a set limit with no hull-pressure datum is not met (as size_checks and select_fenders)
+        ws.cell(row=i, column=17,
+                value=f'=IF(PLIM="","-",IF(N{i}="","no (no datum)",IF(N{i}<=PLIM,"yes","no")))')
         ws.cell(row=i, column=18, value=f.source)
     ws.freeze_panes = "B2"
     ws.auto_filter.ref = f"A1:R{len(res.catalogue) + 1}"
