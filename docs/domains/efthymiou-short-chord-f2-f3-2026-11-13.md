@@ -42,7 +42,8 @@ source-verified here and is not introduced as a calculation or a golden.
 | 4 | 2026-11-14 | The deferred-equation references were linked to their issue so the remaining scope can be opened from this record. |
 | 5 | 2026-11-14 | The summary now distinguishes the satisfied tracking requirement from the unfinished equation work; the focused-test dependency limit is recorded. |
 | 6 | 2026-11-14 | The focused-test dependency note now records the import requirements and points to the recorded results without retaining a temporary environment narrative. |
-| 7 | 2026-11-14 | The focused-test dependency note now includes numpy, scipy and pydantic to describe the eager package imports. |
+| 7 | 2026-11-15 | The focused-test dependency note now includes numpy, scipy and pydantic to describe the eager package imports. |
+| 8 | 2026-11-15 | The revision 7 date was corrected to match its commit date in UTC; calculation and test evidence are unchanged. |
 
 Table 1a. Validation-record revisions.
 
