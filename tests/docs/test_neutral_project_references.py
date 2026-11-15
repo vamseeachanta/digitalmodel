@@ -1,10 +1,7 @@
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
-"""Keep the nine selected documents free of private project locators.
-
-The scan is line based; tokens split across soft line wraps are not detected.
-"""
+"""Guard nine selected documents using token digests; soft line wraps can hide tokens."""
 from hashlib import sha256
 from pathlib import Path
 
@@ -22,7 +19,6 @@ DOCUMENTS = (
     "docs/plans/2026-05-05-issue-480-plet-plem-jumper-segments.md",
     "docs/plans/2026-05-05-issue-481-plet-plem-workbook-conversion.md",
 )
-# Casefolded token digests keep removed identifiers out of fixtures and failures.
 TOKENS = (
     (8, "ba5d4d12bdf35290c49f02de919e2eb4713f15e3110c5b3cb57fc4f6b6a350f7"),  # T01
     (9, "37bceb36aa0cc95c1ee73ad258f7b4fdbdc10467d3c546ac966c43d816b77170"),  # T02
@@ -91,14 +87,14 @@ def test_scan_rejects_synthetic_tokens_anywhere(tmp_path, prefix, transform):
     token = "private_fixture"
     tokens = ((len(token), sha256(token.encode()).hexdigest()),)
     page = tmp_path / "example.md"
-    page.write_text(prefix + getattr(token, transform)(), encoding="utf-8")
+    page.write_text(prefix + getattr(token, transform)(), encoding="utf-8", newline="\n")
     with pytest.raises(AssertionError, match="line/token") as error:
         assert_neutral(page, tokens)
     assert token not in str(error.value).casefold()
 
 def test_scan_accepts_neutral_roles(tmp_path):
     page = tmp_path / "example.md"
-    page.write_text("source archive; riser equipment library; approved jumper workbook", encoding="utf-8")
+    page.write_text("source archive; riser equipment library; approved jumper workbook", encoding="utf-8", newline="\n")
     assert_neutral(page)
 
 @pytest.mark.parametrize("directory", (False, True))

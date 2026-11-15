@@ -68,7 +68,7 @@ Ranked by curated-CAD density × reuse potential.
 | Live folder | Archived twin | Decision |
 |---|---|---|
 | private project archive (815) | private project archive (archived twin; `.preexisting…`) (4,522) | **Live = canonical**, archive = dedup 🗄️ |
-| `<project-archive>` (474) | `<project-archive>.preexisting…` (3,230) | **Live = canonical**, archive = dedup 🗄️ |
+| terminal project archive (474) | terminal project archive (archived twin; `.preexisting…`) (3,230) | **Live = canonical**, archive = dedup 🗄️ |
 | engineering partner archive (18) | engineering partner archive (archived twin; `.preexisting…`) (502) | **Live = canonical** (but thin — archive holds most history; spot-check before deleting) |
 | coiled-tubing project archive (225) | coiled-tubing project archive (archived twin; `.preexisting…`) (481) | **Live = canonical**, archive = dedup 🗄️ |
 | — (no live) | EPC project archive (archived twin; `.preexisting…`) (317) | **Archive IS canonical** — keep |
