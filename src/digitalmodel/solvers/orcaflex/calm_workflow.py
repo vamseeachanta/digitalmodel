@@ -427,6 +427,7 @@ def assess_results(prepared: dict, responses: list[dict], criteria: dict) -> dic
 
 def build_report(prepared: dict, assessment: dict) -> ReportSpec:
     """Populate the repository standard report form, preserving evidence limits."""
+    from digitalmodel.reporting._metadata import package_code_edition
     from digitalmodel.reporting import (
         DocumentMeta,
         Provenance,
@@ -451,7 +452,11 @@ def build_report(prepared: dict, assessment: dict) -> ReportSpec:
             project="Generic worked example",
             client="Not applicable",
         ),
-        provenance=Provenance()
+        provenance=Provenance(
+            code_edition=package_code_edition(),
+            units_system="SI",
+            validated_path="screening",
+        )
         .add(
             "input",
             "supplied configuration with explicit criteria",

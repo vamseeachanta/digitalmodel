@@ -49,7 +49,9 @@ def test_assemble_report_fails_closed_without_provenance() -> None:
 
 
 def test_assemble_report_with_provenance_renders_document() -> None:
-    prov = Provenance().add("spec", "spec.yml", digest="abc123")
+    prov = Provenance(
+        code_edition="test", units_system="SI", validated_path="screening"
+    ).add("spec", "spec.yml", digest="abc123")
     html = assemble_report("Test Report", provenance=prov, ledger=_ledger())
     assert "<!DOCTYPE html>" in html
     assert "Test Report" in html
@@ -62,15 +64,19 @@ def test_assemble_report_with_provenance_renders_document() -> None:
 
 
 def test_assemble_report_writes_file(tmp_path) -> None:
-    prov = Provenance().add("solver_queue", "completed/run_42")
+    prov = Provenance(
+        code_edition="test", units_system="SI", validated_path="screening"
+    ).add("workflow_results", "examples/workflows/demo/results/run_42.json")
     out = tmp_path / "r.html"
     result = assemble_report("R", provenance=prov, output_path=out)
     assert result == out and out.exists()
-    assert "completed/run_42" in out.read_text()
+    assert "examples/workflows/demo/results/run_42.json" in out.read_text()
 
 
 def test_body_sections_render_before_provenance() -> None:
-    prov = Provenance().add("file", "data.csv")
+    prov = Provenance(
+        code_edition="test", units_system="SI", validated_path="screening"
+    ).add("file", "data.csv")
 
     def _body(data, **_):
         return '<div class="section" id="body">BODYMARK</div>'
@@ -88,7 +94,11 @@ def test_body_sections_render_before_provenance() -> None:
 
 
 def test_provenance_block_lists_each_source() -> None:
-    prov = Provenance().add("spec", "a.yml").add("analysis_store", "store://x")
+    prov = (
+        Provenance(code_edition="test", units_system="SI", validated_path="screening")
+        .add("spec", "a.yml")
+        .add("analysis_store", "store://x")
+    )
     block = provenance_block(prov)
     assert "a.yml" in block and "store://x" in block
     assert "view" in block.lower()  # view-not-copy framing
@@ -107,7 +117,9 @@ def test_assumption_ledger_block_renders_rows() -> None:
 
 
 def test_html_is_escaped_in_blocks() -> None:
-    prov = Provenance().add("file", "<script>x</script>")
+    prov = Provenance(
+        code_edition="test", units_system="SI", validated_path="screening"
+    ).add("file", "<script>x</script>")
     block = provenance_block(prov)
     assert "<script>x</script>" not in block
     assert "&lt;script&gt;" in block

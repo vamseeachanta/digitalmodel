@@ -559,6 +559,7 @@ def build_chain_report(
     bundle: ChainBundle, *, document: Any, records: list[ResultRecord] | None = None
 ) -> Any:
     """Build the standard report spec with evidence gaps and a way forward."""
+    from digitalmodel.reporting._metadata import package_code_edition
     from digitalmodel.reporting import (
         Provenance,
         ReportSpec,
@@ -737,7 +738,11 @@ def build_chain_report(
             ),
         ]
     )
-    provenance = Provenance().add(
+    provenance = Provenance(
+        code_edition=package_code_edition(),
+        units_system="SI",
+        validated_path="screening",
+    ).add(
         "input",
         "shared-input",
         digest="sha256:" + bundle.input_digest,
