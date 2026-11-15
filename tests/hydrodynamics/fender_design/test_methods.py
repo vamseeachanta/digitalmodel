@@ -102,18 +102,38 @@ def test_tfadm_p39_velocity_and_temperature_correction():
     assert vf == 1.17                                          # printed 1.17
     assert fd.temperature_factor(10, "sbr") == pytest.approx(1.038)
     assert fd.temperature_factor(40, "sbr") == pytest.approx(0.948)
+    # at 20 mm/s the compression time is about 48 s, so VF = 1 (printed)
+    t_slow = fd.compression_time_s(720, 0.020)
+    assert t_slow == pytest.approx(48.6, abs=0.1)
+    vf_energy = fd.velocity_factor(t_slow, "sbr", use="energy")
+    assert vf_energy == 1.0                                    # printed "VF=1"
     cone = FenderRating("SCN1000-F2.5-CV", "example", "cone", 1000, None, None, 540.0, 965.0, None, 72.0, "TFADM p. 39")
     p = fd.design_performance(
         cone, energy_tolerance=0.0, reaction_tolerance=0.0,
         velocity_factor_reaction=vf, temperature_factor_reaction=fd.temperature_factor(10, "sbr"),
-        velocity_factor_energy=1.0, temperature_factor_energy=fd.temperature_factor(40, "sbr"),
+        velocity_factor_energy=vf_energy, temperature_factor_energy=fd.temperature_factor(40, "sbr"),
     )
     assert p.reaction_kn == pytest.approx(1172, abs=0.5)       # printed 1172 kN (+21.4 %)
     assert p.energy_knm == pytest.approx(512, abs=0.5)         # printed 512 kJ (-5.2 %)
     assert (p.reaction_kn / 965 - 1) * 100 == pytest.approx(21.4, abs=0.05)
     assert (p.energy_knm / 540 - 1) * 100 == pytest.approx(-5.2, abs=0.05)
-    # at 20 mm/s the compression time is about 48 s, so VF = 1 (printed)
-    assert fd.compression_time_s(720, 0.020) == pytest.approx(48.6, abs=0.1)
+
+
+def test_velocity_factor_beyond_the_table_needs_its_use():
+    # 48.65 s (the p. 40 example): the 20 s SBR value 1.08 would overstate energy
+    with pytest.raises(ValueError, match="beyond the tabulated 20 s"):
+        fd.velocity_factor(48.65, "sbr")
+    assert fd.velocity_factor(48.65, "sbr", use="energy") == 1.0
+    assert fd.velocity_factor(48.65, "sbr", use="reaction") == 1.08   # 20 s row, upper bound
+    assert fd.velocity_factor(48.65, "blend", use="reaction") == 1.03
+    # inside the table the use does not change the value
+    for t in (1.0, 6.08, 19.9, 20.0):
+        assert fd.velocity_factor(t, "sbr", use="energy") == fd.velocity_factor(t, "sbr", use="reaction") \
+            == fd.velocity_factor(t, "sbr")
+    with pytest.raises(ValueError):
+        fd.velocity_factor(5.0, "sbr", use="both")
+    with pytest.raises(ValueError):
+        fd.velocity_factor(5.0, "epdm")
 
 
 def test_temperature_factor_interpolates_and_bounds():

@@ -93,3 +93,73 @@ def test_importer_maps_and_filters(tmp_path):
     # per-metre arch and unrated chart row left out of the selection catalogue
     assert [f.fender_id for f in cat] == ["S1", "F1"]
     assert "Example catalogue (2026), p.4; read 2026-11-15" in cat[1].source
+    assert [r["perf_basis"] for r in _rows(out / "fender_catalogue.csv")] == ["RPD", "GEA"]
+
+
+def _importer():
+    spec = importlib.util.spec_from_file_location("imp", ROOT / "scripts" / "fender_design" / "import_vendor_tables.py")
+    imp = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(imp)
+    return imp
+
+
+def _two_bases(tmp_path):
+    """The same fictional cone size rated on CV and on RPD, plus one pneumatic row."""
+    src = tmp_path / "in"
+    src.mkdir()
+    (src / "sources.csv").write_text(
+        "source_id,vendor,document_title,edition_or_date\nSRC-x,Example Co,Example catalogue,2026\n", encoding="utf-8")
+    (src / "solid_rubber.csv").write_text(
+        SOLID_HDR + "\n"
+        "S1,Example Co,Cone,cone,C1000,1000,,G1,72,500,900,per-unit,RPD,10,1000,PIANC 2002,,,,SRC-x,p.1,table,,,2026-11-15,\n"
+        "S1-CV,Example Co,Cone,cone,C1000,1000,,G1,72,450,850,per-unit,CV,10,1000,PIANC 2002,,,,SRC-x,p.1,table,,,2026-11-15,\n",
+        encoding="utf-8")
+    (src / "floating.csv").write_text(
+        FLOAT_HDR + "\nF1,Example Co,Pneumatic,pneumatic,2000 x 3500,2000,3500,50,60,300,850,130,500,ISO 17357-1:2014,"
+        "SRC-x,p.4,table,,,2026-11-15,\n", encoding="utf-8")
+    return src
+
+
+def test_importer_refuses_mixed_bases_and_exports_one(tmp_path):
+    imp = _importer()
+    src = _two_bases(tmp_path)
+    out = tmp_path / "out"
+    with pytest.raises(ValueError, match="cone: CV, RPD"):
+        imp.main(["--in", str(src), "--out", str(out)])
+    assert not (out / "fender_catalogue.csv").exists()
+    assert imp.main(["--in", str(src), "--out", str(out), "--perf-basis", "CV"]) == 0
+    rows = _rows(out / "fender_catalogue.csv")
+    assert [(r["fender_id"], r["perf_basis"]) for r in rows] == [("S1-CV", "CV"), ("F1", "GEA")]
+    assert "basis CV" in rows[0]["source"]
+    with pytest.raises(ValueError):
+        imp.catalogue_rows(imp.convert(src), "XYZ")
+
+
+def test_case_loader_refuses_mixed_bases(tmp_path):
+    import sys
+    sys.path.insert(0, str(ROOT / "examples" / "hydrodynamics" / "fender_design"))
+    from fender_case import catalogue_bases, check_one_basis, compute, load_case
+
+    cat = tmp_path / "cat.csv"
+    rows = _rows(DATA / "illustrative_fenders.csv")
+    cols = list(rows[0]) + ["perf_basis"]
+    for r in rows:
+        r["perf_basis"] = "GEA" if r["fender_type"] == "pneumatic" else "CV"
+    rows[1]["perf_basis"] = "RPD"           # a pneumatic row on another basis
+    with cat.open("w", newline="", encoding="utf-8") as fh:
+        w = csv.DictWriter(fh, fieldnames=cols)
+        w.writeheader()
+        w.writerows(rows)
+    case = load_case(ROOT / "examples" / "hydrodynamics" / "fender_design" / "generic_case.yaml")
+    with pytest.raises(ValueError, match="pneumatic: GEA, RPD"):
+        compute(case, cat)
+    # one basis per type (pneumatic GEA, foam CV) is accepted
+    rows[1]["perf_basis"] = "GEA"
+    with cat.open("w", newline="", encoding="utf-8") as fh:
+        w = csv.DictWriter(fh, fieldnames=cols)
+        w.writeheader()
+        w.writerows(rows)
+    res = compute(case, cat)
+    assert res.perf_basis["GEN-PN-4"] == "GEA"
+    assert catalogue_bases(DATA / "illustrative_fenders.csv") == {}   # no column: nothing to check
+    check_one_basis(res.catalogue, {})

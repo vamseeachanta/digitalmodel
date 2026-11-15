@@ -160,18 +160,40 @@ def results_dict(res) -> dict:
                       other=math.prod(c.value for c in r.extra) if r.extra else 1.0,
                       normal=r.normal_energy_knm, factor=r.factor.value, design=r.design_energy_knm,
                       divisor=r.capacity_divisor, flags=list(r.flags),
-                      sources={c.name: f"{c.source}: {c.note}" for c in r.coefficients()})
+                      outside_validity=fc.outside_validity(r),
+                      sources={c.name: f"{c.source}: {c.note}" for c in r.coefficients()},
+                      citations=[dict(code_id=c.code_id, section=c.section, wiki_path=c.wiki_path)
+                                 for c in r.citations],
+                      citation_status=dict(r.citation_status))
                  for r in res.methods],
         skipped=res.skipped,
+        reaction_factor=res.reaction_factor,
+        design_reaction_kn=res.design.reaction_kn,
         sweeps=[dict(parameter=s.parameter, base=s.base_value, low=s.range_low, high=s.range_high,
                      basis=s.range_basis, change_low=s.change_pct(s.range_low),
                      change_high=s.change_pct(s.range_high),
                      util_low=s.at(s.range_low).utilisation, util_high=s.at(s.range_high).utilisation,
-                     limit_value=s.limit_value()) for s in res.sweeps],
+                     limit_value=s.limit_value(), reaction_factor=s.reaction_factor,
+                     reaction_low=s.at(s.range_low).reaction_kn, reaction_high=s.at(s.range_high).reaction_kn,
+                     reaction_base=s.at(s.base_value).reaction_kn,
+                     reaction_limit_value=s.reaction_limit_value()) for s in res.sweeps],
+        sweeps_skipped=res.sweeps_skipped,
         tornado=[dict(parameter=b.parameter, span_pct=b.span_pct) for b in res.bars],
         geometry=res.selected.geometry,
     )
     return out
+
+
+def method_notes(r) -> str:
+    """Flags of a method result for a table cell (validity first); the
+    citation qualification is reported in its own table."""
+    flags = [f for f in r.flags if not f.startswith("citation not resolved")]
+    flags.sort(key=lambda f: fc.VALIDITY_MARK not in f)
+    return "; ".join(("**" + f + "**") if fc.VALIDITY_MARK in f else f for f in flags) or "-"
+
+
+def _r(x):
+    return "not rated" if x is None else f"{x:,.0f}"
 
 
 def tables(res) -> dict[str, str]:
@@ -179,23 +201,35 @@ def tables(res) -> dict[str, str]:
     t = {}
     t["methods_table"] = md_table(
         ["Method", "v (m/s)", "Cm", "Ce", "Cs", "Cc", "Other", "Normal (kNm)", "Factor", "Design (kNm)",
-         "Per fender / capacity"],
-        [[r.label, f"{r.velocity_m_s.value:.3f}", f"{r.cm.value:.3f}", f"{r.ce.value:.3f}", f"{r.cs.value:.2f}",
+         "Per fender / capacity", "Flags"],
+        [[r.label + (" (outside validity)" if fc.outside_validity(r) else ""), f"{r.velocity_m_s.value:.3f}",
+          f"{r.cm.value:.3f}", f"{r.ce.value:.3f}", f"{r.cs.value:.2f}",
           f"{r.cc.value:.2f}", f"{math.prod(c.value for c in r.extra) if r.extra else 1.0:.2f}",
           _f(r.normal_energy_knm), f"{r.factor.value:.2f}", _f(r.design_energy_knm),
-          f"{r.design_energy_knm / n / (res.capacity_knm * res.selected.capacity_divisor / r.capacity_divisor):.2f}"]
+          f"{r.design_energy_knm / n / (res.capacity_knm * res.selected.capacity_divisor / r.capacity_divisor):.2f}",
+          method_notes(r)]
          for r in res.methods])
+    t["citations_table"] = md_table(
+        ["Citation (code_id)", "Wiki page", "Methods", "Status"],
+        [[code, path, ", ".join(ms), st] for (code, path), (ms, st) in _citation_rows(res).items()])
+    t["sweeps_skipped_table"] = md_table(
+        ["Input", "Why it is not swept for this method"],
+        [[k, why] for k, why in res.sweeps_skipped.items()]) if res.sweeps_skipped else "None."
+
     t["method_sources_table"] = md_table(
         ["Method", "Velocity basis", "Cm basis", "Factor basis"],
         [[r.label, f"{r.velocity_m_s.source}: {r.velocity_m_s.note}", f"{r.cm.source}: {r.cm.note}",
           f"{r.factor.source}: {r.factor.note}"] for r in res.methods])
     t["sweep_table"] = md_table(
         ["Input", "Base", "Credible range", "Basis", "Design energy change at range ends",
-         "Utilisation at range ends", "Value at utilisation 1"],
+         "Utilisation at range ends", "Value at utilisation 1",
+         f"Reaction x {res.reaction_factor:.2f} at range ends (kN)", "Value at reaction limit"],
         [[s.label, f"{s.base_value:.4g} {s.unit}", f"{s.range_low:g} to {s.range_high:g}", s.range_basis,
           f"{s.change_pct(s.range_low):+.0f} % / {s.change_pct(s.range_high):+.0f} %",
           f"{s.at(s.range_low).utilisation:.2f} / {s.at(s.range_high).utilisation:.2f}",
-          "-" if s.limit_value() is None else f"{s.limit_value():.4g}"] for s in res.sweeps])
+          "-" if s.limit_value() is None else f"{s.limit_value():.4g}",
+          f"{_r(s.at(s.range_low).reaction_kn)} / {_r(s.at(s.range_high).reaction_kn)}",
+          "-" if s.reaction_limit_value() is None else f"{s.reaction_limit_value():.4g}"] for s in res.sweeps])
     t["tornado_table"] = md_table(
         ["Rank", "Input", "Span of design energy (percentage points)"],
         [[i, b.label, f"{b.span_pct:.0f}"] for i, b in enumerate(res.bars, start=1)])
@@ -215,6 +249,17 @@ def tables(res) -> dict[str, str]:
         [[f"{x:,.0f}"] + [f"{fd.brolsma_velocity(x, c):.3f}" for c in "abcde"]
          for x in (5_000, 10_000, 20_000, 50_000, 100_000, 200_000)])
     return t
+
+
+def _citation_rows(res) -> dict:
+    rows: dict = {}
+    for r in res.methods:
+        for c in r.citations:
+            st = dict(r.citation_status).get(c.code_id, "not checked")
+            ms, _ = rows.setdefault((c.code_id, c.wiki_path), ([], st))
+            if r.method not in ms:
+                ms.append(r.method)
+    return rows
 
 
 def render(template: Path, values: dict, out_md: Path, out_html: Path, title: str):
@@ -278,6 +323,7 @@ def main(argv=None) -> int:
             ce=f"{g['ce']:.3f}", ce_err=f"{fd.eccentricity_k2_numerator(g['k_m'], g['r_m'], g['phi_deg']):.3f}",
             n_methods=len(res.methods), n_tests="see the test count in the pull request",
             top1=res.bars[0].label, top2=res.bars[1].label, top3=res.bars[2].label,
+            rf=f"{res.reaction_factor:.2f}", R_design=_f(res.design.reaction_kn, 0),
         )
         if cnt:
             values["db_rows"] = f"{n_rows:,}"

@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Universal fender design workbook - generic Supramax-class example</title><style>body{font-family:Segoe UI,Helvetica,Arial,sans-serif;max-width:60rem;margin:2rem auto;padding:0 1rem;color:#0b0b0b;line-height:1.45}table{border-collapse:collapse;font-size:.85rem;margin:.6rem 0}th,td{border:1px solid #c3c2b7;padding:.25rem .45rem;text-align:left;vertical-align:top}th{background:#f0efec}img{max-width:100%;border:1px solid #e1e0d9}code{font-size:.85em}h1,h2,h3{line-height:1.2}</style></head><body><h1 id="fender-design-methods-coefficients-database-and-sensitivity-generic-method-report-revision-1">Fender design: methods, coefficients, database and sensitivity (generic method report, revision 1)</h1>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Universal fender design workbook - generic Supramax-class example</title><style>body{font-family:Segoe UI,Helvetica,Arial,sans-serif;max-width:60rem;margin:2rem auto;padding:0 1rem;color:#0b0b0b;line-height:1.45}table{border-collapse:collapse;font-size:.85rem;margin:.6rem 0}th,td{border:1px solid #c3c2b7;padding:.25rem .45rem;text-align:left;vertical-align:top}th{background:#f0efec}img{max-width:100%;border:1px solid #e1e0d9}code{font-size:.85em}h1,h2,h3{line-height:1.2}</style></head><body><h1 id="fender-design-methods-coefficients-database-and-sensitivity-generic-method-report-revision-2">Fender design: methods, coefficients, database and sensitivity (generic method report, revision 2)</h1>
 <p>Living method report for the berthing-energy design of ship fenders. It sits beside the
 calculation module <code>digitalmodel.hydrodynamics.fender_design</code> (with
 <code>digitalmodel.hydrodynamics.berthing_energy</code>), the fender database in <code>data/fender_design/</code>,
@@ -24,6 +24,9 @@ no result here clears a fender for any berth.</p>
 <li>One-at-a-time sensitivity (Section 7) ranks the inputs. In this case the three largest
   are: berthing velocity; first contact from bow / LBP (Ce); displacement. The berthing velocity enters squared and is the
   largest single term in this case.</li>
+<li>Each method result carries a citation sidecar for the standards behind its coefficients.
+  The wiki pages for these standards are not yet written, so every result here is flagged
+  as resting on the source register only (Section 10, Table 9).</li>
 <li>Four errors recur in spreadsheets and are checked by the module and tests (Section 3.7):
   K² in place of R² cos² φ in the eccentricity numerator; the moulded depth entered as the
   draught; K computed from L_OA; and a velocity from one method combined with the factors of
@@ -241,12 +244,23 @@ computes φ from the geometry and the test suite checks it equals this form).</p
 <li>Tolerances: moulded rubber ±10 %, extruded ±20 %, foam ±10 to ±15 %, pneumatic 0 % on
   energy (guaranteed energy absorption, GEA, ISO 17357-1) and ±10 % on reaction.</li>
 <li>Velocity factor by compression time t = d/(0.74 v) and temperature factor by compound are
-  tabulated in the module (Trelleborg manual p. 35).</li>
+  tabulated in the module (Trelleborg manual p. 35). The table stops at 20 s, where the blend
+  and SBR factors are still above 1.00, so beyond 20 s the module needs to know the use:
+  for minimum energy it takes 1.00, as the manual's worked example does at 48 s (pp. 39–40);
+  for maximum reaction it holds the 20 s value, an upper bound because the factor does not
+  rise with time. Without the use stated, a time beyond 20 s is an error.</li>
 <li>Hull pressure guidance (PIANC 2002 Table 4.4.1, secondary): bulk carriers below 200 kPa;
   other values in <code>HULL_PRESSURE_KPA</code>. The sources disagree for bulk carriers (one paper lists
   200 to 320 kPa for WG33); the module uses 200 kPa and records the conflict.</li>
 <li>Reaction at part energy is read from a normalised curve when one is supplied; without a
-  curve the rated reaction is used as an upper bound.</li>
+  curve the rated reaction is used as an upper bound. Every reaction compared with a limit
+  (selection, sweeps, charts) is multiplied by the reaction factor, here 1.10 (the +10 %
+  manufacturing tolerance): the rated-deflection design reaction of the base fender is
+  1,595 kN.</li>
+<li>Hull pressure is compared at rated deflection only (catalogue value × reaction factor). The
+  pressure at part load is not calculated: no pressure-deflection relationship is sourced,
+  and scaling the rated pressure by reaction would assume the rated contact area at every
+  deflection.</li>
 </ul>
 <h3 id="37-errors-checked-by-the-module-and-the-tests">3.7 Errors checked by the module and the tests</h3>
 <ol>
@@ -276,6 +290,7 @@ computes φ from the geometry and the test suite checks it equals this form).</p
 <th>Factor</th>
 <th>Design (kNm)</th>
 <th>Per fender / capacity</th>
+<th>Flags</th>
 </tr>
 </thead>
 <tbody>
@@ -291,6 +306,7 @@ computes φ from the geometry and the test suite checks it equals this form).</p
 <td>1.75</td>
 <td>680.8</td>
 <td>0.97</td>
+<td>-</td>
 </tr>
 <tr>
 <td>PIANC WG211 (2024)</td>
@@ -304,6 +320,7 @@ computes φ from the geometry and the test suite checks it equals this form).</p
 <td>1.59</td>
 <td>1,116.9</td>
 <td>1.76</td>
+<td>WG211 factors from the 2024 background papers; final guideline tables not read</td>
 </tr>
 <tr>
 <td>BS 6349-4:2014</td>
@@ -317,6 +334,7 @@ computes φ from the geometry and the test suite checks it equals this form).</p
 <td>1.75</td>
 <td>574.3</td>
 <td>0.82</td>
+<td>-</td>
 </tr>
 <tr>
 <td>EAU 2012</td>
@@ -330,6 +348,7 @@ computes φ from the geometry and the test suite checks it equals this form).</p
 <td>1.75</td>
 <td>1,272.5</td>
 <td>1.82</td>
+<td>EAU velocities digitized at two sizes only</td>
 </tr>
 <tr>
 <td>ROM 2.0-11 (2012)</td>
@@ -343,6 +362,7 @@ computes φ from the geometry and the test suite checks it equals this form).</p
 <td>1.50</td>
 <td>1,001.7</td>
 <td>1.43</td>
+<td>-</td>
 </tr>
 <tr>
 <td>UFC 4-152-01 (2017 C1)</td>
@@ -356,6 +376,7 @@ computes φ from the geometry and the test suite checks it equals this form).</p
 <td>1.50</td>
 <td>874.3</td>
 <td>1.25</td>
+<td>below 0.10 m/s: use with caution (TFADM p. 23)</td>
 </tr>
 <tr>
 <td>Ueda Cm (Japan), PIANC 2002 v and factor</td>
@@ -369,6 +390,7 @@ computes φ from the geometry and the test suite checks it equals this form).</p
 <td>1.75</td>
 <td>659.7</td>
 <td>0.94</td>
+<td>-</td>
 </tr>
 <tr>
 <td>IS 4651-3:1974 (withdrawn)</td>
@@ -382,14 +404,18 @@ computes φ from the geometry and the test suite checks it equals this form).</p
 <td>1.00</td>
 <td>952.2</td>
 <td>1.36</td>
+<td>withdrawn standard; comparison only</td>
 </tr>
 </tbody>
 </table>
 <p>Table 3 – Design berthing energy by method for the generic case (same ship and berth). The
-last column is energy per fender over the base fender capacity (for WG211 the capacity is
-divided by γ_m).</p>
+"per fender / capacity" column is energy per fender over the base fender capacity (for WG211
+the capacity is divided by γ_m). Flags in bold put a formula outside its stated validity;
+such a result is outside the method's basis and is shown for comparison only. The citation
+qualification common to all rows is in Table 9.</p>
 <p><img alt="Methods" src="charts/methods.png" /></p>
-<p>Figure 1 – Design energy by method.</p>
+<p>Figure 1 – Design energy by method. A hatched bar is outside the stated validity of a
+formula it uses (note below the chart).</p>
 <table>
 <thead>
 <tr>
@@ -472,29 +498,67 @@ reads. The database currently holds 4,652 rows from 14 catalogues (Figure 4):
 cone, cell, element, arch, V, cylindrical and other solid rubber types, and pneumatic, foam,
 foam-filled and hydropneumatic floating fenders. Float levels of floating fenders are not
 published in the catalogues read.</p>
+<p>Each row keeps its performance basis: RPD (rated performance at the PIANC initial velocity),
+CV (slow constant velocity) or GEA (guaranteed energy absorption, floating fenders). The
+selection catalogue written by the importer carries the basis, and both the importer and the
+case loader refuse a catalogue in which one fender type holds rows on different bases: a CV
+and an RPD row of the same size are two ratings of one fender, not two fenders. Where the
+vendor tables hold both, one basis is chosen at export (<code>--perf-basis</code>).</p>
 <p><img alt="Database coverage" src="charts/database_coverage.png" /></p>
 <p>Figure 4 – Rows in the fender database by fender type.</p>
 <h2 id="6-universal-workbook">6. Universal workbook</h2>
 <p><code>build_fender_workbook.py</code> writes an xlsx from a case file and a catalogue:</p>
 <ul>
-<li><strong>Inputs:</strong> the case values with their basis (yellow cells).</li>
-<li><strong>Calc:</strong> C_b, K, R, φ, C_e (and the error form), KC/D and C_m by three methods as live
-  formulas.</li>
-<li><strong>Velocity:</strong> the Brolsma table and log-log interpolation at the DWT and displacement, live.</li>
-<li><strong>Methods:</strong> design energy by every method with live velocity, C_m and C_e where the
-  method uses them; the basis of each term.</li>
+<li><strong>Inputs:</strong> the case values with their basis (yellow cells), including berth structure,
+  fender deflection, tugs, calls a year, continuous berth and an optional velocity override.
+  Below them, in red, the choices fixed at generation (method, Brolsma condition, condition
+  class, ship type, factor position or override, WG211 class, CoV_M and contact, fender and
+  curve): these select table rows or constants, and changing one needs the workbook to be
+  regenerated.</li>
+<li><strong>Calc:</strong> C_b, K, R, φ, C_e (and the error form), KC/D, C_m by four methods, the UFC and
+  IS 4651 eccentricity, C_s, C_c and C_g by method, as live formulas.</li>
+<li><strong>Velocity:</strong> the Brolsma table and log-log interpolation at the DWT and displacement, and
+  the digitized UFC, ROM (with and without tugs) and EAU tables, live.</li>
+<li><strong>Methods:</strong> design energy by every method. Every coefficient that depends on an Inputs
+  value is a formula: velocity by size (or the override), C_m, C_e, C_s, C_c, C_g, the ROM
+  accidental factor (displacement, tugs, velocity, calls) and the WG211 frequency correction.
+  The flags column is written at generation.</li>
 <li><strong>Fenders:</strong> the catalogue with live capacity, utilisation, design reaction and checks
   against the limits on Inputs.</li>
-<li><strong>Sensitivity, Tornado, Sizes:</strong> written by the generator, with charts.</li>
+<li><strong>Sensitivity, Tornado, Sizes:</strong> written by the generator, with charts, and marked in red
+  "regenerate after any input change".</li>
 <li><strong>Sources:</strong> the source register.</li>
 </ul>
 <p>The test suite recomputes the workbook's formulas and checks C_b, K, R, φ, C_e, every
-method's design energy and the fender utilisation against the module.</p>
+method's design energy and the fender utilisation against the module. It then changes ten
+inputs (displacement, DWT, depth, contact point, angle, structure, fender deflection, calls a
+year, tugs, continuous berth) so that each threshold is crossed, recomputes, and checks every
+method's velocity, C_m, C_e, C_s, C_c, factor and design energy against the module run on
+the changed case; and it checks that the velocity override cell drives every method (ROM
+factor 1.80 at 0.08 m/s).</p>
 <h2 id="7-sensitivity">7. Sensitivity</h2>
 <p>Each input is moved alone over a credible range with every other input at its base. Each
 chart shows the energy per fender with the base fender's capacity, and below it the
-reaction per fender with the reaction limit; the credible range is shaded and the base is
-marked. Above the rated energy the catalogue does not rate the reaction, and the chart says so.</p>
+reaction per fender, multiplied by the reaction factor 1.10, with the reaction limit; the
+credible range is shaded and the base is marked. Above the rated energy the catalogue does
+not rate the reaction, and the chart says so. A velocity sweep re-evaluates the method at
+each velocity, so velocity-dependent coefficients (the ROM accidental factor and C_c) follow
+it. Only coefficients the method uses are swept, within the values its own rule gives;
+the inputs left out for this method are:</p>
+<table>
+<thead>
+<tr>
+<th>Input</th>
+<th>Why it is not swept for this method</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>cc</td>
+<td>Cc is 1.0 with the PIANC keel-clearance Cm, which already includes the confined-water effect (PIANC 2002 4.2.7 pairing rule)</td>
+</tr>
+</tbody>
+</table>
 <table>
 <thead>
 <tr>
@@ -505,6 +569,8 @@ marked. Above the rated energy the catalogue does not rate the reaction, and the
 <th>Design energy change at range ends</th>
 <th>Utilisation at range ends</th>
 <th>Value at utilisation 1</th>
+<th>Reaction x 1.10 at range ends (kN)</th>
+<th>Value at reaction limit</th>
 </tr>
 </thead>
 <tbody>
@@ -516,6 +582,8 @@ marked. Above the rated energy the catalogue does not rate the reaction, and the
 <td>-77 % / +138 %</td>
 <td>0.23 / 2.31</td>
 <td>0.1131</td>
+<td>535 / not rated</td>
+<td>-</td>
 </tr>
 <tr>
 <td>displacement</td>
@@ -525,6 +593,8 @@ marked. Above the rated energy the catalogue does not rate the reaction, and the
 <td>-25 % / +10 %</td>
 <td>0.73 / 1.07</td>
 <td>6.169e+04</td>
+<td>1,250 / not rated</td>
+<td>-</td>
 </tr>
 <tr>
 <td>water depth (Cm through keel clearance)</td>
@@ -534,6 +604,8 @@ marked. Above the rated energy the catalogue does not rate the reaction, and the
 <td>+3 % / -14 %</td>
 <td>1.00 / 0.83</td>
 <td>13.16</td>
+<td>not rated / 1,383</td>
+<td>-</td>
 </tr>
 <tr>
 <td>first contact from bow / LBP (Ce)</td>
@@ -543,6 +615,8 @@ marked. Above the rated energy the catalogue does not rate the reaction, and the
 <td>-15 % / +36 %</td>
 <td>0.83 / 1.32</td>
 <td>0.2586</td>
+<td>1,373 / not rated</td>
+<td>-</td>
 </tr>
 <tr>
 <td>berthing angle (Ce)</td>
@@ -552,6 +626,8 @@ marked. Above the rated energy the catalogue does not rate the reaction, and the
 <td>-5 % / +6 %</td>
 <td>0.92 / 1.03</td>
 <td>7.499</td>
+<td>1,498 / not rated</td>
+<td>-</td>
 </tr>
 <tr>
 <td>softness factor Cs</td>
@@ -561,14 +637,7 @@ marked. Above the rated energy the catalogue does not rate the reaction, and the
 <td>-10 % / +0 %</td>
 <td>0.88 / 0.97</td>
 <td>-</td>
-</tr>
-<tr>
-<td>berth configuration factor Cc</td>
-<td>1 -</td>
-<td>0.8 to 1</td>
-<td>PIANC 2002 4.2.7 (SFT p. 20) solid quay to open berth</td>
-<td>-20 % / +0 %</td>
-<td>0.78 / 0.97</td>
+<td>1,436 / 1,560</td>
 <td>-</td>
 </tr>
 <tr>
@@ -579,6 +648,8 @@ marked. Above the rated energy the catalogue does not rate the reaction, and the
 <td>-29 % / +0 %</td>
 <td>0.69 / 0.97</td>
 <td>1.799</td>
+<td>1,205 / 1,560</td>
+<td>-</td>
 </tr>
 </tbody>
 </table>
@@ -616,21 +687,16 @@ marked. Above the rated energy the catalogue does not rate the reaction, and the
 </tr>
 <tr>
 <td>5</td>
-<td>berth configuration factor Cc</td>
-<td>20</td>
-</tr>
-<tr>
-<td>6</td>
 <td>water depth (Cm through keel clearance)</td>
 <td>17</td>
 </tr>
 <tr>
-<td>7</td>
+<td>6</td>
 <td>berthing angle (Ce)</td>
 <td>11</td>
 </tr>
 <tr>
-<td>8</td>
+<td>7</td>
 <td>softness factor Cs</td>
 <td>10</td>
 </tr>
@@ -649,10 +715,8 @@ marked. Above the rated energy the catalogue does not rate the reaction, and the
 <p>Figure 10 – Berthing angle (C_e).</p>
 <p><img alt="Cs" src="charts/sweep_cs.png" /></p>
 <p>Figure 11 – Softness factor C_s.</p>
-<p><img alt="Cc" src="charts/sweep_cc.png" /></p>
-<p>Figure 12 – Berth configuration factor C_c.</p>
 <p><img alt="Factor" src="charts/sweep_factor.png" /></p>
-<p>Figure 13 – Abnormal (or partial) energy factor.</p>
+<p>Figure 12 – Abnormal (or partial) energy factor.</p>
 <h2 id="8-neighbouring-fender-sizes">8. Neighbouring fender sizes</h2>
 <table>
 <thead>
@@ -722,8 +786,8 @@ marked. Above the rated energy the catalogue does not rate the reaction, and the
 </table>
 <p>Table 7 – Illustrative fenders against the base (percentage change from the base).</p>
 <p><img alt="Sizes" src="charts/sizes.png" /></p>
-<p>Figure 14 – Neighbouring sizes: capacity against energy per fender and reaction against the
-limit.</p>
+<p>Figure 13 – Neighbouring sizes: capacity against energy per fender and rated reaction against
+the limit.</p>
 <h2 id="9-verification">9. Verification</h2>
 <p>The tests (<code>tests/hydrodynamics/fender_design/</code>) reproduce published worked examples:</p>
 <ul>
@@ -735,7 +799,14 @@ limit.</p>
 <li>ShibataFenderTeam Design Manual (2026) p. 19: C_b, K, R, φ and C_e (0.761) for a laden
   tanker at third-point contact;</li>
 <li>Trelleborg Fender Application Design Manual (2024) pp. 39–40: compression time, velocity
-  and temperature factors, maximum reaction (1,172 kN) and minimum energy (512 kNm);</li>
+  and temperature factors, maximum reaction (1,172 kN) and minimum energy (512 kNm), the
+  latter with the velocity factor computed by the module at the 48.6 s compression time
+  (1.00), not entered by hand;</li>
+<li>ROM 2.0-11 Table 4.6.4.43 under a velocity override: at 0.08 m/s the accidental factor is
+  1.80, and the result equals ROM's own result where its table gives 0.08 m/s;</li>
+<li>citation sidecar: a missing page is recorded and flagged, strict mode fails closed, and a
+  page whose code_id, publisher or revision differs (or that has no frontmatter) stops the
+  calculation;</li>
 <li>IS 4651-3 Table 3 eccentricity values; hand checks of every method, of the sweeps and of
   the workbook formulas.</li>
 </ul>
@@ -752,8 +823,10 @@ limit.</p>
   of the individual changes.</li>
 <li>Ship-to-ship (floating fender between ships) energy and dolphin layout methods are not
   implemented.</li>
-<li>Citation sidecars resolved against a wiki page per standard are not yet in place; the
-  source register in the module carries the provenance.</li>
+<li>The wiki standards pages the citation sidecars point to are not yet written. Every method
+  result carries its citations and is flagged "citation not resolved against the wiki"
+  (Table 9); its values rest on the source register only (Table 8). Strict mode
+  (<code>citations="strict"</code>) refuses to calculate until the pages exist and match.</li>
 </ul>
 <h2 id="11-sources">11. Sources</h2>
 <table>
@@ -914,4 +987,72 @@ limit.</p>
 </tr>
 </tbody>
 </table>
-<p>Table 8 – Source register (<code>fender_design.SOURCES</code>).</p></body></html>
+<p>Table 8 – Source register (<code>fender_design.SOURCES</code>).</p>
+<table>
+<thead>
+<tr>
+<th>Citation (code_id)</th>
+<th>Wiki page</th>
+<th>Methods</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>PIANC-WG33-2002</td>
+<td>wikis/marine-engineering/wiki/standards/pianc-wg33-2002.md</td>
+<td>pianc2002, wg211, bs6349, eau, ueda</td>
+<td>unresolved: page_missing</td>
+</tr>
+<tr>
+<td>PIANC-WG211-2024</td>
+<td>wikis/marine-engineering/wiki/standards/pianc-wg211-2024.md</td>
+<td>wg211</td>
+<td>unresolved: page_missing</td>
+</tr>
+<tr>
+<td>BS-6349-4</td>
+<td>wikis/marine-engineering/wiki/standards/bs-6349-4.md</td>
+<td>bs6349</td>
+<td>unresolved: page_missing</td>
+</tr>
+<tr>
+<td>vasco-costa-1964</td>
+<td>wikis/marine-engineering/wiki/concepts/vasco-costa-1964-berthing-added-mass.md</td>
+<td>bs6349</td>
+<td>unresolved: page_missing</td>
+</tr>
+<tr>
+<td>EAU-2012</td>
+<td>wikis/marine-engineering/wiki/standards/eau-2012.md</td>
+<td>eau</td>
+<td>unresolved: page_missing</td>
+</tr>
+<tr>
+<td>ROM-2.0-11</td>
+<td>wikis/marine-engineering/wiki/standards/rom-2-0-11.md</td>
+<td>rom</td>
+<td>unresolved: page_missing</td>
+</tr>
+<tr>
+<td>UFC-4-152-01</td>
+<td>wikis/marine-engineering/wiki/standards/ufc-4-152-01.md</td>
+<td>ufc</td>
+<td>unresolved: page_missing</td>
+</tr>
+<tr>
+<td>ueda-1981</td>
+<td>wikis/marine-engineering/wiki/concepts/ueda-1981-berthing-added-mass.md</td>
+<td>ueda</td>
+<td>unresolved: page_missing</td>
+</tr>
+<tr>
+<td>IS-4651-3</td>
+<td>wikis/marine-engineering/wiki/standards/is-4651-3.md</td>
+<td>is4651</td>
+<td>unresolved: page_missing</td>
+</tr>
+</tbody>
+</table>
+<p>Table 9 – Citation sidecar of the method results and its resolution status when this report
+was built (<code>fender_design.CITATION_TARGETS</code>).</p></body></html>

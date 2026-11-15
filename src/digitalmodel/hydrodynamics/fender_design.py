@@ -16,7 +16,11 @@ added-mass formulae, catalogue selection) and adds:
   result carrying every coefficient and the source of the value used;
 * fender performance: factored (design) energy and reaction of a catalogue
   fender, reaction at part energy from a normalised curve;
-* one-at-a-time sensitivity sweeps and tornado ranking for charts.
+* one-at-a-time sensitivity sweeps and tornado ranking for charts, each
+  sweep limited to the inputs the method uses;
+* a citation sidecar on every method result (:class:`Citation` records for
+  the standards behind its coefficients), resolved against the wiki at
+  calculation time (:data:`CITATION_TARGETS`, :func:`resolve_citations`).
 
 Copyrighted text is not reproduced. Numeric values are tabulated with the
 clause they come from; where a value was read in a vendor manual that
@@ -32,7 +36,9 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field, replace
+from pathlib import Path
 
+from digitalmodel.citations.schema import Citation, CitationResolutionError, validate_citation
 from digitalmodel.hydrodynamics.berthing_energy import (
     SEAWATER_DENSITY_T_M3,
     FenderRating,
@@ -486,6 +492,12 @@ class MethodResult:
     accidental factor or WG211 partial energy factor). ``capacity_divisor``
     is the factor the fender's characteristic energy is divided by before it
     is compared (WG211 gamma_m; 1.0 elsewhere).
+
+    ``citations`` is the sidecar: one :class:`Citation` per standard or paper
+    a coefficient comes from (values given by the caller carry none).
+    ``citation_status`` pairs each citation's ``code_id`` with ``resolved``,
+    ``unresolved: page_missing``, ``unresolved: resolver_unconfigured`` or
+    ``not checked``; an unresolved citation also adds a flag.
     """
 
     method: str
@@ -502,9 +514,16 @@ class MethodResult:
     extra: tuple[Coefficient, ...] = ()
     capacity_divisor: float = 1.0
     flags: tuple[str, ...] = ()
+    citations: tuple[Citation, ...] = field(default=(), repr=False)
+    citation_status: tuple[tuple[str, str], ...] = ()
 
     def coefficients(self) -> list[Coefficient]:
         return [self.velocity_m_s, self.cm, self.ce, self.cs, self.cc, *self.extra, self.factor]
+
+    @property
+    def citations_resolved(self) -> bool:
+        """True when every citation of the result resolved against the wiki."""
+        return bool(self.citation_status) and all(s == "resolved" for _, s in self.citation_status)
 
 
 @dataclass(frozen=True)
@@ -557,6 +576,21 @@ def _result(method, label, case, v, cm, ce, cs, cc, factor, geo, *, extra=(), di
                         tuple(extra), divisor, tuple(flags))
 
 
+def _caller_velocity(velocity_m_s: float) -> Coefficient:
+    return Coefficient("velocity_m_s", _finite("velocity_m_s", velocity_m_s, positive=True), "caller",
+                       "given by the caller; velocity-dependent coefficients recomputed at this value")
+
+
+def _velocity(own, velocity_m_s: float | None) -> Coefficient:
+    """The method's own velocity (``own()``), or the caller's value.
+
+    Every coefficient a method derives from the velocity is computed after
+    this, from the value returned, so an override cannot leave a coefficient
+    on the method's own velocity.
+    """
+    return own() if velocity_m_s is None else _caller_velocity(velocity_m_s)
+
+
 def _pianc_ce(case: Case) -> tuple[Coefficient, dict]:
     geo = eccentricity(case.ship, case.berth)
     return Coefficient("ce", geo["ce"], "pianc2002-ce",
@@ -596,34 +630,39 @@ def _common(case: Case, cm_method: str):
 # ---- PIANC WG33 (2002) --------------------------------------------------
 
 
-def _m_pianc2002(case: Case, position: str) -> MethodResult:
+def _m_pianc2002(case: Case, position: str, velocity_m_s: float | None = None) -> MethodResult:
     _, cm, cs, cc = _common(case, "pianc2002")
     ce, geo = _pianc_ce(case)
-    return _result("pianc2002", "PIANC WG33 (2002)", case, _brolsma(case, "dwt"), cm, ce, cs, cc,
+    v = _velocity(lambda: _brolsma(case, "dwt"), velocity_m_s)
+    return _result("pianc2002", "PIANC WG33 (2002)", case, v, cm, ce, cs, cc,
                    _abnormal(case, position), geo)
 
 
-def _m_ueda(case: Case, position: str) -> MethodResult:
+def _m_ueda(case: Case, position: str, velocity_m_s: float | None = None) -> MethodResult:
     _, cm, cs, cc = _common(case, "ueda")
     ce, geo = _pianc_ce(case)
+    v = _velocity(lambda: _brolsma(case, "dwt"), velocity_m_s)
     return _result("ueda", "Ueda Cm (Japan), PIANC 2002 v and factor", case,
-                   _brolsma(case, "dwt"), cm, ce, cs, cc, _abnormal(case, position), geo)
+                   v, cm, ce, cs, cc, _abnormal(case, position), geo)
 
 
 # ---- BS 6349-4:2014 -------------------------------------------------------
 
 
-def _m_bs6349(case: Case, position: str) -> MethodResult:
+def _m_bs6349(case: Case, position: str, velocity_m_s: float | None = None) -> MethodResult:
     r, cm, cs, cc = _common(case, "vasco_costa")
     ce, geo = _pianc_ce(case)
-    flags = ["Vasco Costa Cm outside its stated validity (KC < 0.1 D)"] if r < 0.1 else []
+    flags = [f"Vasco Costa Cm outside its stated validity (KC/D {r:.3f} < 0.1)"] if r < 0.1 else []
     if case.ship.ship_type == "gas":
         fac = Coefficient("energy_factor", 2.0, "bs6349-4", "2.0 for gas carriers at LNG facilities (as summarised)")
     else:
         fac = _abnormal(case, position, "pianc2002")
         fac = Coefficient(fac.name, fac.value, fac.source,
                           fac.note + "; BS 6349-4 own factor table not read")
-    return _result("bs6349", "BS 6349-4:2014", case, _brolsma(case, "displacement"), cm, ce, cs, cc, fac, geo,
+    v = _velocity(lambda: _brolsma(case, "displacement"), velocity_m_s)
+    if v.value < 0.08:
+        flags.append("Vasco Costa Cm outside its stated validity (v < 0.08 m/s)")
+    return _result("bs6349", "BS 6349-4:2014", case, v, cm, ce, cs, cc, fac, geo,
                    flags=flags)
 
 
@@ -683,13 +722,14 @@ def wg211_gamma_n(consequence_class: str, berthings_per_year: float) -> float:
     return a * math.log(n) + b
 
 
-def _m_wg211(case: Case, position: str) -> MethodResult:
+def _m_wg211(case: Case, position: str, velocity_m_s: float | None = None) -> MethodResult:
     r = _ukc_ratio(case.ship, case.berth)
     cm = Coefficient("cm", added_mass_factor(case.ship, case.berth.water_depth_m, "pianc2002"),
                      "pianc2002-cm", f"keel clearance rule (as in the R24B example); KC/D = {r:.3f}")
     ce, geo = _pianc_ce(case)
     v_val, v_note = WG211_VELOCITY[case.condition]
-    v = Coefficient("velocity_m_s", v_val, "pianc-wg211", f"{case.condition}: {v_note}")
+    v = _velocity(lambda: Coefficient("velocity_m_s", v_val, "pianc-wg211", f"{case.condition}: {v_note}"),
+                  velocity_m_s)
     one = Coefficient("cs", 1.0, "pianc-wg211", "removed in WG211")
     cc = Coefficient("cc", 1.0, "pianc-wg211", "removed in WG211")
     g_ref = wg211_gamma_eref(case.condition if case.condition != "monitored" else "monitored",
@@ -747,11 +787,12 @@ def ufc_added_mass(ship: Ship, water_depth_m: float) -> float:
     return cm0 + (cm1 - cm0) * (t / d) ** 3.5
 
 
-def _m_ufc(case: Case, position: str) -> MethodResult:
+def _m_ufc(case: Case, position: str, velocity_m_s: float | None = None) -> MethodResult:
     s, b = case.ship, case.berth
     _ukc_ratio(s, b)
-    v = Coefficient("velocity_m_s", ufc_velocity(s.displacement_t, case.condition), "ufc-4-152-01",
-                    f"Fig. 5-3/5-4, {case.condition} (sheltered/moderate/exposed), digitized")
+    v = _velocity(lambda: Coefficient("velocity_m_s", ufc_velocity(s.displacement_t, case.condition), "ufc-4-152-01",
+                                      f"Fig. 5-3/5-4, {case.condition} (sheltered/moderate/exposed), digitized"),
+                  velocity_m_s)
     cm = Coefficient("cm", ufc_added_mass(s, b.water_depth_m), "ufc-4-152-01", "5-2.1.1 e surface vessels")
     k = radius_of_gyration(s.cb, s.lbp_m)
     a = abs(s.lbp_m / 2.0 - b.contact_x_from_bow_m)
@@ -807,11 +848,12 @@ def rom_accidental_factor(displacement_t: float, tugs: bool, velocity_m_s: float
     return max(g, 1.10)
 
 
-def _m_rom(case: Case, position: str) -> MethodResult:
+def _m_rom(case: Case, position: str, velocity_m_s: float | None = None) -> MethodResult:
     s, b = case.ship, case.berth
     r = _ukc_ratio(s, b)
-    v = Coefficient("velocity_m_s", rom_velocity(s.displacement_t, case.condition, case.tugs), "rom-2.0-11",
-                    f"Table 4.6.4.{'36' if case.tugs else '37'}, {case.condition}, digitized")
+    v = _velocity(lambda: Coefficient("velocity_m_s", rom_velocity(s.displacement_t, case.condition, case.tugs),
+                                      "rom-2.0-11", f"Table 4.6.4.{'36' if case.tugs else '37'}, {case.condition}, digitized"),
+                  velocity_m_s)
     cm = Coefficient("cm", added_mass_factor(s, b.water_depth_m, "pianc2002"), "rom-2.0-11",
                      f"1.8 / 1.5 keel-clearance rule (p. 265); KC/D = {r:.3f}")
     ce, geo = _pianc_ce(case)
@@ -849,14 +891,15 @@ def eau_velocity(dwt_t: float, condition: str) -> float:
     return pts[-1][1] if d >= pts[-1][0] else _loglog(d, pts)
 
 
-def _m_eau(case: Case, position: str) -> MethodResult:
+def _m_eau(case: Case, position: str, velocity_m_s: float | None = None) -> MethodResult:
     s = case.ship
     if s.dwt_t is None:
         raise ValueError("the EAU velocity is keyed by DWT; give ship.dwt_t")
     _, cm, cs, cc = _common(case, "pianc2002")
     ce, geo = _pianc_ce(case)
-    v = Coefficient("velocity_m_s", eau_velocity(s.dwt_t, case.condition), "eau-2012",
-                    f"{case.condition} (normal), characteristic value, digitized")
+    v = _velocity(lambda: Coefficient("velocity_m_s", eau_velocity(s.dwt_t, case.condition), "eau-2012",
+                                      f"{case.condition} (normal), characteristic value, digitized"),
+                  velocity_m_s)
     return _result("eau", "EAU 2012", case, v, cm, ce, cs, cc, _abnormal(case, position, "eau-2012"), geo,
                    flags=["EAU velocities digitized at two sizes only"])
 
@@ -872,12 +915,13 @@ IS4651_VELOCITY = {
 }
 
 
-def _m_is4651(case: Case, position: str) -> MethodResult:
+def _m_is4651(case: Case, position: str, velocity_m_s: float | None = None) -> MethodResult:
     s, b = case.ship, case.berth
     _ukc_ratio(s, b)
     m = s.displacement_t
     band = 0 if m <= 5_000 else 1 if m <= 10_000 else 2 if m <= 100_000 else 3
-    v = Coefficient("velocity_m_s", IS4651_VELOCITY[case.condition][band], "is-4651-3-1974", "Table 2")
+    v = _velocity(lambda: Coefficient("velocity_m_s", IS4651_VELOCITY[case.condition][band], "is-4651-3-1974",
+                                      "Table 2"), velocity_m_s)
     cm = Coefficient("cm", 1.0 + 2.0 * s.draft_m / s.beam_m, "is-4651-3-1974", "5.2.1.2: 1 + 2D/B")
     r_g = 0.25 * s.lbp_m
     l_ = abs(s.lbp_m / 2.0 - b.contact_x_from_bow_m)
@@ -919,6 +963,118 @@ def _as_case(ship_or_case, berth=None, **case_kw) -> Case:
     return Case(ship_or_case, berth, **case_kw)
 
 
+# --------------------------------------------------------------------------
+# Citation sidecar (calculation-output citation contract)
+# --------------------------------------------------------------------------
+
+_STANDARDS = "wikis/marine-engineering/wiki/standards/"
+_CONCEPTS = "wikis/marine-engineering/wiki/concepts/"
+
+#: Wiki target of each standard or paper in :data:`SOURCES` that a method
+#: coefficient can come from: source id -> (code_id, publisher, revision,
+#: wiki_path). Pages are standards pages (or concept pages for the two added-
+#: mass papers), never vendor-derived source pages. For the two papers the
+#: publisher field holds the author, because the publisher was not verified.
+#: The vendor manuals (``tfadm-2024``, ``sft-2026``) are not cited: they are
+#: named in each secondary citation's section instead.
+CITATION_TARGETS: dict[str, tuple[str, str, str, str]] = {
+    "pianc2002": ("PIANC-WG33-2002", "PIANC", "2002", _STANDARDS + "pianc-wg33-2002.md"),
+    "pianc2002-velocity": ("PIANC-WG33-2002", "PIANC", "2002", _STANDARDS + "pianc-wg33-2002.md"),
+    "pianc2002-cm": ("PIANC-WG33-2002", "PIANC", "2002", _STANDARDS + "pianc-wg33-2002.md"),
+    "pianc2002-ce": ("PIANC-WG33-2002", "PIANC", "2002", _STANDARDS + "pianc-wg33-2002.md"),
+    "pianc2002-cc": ("PIANC-WG33-2002", "PIANC", "2002", _STANDARDS + "pianc-wg33-2002.md"),
+    "pianc2002-cs": ("PIANC-WG33-2002", "PIANC", "2002", _STANDARDS + "pianc-wg33-2002.md"),
+    "pianc-wg211": ("PIANC-WG211-2024", "PIANC", "2024", _STANDARDS + "pianc-wg211-2024.md"),
+    "bs6349-4": ("BS-6349-4", "BSI", "2014", _STANDARDS + "bs-6349-4.md"),
+    "bs6349-4-velocity": ("BS-6349-4", "BSI", "2014", _STANDARDS + "bs-6349-4.md"),
+    "eau-2012": ("EAU-2012", "HTG", "2012", _STANDARDS + "eau-2012.md"),
+    "rom-2.0-11": ("ROM-2.0-11", "Puertos del Estado", "2012", _STANDARDS + "rom-2-0-11.md"),
+    "ufc-4-152-01": ("UFC-4-152-01", "US DoD", "2017 Change 1 2024", _STANDARDS + "ufc-4-152-01.md"),
+    "is-4651-3-1974": ("IS-4651-3", "BIS", "1974", _STANDARDS + "is-4651-3.md"),
+    "iso17357-1": ("ISO-17357-1", "ISO", "2014", _STANDARDS + "iso-17357-1.md"),
+    "vasco-costa-1964": ("vasco-costa-1964", "Vasco Costa", "1964",
+                         _CONCEPTS + "vasco-costa-1964-berthing-added-mass.md"),
+    "ueda-1981": ("ueda-1981", "Ueda et al.", "1981", _CONCEPTS + "ueda-1981-berthing-added-mass.md"),
+}
+
+#: Resolution failures that leave a result usable but qualified (the page is
+#: not yet written, or no wiki is configured on this machine). Every other
+#: failure, in particular a page whose code_id, publisher or revision differs
+#: from the citation, stops the calculation.
+_UNRESOLVED_REASONS = ("page_missing", "resolver_unconfigured")
+
+CITATION_MODES = ("record", "strict", "off")
+
+
+def citation_for(source_id: str) -> Citation:
+    """The :class:`Citation` of a source in :data:`CITATION_TARGETS`."""
+    if source_id not in CITATION_TARGETS:
+        raise KeyError(f"no citation target for source {source_id!r}")
+    code_id, publisher, revision, wiki_path = CITATION_TARGETS[source_id]
+    src = SOURCES[source_id]
+    note = f"{src.verification}" + (f"; read in {src.read_in}" if src.read_in else "")
+    return Citation(code_id=code_id, publisher=publisher, revision=revision,
+                    section=src.clause or src.edition, wiki_path=wiki_path, note=note,
+                    source_sibling="generic")
+
+
+def result_citations(coefficients) -> tuple[Citation, ...]:
+    """One citation per cited source among ``coefficients`` (caller values excluded)."""
+    out, seen = [], set()
+    for c in coefficients:
+        if c.source == "caller" or c.source in seen:
+            continue
+        seen.add(c.source)
+        out.append(citation_for(c.source))
+    return tuple(out)
+
+
+def resolve_citations(citations, *, mode: str = "record",
+                      wiki_root: Path | None = None) -> tuple[tuple[str, str], ...]:
+    """Resolve each citation against the wiki; return (code_id, status) pairs.
+
+    ``mode``: ``strict`` raises :class:`CitationResolutionError` on any
+    failure (fail-closed); ``record`` raises on a mismatched or misconfigured
+    target but records a missing page or an unconfigured resolver as
+    ``unresolved: <reason>``; ``off`` checks nothing (``not checked``).
+    ``wiki_root`` is a wiki clone root; ``None`` uses the resolver's search
+    order (``LLM_WIKI_PATH`` first).
+    """
+    if mode not in CITATION_MODES:
+        raise ValueError(f"citation mode must be one of {CITATION_MODES}")
+    out = []
+    for c in citations:
+        if mode == "off":
+            out.append((c.code_id, "not checked"))
+            continue
+        try:
+            validate_citation(c, repo_root=wiki_root)
+        except CitationResolutionError as exc:
+            reason = exc.reason.split(":", 1)[0]
+            if mode == "strict" or reason not in _UNRESOLVED_REASONS:
+                raise CitationResolutionError(code_id=c.code_id, wiki_path=c.wiki_path,
+                                              reason=exc.reason) from exc
+            out.append((c.code_id, f"unresolved: {reason}"))
+            continue
+        out.append((c.code_id, "resolved"))
+    return tuple(out)
+
+
+def _cite(res: MethodResult, mode: str, wiki_root: Path | None) -> MethodResult:
+    cites = result_citations(res.coefficients())
+    status = resolve_citations(cites, mode=mode, wiki_root=wiki_root)
+    seen, pending = set(), []
+    for code_id, st in status:
+        if st.startswith("unresolved") and code_id not in seen:
+            seen.add(code_id)
+            pending.append(f"{code_id} ({st.split(': ', 1)[1]})")
+    flags = list(res.flags)
+    if pending:
+        flags.append("citation not resolved against the wiki: " + ", ".join(pending)
+                     + "; values carry the source register only")
+    return replace(res, citations=cites, citation_status=status, flags=tuple(flags))
+
+
 def energy_by_method(
     ship_or_case,
     berth: Berth | None = None,
@@ -927,27 +1083,34 @@ def energy_by_method(
     velocity_m_s: float | None = None,
     factor: float | None = None,
     factor_position: str = "smallest",
+    citations: str = "record",
+    citation_root: Path | None = None,
     **case_kw,
 ) -> MethodResult:
     """Normal and design berthing energy by ``method`` (a key of :data:`METHODS`).
 
     Accepts a :class:`Case`, or a Ship and Berth (with :class:`Case` keywords).
     ``velocity_m_s`` and ``factor`` override the method's own values; the
-    result then names "caller" as their source. ``factor_position`` chooses
-    the largest- or smallest-ship PIANC abnormal factor where a method uses it.
+    result then names "caller" as their source. A velocity override is
+    applied before the method derives its velocity-dependent coefficients
+    (ROM accidental factor and Cc, validity flags), so they follow the
+    effective velocity. ``factor_position`` chooses the largest- or
+    smallest-ship PIANC abnormal factor where a method uses it.
+
+    The result carries its citation sidecar, resolved per ``citations``
+    (``record``, ``strict`` or ``off``; see :func:`resolve_citations`)
+    against ``citation_root``.
     """
     if method not in METHODS:
         raise ValueError(f"unknown method {method!r}; one of {tuple(METHODS)}")
     case = _as_case(ship_or_case, berth, **case_kw)
-    res = METHODS[method].evaluate(case, factor_position)
-    if velocity_m_s is None and factor is None:
-        return res
-    v = res.velocity_m_s if velocity_m_s is None else Coefficient(
-        "velocity_m_s", _finite("velocity_m_s", velocity_m_s, positive=True), "caller")
-    f = res.factor if factor is None else Coefficient(res.factor.name, _finite("factor", factor, positive=True), "caller")
-    flags = [x for x in res.flags if not x.startswith("below 0.")]
-    return _result(res.method, res.label, case, v, res.cm, res.ce, res.cs, res.cc, f, res.geometry,
-                   extra=res.extra, divisor=res.capacity_divisor, flags=flags)
+    res = METHODS[method].evaluate(case, factor_position, velocity_m_s)
+    if factor is not None:
+        f = Coefficient(res.factor.name, _finite("factor", factor, positive=True), "caller")
+        res = _result(res.method, res.label, case, res.velocity_m_s, res.cm, res.ce, res.cs, res.cc, f,
+                      res.geometry, extra=res.extra, divisor=res.capacity_divisor,
+                      flags=[x for x in res.flags if not x.startswith("below 0.")])
+    return _cite(res, citations, citation_root)
 
 
 def compare_methods(ship_or_case, berth=None, methods=None, **kwargs) -> list[MethodResult]:
@@ -1131,13 +1294,42 @@ TEMPERATURE_FACTOR_TABLE = (
 _COMPOUND = {"blend": 1, "nr": 2, "sbr": 3}
 
 
-def velocity_factor(compression_time: float, compound: str = "blend") -> float:
-    """VF from the TFADM p. 35 table (nearest lower tabulated time; 1.0 beyond 20 s
-    only where the table reaches 1.00, otherwise the 20 s value)."""
+VELOCITY_FACTOR_USES = ("energy", "reaction")
+
+
+def velocity_factor(compression_time: float, compound: str = "blend", use: str | None = None) -> float:
+    """VF from the TFADM p. 35 table, nearest lower tabulated time (1 to 20 s).
+
+    The table stops at 20 s, where the blend and SBR factors are still above
+    1.00. Beyond 20 s the factor depends on what it is used for, and ``use``
+    must say which:
+
+    * ``"energy"`` (minimum energy, slowest berthing): 1.00. The manual's
+      worked example (pp. 39-40, SBR) takes VF = 1 at a 48 s compression
+      time, the catalogue (slow constant-velocity) performance; no tabulated
+      value is below 1.00, so energy is not overstated.
+    * ``"reaction"`` (maximum reaction, fastest berthing): the 20 s value,
+      an upper bound because the tabulated factor does not increase with time.
+
+    Without ``use`` a time beyond 20 s raises ValueError rather than guess.
+    Within the table ``use`` does not change the value.
+    """
     t = _finite("compression_time", compression_time, positive=True)
+    if compound not in _COMPOUND:
+        raise ValueError(f"compound must be one of {tuple(_COMPOUND)}")
+    if use is not None and use not in VELOCITY_FACTOR_USES:
+        raise ValueError(f"use must be one of {VELOCITY_FACTOR_USES}")
     j = _COMPOUND[compound]
     if t < 1.0:
         raise ValueError("compression time below the tabulated 1 s")
+    t_max = VELOCITY_FACTOR_TABLE[-1][0]
+    if t > t_max:
+        if use is None:
+            raise ValueError(
+                f"compression time {t:.1f} s beyond the tabulated {t_max} s: pass use='energy' "
+                f"(VF 1.00, TFADM pp. 39-40 example) or use='reaction' (the {t_max} s value, an upper bound)"
+            )
+        return 1.0 if use == "energy" else VELOCITY_FACTOR_TABLE[-1][j]
     row = max((r for r in VELOCITY_FACTOR_TABLE if r[0] <= t), key=lambda r: r[0])
     return row[j]
 
@@ -1159,6 +1351,13 @@ def temperature_factor(temperature_c: float, compound: str = "blend") -> float:
 
 @dataclass(frozen=True)
 class SweepPoint:
+    """One swept value. ``reaction_kn`` is the curve reaction at this energy
+    times the sweep's ``reaction_factor`` (tolerance, velocity, temperature);
+    ``hull_pressure_kpa`` is the catalogue hull pressure at rated deflection
+    times the same factor: the pressure at part load is not calculated,
+    because no pressure-deflection relationship is sourced. Both are None
+    above the energy capacity, where the catalogue rates neither."""
+
     value: float
     design_energy_knm: float
     energy_per_fender_knm: float
@@ -1175,7 +1374,9 @@ class Sweep:
     ``range_low``/``range_high`` bound the credible range (``range_basis``
     says where it comes from); ``points`` may extend wider to show the
     trend. ``capacity_knm`` is the fender energy capacity for utilisation;
-    ``reaction_limit_kn`` and ``hull_pressure_limit_kpa`` are the limits drawn.
+    ``reaction_factor`` multiplies every reaction and hull pressure before
+    the comparison with ``reaction_limit_kn`` and
+    ``hull_pressure_limit_kpa``, the limits drawn.
     """
 
     parameter: str
@@ -1191,6 +1392,7 @@ class Sweep:
     reaction_limit_kn: float | None
     hull_pressure_limit_kpa: float | None
     fenders_in_contact: int
+    reaction_factor: float = 1.0
 
     def at(self, value: float) -> SweepPoint:
         for p in self.points:
@@ -1212,6 +1414,27 @@ class Sweep:
                 return a.value + (a.utilisation - 1.0) / (a.utilisation - b.utilisation) * (b.value - a.value)
         return None
 
+    def reaction_limit_value(self) -> float | None:
+        """Smallest swept value at which the factored reaction reaches the
+        reaction limit (linear between rated points), or None if it does not
+        within the rated points or no limit is set."""
+        if self.reaction_limit_kn is None:
+            return None
+        lim = self.reaction_limit_kn
+        pts = [p for p in self.points if p.reaction_kn is not None]
+        for a, b in zip(pts, pts[1:]):
+            ra, rb = a.reaction_kn, b.reaction_kn
+            if ra != rb and min(ra, rb) <= lim <= max(ra, rb):
+                return a.value + (lim - ra) / (rb - ra) * (b.value - a.value)
+        return None
+
+    def over_reaction_limit(self) -> list[float]:
+        """Swept values whose factored reaction exceeds the reaction limit."""
+        if self.reaction_limit_kn is None:
+            return []
+        return [p.value for p in self.points
+                if p.reaction_kn is not None and p.reaction_kn > self.reaction_limit_kn]
+
 
 def parameter_sweep(
     parameter: str,
@@ -1230,18 +1453,22 @@ def parameter_sweep(
     curve: PerformanceCurve | None = None,
     reaction_limit_kn: float | None = None,
     hull_pressure_limit_kpa: float | None = None,
+    reaction_factor: float = 1.0,
 ) -> Sweep:
     """Evaluate ``design_energy(value)`` over ``values`` and the fender response.
 
     ``design_energy`` maps one value of the parameter to design energy (kNm)
     with all other inputs at base. Energy per fender = design energy /
     ``fenders_in_contact``; utilisation = energy per fender / capacity
-    (default rated energy). Hull pressure = catalogue hull pressure x
-    reaction / rated reaction (contact area as at the rated point, an
-    approximation).
+    (default rated energy). Reaction = curve reaction at that energy x
+    ``reaction_factor`` (1 + reaction tolerance, times any velocity and
+    temperature factors: :class:`DesignPerformance` reaction / rated
+    reaction). Hull pressure = catalogue hull pressure (at rated deflection)
+    x ``reaction_factor``; it is not scaled to part load.
     """
     if isinstance(fenders_in_contact, bool) or not isinstance(fenders_in_contact, int) or fenders_in_contact < 1:
         raise ValueError("fenders_in_contact must be a whole number >= 1")
+    rf = _finite("reaction_factor", reaction_factor, positive=True)
     if capacity_knm is None:
         cap = fender.rated_energy_knm
     else:
@@ -1253,15 +1480,17 @@ def parameter_sweep(
         per = e / fenders_in_contact
         r, d = reaction_at_energy(fender, per, curve, cap)
         hp = None
-        if r is not None and fender.hull_pressure_kpa is not None:
-            hp = fender.hull_pressure_kpa * r / fender.reaction_kn
+        if r is not None:
+            r *= rf
+            if fender.hull_pressure_kpa is not None:
+                hp = fender.hull_pressure_kpa * rf
         pts.append(SweepPoint(v, e, per, per / cap, r, d, hp))
     return Sweep(
         parameter=parameter, label=label, unit=unit, base_value=float(base_value),
         base_design_energy_knm=float(design_energy(base_value)), range_low=float(range_low),
         range_high=float(range_high), range_basis=range_basis, points=tuple(pts), capacity_knm=cap,
         reaction_limit_kn=reaction_limit_kn, hull_pressure_limit_kpa=hull_pressure_limit_kpa,
-        fenders_in_contact=fenders_in_contact,
+        fenders_in_contact=fenders_in_contact, reaction_factor=rf,
     )
 
 
@@ -1300,6 +1529,47 @@ class SweepRange:
     basis: str
 
 
+SWEEP_KEYS = ("velocity_m_s", "displacement_t", "water_depth_m", "contact_x_over_lbp",
+              "berthing_angle_deg", "cs", "cc", "factor")
+
+#: Values the method's own rules can give Cs and Cc: method -> {key: (low, high)}.
+#: A coefficient range outside these is clipped to them; a coefficient the
+#: method fixes or removes is not swept (:data:`SWEEP_EXCLUSIONS`).
+SWEEP_COEFFICIENT_LIMITS: dict[str, dict[str, tuple[float, float]]] = {
+    "pianc2002": {"cs": (0.9, 1.0)},
+    "ueda": {"cs": (0.9, 1.0), "cc": (0.8, 1.0)},
+    "bs6349": {"cs": (0.9, 1.0), "cc": (0.8, 1.0)},
+    "eau": {"cs": (0.9, 1.0)},
+    "rom": {"cs": (0.9, 1.0), "cc": (0.9, 1.0)},
+    "ufc": {"cc": (0.8, 1.0)},
+    "wg211": {},
+    "is4651": {},
+}
+
+_KEEL_CLEARANCE_CC = ("Cc is 1.0 with the PIANC keel-clearance Cm, which already includes the "
+                      "confined-water effect (PIANC 2002 4.2.7 pairing rule)")
+
+#: Sweeps a method does not admit, with the reason.
+SWEEP_EXCLUSIONS: dict[str, dict[str, str]] = {
+    "pianc2002": {"cc": _KEEL_CLEARANCE_CC},
+    "eau": {"cc": _KEEL_CLEARANCE_CC},
+    "ueda": {},
+    "bs6349": {},
+    "rom": {},
+    "ufc": {"cs": "UFC 4-152-01 takes Cd = 1.0 for larger ships on energy-absorbing fenders"},
+    "wg211": {"cs": "WG211 removes Cs", "cc": "WG211 removes Cc"},
+    "is4651": {"cs": "IS 4651 fixes Cs at 0.9", "cc": "IS 4651 has no Cc",
+               "factor": "IS 4651 applies no abnormal factor"},
+}
+
+
+def inapplicable_sweeps(method: str) -> dict[str, str]:
+    """Sweeps :func:`standard_sweeps` leaves out for ``method``, with the reason."""
+    if method not in METHODS:
+        raise ValueError(f"unknown method {method!r}; one of {tuple(METHODS)}")
+    return dict(SWEEP_EXCLUSIONS[method])
+
+
 def standard_sweeps(
     case: Case,
     method: str,
@@ -1311,6 +1581,7 @@ def standard_sweeps(
     curve: PerformanceCurve | None = None,
     reaction_limit_kn: float | None = None,
     hull_pressure_limit_kpa: float | None = None,
+    reaction_factor: float = 1.0,
     velocity_m_s: float | None = None,
     factor: float | None = None,
     factor_position: str = "smallest",
@@ -1318,63 +1589,85 @@ def standard_sweeps(
 ) -> list[Sweep]:
     """The standard set of sweeps around the ``method`` result for this case.
 
-    Keys of ``ranges`` (each optional): ``velocity_m_s``, ``displacement_t``
-    (energy only: draft, Cb and Cm held), ``water_depth_m`` (moves Cm through
-    keel clearance, and Cc where the method uses it), ``contact_x_over_lbp``
-    and ``berthing_angle_deg`` (move Ce), ``cs``, ``cc``, ``factor``. The
-    swept values span a little wider than each range.
+    Keys of ``ranges`` (each optional, see :data:`SWEEP_KEYS`):
+
+    * ``velocity_m_s``: the method is re-evaluated at each velocity, so
+      velocity-dependent coefficients (ROM accidental factor and Cc) follow;
+    * ``displacement_t``: energy only (draft, Cb, velocity and every
+      coefficient held), so energy is proportional to displacement;
+    * ``water_depth_m`` (Cm through keel clearance, and Cc where the method
+      uses it), ``contact_x_over_lbp`` and ``berthing_angle_deg`` (Ce): the
+      method is re-evaluated with the berth changed;
+    * ``cs``, ``cc``, ``factor``: the coefficient alone, others held, and
+      only where the method uses it: a sweep in :func:`inapplicable_sweeps`
+      is left out, and a Cs or Cc range is clipped to
+      :data:`SWEEP_COEFFICIENT_LIMITS` (the range basis then says so).
+
+    ``velocity_m_s`` and ``factor`` are the caller's overrides of the base
+    case (as in :func:`energy_by_method`). ``reaction_factor`` multiplies the
+    reactions and hull pressures before they are compared with the limits.
+    The swept values span a little wider than each range.
     """
     ship, berth = case.ship, case.berth
-    base = energy_by_method(case, method=method, velocity_m_s=velocity_m_s, factor=factor,
-                            factor_position=factor_position)
+    kw = dict(velocity_m_s=velocity_m_s, factor=factor, factor_position=factor_position, citations="off")
+    base = energy_by_method(case, method=method, **kw)
     v0, f0 = base.velocity_m_s.value, base.factor.value
-    cm0, ce0, cs0, cc0 = base.cm.value, base.ce.value, base.cs.value, base.cc.value
-    other = 1.0
-    for c in base.extra:
-        other *= c.value
+    cs0, cc0 = base.cs.value, base.cc.value
+    e0 = base.design_energy_knm
     m0 = ship.displacement_t
+    excluded = inapplicable_sweeps(method)
+    limits = SWEEP_COEFFICIENT_LIMITS[method]
 
-    def energy(m=m0, v=v0, ce=ce0, cm=cm0, cs=cs0, cc=cc0, f=f0):
-        return berthing_energy(m, v, ce, cm, cs, cc) * other * f
+    def at_velocity(x):
+        return energy_by_method(case, method=method, **{**kw, "velocity_m_s": x}).design_energy_knm
 
-    def with_berth(**kw):
-        b = Berth(**{**berth.__dict__, **kw})
-        return energy_by_method(replace(case, berth=b), method=method, velocity_m_s=v0, factor=f0)
+    def with_berth(**b_kw):
+        b = Berth(**{**berth.__dict__, **b_kw})
+        return energy_by_method(replace(case, berth=b), method=method, **kw).design_energy_knm
 
     builders = {
-        "velocity_m_s": ("berthing velocity", "m/s", v0, lambda x: energy(v=x)),
-        "displacement_t": ("displacement", "t", m0, lambda x: energy(m=x)),
+        "velocity_m_s": ("berthing velocity", "m/s", v0, at_velocity),
+        "displacement_t": ("displacement", "t", m0, lambda x: e0 * x / m0),
         "water_depth_m": ("water depth (Cm through keel clearance)", "m", berth.water_depth_m,
-                          lambda x: with_berth(water_depth_m=x).design_energy_knm),
+                          lambda x: with_berth(water_depth_m=x)),
         "contact_x_over_lbp": ("first contact from bow / LBP (Ce)", "-",
                                berth.contact_x_from_bow_m / ship.lbp_m,
-                               lambda x: with_berth(contact_x_from_bow_m=x * ship.lbp_m).design_energy_knm),
+                               lambda x: with_berth(contact_x_from_bow_m=x * ship.lbp_m)),
         "berthing_angle_deg": ("berthing angle (Ce)", "deg", berth.berthing_angle_deg,
-                               lambda x: with_berth(berthing_angle_deg=x).design_energy_knm),
-        "cs": ("softness factor Cs", "-", cs0, lambda x: energy(cs=x)),
-        "cc": ("berth configuration factor Cc", "-", cc0, lambda x: energy(cc=x)),
-        "factor": ("abnormal / partial energy factor", "-", f0, lambda x: energy(f=x)),
+                               lambda x: with_berth(berthing_angle_deg=x)),
+        "cs": ("softness factor Cs", "-", cs0, lambda x: e0 * x / cs0),
+        "cc": ("berth configuration factor Cc", "-", cc0, lambda x: e0 * x / cc0),
+        "factor": ("abnormal / partial energy factor", "-", f0, lambda x: e0 * x / f0),
     }
     out = []
     for key, rng in ranges.items():
         if key not in builders:
             raise KeyError(f"unknown sweep {key!r}")
+        if key in excluded:
+            continue
         label, unit, b0, fn = builders[key]
-        lo, hi = min(rng.low, b0), max(rng.high, b0)
+        r_lo, r_hi, basis = rng.low, rng.high, rng.basis
+        if key in limits:
+            a, b = limits[key]
+            if r_lo < a or r_hi > b:
+                r_lo, r_hi = max(r_lo, a), min(r_hi, b)
+                basis = f"{basis}; clipped to {a:g} to {b:g}, the values this method's rule gives"
+        lo, hi = min(r_lo, b0), max(r_hi, b0)
         pad = 0.15 * (hi - lo) if hi > lo else 0.1 * abs(b0)
         lo_s, hi_s = lo - pad, hi + pad
         if key == "water_depth_m":
             lo_s = max(lo_s, ship.draft_m * 1.001)
         if key == "contact_x_over_lbp":
             lo_s, hi_s = max(lo_s, 0.0), min(hi_s, 1.0)
-        if key in ("velocity_m_s", "displacement_t", "cs", "cc", "factor"):
+        if key in ("velocity_m_s", "displacement_t", "factor"):
             lo_s = max(lo_s, 1e-6)
-        if key in ("cs", "cc"):
-            hi_s = min(hi_s, 1.0)
+        if key in limits:
+            lo_s, hi_s = max(lo_s, limits[key][0]), min(hi_s, limits[key][1])
         values = [lo_s + (hi_s - lo_s) * i / (points - 1) for i in range(points)]
         out.append(parameter_sweep(
-            key, label, unit, b0, values, fn, fender, range_low=rng.low, range_high=rng.high,
-            range_basis=rng.basis, fenders_in_contact=fenders_in_contact, capacity_knm=capacity_knm,
+            key, label, unit, b0, values, fn, fender, range_low=r_lo, range_high=r_hi,
+            range_basis=basis, fenders_in_contact=fenders_in_contact, capacity_knm=capacity_knm,
             curve=curve, reaction_limit_kn=reaction_limit_kn, hull_pressure_limit_kpa=hull_pressure_limit_kpa,
+            reaction_factor=reaction_factor,
         ))
     return out

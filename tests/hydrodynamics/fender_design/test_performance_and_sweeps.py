@@ -103,9 +103,33 @@ def test_sweep_points_include_base_and_range_ends():
     assert s.change_pct(0.15) == pytest.approx(125.0)
     # above the rated energy the reaction is not defined
     assert s.at(0.15).reaction_kn is None
-    # hull pressure scales with reaction at the rated contact area
+    # hull pressure is the rated-deflection value (not scaled to part load)
     p = s.at(0.05)
-    assert p.hull_pressure_kpa == pytest.approx(135.0 * p.reaction_kn / 1100.0)
+    assert p.hull_pressure_kpa == pytest.approx(135.0)
+    assert s.at(0.15).hull_pressure_kpa is None
+
+
+def test_sweep_reaction_factor_raises_reaction_and_pressure():
+    def energy(v):
+        return berthing_energy(60_000.0, v, ce=0.5, cm=1.8) * 1.25
+
+    kw = dict(range_low=0.08, range_high=0.15, range_basis="test", curve=CURVE, reaction_limit_kn=500.0)
+    nominal = parameter_sweep("velocity_m_s", "v", "m/s", 0.10, [0.05, 0.10], energy, FENDER, **kw)
+    toleranced = parameter_sweep("velocity_m_s", "v", "m/s", 0.10, [0.05, 0.10], energy, FENDER,
+                                 reaction_factor=1.10, **kw)
+    assert toleranced.reaction_factor == 1.10
+    for v in (0.05, 0.10):
+        assert toleranced.at(v).reaction_kn == pytest.approx(1.10 * nominal.at(v).reaction_kn)
+        assert toleranced.at(v).hull_pressure_kpa == pytest.approx(1.10 * 135.0)
+    # 0.10 m/s: 337.5 kNm = 84.375 % of 400 -> reaction 50 + 44.375 / 60 x 50 = 86.98 % of 1100
+    r_nom = 1100.0 * (50.0 + (84.375 - 40.0) / 60.0 * 50.0) / 100.0
+    assert nominal.at(0.10).reaction_kn == pytest.approx(r_nom)
+    # 0.15 m/s is above the rated energy (reaction not rated); the factored
+    # reaction reaches the 500 kN limit at a lower velocity than the nominal
+    assert nominal.over_reaction_limit() == [0.08, 0.10] == toleranced.over_reaction_limit()
+    assert toleranced.reaction_limit_value() < nominal.reaction_limit_value() < 0.08
+    with pytest.raises(ValueError):
+        parameter_sweep("velocity_m_s", "v", "m/s", 0.10, [0.10], energy, FENDER, reaction_factor=0.0, **kw)
 
 
 def test_sweep_shares_energy_between_fenders():

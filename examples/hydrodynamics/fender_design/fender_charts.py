@@ -84,18 +84,25 @@ def sweep_chart(sweep, path, title: str, fender_label: str):
         ax2.axhline(sweep.reaction_limit_kn, color=LIMIT, linewidth=1.5, linestyle="--")
         ax2.text(xs[0], sweep.reaction_limit_kn, f" reaction limit {sweep.reaction_limit_kn:,.0f} kN",
                  va="bottom", fontsize=7.5, color=INK)
+        x_lim = sweep.reaction_limit_value()
+        if x_lim is not None:
+            ax2.axvline(x_lim, color=LIMIT, linewidth=1.0, linestyle=":")
+            ax2.annotate(f"reaches limit at {x_lim:.4g} {sweep.unit}", (x_lim, sweep.reaction_limit_kn),
+                         textcoords="offset points", xytext=(4, -12), fontsize=7, color=INK)
     over = [p.value for p in sweep.points if p.reaction_kn is None]
     if over:
         ax2.axvspan(min(over), max(xs), color=LIMIT, alpha=0.08, zorder=0)
         ax2.text(min(over), 0.0, " above rated energy:\n reaction not rated", fontsize=7,
                  color=INK2, va="bottom")
-    ax2.set_ylabel("reaction per fender (kN)")
+    rf = getattr(sweep, "reaction_factor", 1.0)
+    ax2.set_ylabel("reaction per fender (kN)" if rf == 1.0 else f"reaction per fender x {rf:.2f} (kN)")
     ax2.set_ylim(bottom=0)
     ax2.set_xlabel(f"{sweep.label} ({sweep.unit})")
     ax1.set_title(title, fontsize=9.5, color=INK, loc="left")
+    rf_note = "" if rf == 1.0 else f" Reaction includes the reaction factor {rf:.2f} (manufacturing tolerance)."
     ax2.text(1.0, -0.32, f"Shaded: credible range {sweep.range_low:g} to {sweep.range_high:g} {sweep.unit} "
-             f"({sweep.range_basis}). Dotted: base.", transform=ax2.transAxes, ha="right",
-             fontsize=6.5, color=MUTED)
+             f"({sweep.range_basis}). Dotted: base.{rf_note}", transform=ax2.transAxes, ha="right",
+             fontsize=6.5, color=MUTED, wrap=True)
     return _save(fig, path)
 
 
@@ -120,16 +127,35 @@ def tornado_chart(bars, path, title: str, base_energy_knm: float):
     return _save(fig, path)
 
 
+VALIDITY_MARK = "outside its stated validity"
+
+
+def outside_validity(res) -> list[str]:
+    """Flags of a result that put a formula outside its stated validity."""
+    return [f for f in getattr(res, "flags", ()) if VALIDITY_MARK in f]
+
+
 def method_chart(results, path, title: str, capacity_knm: float | None = None,
                  capacity_label: str = ""):
-    """Design energy by method (horizontal bars), with an optional capacity line."""
+    """Design energy by method (horizontal bars), with an optional capacity line.
+
+    A result with a flag that puts a formula outside its stated validity is
+    hatched, labelled "(outside validity)" and explained in a note below.
+    """
     fig, ax = _fig(1, height=0.5 * len(results) + 1.6, width=8.5)
     _style(ax)
     ys = list(range(len(results)))[::-1]
+    notes = []
     for y, res in zip(ys, results):
-        ax.barh(y, res.design_energy_knm, height=0.55, color=SERIES[0], edgecolor=SURFACE)
-        ax.text(res.design_energy_knm, y, f"  {res.design_energy_knm:,.0f} kNm", va="center",
-                fontsize=7.5, color=INK)
+        bad = outside_validity(res)
+        ax.barh(y, res.design_energy_knm, height=0.55, color=SERIES[0], edgecolor=SURFACE,
+                hatch="///" if bad else None, alpha=0.55 if bad else 1.0)
+        ax.text(res.design_energy_knm, y, f"  {res.design_energy_knm:,.0f} kNm"
+                + ("  (outside validity)" if bad else ""), va="center", fontsize=7.5, color=INK)
+        notes += [f"{res.label}: {f}" for f in bad]
+    if notes:
+        ax.text(1.0, -0.12 - 0.5 / max(len(results), 1), "Hatched: " + "; ".join(notes) + ".",
+                transform=ax.transAxes, ha="right", va="top", fontsize=6.5, color=INK2, wrap=True)
     ax.set_yticks(ys)
     ax.set_yticklabels([res.label for res in results], fontsize=8, color=INK)
     if capacity_knm:

@@ -10,7 +10,14 @@ writes, to a caller-supplied output directory:
   ``data/fender_design/database_schema.yaml``;
 * ``fender_catalogue.csv``: rated rows only, in the column layout that
   :func:`digitalmodel.hydrodynamics.berthing_energy.load_fender_catalogue`
-  reads (``FENDER_CATALOGUE_COLUMNS``), ready for the workbook generator.
+  reads (``FENDER_CATALOGUE_COLUMNS``) plus a ``perf_basis`` column, ready
+  for the workbook generator.
+
+A catalogue compares rows with each other, so every row of one fender type
+must be rated on the same performance basis (RPD, CV or GEA). Where the
+vendor tables hold more than one basis for a type, choose one with
+``--perf-basis``; otherwise the export stops with the types and bases found.
+Floating fenders are rated at GEA.
 
 Nothing is written inside this repository unless the caller points the output
 there; vendor values are not committed to the public repository.
@@ -21,7 +28,7 @@ Input directory layout (as produced by the private vendor-data work)::
 
 Usage::
 
-    python scripts/fender_design/import_vendor_tables.py --in <dir> --out <dir>
+    python scripts/fender_design/import_vendor_tables.py --in <dir> --out <dir> [--perf-basis RPD]
 """
 
 from __future__ import annotations
@@ -71,7 +78,10 @@ CATALOGUE_COLUMNS = (
     "hull_pressure_kpa",
     "rated_deflection_pct",
     "source",
+    "perf_basis",
 )
+
+PERF_BASES = ("RPD", "CV", "GEA")
 
 
 def _num(text: str) -> str:
@@ -164,19 +174,29 @@ def convert(in_dir: Path) -> list[dict]:
     return out
 
 
-def catalogue_rows(rows: list[dict]) -> list[dict]:
+def catalogue_rows(rows: list[dict], perf_basis: str | None = None) -> list[dict]:
     """Rated per-unit rows in the selection-catalogue layout.
 
     Rows without a rated energy or reaction, and per-metre rows (extruded and
     arch fenders quoted per metre length), are left out: selection compares
-    one fender unit with the energy per fender.
+    one fender unit with the energy per fender. ``perf_basis`` keeps only
+    solid-fender rows rated on that basis (floating rows are GEA). The
+    performance basis is written with every row, and rows of one fender type
+    on different bases (or without a basis beside rows with one) raise
+    ValueError: they are not comparable.
     """
+    if perf_basis is not None and perf_basis not in PERF_BASES:
+        raise ValueError(f"perf_basis must be one of {PERF_BASES}")
     out = []
+    bases: dict[str, set] = {}
     for r in rows:
         if not (r["rated_energy_knm"] and r["rated_reaction_kn"]):
             continue
         if r["basis"] and r["basis"] != "per-unit":
             continue
+        if perf_basis is not None and r["family"] == "solid" and r["perf_basis"] != perf_basis:
+            continue
+        bases.setdefault(r["fender_type"], set()).add(r["perf_basis"])
         out.append(
             dict(
                 fender_id=r["record_id"],
@@ -191,9 +211,17 @@ def catalogue_rows(rows: list[dict]) -> list[dict]:
                 rated_deflection_pct=r["rated_deflection_pct"],
                 source=(
                     f"{r['source_id']} {r['catalogue']} ({r['catalogue_edition']}), "
-                    f"{r['page_or_table']}; read {r['accessed_on']}"
+                    f"{r['page_or_table']}; read {r['accessed_on']}; basis {r['perf_basis'] or 'not stated'}"
                 ),
+                perf_basis=r["perf_basis"],
             )
+        )
+    mixed = {t: sorted(b) for t, b in bases.items() if len(b) > 1}
+    if mixed:
+        raise ValueError(
+            "rows of one fender type on different performance bases: "
+            + "; ".join(f"{t}: {', '.join(x or '(blank)' for x in b)}" for t, b in sorted(mixed.items()))
+            + ". Choose one with --perf-basis."
         )
     return out
 
@@ -209,11 +237,13 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--in", dest="in_dir", required=True, type=Path)
     ap.add_argument("--out", dest="out_dir", required=True, type=Path)
+    ap.add_argument("--perf-basis", choices=PERF_BASES, default=None,
+                    help="keep only solid-fender rows rated on this basis in the catalogue")
     args = ap.parse_args(argv)
     rows = convert(args.in_dir)
+    cat = catalogue_rows(rows, args.perf_basis)
     args.out_dir.mkdir(parents=True, exist_ok=True)
     _write(args.out_dir / "fender_database.csv", DATABASE_COLUMNS, rows)
-    cat = catalogue_rows(rows)
     _write(args.out_dir / "fender_catalogue.csv", CATALOGUE_COLUMNS, cat)
     print(f"database rows {len(rows)}; catalogue rows {len(cat)}")
     return 0

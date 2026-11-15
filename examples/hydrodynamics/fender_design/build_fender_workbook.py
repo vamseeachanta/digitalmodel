@@ -5,15 +5,20 @@ Sheets:
 
 * ``README``: what the workbook is, how to use it, the method chosen.
 * ``Inputs``: ship, berth and design values with unit and basis. Editing a
-  value here updates ``Calc``, ``Velocity``, ``Methods`` and ``Fenders``.
+  yellow value here updates ``Calc``, ``Velocity``, ``Methods`` and
+  ``Fenders``. Choices that select a table row or column (navigation
+  condition, condition class, ship type, consequence class, factor
+  position, method) are listed below them as fixed at generation: change
+  them in the case file and regenerate.
 * ``Calc``: block coefficient, radius of gyration, contact geometry, Ce (and
   the K-squared-numerator error, for comparison), keel clearance and Cm by
   three methods, as live formulas.
 * ``Velocity``: the Brolsma table (conditions a to e) and log-log
   interpolation at the ship's DWT and displacement, as live formulas.
-* ``Methods``: berthing energy by every method; velocity, Cm and Ce are
-  formulas referring to ``Calc``/``Velocity``; Cs, Cc and the factor are the
-  method's values with their source.
+* ``Methods``: berthing energy by every method. Every coefficient that
+  depends on an Inputs value is a formula (velocity by size, Cm, Ce, Cs, Cc,
+  Cg, the ROM accidental factor and the WG211 frequency correction); the
+  remaining constants depend only on the fixed-at-generation choices.
 * ``Fenders``: the catalogue with live utilisation, design reaction and
   checks against the limits in ``Inputs``.
 * ``Sensitivity``: one block per input with a chart (values written by the
@@ -29,10 +34,11 @@ Usage::
 from __future__ import annotations
 
 import argparse
+import math
 from pathlib import Path
 
 from openpyxl import Workbook
-from openpyxl.chart import LineChart, Reference, ScatterChart, Series
+from openpyxl.chart import Reference, ScatterChart, Series
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.workbook.defined_name import DefinedName
 
@@ -45,6 +51,8 @@ except ImportError:  # pragma: no cover
 
 HEAD = Font(bold=True)
 INPUT_FILL = PatternFill("solid", fgColor="FFF4CC")
+WARN_FONT = Font(bold=True, color="9C0006")
+WARN_FILL = PatternFill("solid", fgColor="FFC7CE")
 WRAP = Alignment(wrap_text=True, vertical="top")
 
 
@@ -72,6 +80,14 @@ INPUT_ROWS = (
     ("DEPTH", "Water depth at the berth", "m", lambda c: c["berth"]["water_depth_m"]),
     ("X", "First contact aft of the forward perpendicular", "m", lambda c: c["berth"]["contact_x_from_bow_m"]),
     ("ALPHA", "Berthing angle", "deg", lambda c: c["berth"].get("berthing_angle_deg", 0.0)),
+    ("STRUCT", "Berth structure: open, semi_closed or closed", "-", lambda c: c["berth"].get("structure", "open")),
+    ("DEFL", "Fender deflection (for Cs)", "m", lambda c: c["berth"].get("fender_deflection_m", 1.0)),
+    ("TUGS", "Tug-assisted berthing (1 yes, 0 no)", "-", lambda c: int(bool(c.get("conditions", {}).get("tugs", True)))),
+    ("NCALLS", "Berthings a year", "1/yr", lambda c: c.get("conditions", {}).get("berthings_per_year", 100.0)),
+    ("CONT", "Continuous berth (1 yes, 0 no: dolphins)", "-",
+     lambda c: int(bool(c.get("conditions", {}).get("continuous_berth", True)))),
+    ("VOVR", "Velocity override for every method (blank: each method's own)", "m/s",
+     lambda c: c["design"].get("velocity_m_s")),
     ("N", "Fenders in contact (equal share)", "-", lambda c: c["design"].get("fenders_in_contact", 1)),
     ("ETOL", "Fender energy tolerance (fraction)", "-", lambda c: c["design"].get("energy_tolerance", 0.0)),
     ("RTOL", "Fender reaction tolerance (fraction)", "-", lambda c: c["design"].get("reaction_tolerance", 0.10)),
@@ -92,7 +108,34 @@ def _inputs(wb, case):
         ws.cell(row=i, column=3, value=unit)
         ws.cell(row=i, column=4, value=basis.get(name, ""))
         _name(wb, name, f"Inputs!$B${i}")
+    r = len(INPUT_ROWS) + 3
+    head = ws.cell(row=r, column=1, value="Fixed at generation: change in the case file and REGENERATE the workbook")
+    head.font = WARN_FONT
+    head.fill = WARN_FILL
+    ws.cell(row=r, column=4, value=(
+        "These choices select table rows, columns or constants in Methods; editing them here would "
+        "not update Methods. Sensitivity, Tornado and Sizes are also written by the generator."))
+    for k, (label, get) in enumerate(FIXED_ROWS, start=r + 1):
+        ws.cell(row=k, column=1, value=label)
+        v = get(case)
+        ws.cell(row=k, column=2, value="-" if v is None else str(v))
+        ws.cell(row=k, column=3, value="regenerate after change").font = WARN_FONT
     return ws
+
+
+FIXED_ROWS = (
+    ("Selected method", lambda c: c["design"]["method"]),
+    ("Brolsma navigation condition (a to e)", lambda c: c["berth"].get("navigation", "b")),
+    ("Condition class (WG211, ROM, UFC, EAU, IS 4651)", lambda c: c.get("conditions", {}).get("condition", "moderate")),
+    ("Ship type (abnormal factor, hull pressure)", lambda c: c["ship"].get("ship_type", "bulk")),
+    ("Abnormal factor position (largest or smallest ships)", lambda c: c["design"].get("factor_position", "smallest")),
+    ("Factor override (blank: each method's own)", lambda c: c["design"].get("factor")),
+    ("WG211 consequence class", lambda c: c.get("conditions", {}).get("consequence_class", "B")),
+    ("WG211 spread of displacements CoV_M", lambda c: c.get("conditions", {}).get("cov_m", "high")),
+    ("WG211 multiple contact", lambda c: c.get("conditions", {}).get("multiple_contact", False)),
+    ("Base fender, curve, catalogue", lambda c: f"{c['design'].get('base_fender_id')}; {c['design'].get('curve')}; "
+                                              f"{c['database'].get('catalogue')}"),
+)
 
 
 CALC_ROWS = (
@@ -108,6 +151,24 @@ CALC_ROWS = (
     ("CM_P", "Cm, PIANC 2002 keel clearance", "=IF(KCD<=0.1,1.8,IF(KCD>=0.5,1.5,1.875-0.75*KCD))", "PIANC 2002 4.2.5 (SFT p. 18)"),
     ("CM_VC", "Cm, Vasco Costa 1 + 2T/B", "=1+2*T/BEAM", "Vasco Costa 1964"),
     ("CM_U", "Cm, Ueda 1 + pi T / (2 Cb B)", "=1+PI()*T/(2*CB*BEAM)", "Ueda 1981"),
+    ("CM_UFC", "Cm, UFC C_M0 + (C_m1 - C_M0)(T/d)^3.5",
+     "=(1.3+1.5*T/BEAM)+(IF(CB<0.6,1.5*CB,0.9)*(12.4*(T/BEAM)^0.3-50*T/LBP)-(1.3+1.5*T/BEAM))*(T/DEPTH)^3.5",
+     "UFC 4-152-01 5-2.1.1 e"),
+    ("XA", "Contact distance from midships along the ship, a = |LBP/2 - x|", "=ABS(LBP/2-X)", "UFC, IS 4651"),
+    ("CE_UFC", "Ce, UFC k^2 / (a^2 + k^2)", "=K^2/(XA^2+K^2)", "UFC 4-152-01 5-2.1"),
+    ("CG_UFC", "Cg, UFC 0.95 at or beyond the quarter points, else 1.0", "=IF(XA>=LBP/4-1E-9,0.95,1)",
+     "UFC 4-152-01 5-2.1"),
+    ("CE_IS", "Ce, IS 4651 (1 + (l/r)^2 sin^2 theta) / (1 + (l/r)^2), r = L/4",
+     "=(1+(XA/(0.25*LBP))^2*SIN(RADIANS(ALPHA))^2)/(1+(XA/(0.25*LBP))^2)", "IS 4651-3 5.2.1.3"),
+    ("CS_P", "Cs, PIANC 2002: 1.0 above 0.15 m deflection, else 0.9", "=IF(DEFL>0.15,1,0.9)", "PIANC 2002 4.2.6"),
+    ("CS_ROM", "Cs, ROM 2.0-11: 1.0 above 0.15 m and LBP below 300 m, else 0.9",
+     "=IF(AND(DEFL>0.15,LBP<300),1,0.9)", "ROM 2.0-11 p. 272"),
+    ("CC_P", "Cc, PIANC 2002 table (with Vasco Costa or Ueda Cm)",
+     '=IF(OR(STRUCT="open",ABS(ALPHA)>5),1,IF(STRUCT="closed",IF(KCD<=0.5,0.8,0.9),IF(KCD<=0.5,0.9,1)))',
+     "PIANC 2002 4.2.7 (SFT p. 20)"),
+    ("CC_UFC", "Cc, UFC: open or angled 1.0, solid 0.8, between 0.9",
+     '=IF(OR(STRUCT="open",ABS(ALPHA)>5),1,IF(STRUCT="closed",0.8,0.9))', "UFC 4-152-01 5-2.1"),
+    ("CG_ROM", "Cg, ROM: 0.95 continuous berth, 1.0 dolphins", "=IF(CONT=1,0.95,1)", "ROM 2.0-11"),
 )
 
 
@@ -153,7 +214,63 @@ def _velocity(wb):
         for j, size in ((2, "DWT"), (3, "M")):
             ws.cell(row=r, column=j, value=_loglog_formula(size, cond))
             _name(wb, f"V_{cond}_{'DWT' if size == 'DWT' else 'M'}", f"Velocity!${_c(j)}${r}")
+    _code_velocity_tables(wb, ws, 40)
     return ws
+
+
+def _table(wb, ws, row, title, header, rows, names):
+    """Write a small table with a title; name each column (``names[j]`` or None)."""
+    ws.cell(row=row, column=1, value=title).font = HEAD
+    for j, h in enumerate(header, start=1):
+        ws.cell(row=row + 1, column=j, value=h)
+    for k, vals in enumerate(rows, start=row + 2):
+        for j, v in enumerate(vals, start=1):
+            ws.cell(row=k, column=j, value=v)
+    last = row + 1 + len(rows)
+    for j, n in enumerate(names, start=1):
+        if n:
+            _name(wb, n, f"Velocity!${_c(j)}${row + 2}:${_c(j)}${last}")
+    return last + 2
+
+
+def _code_velocity_tables(wb, ws, row):
+    """UFC, ROM and EAU velocity tables (digitized, SI) for the Methods formulas."""
+    lt, ft = 1.0160469088, 0.3048
+    row = _table(wb, ws, row, "UFC 4-152-01 Figs. 5-3/5-4 (digitized), converted to t and m/s",
+                 ["displacement (t)", "sheltered", "moderate", "exposed"],
+                 [(x * lt, a * ft, b * ft, c * ft) for x, a, b, c in fd.UFC_VELOCITY_FT_S],
+                 ["UFX", "UFY_1", "UFY_2", "UFY_3"])
+    row = _table(wb, ws, row, "ROM 2.0-11 Tables 4.6.4.36 (tugs) and 4.6.4.37 (no tugs), digitized; "
+                 "linear in ln(displacement), constant outside 2,000 to 100,000 t",
+                 ["ln(displacement)", "tugs favourable", "tugs moderate", "tugs unfavourable",
+                  "no tugs favourable", "no tugs moderate", "no tugs unfavourable"],
+                 [(math.log(t[0]), t[1], t[2], t[3], n[1], n[2], n[3])
+                  for t, n in zip(fd.ROM_VELOCITY_TUGS, fd.ROM_VELOCITY_NO_TUGS)],
+                 ["RLX", "RT_1", "RT_2", "RT_3", "RN_1", "RN_2", "RN_3"])
+    _table(wb, ws, row, "EAU 2012 characteristic velocity (digitized at two sizes); constant above 50,000 DWT",
+           ["DWT", "favourable", "normal", "unfavourable"], list(fd.EAU_VELOCITY),
+           ["EAX", "EAY_1", "EAY_2", "EAY_3"])
+
+
+def _loglog_named(size, x, y):
+    """Log-log interpolation formula body between named columns; #N/A outside."""
+    i = f"MATCH({size},{x},1)"
+    x0, x1 = f"INDEX({x},{i})", f"INDEX({x},{i}+1)"
+    y0, y1 = f"INDEX({y},{i})", f"INDEX({y},{i}+1)"
+    return (f"IF(OR({size}<INDEX({x},1),{size}>INDEX({x},COUNT({x}))),NA(),"
+            f"IF({size}=INDEX({x},COUNT({x})),INDEX({y},COUNT({y})),"
+            f"EXP(LN({y0})+(LN({size})-LN({x0}))/(LN({x1})-LN({x0}))*(LN({y1})-LN({y0})))))")
+
+
+def _rom_velocity_formula(j):
+    x = "MIN(MAX(LN(M),INDEX(RLX,1)),INDEX(RLX,COUNT(RLX)))"
+
+    def lin(y):
+        i = f"MATCH({x},RLX,1)"
+        return (f"IF({x}>=INDEX(RLX,COUNT(RLX)),INDEX({y},COUNT({y})),"
+                f"INDEX({y},{i})+({x}-INDEX(RLX,{i}))/(INDEX(RLX,{i}+1)-INDEX(RLX,{i}))"
+                f"*(INDEX({y},{i}+1)-INDEX({y},{i})))")
+    return f"IF(TUGS=1,{lin(f'RT_{j}')},{lin(f'RN_{j}')})"
 
 
 def _c(col):
@@ -175,36 +292,81 @@ def _loglog_formula(size, cond):
 
 VEL_REF = {"pianc2002": "DWT", "ueda": "DWT", "bs6349": "M"}
 CM_REF = {"pianc2002": "=CM_P", "wg211": "=CM_P", "eau": "=CM_P", "rom": "=CM_P",
-          "bs6349": "=CM_VC", "ueda": "=CM_U"}
-CE_REF = {"pianc2002", "wg211", "eau", "rom", "bs6349", "ueda"}
+          "bs6349": "=CM_VC", "ueda": "=CM_U", "ufc": "=CM_UFC", "is4651": "=CM_VC"}
+CE_REF = {"pianc2002": "=CE", "wg211": "=CE", "eau": "=CE", "rom": "=CE", "bs6349": "=CE", "ueda": "=CE",
+          "ufc": "=CE_UFC", "is4651": "=CE_IS"}
+#: Cs and Cc formulas; a method absent here has a constant the method fixes
+#: (WG211 removes both, UFC Cd 1.0, IS 4651 Cs 0.9 and no Cc, Cc 1.0 with the
+#: PIANC keel-clearance Cm).
+CS_REF = {"pianc2002": "=CS_P", "ueda": "=CS_P", "bs6349": "=CS_P", "eau": "=CS_P", "rom": "=CS_ROM"}
+CC_REF = {"ueda": "=CC_P", "bs6349": "=CC_P", "ufc": "=CC_UFC"}
+OTHER_REF = {"ufc": "=CG_UFC", "rom": "=CG_ROM"}
+_CLASS = {"monitored": 1, "favourable": 1, "moderate": 2, "unfavourable": 3}
+
+
+def _velocity_formula(r, res, case):
+    """Velocity cell: a formula on Inputs for every size-dependent table; the
+    WG211 value depends only on the condition class (fixed at generation)."""
+    j = _CLASS[res.fcase.condition]
+    if r.method in VEL_REF:
+        own = f"V_{res.berth.navigation}_{VEL_REF[r.method]}"
+    elif r.method == "ufc":
+        own = _loglog_named("M", "UFX", f"UFY_{j}")
+    elif r.method == "rom":
+        own = _rom_velocity_formula(j)
+    elif r.method == "eau":
+        own = f"IF(DWT<INDEX(EAX,1),NA(),IF(DWT>=INDEX(EAX,2),INDEX(EAY_{j},2),{_loglog_named('DWT', 'EAX', f'EAY_{j}')}))"
+    elif r.method == "is4651":
+        a, b, c, d = fd.IS4651_VELOCITY[res.fcase.condition]
+        own = f"IF(M<=5000,{a},IF(M<=10000,{b},IF(M<=100000,{c},{d})))"
+    else:  # wg211
+        own = repr(fd.WG211_VELOCITY[res.fcase.condition][0])
+    return f'=IF(VOVR="",{own},VOVR)'
+
+
+def _factor_formula(r, res, i):
+    """Factor cell: the ROM product and the WG211 frequency correction follow
+    Inputs; other factors depend only on fixed-at-generation choices."""
+    if r.factor.source == "caller":
+        return r.factor.value
+    if r.method == "rom":
+        return (f"=MAX(IF(M<=85000,1.5,1.25)*IF(TUGS=1,1,1.25)*IF(B{i}<=0.1,1.2,1)"
+                f"*IF(NCALLS>300,1.15,1),1.1)")
+    if r.method == "wg211":
+        c = res.fcase
+        g_ref = fd.wg211_gamma_eref(c.condition, c.cov_m, c.consequence_class, c.multiple_contact)
+        (a1, b1), (a2, b2) = fd.WG211_GAMMA_N[c.consequence_class]
+        return f"={g_ref!r}*(IF(NCALLS<=100,{a1!r},{a2!r})*LN(NCALLS)+IF(NCALLS<=100,{b1!r},{b2!r}))"
+    return r.factor.value
+
+
+def _rom_cc_formula(i):
+    return (f'=IF(OR(KCD>0.5,ABS(ALPHA)>5,B{i}<0.2,STRUCT="open",CONT=0),1,'
+            f'IF(STRUCT="closed",0.9,1))')
 
 
 def _methods(wb, res):
     ws = wb.create_sheet("Methods")
     cols = ["Method", "v (m/s)", "Cm", "Ce", "Cs", "Cc", "Other (Cg)", "Normal energy (kNm)", "Factor",
             "Design energy (kNm)", "Capacity divisor", "Velocity basis", "Cm basis", "Ce basis",
-            "Factor basis", "Flags"]
+            "Factor basis", "Flags (at generation: regenerate after input change)"]
     _header(ws, 1, cols)
     for j, w in enumerate([34, 9, 8, 8, 6, 6, 9, 14, 8, 14, 9, 55, 40, 40, 55, 50], start=1):
         ws.column_dimensions[_c(j)].width = w
     sel_row = None
     for i, r in enumerate(res.methods, start=2):
         ws.cell(row=i, column=1, value=r.label)
-        if r.velocity_m_s.source != "caller" and r.method in VEL_REF:
-            v = f"=V_{res.berth.navigation}_{VEL_REF[r.method]}"
-        else:
-            v = r.velocity_m_s.value
-        ws.cell(row=i, column=2, value=v)
+        ws.cell(row=i, column=2, value=_velocity_formula(r, res, res.case))
         ws.cell(row=i, column=3, value=CM_REF.get(r.method, r.cm.value))
-        ws.cell(row=i, column=4, value="=CE" if r.method in CE_REF else r.ce.value)
-        ws.cell(row=i, column=5, value=r.cs.value)
-        ws.cell(row=i, column=6, value=r.cc.value)
+        ws.cell(row=i, column=4, value=CE_REF.get(r.method, r.ce.value))
+        ws.cell(row=i, column=5, value=CS_REF.get(r.method, r.cs.value))
+        ws.cell(row=i, column=6, value=_rom_cc_formula(i) if r.method == "rom" else CC_REF.get(r.method, r.cc.value))
         other = 1.0
         for c in r.extra:
             other *= c.value
-        ws.cell(row=i, column=7, value=other)
+        ws.cell(row=i, column=7, value=OTHER_REF.get(r.method, other))
         ws.cell(row=i, column=8, value=f"=0.5*M*B{i}^2*C{i}*D{i}*E{i}*F{i}*G{i}")
-        ws.cell(row=i, column=9, value=r.factor.value)
+        ws.cell(row=i, column=9, value=_factor_formula(r, res, i))
         ws.cell(row=i, column=10, value=f"=H{i}*I{i}")
         ws.cell(row=i, column=11, value=r.capacity_divisor)
         ws.cell(row=i, column=12, value=f"{r.velocity_m_s.source}: {r.velocity_m_s.note}")
@@ -264,17 +426,21 @@ def _fenders(wb, res):
 
 def _sensitivity(wb, res):
     ws = wb.create_sheet("Sensitivity")
-    ws.cell(row=1, column=1, value=(
-        "One-at-a-time sensitivity around the selected method. Values are written by the "
-        "generator from the Python module (not live formulas): re-run it after changing inputs. "
-        "Capacity = rated energy x (1 - tolerance) x angular factor of the base fender.")).alignment = WRAP
+    note = ws.cell(row=1, column=1, value=(
+        "REGENERATE AFTER ANY INPUT CHANGE: one-at-a-time sensitivity around the selected method, written "
+        "by the generator from the Python module (not live formulas). Capacity = rated energy x "
+        "(1 - tolerance) x angular factor of the base fender. Reaction = curve reaction x reaction factor "
+        f"{res.reaction_factor:.3f} (1 + tolerance)."))
+    note.alignment = WRAP
+    note.font = WARN_FONT
+    note.fill = WARN_FILL
     row = 3
     for s in res.sweeps:
         ws.cell(row=row, column=1, value=f"{s.label} ({s.unit})").font = HEAD
         ws.cell(row=row, column=6, value=f"base {s.base_value:.6g}; range {s.range_low:g} to {s.range_high:g} ({s.range_basis})")
         hdr = row + 1
         for j, h in enumerate(["value", "design energy (kNm)", "per fender (kNm)", "capacity (kNm)",
-                               "utilisation", "reaction (kN)", "reaction limit (kN)"], start=1):
+                               "utilisation", "reaction x reaction factor (kN)", "reaction limit (kN)"], start=1):
             ws.cell(row=hdr, column=j, value=h).font = HEAD
         for k, p in enumerate(s.points, start=hdr + 1):
             ws.cell(row=k, column=1, value=p.value)
@@ -310,7 +476,15 @@ def _tornado(wb, res):
         for j, v in enumerate([b.label, b.low_value, b.high_value, b.low_change_pct,
                                b.high_change_pct, b.span_pct, b.range_basis], start=1):
             ws.cell(row=i, column=j, value=v)
+    _banner(ws, "I1")
     return ws
+
+
+def _banner(ws, ref):
+    c = ws[ref]
+    c.value = "Written by the generator: REGENERATE after any input change"
+    c.font = WARN_FONT
+    c.fill = WARN_FILL
 
 
 def _sizes(wb, res):
@@ -325,6 +499,7 @@ def _sizes(wb, res):
                 ch["rated_energy"], ch["reaction"], ch["deflection"], ch["hull_pressure"], ch["energy_margin_pp"]]
         for j, v in enumerate(vals, start=1):
             ws.cell(row=i, column=j, value=v)
+    _banner(ws, "N1")
     return ws
 
 
@@ -353,7 +528,8 @@ def _readme(wb, res):
         f"and angular factor {res.capacity_knm:,.1f} kNm.",
         "",
         "Yellow cells on Inputs are inputs. Calc, Velocity, Methods and Fenders recalculate in Excel. "
-        "Sensitivity, Tornado and Sizes are written by the generator; re-run it after changing inputs.",
+        "The choices listed on Inputs as fixed at generation (red), and the Sensitivity, Tornado and Sizes "
+        "sheets and the Methods flags, are written by the generator: REGENERATE after changing them or any input.",
         "The workbook gives numbers only; it does not clear a design. Every value marked secondary "
         "in Sources was read in a vendor manual that reproduces the standard.",
     ]
