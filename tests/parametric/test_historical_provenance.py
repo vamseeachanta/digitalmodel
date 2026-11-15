@@ -109,6 +109,10 @@ def test_checkout_metadata_ignores_remote_tracking_refs(tmp_path, monkeypatch, d
     # The shallow boundary makes parent lookups fail; the snapshot must not need one.
     (checkout / ".git" / "shallow").write_bytes(git("rev-parse", "HEAD") + b"\n")
     assert git("rev-parse", "--is-shallow-repository") == b"true"
+    assert subprocess.run(
+        ["git", "-C", str(checkout), "rev-parse", "--verify", "-q", "HEAD^"],
+        env=env, capture_output=True,
+    ).returncode != 0
     if detached:
         git("update-ref", "--no-deref", "HEAD", git("rev-parse", "HEAD").decode())
     before = _checkout_metadata(env)
@@ -416,7 +420,7 @@ def artifact_checkout(inventory, tmp_path, tmp_path_factory, monkeypatch, reques
     git_dir = subprocess.check_output(
         ["git", "-C", str(ROOT), "rev-parse", "--absolute-git-dir"], text=True,
     ).strip()
-    (tmp_path / ".git").write_text(f"gitdir: {git_dir}\n", encoding="utf-8")
+    (tmp_path / ".git").write_text(f"gitdir: {git_dir}\n", encoding="utf-8", newline="\n")
     evidence = history.legacy_evidence.MANIFEST
     needed = {evidence.name, "blobs", *row["sources"].values(), *row["artifacts"].values()}
     shutil.copytree(ROOT / evidence.parent, tmp_path / evidence.parent,
@@ -537,7 +541,7 @@ def test_cli_reports_status_and_refuses_incomplete_audit(
     retained_record, tmp_path, monkeypatch, capsys, status,
 ):
     index = tmp_path / "index.json"
-    index.write_text(json.dumps({"atlases": [retained_record]}), encoding="utf-8")
+    index.write_text(json.dumps({"atlases": [retained_record]}), encoding="utf-8", newline="\n")
 
     def verify(*args, **kwargs):
         if status == "REJECTED":
@@ -556,7 +560,7 @@ def test_cli_exits_nonzero_on_checkout_content_drift(
     path = root / row["manifest"]
     path.write_bytes(path.read_bytes() + b"# changed\n")
     index = root / "index.json"
-    index.write_text(json.dumps({"atlases": [row]}), encoding="utf-8")
+    index.write_text(json.dumps({"atlases": [row]}), encoding="utf-8", newline="\n")
     verify = history.verify_git
 
     def verify_checkout(record, *, retained_ref):
@@ -573,7 +577,7 @@ def test_cli_reads_utf8_index_under_legacy_default(retained_record, tmp_path, mo
     index = tmp_path / "index.json"
     index.write_text(
         json.dumps({"atlases": [retained_record], "description": "\u00e9vidence"}, ensure_ascii=False),
-        encoding="utf-8",
+        encoding="utf-8", newline="\n",
     )
     read_text = Path.read_text
 
