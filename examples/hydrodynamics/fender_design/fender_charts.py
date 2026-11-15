@@ -89,11 +89,12 @@ def sweep_chart(sweep, path, title: str, fender_label: str):
             ax2.axvline(x_lim, color=LIMIT, linewidth=1.0, linestyle=":")
             ax2.annotate(f"reaches limit at {x_lim:.4g} {sweep.unit}", (x_lim, sweep.reaction_limit_kn),
                          textcoords="offset points", xytext=(4, -12), fontsize=7, color=INK)
-    over = [p.value for p in sweep.points if p.reaction_kn is None]
-    if over:
-        ax2.axvspan(min(over), max(xs), color=LIMIT, alpha=0.08, zorder=0)
-        ax2.text(min(over), 0.0, " above rated energy:\n reaction not rated", fontsize=7,
-                 color=INK2, va="bottom")
+    spans = unrated_intervals(xs, [p.reaction_kn is not None for p in sweep.points])
+    for i, (lo, hi) in enumerate(spans):
+        ax2.axvspan(lo, hi, color=LIMIT, alpha=0.08, zorder=0)
+        if i == 0:
+            ax2.text(lo, 0.0, " above rated energy:\n reaction not rated", fontsize=7,
+                     color=INK2, va="bottom")
     rf = getattr(sweep, "reaction_factor", 1.0)
     ax2.set_ylabel("reaction per fender (kN)" if rf == 1.0 else f"reaction per fender x {rf:.2f} (kN)")
     ax2.set_ylim(bottom=0)
@@ -104,6 +105,32 @@ def sweep_chart(sweep, path, title: str, fender_label: str):
              f"({sweep.range_basis}). Dotted: base.{rf_note}", transform=ax2.transAxes, ha="right",
              fontsize=6.5, color=MUTED, wrap=True)
     return _save(fig, path)
+
+
+def unrated_intervals(xs, rated) -> list[tuple[float, float]]:
+    """Contiguous x-intervals of the points that are not rated.
+
+    ``xs`` are the sweep values in order and ``rated`` says, point by point,
+    whether a reaction exists. Each run of unrated points becomes one
+    interval that extends halfway to the neighbouring rated point (or to the
+    end of the sweep), so rated points are never shaded.
+    """
+    xs, rated = list(xs), list(rated)
+    if len(xs) != len(rated):
+        raise ValueError("xs and rated differ in length")
+    out, i, n = [], 0, len(xs)
+    while i < n:
+        if rated[i]:
+            i += 1
+            continue
+        j = i
+        while j + 1 < n and not rated[j + 1]:
+            j += 1
+        lo = xs[i] if i == 0 else 0.5 * (xs[i - 1] + xs[i])
+        hi = xs[j] if j == n - 1 else 0.5 * (xs[j] + xs[j + 1])
+        out.append((lo, hi))
+        i = j + 1
+    return out
 
 
 def tornado_chart(bars, path, title: str, base_energy_knm: float):
@@ -215,8 +242,13 @@ def range_by_type_chart(stats, path, title: str, xlabel: str):
 
 
 def size_comparison_chart(rows, path, title: str, design_energy_knm: float,
-                          reaction_limit_kn: float | None = None):
-    """Rated energy and reaction of neighbouring sizes (two panels, one scale each)."""
+                          reaction_limit_kn: float | None = None, basis_note: str = ""):
+    """Energy capacity and reaction of neighbouring sizes (two panels, one scale each).
+
+    ``energy_knm`` and ``reaction_kn`` in each row are the values to compare
+    with the demand and the limit, i.e. after the case's tolerances,
+    reductions and capacity divisor; ``basis_note`` states that basis.
+    """
     fig, (ax1, ax2) = _fig(2, height=5.0, sharex=True)
     names = [r["label"] for r in rows]
     xs = list(range(len(rows)))
@@ -230,7 +262,7 @@ def size_comparison_chart(rows, path, title: str, design_energy_knm: float,
     for x, r in zip(xs, rows):
         ax1.text(x, r["energy_knm"], f"{r['energy_change_pct']:+.0f} %", ha="center", va="bottom",
                  fontsize=7, color=INK)
-    ax1.set_ylabel("energy capacity (kNm)")
+    ax1.set_ylabel("design energy capacity (kNm)")
     ax2.bar(xs, [r["reaction_kn"] for r in rows], color=c1, edgecolor=SURFACE, width=0.6)
     if reaction_limit_kn:
         ax2.axhline(reaction_limit_kn, color=LIMIT, linestyle="--", linewidth=1.5)
@@ -239,10 +271,10 @@ def size_comparison_chart(rows, path, title: str, design_energy_knm: float,
     for x, r in zip(xs, rows):
         ax2.text(x, r["reaction_kn"], f"{r['reaction_change_pct']:+.0f} %", ha="center", va="bottom",
                  fontsize=7, color=INK)
-    ax2.set_ylabel("rated reaction (kN)")
+    ax2.set_ylabel("design reaction (kN)")
     ax2.set_xticks(xs)
     ax2.set_xticklabels(names, fontsize=7.5, rotation=20, ha="right", color=INK)
     ax1.set_title(title, fontsize=9.5, color=INK, loc="left")
-    ax2.text(1.0, -0.45, "Orange: base choice. Labels: % change from the base.", transform=ax2.transAxes,
-             ha="right", fontsize=6.5, color=MUTED)
+    ax2.text(1.0, -0.45, "Orange: base choice. Labels: % change from the base." + (f" {basis_note}" if basis_note else ""),
+             transform=ax2.transAxes, ha="right", fontsize=6.5, color=MUTED, wrap=True)
     return _save(fig, path)

@@ -19,7 +19,7 @@
       "design": 680.8385800390707,
       "divisor": 1.0,
       "flags": [
-        "citation not resolved against the wiki: PIANC-WG33-2002 (page_missing); values carry the source register only"
+        "citation not resolved against the wiki: PIANC-WG33-2002 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
       ],
       "outside_validity": [],
       "sources": {
@@ -81,7 +81,7 @@
       "divisor": 1.1,
       "flags": [
         "WG211 factors from the 2024 background papers; final guideline tables not read",
-        "citation not resolved against the wiki: PIANC-WG211-2024 (page_missing), PIANC-WG33-2002 (page_missing); values carry the source register only"
+        "citation not resolved against the wiki: PIANC-WG211-2024 (page_missing), PIANC-WG33-2002 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
       ],
       "outside_validity": [],
       "sources": {
@@ -128,7 +128,7 @@
       "design": 574.3224441345017,
       "divisor": 1.0,
       "flags": [
-        "citation not resolved against the wiki: BS-6349-4 (page_missing), vasco-costa-1964 (page_missing), PIANC-WG33-2002 (page_missing); values carry the source register only"
+        "citation not resolved against the wiki: BS-6349-4 (page_missing), vasco-costa-1964 (page_missing), PIANC-WG33-2002 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
       ],
       "outside_validity": [],
       "sources": {
@@ -192,7 +192,7 @@
       "divisor": 1.0,
       "flags": [
         "EAU velocities digitized at two sizes only",
-        "citation not resolved against the wiki: EAU-2012 (page_missing), PIANC-WG33-2002 (page_missing); values carry the source register only"
+        "citation not resolved against the wiki: EAU-2012 (page_missing), PIANC-WG33-2002 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
       ],
       "outside_validity": [],
       "sources": {
@@ -249,7 +249,7 @@
       "design": 1001.6632020912107,
       "divisor": 1.0,
       "flags": [
-        "citation not resolved against the wiki: ROM-2.0-11 (page_missing); values carry the source register only"
+        "citation not resolved against the wiki: ROM-2.0-11 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
       ],
       "outside_validity": [],
       "sources": {
@@ -276,23 +276,23 @@
       "method": "ufc",
       "label": "UFC 4-152-01 (2017 C1)",
       "velocity": 0.09884951278705814,
-      "cm": 3.8755158267397025,
+      "cm": 3.426532828102239,
       "ce": 0.5400727886754333,
       "cs": 1.0,
       "cc": 1.0,
       "other": 0.95,
-      "normal": 582.8754141976701,
+      "normal": 515.3486221528855,
       "factor": 1.5,
-      "design": 874.3131212965052,
+      "design": 773.0229332293281,
       "divisor": 1.0,
       "flags": [
         "below 0.10 m/s: use with caution (TFADM p. 23)",
-        "citation not resolved against the wiki: UFC-4-152-01 (page_missing); values carry the source register only"
+        "citation not resolved against the wiki: UFC-4-152-01 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
       ],
       "outside_validity": [],
       "sources": {
         "velocity_m_s": "ufc-4-152-01: Fig. 5-3/5-4, moderate (sheltered/moderate/exposed), digitized",
-        "cm": "ufc-4-152-01: 5-2.1.1 e surface vessels",
+        "cm": "ufc-4-152-01: 5-2.1.1 e surface vessels; F 0.770 from berthing coefficient Ce Cg Cd Cc = 0.513 (Eq. 5-2, p. 106; p. 109)",
         "ce": "ufc-4-152-01: k^2/(a^2 + k^2), k 48.76 m, a 45.00 m",
         "cs": "ufc-4-152-01: Cd 1.0 for larger ships on energy-absorbing fenders",
         "cc": "ufc-4-152-01: open berth or angled approach",
@@ -324,7 +324,7 @@
       "design": 659.6542345176055,
       "divisor": 1.0,
       "flags": [
-        "citation not resolved against the wiki: PIANC-WG33-2002 (page_missing), ueda-1981 (page_missing); values carry the source register only"
+        "citation not resolved against the wiki: PIANC-WG33-2002 (page_missing), ueda-1981 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
       ],
       "outside_validity": [],
       "sources": {
@@ -387,7 +387,7 @@
       "divisor": 1.0,
       "flags": [
         "withdrawn standard; comparison only",
-        "citation not resolved against the wiki: IS-4651-3 (page_missing); values carry the source register only"
+        "citation not resolved against the wiki: IS-4651-3 (page_missing); values carry the source register only (citations='record', explicit opt-out)"
       ],
       "outside_validity": [],
       "sources": {
@@ -574,6 +574,79 @@
     "phi_deg": 65.42687416958981,
     "ce": 0.5950658584780236
   },
+  "size_checks": [
+    {
+      "fender_id": "GEN-PN-4",
+      "is_base": true,
+      "rated_energy": 700.0,
+      "capacity": 700.0,
+      "utilisation": 0.9726265429129582,
+      "rated_reaction": 1450.0,
+      "reaction": 1595.0000000000002,
+      "hull_pressure": 231.00000000000003,
+      "meets_energy": true,
+      "meets_reaction": true,
+      "meets_pressure": false,
+      "meets_all": false
+    },
+    {
+      "fender_id": "GEN-PN-2",
+      "is_base": false,
+      "rated_energy": 250.0,
+      "capacity": 250.0,
+      "utilisation": 2.723354320156283,
+      "rated_reaction": 800.0,
+      "reaction": 880.0000000000001,
+      "hull_pressure": 143.0,
+      "meets_energy": false,
+      "meets_reaction": true,
+      "meets_pressure": true,
+      "meets_all": false
+    },
+    {
+      "fender_id": "GEN-PN-3",
+      "is_base": false,
+      "rated_energy": 400.0,
+      "capacity": 400.0,
+      "utilisation": 1.7020964500976767,
+      "rated_reaction": 1100.0,
+      "reaction": 1210.0,
+      "hull_pressure": 148.5,
+      "meets_energy": false,
+      "meets_reaction": true,
+      "meets_pressure": true,
+      "meets_all": false
+    },
+    {
+      "fender_id": "GEN-PN-5",
+      "is_base": false,
+      "rated_energy": 900.0,
+      "capacity": 900.0,
+      "utilisation": 0.7564873111545231,
+      "rated_reaction": 1600.0,
+      "reaction": 1760.0000000000002,
+      "hull_pressure": 165.0,
+      "meets_energy": true,
+      "meets_reaction": false,
+      "meets_pressure": true,
+      "meets_all": false
+    },
+    {
+      "fender_id": "GEN-FM-6",
+      "is_base": false,
+      "rated_energy": 1000.0,
+      "capacity": 1000.0,
+      "utilisation": 0.6808385800390707,
+      "rated_reaction": 1400.0,
+      "reaction": 1540.0000000000002,
+      "hull_pressure": 198.00000000000003,
+      "meets_energy": true,
+      "meets_reaction": true,
+      "meets_pressure": true,
+      "meets_all": true
+    }
+  ],
+  "citation_mode": "record",
   "charts": {
     "methods": "methods.png",
     "cm": "cm_methods.png",

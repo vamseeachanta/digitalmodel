@@ -23,6 +23,73 @@ from digitalmodel.hydrodynamics.berthing_energy import (
 )
 
 
+@dataclass(frozen=True)
+class SizeCheck:
+    """One neighbouring size with the case's design adjustments applied.
+
+    ``capacity_knm`` = rated energy x (1 - energy tolerance) x angular factor
+    / the selected method's capacity divisor (WG211 gamma_m), the same basis
+    as the base fender's capacity. ``reaction_kn`` and ``hull_pressure_kpa``
+    are the rated-deflection values x (1 + reaction tolerance), compared with
+    the limits as given. A check without a limit is None.
+    """
+
+    fender_id: str
+    is_base: bool
+    rated_energy_knm: float
+    capacity_knm: float
+    utilisation: float
+    rated_reaction_kn: float
+    reaction_kn: float
+    hull_pressure_kpa: float | None
+    meets_energy: bool
+    meets_reaction: bool | None
+    meets_pressure: bool | None
+
+    @property
+    def meets_all(self) -> bool:
+        return self.meets_energy and self.meets_reaction is not False and self.meets_pressure is not False
+
+
+def size_checks(fenders, base_id: str, energy_per_fender_knm: float, design: dict,
+                capacity_divisor: float = 1.0) -> list[SizeCheck]:
+    """Check each fender in ``fenders`` against the case demand and limits,
+    with the configured tolerances, angular factor and capacity divisor
+    (``design`` is the case's ``design`` block)."""
+    r_lim = design.get("reaction_limit_kn")
+    p_lim = design.get("hull_pressure_limit_kpa")
+    out = []
+    for f in fenders:
+        dp = fd.design_performance(
+            f,
+            energy_tolerance=design.get("energy_tolerance", 0.0),
+            reaction_tolerance=design.get("reaction_tolerance", 0.10),
+            angular_factor=design.get("angular_factor", 1.0),
+        )
+        cap = dp.energy_knm / capacity_divisor
+        rf = dp.reaction_kn / f.reaction_kn
+        p = None if f.hull_pressure_kpa is None else f.hull_pressure_kpa * rf
+        out.append(SizeCheck(
+            fender_id=f.fender_id, is_base=f.fender_id == base_id,
+            rated_energy_knm=f.rated_energy_knm, capacity_knm=cap,
+            utilisation=energy_per_fender_knm / cap,
+            rated_reaction_kn=f.reaction_kn, reaction_kn=dp.reaction_kn, hull_pressure_kpa=p,
+            meets_energy=cap >= energy_per_fender_knm,
+            meets_reaction=None if r_lim is None else dp.reaction_kn <= r_lim,
+            meets_pressure=None if (p_lim is None or p is None) else p <= p_lim,
+        ))
+    return out
+
+
+def size_basis(res) -> str:
+    """One sentence: the adjustments applied to every neighbouring size."""
+    d = res.case["design"]
+    div = res.selected.capacity_divisor
+    return (f"Energy: rated x (1 - {d.get('energy_tolerance', 0.0):.2f}) x angular {d.get('angular_factor', 1.0):.2f}"
+            + (f" / {div:.2f} ({res.selected.label} capacity divisor)" if div != 1.0 else "")
+            + f". Reaction and hull pressure: rated-deflection value x (1 + {d.get('reaction_tolerance', 0.10):.2f}).")
+
+
 @dataclass
 class CaseResult:
     case: dict
@@ -42,6 +109,8 @@ class CaseResult:
     fcase: fd.Case | None = None
     sweeps_skipped: dict = field(default_factory=dict)
     perf_basis: dict = field(default_factory=dict)
+    size_checks: list = field(default_factory=list)
+    citation_mode: str = "strict"
 
     @property
     def reaction_factor(self) -> float:
@@ -112,7 +181,16 @@ def load_case(path) -> dict:
     return case
 
 
-def compute(case: dict, catalogue_path: str | Path | None = None) -> CaseResult:
+def compute(case: dict, catalogue_path: str | Path | None = None, citations: str | None = None) -> CaseResult:
+    """Every result of a case.
+
+    ``citations`` is the citation mode of the method results: ``strict``
+    (default) raises when a cited wiki page is missing or no wiki is
+    configured; ``record`` is the explicit opt-out that records each
+    unresolved citation and flags the result. The argument overrides the
+    case file's ``citations: {mode: ...}``; the mode used is kept in
+    :attr:`CaseResult.citation_mode` for the report.
+    """
     base_dir = Path(case.get("_dir", "."))
     s, b, d = case["ship"], case["berth"], case["design"]
     ship = fd.Ship(**s)
@@ -123,9 +201,12 @@ def compute(case: dict, catalogue_path: str | Path | None = None) -> CaseResult:
         factor=d.get("factor"),
         factor_position=d.get("factor_position", "smallest"),
     )
-    # citation sidecar: mode record (default), strict or off; wiki_root optional
+    # citation sidecar: strict (default, fail-closed) or the explicit opt-out record
     cit = case.get("citations") or {}
-    ckw = dict(citations=cit.get("mode", "record"), citation_root=_resolve(base_dir, cit.get("wiki_root")))
+    mode = citations or cit.get("mode", "strict")
+    if mode not in ("strict", "record"):
+        raise ValueError(f"case citation mode must be strict or record, not {mode!r}")
+    ckw = dict(citations=mode, citation_root=_resolve(base_dir, cit.get("wiki_root")))
     methods = fd.compare_methods(fcase, methods=d.get("methods"), **kw, **ckw)
     skipped = fd.compare_methods_skipped(fcase, methods=d.get("methods"), **kw, citations="off")
     # the selected method uses its own velocity and factor unless the case overrides them
@@ -162,11 +243,14 @@ def compute(case: dict, catalogue_path: str | Path | None = None) -> CaseResult:
     excluded = fd.inapplicable_sweeps(d["method"])
     sweeps_skipped = {k: excluded[k] for k in ranges if k in excluded}
     bars = fd.tornado(sweeps)
-    sizes = []
+    sizes, checks = [], []
     ids = d.get("neighbour_ids")
     if ids:
         per = selected.design_energy_knm / d.get("fenders_in_contact", 1)
         sizes = fender_size_sensitivity(catalogue, base_fender.fender_id, per, fender_ids=ids)
+        checks = size_checks([r.fender for r in sizes], base_fender.fender_id, per, d,
+                             selected.capacity_divisor)
     return CaseResult(case, ship, berth, methods, skipped, selected, catalogue, base_fender,
                       capacity, design, curve, sweeps, bars, sizes, fcase, sweeps_skipped,
-                      {f.fender_id: bases.get(f.fender_id, "") for f in catalogue} if bases else {})
+                      {f.fender_id: bases.get(f.fender_id, "") for f in catalogue} if bases else {},
+                      checks, mode)

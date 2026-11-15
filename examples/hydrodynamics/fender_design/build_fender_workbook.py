@@ -151,9 +151,6 @@ CALC_ROWS = (
     ("CM_P", "Cm, PIANC 2002 keel clearance", "=IF(KCD<=0.1,1.8,IF(KCD>=0.5,1.5,1.875-0.75*KCD))", "PIANC 2002 4.2.5 (SFT p. 18)"),
     ("CM_VC", "Cm, Vasco Costa 1 + 2T/B", "=1+2*T/BEAM", "Vasco Costa 1964"),
     ("CM_U", "Cm, Ueda 1 + pi T / (2 Cb B)", "=1+PI()*T/(2*CB*BEAM)", "Ueda 1981"),
-    ("CM_UFC", "Cm, UFC C_M0 + (C_m1 - C_M0)(T/d)^3.5",
-     "=(1.3+1.5*T/BEAM)+(IF(CB<0.6,1.5*CB,0.9)*(12.4*(T/BEAM)^0.3-50*T/LBP)-(1.3+1.5*T/BEAM))*(T/DEPTH)^3.5",
-     "UFC 4-152-01 5-2.1.1 e"),
     ("XA", "Contact distance from midships along the ship, a = |LBP/2 - x|", "=ABS(LBP/2-X)", "UFC, IS 4651"),
     ("CE_UFC", "Ce, UFC k^2 / (a^2 + k^2)", "=K^2/(XA^2+K^2)", "UFC 4-152-01 5-2.1"),
     ("CG_UFC", "Cg, UFC 0.95 at or beyond the quarter points, else 1.0", "=IF(XA>=LBP/4-1E-9,0.95,1)",
@@ -168,6 +165,11 @@ CALC_ROWS = (
      "PIANC 2002 4.2.7 (SFT p. 20)"),
     ("CC_UFC", "Cc, UFC: open or angled 1.0, solid 0.8, between 0.9",
      '=IF(OR(STRUCT="open",ABS(ALPHA)>5),1,IF(STRUCT="closed",0.8,0.9))', "UFC 4-152-01 5-2.1"),
+    ("CB_UFC", "Berthing coefficient, UFC Cb = Ce Cg Cd Cc (Cd 1.0)", "=CE_UFC*CG_UFC*1*CC_UFC",
+     "UFC 4-152-01 Eq. 5-2, p. 106"),
+    ("CM_UFC", "Cm, UFC C_M0 + (C_m1 - C_M0)(T/d)^3.5, F = 1.5 Cb (Cb < 0.6) or 0.9, Cb berthing coefficient",
+     "=(1.3+1.5*T/BEAM)+(IF(CB_UFC<0.6,1.5*CB_UFC,0.9)*(12.4*(T/BEAM)^0.3-50*T/LBP)-(1.3+1.5*T/BEAM))*(T/DEPTH)^3.5",
+     "UFC 4-152-01 5-2.1.1 e, p. 109"),
     ("CG_ROM", "Cg, ROM: 0.95 continuous berth, 1.0 dolphins", "=IF(CONT=1,0.95,1)", "ROM 2.0-11"),
 )
 
@@ -488,18 +490,27 @@ def _banner(ws, ref):
 
 
 def _sizes(wb, res):
+    """Neighbouring sizes with the case's design adjustments (tolerances,
+    angular factor, capacity divisor) applied before the limit checks."""
     ws = wb.create_sheet("Sizes")
-    _header(ws, 1, ["Fender", "Base", "Rated E (kNm)", "Rated R (kN)", "Hull p (kPa)", "Deflection (mm)",
-                    "Energy margin (%)", "dE (%)", "dR (%)", "dDefl (%)", "dp (%)", "dMargin (pp)"],
-            [18, 6, 12, 12, 11, 13, 14, 8, 8, 9, 8, 11])
-    for i, r in enumerate(res.sizes, start=2):
-        ch = r.change_pct
-        vals = [r.fender.fender_id, "base" if r.is_base else "", r.fender.rated_energy_knm,
-                r.fender.reaction_kn, r.fender.hull_pressure_kpa, r.deflection_mm, r.energy_margin_pct,
-                ch["rated_energy"], ch["reaction"], ch["deflection"], ch["hull_pressure"], ch["energy_margin_pp"]]
+    _header(ws, 1, ["Fender", "Base", "Rated E (kNm)", "Design capacity (kNm)", "Utilisation",
+                    "Rated R (kN)", "Design R (kN)", "Design hull p (kPa)", "Energy met", "Reaction met",
+                    "Pressure met", "Deflection (mm)", "dE rated (%)", "dR rated (%)"],
+            [18, 6, 12, 14, 11, 12, 12, 13, 10, 11, 11, 13, 11, 11])
+    rows = {r.fender.fender_id: r for r in res.sizes}
+
+    def yn(x):
+        return "-" if x is None else ("yes" if x else "no")
+    for i, c in enumerate(res.size_checks, start=2):
+        r = rows[c.fender_id]
+        vals = [c.fender_id, "base" if c.is_base else "", c.rated_energy_knm, c.capacity_knm, c.utilisation,
+                c.rated_reaction_kn, c.reaction_kn, c.hull_pressure_kpa, yn(c.meets_energy), yn(c.meets_reaction),
+                yn(c.meets_pressure), r.deflection_mm, r.change_pct["rated_energy"], r.change_pct["reaction"]]
         for j, v in enumerate(vals, start=1):
             ws.cell(row=i, column=j, value=v)
-    _banner(ws, "N1")
+    from fender_case import size_basis
+    ws.cell(row=len(res.size_checks) + 3, column=1, value=size_basis(res))
+    _banner(ws, "P1")
     return ws
 
 

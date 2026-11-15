@@ -22,7 +22,7 @@ from fender_case import compute, load_case  # noqa: E402
 
 @pytest.fixture(scope="module")
 def built(tmp_path_factory):
-    res = compute(load_case(EXAMPLE / "generic_case.yaml"))
+    res = compute(load_case(EXAMPLE / "generic_case.yaml"), citations="record")
     out = tmp_path_factory.mktemp("wb") / "generic.xlsx"
     build_workbook(res, out)
     return res, out
@@ -80,7 +80,7 @@ def test_changed_inputs_recompute_every_method(built, tmp_path):
     case["berth"].update(water_depth_m=CHANGED["DEPTH"], contact_x_from_bow_m=CHANGED["X"],
                          berthing_angle_deg=CHANGED["ALPHA"], structure="closed", fender_deflection_m=0.12)
     case["conditions"].update(berthings_per_year=400, continuous_berth=True, tugs=True)
-    new = {r.method: r for r in compute(case).methods}
+    new = {r.method: r for r in compute(case, citations="record").methods}
     assert set(new) == {r.method for r in res.methods}
     for i, r in enumerate(res.methods, start=2):
         m = new[r.method]
@@ -101,12 +101,25 @@ def test_velocity_override_cell_drives_every_method(built, tmp_path):
     vals = _calculate(changed)
     case = load_case(EXAMPLE / "generic_case.yaml")
     case["design"]["velocity_m_s"] = 0.08
-    new = {r.method: r for r in compute(case).methods}
+    new = {r.method: r for r in compute(case, citations="record").methods}
     for i, r in enumerate(res.methods, start=2):
         assert vals[f"METHODS!B{i}"] == pytest.approx(0.08)
         assert vals[f"METHODS!J{i}"] == pytest.approx(new[r.method].design_energy_knm, rel=1e-9), r.method
     rom_row = [r.method for r in res.methods].index("rom") + 2
     assert vals[f"METHODS!I{rom_row}"] == pytest.approx(1.80)   # ROM Table 4.6.4.43 at v <= 0.10
+
+
+def test_ufc_row_reproduces_the_hand_regression(built, tmp_path):
+    # UFC 4-152-01 Eq. 5-2 / p. 109 hand case (test_methods_codes): block coefficient 0.40,
+    # midships, 0.10 m/s -> berthing coefficient 1.0, F 0.9, Cm 3.8755, 823.7 kNm
+    res, out = built
+    changed = tmp_path / "ufc.xlsx"
+    _set_inputs(out, changed, dict(M=0.40 * 1.025 * 180 * 32 * 12, X=90.0, ALPHA=0.0, VOVR=0.10))
+    vals = _calculate(changed)
+    assert vals["CALC!B2"] == pytest.approx(0.40)
+    row = [r.method for r in res.methods].index("ufc") + 2
+    assert vals[f"METHODS!C{row}"] == pytest.approx(3.87552, abs=5e-5)
+    assert vals[f"METHODS!J{row}"] == pytest.approx(823.7, abs=0.05)
 
 
 def test_fixed_choices_marked_for_regeneration(built):

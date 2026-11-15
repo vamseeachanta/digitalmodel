@@ -196,7 +196,7 @@ def _hand(v, cm, cc, f):
 
 
 def test_pianc2002_hand_check():
-    res = fd.energy_by_method(SHIP, BERTH, "pianc2002", factor_position="largest")
+    res = fd.energy_by_method(SHIP, BERTH, "pianc2002", factor_position="largest", citations="off")
     v = fd.brolsma_velocity(48_000, "b")
     e, ce = _hand(v, 1.875 - 0.75 * 2 / 12, 1.0, 1.25)
     assert res.velocity_m_s.value == pytest.approx(v)
@@ -208,14 +208,14 @@ def test_pianc2002_hand_check():
 
 
 def test_bs6349_uses_displacement_and_vasco_costa():
-    res = fd.energy_by_method(SHIP, BERTH, "bs6349")
+    res = fd.energy_by_method(SHIP, BERTH, "bs6349", citations="off")
     v = fd.brolsma_velocity(60_000, "b")
     e, _ = _hand(v, 1 + 24 / 32, 1.0, 1.75)
     assert res.design_energy_knm == pytest.approx(e, rel=1e-12)
 
 
 def test_overrides_named_as_caller():
-    res = fd.energy_by_method(SHIP, BERTH, "pianc2002", velocity_m_s=0.12, factor=1.5)
+    res = fd.energy_by_method(SHIP, BERTH, "pianc2002", velocity_m_s=0.12, factor=1.5, citations="off")
     assert res.velocity_m_s.source == "caller" and res.factor.source == "caller"
     e, _ = _hand(0.12, 1.75, 1.0, 1.5)
     assert res.design_energy_knm == pytest.approx(e)
@@ -223,15 +223,15 @@ def test_overrides_named_as_caller():
 
 def test_grounded_ship_and_missing_dwt_raise():
     with pytest.raises(ValueError, match="keel clearance"):
-        fd.energy_by_method(SHIP, fd.Berth(12.0, 45.0), "pianc2002")
+        fd.energy_by_method(SHIP, fd.Berth(12.0, 45.0), "pianc2002", citations="off")
     no_dwt = fd.Ship(60_000, 180.0, 32.0, 12.0)
     with pytest.raises(ValueError, match="DWT"):
-        fd.energy_by_method(no_dwt, BERTH, "pianc2002")
-    assert "pianc2002" in fd.compare_methods_skipped(no_dwt, BERTH)
+        fd.energy_by_method(no_dwt, BERTH, "pianc2002", citations="off")
+    assert "pianc2002" in fd.compare_methods_skipped(no_dwt, BERTH, citations="off")
 
 
 def test_compare_methods_covers_registered_methods():
-    results = fd.compare_methods(SHIP, BERTH)
+    results = fd.compare_methods(SHIP, BERTH, citations="off")
     assert {r.method for r in results} == set(fd.METHODS)
     for r in results:
         assert r.design_energy_knm > 0
@@ -240,7 +240,7 @@ def test_compare_methods_covers_registered_methods():
 
 def test_vasco_costa_validity_flag():
     shallow = fd.Berth(12.5, 45.0)
-    res = fd.energy_by_method(SHIP, shallow, "bs6349")
+    res = fd.energy_by_method(SHIP, shallow, "bs6349", citations="off")
     assert any("validity" in f for f in res.flags)
 
 
@@ -254,7 +254,7 @@ def test_standard_sweeps_base_matches_method():
         "factor": fd.SweepRange(1.25, 1.75, "test"),
     }
     sweeps = fd.standard_sweeps(fd.Case(SHIP, BERTH), "pianc2002", fender, ranges, factor_position="largest")
-    base = fd.energy_by_method(SHIP, BERTH, "pianc2002", factor_position="largest").design_energy_knm
+    base = fd.energy_by_method(SHIP, BERTH, "pianc2002", factor_position="largest", citations="off").design_energy_knm
     for s in sweeps:
         assert s.base_design_energy_knm == pytest.approx(base, rel=1e-9), s.parameter
         assert s.at(s.base_value).design_energy_knm == pytest.approx(base, rel=1e-9)

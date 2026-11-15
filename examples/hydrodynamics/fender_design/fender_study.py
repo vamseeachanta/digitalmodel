@@ -31,7 +31,7 @@ from pathlib import Path
 from digitalmodel.hydrodynamics import fender_design as fd
 
 from build_fender_workbook import build_workbook
-from fender_case import compute, load_case
+from fender_case import compute, load_case, size_basis
 import fender_charts as fc
 
 SWEEP_TITLES = {
@@ -73,8 +73,13 @@ def charts(res, out: Path, fender_label: str, db_counts=None) -> dict[str, str]:
         ("PIANC 2002 / ROM / WG211 (keel clearance)", ratios, cm_series(lambda d: fd.added_mass_factor(s, d, "pianc2002"))),
         ("Vasco Costa 1 + 2T/B (BS 6349, IS 4651)", ratios, cm_series(lambda d: fd.added_mass_factor(s, d, "vasco_costa"))),
         ("Ueda 1 + pi T/(2 Cb B) (Japan)", ratios, cm_series(lambda d: fd.added_mass_factor(s, d, "ueda"))),
-        ("UFC 4-152-01 surface vessel", ratios, cm_series(lambda d: fd.ufc_added_mass(s, d))),
     ]
+    ufc = next((r for r in res.methods if r.method == "ufc"), None)
+    if ufc is not None:
+        # F uses the berthing coefficient Ce Cg Cd Cc of the base contact point
+        cbb = ufc.geometry["cb_berthing"]
+        series.append((f"UFC 4-152-01 surface vessel (berthing coeff. {cbb:.3f})", ratios,
+                       cm_series(lambda d: fd.ufc_added_mass(s, d, cbb))))
     kcd = (res.berth.water_depth_m - s.draft_m) / s.draft_m
     made["cm"] = fc.line_family_chart(
         series, cdir / "cm_methods.png", "Added mass factor Cm against keel clearance",
@@ -100,15 +105,17 @@ def charts(res, out: Path, fender_label: str, db_counts=None) -> dict[str, str]:
     made["tornado"] = fc.tornado_chart(res.bars, cdir / "tornado.png",
                                        "Which inputs move the design energy most (one at a time)",
                                        res.selected.design_energy_knm).name
-    if res.sizes:
-        rows = [dict(label=r.fender.fender_id, is_base=r.is_base, energy_knm=r.fender.rated_energy_knm,
-                     reaction_kn=r.fender.reaction_kn,
-                     energy_change_pct=r.change_pct["rated_energy"] or 0.0,
-                     reaction_change_pct=r.change_pct["reaction"] or 0.0) for r in res.sizes]
+    if res.size_checks:
+        base = next(c for c in res.size_checks if c.is_base)
+        rows = [dict(label=c.fender_id, is_base=c.is_base, energy_knm=c.capacity_knm, reaction_kn=c.reaction_kn,
+                     energy_change_pct=(c.capacity_knm / base.capacity_knm - 1.0) * 100.0,
+                     reaction_change_pct=(c.reaction_kn / base.reaction_kn - 1.0) * 100.0)
+                for c in res.size_checks]
         rows.sort(key=lambda r: r["energy_knm"])
         made["sizes"] = fc.size_comparison_chart(
             rows, cdir / "sizes.png", "Neighbouring fender sizes against the base",
-            res.selected.design_energy_knm / n, res.case["design"].get("reaction_limit_kn")).name
+            res.selected.design_energy_knm / n, res.case["design"].get("reaction_limit_kn"),
+            basis_note=size_basis(res)).name
     if db_counts:
         made["database"] = database_chart(db_counts, cdir / "database_coverage.png")
     return made
@@ -180,6 +187,12 @@ def results_dict(res) -> dict:
         sweeps_skipped=res.sweeps_skipped,
         tornado=[dict(parameter=b.parameter, span_pct=b.span_pct) for b in res.bars],
         geometry=res.selected.geometry,
+        size_checks=[dict(fender_id=c.fender_id, is_base=c.is_base, rated_energy=c.rated_energy_knm,
+                          capacity=c.capacity_knm, utilisation=c.utilisation, rated_reaction=c.rated_reaction_kn,
+                          reaction=c.reaction_kn, hull_pressure=c.hull_pressure_kpa,
+                          meets_energy=c.meets_energy, meets_reaction=c.meets_reaction,
+                          meets_pressure=c.meets_pressure, meets_all=c.meets_all) for c in res.size_checks],
+        citation_mode=res.citation_mode,
     )
     return out
 
@@ -187,7 +200,7 @@ def results_dict(res) -> dict:
 def method_notes(r) -> str:
     """Flags of a method result for a table cell (validity first); the
     citation qualification is reported in its own table."""
-    flags = [f for f in r.flags if not f.startswith("citation not resolved")]
+    flags = [f for f in r.flags if not f.startswith("citation not resolved") and f != fd.CITATIONS_NOT_CHECKED]
     flags.sort(key=lambda f: fc.VALIDITY_MARK not in f)
     return "; ".join(("**" + f + "**") if fc.VALIDITY_MARK in f else f for f in flags) or "-"
 
@@ -233,14 +246,21 @@ def tables(res) -> dict[str, str]:
     t["tornado_table"] = md_table(
         ["Rank", "Input", "Span of design energy (percentage points)"],
         [[i, b.label, f"{b.span_pct:.0f}"] for i, b in enumerate(res.bars, start=1)])
-    if res.sizes:
+    if res.size_checks:
+        d = res.case["design"]
+        r_lim, p_lim = d.get("reaction_limit_kn"), d.get("hull_pressure_limit_kpa")
+
+        def yn(x):
+            return "-" if x is None else ("yes" if x else "**no**")
         t["sizes_table"] = md_table(
-            ["Fender", "Rated energy (kNm)", "Rated reaction (kN)", "Hull pressure (kPa)", "Energy margin (%)",
-             "dE (%)", "dR (%)", "dp (%)"],
-            [[r.fender.fender_id + (" (base)" if r.is_base else ""), _f(r.fender.rated_energy_knm, 0),
-              _f(r.fender.reaction_kn, 0), _f(r.fender.hull_pressure_kpa, 0), f"{r.energy_margin_pct:+.0f}",
-              _f(r.change_pct["rated_energy"], 0), _f(r.change_pct["reaction"], 0),
-              _f(r.change_pct["hull_pressure"], 0)] for r in res.sizes])
+            ["Fender", "Rated energy (kNm)", "Design capacity (kNm)", "Utilisation",
+             "Rated reaction (kN)", "Design reaction (kN)", "Design hull pressure (kPa)",
+             "Energy", f"Reaction <= {_f(r_lim, 0)} kN", f"Pressure <= {_f(p_lim, 0)} kPa"],
+            [[c.fender_id + (" (base)" if c.is_base else ""), _f(c.rated_energy_knm, 0), _f(c.capacity_knm, 0),
+              f"{c.utilisation:.2f}", _f(c.rated_reaction_kn, 0), _f(c.reaction_kn, 0),
+              _f(c.hull_pressure_kpa, 0), yn(c.meets_energy), yn(c.meets_reaction), yn(c.meets_pressure)]
+             for c in res.size_checks])
+        t["sizes_basis"] = size_basis(res)
     t["sources_table"] = md_table(
         ["Id", "Document", "Edition", "Clause", "Verification", "Read in"],
         [[s.source_id, s.title, s.edition, s.clause, s.verification, s.read_in] for s in fd.SOURCES.values()])
@@ -292,8 +312,11 @@ def main(argv=None) -> int:
     ap.add_argument("--stem", default="report")
     ap.add_argument("--fender-label", default=None)
     ap.add_argument("--extra-values", type=Path, help="JSON of further template values")
+    ap.add_argument("--allow-unresolved-citations", action="store_true",
+                    help="explicit opt-out of the fail-closed citation check: run in citation mode "
+                         "'record', flag every unresolved citation and state the opt-out in the report")
     a = ap.parse_args(argv)
-    res = compute(load_case(a.case), a.catalogue)
+    res = compute(load_case(a.case), a.catalogue, citations="record" if a.allow_unresolved_citations else None)
     a.out.mkdir(parents=True, exist_ok=True)
     label = a.fender_label or res.base_fender.fender_id
     cnt = None
@@ -324,6 +347,13 @@ def main(argv=None) -> int:
             n_methods=len(res.methods), n_tests="see the test count in the pull request",
             top1=res.bars[0].label, top2=res.bars[1].label, top3=res.bars[2].label,
             rf=f"{res.reaction_factor:.2f}", R_design=_f(res.design.reaction_kn, 0),
+            citation_mode=res.citation_mode,
+            citation_mode_note=(
+                "This report was generated with the explicit citation opt-out (citation mode `record`, "
+                "`--allow-unresolved-citations`): the default mode `strict` stops the calculation while the "
+                "cited wiki pages are missing. Every unresolved citation is flagged on its result and listed below."
+                if res.citation_mode == "record" else
+                "This report was generated in the default citation mode `strict`: every cited wiki page resolved."),
         )
         if cnt:
             values["db_rows"] = f"{n_rows:,}"

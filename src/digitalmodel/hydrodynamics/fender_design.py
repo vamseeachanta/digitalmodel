@@ -771,16 +771,19 @@ def ufc_velocity(displacement_t: float, condition: str) -> float:
     return _loglog(_finite("displacement_t", displacement_t, positive=True), pts)
 
 
-def ufc_added_mass(ship: Ship, water_depth_m: float) -> float:
-    """Surface-vessel Cm, UFC 4-152-01 5-2.1.1 e.
+def ufc_added_mass(ship: Ship, water_depth_m: float, berthing_coefficient: float) -> float:
+    """Surface-vessel Cm, UFC 4-152-01 (2017, Change 1 2024) 5-2.1.1 e, p. 109.
 
     Cm = C_M0 + (C_m1 - C_M0)(T/d)^3.5, C_M0 = 1.3 + 1.5 T/B,
     C_m1 = F [12.4 (T/B)^0.3 - 50 T/L], F = 1.5 Cb (Cb < 0.6) or 0.9.
-    The text calls the Cb in F the berthing coefficient; the block
-    coefficient is used here (it makes F continuous at 0.6).
+
+    The Cb in F is the berthing coefficient, Cb = Ce Cg Cd Cc: Equation 5-2
+    (p. 106) defines it, and p. 109 repeats "Cb = berthing coefficient as
+    defined previously" under F. The block coefficient has its own symbol in
+    the text (C_BL, p. 107) and is not used in F.
     """
     t, b, l, d = ship.draft_m, ship.beam_m, ship.lbp_m, _finite("water_depth_m", water_depth_m, positive=True)
-    cb = ship.cb
+    cb = _finite("berthing_coefficient", berthing_coefficient, positive=True)
     f = 1.5 * cb if cb < 0.6 else 0.9
     cm0 = 1.3 + 1.5 * t / b
     cm1 = f * (12.4 * (t / b) ** 0.3 - 50.0 * t / l)
@@ -793,7 +796,6 @@ def _m_ufc(case: Case, position: str, velocity_m_s: float | None = None) -> Meth
     v = _velocity(lambda: Coefficient("velocity_m_s", ufc_velocity(s.displacement_t, case.condition), "ufc-4-152-01",
                                       f"Fig. 5-3/5-4, {case.condition} (sheltered/moderate/exposed), digitized"),
                   velocity_m_s)
-    cm = Coefficient("cm", ufc_added_mass(s, b.water_depth_m), "ufc-4-152-01", "5-2.1.1 e surface vessels")
     k = radius_of_gyration(s.cb, s.lbp_m)
     a = abs(s.lbp_m / 2.0 - b.contact_x_from_bow_m)
     ce_v = k * k / (a * a + k * k)
@@ -810,6 +812,12 @@ def _m_ufc(case: Case, position: str, velocity_m_s: float | None = None) -> Meth
     else:
         cc_v, note = 0.9, "between open and solid (UFC: 'in between'); midpoint assumed"
     cc = Coefficient("cc", cc_v, "ufc-4-152-01", note)
+    cb_berth = ce.value * cg.value * cd.value * cc.value
+    geo["cb_berthing"] = cb_berth
+    f = 1.5 * cb_berth if cb_berth < 0.6 else 0.9
+    cm = Coefficient("cm", ufc_added_mass(s, b.water_depth_m, cb_berth), "ufc-4-152-01",
+                     f"5-2.1.1 e surface vessels; F {f:.3f} from berthing coefficient "
+                     f"Ce Cg Cd Cc = {cb_berth:.3f} (Eq. 5-2, p. 106; p. 109)")
     fac = Coefficient("accidental_factor", 1.5, "ufc-4-152-01", "5-1.5.3: increase by at least 50 %")
     return _result("ufc", "UFC 4-152-01 (2017 C1)", case, v, cm, ce, cd, cc, fac, geo, extra=(cg,))
 
@@ -997,13 +1005,20 @@ CITATION_TARGETS: dict[str, tuple[str, str, str, str]] = {
     "ueda-1981": ("ueda-1981", "Ueda et al.", "1981", _CONCEPTS + "ueda-1981-berthing-added-mass.md"),
 }
 
-#: Resolution failures that leave a result usable but qualified (the page is
-#: not yet written, or no wiki is configured on this machine). Every other
-#: failure, in particular a page whose code_id, publisher or revision differs
-#: from the citation, stops the calculation.
+#: Resolution failures that the explicit opt-out ``record`` turns into a
+#: flag (the page is not yet written, or no wiki is configured on this
+#: machine). In the default ``strict`` mode they raise at calculation time
+#: (fail-closed, calculation-output citation contract section 4.1). A page
+#: whose code_id, publisher or revision differs from the citation raises in
+#: every checking mode.
 _UNRESOLVED_REASONS = ("page_missing", "resolver_unconfigured")
 
-CITATION_MODES = ("record", "strict", "off")
+#: ``strict`` is the default. ``record`` and ``off`` are explicit opt-outs;
+#: each flags the results it touches, so the omission stays visible.
+CITATION_MODES = ("strict", "record", "off")
+
+#: Flag added to a result whose citations were not checked (``off``).
+CITATIONS_NOT_CHECKED = "citations not checked (citations='off', explicit opt-out)"
 
 
 def citation_for(source_id: str) -> Citation:
@@ -1029,14 +1044,16 @@ def result_citations(coefficients) -> tuple[Citation, ...]:
     return tuple(out)
 
 
-def resolve_citations(citations, *, mode: str = "record",
+def resolve_citations(citations, *, mode: str = "strict",
                       wiki_root: Path | None = None) -> tuple[tuple[str, str], ...]:
     """Resolve each citation against the wiki; return (code_id, status) pairs.
 
-    ``mode``: ``strict`` raises :class:`CitationResolutionError` on any
-    failure (fail-closed); ``record`` raises on a mismatched or misconfigured
-    target but records a missing page or an unconfigured resolver as
-    ``unresolved: <reason>``; ``off`` checks nothing (``not checked``).
+    ``mode``: ``strict`` (default) raises :class:`CitationResolutionError`
+    on any failure, including a missing page or an unconfigured resolver
+    (fail-closed). The explicit opt-out ``record`` raises on a mismatched
+    or misconfigured target but records a missing page or an unconfigured
+    resolver as ``unresolved: <reason>``; ``off`` checks nothing
+    (``not checked``).
     ``wiki_root`` is a wiki clone root; ``None`` uses the resolver's search
     order (``LLM_WIKI_PATH`` first).
     """
@@ -1071,7 +1088,9 @@ def _cite(res: MethodResult, mode: str, wiki_root: Path | None) -> MethodResult:
     flags = list(res.flags)
     if pending:
         flags.append("citation not resolved against the wiki: " + ", ".join(pending)
-                     + "; values carry the source register only")
+                     + "; values carry the source register only (citations='record', explicit opt-out)")
+    if mode == "off" and cites:
+        flags.append(CITATIONS_NOT_CHECKED)
     return replace(res, citations=cites, citation_status=status, flags=tuple(flags))
 
 
@@ -1083,7 +1102,7 @@ def energy_by_method(
     velocity_m_s: float | None = None,
     factor: float | None = None,
     factor_position: str = "smallest",
-    citations: str = "record",
+    citations: str = "strict",
     citation_root: Path | None = None,
     **case_kw,
 ) -> MethodResult:
@@ -1097,9 +1116,11 @@ def energy_by_method(
     effective velocity. ``factor_position`` chooses the largest- or
     smallest-ship PIANC abnormal factor where a method uses it.
 
-    The result carries its citation sidecar, resolved per ``citations``
-    (``record``, ``strict`` or ``off``; see :func:`resolve_citations`)
-    against ``citation_root``.
+    The result carries its citation sidecar, resolved against
+    ``citation_root`` per ``citations`` (see :func:`resolve_citations`). The
+    default ``strict`` raises :class:`CitationResolutionError` when a cited
+    page is missing or no wiki is configured; ``record`` (missing pages
+    flagged) and ``off`` (not checked, flagged) are explicit opt-outs.
     """
     if method not in METHODS:
         raise ValueError(f"unknown method {method!r}; one of {tuple(METHODS)}")

@@ -152,14 +152,14 @@ def test_case_loader_refuses_mixed_bases(tmp_path):
         w.writerows(rows)
     case = load_case(ROOT / "examples" / "hydrodynamics" / "fender_design" / "generic_case.yaml")
     with pytest.raises(ValueError, match="pneumatic: GEA, RPD"):
-        compute(case, cat)
+        compute(case, cat, citations="record")
     # one basis per type (pneumatic GEA, foam CV) is accepted
     rows[1]["perf_basis"] = "GEA"
     with cat.open("w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=cols)
         w.writeheader()
         w.writerows(rows)
-    res = compute(case, cat)
+    res = compute(case, cat, citations="record")
     assert res.perf_basis["GEN-PN-4"] == "GEA"
     assert catalogue_bases(DATA / "illustrative_fenders.csv") == {}   # no column: nothing to check
     check_one_basis(res.catalogue, {})
