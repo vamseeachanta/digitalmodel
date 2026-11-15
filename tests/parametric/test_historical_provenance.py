@@ -112,7 +112,7 @@ def test_checkout_metadata_ignores_remote_tracking_refs(tmp_path, monkeypatch, d
     assert subprocess.run(
         ["git", "-C", str(checkout), "rev-parse", "--verify", "-q", "HEAD^"],
         env=env, capture_output=True,
-    ).returncode != 0
+    ).returncode == 1
     if detached:
         git("update-ref", "--no-deref", "HEAD", git("rev-parse", "HEAD").decode())
     before = _checkout_metadata(env)
