@@ -224,7 +224,8 @@ class DnvStF201Strategy:
                 "alpha_fab": material.alpha_fab,
                 "youngs_modulus": material.youngs_modulus,
                 "poissons_ratio": material.poissons_ratio,
-                "collapse_smys": material.smys,
+                # Specified SMYS before alpha_U; p_p uses collapse_f_y.
+                "smys_before_alpha_u": material.smys,
                 "collapse_f_y": details["f_y"],
                 "collapse_reference": "DNV-ST-F101 Eq. 5.9",
                 "p_min_internal": pi,

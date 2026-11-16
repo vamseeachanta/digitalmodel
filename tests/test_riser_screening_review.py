@@ -59,7 +59,12 @@ def test_out_of_domain_report_is_strict_json_and_keeps_failed_verdict(
     assert finite == result["cases"][1]
     note = (tmp_path / "domain_calcnote.md").read_text()
     assert "**Overall status:** FAIL" in note
-    assert '"Infinity"' in note
+    # The rendered result, not the basis prose, carries the failed case.
+    assert ("**Governing case:** outside_domain" in note)
+    assert "check `combined`, utilisation inf" in note
+    row = next(line for line in note.splitlines()
+               if line.startswith("| 1 | outside_domain |"))
+    assert row.endswith("| combined | inf | FAIL |")
     run_riser_screening(copy.deepcopy(cfg))
     assert report_file.read_bytes() == before
 

@@ -253,7 +253,11 @@ def _report_context(geometry, material, cases, code, factors, cfg, results):
     input_file = cfg.get("_config_file_path")
     source = Path(input_file) if input_file else Path(__file__)
     timestamp = datetime.fromtimestamp(source.stat().st_mtime, timezone.utc).isoformat()
-    provenance = Provenance()
+    provenance = Provenance(
+        code_edition=f"digitalmodel {__version__}; {code.value}",
+        units_system="SI: m, Pa, N, N*m",
+        validated_path="screening",
+    )
     if input_file:
         provenance.add("file", source.name, digest="sha256:" + sha256(source.read_bytes()).hexdigest(),
                        retrieved_at=timestamp, description="Screening input file snapshot")

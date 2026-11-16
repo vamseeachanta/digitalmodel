@@ -318,6 +318,10 @@ def test_workflow_output_anchor_report_contract_and_determinism(tmp_path, monkey
     assert echo["factors"]["safety_class"] == "medium"
     provenance = result["provenance"]
     assert provenance["package_version"] == __version__
+    # Completed reports carry the provenance fields required by #4064.
+    assert provenance["code_edition"] == f"digitalmodel {__version__}; {echo['code']}"
+    assert provenance["units_system"] == "SI: m, Pa, N, N*m"
+    assert provenance["validated_path"] == "screening"
     source_record = provenance["sources"][0]
     assert source_record["digest"] == "sha256:" + hashlib.sha256(input_file.read_bytes()).hexdigest()
     assert source_record["retrieved_at"] == datetime.fromtimestamp(input_file.stat().st_mtime, timezone.utc).isoformat()

@@ -37,7 +37,8 @@ def test_external_collapse_uses_same_characteristic_yield_as_other_resistances(
     fy = material.smys * alpha_u
     pp = fy * material.alpha_fab * 2 * t2 / diameter
     assert details["p_p"] == pp
-    assert details["collapse_smys"] == material.smys
+    assert details["smys_before_alpha_u"] == material.smys
+    assert "collapse_smys" not in details
     assert details["collapse_f_y"] == details["f_y"] == fy
     assert asdict(material) == original_material
     # Independent cubic roots in MPa, rather than the production bisection.
