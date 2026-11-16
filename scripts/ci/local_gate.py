@@ -264,13 +264,13 @@ class MergeConflict(GateError):
     """The head conflicts with the current base tip."""
 
 
-def remove_tree(work_root: Path, worktree: Path) -> None:
-    """Remove only the worktree this run created."""
+def remove_tree(work_root: Path, tree_root: Path) -> None:
+    """Remove only the worktrees this run created (one per module, under ``tree_root``)."""
     mirror = work_root / "mirror.git"
-    if worktree.exists():
-        capture(["git", "-C", str(mirror), "worktree", "remove", "--force", str(worktree)], check=False)
-    if worktree.exists():
-        shutil.rmtree(worktree, ignore_errors=True)
+    if tree_root.is_dir():
+        for child in tree_root.iterdir():
+            capture(["git", "-C", str(mirror), "worktree", "remove", "--force", str(child)], check=False)
+        shutil.rmtree(tree_root, ignore_errors=True)
     capture(["git", "-C", str(mirror), "worktree", "prune"], check=False)
 
 
@@ -301,8 +301,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     return args
 
 
-def gate(args: argparse.Namespace, run_dir: Path, worktree: Path) -> tuple[str, str, list[Result]]:
-    """Run the whole gate; return state, description and module results."""
+def gate(args: argparse.Namespace, run_dir: Path, tree_root: Path) -> tuple[str, str, list[Result]]:
+    """Run the whole gate; return state, description and module results.
+
+    Every module gets its own checkout of the merged commit, as every hosted job
+    does: a file one shard writes into the tree cannot change another shard's result.
+    """
     started = time.monotonic()
     deadline = started + args.budget_seconds
     available = free_gb(args.work_root)
@@ -315,7 +319,10 @@ def gate(args: argparse.Namespace, run_dir: Path, worktree: Path) -> tuple[str, 
         raise GateError("pull request comes from another repository; local gate refused")
     if not re.fullmatch(r"[A-Za-z0-9._/-]{1,100}", info["base"]):
         raise GateError("unexpected base branch name")
+    worktree = tree_root / "plan"
     tip = prepare_tree(args, info["base"], worktree)
+    merged = capture(["git", "-C", str(worktree), "rev-parse", "HEAD"]).stdout.strip()
+    mirror = args.work_root / "mirror.git"
 
     scratch = run_dir / "scratch"
     logs = run_dir / "logs"
@@ -341,11 +348,18 @@ def gate(args: argparse.Namespace, run_dir: Path, worktree: Path) -> tuple[str, 
     print(f"local-gate: {len(modules)} modules: {', '.join(m.name for m in modules)}", flush=True)
 
     def run_one(module: Module) -> Result:
-        result = run_module(module, worktree, env, logs, deadline, args.module_timeout)
+        tree = tree_root / module.name
+        added = capture(["git", "-C", str(mirror), "worktree", "add", "--quiet", "--detach",
+                         str(tree), merged], check=False)
+        if added.returncode != 0:
+            print(f"local-gate: {module.name} checkout failed", flush=True)
+            return Result(module.name, "fail", 0.0, added.returncode)
+        result = run_module(module, tree, env, logs, deadline, args.module_timeout)
         print(f"local-gate: {result.name} {result.status} in {result.seconds:.0f} s", flush=True)
         return result
 
     results = run_modules(modules, args.jobs, run_one)
+    shutil.rmtree(scratch, ignore_errors=True)
     state, description = summarize(results, time.monotonic() - started, tip)
     return state, description, results
 

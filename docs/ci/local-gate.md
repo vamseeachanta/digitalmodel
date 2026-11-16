@@ -109,9 +109,12 @@ These runs are not advisory:
   `Quality Gates`, the Python 3.12 matrix leg, or the baseline comparison of the
   domain aggregate. Those results arrive from the hosted runs and from the push
   to `main`.
-- Modules share one worktree. A test that writes outside its own temporary
-  directory can disturb a module running beside it; `--jobs 1` removes that
-  interaction at the cost of time.
+- Disk use. Every module has its own checkout of the merged commit, as every
+  hosted job has, so a file one shard writes cannot change the result of
+  another. A trial with four modules used about 25 GB under the work root: a
+  complete mirror (3.4 GB), the package cache (19 GB) and the checkouts. The
+  checkouts and the scratch directory are removed at the end of a run; the
+  mirror and the cache stay for the next run.
 - The gate executes code from the pull request with the credentials of the
   account that runs it. It accepts same-repository pull requests only, the same
   boundary the self-hosted workflow jobs apply.
