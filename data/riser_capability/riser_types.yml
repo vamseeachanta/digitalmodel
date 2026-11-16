@@ -262,6 +262,10 @@ databases:
     category: Buoyancy modules
     path: data/riser_buoyancy/data.json
     provenance: citation_id per row resolved in sources.yml
+  - id: riser_tensioners
+    category: Tensioners
+    path: data/riser_tensioners/data.json
+    provenance: citation_id per row resolved in sources.yml
   - id: soil_stiffness
     category: Soil
     path: data/soil_stiffness/data.json

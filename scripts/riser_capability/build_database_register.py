@@ -26,6 +26,7 @@ INPUTS = (
     ("Flexible pipe", "data/flexible_pipe/data.json", "records", "records"),
     ("Structural sections", "data/riser_database/structure_properties/data.json", "records", "records"),
     ("Buoyancy modules", "data/riser_buoyancy/data.json", "records", "records"),
+    ("Tensioners", "data/riser_tensioners/data.json", "records", "records"),
     ("Soil", "data/soil_stiffness/data.json", "records", "records"),
     ("Soil", "data/geotechnical/geotech_database.yaml", "parameters", "parameter rows"),
     ("S-N, SCF, DFF", "data/fatigue/sn_curves.yaml", "curves", "curves"),

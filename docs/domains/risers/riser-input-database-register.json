@@ -10,6 +10,7 @@
 {"category":"Flexible pipe","count":0,"format":"json","issue":null,"path":"data/flexible_pipe/data.json","provenance":"citation_id per row resolved in sources.yml","selector":"records","status":"empty","unit":"records"},
 {"category":"Structural sections","count":0,"format":"json","issue":null,"path":"data/riser_database/structure_properties/data.json","provenance":"citation_id per row resolved in sources.yml","selector":"records","status":"empty","unit":"records"},
 {"category":"Buoyancy modules","count":0,"format":"json","issue":null,"path":"data/riser_buoyancy/data.json","provenance":"citation_id per row resolved in sources.yml","selector":"records","status":"empty","unit":"records"},
+{"category":"Tensioners","count":0,"format":"json","issue":null,"path":"data/riser_tensioners/data.json","provenance":"citation_id per row resolved in sources.yml","selector":"records","status":"empty","unit":"records"},
 {"category":"Soil","count":0,"format":"json","issue":null,"path":"data/soil_stiffness/data.json","provenance":"citation_id per row resolved in sources.yml","selector":"records","status":"empty","unit":"records"},
 {"category":"Soil","count":60,"format":"yaml","issue":null,"path":"data/geotechnical/geotech_database.yaml","provenance":"source_id, locator","selector":"parameters","status":"populated","unit":"parameter rows"},
 {"category":"S-N, SCF, DFF","count":23,"format":"yaml","issue":null,"path":"data/fatigue/sn_curves.yaml","provenance":"file-level metadata.source only","selector":"curves","status":"populated","unit":"curves"},
