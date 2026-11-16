@@ -133,7 +133,9 @@ def sensitivity_section(data):
 
 
 def source_table(data):
-    rows = [(s['what'], s['source'], s['licence'], s.get('revision', s['date']), f"[Source]({s['url']})")
+    rows = [(s['what'], s['source'], s['licence'],
+             f"{s['revision'][:8]} ({s['date']})" if 'revision' in s else s['date'],
+             f"[Source]({s.get('reader_url', s['url'])})")
             for s in data['sources']]
     return table(('Data', 'Source', 'Licence', 'Version or date', 'Link'), rows,
                  'Table B1. Retained data sources; input and source digests are recorded by the analysis and eval.')
@@ -169,7 +171,8 @@ The public example well gives a pump stroke of {number(key['pump_stroke_in'])} i
 | 0 | 2026-11-12 | Initial calculation note with public-card results, assumptions and sensitivity. |
 | 1 | 2026-11-12 | Correct cycle endpoints, refresh derived results and declare metadata precision for reproducible comparison. |
 | 2 | 2026-11-14 | Bind the fixture and plate-score citations to the consumed bytes so their revisions and digests agree. |
-| 3 | 2026-11-16 | Disclose reported cycle-origin sensitivity beside the shape-model limitations. |
+| 3 | 2026-11-16 | Record Git blob identities for history-independent checks and show readable source links with dated short revisions. |
+| 4 | 2026-11-16 | Disclose reported cycle-origin sensitivity beside the shape-model limitations. |
 
 ## 1 Introduction
 

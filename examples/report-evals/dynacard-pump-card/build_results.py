@@ -50,7 +50,9 @@ def manifest(data):
                 'repo': REPO, 'commit': pin, 'tolerance': {'abs': 0.5 * 10 ** -digits},
                 'basis': 'fixed', 'limits': ['Arithmetic reproduction only; derived pump quantities depend on the ASSUMED inputs recorded in the analysis and report.']}
                for key, label, value, unit, digits in numerical_results(data)]
-    inputs = [{'id': f'source_{index}', 'description': row['what'], 'source': row['source'],
+    inputs = [{'id': f'source_{index}',
+               'description': row['what'] + (f"; Git blob {row['git_blob']}" if 'git_blob' in row else ''),
+               'source': row['source'],
                'url': row['url'], 'licence': row['licence'],
                'version_or_date': row.get('revision', row['date']),
                'sha256_published': row['sha256'], 'updates': 'never',

@@ -22,7 +22,7 @@
  "inputs": [
   {
    "id": "source_0",
-   "description": "Public example surface card, rod string and stored pump card",
+   "description": "Public example surface card, rod string and stored pump card; Git blob f07b8a26b93a13f317dbc446d64958158c31e0eb",
    "source": "Repository field fixture",
    "url": "https://api.github.com/repositories/590299785/contents/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json?ref=9680e7e1ac4a4c225b788e4308322cf87460af70",
    "licence": "MIT",
@@ -46,7 +46,7 @@
   },
   {
    "id": "source_2",
-   "description": "Recorded shape-only plate score",
+   "description": "Recorded shape-only plate score; Git blob ba4404432ec57f4162129bc99bc7b363a50a7272",
    "source": "Repository benchmark",
    "url": "https://api.github.com/repositories/590299785/contents/tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json?ref=91e9ad115c6994d4d2546b515ba0751efa782277",
    "licence": "MIT",

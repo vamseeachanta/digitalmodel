@@ -12,7 +12,8 @@ The public example well gives a pump stroke of 39.57 in from a measured surface 
 | 0 | 2026-11-12 | Initial calculation note with public-card results, assumptions and sensitivity. |
 | 1 | 2026-11-12 | Correct cycle endpoints, refresh derived results and declare metadata precision for reproducible comparison. |
 | 2 | 2026-11-14 | Bind the fixture and plate-score citations to the consumed bytes so their revisions and digests agree. |
-| 3 | 2026-11-16 | Disclose reported cycle-origin sensitivity beside the shape-model limitations. |
+| 3 | 2026-11-16 | Record Git blob identities for history-independent checks and show readable source links with dated short revisions. |
+| 4 | 2026-11-16 | Disclose reported cycle-origin sensitivity beside the shape-model limitations. |
 
 ## 1 Introduction
 
@@ -214,9 +215,9 @@ The [reusable prompt](../../../examples/report-evals/dynacard-pump-card/PROMPT.m
 
 | Data | Source | Licence | Version or date | Link |
 | --- | --- | --- | --- | --- |
-| Public example surface card, rod string and stored pump card | Repository field fixture | MIT | 9680e7e1ac4a4c225b788e4308322cf87460af70 | [Source](https://api.github.com/repositories/590299785/contents/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json?ref=9680e7e1ac4a4c225b788e4308322cf87460af70) |
+| Public example surface card, rod string and stored pump card | Repository field fixture | MIT | 9680e7e1 (2026-11-12) | [Source](../../../../9680e7e1ac4a4c225b788e4308322cf87460af70/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json) |
 | Public reference shapes | Public diagnostic plate | CC0 1.0 | 2026-10-11 | [Source](https://doi.org/10.17632/hnfwm9mjs6.1) |
-| Recorded shape-only plate score | Repository benchmark | MIT | 91e9ad115c6994d4d2546b515ba0751efa782277 | [Source](https://api.github.com/repositories/590299785/contents/tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json?ref=91e9ad115c6994d4d2546b515ba0751efa782277) |
+| Recorded shape-only plate score | Repository benchmark | MIT | 91e9ad11 (2026-11-12) | [Source](../../../../91e9ad115c6994d4d2546b515ba0751efa782277/tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json) |
 
 Table B1. Retained data sources; input and source digests are recorded by the analysis and eval.
 

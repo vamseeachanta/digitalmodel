@@ -464,3 +464,39 @@ def test_worked_cpip_uses_the_supplied_density(document, builder):
     readme = builder.text_artifacts(document)["README.md"].decode("utf-8")
     assert "density source `context`" in readme
     assert "CPIP uses its own default mixture" not in readme
+
+
+def test_reported_one_sample_phase_flip_matches_current_model(records, document):
+    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import classify_shape
+
+    card = CardData(**records[0]["computed_pump_card"])
+    # Advance the cycle origin by one sample, retaining all stored samples.
+    shifted = CardData(position=np.roll(card.position, -1).tolist(),
+                       load=np.roll(card.load, -1).tolist())
+    probe = document["basis"]["shape_phase_sensitivity"]["value"]
+    assert classify_shape(card).classification == probe["normal_one_sample_shift_from"]
+    assert classify_shape(shifted).classification == probe["normal_one_sample_shift_to"]
+
+
+def test_reported_near_minimum_phase_counts_match_current_model(records, document):
+    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import classify_shape
+
+    total = changed = 0
+    for record in records:
+        for key in ("source_pump_card", "computed_pump_card"):
+            card = CardData(**record[key])
+            original = classify_shape(card).classification
+            # A cyclic shift qualifies when its first position is within
+            # one percent of the minimum, using the complete stored cycle.
+            # The unchanged origin is not a shift and is excluded.
+            threshold = min(card.position) + 0.01 * np.ptp(card.position)
+            for shift in range(1, len(card.position)):
+                position = np.roll(card.position, shift)
+                if position[0] <= threshold:
+                    shifted = CardData(position=position.tolist(),
+                                       load=np.roll(card.load, shift).tolist())
+                    total += 1
+                    changed += classify_shape(shifted).classification != original
+    probe = document["basis"]["shape_phase_sensitivity"]["value"]
+    assert total == probe["near_minimum_shifts"]
+    assert changed == probe["changed_labels"]

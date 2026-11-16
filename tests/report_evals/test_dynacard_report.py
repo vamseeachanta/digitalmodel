@@ -434,3 +434,79 @@ def test_report_discloses_reported_shape_phase_sensitivity(analysis):
     assert phase["reason"] in limitations
     assert "reported" in phase["provenance"].lower()
     assert "33 of 104" in limitations
+
+
+@pytest.mark.parametrize('index', [0, 2])
+def test_repository_source_identity_without_history(index, monkeypatch):
+    import hashlib
+    import subprocess
+    from urllib.parse import parse_qs, urljoin, urlsplit
+    report = module('analysis')
+    # An exported or shallow checkout need not contain the cited commit.
+    # Permit only a history-independent hash of the consumed bytes.
+    run = subprocess.run
+    def without_history(command, **kwargs):
+        assert command[:2] == ['git', 'hash-object']
+        return run(command, **kwargs)
+    monkeypatch.setattr(subprocess, 'run', without_history)
+    row = report.sources(ROOT, FIXTURE, True)[index]
+    url = urlsplit(row['url'])
+    if '/blob/' in url.path:
+        revision, _, relative = url.path.partition('/blob/')[2].partition('/')
+    else:
+        relative = url.path.partition('/contents/')[2]
+        revision = parse_qs(url.query)['ref'][0]
+    blob = subprocess.run(['git', 'hash-object', '--no-filters', '--stdin'], cwd=ROOT,
+                          input=(ROOT / relative).read_bytes(), check=True,
+                          capture_output=True).stdout.decode('ascii').strip()
+    assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == row['sha256']
+    assert blob == row['git_blob']
+    assert row['revision'] == revision
+    assert len(revision) == 40
+    assert url.netloc == 'api.github.com'
+    assert url.path.startswith('/repositories/590299785/contents/')
+    base = 'https://github.com/example/repository/blob/main/docs/domains/artificial_lift/report.md'
+    assert urljoin(base, row['reader_url']) == (
+        f'https://github.com/example/repository/blob/{revision}/{relative}')
+    assert row['date'] == '2026-11-12'
+
+
+@pytest.mark.parametrize('relative', [
+    'tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json',
+    'tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json',
+])
+def test_repository_source_rejects_incorrect_blob_identity(monkeypatch, relative):
+    report = module('analysis')
+    pin = dict(report.SOURCE_PINS[relative], git_blob='0' * 40)
+    monkeypatch.setitem(report.SOURCE_PINS, relative, pin)
+    with pytest.raises(ValueError, match='source bytes do not match.*revision'):
+        report.repository_source(ROOT / relative, relative)
+
+
+def test_source_table_uses_readable_links_and_dated_short_revisions():
+    report = module('analysis')
+    sources = report.sources(ROOT, FIXTURE, True)
+    text = module('build_report').source_table({'sources': sources})
+    for row in (sources[0], sources[2]):
+        assert f"{row['revision'][:8]} ({row['date']})" in text
+        assert f"[Source]({row['reader_url']})" in text
+        assert row['revision'] not in text.replace(row['reader_url'], '')
+    assert sources[1]['date'] in text
+    assert 'api.github.com' not in text
+
+
+def test_manifest_retains_full_source_revisions_and_blob_ids(analysis):
+    result = module('build_results').manifest(analysis)
+    for index in (0, 2):
+        row = analysis['sources'][index]
+        recorded = next(item for item in result['inputs'] if item['id'] == f'source_{index}')
+        assert recorded['version_or_date'] == row['revision']
+        assert row['git_blob'] in recorded['description']
+        assert recorded['sha256_published'] == row['sha256']
+
+
+def test_report_retains_both_revision_entries(analysis):
+    text = module('build_report').build_report(analysis)
+    assert '| 3 | 2026-11-16 | Record Git blob identities' in text
+    assert '| 4 | 2026-11-16 | Disclose reported cycle-origin sensitivity' in text
+    assert text.index('| 3 |') < text.index('| 4 |')
