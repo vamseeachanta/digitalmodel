@@ -226,11 +226,12 @@ def basis_section(document):
             "is not a multiplier in that calculation. Runtime source `card` denotes the "
             "InputParameters default, not measured runtime. Both CPIP density and "
             "gradient are retained above; negative computed intake pressures are "
-            "retained without clamping. The module's CPIP uses its own default mixture "
-            "density (35° API oil, 1.03 water specific gravity, 50 % water cut, "
-            "58.651 lb/ft³), not the context fluid density of 63.237 lb/ft³ used to scale "
-            "the load, so the computed fluid load can exceed the CPIP discharge-pressure "
-            "basis; CPIP for these examples is therefore not established.\n")
+            "retained without clamping. The module's CPIP uses the supplied context "
+            "fluid density of 63.237 lb/ft³ (density source `context`), the same "
+            "density that scales the load. The load scale assumes zero intake "
+            "pressure, so computed CPIP restates that assumption and does not "
+            "establish a physical intake pressure; CPIP for these examples is "
+            "therefore not established.\n")
 
 
 def limitations():

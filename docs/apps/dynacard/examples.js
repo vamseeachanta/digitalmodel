@@ -2263,7 +2263,7 @@ const data = {
   ],
   "provenance": {
     "results_path": "docs/domains/artificial_lift/dynacard-examples/results.json",
-    "results_sha256": "0932c32ab2225482bcc1b0906e6ca6fa455d3ea3d61d05b9eaf3c491d5c7c23b",
+    "results_sha256": "25bb776b84e461c76c76760b2f84cfaea9d61c2f37a9930285972e332b85f13d",
     "source": {
       "dataset_url": "https://data.mendeley.com/datasets/hnfwm9mjs6/1",
       "file_url": "https://data.mendeley.com/public-files/datasets/hnfwm9mjs6/files/53140ff5-85c3-40d1-b900-364a892e692e/file_downloaded",
@@ -2482,14 +2482,14 @@ const data = {
         "reason": "Rod parting and other near-zero physical-load conditions are shape illustrations, not physical pump cards.",
         "provenance": "assumed, based on previous experience"
       },
-      "cpip_defaults": {
+      "cpip_density_basis": {
         "status": "ASSUMED",
         "value": {
-          "oil_api": 35.0,
-          "water_sg": 1.03,
-          "water_cut_pct": 50.0
+          "density_source": "context",
+          "fluid_density_lb_ft3": 63.237,
+          "tubing_gradient": "fluid_density / 144 psi/ft"
         },
-        "reason": "CPIP derives density from this default mixture, not context fluid_density; retained as the module reports it.",
+        "reason": "CPIP uses the supplied context fluid density, the same density that scales the load; the scale assumes zero intake pressure, so computed CPIP restates that assumption.",
         "provenance": "assumed, based on previous experience"
       },
       "production": {

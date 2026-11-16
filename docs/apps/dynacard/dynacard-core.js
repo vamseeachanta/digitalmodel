@@ -281,11 +281,14 @@
   }
   function analyse(card, well) {
     validateCard(card);
+    // Mirrors "fluid_density" in model_fields_set: the CPIP density basis
+    // depends on whether the caller supplied a density, not on its value.
+    const densitySupplied = well != null && well.fluid_density != null;
     well = normalizeWell(well);
     if (!analysis || !models?.context || !models?.shape) {
       throw new Error("Shipped analysis/model assets are missing; no fallback is supported.");
     }
-    const pumpCard = solve(card, well), p1 = analysis.calculate(pumpCard, well);
+    const pumpCard = solve(card, well), p1 = analysis.calculate(pumpCard, well, densitySupplied);
     const result = {...p1, downhole_card: pumpCard, surface_stroke: span(card.position),
       peak_polished_rod_load: max(card.load), minimum_polished_rod_load: min(card.load),
       pump_card_max_load: max(pumpCard.load), pump_card_min_load: min(pumpCard.load),

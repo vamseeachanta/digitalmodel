@@ -108,9 +108,13 @@ and percentages and the shipped model's call and confidence are labelled
 and crosswalk status: `literal` or `ASSUMED`, as recorded by the plate mapping.
 Uploaded CSV cards do not inherit example provenance.
 
-CPIP uses the reference's separate mixture calculation: oil 35° API, water
-specific gravity 1.03, and water cut 50% when no well test is supplied. The page's
-fluid-density input affects the wave equation, **not** this CPIP mixture basis.
+CPIP follows the reference's density basis: a supplied fluid density sets the
+tubing gradient (density/144 psi/ft; density source `context`). Without one, the
+reference uses a mixture of oil 35° API and water specific gravity 1.03 at the
+well-test water cut, or 50% when no well test is supplied. The page always
+supplies its fluid-density input, so that input sets both the wave equation and
+CPIP. A negative calculated intake pressure is retained with pressure status
+`negative_calculated_pressure`; it does not establish a physical intake pressure.
 The page assumes runtime of 24 h/day and reference pump efficiency of 100%.
 The API retains supplied well-test and runtime information where the default
 workflow uses it. These outputs are displacement, not measured production.
@@ -182,20 +186,20 @@ differences.
 
 | Example | Max pump-load difference (lbf) | Max pump-position difference (in) | Max scalar relative difference | Labels equal | Max probability difference | Polished-rod work difference (ft·lbf) | Pump-card work difference (ft·lbf) |
 | --- | ---: | ---: | ---: | :---: | ---: | ---: | ---: |
-| Normal operation | 2.260549081e-09 | 3.548272787e-13 | 4.211619095e-11 | yes | 2.220446049e-16 | 0.000000000e+00 | 6.488335202e-09 |
-| Insufficient supply | 2.220986062e-09 | 3.552713679e-14 | 2.650754944e-12 | yes | 2.220446049e-16 | 0.000000000e+00 | 2.862179826e-09 |
-| Gas interference | 2.279193723e-09 | 0.000000000e+00 | 8.382061185e-12 | yes | 1.734723476e-18 | 0.000000000e+00 | 4.239154805e-09 |
-| Rod parting | 2.266915544e-09 | 5.373479439e-14 | 2.360233160e-12 | yes | 2.220446049e-16 | 0.000000000e+00 | 5.624315236e-09 |
-| Tagging up | 2.205069904e-09 | 3.019806627e-14 | 9.797272129e-12 | yes | 6.776263578e-21 | 0.000000000e+00 | 5.502442946e-09 |
-| Tagging down | 2.284195944e-09 | 2.273736754e-13 | 5.683533897e-12 | yes | 8.271806126e-25 | 0.000000000e+00 | 4.996763892e-09 |
-| Traveling valve leakage | 2.280103217e-09 | 0.000000000e+00 | 7.649144582e-12 | yes | 3.231174268e-27 | 0.000000000e+00 | 6.510163075e-09 |
-| Standing valve leakage | 2.281012712e-09 | 2.620126338e-14 | 2.164386796e-11 | yes | 2.220446049e-16 | 0.000000000e+00 | 6.481059245e-09 |
-| Plunger out of barrel | 2.287833922e-09 | 1.127986593e-13 | 1.343616193e-12 | yes | 1.615587134e-27 | 0.000000000e+00 | 4.985849955e-09 |
-| Sand production | 2.244178177e-09 | 0.000000000e+00 | 4.502234000e-12 | yes | 4.135903063e-25 | 0.000000000e+00 | 5.058609531e-09 |
+| Normal operation | 2.260549081e-09 | 3.548272787e-13 | 9.538155943e-12 | yes | 2.220446049e-16 | 0.000000000e+00 | 6.488335202e-09 |
+| Insufficient supply | 2.220986062e-09 | 3.552713679e-14 | 1.854022280e-12 | yes | 2.220446049e-16 | 0.000000000e+00 | 2.862179826e-09 |
+| Gas interference | 2.279193723e-09 | 0.000000000e+00 | 4.039174726e-12 | yes | 1.734723476e-18 | 0.000000000e+00 | 4.239154805e-09 |
+| Rod parting | 2.266915544e-09 | 5.373479439e-14 | 1.710835035e-12 | yes | 2.220446049e-16 | 0.000000000e+00 | 5.624315236e-09 |
+| Tagging up | 2.205069904e-09 | 3.019806627e-14 | 4.176279887e-12 | yes | 6.776263578e-21 | 0.000000000e+00 | 5.502442946e-09 |
+| Tagging down | 2.284195944e-09 | 2.273736754e-13 | 3.211613001e-12 | yes | 8.271806126e-25 | 0.000000000e+00 | 4.996763892e-09 |
+| Traveling valve leakage | 2.280103217e-09 | 0.000000000e+00 | 3.699276041e-12 | yes | 3.231174268e-27 | 0.000000000e+00 | 6.510163075e-09 |
+| Standing valve leakage | 2.281012712e-09 | 2.620126338e-14 | 1.265829130e-11 | yes | 2.220446049e-16 | 0.000000000e+00 | 6.481059245e-09 |
+| Plunger out of barrel | 2.287833922e-09 | 1.127986593e-13 | 1.075935362e-12 | yes | 1.615587134e-27 | 0.000000000e+00 | 4.985849955e-09 |
+| Sand production | 2.244178177e-09 | 0.000000000e+00 | 2.734857892e-12 | yes | 4.135903063e-25 | 0.000000000e+00 | 5.058609531e-09 |
 
 Table 1. Measured Python/JavaScript reproduction differences for the ten examples.
 
-For the ten saved surface cards replayed through live Python and JavaScript, the tolerances are `1e-6` of reference range for pump samples, `1e-6` of `max(abs(reference), 1)` for scalars and `1e-6` absolute for probabilities, and the measured maxima are 2.287833922e-09 lbf, 3.548272787e-13 in, 4.211619095e-11 scalar relative, 2.220446049e-16 probability absolute, 0.000000000e+00 ft·lbf polished-rod work and 6.510163075e-09 ft·lbf pump-card work, with both classification labels identical in all ten cases.
+For the ten saved surface cards replayed through live Python and JavaScript, the tolerances are `1e-6` of reference range for pump samples, `1e-6` of `max(abs(reference), 1)` for scalars and `1e-6` absolute for probabilities, and the measured maxima are 2.287833922e-09 lbf, 3.548272787e-13 in, 1.265829130e-11 scalar relative, 2.220446049e-16 probability absolute, 0.000000000e+00 ft·lbf polished-rod work and 6.510163075e-09 ft·lbf pump-card work, with both classification labels identical in all ten cases.
 
 <!-- reproduction:end -->
 
@@ -245,7 +249,7 @@ $env:PYTHONIOENCODING = 'utf-8'
 python docs/apps/dynacard/build_assets.py
 python docs/apps/dynacard/build_assets.py --check
 python docs/apps/dynacard/build_reproduction.py
-python -m pytest tests/apps/test_dynacard_app.py -q
+python -m pytest tests/apps/test_dynacard_app.py tests/apps/test_dynacard_app_assets.py -q
 python scripts/enforcement/check-engineering-register.py docs/apps/dynacard/README.md
 node docs/apps/dynacard/test/page_smoke.cjs
 ```

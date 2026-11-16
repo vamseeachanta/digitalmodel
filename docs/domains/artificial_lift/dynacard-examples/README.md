@@ -34,7 +34,7 @@ Computed-card shape-only matches 6/10 expected modes; the shipped model matches 
 
 Every analysis runs on the surface card at its published CSV precision (0.0001 in, 0.01 lbf), so rerunning a published CSV reproduces the stored values. Precision-effect deltas are reported at an absolute resolution of 1e-6 lbf and 1e-6 percentage points; smaller cancellation noise is reported as zero. Fluid load and fillage step with the detected corner samples: the unrounded synthesised cards give fluid loads differing by up to 34 lbf and the same fillage to one decimal, with corners moved in examples 3, 4, 9. Differences of this size between two tools reading the same card are expected unless both use identical input digits.
 
-Computed CPIP below zero: example 1: -28.764 psi; example 8: -57.485 psi. These values are retained as reported by the module; physical intake pressure is not established without a consistent dimensioned fluid-pressure basis and measured cards.
+Computed CPIP below zero: none. These values are retained as reported by the module; physical intake pressure is not established without a consistent dimensioned fluid-pressure basis and measured cards.
 
 | Example | Condition | Crosswalk | Pump stroke (in) | Fillage (%) | Fluid load (lbf) | Shipped HYPOTHESIS | Shape-only HYPOTHESIS (computed pump card) | Round-trip nRMSE (%) |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -91,10 +91,10 @@ Figure 2. Synthesised surface card, not a measured card; computed pump card over
 | Fluid load (upstroke minus downstroke mean) | lbf | 3711 |
 | Upstroke mean load | lbf | 3850 |
 | Downstroke mean load | lbf | 139 |
-| CPIP intake pressure | psi | -28.8 |
-| CPIP discharge pressure | psi | 2071.4 |
-| CPIP module fluid density | lb/ft³ | 58.651 |
-| CPIP tubing gradient | psi/ft | 0.4070 |
+| CPIP intake pressure | psi | 127.0 |
+| CPIP discharge pressure | psi | 2227.2 |
+| CPIP module fluid density | lb/ft³ | 63.237 |
+| CPIP tubing gradient | psi/ft | 0.4391 |
 | Gross displacement | bbl/day | 67.4 |
 | Net displacement | bbl/day | 56.3 |
 | Theoretical production | bbl/day | 56.3 |
@@ -140,10 +140,10 @@ Figure 3. Synthesised surface card, not a measured card; computed pump card over
 | Fluid load (upstroke minus downstroke mean) | lbf | 3020 |
 | Upstroke mean load | lbf | 3199 |
 | Downstroke mean load | lbf | 179 |
-| CPIP intake pressure | psi | 362.5 |
-| CPIP discharge pressure | psi | 2071.4 |
-| CPIP module fluid density | lb/ft³ | 58.651 |
-| CPIP tubing gradient | psi/ft | 0.4070 |
+| CPIP intake pressure | psi | 518.3 |
+| CPIP discharge pressure | psi | 2227.2 |
+| CPIP module fluid density | lb/ft³ | 63.237 |
+| CPIP tubing gradient | psi/ft | 0.4391 |
 | Gross displacement | bbl/day | 67.4 |
 | Net displacement | bbl/day | 15.5 |
 | Theoretical production | bbl/day | 15.5 |
@@ -189,10 +189,10 @@ Figure 4. Synthesised surface card, not a measured card; computed pump card over
 | Fluid load (upstroke minus downstroke mean) | lbf | 3405 |
 | Upstroke mean load | lbf | 3718 |
 | Downstroke mean load | lbf | 313 |
-| CPIP intake pressure | psi | 144.9 |
-| CPIP discharge pressure | psi | 2071.4 |
-| CPIP module fluid density | lb/ft³ | 58.651 |
-| CPIP tubing gradient | psi/ft | 0.4070 |
+| CPIP intake pressure | psi | 300.7 |
+| CPIP discharge pressure | psi | 2227.2 |
+| CPIP module fluid density | lb/ft³ | 63.237 |
+| CPIP tubing gradient | psi/ft | 0.4391 |
 | Gross displacement | bbl/day | 67.4 |
 | Net displacement | bbl/day | 19.0 |
 | Theoretical production | bbl/day | 19.0 |
@@ -238,10 +238,10 @@ Figure 5. Synthesised surface card, not a measured card; computed pump card over
 | Fluid load (upstroke minus downstroke mean) | lbf | 2935 |
 | Upstroke mean load | lbf | 3337 |
 | Downstroke mean load | lbf | 402 |
-| CPIP intake pressure | psi | 410.4 |
-| CPIP discharge pressure | psi | 2071.4 |
-| CPIP module fluid density | lb/ft³ | 58.651 |
-| CPIP tubing gradient | psi/ft | 0.4070 |
+| CPIP intake pressure | psi | 566.2 |
+| CPIP discharge pressure | psi | 2227.2 |
+| CPIP module fluid density | lb/ft³ | 63.237 |
+| CPIP tubing gradient | psi/ft | 0.4391 |
 | Gross displacement | bbl/day | 67.4 |
 | Net displacement | bbl/day | 62.2 |
 | Theoretical production | bbl/day | 62.2 |
@@ -287,10 +287,10 @@ Figure 6. Synthesised surface card, not a measured card; computed pump card over
 | Fluid load (upstroke minus downstroke mean) | lbf | 3456 |
 | Upstroke mean load | lbf | 3475 |
 | Downstroke mean load | lbf | 19 |
-| CPIP intake pressure | psi | 115.7 |
-| CPIP discharge pressure | psi | 2071.4 |
-| CPIP module fluid density | lb/ft³ | 58.651 |
-| CPIP tubing gradient | psi/ft | 0.4070 |
+| CPIP intake pressure | psi | 271.5 |
+| CPIP discharge pressure | psi | 2227.2 |
+| CPIP module fluid density | lb/ft³ | 63.237 |
+| CPIP tubing gradient | psi/ft | 0.4391 |
 | Gross displacement | bbl/day | 67.4 |
 | Net displacement | bbl/day | 47.3 |
 | Theoretical production | bbl/day | 47.3 |
@@ -336,10 +336,10 @@ Figure 7. Synthesised surface card, not a measured card; computed pump card over
 | Fluid load (upstroke minus downstroke mean) | lbf | 3303 |
 | Upstroke mean load | lbf | 3922 |
 | Downstroke mean load | lbf | 619 |
-| CPIP intake pressure | psi | 202.4 |
-| CPIP discharge pressure | psi | 2071.4 |
-| CPIP module fluid density | lb/ft³ | 58.651 |
-| CPIP tubing gradient | psi/ft | 0.4070 |
+| CPIP intake pressure | psi | 358.2 |
+| CPIP discharge pressure | psi | 2227.2 |
+| CPIP module fluid density | lb/ft³ | 63.237 |
+| CPIP tubing gradient | psi/ft | 0.4391 |
 | Gross displacement | bbl/day | 67.4 |
 | Net displacement | bbl/day | 53.2 |
 | Theoretical production | bbl/day | 53.2 |
@@ -385,10 +385,10 @@ Figure 8. Synthesised surface card, not a measured card; computed pump card over
 | Fluid load (upstroke minus downstroke mean) | lbf | 3403 |
 | Upstroke mean load | lbf | 3436 |
 | Downstroke mean load | lbf | 33 |
-| CPIP intake pressure | psi | 145.9 |
-| CPIP discharge pressure | psi | 2071.4 |
-| CPIP module fluid density | lb/ft³ | 58.651 |
-| CPIP tubing gradient | psi/ft | 0.4070 |
+| CPIP intake pressure | psi | 301.7 |
+| CPIP discharge pressure | psi | 2227.2 |
+| CPIP module fluid density | lb/ft³ | 63.237 |
+| CPIP tubing gradient | psi/ft | 0.4391 |
 | Gross displacement | bbl/day | 67.4 |
 | Net displacement | bbl/day | 63.1 |
 | Theoretical production | bbl/day | 63.1 |
@@ -434,10 +434,10 @@ Figure 9. Synthesised surface card, not a measured card; computed pump card over
 | Fluid load (upstroke minus downstroke mean) | lbf | 3762 |
 | Upstroke mean load | lbf | 3855 |
 | Downstroke mean load | lbf | 93 |
-| CPIP intake pressure | psi | -57.5 |
-| CPIP discharge pressure | psi | 2071.4 |
-| CPIP module fluid density | lb/ft³ | 58.651 |
-| CPIP tubing gradient | psi/ft | 0.4070 |
+| CPIP intake pressure | psi | 98.3 |
+| CPIP discharge pressure | psi | 2227.2 |
+| CPIP module fluid density | lb/ft³ | 63.237 |
+| CPIP tubing gradient | psi/ft | 0.4391 |
 | Gross displacement | bbl/day | 67.4 |
 | Net displacement | bbl/day | 50.2 |
 | Theoretical production | bbl/day | 50.2 |
@@ -483,10 +483,10 @@ Figure 10. Synthesised surface card, not a measured card; computed pump card ove
 | Fluid load (upstroke minus downstroke mean) | lbf | 2554 |
 | Upstroke mean load | lbf | 2607 |
 | Downstroke mean load | lbf | 53 |
-| CPIP intake pressure | psi | 626.1 |
-| CPIP discharge pressure | psi | 2071.4 |
-| CPIP module fluid density | lb/ft³ | 58.651 |
-| CPIP tubing gradient | psi/ft | 0.4070 |
+| CPIP intake pressure | psi | 781.9 |
+| CPIP discharge pressure | psi | 2227.2 |
+| CPIP module fluid density | lb/ft³ | 63.237 |
+| CPIP tubing gradient | psi/ft | 0.4391 |
 | Gross displacement | bbl/day | 67.4 |
 | Net displacement | bbl/day | 63.0 |
 | Theoretical production | bbl/day | 63.0 |
@@ -532,10 +532,10 @@ Figure 11. Synthesised surface card, not a measured card; computed pump card ove
 | Fluid load (upstroke minus downstroke mean) | lbf | 3235 |
 | Upstroke mean load | lbf | 3690 |
 | Downstroke mean load | lbf | 455 |
-| CPIP intake pressure | psi | 241.0 |
-| CPIP discharge pressure | psi | 2071.4 |
-| CPIP module fluid density | lb/ft³ | 58.651 |
-| CPIP tubing gradient | psi/ft | 0.4070 |
+| CPIP intake pressure | psi | 396.8 |
+| CPIP discharge pressure | psi | 2227.2 |
+| CPIP module fluid density | lb/ft³ | 63.237 |
+| CPIP tubing gradient | psi/ft | 0.4391 |
 | Gross displacement | bbl/day | 67.4 |
 | Net displacement | bbl/day | 52.0 |
 | Theoretical production | bbl/day | 52.0 |
@@ -671,9 +671,9 @@ Source: [DOI 10.17632/hnfwm9mjs6.1](https://data.mendeley.com/datasets/hnfwm9mjs
 | `crosswalks.供液不足` | ASSUMED | `"FLUID_POUND"` | Supply insufficiency does not establish fluid pound; sand production does not establish abrasion. Provenance: assumed, based on previous experience. |
 | `crosswalks.出砂` | ASSUMED | `"SAND_ABRASION"` | Same ASSUMED crosswalks basis. Provenance: assumed, based on previous experience. |
 | `uniform_scale` | ASSUMED | `"All ten shapes use the same stroke and load range"` | Rod parting and other near-zero physical-load conditions are shape illustrations, not physical pump cards. Provenance: assumed, based on previous experience. |
-| `cpip_defaults.oil_api` | ASSUMED | `35.0` | CPIP derives density from this default mixture, not context fluid_density; retained as the module reports it. Provenance: assumed, based on previous experience. |
-| `cpip_defaults.water_sg` | ASSUMED | `1.03` | Same ASSUMED cpip_defaults basis. Provenance: assumed, based on previous experience. |
-| `cpip_defaults.water_cut_pct` | ASSUMED | `50.0` | Same ASSUMED cpip_defaults basis. Provenance: assumed, based on previous experience. |
+| `cpip_density_basis.density_source` | ASSUMED | `"context"` | CPIP uses the supplied context fluid density, the same density that scales the load; the scale assumes zero intake pressure, so computed CPIP restates that assumption. Provenance: assumed, based on previous experience. |
+| `cpip_density_basis.fluid_density_lb_ft3` | ASSUMED | `63.237` | Same ASSUMED cpip_density_basis basis. Provenance: assumed, based on previous experience. |
+| `cpip_density_basis.tubing_gradient` | ASSUMED | `"fluid_density / 144 psi/ft"` | Same ASSUMED cpip_density_basis basis. Provenance: assumed, based on previous experience. |
 | `production.runtime_hours` | ASSUMED | `24.0` | InputParameters defaults runtime to 24 h (reported source: card); no measured runtime or efficiency. Production = net displacement * runtime / 24; reported efficiency is not a multiplier. Provenance: assumed, based on previous experience. |
 | `production.pump_efficiency_pct` | ASSUMED | `100.0` | Same ASSUMED production basis. Provenance: assumed, based on previous experience. |
 | `solver_defaults.method` | ASSUMED | `"everitt_jennings"` | Forward and default inverse use matching grids, damping defaults and vertical survey; inverse output smoothing remains enabled. Provenance: assumed, based on previous experience. |
@@ -684,7 +684,7 @@ Source: [DOI 10.17632/hnfwm9mjs6.1](https://data.mendeley.com/datasets/hnfwm9mjs
 
 Table 13. Every assigned input and interpretation is ASSUMED; the source does not provide a dimensioned well or measured surface card.
 
-The production module reports gross displacement from pump area, gross stroke and speed; net displacement multiplies gross by fillage; theoretical production multiplies net by runtime/24. The reported pump-efficiency value is not a multiplier in that calculation. Runtime source `card` denotes the InputParameters default, not measured runtime. Both CPIP density and gradient are retained above; negative computed intake pressures are retained without clamping. The module's CPIP uses its own default mixture density (35° API oil, 1.03 water specific gravity, 50 % water cut, 58.651 lb/ft³), not the context fluid density of 63.237 lb/ft³ used to scale the load, so the computed fluid load can exceed the CPIP discharge-pressure basis; CPIP for these examples is therefore not established.
+The production module reports gross displacement from pump area, gross stroke and speed; net displacement multiplies gross by fillage; theoretical production multiplies net by runtime/24. The reported pump-efficiency value is not a multiplier in that calculation. Runtime source `card` denotes the InputParameters default, not measured runtime. Both CPIP density and gradient are retained above; negative computed intake pressures are retained without clamping. The module's CPIP uses the supplied context fluid density of 63.237 lb/ft³ (density source `context`), the same density that scales the load. The load scale assumes zero intake pressure, so computed CPIP restates that assumption and does not establish a physical intake pressure; CPIP for these examples is therefore not established.
 
 Model SHA-256 digests (decompressed inference JSON): shipped `c3612e1f31aad740b4ebc5f81e34bf09ae7d21e42f1f18915c2a76c94337a40c`; shape_only `4190590bd965267518f9e936ac3a315d3be9a68eac72e92b60f5b1e6bb38c94f`.
 

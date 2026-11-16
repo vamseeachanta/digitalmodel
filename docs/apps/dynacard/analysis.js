@@ -144,17 +144,34 @@
     return {fluid_load: up - down, upstroke_load: up, downstroke_load: down};
   }
 
-  function cpip(well, fluid) {
+  // calculations.py _cpip_density_basis: a supplied context density wins;
+  // otherwise the 35 deg API / 1.03 SG mixture at the well-test (or 50 %) water cut.
+  function cpipDensityBasis(well, densitySupplied) {
+    if (densitySupplied) {
+      const density = well.fluid_density;
+      if (!Number.isFinite(density) || density <= 0) throw new Error("fluid_density must be finite and positive for CPIP");
+      return {density, gradient: density / 144, source: "context"};
+    }
     const waterCut = well.well_test ? (well.well_test.water_cut ?? 0) : 50;
-    const tubingPressure = well.input_params && well.input_params.tubing_pressure;
-    if (!tubingPressure) throw new Error("A positive tubing pressure is required; the 100 psi fallback is not supported.");
     const oilSg = 141.5 / (35 + 131.5), wc = waterCut / 100;
     const mixedSg = 1.03 * wc + oilSg * (1 - wc);
-    const gradient = 0.433 * mixedSg, density = mixedSg * 62.4;
-    const discharge = tubingPressure + gradient * well.pump.depth;
+    return {density: mixedSg * 62.4, gradient: 0.433 * mixedSg,
+      source: well.well_test ? "well_test_mixture" : "assumed_50pct_mixture"};
+  }
+
+  function cpip(well, fluid, densitySupplied) {
+    const tubingPressure = well.input_params && well.input_params.tubing_pressure;
+    if (!tubingPressure) throw new Error("A positive tubing pressure is required; the 100 psi fallback is not supported.");
+    const basis = cpipDensityBasis(well, densitySupplied);
+    const discharge = tubingPressure + basis.gradient * well.pump.depth;
     const pumpArea = Math.PI * well.pump.diameter ** 2 / 4;
-    return {pump_intake_pressure: discharge - fluid.fluid_load / pumpArea,
-      pump_discharge_pressure: discharge, fluid_density: density, tubing_gradient: gradient};
+    const intake = discharge - fluid.fluid_load / pumpArea;
+    const negative = intake < 0;
+    return {pump_intake_pressure: intake, pump_discharge_pressure: discharge,
+      fluid_density: basis.density, tubing_gradient: basis.gradient,
+      density_source: basis.source,
+      pressure_status: negative ? "negative_calculated_pressure" : "calculated",
+      warnings: negative ? ["Negative calculated pressure: physical intake pressure is not established."] : []};
   }
 
   function production(well, fillage) {
@@ -172,13 +189,13 @@
       pump_efficiency: efficiency, runtime_hours: runtime, runtime_source: source};
   }
 
-  function calculate(card, well) {
+  function calculate(card, well, densitySupplied = false) {
     const found = corners(card), gross = span(card.position);
     const net = card.position[found[3]] - minimum(card.position);
     const fillage = {gross_stroke: gross, net_stroke: net,
       fillage: clip(gross > 0 ? net / gross * 100 : 0, 0, 100), corners: found};
     const fluid = fluidLoad(card);
-    return {fluid_load: fluid, fillage, cpip: cpip(well, fluid),
+    return {fluid_load: fluid, fillage, cpip: cpip(well, fluid, densitySupplied),
       production: production(well, fillage), corners: found};
   }
 

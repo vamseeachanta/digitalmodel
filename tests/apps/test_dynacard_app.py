@@ -105,6 +105,8 @@ def assert_parity(actual, expected):
         assert actual[key] == expected[key], key
     assert actual["fillage"]["corners"] == expected["fillage"]["corners"]
     assert actual["production"]["runtime_source"] == expected["production"]["runtime_source"]
+    for key in ("density_source", "pressure_status", "warnings"):
+        assert actual["cpip"][key] == expected["cpip"][key], f"cpip.{key}"
     for key in ("diagnosis", "shape_diagnosis"):
         assert actual[key]["classification"] == expected[key]["classification"]
         assert actual[key]["confidence"] == expected[key]["confidence"]
