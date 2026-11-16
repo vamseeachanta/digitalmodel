@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diagnostic crack inspection policy</title>
+<style>
+body { font: 1rem/1.6 system-ui, sans-serif; max-width: 58rem; margin: 2rem auto; padding: 0 1rem; }
+pre { overflow-x: auto; padding: 1rem; background: #f2f4f6; }
+table { border-collapse: collapse; } th, td { border: 1px solid #bbb; padding: .5rem; text-align: left; }
+</style>
+<h1>Diagnostic crack inspection policy</h1>
+<p>The supplied growth history can support explicit policy arithmetic. This calculation
+qualifies neither a service inspection interval nor the supplied material law.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>1</td><td>2026-11-16</td><td>Document explicit policy inputs and unknown target-life handling.</td></tr></table>
+<h2>Synthetic example</h2>
+<p>All numerical inputs below are artificial controls. Depth is in metres, DeltaK in
+MPa sqrt(m), C in m/cycle/(MPa sqrt(m)) raised to the growth exponent, and time in years.
+A constant cycle rate is assumed throughout the predicted life. No automatic unit conversion occurs.</p>
+<pre id="example">from digitalmodel.asset_integrity.inspection_planning import plan_crack_inspection
+
+result = plan_crack_inspection(
+    table=[[0.001, 5.0], [0.002, 2.0]],
+    law=dict(c=1e-10, m=2, threshold=2, e_ratio=1,
+             threshold_rule="unchanged", basis="Synthetic growth law"),
+    cycles_per_year=1000000,
+    interval_divisor=2,
+    policy_cap_years=10,
+    policy_basis="Synthetic divisor and cap; not a service policy",
+    target_depth_basis="Supplied assessment target; not a critical depth",
+)</pre>
+<p>For linear DeltaK decreasing from 5 to 2, the independent integral is
+N = (1/2 − 1/5)/(C × 3000) = 1000000 cycles. Dividing by 1000000 cycles/year gives
+1.0 year; dividing by 2 gives 0.5 year, below the supplied 10.0 year cap.</p>
+<h2>Result interpretation</h2>
+<p>A non-null target cycle count gives <code>DIAGNOSTIC_POLICY_ONLY</code> and
+min(cycles / cycles_per_year / interval_divisor, policy_cap_years), without rounding.
+Positive-threshold arrival at the last depth retains finite life even with an ARRESTED growth status.</p>
+<p>Initial or interior arrest, and divergent arrival, retain null target years and interval with
+<code>REVIEW_REQUIRED</code>. Actual arrest depth and cycles-to-arrest remain in the growth record;
+unknown target life never selects the cap. Results retain copied inputs and shared-integrator provenance.
+All numerical output is finite or null. Nonfinite arithmetic raises an error before a cap can hide it.</p>
+<h2>Remaining requirements</h2>
+<p>The final depth is a supplied assessment target. Published-example qualification, calibrated stress-ratio
+correction, material and detection qualification, automatic critical-depth calculation, leak-before-break
+and risk-based inspection integration remain open under #2177. E-ratio is a declared sensitivity only.</p>
+</html>
