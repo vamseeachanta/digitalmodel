@@ -130,6 +130,9 @@ jobs:
           UV_NO_SOURCES=true uv pip install -e .
           uv pip install pytest pytest-cov ruff bandit pyyaml loguru click
 
+      - name: Check report provenance ratchet
+        run: python scripts/enforcement/check-report-provenance.py
+
       - name: Check engineering register changes
         env:
           REGISTER_BASE: ${{ github.event_name == 'pull_request' && steps.build_merge.outputs.tip || github.event.before }}
