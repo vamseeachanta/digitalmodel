@@ -1,6 +1,8 @@
 # MANDATORY: All operations use parallel processing where applicable
 
-.PHONY: all install test lint format clean parallel-check
+.PHONY: all install install-test test lint format clean parallel-check
+
+TEST_ARGS ?= tests/ -x --tb=short -q
 
 # Default target runs everything in parallel
 all: parallel-check
@@ -18,9 +20,13 @@ install-dev:
 	@echo "📦 Installing dev dependencies (parallel)..."
 	@uv pip install -e .[dev] --compile
 
+install-test:
+	@echo "Installing test dependencies..."
+	@uv sync --no-sources --extra test
+
 test:
-	@echo "🧪 Running tests (parallel)..."
-	@pytest -n auto --dist loadscope
+	@echo "Running tests..."
+	@uv run --no-sources --with-editable '.[test]' python -m pytest $(TEST_ARGS)
 
 lint:
 	@echo "Running linters..."

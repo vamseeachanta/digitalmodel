@@ -204,10 +204,42 @@ digitalmodel registers 27 CLI entry points. Run `digitalmodel --help` for the fu
 
 ## Testing
 
+Run from the repository root with Python 3.11 (the CI version) and `uv` installed.
+The command below installs the package and the complete `test` extra, including
+pytest plugins and collection-time dependencies, using the same invocation as CI.
+To preserve an existing environment, set `UV_PROJECT_ENVIRONMENT` to a new,
+disposable directory before running these commands.
+
+Start with the offline-capable documentation contract:
+
 ```bash
-cd digitalmodel
-python -m pytest tests/ -x --tb=short -q
+uv run --no-sources --with-editable '.[test]' python -m pytest tests/contracts/test_test_environment_docs.py -q -p no:cacheprovider
 ```
+
+Dependency installation may access the public package index; the contract tests
+themselves run offline and install nothing. After provisioning, add `--offline`
+to `uv run` to prohibit network access during subsequent runs.
+
+Select a bounded test directory separately, for example:
+
+```bash
+uv run --no-sources --with-editable '.[test]' python -m pytest tests/contracts/ -q
+```
+
+With `make` available, `make install-test` provisions the project environment with
+`uv sync --no-sources --extra test`. `make test` uses the same CI invocation;
+override its default whole-suite arguments for a bounded run:
+
+```bash
+make test TEST_ARGS="tests/contracts/test_test_environment_docs.py -q -p no:cacheprovider"
+```
+
+`--no-sources` selects public-index dependencies rather than repository source
+pins. The existing source-pin comment in `pyproject.toml` records that the
+public-index `assetutilities` release lacks `workflow_api`, which the Git pin
+supplies. Passing the smoke contract establishes the test environment for that
+contract; it does not establish full-domain compatibility or a passing whole
+suite. Other tests may require additional domain data, dependencies or licences.
 
 ## Contributing
 
