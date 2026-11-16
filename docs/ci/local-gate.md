@@ -73,8 +73,12 @@ delays a merge:
   `Parametric atlas drift`, `Workflow Automation Tests`, `Capability card links`
 
 Advisory does not mean ignored. A hosted job that has finished with a failure
-at the head still blocks the merge; only a job that has not finished is
-disregarded.
+at the head still blocks the merge, with one exception: the jobs the local gate
+runs itself on the same merged tree (the three `Quality Gates by Domain` job
+groups, `Text Encoding` and `Repository Structure`) are superseded by the
+`local-gate` result. A runner that refused or dropped one of those jobs
+therefore does not hold a pull request the gate has passed. A job that has not
+finished is disregarded.
 
 These runs are not advisory:
 
