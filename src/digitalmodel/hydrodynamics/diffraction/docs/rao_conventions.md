@@ -40,11 +40,19 @@ in `(-pi, pi]`; source zero is represented by +pi, equivalent to the equation's
 -pi endpoint. This helper does not mirror headings automatically.
 
 The method does not preserve erroneous spreadsheet addressing. Each call uses
-the sample supplied by its caller. A fixed-row lookup in a legacy engineering
-workbook can repeat an amplitude across frequencies; an exporter shall select
-the intended frequency sample explicitly. Spreadsheet row/column helpers,
+the sample supplied by its caller. Spreadsheet row/column helpers,
 metadata, charts, pasted results and copy-to-clipboard macros are outside this
 module.
+
+## Related code
+
+`digitalmodel.motion_forecast.conventions.normalize_phase_deg` uses degrees and a
+solver enum to select the phase sign; `lag_to_lead_phase_rad` uses unwrapped
+radians and an explicit axis-reversal flag.
+
+`digitalmodel.motion_forecast.conventions.heading_going_to_deg` wraps the half-turn
+conversion in `[0, 360)` degrees; `opposite_axis_heading_rad` returns radians in
+`(-pi, pi]`.
 
 ## Standards and clauses
 

@@ -2,7 +2,7 @@
 
 Internal angular quantities use radians. No named engineering standard or clause
 is stated in the source; the formulas implement its explicit convention equations.
-See ``README_rao_conventions.md`` for assumptions and input gaps.
+See ``docs/rao_conventions.md`` for assumptions and input gaps.
 """
 from __future__ import annotations
 
@@ -131,6 +131,7 @@ def lag_to_lead_phase_rad(phase_lag_rad: float, *, reverse_axis: bool = False) -
     Source convention: x = a R cos(omega t - lag) becomes
     x = a R cos(omega t + lead). Reversing an axis negates x. The source's
     reflection equation chooses +pi. No standard or clause is stated.
+    See ``docs/rao_conventions.md`` under "Related code" for the degree helper.
     """
     phase_lag_rad = _finite_real(phase_lag_rad, 'phase_lag_rad')
     _boolean(reverse_axis, 'reverse_axis')
@@ -178,6 +179,7 @@ def opposite_axis_heading_rad(source_heading_rad: float) -> float:
     At source zero use +pi, equivalent to the equation's -pi endpoint. Both
     axes measure angles in the same rotational sense. No standard clause is
     stated in the source; this is not a general rotation/heading transformation.
+    See ``docs/rao_conventions.md`` under "Related code" for the degree helper.
     """
     source_heading_rad = _finite_real(source_heading_rad, 'source_heading_rad')
     if not 0.0 <= source_heading_rad <= 2.0 * math.pi:
