@@ -71,5 +71,24 @@
       "dp_notation_source": "https://www.allseas.com/sites/d10p.allseas.com/files/2026-02/pioneering-spirit-vessel-specs-2026.pdf"
     },
     "dp_notation_source": "DP-3; printed page 8"
+  },
+  {
+    "vessel_name": "Castorone",
+    "owner": "Saipem",
+    "lay_methods": null,
+    "tensioner_capacity_tonnes": null,
+    "max_pipe_diameter_inches": 48,
+    "dp_class": null,
+    "water_depth_min_m": null,
+    "water_depth_max_m": null,
+    "record_water_depth_m": null,
+    "source_url": "https://www.saipem.com/en/solutions-energy-transition/fleet-and-yards/castorone",
+    "retrieved_utc": "2026-11-14T02:33:54.167562+00:00",
+    "field_sources": {
+      "vessel_name": "https://www.saipem.com/en/solutions-energy-transition/fleet-and-yards/castorone",
+      "owner": "https://www.saipem.com/en/solutions-energy-transition/fleet-and-yards/castorone",
+      "max_pipe_diameter_inches": "https://www.saipem.com/en/solutions-energy-transition/fleet-and-yards/castorone"
+    },
+    "dp_notation_source": null
   }
 ]

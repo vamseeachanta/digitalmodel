@@ -24,7 +24,7 @@ from enum import Enum
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
-from digitalmodel.reporting.provenance import Provenance
+from digitalmodel.reporting.provenance import Provenance, assemble_report
 from digitalmodel.reporting.skeleton import (
     BlockSpec,
     Completeness,
@@ -284,6 +284,7 @@ def render_structured_report(
     ``(html_or_path, completeness)`` so the caller can gate on acceptance (all
     required slots filled for that hull form). Provenance is required (#1019).
     """
+    provenance.require()
     skeleton = diffraction_report_skeleton(structure_type)
     content = build_diffraction_report_content(
         report_data,
@@ -293,8 +294,14 @@ def render_structured_report(
         extra_blocks=extra_blocks,
     )
     status = skeleton.completeness(content, provenance=provenance)
-    out = skeleton.build_html(
-        content, provenance=provenance, output_path=output_path, css=css
+    sections = skeleton.to_backbone().sections
+    reads = ([report_data.source_file] if report_data.source_file
+             else [source.identifier for source in provenance.sources])
+    for section in sections:
+        section.reads = list(reads)
+    out = assemble_report(
+        skeleton.title, data=content, sections=sections, provenance=provenance,
+        output_path=output_path, css=css,
     )
     return out, status
 

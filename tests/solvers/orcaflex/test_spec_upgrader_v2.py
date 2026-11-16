@@ -321,7 +321,9 @@ def test_invalid_riser_data_is_rejected(single_riser, defect):
     elif defect == "unknown_line_type":
         props[SECTIONS][0][0] = "Unresolved"
     elif defect == "non_scalar_stiffness":
-        generic["line_types"][0]["bending_stiffness"] = [120, None]
+        # Isotropic native lists [EI, ~] are converted (#3980); an anisotropic
+        # pair has no representation in the riser schema.
+        generic["line_types"][0]["bending_stiffness"] = [120, 200]
     else:
         del generic["vessels"]
     original = deepcopy(single_riser)
@@ -349,6 +351,66 @@ def test_multiple_referenced_line_types_preserve_order(single_riser, tmp_path):
     upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
     assert [s["line_type"] for s in upgraded["riser"]["lines"][0]["sections"]] == [row[0] for row in rows]
     assert generated_mapping(upgraded, tmp_path / "after") == generated_mapping(single_riser, tmp_path / "before")
+
+
+def test_typed_tensioners_are_rejected_on_fallback_route(single_riser, tmp_path):
+    """Typed tensioners must not be dropped silently on the riser-plus-generic route.
+
+    The fallback renders only the line and vessel templates and emits no
+    tensioner links (#3976), so generation must refuse a typed tensioner.
+    """
+    upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
+    line = upgraded["riser"]["lines"][0]
+    line["end_a"]["type"] = "free"
+    line["end_a"].pop("name", None)
+    upgraded["riser"]["tensioners"] = [{
+        "name": "Tensioner", "line": line["name"], "count": 4, "total_tension": 1000,
+        "stiffness": 50, "radius": 3, "vessel_z": 20,
+    }]
+    original = deepcopy(upgraded)
+    with pytest.raises(ValueError, match="tensioners"):
+        generated_mapping(upgraded, tmp_path / "out")
+    assert upgraded == original
+
+
+@pytest.mark.parametrize("stiffness", [[120, None], [120, 120]])
+def test_isotropic_native_stiffness_list_is_converted(single_riser, tmp_path, stiffness):
+    """The [EI, ~] input formerly pinned as rejected now converts (#3980).
+
+    Comparator: the authored EI of 120 kN.m2; the native list layout is
+    written back unchanged and the upgrade is lossless.
+    """
+    single_riser["generic"]["line_types"][0]["bending_stiffness"] = stiffness
+    upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
+    assert upgraded["riser"]["line_types"][0]["bending_stiffness"] == 120
+    after = generated_mapping(upgraded, tmp_path / "after")
+    assert after == generated_mapping(single_riser, tmp_path / "before")
+    (line_type,) = after["includes/20_generic_objects.yml"]["LineTypes"]
+    assert line_type["EI"] == stiffness
+
+
+@pytest.mark.parametrize("explicit_second", [False, True])
+@pytest.mark.parametrize("source", ["typed", "properties"])
+def test_typed_stiffness_edit_preserves_isotropy(
+    single_riser, tmp_path, explicit_second, source
+):
+    """A synthetic EI edit updates both directions or retains inheritance."""
+    native_type = single_riser["generic"]["line_types"][0]
+    stiffness = [120, 120 if explicit_second else None]
+    if source == "typed":
+        native_type["bending_stiffness"] = stiffness
+    else:
+        native_type.pop("bending_stiffness")
+        native_type["properties"]["EI"] = stiffness
+    upgraded = upgrade_spec(single_riser, DetectedModelType.RISER)
+    upgraded["riser"]["line_types"][0]["bending_stiffness"] = 150
+    original = deepcopy(upgraded)
+    reloaded = yaml.safe_load(yaml.safe_dump(upgraded))
+    after = generated_mapping(reloaded, tmp_path / "edited")
+    (line_type,) = after["includes/20_generic_objects.yml"]["LineTypes"]
+    assert line_type["EI"] == [150, 150 if explicit_second else None]
+    assert upgraded == original
+    assert reloaded == original
 
 
 def test_typed_buoys_are_rejected_on_fallback_route(single_riser, tmp_path):
