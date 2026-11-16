@@ -304,7 +304,7 @@
       "outside_validity": [],
       "sources": {
         "velocity_m_s": "ufc-4-152-01: Fig. 5-3/5-4, moderate (sheltered/moderate/exposed), digitized",
-        "cm": "ufc-4-152-01: 5-2.1.1 e surface vessels; F 0.770 from berthing coefficient Ce Cg Cd Cc = 0.513 (Eq. 5-2, p. 106; p. 109)",
+        "cm": "ufc-4-152-01: 5-2.1.1 e surface vessels; F 0.770 from berthing coefficient Ce Cg Cd Cc = 0.513 (Eq. 5-2, p. 106; p. 109, printed wording; the block coefficient reading is the alternative)",
         "ce": "ufc-4-152-01: k^2/(a^2 + k^2), k 48.76 m, a 45.00 m",
         "cs": "ufc-4-152-01: Cd 1.0 for larger ships on energy-absorbing fenders",
         "cc": "ufc-4-152-01: open berth or angled approach",
@@ -724,6 +724,11 @@
     "tornado": "tornado.png",
     "sizes": "sizes.png",
     "database": "database_coverage.png"
+  },
+  "ufc_f_basis": "berthing_coefficient",
+  "ufc_design_energy_knm_by_f_reading": {
+    "berthing_coefficient": 773.0229332293281,
+    "block_coefficient": 874.3131212965052
   },
   "database_rows": 4652,
   "database_by_type": {

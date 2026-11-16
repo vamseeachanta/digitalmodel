@@ -158,3 +158,28 @@ def test_selected_pianc_geometry_matches_the_common_values():
     g = res.selected.geometry
     assert v["cb"] == f"{g['cb']:.3f}" and v["K"] == f"{g['k_m']:.2f}"
     assert v["R"] == f"{g['r_m']:.2f}" and v["phi"] == f"{g['phi_deg']:.1f}" and v["ce"] == f"{g['ce']:.3f}"
+
+
+@pytest.mark.parametrize("basis", list(fd.UFC_F_BASES))
+def test_report_states_both_ufc_f_readings(tmp_path, basis):
+    p = _case_file(tmp_path, "pianc2002")
+    case = yaml.safe_load(p.read_text(encoding="utf-8"))
+    case["conditions"]["ufc_f_basis"] = basis
+    p.write_text(yaml.safe_dump(case, sort_keys=False), encoding="utf-8")
+    out = tmp_path / "out"
+    assert fender_study.main(["--case", str(p), "--out", str(out), "--template",
+                              str(EXAMPLE / "report_template.md"), "--stem", "r",
+                              "--allow-unresolved-citations"]) == 0
+    res = compute(load_case(p), citations="record")
+    e = {b: fd.energy_by_method(fd.Case(res.ship, res.berth, **{**case["conditions"], "ufc_f_basis": b}),
+                                method="ufc", citations="off").design_energy_knm for b in fd.UFC_F_BASES}
+    assert e["berthing_coefficient"] != pytest.approx(e["block_coefficient"], rel=1e-3)
+    md = (out / "r.md").read_text(encoding="utf-8")
+    assert f"This build uses `{basis}`." in md
+    assert (f"{e['berthing_coefficient']:,.1f} kNm under the berthing-coefficient reading and "
+            f"{e['block_coefficient']:,.1f} kNm under the") in " ".join(md.split())
+    data = json.loads((out / "results.json").read_text(encoding="utf-8"))
+    assert data["ufc_f_basis"] == basis
+    assert data["ufc_design_energy_knm_by_f_reading"] == pytest.approx(e)
+    ufc = next(m for m in res.methods if m.method == "ufc")
+    assert ufc.design_energy_knm == pytest.approx(e[basis])

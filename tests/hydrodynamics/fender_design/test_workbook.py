@@ -124,6 +124,36 @@ def test_ufc_row_reproduces_the_hand_regression(built, tmp_path):
     assert vals[f"METHODS!J{row}"] == pytest.approx(823.7, abs=0.05)
 
 
+def test_ufc_f_basis_input_reads_the_block_coefficient_at_0(built, tmp_path):
+    # the same hand case with the block coefficient 0.40 in F: F 0.6, Cm 2.84256, 604.2 kNm
+    res, out = built
+    wb = openpyxl.load_workbook(out)
+    sheet, ref = list(wb.defined_names["UFCF"].destinations)[0]
+    assert wb[sheet][ref.replace("$", "")].value == 1                # generic case: printed wording
+    changed = tmp_path / "ufc_block.xlsx"
+    _set_inputs(out, changed, dict(M=0.40 * 1.025 * 180 * 32 * 12, X=90.0, ALPHA=0.0, VOVR=0.10, UFCF=0))
+    vals = _calculate(changed)
+    row = [r.method for r in res.methods].index("ufc") + 2
+    assert vals[f"METHODS!C{row}"] == pytest.approx(2.84256, abs=5e-5)
+    assert vals[f"METHODS!J{row}"] == pytest.approx(604.2, abs=0.05)
+
+
+def test_workbook_from_a_block_coefficient_case_matches_the_module(tmp_path):
+    case = load_case(EXAMPLE / "generic_case.yaml")
+    case["conditions"]["ufc_f_basis"] = "block_coefficient"
+    res = compute(case, citations="record")
+    out = tmp_path / "block.xlsx"
+    build_workbook(res, out)
+    wb = openpyxl.load_workbook(out)
+    sheet, ref = list(wb.defined_names["UFCF"].destinations)[0]
+    assert wb[sheet][ref.replace("$", "")].value == 0
+    vals = _calculate(out)
+    ufc = next(r for r in res.methods if r.method == "ufc")
+    row = [r.method for r in res.methods].index("ufc") + 2
+    assert vals[f"METHODS!C{row}"] == pytest.approx(ufc.cm.value, rel=1e-9)
+    assert vals[f"METHODS!J{row}"] == pytest.approx(ufc.design_energy_knm, rel=1e-9)
+
+
 def test_fixed_choices_marked_for_regeneration(built):
     _, out = built
     wb = openpyxl.load_workbook(out)
@@ -404,3 +434,21 @@ def test_angular_factor_1_keeps_the_rated_capacity(built, tmp_path):
     assert vals[f"FENDERS!L{row}"] == pytest.approx(base.utilisation, rel=1e-9)
     assert vals[f"FENDERS!O{row}"] == ("yes" if base.meets_energy else "no")
     assert vals[f"INPUTS!E{int(_ref(wb, 'ANG').split('!B')[1])}"] == "ok"
+
+
+@pytest.mark.parametrize("ufcf", [2, 0.5, "berthing"])
+def test_ufc_f_reading_other_than_0_or_1_is_an_error_in_the_ufc_row(built, tmp_path, ufcf):
+    res, out = built
+    changed = tmp_path / "ufcf.xlsx"
+    _set_inputs(out, changed, dict(UFCF=ufcf))
+    vals = _evaluate(changed)
+    wb = openpyxl.load_workbook(changed)
+    assert _na(vals[_ref(wb, "UFCFC")])
+    methods = [r.method for r in res.methods]
+    row = methods.index("ufc") + 2
+    for col in "CJ":                                         # Cm, design energy
+        assert _na(vals[f"METHODS!{col}{row}"]), col
+    other = methods.index("pianc2002") + 2
+    assert _number(vals[f"METHODS!J{other}"])                # other methods do not read it
+    irow = int(_ref(wb, "UFCF").split("!B")[1])
+    assert vals[f"INPUTS!E{irow}"].startswith("ERROR: UFC F reading must be 1")

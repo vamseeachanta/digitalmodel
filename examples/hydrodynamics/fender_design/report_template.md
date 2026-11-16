@@ -104,18 +104,25 @@ Figure 2 – Design berthing velocity against ship size by method.
 | PIANC 2002 (also ROM, WG211 example, EAU) | 1.8 at KC/D ≤ 0.1; 1.875 − 0.75 KC/D; 1.5 at KC/D ≥ 0.5 | use with C_c = 1.0 | secondary (SFT p. 18; TFADM p. 24); ROM p. 265 full-text |
 | Vasco Costa (1964) (BS 6349-4, IS 4651) | 1 + 2T/B | v ≥ 0.08 m/s, KC ≥ 0.1T; pair with C_c | formula |
 | Ueda (1981) (Japanese practice) | 1 + πT/(2 C_b B) | pair with C_c | formula |
-| UFC 4-152-01 surface vessels | C_M0 + (C_m1 − C_M0)(T/d)^3.5, C_M0 = 1.3 + 1.5T/B, C_m1 = F[12.4(T/B)^0.3 − 50T/L] | F = 1.5C_b (C_b < 0.6) or 0.9, with C_b the berthing coefficient C_e·C_g·C_d·C_c (Eq. 5-2, p. 106; restated p. 109), not the block coefficient | full-text |
+| UFC 4-152-01 surface vessels | C_M0 + (C_m1 − C_M0)(T/d)^3.5, C_M0 = 1.3 + 1.5T/B, C_m1 = F[12.4(T/B)^0.3 − 50T/L] | F = 1.5C_b (C_b < 0.6) or 0.9; the C_b in F is read two ways (printed wording: the berthing coefficient C_e·C_g·C_d·C_c, Eq. 5-2, p. 106, restated p. 109; alternative: the block coefficient), option `ufc_f_basis`, this build `{{ufc_f_basis}}` | full-text |
 | Longitudinal approach | 1.1 | | secondary |
 
 Table 2 – Added-mass methods.
 
 The UFC form rises steeply in shallow water (T/d near 1) and gives values well above the
 others there; UFC itself notes that added mass may exceed PIANC below a depth/draught of 1.2.
-In UFC the C_b inside F is the berthing coefficient C_e·C_g·C_d·C_c of Equation 5-2 (p. 106),
-which p. 109 restates under F; the block coefficient has its own symbol (C_BL, p. 107). The
-UFC C_m therefore depends on the contact point: the UFC curve in Figure 3 uses the berthing
-coefficient of the base contact point. TR-6074-OCN, which UFC cites for the added mass, was
-not read.
+The C_b inside the UFC factor F is a source ambiguity. The printed wording on p. 109 is
+"C_b = berthing coefficient as defined previously", that is C_e·C_g·C_d·C_c of Equation 5-2
+(p. 106); the block coefficient has its own symbol (C_BL, p. 107). The threshold 0.6 and the
+form 1.5 C_b read as a hull-form limit, which supports the block coefficient instead. The
+source text does not settle it, so both readings are an explicit option: the case option
+`ufc_f_basis` takes `berthing_coefficient` (the default, the printed wording) or
+`block_coefficient`, and the workbook carries the same choice as the live input UFCF (1 or 0).
+This build uses `{{ufc_f_basis}}`. For the generic case the UFC design energy is
+{{E_ufc_berthing}} kNm under the berthing-coefficient reading and {{E_ufc_block}} kNm under the
+block-coefficient reading. Under the berthing-coefficient reading the UFC C_m depends on the
+contact point; the UFC curve in Figure 3 uses the C_b in F of the base case. TR-6074-OCN, which
+UFC cites for the added mass, was not read, so the reading is not resolved against that source.
 Figure 3 shows the four forms for the generic ship.
 
 ![Cm against keel clearance](charts/cm_methods.png)
@@ -313,7 +320,7 @@ not rate the reaction, and the chart says so. A velocity sweep re-evaluates the 
 each velocity, so velocity-dependent coefficients (the ROM accidental factor and C_c) follow
 it. A C_c sweep re-evaluates the method with C_c given, so terms derived from C_c follow it
 (the UFC 4-152-01 added mass, through the berthing coefficient C_e C_g C_d C_c in its factor
-F). Only coefficients the method uses are swept, within the values its own rule gives;
+F, under the berthing-coefficient reading). Only coefficients the method uses are swept, within the values its own rule gives;
 the inputs left out for this method are:
 
 {{sweeps_skipped_table}}

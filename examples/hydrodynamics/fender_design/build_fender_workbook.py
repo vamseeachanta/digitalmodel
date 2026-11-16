@@ -98,6 +98,9 @@ INPUT_ROWS = (
     ("ANG", "Angular factor on fender energy", "-", lambda c: c["design"].get("angular_factor", 1.0)),
     ("RLIM", "Reaction limit per fender", "kN", lambda c: c["design"].get("reaction_limit_kn")),
     ("PLIM", "Hull pressure limit", "kPa", lambda c: c["design"].get("hull_pressure_limit_kpa")),
+    ("UFCF", "UFC factor F reads Cb as: 1 berthing coefficient Ce Cg Cd Cc (printed wording, default), "
+     "0 block coefficient", "-",
+     lambda c: int(c.get("conditions", {}).get("ufc_f_basis", "berthing_coefficient") == "berthing_coefficient")),
 )
 
 
@@ -176,8 +179,8 @@ CALC_ROWS = (
      '=IF(OR(STRUCT="open",ABS(ALPHA)>5),1,IF(STRUCT="closed",0.8,0.9))', "UFC 4-152-01 5-2.1"),
     ("CB_UFC", "Berthing coefficient, UFC Cb = Ce Cg Cd Cc (Cd 1.0)", "=CE_UFC*CG_UFC*1*CC_UFC",
      "UFC 4-152-01 Eq. 5-2, p. 106"),
-    ("CM_UFC", "Cm, UFC C_M0 + (C_m1 - C_M0)(T/d)^3.5, F = 1.5 Cb (Cb < 0.6) or 0.9, Cb berthing coefficient",
-     "=(1.3+1.5*T/BEAM)+(IF(CB_UFC<0.6,1.5*CB_UFC,0.9)*(12.4*(T/BEAM)^0.3-50*T/LBP)-(1.3+1.5*T/BEAM))*(T/DEPTH)^3.5",
+    ("CM_UFC", "Cm, UFC C_M0 + (C_m1 - C_M0)(T/d)^3.5, F = 1.5 Cb (Cb < 0.6) or 0.9, Cb in F per UFCF (CF_UFC)",
+     "=(1.3+1.5*T/BEAM)+(IF(CF_UFC<0.6,1.5*CF_UFC,0.9)*(12.4*(T/BEAM)^0.3-50*T/LBP)-(1.3+1.5*T/BEAM))*(T/DEPTH)^3.5",
      "UFC 4-152-01 5-2.1.1 e, p. 109"),
     ("CG_ROM", "Cg, ROM: 0.95 continuous berth, 1.0 dolphins", "=IF(CONT=1,0.95,1)", "ROM 2.0-11"),
     # Checked inputs: the only cells that read X and ANG. Outside the valid range they are
@@ -187,12 +190,20 @@ CALC_ROWS = (
      "=IF(AND(ISNUMBER(X),ISNUMBER(LBP),X>=0,X<=LBP),X,NA())", "fender_design.contact_offset_m"),
     ("ANGC", "Angular factor, checked: #N/A unless 0 < factor <= 1 (a reduction only)",
      "=IF(AND(ISNUMBER(ANG),ANG>0,ANG<=1),ANG,NA())", "fender_design.design_performance"),
+    # The Cb inside the UFC factor F: the printed wording (berthing coefficient, the default)
+    # or the block coefficient (the 0.6 threshold read as a hull-form limit); fender_design.UFC_F_BASES.
+    ("UFCFC", "UFC F reading, checked: #N/A unless 1 (berthing coefficient) or 0 (block coefficient)",
+     "=IF(AND(ISNUMBER(UFCF),OR(UFCF=0,UFCF=1)),UFCF,NA())", "fender_design.Case.ufc_f_basis"),
+    ("CF_UFC", "Cb in UFC F: berthing coefficient CB_UFC (UFCF 1) or block coefficient CB (UFCF 0)",
+     "=IF(UFCFC=1,CB_UFC,CB)", "UFC 4-152-01 5-2.1.1 e, p. 109; fender_design.ufc_f_cb"),
 )
 
 #: Inputs whose value is checked in Calc: input name -> (checked name, error text shown on Inputs).
 INPUT_CHECKS = {
     "X": ("XC", "ERROR: first contact is not on the ship (0 to LBP); every energy and energy check is #N/A"),
     "ANG": ("ANGC", "ERROR: angular factor must be in (0, 1]; fender capacity and energy checks are #N/A"),
+    "UFCF": ("UFCFC", "ERROR: UFC F reading must be 1 (berthing coefficient) or 0 (block coefficient); "
+                      "UFC energy is #N/A"),
 }
 
 

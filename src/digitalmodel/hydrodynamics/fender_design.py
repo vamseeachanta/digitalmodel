@@ -487,6 +487,13 @@ _register(
 #: (each maps it to its own classes; the mapping is stated in the result).
 CONDITIONS = ("monitored", "favourable", "moderate", "unfavourable")
 
+#: Readings of the Cb inside the UFC 4-152-01 added-mass factor F (5-2.1.1 e,
+#: p. 109). The first, the default, follows the printed wording ("Cb =
+#: berthing coefficient as defined previously", Ce Cg Cd Cc of Eq. 5-2); the
+#: second reads the 0.6 threshold as a hull-form limit on the block
+#: coefficient. The source text does not settle which is meant.
+UFC_F_BASES = ("berthing_coefficient", "block_coefficient")
+
 
 @dataclass(frozen=True)
 class Coefficient:
@@ -550,6 +557,9 @@ class Case:
     spread of displacements using the berth) and ``multiple_contact`` enter
     the WG211 partial energy factor. ``tugs`` and ``berthings_per_year`` enter
     the ROM accidental factor and the WG211 frequency correction.
+    ``ufc_f_basis`` chooses the reading of the Cb inside the UFC 4-152-01
+    added-mass factor F (one of :data:`UFC_F_BASES`; see
+    :func:`ufc_added_mass`).
     """
 
     ship: Ship
@@ -561,10 +571,13 @@ class Case:
     cov_m: str = "high"
     multiple_contact: bool = False
     continuous_berth: bool = True
+    ufc_f_basis: str = "berthing_coefficient"
 
     def __post_init__(self) -> None:
         if self.condition not in CONDITIONS:
             raise ValueError(f"condition must be one of {CONDITIONS}")
+        if self.ufc_f_basis not in UFC_F_BASES:
+            raise ValueError(f"ufc_f_basis must be one of {UFC_F_BASES}, got {self.ufc_f_basis!r}")
         if self.consequence_class not in "ABCD" or len(self.consequence_class) != 1:
             raise ValueError("consequence_class must be A, B, C or D")
         if self.cov_m not in ("high", "moderate", "low"):
@@ -792,10 +805,13 @@ def ufc_added_mass(ship: Ship, water_depth_m: float, berthing_coefficient: float
     Cm = C_M0 + (C_m1 - C_M0)(T/d)^3.5, C_M0 = 1.3 + 1.5 T/B,
     C_m1 = F [12.4 (T/B)^0.3 - 50 T/L], F = 1.5 Cb (Cb < 0.6) or 0.9.
 
-    The Cb in F is the berthing coefficient, Cb = Ce Cg Cd Cc: Equation 5-2
-    (p. 106) defines it, and p. 109 repeats "Cb = berthing coefficient as
-    defined previously" under F. The block coefficient has its own symbol in
-    the text (C_BL, p. 107) and is not used in F.
+    ``berthing_coefficient`` is the Cb that enters F; the caller chooses it
+    by the reading (:data:`UFC_F_BASES`, :func:`ufc_f_cb`). The printed
+    wording, the default, takes the berthing coefficient Cb = Ce Cg Cd Cc:
+    Equation 5-2 (p. 106) defines it, and p. 109 repeats "Cb = berthing
+    coefficient as defined previously" under F. The 0.6 threshold reads as a
+    hull-form limit, which supports the block coefficient (C_BL, p. 107)
+    instead; the text does not settle it, so both readings are offered.
     """
     t, b, l, d = ship.draft_m, ship.beam_m, ship.lbp_m, _finite("water_depth_m", water_depth_m, positive=True)
     cb = _finite("berthing_coefficient", berthing_coefficient, positive=True)
@@ -803,6 +819,15 @@ def ufc_added_mass(ship: Ship, water_depth_m: float, berthing_coefficient: float
     cm0 = 1.3 + 1.5 * t / b
     cm1 = f * (12.4 * (t / b) ** 0.3 - 50.0 * t / l)
     return cm0 + (cm1 - cm0) * (t / d) ** 3.5
+
+
+def ufc_f_cb(ship: Ship, berthing_coefficient: float, basis: str = "berthing_coefficient") -> float:
+    """The Cb that enters the UFC factor F under ``basis`` (:data:`UFC_F_BASES`):
+    the berthing coefficient Ce Cg Cd Cc (default, printed wording) or the
+    ship's block coefficient."""
+    if basis not in UFC_F_BASES:
+        raise ValueError(f"ufc_f_basis must be one of {UFC_F_BASES}, got {basis!r}")
+    return berthing_coefficient if basis == "berthing_coefficient" else ship.cb
 
 
 def _m_ufc(case: Case, position: str, velocity_m_s: float | None = None) -> MethodResult:
@@ -827,24 +852,33 @@ def _m_ufc(case: Case, position: str, velocity_m_s: float | None = None) -> Meth
     else:
         cc_v, note = 0.9, "between open and solid (UFC: 'in between'); midpoint assumed"
     cc = Coefficient("cc", cc_v, "ufc-4-152-01", note)
-    cm, geo["cb_berthing"] = _ufc_cm(case, ce, cg, cd, cc)
+    cm = _ufc_cm(case, ce, cg, cd, cc, geo)
     fac = Coefficient("accidental_factor", 1.5, "ufc-4-152-01", "5-1.5.3: increase by at least 50 %")
     return _result("ufc", "UFC 4-152-01 (2017 C1)", case, v, cm, ce, cd, cc, fac, geo, extra=(cg,))
 
 
 def _ufc_cm(case: Case, ce: Coefficient, cg: Coefficient, cd: Coefficient,
-            cc: Coefficient) -> tuple[Coefficient, float]:
-    """UFC Cm and the berthing coefficient Ce Cg Cd Cc it depends on (F, p. 109).
+            cc: Coefficient, geo: dict) -> Coefficient:
+    """UFC Cm through F (p. 109), with the Cb in F read per ``case.ufc_f_basis``.
 
     The one place the UFC Cm is derived, so an override of Cc (or of any
-    other factor of the berthing coefficient) recomputes Cm through F.
+    other factor of the berthing coefficient) recomputes Cm through F when F
+    reads the berthing coefficient. ``geo`` receives the berthing coefficient
+    Ce Cg Cd Cc (``cb_berthing``) and the Cb used in F (``ufc_f_cb``); the
+    reading is named in the Cm note.
     """
     cb_berth = ce.value * cg.value * cd.value * cc.value
-    f = 1.5 * cb_berth if cb_berth < 0.6 else 0.9
-    cm = Coefficient("cm", ufc_added_mass(case.ship, case.berth.water_depth_m, cb_berth), "ufc-4-152-01",
-                     f"5-2.1.1 e surface vessels; F {f:.3f} from berthing coefficient "
-                     f"Ce Cg Cd Cc = {cb_berth:.3f} (Eq. 5-2, p. 106; p. 109)")
-    return cm, cb_berth
+    cb_f = ufc_f_cb(case.ship, cb_berth, case.ufc_f_basis)
+    f = 1.5 * cb_f if cb_f < 0.6 else 0.9
+    if case.ufc_f_basis == "berthing_coefficient":
+        how = (f"F {f:.3f} from berthing coefficient Ce Cg Cd Cc = {cb_f:.3f} (Eq. 5-2, p. 106; p. 109, "
+               f"printed wording; the block coefficient reading is the alternative)")
+    else:
+        how = (f"F {f:.3f} from block coefficient Cb = {cb_f:.3f} (reading chosen for the 0.6 hull-form "
+               f"threshold; p. 109 prints berthing coefficient Ce Cg Cd Cc = {cb_berth:.3f})")
+    geo.update(cb_berthing=cb_berth, ufc_f_cb=cb_f)
+    return Coefficient("cm", ufc_added_mass(case.ship, case.berth.water_depth_m, cb_f), "ufc-4-152-01",
+                       f"5-2.1.1 e surface vessels; {how}")
 
 
 # ---- ROM 2.0-11 -------------------------------------------------------------
@@ -1135,7 +1169,7 @@ def _with_cc(case: Case, res: MethodResult, cc_value: float) -> MethodResult:
     cm, geo = res.cm, dict(res.geometry)
     if res.method == "ufc":
         cg = next(c for c in res.extra if c.name == "cg")
-        cm, geo["cb_berthing"] = _ufc_cm(case, res.ce, cg, res.cs, cc)
+        cm = _ufc_cm(case, res.ce, cg, res.cs, cc, geo)
     return _result(res.method, res.label, case, res.velocity_m_s, cm, res.ce, res.cs, cc, res.factor, geo,
                    extra=res.extra, divisor=res.capacity_divisor,
                    flags=[x for x in res.flags if not x.startswith("below 0.")])
@@ -1163,7 +1197,8 @@ def energy_by_method(
     (ROM accidental factor and Cc, validity flags), so they follow the
     effective velocity. A Cc override replaces the method's berth
     configuration factor and every term derived from it is recomputed (UFC
-    4-152-01: Cm through F of the berthing coefficient Ce Cg Cd Cc); a
+    4-152-01: Cm through F of the berthing coefficient Ce Cg Cd Cc, when
+    ``ufc_f_basis`` is the default berthing coefficient); a
     method that fixes or removes Cc (:func:`inapplicable_sweeps`) refuses it.
     ``factor_position`` chooses the largest- or smallest-ship PIANC abnormal
     factor where a method uses it.
@@ -1769,7 +1804,8 @@ def standard_sweeps(
       method is re-evaluated with the berth changed;
     * ``cc``: the method is re-evaluated with Cc given (the ``cc`` override
       of :func:`energy_by_method`), so terms derived from Cc follow (UFC Cm
-      through F of the berthing coefficient Ce Cg Cd Cc);
+      through F of the berthing coefficient Ce Cg Cd Cc under the default
+      ``ufc_f_basis``);
     * ``cs``, ``factor``: the coefficient alone, others held (no method
       derives another term from them where the sweep applies).
 

@@ -167,6 +167,57 @@ def test_ufc_berthing_coefficient_regression_from_the_source_text():
     assert 0.5 * ship.displacement_t * 0.10**2 * cm_low * 1.5 == pytest.approx(604.2, abs=0.05)
 
 
+# UFC 4-152-01 5-2.1.1 e (p. 109) prints "Cb = berthing coefficient as defined
+# previously" under F, while the 0.6 threshold of F = 1.5 Cb reads as a
+# hull-form (block coefficient) limit. Both readings are an explicit option;
+# the default follows the printed wording.
+def _ufc_source_case(**kw):
+    ship = fd.Ship(displacement_t=0.40 * 1.025 * 180 * 32 * 12, lbp_m=180.0, beam_m=32.0, draft_m=12.0,
+                   ship_type="bulk", dwt_t=20_000)
+    berth = fd.Berth(water_depth_m=14.0, contact_x_from_bow_m=90.0, berthing_angle_deg=0.0,
+                     navigation="b", structure="open", fender_deflection_m=1.5)
+    return fd.Case(ship, berth, condition="moderate", **kw)
+
+
+def test_ufc_f_basis_default_is_the_printed_berthing_coefficient():
+    assert fd.Case(SHIP, BERTH).ufc_f_basis == "berthing_coefficient"
+    assert fd.UFC_F_BASES == ("berthing_coefficient", "block_coefficient")
+    r = fd.energy_by_method(_ufc_source_case(), method="ufc", velocity_m_s=0.10, citations="off")
+    assert r.geometry["ufc_f_cb"] == pytest.approx(1.0)          # Ce Cg Cd Cc at midships, open berth
+    assert r.cm.value == pytest.approx(3.87552, abs=5e-5)        # F 0.9
+    assert r.design_energy_knm == pytest.approx(823.7, abs=0.05)
+    assert "berthing coefficient" in r.cm.note and "block coefficient" in r.cm.note
+
+
+def test_ufc_f_basis_block_coefficient_gives_the_hand_value():
+    """Same hand case read with the block coefficient in F: Cb 0.40 < 0.6, so
+    F = 1.5 x 0.40 = 0.6; C_m1 = 0.6 x 5.90591 = 3.54355;
+    Cm = 1.8625 + (3.54355 - 1.8625) x 0.583009 = 2.84256;
+    E = 0.5 x 28,339.2 x 0.10^2 x 2.84256 x 1.5 = 604.2 kNm (Ce Cg Cd Cc = 1.0)."""
+    r = fd.energy_by_method(_ufc_source_case(ufc_f_basis="block_coefficient"), method="ufc",
+                            velocity_m_s=0.10, citations="off")
+    assert "block coefficient Cb = 0.400" in r.cm.note
+    assert r.geometry["ufc_f_cb"] == pytest.approx(0.40)
+    assert r.geometry["cb_berthing"] == pytest.approx(1.0)      # the energy still uses Ce Cg Cd Cc
+    assert r.cm.value == pytest.approx(2.84256, abs=5e-5)
+    assert r.design_energy_knm == pytest.approx(604.2, abs=0.05)
+    assert "F 0.600 from block coefficient" in r.cm.note
+
+
+def test_ufc_f_basis_block_coefficient_leaves_cm_independent_of_cc():
+    case = fd.Case(SHIP, fd.Berth(**{**BERTH.__dict__, "structure": "closed"}), ufc_f_basis="block_coefficient")
+    base = fd.energy_by_method(case, method="ufc", citations="off")
+    r = fd.energy_by_method(case, method="ufc", cc=1.0, citations="off")
+    assert base.cc.value == 0.8
+    assert r.cm.value == pytest.approx(base.cm.value, rel=1e-12)
+    assert r.design_energy_knm == pytest.approx(base.design_energy_knm / 0.8, rel=1e-12)
+
+
+def test_ufc_f_basis_refuses_an_unknown_reading():
+    with pytest.raises(ValueError, match="ufc_f_basis must be one of"):
+        fd.Case(SHIP, BERTH, ufc_f_basis="block")
+
+
 # ---------------------------------------------------------------- ROM 2.0-11
 
 

@@ -25,6 +25,7 @@ conditions:
   cov_m: high
   multiple_contact: false
   continuous_berth: true
+  ufc_f_basis: berthing_coefficient   # Cb in UFC F: printed wording (default) or block_coefficient
 design:
   method: pianc2002
   factor_position: smallest    # Handymax-size bulk carrier (SFT p. 22 class reading)

@@ -406,7 +406,7 @@ def test_ufc_cc_override_recomputes_added_mass():
 
 
 def test_ufc_cc_sweep_recomputes_cm_and_crosses_capacity():
-    # Codex review at 319e3d45: holding Cm gave 653.5 kNm (0.934) at Cc 1.0; recomputed it is 773.0 (1.104)
+    # second-provider review at 319e3d45: holding Cm gave 653.5 kNm (0.934) at Cc 1.0; recomputed it is 773.0 (1.104)
     sw = next(s for s in fd.standard_sweeps(CLOSED, "ufc", FENDER, {"cc": fd.SweepRange(0.8, 1.0, "test")},
                                             capacity_knm=700.0, citations="off"))
     assert sw.parameter == "cc"

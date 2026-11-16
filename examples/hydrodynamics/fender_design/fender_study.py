@@ -26,6 +26,7 @@ import json
 import math
 import re
 from collections import Counter
+from dataclasses import replace
 from pathlib import Path
 
 from digitalmodel.hydrodynamics import fender_design as fd
@@ -100,10 +101,12 @@ def charts(res, out: Path, fender_label: str, db_counts=None) -> dict[str, str]:
     ]
     ufc = next((r for r in res.methods if r.method == "ufc"), None)
     if ufc is not None:
-        # F uses the berthing coefficient Ce Cg Cd Cc of the base contact point
-        cbb = ufc.geometry["cb_berthing"]
-        series.append((f"UFC 4-152-01 surface vessel (berthing coeff. {cbb:.3f})", ratios,
-                       cm_series(lambda d: fd.ufc_added_mass(s, d, cbb))))
+        # the Cb in F of the base case, by the case's reading (berthing coefficient
+        # Ce Cg Cd Cc of the base contact point, or the block coefficient)
+        cbf = ufc.geometry["ufc_f_cb"]
+        what = "berthing coeff." if res.fcase.ufc_f_basis == "berthing_coefficient" else "block coeff."
+        series.append((f"UFC 4-152-01 surface vessel (Cb in F: {what} {cbf:.3f})", ratios,
+                       cm_series(lambda d: fd.ufc_added_mass(s, d, cbf))))
     kcd = (res.berth.water_depth_m - s.draft_m) / s.draft_m
     made["cm"] = fc.line_family_chart(
         series, cdir / "cm_methods.png", "Added mass factor Cm against keel clearance",
@@ -171,6 +174,7 @@ def database_chart(cnt: Counter, path):
         ax.text(v, y, f"  {v}", va="center", fontsize=7.5, color=fc.INK)
     ax.set_yticks(list(ys))
     ax.set_yticklabels([k for k, _ in items], fontsize=8)
+    ax.set_xlim(0, max(v for _, v in items) * 1.15)   # room for the count labels inside the axes
     ax.set_xlabel("rows in the fender database")
     ax.set_title("Fender database coverage by type", fontsize=9.5, loc="left")
     fc._save(fig, path)
@@ -337,6 +341,32 @@ def method_values(res) -> dict[str, str]:
     return dict(selected_label=res.selected.label)
 
 
+def ufc_f_readings(res) -> dict[str, float | None]:
+    """UFC design energy (kNm) of the case under each reading of the Cb in
+    the factor F (:data:`fd.UFC_F_BASES`), the case's velocity and factor
+    overrides applied; None where UFC cannot be evaluated for the case."""
+    d = res.case["design"]
+    out = {}
+    for basis in fd.UFC_F_BASES:
+        try:
+            r = fd.energy_by_method(replace(res.fcase, ufc_f_basis=basis), method="ufc",
+                                    velocity_m_s=d.get("velocity_m_s"), factor=d.get("factor"),
+                                    factor_position=d.get("factor_position", "smallest"), citations="off")
+        except ValueError:
+            out[basis] = None
+            continue
+        out[basis] = r.design_energy_knm
+    return out
+
+
+def ufc_f_values(res) -> dict[str, str]:
+    """Template values of the UFC factor F reading: the reading this build
+    uses and the UFC design energy under each reading."""
+    e = ufc_f_readings(res)
+    return dict(ufc_f_basis=res.fcase.ufc_f_basis, E_ufc_berthing=_f(e["berthing_coefficient"]),
+                E_ufc_block=_f(e["block_coefficient"]))
+
+
 def sweep_figure_values(res, made: dict[str, str], first: int = FIRST_SWEEP_FIGURE) -> dict[str, str]:
     """Template values of the sensitivity figures.
 
@@ -399,6 +429,8 @@ def main(argv=None) -> int:
     made = charts(res, a.out, label, cnt)
     data = results_dict(res)
     data["charts"] = made
+    data["ufc_f_basis"] = res.fcase.ufc_f_basis
+    data["ufc_design_energy_knm_by_f_reading"] = ufc_f_readings(res)
     if cnt:
         data["database_rows"] = n_rows
         data["database_by_type"] = dict(cnt.most_common())
@@ -414,6 +446,7 @@ def main(argv=None) -> int:
             values[f"f_{r.method}"] = f"{r.factor.value:.2f}"
         values.update(geometry_values(res))
         values.update(method_values(res))
+        values.update(ufc_f_values(res))
         values.update(sweep_figure_values(res, made))
         values.update(
             E_design=_f(res.selected.design_energy_knm), E_normal=_f(res.selected.normal_energy_knm),

@@ -299,3 +299,104 @@ def test_compute_at_angular_factor_1_keeps_the_rated_capacity():
     assert base.capacity_knm == pytest.approx(700.0) and res.capacity_knm == pytest.approx(700.0)
     assert base.utilisation == pytest.approx(res.selected.design_energy_knm / 700.0)
     assert base.meets_energy is False
+
+
+# ------------------------------------------------------------- chart layout
+# Annotations stay inside the figure, clear of each other and of the limit
+# lines; footnotes are not cut (review at ecd8d308: base annotation over the
+# water-depth limit label, Cs annotation clipped at the right edge, sizes
+# footnote cut at the left and bar labels on the reaction limit line).
+
+
+def _fig_with(*draw):
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots(figsize=(4.0, 3.0), dpi=100)
+    ax.set_xlim(0, 10)
+    ax.set_ylim(0, 10)
+    for d in draw:
+        d(ax)
+    fig.tight_layout()
+    return fig
+
+
+def test_layout_check_finds_text_outside_the_figure():
+    # figure text: tight_layout does not move it, so it stays cut at the right edge
+    fig = _fig_with(lambda ax: ax.figure.text(0.8, 0.5, "a label that runs off the right edge", fontsize=9))
+    issues = fc.layout_issues(fig)
+    assert any("outside the figure" in i for i in issues), issues
+
+
+def test_layout_check_finds_a_label_outside_its_axes():
+    # a label placed past the right end of the x range (the narrow unrated span at the end of a sweep)
+    fig = _fig_with(lambda ax: ax.text(10.2, 1.0, "label past the axes", clip_on=False))
+    issues = fc.layout_issues(fig)
+    assert any("outside its axes" in i for i in issues), issues
+
+
+def test_layout_check_finds_text_across_a_limit_line():
+    def draw(ax):
+        ax.axhline(5.0, color=fc.LIMIT, linestyle="--")
+        ax.text(2.0, 5.0, "across the limit", va="center")
+    issues = fc.layout_issues(_fig_with(draw))
+    assert any("limit line" in i and "across the limit" in i for i in issues), issues
+
+
+def test_layout_check_finds_overlapping_text():
+    def draw(ax):
+        ax.text(2.0, 2.0, "first label")
+        ax.text(2.2, 2.0, "second label")
+    issues = fc.layout_issues(_fig_with(draw))
+    assert any("overlaps" in i for i in issues), issues
+
+
+def test_layout_check_passes_clear_text():
+    def draw(ax):
+        ax.axhline(5.0, color=fc.LIMIT, linestyle="--")
+        ax.text(1.0, 6.0, "above the line")
+        ax.text(1.0, 2.0, "below the line")
+    assert fc.layout_issues(_fig_with(draw)) == []
+
+
+def _all_charts(tmp_path, case):
+    import warnings
+
+    import fender_study
+    res = compute(case, citations="record")
+    cnt, _, _ = fender_study.index_counts(ROOT / "data" / "fender_design" / "catalogue_index.csv")
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        made = fender_study.charts(res, tmp_path, res.base_fender.fender_id, cnt)
+    return made, [str(w.message) for w in caught if issubclass(w.category, fc.ChartLayoutWarning)]
+
+
+def test_every_generic_chart_has_clear_annotations(tmp_path):
+    made, problems = _all_charts(tmp_path, load_case(EXAMPLE / "generic_case.yaml"))
+    assert len(made) == 13                       # methods, Cm, velocity, 7 sweeps, tornado, sizes, database
+    assert problems == []
+
+
+@pytest.mark.parametrize("method", ["ufc", "wg211", "rom", "is4651"])
+def test_charts_of_other_selected_methods_have_clear_annotations(tmp_path, method):
+    case = load_case(EXAMPLE / "generic_case.yaml")
+    case["design"]["method"] = method
+    _, problems = _all_charts(tmp_path, case)
+    assert problems == []
+
+
+def test_sweep_chart_keeps_headroom_above_the_limit_and_the_data():
+    import matplotlib.pyplot as plt
+    res = compute(load_case(EXAMPLE / "generic_case.yaml"), citations="record")
+    figs = {}
+    orig = fc._finish
+    fc._finish = lambda fig, path: figs.setdefault(Path(path).name, fig)
+    try:
+        sw = next(s for s in res.sweeps if s.parameter == "water_depth_m")
+        fc.sweep_chart(sw, "wd.png", "t", "GEN-PN-4")
+    finally:
+        fc._finish = orig
+    ax1, ax2 = figs["wd.png"].axes[:2]
+    top = max([p.energy_per_fender_knm for p in sw.points] + [sw.capacity_knm])
+    assert ax1.get_ylim()[1] >= 1.25 * top
+    rtop = max([p.reaction_kn for p in sw.points if p.reaction_kn is not None] + [sw.reaction_limit_kn])
+    assert ax2.get_ylim()[1] >= 1.25 * rtop
+    plt.close(figs["wd.png"])
