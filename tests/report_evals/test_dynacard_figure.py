@@ -16,7 +16,7 @@ def test_figure_exports_physical_cards_and_ten_reference_shapes(tmp_path, monkey
     def capture_svg(figure, path, *args, **kwargs):
         savefig(figure, path, *args, **kwargs)
         if Path(path).suffix == '.svg':
-            raw_svg.append(Path(path).read_text())
+            raw_svg.append(Path(path).read_text(encoding='utf-8'))
     monkeypatch.setattr(Figure, 'savefig', capture_svg)
     spec = importlib.util.spec_from_file_location('dynacard_plotting', HERE / 'plotting.py')
     module = importlib.util.module_from_spec(spec)
