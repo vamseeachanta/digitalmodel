@@ -13,6 +13,8 @@ The 1/12 comes from integral(-a/2,a/2) u^2 du / a = a^2/12.
 The chosen offsets are synthetic coordinates, not measured engineering data.
 """
 
+from copy import deepcopy
+
 import pytest
 
 from digitalmodel.infrastructure.base_solvers.hydrodynamics.code_dnvrph103_hydrodynamics_circular import (
@@ -196,3 +198,104 @@ def test_circular_inertia_and_export_are_about_centre_of_mass(cog):
     buoy = {}
     solver.update_6d_buoy_inertia({"I": inertia}, buoy)
     assert buoy["MomentsOfInertia"] == [4.8, 4.8, 2.4]
+
+
+@pytest.fixture(params=["circular", "rectangular", "shared"])
+def buoy_exporters(request):
+    """Exercise the real methods and the dependency-free shared helpers."""
+    if request.param == "shared":
+        from digitalmodel.infrastructure.base_solvers.hydrodynamics.buoy_export import (
+            update_mass_inertia_buoy_data,
+            update_rotational_buoy_data,
+        )
+        return update_rotational_buoy_data, update_mass_inertia_buoy_data
+    solver_class = {
+        "circular": DNVRPH103_hydrodynamics_circular,
+        "rectangular": DNVRPH103_hydrodynamics_rectangular,
+    }[request.param]
+    solver = solver_class()
+    return solver.update_6d_buoy_rotational, solver.update_6d_buoy_inertia
+
+
+@pytest.fixture
+def export_properties():
+    """Synthetic supplied values pin formatting without calculating coefficients."""
+    return {
+        "rotational": {
+            "am": {
+                "splash": {"x": 1.23456, "y": -2.34567, "z": 3.45678},
+                "deep": {"x": 4.56789, "y": 5.67891, "z": -6.78912},
+            },
+            "cd": {"x": 7.89123, "y": -8.91234, "z": 9.12345},
+            "I": {"x": 10.23456, "y": 11.34567, "z": -12.45678},
+            "ca": {"x": 13, "y": -14.56789, "z": 15.67891},
+        },
+        "I": {"Ix": 1234.56, "Iy": 2345.67, "Iz": 3456.78},
+        "unrelated": {"keep": [42]},
+    }
+
+
+@pytest.mark.parametrize("zone, area_moment", [
+    ("splash", [1.235, -2.346, 3.457]),
+    ("deep", [4.568, 5.679, -6.789]),
+])
+def test_rotational_export_contract(buoy_exporters, export_properties, zone, area_moment):
+    """Retain axis order, rounding, float coefficients and unrelated entries."""
+    properties_before = deepcopy(export_properties)
+    buoy = {"sentinel": {"keep": [42]}, "DragAreaMoment": [99]}
+    assert buoy_exporters[0](export_properties, zone, buoy) is None
+    assert buoy == {
+        "sentinel": {"keep": [42]},
+        "DragAreaMoment": area_moment,
+        "DragMomentCoefficient": [7.891, -8.912, 9.123],
+        "HydrodynamicInertia": [10.235, 11.346, -12.457],
+        "AddedInertiaCoefficient": [13.0, -14.568, 15.679],
+    }
+    assert list(buoy) == [
+        "sentinel", "DragAreaMoment", "DragMomentCoefficient",
+        "HydrodynamicInertia", "AddedInertiaCoefficient",
+    ]
+    assert all(type(value) is float for value in buoy["AddedInertiaCoefficient"])
+    assert export_properties == properties_before
+
+
+def test_mass_inertia_export_contract(buoy_exporters, export_properties):
+    """Convert supplied kg.m^2 to t.m^2 and retain unrelated entries."""
+    properties_before = deepcopy(export_properties)
+    buoy = {"sentinel": {"keep": [42]}, "MomentsOfInertia": [99]}
+    assert buoy_exporters[1](export_properties, buoy) is None
+    assert buoy == {
+        "sentinel": {"keep": [42]}, "MomentsOfInertia": [1.235, 2.346, 3.457],
+    }
+    assert export_properties == properties_before
+
+
+def test_rotational_export_missing_key_retains_partial_updates(
+    buoy_exporters, export_properties,
+):
+    """A missing coefficient still raises after the preceding three updates."""
+    del export_properties["rotational"]["ca"]["y"]
+    properties_before = deepcopy(export_properties)
+    buoy = {"sentinel": 42, "AddedInertiaCoefficient": [99]}
+    with pytest.raises(KeyError, match="y"):
+        buoy_exporters[0](export_properties, "deep", buoy)
+    assert buoy == {
+        "sentinel": 42, "AddedInertiaCoefficient": [99],
+        "DragAreaMoment": [4.568, 5.679, -6.789],
+        "DragMomentCoefficient": [7.891, -8.912, 9.123],
+        "HydrodynamicInertia": [10.235, 11.346, -12.457],
+    }
+    assert export_properties == properties_before
+
+
+def test_mass_inertia_export_missing_key_does_not_update(
+    buoy_exporters, export_properties,
+):
+    """An incomplete principal-inertia vector raises before mutating output."""
+    del export_properties["I"]["Iy"]
+    properties_before = deepcopy(export_properties)
+    buoy = {"sentinel": 42, "MomentsOfInertia": [99]}
+    with pytest.raises(KeyError, match="Iy"):
+        buoy_exporters[1](export_properties, buoy)
+    assert buoy == {"sentinel": 42, "MomentsOfInertia": [99]}
+    assert export_properties == properties_before
