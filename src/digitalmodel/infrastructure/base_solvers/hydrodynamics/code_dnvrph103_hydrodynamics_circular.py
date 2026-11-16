@@ -5,6 +5,10 @@ from scipy import interpolate
 
 from assetutilities.common.data import SaveData
 
+from digitalmodel.infrastructure.base_solvers.hydrodynamics.buoy_export import (
+    update_mass_inertia_buoy_data,
+    update_rotational_buoy_data,
+)
 from digitalmodel.solvers.orcaflex.orcaflex_model_utilities import (
     OrcaflexModelUtilities,
 )
@@ -94,41 +98,10 @@ class DNVRPH103_hydrodynamics_circular:
         return buoy_6d
 
     def update_6d_buoy_rotational(self, properties, zone, buoy_data):
-        DragAreaMoment = [
-            round(properties["rotational"]["am"][zone]["x"], 3),
-            round(properties["rotational"]["am"][zone]["y"], 3),
-            round(properties["rotational"]["am"][zone]["z"], 3),
-        ]
-        buoy_data.update({"DragAreaMoment": DragAreaMoment})
-
-        DragMomentCoefficient = [
-            round(properties["rotational"]["cd"]["x"], 3),
-            round(properties["rotational"]["cd"]["y"], 3),
-            round(properties["rotational"]["cd"]["z"], 3),
-        ]
-        buoy_data.update({"DragMomentCoefficient": DragMomentCoefficient})
-
-        HydrodynamicInertia = [
-            round(properties["rotational"]["I"]["x"], 3),
-            round(properties["rotational"]["I"]["y"], 3),
-            round(properties["rotational"]["I"]["z"], 3),
-        ]
-        buoy_data.update({"HydrodynamicInertia": HydrodynamicInertia})
-
-        AddedInertiaCoefficient = [
-            float(round(properties["rotational"]["ca"]["x"], 3)),
-            float(round(properties["rotational"]["ca"]["y"], 3)),
-            float(round(properties["rotational"]["ca"]["z"], 3)),
-        ]
-        buoy_data.update({"AddedInertiaCoefficient": AddedInertiaCoefficient})
+        update_rotational_buoy_data(properties, zone, buoy_data)
 
     def update_6d_buoy_inertia(self, properties, buoy_data):
-        MomentsOfInertia = [
-            round(properties["I"]["Ix"] / 1000, 3),
-            round(properties["I"]["Iy"] / 1000, 3),
-            round(properties["I"]["Iz"] / 1000, 3),
-        ]
-        buoy_data.update({"MomentsOfInertia": MomentsOfInertia})
+        update_mass_inertia_buoy_data(properties, buoy_data)
 
     def update_6d_buoy_translational(self, properties, zone, buoy_data):
         buoy_data.update({"Mass": self.cfg["inputs"]["m_air"] / 1000})
