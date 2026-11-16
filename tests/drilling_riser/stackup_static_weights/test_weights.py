@@ -41,3 +41,6 @@ def test_installed_section_includes_fluid_and_auxiliaries_once():
     assert result.filled_submerged_weight_n == pytest.approx(
         25.0 * (dry_n_m + (fluid_kg_m - displacement_kg_m) * 10.0)
     )
+    assert result.filled_air_weight_n == pytest.approx(125250.0)
+    assert result.filled_submerged_weight_n == pytest.approx(59750.0)
+    assert result.filled_air_weight_n - result.filled_submerged_weight_n == pytest.approx(25.0 * 262.0 * 10.0)

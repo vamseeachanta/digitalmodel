@@ -31,6 +31,10 @@ def test_failed_units_overpull_and_setting_limit():
     assert result.additional_overpull_n == pytest.approx(extra_n)
     assert result.overall_top_tension_n == pytest.approx(top_n + extra_n + 10000.0)
     assert result.maximum_setting_n == pytest.approx(1000000.0 * 0.8)
+    assert result.slip_ring_tension_n == pytest.approx(464000.0)
+    assert result.minimum_top_tension_n == pytest.approx(580000.0)
+    assert result.package_overpull_n == pytest.approx(-34000.0)
+    assert result.overall_top_tension_n == pytest.approx(654000.0)
 
 
 def test_governing_applied_tension_selects_larger_requirement():
