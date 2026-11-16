@@ -61,7 +61,7 @@ from bisect import bisect_left
 from dataclasses import dataclass
 from fractions import Fraction
 from math import isfinite
-from numbers import Real
+from numbers import Rational, Real
 
 
 def _finite(value: float, name: str, *, minimum: float = 0.0) -> None:
@@ -192,8 +192,8 @@ def round_force_up(force_n: float, quantum_n: float) -> float:
     _finite(quantum_n, "quantum_n")
     if quantum_n == 0:
         raise ValueError("quantum_n must be positive")
-    f = Fraction(force_n)
-    q = Fraction(quantum_n)
+    f = Fraction(force_n) if isinstance(force_n, Rational) else Fraction(float(force_n))
+    q = Fraction(quantum_n) if isinstance(quantum_n, Rational) else Fraction(float(quantum_n))
     fn, fd = f.numerator, f.denominator
     qn, qd = q.numerator, q.denominator
     numerator, denominator = fn * qd, fd * qn

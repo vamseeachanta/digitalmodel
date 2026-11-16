@@ -111,6 +111,8 @@ def test_interpolation_avoids_overflow_in_a_finite_linear_result():
     (Fraction(11, 10), 0.25, 1.25),
     (np.int64(1), 0.25, 1.0),
     (1.1, np.int64(1), 2.0),
+    (np.float32(1.5), 0.25, 1.5),
+    (1.1, np.float32(0.5), 1.5),
 ])
 def test_quantization_accepts_integer_and_fraction_inputs(force_n, quantum_n, expected_n):
     assert round_force_up(force_n, quantum_n) == expected_n
