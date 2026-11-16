@@ -27,20 +27,28 @@ PUBLIC_SHA256 = '2404c333a9f458ebdf0817dfa98e00962e48639455ae9b612766e14a39dbbd9
 # Source revisions are independent of the historical calculation-code pin.
 # Each immutable revision contains exactly the bytes accepted below.
 SOURCE_PINS = {
-    FIXTURE.relative_to(ROOT).as_posix(): (
-        '9680e7e1ac4a4c225b788e4308322cf87460af70', PUBLIC_SHA256),
-    SCORE: ('91e9ad115c6994d4d2546b515ba0751efa782277',
-            'cb11b1fd0399285c3a795dacc2c1c2d0b2cdb38e3103f7bc2859ca79a480743d'),
+    FIXTURE.relative_to(ROOT).as_posix(): {
+        'revision': '9680e7e1ac4a4c225b788e4308322cf87460af70',
+        'sha256': PUBLIC_SHA256, 'git_blob': 'f07b8a26b93a13f317dbc446d64958158c31e0eb',
+        'date': '2026-11-12'},
+    SCORE: {'revision': '91e9ad115c6994d4d2546b515ba0751efa782277',
+            'sha256': 'cb11b1fd0399285c3a795dacc2c1c2d0b2cdb38e3103f7bc2859ca79a480743d',
+            'git_blob': 'ba4404432ec57f4162129bc99bc7b363a50a7272', 'date': '2026-11-12'},
 }
 
 
 def repository_source(path, relative):
     """Reject changed inputs rather than cite bytes from a different revision."""
-    revision, expected = SOURCE_PINS[relative]
-    digest = hashlib.sha256(path.read_bytes()).hexdigest()
-    if digest != expected:
+    pin = SOURCE_PINS[relative]
+    raw = path.read_bytes()
+    digest = hashlib.sha256(raw).hexdigest()
+    blob = hashlib.sha1(b'blob ' + str(len(raw)).encode('ascii') + b'\0' + raw).hexdigest()
+    if digest != pin['sha256'] or blob != pin['git_blob']:
         raise ValueError(f'{relative}: source bytes do not match the cited revision')
-    return {'revision': revision, 'sha256': digest,
+    revision = pin['revision']
+    # The report is three directories below the repository root. GitHub blob
+    # links remain within that repository; the API URI supports data retrieval.
+    return {**pin, 'reader_url': f'../../../../{revision}/{relative}',
             'url': f'https://api.github.com/repositories/590299785/contents/{relative}?ref={revision}'}
 
 
@@ -203,7 +211,7 @@ def main():
     except (ValueError, ArithmeticError) as exc:
         parser.exit(2, f'Card input or calculation error: {exc}\n')
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(result, indent=2, allow_nan=False) + '\n', encoding='utf-8')
+    args.out.write_text(json.dumps(result, indent=2, allow_nan=False) + '\n', encoding='utf-8', newline='\n')
     if args.figure:
         from plotting import render_figure
         render_figure(result, args.figure)

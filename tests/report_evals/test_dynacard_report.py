@@ -30,10 +30,10 @@ def test_public_identity_matches_committed_fixture():
 
 
 @pytest.mark.parametrize('index', [0, 2])
-def test_repository_source_citation_matches_consumed_bytes(index):
+def test_repository_source_citation_matches_consumed_bytes(index, monkeypatch):
     import hashlib
     import subprocess
-    from urllib.parse import parse_qs, urlsplit
+    from urllib.parse import parse_qs, urljoin, urlsplit
     report = module('analysis')
     row = report.sources(ROOT, FIXTURE, True)[index]
     url = urlsplit(row['url'])
@@ -42,14 +42,60 @@ def test_repository_source_citation_matches_consumed_bytes(index):
     else:
         relative = url.path.partition('/contents/')[2]
         revision = parse_qs(url.query)['ref'][0]
-    blob = subprocess.run(['git', 'show', f'{revision}:{relative}'], cwd=ROOT,
-                          check=True, capture_output=True).stdout
-    assert hashlib.sha256(blob).hexdigest() == row['sha256']
-    assert blob == (ROOT / relative).read_bytes()
+    # An exported or shallow checkout need not contain the cited commit.
+    # Permit only a history-independent hash of the consumed bytes.
+    run = subprocess.run
+    def without_history(command, **kwargs):
+        assert command[:2] == ['git', 'hash-object']
+        return run(command, **kwargs)
+    monkeypatch.setattr(subprocess, 'run', without_history)
+    blob = subprocess.run(['git', 'hash-object', '--no-filters', '--stdin'], cwd=ROOT,
+                          input=(ROOT / relative).read_bytes(), check=True,
+                          capture_output=True).stdout.decode('ascii').strip()
+    assert hashlib.sha256((ROOT / relative).read_bytes()).hexdigest() == row['sha256']
+    assert blob == row['git_blob']
     assert row['revision'] == revision
     assert len(revision) == 40
     assert url.netloc == 'api.github.com'
     assert url.path.startswith('/repositories/590299785/contents/')
+    base = 'https://github.com/example/repository/blob/main/docs/domains/artificial_lift/report.md'
+    assert urljoin(base, row['reader_url']) == (
+        f'https://github.com/example/repository/blob/{revision}/{relative}')
+    assert row['date'] == '2026-11-12'
+
+
+@pytest.mark.parametrize('relative', [
+    'tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json',
+    'tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json',
+])
+def test_repository_source_rejects_incorrect_blob_identity(monkeypatch, relative):
+    report = module('analysis')
+    pin = dict(report.SOURCE_PINS[relative], git_blob='0' * 40)
+    monkeypatch.setitem(report.SOURCE_PINS, relative, pin)
+    with pytest.raises(ValueError, match='source bytes do not match.*revision'):
+        report.repository_source(ROOT / relative, relative)
+
+
+def test_source_table_uses_readable_links_and_dated_short_revisions():
+    report = module('analysis')
+    sources = report.sources(ROOT, FIXTURE, True)
+    text = module('build_report').source_table({'sources': sources})
+    for row in (sources[0], sources[2]):
+        assert f"{row['revision'][:8]} ({row['date']})" in text
+        assert f"[Source]({row['reader_url']})" in text
+        assert row['revision'] not in text.replace(row['reader_url'], '')
+    assert sources[1]['date'] in text
+    assert 'api.github.com' not in text
+
+
+def test_manifest_retains_full_source_revisions_and_blob_ids(analysis):
+    result = module('build_results').manifest(analysis)
+    for index in (0, 2):
+        row = analysis['sources'][index]
+        recorded = next(item for item in result['inputs'] if item['id'] == f'source_{index}')
+        assert recorded['version_or_date'] == row['revision']
+        assert row['git_blob'] in recorded['description']
+        assert recorded['sha256_published'] == row['sha256']
 
 
 @pytest.mark.parametrize('index', [0, 2])
@@ -107,10 +153,10 @@ def test_reader_layout_reproduces_fixture(analysis):
     ('tubing_anchored', False, 'tubing'),
 ])
 def test_reader_input_errors(tmp_path, field, value, message):
-    data = json.loads((HERE / 'reader-card-template.json').read_text())
+    data = json.loads((HERE / 'reader-card-template.json').read_text(encoding='utf-8'))
     data[field] = value
     path = tmp_path / 'card.json'
-    path.write_text(json.dumps(data))
+    path.write_text(json.dumps(data), encoding='utf-8', newline='\n')
     with pytest.raises(ValueError, match=message):
         module('analysis').run(path)
 
@@ -142,11 +188,11 @@ def test_assumptions_and_hypotheses_are_never_pass(analysis):
 
 
 def test_repeated_closing_pair_is_compared(tmp_path):
-    data = json.loads((HERE / 'reader-card-template.json').read_text())
+    data = json.loads((HERE / 'reader-card-template.json').read_text(encoding='utf-8'))
     for name in ('position_in', 'load_lbf'):
         data['surface_card'][name].append(data['surface_card'][name][0])
     path = tmp_path / 'closed.json'
-    path.write_text(json.dumps(data))
+    path.write_text(json.dumps(data), encoding='utf-8', newline='\n')
     result = module('analysis').run(path, include_sensitivity=False)
     opened = module('analysis').run(HERE / 'reader-card-template.json', include_sensitivity=False)
     assert result['key_results'] == pytest.approx(opened['key_results'], rel=1e-12, abs=1e-10)
@@ -159,9 +205,9 @@ def test_repeated_closing_pair_is_compared(tmp_path):
 def test_report_equals_fresh_build(analysis):
     builder = module('build_report')
     report = ROOT / 'docs/domains/artificial_lift/dynacard-pump-card-report.md'
-    assert report.read_text() == builder.build_report(analysis)
-    assert report.read_text().split('## ')[1:3][1].startswith('Revision history\n')
-    prompt = (HERE / 'PROMPT.md').read_text()
+    assert report.read_text(encoding='utf-8') == builder.build_report(analysis)
+    assert report.read_text(encoding='utf-8').split('## ')[1:3][1].startswith('Revision history\n')
+    prompt = (HERE / 'PROMPT.md').read_text(encoding='utf-8')
     assert prompt == builder.build_prompt(analysis)
     for row in analysis['missing_data']:
         assert row['what'] in prompt and row['effect'] in prompt
@@ -176,7 +222,7 @@ def test_candidate_eval_rebuilds_and_grades(tmp_path):
         result = subprocess.run([sys.executable, str(HERE / 'eval.py'), *args],
                                 capture_output=True, text=True, timeout=120)
         assert result.returncode == 0, result.stdout + result.stderr
-    record = json.loads(out.read_text())
+    record = json.loads(out.read_text(encoding='utf-8'))
     assert record['grade'] == 'PASS'
     assert len(record['results']) >= 16
     assert record['context']['digitalmodel_file'] == 'src/digitalmodel/__init__.py'
@@ -196,23 +242,23 @@ def test_eval_rejects_package_outside_checkout(tmp_path):
     (lambda d: d.pop('strokes_per_minute'), 'strokes_per_minute'),
 ])
 def test_reader_rejects_incomplete_or_unsupported_data(tmp_path, change, message):
-    data = json.loads((HERE / 'reader-card-template.json').read_text())
+    data = json.loads((HERE / 'reader-card-template.json').read_text(encoding='utf-8'))
     change(data)
     path = tmp_path / 'card.json'
-    path.write_text(json.dumps(data))
+    path.write_text(json.dumps(data), encoding='utf-8', newline='\n')
     with pytest.raises(ValueError, match=message):
         module('analysis').run(path, include_sensitivity=False)
 
 
 def test_omitted_reader_properties_are_assumed(tmp_path):
-    data = json.loads((HERE / 'reader-card-template.json').read_text())
+    data = json.loads((HERE / 'reader-card-template.json').read_text(encoding='utf-8'))
     data.pop('fluid_density_lb_ft3')
     data.pop('tubing_pressure_psi')
     for rod in data['rod_string']:
         for key in ('material', 'modulus_psi', 'weight_lb_ft', 'wave_speed_ft_s'):
             rod.pop(key)
     path = tmp_path / 'card.json'
-    path.write_text(json.dumps(data))
+    path.write_text(json.dumps(data), encoding='utf-8', newline='\n')
     result = module('analysis').run(path, include_sensitivity=False)
     assumptions = {r['id']: r for r in result['assumptions']}
     assert assumptions['fluid_density_lb_ft3']['value'] == 62.4
@@ -227,18 +273,18 @@ def test_stale_shape_score_is_rejected(tmp_path):
     basis = module('model_basis')
     path = tmp_path / basis.SCORE
     path.parent.mkdir(parents=True)
-    score = json.loads((ROOT / basis.SCORE).read_text())
+    score = json.loads((ROOT / basis.SCORE).read_text(encoding='utf-8'))
     score['models']['shape_only']['sha256'] = '0' * 64
-    path.write_text(json.dumps(score))
+    path.write_text(json.dumps(score), encoding='utf-8', newline='\n')
     with pytest.raises(ValueError, match='does not match'):
         basis.shape_evidence(CardData(position=[0, 1, 2], load=[1, 2, 1]), tmp_path)
 
 
 def test_committed_manifest_equals_fresh_build(analysis):
-    assert json.loads((HERE / 'results.json').read_text()) == module('build_results').manifest(analysis)
+    assert json.loads((HERE / 'results.json').read_text(encoding='utf-8')) == module('build_results').manifest(analysis)
     for row in module('build_results').numerical_results(analysis):
         rid, _, _, _, digits = row
-        result = next(r for r in json.loads((HERE / 'results.json').read_text())['results'] if r['id'] == rid)
+        result = next(r for r in json.loads((HERE / 'results.json').read_text(encoding='utf-8'))['results'] if r['id'] == rid)
         assert result['tolerance'] == {'abs': 0.5 * 10 ** -digits}
 
 
@@ -249,14 +295,14 @@ def test_committed_manifest_equals_fresh_build(analysis):
     ('position_sample', '3.5', 'position_in'),
 ])
 def test_reader_does_not_coerce_invalid_measurements(tmp_path, field, value, message):
-    data = json.loads((HERE / 'reader-card-template.json').read_text())
+    data = json.loads((HERE / 'reader-card-template.json').read_text(encoding='utf-8'))
     if field == 'material':
         data['rod_string'][0]['material'] = value
     else:
         key = 'load_lbf' if field == 'load_sample' else 'position_in'
         data['surface_card'][key][0] = value
     path = tmp_path / 'card.json'
-    path.write_text(json.dumps(data))
+    path.write_text(json.dumps(data), encoding='utf-8', newline='\n')
     with pytest.raises(ValueError, match=message):
         module('analysis').run(path, include_sensitivity=False)
 
@@ -397,7 +443,7 @@ def test_deviated_survey_is_disclosed_as_vertical_approximation(tmp_path):
     data['survey'] = {'measured_depth_ft': [0, depth / 2, depth],
                       'inclination_deg': [0, 30, 60], 'azimuth_deg': [0, 0, 0]}
     path = tmp_path / 'deviated.json'
-    path.write_text(json.dumps(data), encoding='utf-8')
+    path.write_text(json.dumps(data), encoding='utf-8', newline='\n')
     report = module('analysis')
     deviated = report.run(path, include_sensitivity=False)
     vertical = report.run(HERE / 'reader-card-template.json', include_sensitivity=False)

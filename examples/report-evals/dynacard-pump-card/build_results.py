@@ -50,7 +50,9 @@ def manifest(data):
                 'repo': REPO, 'commit': pin, 'tolerance': {'abs': 0.5 * 10 ** -digits},
                 'basis': 'fixed', 'limits': ['Arithmetic reproduction only; derived pump quantities depend on the ASSUMED inputs recorded in the analysis and report.']}
                for key, label, value, unit, digits in numerical_results(data)]
-    inputs = [{'id': f'source_{index}', 'description': row['what'], 'source': row['source'],
+    inputs = [{'id': f'source_{index}',
+               'description': row['what'] + (f"; Git blob {row['git_blob']}" if 'git_blob' in row else ''),
+               'source': row['source'],
                'url': row['url'], 'licence': row['licence'],
                'version_or_date': row.get('revision', row['date']),
                'sha256_published': row['sha256'], 'updates': 'never',
@@ -80,7 +82,7 @@ def manifest(data):
 def main():
     from analysis import run
     result = manifest(run())
-    (HERE / 'results.json').write_text(json.dumps(result, indent=1, ensure_ascii=False, allow_nan=False) + '\n', encoding='utf-8')
+    (HERE / 'results.json').write_text(json.dumps(result, indent=1, ensure_ascii=False, allow_nan=False) + '\n', encoding='utf-8', newline='\n')
 
 
 if __name__ == '__main__':
