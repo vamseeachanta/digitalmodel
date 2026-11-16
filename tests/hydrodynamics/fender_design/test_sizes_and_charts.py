@@ -271,3 +271,31 @@ def test_common_capacity_line_kept_for_bars_sharing_one_capacity(tmp_path, monke
     ax = figs[0].axes[0]
     assert {round(float(ln.get_xdata()[0]), 6) for ln in ax.lines} == {663.0}
     assert ax.get_xlabel() == "design energy (kNm)"
+
+
+def _ufc_case(ang):
+    case = load_case(EXAMPLE / "generic_case.yaml")
+    case["design"].update(method="ufc", angular_factor=ang)
+    return case
+
+
+@pytest.mark.parametrize("ang", [0.0, 1.0000001, 1.2])
+def test_compute_refuses_angular_factor_outside_0_to_1(ang):
+    # UFC demand 773.0 kNm; 1.2 would have raised the 700 kNm rating to 840 kNm (utilisation 0.920)
+    with pytest.raises(ValueError, match=r"angular_factor must be in \(0, 1\]"):
+        compute(_ufc_case(ang), citations="record")
+
+
+@pytest.mark.parametrize("ang", [0.0, 1.0000001, 1.2])
+def test_size_checks_refuse_angular_factor_outside_0_to_1(ang):
+    with pytest.raises(ValueError, match=r"angular_factor must be in \(0, 1\]"):
+        size_checks([PN4, PN5], "GEN-PN-4", 500.0, dict(DESIGN, angular_factor=ang))
+
+
+def test_compute_at_angular_factor_1_keeps_the_rated_capacity():
+    res = compute(_ufc_case(1.0), citations="record")
+    base = next(c for c in res.size_checks if c.is_base)
+    assert res.selected.design_energy_knm == pytest.approx(773.0, abs=0.05)
+    assert base.capacity_knm == pytest.approx(700.0) and res.capacity_knm == pytest.approx(700.0)
+    assert base.utilisation == pytest.approx(res.selected.design_energy_knm / 700.0)
+    assert base.meets_energy is False

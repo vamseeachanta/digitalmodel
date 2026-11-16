@@ -9,10 +9,14 @@ Sheets:
   ``Fenders``. Choices that select a table row or column (navigation
   condition, condition class, ship type, consequence class, factor
   position, method) are listed below them as fixed at generation: change
-  them in the case file and regenerate.
+  them in the case file and regenerate. The ``Check`` column shows an
+  error when the first contact is off the ship or the angular factor is
+  outside (0, 1].
 * ``Calc``: block coefficient, radius of gyration, contact geometry, Ce (and
   the K-squared-numerator error, for comparison), keel clearance and Cm by
-  three methods, as live formulas.
+  three methods, as live formulas. ``XC`` and ``ANGC`` are the checked
+  contact position and angular factor, #N/A when invalid, so the error
+  carries into every energy and energy check.
 * ``Velocity``: the Brolsma table (conditions a to e) and log-log
   interpolation at the ship's DWT and displacement, as live formulas.
 * ``Methods``: berthing energy by every method. Every coefficient that
@@ -99,7 +103,7 @@ INPUT_ROWS = (
 
 def _inputs(wb, case):
     ws = wb.create_sheet("Inputs")
-    _header(ws, 1, ["Input", "Value", "Unit", "Basis"], [44, 14, 8, 90])
+    _header(ws, 1, ["Input", "Value", "Unit", "Basis", "Check"], [44, 14, 8, 90, 60])
     basis = case.get("basis", {})
     for i, (name, label, unit, get) in enumerate(INPUT_ROWS, start=2):
         ws.cell(row=i, column=1, value=label)
@@ -107,6 +111,9 @@ def _inputs(wb, case):
         c.fill = INPUT_FILL
         ws.cell(row=i, column=3, value=unit)
         ws.cell(row=i, column=4, value=basis.get(name, ""))
+        if name in INPUT_CHECKS:
+            checked, error = INPUT_CHECKS[name]
+            ws.cell(row=i, column=5, value=f'=IF(ISNUMBER({checked}),"ok","{error}")').font = WARN_FONT
         _name(wb, name, f"Inputs!$B${i}")
     r = len(INPUT_ROWS) + 3
     head = ws.cell(row=r, column=1, value="Fixed at generation: change in the case file and REGENERATE the workbook")
@@ -141,7 +148,8 @@ FIXED_ROWS = (
 CALC_ROWS = (
     ("CB", "Block coefficient Cb = M / (rho LBP B T)", "=M/(RHO*LBP*BEAM*T)", "PIANC 2002 4.2.4"),
     ("K", "Radius of gyration K = (0.19 Cb + 0.11) LBP", "=(0.19*CB+0.11)*LBP", "PIANC 2002 4.2.4"),
-    ("XG", "Contact forward of the centre of mass (LBP/2 - x)", "=LBP/2-X", "centre of mass at mid-LBP"),
+    ("XG", "Contact forward of the centre of mass (LBP/2 - x), x checked (XC)", "=LBP/2-XC",
+     "centre of mass at mid-LBP"),
     ("RCG", "R = distance contact to centre of mass", "=SQRT(XG^2+(BEAM/2)^2)", "PIANC 2002 4.2.4"),
     ("RN", "Component of R along the berth normal", "=ABS(XG*SIN(RADIANS(ALPHA))+BEAM/2*COS(RADIANS(ALPHA)))", "geometry"),
     ("PHI", "phi = angle between velocity and R", "=DEGREES(ACOS(MIN(1,RN/RCG)))", "PIANC 2002 4.2.4; SFT p. 19 gamma"),
@@ -151,7 +159,8 @@ CALC_ROWS = (
     ("CM_P", "Cm, PIANC 2002 keel clearance", "=IF(KCD<=0.1,1.8,IF(KCD>=0.5,1.5,1.875-0.75*KCD))", "PIANC 2002 4.2.5 (SFT p. 18)"),
     ("CM_VC", "Cm, Vasco Costa 1 + 2T/B", "=1+2*T/BEAM", "Vasco Costa 1964"),
     ("CM_U", "Cm, Ueda 1 + pi T / (2 Cb B)", "=1+PI()*T/(2*CB*BEAM)", "Ueda 1981"),
-    ("XA", "Contact distance from midships along the ship, a = |LBP/2 - x|", "=ABS(LBP/2-X)", "UFC, IS 4651"),
+    ("XA", "Contact distance from midships along the ship, a = |LBP/2 - x|, x checked (XC)", "=ABS(LBP/2-XC)",
+     "UFC, IS 4651"),
     ("CE_UFC", "Ce, UFC k^2 / (a^2 + k^2)", "=K^2/(XA^2+K^2)", "UFC 4-152-01 5-2.1"),
     ("CG_UFC", "Cg, UFC 0.95 at or beyond the quarter points, else 1.0", "=IF(XA>=LBP/4-1E-9,0.95,1)",
      "UFC 4-152-01 5-2.1"),
@@ -171,7 +180,20 @@ CALC_ROWS = (
      "=(1.3+1.5*T/BEAM)+(IF(CB_UFC<0.6,1.5*CB_UFC,0.9)*(12.4*(T/BEAM)^0.3-50*T/LBP)-(1.3+1.5*T/BEAM))*(T/DEPTH)^3.5",
      "UFC 4-152-01 5-2.1.1 e, p. 109"),
     ("CG_ROM", "Cg, ROM: 0.95 continuous berth, 1.0 dolphins", "=IF(CONT=1,0.95,1)", "ROM 2.0-11"),
+    # Checked inputs: the only cells that read X and ANG. Outside the valid range they are
+    # #N/A, which carries into every energy, capacity, utilisation and energy check, as the
+    # module refuses the same input (contact_offset_m; design_performance and select_fenders).
+    ("XC", "First contact x, checked: #N/A unless 0 <= x <= LBP (contact on the ship)",
+     "=IF(AND(ISNUMBER(X),ISNUMBER(LBP),X>=0,X<=LBP),X,NA())", "fender_design.contact_offset_m"),
+    ("ANGC", "Angular factor, checked: #N/A unless 0 < factor <= 1 (a reduction only)",
+     "=IF(AND(ISNUMBER(ANG),ANG>0,ANG<=1),ANG,NA())", "fender_design.design_performance"),
 )
+
+#: Inputs whose value is checked in Calc: input name -> (checked name, error text shown on Inputs).
+INPUT_CHECKS = {
+    "X": ("XC", "ERROR: first contact is not on the ship (0 to LBP); every energy and energy check is #N/A"),
+    "ANG": ("ANGC", "ERROR: angular factor must be in (0, 1]; fender capacity and energy checks are #N/A"),
+}
 
 
 def _calc(wb):
@@ -413,7 +435,7 @@ def _fenders(wb, res):
                 f.rated_deflection_pct]
         for j, v in enumerate(vals, start=1):
             ws.cell(row=i, column=j, value=v)
-        ws.cell(row=i, column=11, value=f"=G{i}*(1-ETOL)*ANG/GAMMA_M")
+        ws.cell(row=i, column=11, value=f"=G{i}*(1-ETOL)*ANGC/GAMMA_M")
         ws.cell(row=i, column=12, value=f"=E_FENDER/K{i}")
         # a curve above the rated reaction before the rated point raises rows of its type
         # (fender_case.size_checks); otherwise the rated-deflection value x (1 + tolerance)
@@ -551,6 +573,9 @@ def _readme(wb, res):
         "Yellow cells on Inputs are inputs. Calc, Velocity, Methods and Fenders recalculate in Excel. "
         "The choices listed on Inputs as fixed at generation (red), and the Sensitivity, Tornado and Sizes "
         "sheets and the Methods flags, are written by the generator: REGENERATE after changing them or any input.",
+        "The first contact x must lie on the ship (0 to LBP) and the angular factor in (0, 1], as the Python "
+        "module requires. Outside these ranges the Check column on Inputs shows ERROR and every quantity "
+        "that depends on the value, including the energy checks, shows #N/A.",
         "The workbook gives numbers only; it does not clear a design. Every value marked secondary "
         "in Sources was read in a vendor manual that reproduces the standard.",
     ]

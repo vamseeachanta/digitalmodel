@@ -9,7 +9,7 @@ import math
 
 import pytest
 
-from digitalmodel.hydrodynamics.berthing_energy import FenderRating, berthing_energy
+from digitalmodel.hydrodynamics.berthing_energy import FenderRating, berthing_energy, select_fenders
 from digitalmodel.hydrodynamics.fender_design import (
     PerformanceCurve,
     design_performance,
@@ -108,6 +108,27 @@ def test_design_performance_factors():
 def test_design_performance_rejects_bad_tolerance():
     with pytest.raises(ValueError):
         design_performance(FENDER, energy_tolerance=1.0)
+
+
+@pytest.mark.parametrize("ang", [0.0, -0.5, 1.0000001, 1.2])
+def test_design_performance_refuses_angular_factor_outside_0_to_1(ang):
+    # an angular factor reduces the rated energy; above 1 it would inflate capacity
+    with pytest.raises(ValueError, match=r"angular_factor must be in \(0, 1\], got"):
+        design_performance(FENDER, angular_factor=ang)
+
+
+@pytest.mark.parametrize("ang", [1.0000001, 1.2])
+def test_angular_factor_above_1_refused_as_by_select_fenders(ang):
+    with pytest.raises(ValueError, match=r"angular_factor must be in \(0, 1\]"):
+        select_fenders([FENDER], 100.0, angular_factor=ang)
+    with pytest.raises(ValueError, match=r"angular_factor must be in \(0, 1\]"):
+        design_performance(FENDER, angular_factor=ang)
+
+
+@pytest.mark.parametrize("ang, energy", [(1.0, 360.0), (1e-9, 360.0e-9), (0.5, 180.0)])
+def test_design_performance_accepts_angular_factor_in_0_to_1(ang, energy):
+    # 400 x (1 - 0.10) x angular
+    assert design_performance(FENDER, angular_factor=ang).energy_knm == pytest.approx(energy)
 
 
 def _velocity_sweep(n=1):

@@ -3,6 +3,8 @@ to the Python module's values (evaluated with the ``formulas`` package)."""
 
 from __future__ import annotations
 
+import math
+import re
 import sys
 import warnings
 from pathlib import Path
@@ -254,3 +256,151 @@ def test_capacity_text_unchanged_without_a_divisor(built):
     readme = " ".join(str(c.value) for c in wb["README"]["A"] if c.value)
     assert f"capacity after tolerance and angular factor {res.capacity_knm:,.1f} kNm." in readme
     assert "capacity divisor" not in wb["Sensitivity"]["A1"].value
+
+
+# Second-provider review at 39213804: the workbook computed the contact arm and the
+# fender capacity without the module's input checks, so editing Inputs bypassed them
+# (X = 1,800 m on LBP 180 m gave UFC 0.265 kNm, IS 4651 15.655 kNm, PIANC 7.855 kNm;
+# ANG = 1.2 raised the 700 kNm rating to 840 kNm). X and ANG are now read only through
+# the checked cells XC and ANGC, which are #N/A outside 0 to LBP and (0, 1].
+
+XC_FORMULA = "=IF(AND(ISNUMBER(X),ISNUMBER(LBP),X>=0,X<=LBP),X,NA())"
+ANGC_FORMULA = "=IF(AND(ISNUMBER(ANG),ANG>0,ANG<=1),ANG,NA())"
+
+
+def _ref(wb, name):
+    sheet, ref = list(wb.defined_names[name].destinations)[0]
+    return f"{sheet.upper()}!{ref.replace('$', '')}"
+
+
+def _formulas_reading(wb, name):
+    """Cells (``SHEET!A1``) whose formula reads the defined name ``name`` (quoted text ignored)."""
+    pat = re.compile(rf"\b{name}\b")
+    hits = set()
+    for ws in wb.worksheets:
+        for row in ws.iter_rows():
+            for c in row:
+                if isinstance(c.value, str) and c.value.startswith("="):
+                    if pat.search(re.sub(r'"[^"]*"', '""', c.value)):
+                        hits.add(f"{ws.title.upper()}!{c.coordinate}")
+    return hits
+
+
+def test_contact_and_angular_factor_are_read_only_through_checked_cells(built):
+    res, out = built
+    wb = openpyxl.load_workbook(out)
+    assert _formulas_reading(wb, "X") == {_ref(wb, "XC")}
+    assert _formulas_reading(wb, "ANG") == {_ref(wb, "ANGC")}
+    calc = wb["Calc"]
+    cell = lambda n: calc[_ref(wb, n).split("!")[1]].value  # noqa: E731
+    assert cell("XC") == XC_FORMULA
+    assert cell("ANGC") == ANGC_FORMULA
+    assert cell("XG") == "=LBP/2-XC" and cell("XA") == "=ABS(LBP/2-XC)"
+    fen = wb["Fenders"]
+    for i in range(2, len(res.catalogue) + 2):
+        assert fen.cell(row=i, column=11).value == f"=G{i}*(1-ETOL)*ANGC/GAMMA_M"
+
+
+def test_inputs_check_column_names_the_error(built):
+    _, out = built
+    wb = openpyxl.load_workbook(out)
+    ws = wb["Inputs"]
+    assert ws.cell(row=1, column=5).value == "Check"
+    for name, checked, text in (("X", "XC", "ERROR: first contact is not on the ship (0 to LBP)"),
+                                ("ANG", "ANGC", "ERROR: angular factor must be in (0, 1]")):
+        row = int(_ref(wb, name).split("!B")[1])
+        f = ws.cell(row=row, column=5).value
+        assert f.startswith(f'=IF(ISNUMBER({checked}),"ok","{text}')
+
+
+def _evaluate(path):
+    """Evaluate the workbook; every cell value with errors kept (``SHEET!A1`` -> value)."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        formulas = pytest.importorskip("formulas")
+        sol = formulas.ExcelModel().loads(str(path)).finish().calculate()
+    vals = {}
+    for k, v in sol.items():
+        key = str(k).upper().replace("'", "").split("]")[-1]
+        try:
+            vals[key] = v.value[0][0]
+        except (TypeError, IndexError, AttributeError):
+            continue
+    return vals
+
+
+def _na(v):
+    return str(v) == "#N/A"
+
+
+def _number(v):
+    return isinstance(v, (int, float)) and not isinstance(v, bool) and math.isfinite(v)
+
+
+@pytest.mark.parametrize("x", [1800.0, 180.5, -1.0])
+def test_off_ship_contact_is_an_error_in_every_energy_and_check(built, tmp_path, x):
+    res, out = built
+    changed = tmp_path / "offship.xlsx"
+    _set_inputs(out, changed, dict(X=x))
+    vals = _evaluate(changed)
+    wb = openpyxl.load_workbook(changed)
+    for name in ("XC", "XG", "XA", "RCG", "CE", "CE_UFC", "CG_UFC", "CE_IS", "E_DESIGN", "E_FENDER"):
+        assert _na(vals[_ref(wb, name)]), (name, vals[_ref(wb, name)])
+    for i, r in enumerate(res.methods, start=2):
+        assert _na(vals[f"METHODS!H{i}"]) and _na(vals[f"METHODS!J{i}"]), r.method
+    for i in range(2, len(res.catalogue) + 2):
+        assert _na(vals[f"FENDERS!L{i}"]) and _na(vals[f"FENDERS!O{i}"]), i   # utilisation, Energy OK
+        assert _number(vals[f"FENDERS!K{i}"])                                 # capacity does not use x
+    row = int(_ref(wb, "X").split("!B")[1])
+    assert vals[f"INPUTS!E{row}"].startswith("ERROR: first contact is not on the ship")
+    assert vals[f"INPUTS!E{int(_ref(wb, 'ANG').split('!B')[1])}"] == "ok"
+
+
+@pytest.mark.parametrize("x", [0.0, 180.0])
+def test_contact_at_the_ends_of_the_ship_matches_the_module(built, tmp_path, x):
+    res, out = built
+    changed = tmp_path / "ends.xlsx"
+    _set_inputs(out, changed, dict(X=x))
+    vals = _evaluate(changed)
+    wb = openpyxl.load_workbook(changed)
+    assert vals[_ref(wb, "XC")] == pytest.approx(x)
+    case = load_case(EXAMPLE / "generic_case.yaml")
+    assert case["ship"]["lbp_m"] == 180.0
+    case["berth"]["contact_x_from_bow_m"] = x
+    new = {r.method: r for r in compute(case, citations="record").methods}
+    for i, r in enumerate(res.methods, start=2):
+        assert vals[f"METHODS!J{i}"] == pytest.approx(new[r.method].design_energy_knm, rel=1e-9), r.method
+    assert vals[f"INPUTS!E{int(_ref(wb, 'X').split('!B')[1])}"] == "ok"
+    for i in range(2, len(res.catalogue) + 2):
+        assert vals[f"FENDERS!O{i}"] in ("yes", "no")
+
+
+@pytest.mark.parametrize("ang", [0.0, 1.0000001, 1.2])
+def test_angular_factor_outside_0_to_1_is_an_error_in_capacity_and_checks(built, tmp_path, ang):
+    res, out = built
+    changed = tmp_path / "ang.xlsx"
+    _set_inputs(out, changed, dict(ANG=ang))
+    vals = _evaluate(changed)
+    wb = openpyxl.load_workbook(changed)
+    assert _na(vals[_ref(wb, "ANGC")])
+    for i in range(2, len(res.catalogue) + 2):
+        for col in "KLO":                                   # capacity, utilisation, Energy OK
+            assert _na(vals[f"FENDERS!{col}{i}"]), (col, i)
+    assert _number(vals[_ref(wb, "E_DESIGN")])               # the demand does not use the factor
+    row = int(_ref(wb, "ANG").split("!B")[1])
+    assert vals[f"INPUTS!E{row}"].startswith("ERROR: angular factor must be in (0, 1]")
+
+
+def test_angular_factor_1_keeps_the_rated_capacity(built, tmp_path):
+    res, out = built
+    changed = tmp_path / "ang1.xlsx"
+    _set_inputs(out, changed, dict(ANG=1.0))
+    vals = _evaluate(changed)
+    wb = openpyxl.load_workbook(changed)
+    assert vals[_ref(wb, "ANGC")] == pytest.approx(1.0)
+    row = [f.fender_id for f in res.catalogue].index(res.base_fender.fender_id) + 2
+    base = next(c for c in res.size_checks if c.is_base)
+    assert vals[f"FENDERS!K{row}"] == pytest.approx(base.capacity_knm, rel=1e-12)
+    assert vals[f"FENDERS!L{row}"] == pytest.approx(base.utilisation, rel=1e-9)
+    assert vals[f"FENDERS!O{row}"] == ("yes" if base.meets_energy else "no")
+    assert vals[f"INPUTS!E{int(_ref(wb, 'ANG').split('!B')[1])}"] == "ok"

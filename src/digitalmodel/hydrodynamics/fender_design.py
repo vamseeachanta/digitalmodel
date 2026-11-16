@@ -1367,14 +1367,18 @@ def design_performance(
     rated x (1 + reaction tolerance) x velocity x temperature factors (at the
     fastest velocity and lowest temperature) (TFADM p. 30; SFT p. 26).
     Pneumatic fenders are rated at GEA with 0 % energy tolerance (SFT p. 26).
+    The angular factor must be in (0, 1], as in ``select_fenders``.
     """
     et = _finite("energy_tolerance", energy_tolerance, nonneg=True)
     rt = _finite("reaction_tolerance", reaction_tolerance, nonneg=True)
     if et >= 1.0:
         raise ValueError("energy_tolerance must be below 1")
-    f = dict(energy_tolerance=et, reaction_tolerance=rt)
+    # a reduction only, as select_fenders: above 1 it would raise the rated energy
+    ang = _finite("angular_factor", angular_factor)
+    if not 0.0 < ang <= 1.0:
+        raise ValueError(f"angular_factor must be in (0, 1], got {angular_factor!r}")
+    f = dict(energy_tolerance=et, reaction_tolerance=rt, angular_factor=ang)
     for name, value in (
-        ("angular_factor", angular_factor),
         ("velocity_factor_energy", velocity_factor_energy),
         ("velocity_factor_reaction", velocity_factor_reaction),
         ("temperature_factor_energy", temperature_factor_energy),
