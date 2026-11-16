@@ -18,6 +18,7 @@ populated means nonzero records otherwise. Absent categories come from the capab
 | Flexible pipe | `data/flexible_pipe/data.json` | json | 0 | records | empty | citation_id per row resolved in sources.yml | none |
 | Structural sections | `data/riser_database/structure_properties/data.json` | json | 0 | records | empty | citation_id per row resolved in sources.yml | none |
 | Buoyancy modules | `data/riser_buoyancy/data.json` | json | 0 | records | empty | citation_id per row resolved in sources.yml | none |
+| Tensioners | `data/riser_tensioners/data.json` | json | 0 | records | empty | citation_id per row resolved in sources.yml | none |
 | Soil | `data/soil_stiffness/data.json` | json | 0 | records | empty | citation_id per row resolved in sources.yml | none |
 | Soil | `data/geotechnical/geotech_database.yaml` | yaml | 60 | parameter rows | populated | source_id, locator | none |
 | S-N, SCF, DFF | `data/fatigue/sn_curves.yaml` | yaml | 23 | curves | populated | file-level metadata.source only | none |
