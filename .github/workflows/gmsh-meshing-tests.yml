@@ -30,7 +30,7 @@ on:
       - "uv.lock"
       - ".github/workflows/gmsh-meshing-tests.yml"
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
     paths:
       - "src/digitalmodel/solvers/gmsh_meshing/**"
       - "src/digitalmodel/solvers/openfoam/**"
@@ -68,6 +68,8 @@ permissions:
 
 jobs:
   focused-tests:
+    # Draft pull requests wait: the gates start when the pull request is marked ready.
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","x64"]') }}
     timeout-minutes: 20
     defaults:

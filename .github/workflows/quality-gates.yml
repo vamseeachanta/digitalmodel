@@ -3,7 +3,7 @@ name: Quality Gates
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
   push:
     branches: [main, develop]
 
@@ -21,7 +21,8 @@ jobs:
     name: Run Quality Gates
     permissions: {}
     needs: quality-gates
-    if: always()
+    # Draft pull requests wait: the gates start when the pull request is marked ready.
+    if: ${{ always() && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - name: Verify matrix result
@@ -31,11 +32,13 @@ jobs:
 
   quality-gates:
     name: Quality Gates (Python ${{ matrix.python-version }})
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ['3.11', '3.12']
+        # Pull requests test one interpreter; pushes to main and develop test both.
+        python-version: ${{ fromJSON(github.event_name == 'pull_request' && '["3.11"]' || '["3.11", "3.12"]') }}
 
     steps:
       - name: Checkout code

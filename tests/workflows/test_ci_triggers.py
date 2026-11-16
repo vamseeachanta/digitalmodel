@@ -47,9 +47,10 @@ def test_pull_request_activity_types(filename: str) -> None:
     workflow = load_workflow(filename)
     triggers = workflow["on"] if "on" in workflow else workflow[True]
     assert triggers["pull_request"]["types"] == [
-        "opened", "synchronize", "reopened", "edited"
+        "opened", "synchronize", "reopened", "edited", "ready_for_review"
     ]
-    expected_keys = {"types", "paths"} if filename == "gmsh-meshing-tests.yml" else {"types"}
+    filtered = ("gmsh-meshing-tests.yml", "parametric-atlas-drift.yml")
+    expected_keys = {"types", "paths"} if filename in filtered else {"types"}
     assert set(triggers["pull_request"]) == expected_keys
 
 
@@ -60,6 +61,82 @@ def test_edits_cannot_skip_jobs_or_steps(filename: str) -> None:
         for entry in [job, *job.get("steps", [])]:
             condition = str(entry.get("if", ""))
             assert not re.search(r"github\s*\.\s*event\s*\.\s*(action|changes)\b", condition)
+
+
+NOT_DRAFT = "github.event_name != 'pull_request' || !github.event.pull_request.draft"
+# Jobs that start each pull-request workflow. Jobs that need them are skipped
+# with them, and the aggregates carry the same condition under always().
+DRAFT_GATED = {
+    "quality-gates-by-domain.yml": {
+        "detect-domains": f"${{{{ {NOT_DRAFT} }}}}",
+        "domain-tests-required": f"${{{{ always() && ({NOT_DRAFT}) }}}}",
+    },
+    "quality-gates.yml": {
+        "quality-gates": f"${{{{ {NOT_DRAFT} }}}}",
+        "quality-gates-aggregate": f"${{{{ always() && ({NOT_DRAFT}) }}}}",
+    },
+    "parametric-atlas-drift.yml": {"atlas-drift": f"${{{{ {NOT_DRAFT} }}}}"},
+    "gmsh-meshing-tests.yml": {"focused-tests": f"${{{{ {NOT_DRAFT} }}}}"},
+    "docs.yml": {"docs": f"${{{{ {NOT_DRAFT} }}}}"},
+    "repo-structure.yml": {"repo-structure": f"${{{{ {NOT_DRAFT} }}}}"},
+    "store-data-tests.yml": {"content-store": f"${{{{ {NOT_DRAFT} }}}}"},
+}
+
+
+def pull_request_workflows() -> list[str]:
+    """Name every workflow that a pull request can start."""
+    names = []
+    for path in sorted(WORKFLOWS.glob("*.yml")):
+        workflow = load_workflow(path.name)
+        triggers = workflow["on"] if "on" in workflow else workflow[True]
+        if "pull_request" in triggers:
+            names.append(path.name)
+    return names
+
+
+@pytest.mark.parametrize("filename", sorted(DRAFT_GATED))
+def test_draft_pull_requests_wait_for_ready(filename: str) -> None:
+    """Self-hosted jobs skip drafts and start when the draft is marked ready."""
+    workflow = load_workflow(filename)
+    triggers = workflow["on"] if "on" in workflow else workflow[True]
+    types = triggers["pull_request"]["types"]
+    assert {"opened", "synchronize", "reopened", "ready_for_review"} <= set(types)
+    for job_id, condition in DRAFT_GATED[filename].items():
+        assert workflow["jobs"][job_id]["if"] == condition
+    for job_id, job in workflow["jobs"].items():
+        if job_id in DRAFT_GATED[filename] or job.get("runs-on") == "ubuntu-latest":
+            continue
+        needs = job["needs"] if isinstance(job["needs"], list) else [job["needs"]]
+        assert set(needs) & set(DRAFT_GATED[filename])
+        assert "always()" not in str(job.get("if", ""))
+
+
+def test_every_pull_request_workflow_cancels_superseded_runs() -> None:
+    """A new push to a pull request cancels that pull request's older runs."""
+    names = pull_request_workflows()
+    assert set(DRAFT_GATED) <= set(names)
+    for filename in names:
+        concurrency = load_workflow(filename)["concurrency"]
+        assert "github.event.pull_request.number" in concurrency["group"]
+        assert str(concurrency["cancel-in-progress"]).lower() != "false"
+
+
+def test_branch_pushes_start_no_workflow() -> None:
+    """Only main and develop pushes start runs; work branches use pull requests."""
+    for path in sorted(WORKFLOWS.glob("*.yml")):
+        workflow = load_workflow(path.name)
+        triggers = workflow["on"] if "on" in workflow else workflow[True]
+        if "push" in triggers:
+            assert set(triggers["push"]["branches"]) <= {"main", "develop"}, path.name
+
+
+def test_pull_requests_test_one_interpreter() -> None:
+    """Pull requests run one interpreter; main and develop pushes run both."""
+    matrix = load_workflow("quality-gates.yml")["jobs"]["quality-gates"]["strategy"]["matrix"]
+    assert matrix["python-version"] == (
+        "${{ fromJSON(github.event_name == 'pull_request' && "
+        """'["3.11"]' || '["3.11", "3.12"]') }}"""
+    )
 
 
 def evaluate_expression(expression: str, context: dict[str, Any]) -> Any:
