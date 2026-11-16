@@ -75,8 +75,8 @@ def size_checks(fenders, base_id: str, energy_per_fender_knm: float, design: dic
     curve of fender type ``curve_type``; the reaction of a row of that type
     carries the curve's peak up to the rated point (``rated_peak_factor``)."""
     peak = fd.rated_peak_factor(curve)
-    r_lim = design.get("reaction_limit_kn")
-    p_lim = design.get("hull_pressure_limit_kpa")
+    r_lim = fd.check_limit("reaction_limit_kn", design.get("reaction_limit_kn"))
+    p_lim = fd.check_limit("hull_pressure_limit_kpa", design.get("hull_pressure_limit_kpa"))
     out = []
     for f in fenders:
         dp = fd.design_performance(
@@ -239,6 +239,10 @@ def compute(case: dict, catalogue_path: str | Path | None = None, citations: str
     """
     base_dir = Path(case.get("_dir", "."))
     s, b, d = case["ship"], case["berth"], case["design"]
+    # design inputs checked before any result, whatever the sweep ranges hold
+    fd.check_fenders_in_contact(d.get("fenders_in_contact", 1))
+    fd.check_limit("reaction_limit_kn", d.get("reaction_limit_kn"))
+    fd.check_limit("hull_pressure_limit_kpa", d.get("hull_pressure_limit_kpa"))
     ship = fd.Ship(**s)
     berth = fd.Berth(**b)
     fcase = fd.Case(ship, berth, **case.get("conditions", {}))

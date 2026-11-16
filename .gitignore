@@ -296,6 +296,7 @@ docs/reports/*
 !/docs/reports/modules/fender_design/fender-design-generic.html
 !/docs/reports/modules/fender_design/fender-design-generic.xlsx
 !/docs/reports/modules/fender_design/results.json
+!/docs/reports/modules/fender_design/workbook-input-checks.md
 !/docs/reports/modules/fender_design/charts/
 
 !/docs/reports/modules/pipe_capacity/

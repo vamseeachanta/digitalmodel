@@ -583,6 +583,10 @@ class Case:
         if self.cov_m not in ("high", "moderate", "low"):
             raise ValueError("cov_m must be high, moderate or low")
         _finite("berthings_per_year", self.berthings_per_year, positive=True)
+        # yes/no choices are booleans: a truthy string such as "no" must not read as yes
+        for name in ("tugs", "multiple_contact", "continuous_berth"):
+            if not isinstance(getattr(self, name), bool):
+                raise ValueError(f"{name} must be true or false, got {getattr(self, name)!r}")
 
 
 def _ukc_ratio(ship: Ship, berth: Berth) -> float:
@@ -1604,6 +1608,20 @@ class Sweep:
                 if p.reaction_kn is not None and p.reaction_kn > self.reaction_limit_kn]
 
 
+def check_fenders_in_contact(fenders_in_contact) -> int:
+    """The number of fenders sharing the energy: a whole number of 1 or more
+    (an int, not a boolean or a float), as :func:`select_fenders` requires."""
+    if isinstance(fenders_in_contact, bool) or not isinstance(fenders_in_contact, int) or fenders_in_contact < 1:
+        raise ValueError("fenders_in_contact must be a whole number >= 1")
+    return fenders_in_contact
+
+
+def check_limit(name: str, value) -> float | None:
+    """A reaction or hull-pressure limit: None (no check) or a finite number
+    above 0, the rule :func:`select_fenders` applies to the same limits."""
+    return None if value is None else _finite(name, value, positive=True)
+
+
 def parameter_sweep(
     parameter: str,
     label: str,
@@ -1637,8 +1655,9 @@ def parameter_sweep(
     reaction). Hull pressure = catalogue hull pressure (at rated deflection)
     x ``reaction_factor``; it is not scaled to part load.
     """
-    if isinstance(fenders_in_contact, bool) or not isinstance(fenders_in_contact, int) or fenders_in_contact < 1:
-        raise ValueError("fenders_in_contact must be a whole number >= 1")
+    fenders_in_contact = check_fenders_in_contact(fenders_in_contact)
+    reaction_limit_kn = check_limit("reaction_limit_kn", reaction_limit_kn)
+    hull_pressure_limit_kpa = check_limit("hull_pressure_limit_kpa", hull_pressure_limit_kpa)
     rf = _finite("reaction_factor", reaction_factor, positive=True)
     if capacity_knm is None:
         cap = fender.rated_energy_knm
@@ -1841,6 +1860,10 @@ def standard_sweeps(
     """
     if citations not in CITATION_MODES:
         raise ValueError(f"citation mode must be one of {CITATION_MODES}")
+    # checked here as well, so an empty set of ranges does not skip them
+    fenders_in_contact = check_fenders_in_contact(fenders_in_contact)
+    reaction_limit_kn = check_limit("reaction_limit_kn", reaction_limit_kn)
+    hull_pressure_limit_kpa = check_limit("hull_pressure_limit_kpa", hull_pressure_limit_kpa)
     excluded = inapplicable_sweeps(method)
     # every range is checked and constrained before the base result or any point is computed
     constrained = {}

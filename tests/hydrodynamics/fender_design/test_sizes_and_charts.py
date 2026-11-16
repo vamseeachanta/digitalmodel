@@ -539,3 +539,64 @@ def test_saved_sweep_panels_show_numeric_tick_labels(tmp_path, parameter):
     (_, energy_y), (reaction_x, reaction_y) = seen["labels"]
     for texts in (energy_y, reaction_y, reaction_x):
         assert sum(fc._is_number_label(t) for t in texts) >= 2, texts
+
+
+# The committed sweep charts are the generator's output. Second-provider reviews at
+# 1be46a8d and e19273b9 read missing reaction-axis numbers in the committed
+# sweep_displacement_t.png and sweep_berthing_angle_deg.png; the desk read numbers on
+# both. These tests open the committed files themselves: their size equals a figure
+# regenerated now, and, under the matplotlib version that wrote them (the PNG Software
+# tag), their decoded pixels equal it. The PNG bytes are not compared: on this machine
+# the same matplotlib (3.10.8) gives identical pixels but different bytes (the PNG
+# encoder's compression differs between builds), and a newer matplotlib (3.11.2)
+# rasterises text differently (55,000 to 98,000 pixels of 1,102,500 differ).
+
+COMMITTED_CHARTS = ROOT / "docs" / "reports" / "modules" / "fender_design" / "charts"
+
+
+@pytest.fixture(scope="module")
+def regenerated_sweeps(tmp_path_factory):
+    import matplotlib.pyplot as plt
+    from fender_study import SWEEP_TITLES
+    res = compute(load_case(EXAMPLE / "generic_case.yaml"), citations="record")
+    out = tmp_path_factory.mktemp("sweeps")
+    made = {}
+    for sw in res.sweeps:
+        name = f"sweep_{sw.parameter}.png"
+        fc.sweep_chart(sw, out / name, SWEEP_TITLES.get(sw.parameter, sw.label), res.base_fender.fender_id)
+        made[name] = out / name
+    plt.close("all")
+    return made
+
+
+def _rgba(path):
+    from PIL import Image
+    import numpy as np
+    with Image.open(path) as im:
+        return np.asarray(im.convert("RGBA")), dict(im.info)
+
+
+def test_committed_sweep_charts_are_the_current_set_and_size(regenerated_sweeps):
+    committed = {p.name for p in COMMITTED_CHARTS.glob("sweep_*.png")}
+    assert committed == set(regenerated_sweeps)
+    for name, path in regenerated_sweeps.items():
+        old, info = _rgba(COMMITTED_CHARTS / name)
+        new, _ = _rgba(path)
+        assert old.shape == new.shape == (810, 1050, 4), name      # 7.0 x 5.4 in at 150 dpi
+        assert info.get("Software", "").startswith("Matplotlib version"), name
+
+
+def test_committed_sweep_charts_equal_the_regenerated_figures(regenerated_sweeps):
+    import hashlib
+
+    import matplotlib
+    _, info = _rgba(COMMITTED_CHARTS / "sweep_displacement_t.png")
+    written = info["Software"].split("version")[1].split(",")[0].strip()
+    if written != matplotlib.__version__:
+        pytest.skip(f"committed charts written with matplotlib {written}, installed {matplotlib.__version__}: "
+                    "text is rasterised differently between versions, so pixels are compared only under "
+                    f"matplotlib {written}")
+    for name, path in regenerated_sweeps.items():
+        old, _ = _rgba(COMMITTED_CHARTS / name)
+        new, _ = _rgba(path)
+        assert hashlib.sha256(old.tobytes()).hexdigest() == hashlib.sha256(new.tobytes()).hexdigest(), name

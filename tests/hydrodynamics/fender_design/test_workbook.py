@@ -255,14 +255,14 @@ def test_fenders_sheet_design_reaction_carries_the_curve_peak(tmp_path):
         k = 1.10 if f.fender_type == res.base_fender.fender_type else 1.0
         assert vals[f"FENDERS!M{i}"] == pytest.approx(f.reaction_kn * k * (1 + rtol), rel=1e-9), f.fender_id
         if k == 1.0:
-            assert ws.cell(row=i, column=13).value == f"=H{i}*(1+RTOLC)"
+            assert ws.cell(row=i, column=13).value == f"=T{i}*(1+RTOLC)*INPUTS_OK"   # T: rated R checked
 
 
 def test_fenders_sheet_design_reaction_formula_unchanged_for_a_monotonic_curve(built):
     res, out = built
     ws = openpyxl.load_workbook(out)["Fenders"]
     for i in range(2, len(res.catalogue) + 2):
-        assert ws.cell(row=i, column=13).value == f"=H{i}*(1+RTOLC)"
+        assert ws.cell(row=i, column=13).value == f"=T{i}*(1+RTOLC)*INPUTS_OK"
 
 
 def test_capacity_text_names_the_wg211_divisor(tmp_path):
@@ -294,8 +294,8 @@ def test_capacity_text_unchanged_without_a_divisor(built):
 # ANG = 1.2 raised the 700 kNm rating to 840 kNm). X and ANG are now read only through
 # the checked cells XC and ANGC, which are #N/A outside 0 to LBP and (0, 1].
 
-XC_FORMULA = "=IF(AND(ISNUMBER(X),ISNUMBER(LBP),X>=0,X<=LBP),X,NA())"
-ANGC_FORMULA = "=IF(AND(ISNUMBER(ANG),ANG>0,ANG<=1),ANG,NA())"
+XC_FORMULA = "=IF(ISNUMBER(X),IF(AND(X>=0,X<=LBPC),X,NA()),NA())"
+ANGC_FORMULA = "=IF(ISNUMBER(ANG),IF(AND(ANG>0,ANG<=1),ANG,NA()),NA())"
 
 
 def _ref(wb, name):
@@ -325,10 +325,10 @@ def test_contact_and_angular_factor_are_read_only_through_checked_cells(built):
     cell = lambda n: calc[_ref(wb, n).split("!")[1]].value  # noqa: E731
     assert cell("XC") == XC_FORMULA
     assert cell("ANGC") == ANGC_FORMULA
-    assert cell("XG") == "=LBP/2-XC" and cell("XA") == "=ABS(LBP/2-XC)"
+    assert cell("XG") == "=LBPC/2-XC" and cell("XA") == "=ABS(LBPC/2-XC)"
     fen = wb["Fenders"]
     for i in range(2, len(res.catalogue) + 2):
-        assert fen.cell(row=i, column=11).value == f"=G{i}*(1-ETOLC)*ANGC/GAMMA_M"
+        assert fen.cell(row=i, column=11).value == f"=S{i}*(1-ETOLC)*ANGC/GAMMA_M*INPUTS_OK"   # S: checked
 
 
 def test_inputs_check_column_names_the_error(built):
@@ -340,7 +340,7 @@ def test_inputs_check_column_names_the_error(built):
                                 ("ANG", "ANGC", "ERROR: angular factor must be in (0, 1]")):
         row = int(_ref(wb, name).split("!B")[1])
         f = ws.cell(row=row, column=5).value
-        assert f.startswith(f'=IF(ISNUMBER({checked}),"ok","{text}')
+        assert f.startswith(f'=IF(ISNA({checked}),"{text}')
 
 
 def _evaluate(path):
@@ -380,7 +380,7 @@ def test_off_ship_contact_is_an_error_in_every_energy_and_check(built, tmp_path,
         assert _na(vals[f"METHODS!H{i}"]) and _na(vals[f"METHODS!J{i}"]), r.method
     for i in range(2, len(res.catalogue) + 2):
         assert _na(vals[f"FENDERS!L{i}"]) and _na(vals[f"FENDERS!O{i}"]), i   # utilisation, Energy OK
-        assert _number(vals[f"FENDERS!K{i}"])                                 # capacity does not use x
+        assert _na(vals[f"FENDERS!K{i}"])                 # the module refuses the case (INPUTS_OK)
     row = int(_ref(wb, "X").split("!B")[1])
     assert vals[f"INPUTS!E{row}"].startswith("ERROR: first contact is not on the ship")
     assert vals[f"INPUTS!E{int(_ref(wb, 'ANG').split('!B')[1])}"] == "ok"
@@ -416,7 +416,7 @@ def test_angular_factor_outside_0_to_1_is_an_error_in_capacity_and_checks(built,
     for i in range(2, len(res.catalogue) + 2):
         for col in "KLO":                                   # capacity, utilisation, Energy OK
             assert _na(vals[f"FENDERS!{col}{i}"]), (col, i)
-    assert _number(vals[_ref(wb, "E_DESIGN")])               # the demand does not use the factor
+    assert _na(vals[_ref(wb, "E_DESIGN")])                   # the module refuses the case (INPUTS_OK)
     row = int(_ref(wb, "ANG").split("!B")[1])
     assert vals[f"INPUTS!E{row}"].startswith("ERROR: angular factor must be in (0, 1]")
 
@@ -449,7 +449,7 @@ def test_ufc_f_reading_other_than_0_or_1_is_an_error_in_the_ufc_row(built, tmp_p
     for col in "CJ":                                         # Cm, design energy
         assert _na(vals[f"METHODS!{col}{row}"]), col
     other = methods.index("pianc2002") + 2
-    assert _number(vals[f"METHODS!J{other}"])                # other methods do not read it
+    assert _na(vals[f"METHODS!J{other}"])                    # the module refuses the case (INPUTS_OK)
     irow = int(_ref(wb, "UFCF").split("!B")[1])
     assert vals[f"INPUTS!E{irow}"].startswith("ERROR: UFC F reading must be 1")
 
@@ -462,8 +462,8 @@ def test_ufc_f_reading_other_than_0_or_1_is_an_error_in_the_ufc_row(built, tmp_p
 # the checked cells ETOLC and RTOLC, and both input cells carry a data-validation
 # rule with the same bounds.
 
-ETOLC_FORMULA = "=IF(AND(ISNUMBER(ETOL),ETOL>=0,ETOL<1),ETOL,NA())"
-RTOLC_FORMULA = "=IF(AND(ISNUMBER(RTOL),RTOL>=0),RTOL,NA())"
+ETOLC_FORMULA = "=IF(ISNUMBER(ETOL),IF(AND(ETOL>=0,ETOL<1),ETOL,NA()),NA())"
+RTOLC_FORMULA = "=IF(ISNUMBER(RTOL),IF(RTOL>=0,RTOL,NA()),NA())"
 
 
 def _input_row(wb, name):
@@ -501,7 +501,7 @@ def test_tolerance_inputs_carry_a_validation_rule_and_a_check(built):
         dv = rules[f"B{r}"]
         assert dv.type == "custom" and dv.formula1 == formula.format(r=r), name
         assert dv.showErrorMessage and dv.errorStyle == "stop" and not dv.allow_blank, name
-        assert ws.cell(row=r, column=5).value.startswith(f'=IF(ISNUMBER({name}C),"ok","{text}'), name
+        assert ws.cell(row=r, column=5).value.startswith(f'=IF(ISNA({name}C),"{text}'), name
 
 
 def _python_refuses(base, **kw):
@@ -525,8 +525,8 @@ def test_energy_tolerance_outside_0_to_1_is_an_error_in_capacity_and_checks(buil
     for i in range(2, len(res.catalogue) + 2):
         for col in "KLO":                                   # capacity, utilisation, Energy OK
             assert _na(vals[f"FENDERS!{col}{i}"]), (col, i)
-        assert _number(vals[f"FENDERS!M{i}"])                # the reaction does not use it
-    assert _number(vals[_ref(wb, "E_DESIGN")])
+        assert _na(vals[f"FENDERS!M{i}"])                    # the module refuses the case (INPUTS_OK)
+    assert _na(vals[_ref(wb, "E_DESIGN")])
     assert vals[f"INPUTS!E{_input_row(wb, 'ETOL')}"].startswith("ERROR: energy tolerance must be in [0, 1)")
     assert vals[f"INPUTS!E{_input_row(wb, 'RTOL')}"] == "ok"
 
@@ -545,7 +545,7 @@ def test_negative_reaction_tolerance_is_an_error_in_reaction_and_checks(built, t
         assert _na(vals[f"FENDERS!M{i}"]) and _na(vals[f"FENDERS!P{i}"]), i   # design R, Reaction OK
         if f.hull_pressure_kpa is not None:
             assert _na(vals[f"FENDERS!N{i}"]) and _na(vals[f"FENDERS!Q{i}"]), i  # design p, Pressure OK
-        assert _number(vals[f"FENDERS!K{i}"])                                    # capacity does not use it
+        assert _na(vals[f"FENDERS!K{i}"])                    # the module refuses the case (INPUTS_OK)
     assert vals[f"INPUTS!E{_input_row(wb, 'RTOL')}"].startswith("ERROR: reaction tolerance must not be negative")
     assert vals[f"INPUTS!E{_input_row(wb, 'ETOL')}"] == "ok"
 
