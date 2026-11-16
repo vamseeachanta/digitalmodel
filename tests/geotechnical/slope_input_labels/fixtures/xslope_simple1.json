@@ -1,0 +1,249 @@
+{
+  "source": "tests/fixtures/geotechnical/slope/xslope_simple1.xlsx",
+  "sheets": [
+    {
+      "sheet": "main",
+      "formula_count": 0,
+      "cached_count": 0
+    },
+    {
+      "sheet": "mat",
+      "formula_count": 0,
+      "cached_count": 0
+    },
+    {
+      "sheet": "profile",
+      "formula_count": 15,
+      "cached_count": 0
+    },
+    {
+      "sheet": "polygon",
+      "formula_count": 15,
+      "cached_count": 0
+    },
+    {
+      "sheet": "piezo",
+      "formula_count": 0,
+      "cached_count": 0
+    },
+    {
+      "sheet": "circles",
+      "formula_count": 0,
+      "cached_count": 0
+    },
+    {
+      "sheet": "non-circ",
+      "formula_count": 0,
+      "cached_count": 0
+    },
+    {
+      "sheet": "dloads",
+      "formula_count": 1,
+      "cached_count": 1
+    },
+    {
+      "sheet": "dloads (2)",
+      "formula_count": 1,
+      "cached_count": 1
+    },
+    {
+      "sheet": "reinforce",
+      "formula_count": 40,
+      "cached_count": 0
+    },
+    {
+      "sheet": "piles",
+      "formula_count": 0,
+      "cached_count": 0
+    },
+    {
+      "sheet": "lloads",
+      "formula_count": 0,
+      "cached_count": 0
+    },
+    {
+      "sheet": "seep bc",
+      "formula_count": 0,
+      "cached_count": 0
+    },
+    {
+      "sheet": "seep bc (2)",
+      "formula_count": 0,
+      "cached_count": 0
+    },
+    {
+      "sheet": "tseep",
+      "formula_count": 0,
+      "cached_count": 0
+    }
+  ],
+  "defined_names": {
+    "crack_depth": "main!$D$11",
+    "crack_depth_water": "main!$D$12",
+    "gamma_w": "main!$D$10",
+    "k": "main!$D$13",
+    "max_depth": "profile!$B$2",
+    "mesh": "mat!#REF!",
+    "solution1": "mat!#REF!",
+    "solution2": "mat!#REF!",
+    "version": "main!$D$5"
+  },
+  "external_links_count": 0,
+  "vba_present": false,
+  "constants": {
+    "main": {
+      "D8": "Imperial",
+      "D23": "auto"
+    },
+    "mat": {
+      "A1": null, "B1": null,
+      "A2": null, "B2": null,
+      "A3": null, "B3": null,
+      "A4": null, "B4": null,
+      "A5": null, "B5": null,
+      "A6": null, "B6": null,
+      "A7": null, "B7": null,
+      "A8": null, "B8": null,
+      "A9": null, "B9": null,
+      "A10": "mat", "B10": "name",
+      "A11": 1, "B11": "soil",
+      "A12": 2, "B12": null,
+      "A13": 3, "B13": null,
+      "A14": 4, "B14": null,
+      "A15": 5, "B15": null,
+      "A16": 6, "B16": null,
+      "A17": 7, "B17": null,
+      "A18": 8, "B18": null,
+      "A19": 9, "B19": null,
+      "A20": 10, "B20": null,
+      "A21": 11, "B21": null,
+      "A22": 12, "B22": null,
+      "A23": 13, "B23": null,
+      "A24": 14, "B24": null,
+      "A25": 15, "B25": null
+    },
+    "profile": {
+      "B5": 1, "E5": 2, "H5": 3, "K5": 4, "N5": 5, "Q5": 6, "T5": 7, "W5": 8, "Z5": 9, "AC5": 10, "AF5": 11, "AI5": 12, "AL5": 13, "AO5": 14, "AR5": 15
+    },
+    "polygon": {
+      "B5": "material", "E5": "material", "H5": "material", "K5": "material", "N5": "material", "Q5": "material", "T5": "material", "W5": "material", "Z5": "material", "AC5": "material", "AF5": "material", "AI5": "material", "AL5": "material", "AO5": "material", "AR5": "material",
+      "B6": 1, "E6": 2, "H6": 3, "K6": 4, "N6": 5, "Q6": 6, "T6": 7, "W6": 8, "Z6": 9, "AC6": 10, "AF6": 11, "AI6": 12, "AL6": 13, "AO6": 14, "AR6": 15
+    },
+    "piezo": {
+    },
+    "circles": {
+    },
+    "non-circ": {
+    },
+    "dloads": {
+    },
+    "dloads (2)": {
+    },
+    "reinforce": {
+      "G3": null,
+      "G4": null,
+      "G5": null,
+      "G6": null,
+      "G7": null,
+      "Z8": "Geosynthetic", "AA8": "Tangent", "AB8": "Active", "G8": null,
+      "Z9": "Nail", "AA9": "Axial", "AB9": "Passive", "G9": null,
+      "Z10": "Tieback", "AA10": "Axial", "AB10": "Active", "G10": null,
+      "Z11": "Anchor", "AA11": "Axial", "AB11": "Active", "G11": null,
+      "G12": null,
+      "G13": null,
+      "G14": null,
+      "G15": null,
+      "G16": null,
+      "G17": null,
+      "G18": null,
+      "G19": null,
+      "G20": null,
+      "G21": null,
+      "G22": null
+    },
+    "piles": {
+    },
+    "lloads": {
+    },
+    "seep bc": {
+    },
+    "seep bc (2)": {
+    },
+    "tseep": {
+    }
+  },
+  "formulas": [
+    {"sheet": "profile", "cell": "A6", "formula": "=_xlfn.XLOOKUP(B5,mat!$A:$A, mat!$B:$B,\"\") & \"\"", "cached_value": null},
+    {"sheet": "profile", "cell": "D6", "formula": "=_xlfn.XLOOKUP(E5,mat!$A:$A, mat!$B:$B,\"\") & \"\"", "cached_value": null},
+    {"sheet": "profile", "cell": "G6", "formula": "=_xlfn.XLOOKUP(H5,mat!$A:$A, mat!$B:$B,\"\") & \"\"", "cached_value": null},
+    {"sheet": "profile", "cell": "J6", "formula": "=_xlfn.XLOOKUP(K5,mat!$A:$A, mat!$B:$B,\"\") & \"\"", "cached_value": null},
+    {"sheet": "profile", "cell": "M6", "formula": "=_xlfn.XLOOKUP(N5,mat!$A:$A, mat!$B:$B,\"\") & \"\"", "cached_value": null},
+    {"sheet": "profile", "cell": "P6", "formula": "=_xlfn.XLOOKUP(Q5,mat!$A:$A, mat!$B:$B,\"\") & \"\"", "cached_value": null},
+    {"sheet": "profile", "cell": "S6", "formula": "=_xlfn.XLOOKUP(T5,mat!$A:$A, mat!$B:$B,\"\") & \"\"", "cached_value": null},
+    {"sheet": "profile", "cell": "V6", "formula": "=_xlfn.XLOOKUP(W5,mat!$A:$A, mat!$B:$B,\"\") & \"\"", "cached_value": null},
+    {"sheet": "profile", "cell": "Y6", "formula": "=_xlfn.XLOOKUP(Z5,mat!$A:$A, mat!$B:$B,\"\") & \"\"", "cached_value": null},
+    {"sheet": "profile", "cell": "AB6", "formula": "=_xlfn.XLOOKUP(AC5,mat!$A:$A, mat!$B:$B,\"\") & \"\"", "cached_value": null},
+    {"sheet": "profile", "cell": "AE6", "formula": "=_xlfn.XLOOKUP(AF5,mat!$A:$A, mat!$B:$B,\"\") & \"\"", "cached_value": null},
+    {"sheet": "profile", "cell": "AH6", "formula": "=_xlfn.XLOOKUP(AI5,mat!$A:$A, mat!$B:$B,\"\") & \"\"", "cached_value": null},
+    {"sheet": "profile", "cell": "AK6", "formula": "=_xlfn.XLOOKUP(AL5,mat!$A:$A, mat!$B:$B,\"\") & \"\"", "cached_value": null},
+    {"sheet": "profile", "cell": "AN6", "formula": "=_xlfn.XLOOKUP(AO5,mat!$A:$A, mat!$B:$B,\"\") & \"\"", "cached_value": null},
+    {"sheet": "profile", "cell": "AQ6", "formula": "=_xlfn.XLOOKUP(AR5,mat!$A:$A, mat!$B:$B,\"\") & \"\"", "cached_value": null},
+    {"sheet": "polygon", "cell": "A7", "formula": "=IF(OR(B5=\"\",B5=\"material\"),_xlfn.XLOOKUP(B6,mat!$A:$A, mat!$B:$B,\"\") & \"\",\"\")", "cached_value": null},
+    {"sheet": "polygon", "cell": "D7", "formula": "=IF(OR(E5=\"\",E5=\"material\"),_xlfn.XLOOKUP(E6,mat!$A:$A, mat!$B:$B,\"\") & \"\",\"\")", "cached_value": null},
+    {"sheet": "polygon", "cell": "G7", "formula": "=IF(OR(H5=\"\",H5=\"material\"),_xlfn.XLOOKUP(H6,mat!$A:$A, mat!$B:$B,\"\") & \"\",\"\")", "cached_value": null},
+    {"sheet": "polygon", "cell": "J7", "formula": "=IF(OR(K5=\"\",K5=\"material\"),_xlfn.XLOOKUP(K6,mat!$A:$A, mat!$B:$B,\"\") & \"\",\"\")", "cached_value": null},
+    {"sheet": "polygon", "cell": "M7", "formula": "=IF(OR(N5=\"\",N5=\"material\"),_xlfn.XLOOKUP(N6,mat!$A:$A, mat!$B:$B,\"\") & \"\",\"\")", "cached_value": null},
+    {"sheet": "polygon", "cell": "P7", "formula": "=IF(OR(Q5=\"\",Q5=\"material\"),_xlfn.XLOOKUP(Q6,mat!$A:$A, mat!$B:$B,\"\") & \"\",\"\")", "cached_value": null},
+    {"sheet": "polygon", "cell": "S7", "formula": "=IF(OR(T5=\"\",T5=\"material\"),_xlfn.XLOOKUP(T6,mat!$A:$A, mat!$B:$B,\"\") & \"\",\"\")", "cached_value": null},
+    {"sheet": "polygon", "cell": "V7", "formula": "=IF(OR(W5=\"\",W5=\"material\"),_xlfn.XLOOKUP(W6,mat!$A:$A, mat!$B:$B,\"\") & \"\",\"\")", "cached_value": null},
+    {"sheet": "polygon", "cell": "Y7", "formula": "=IF(OR(Z5=\"\",Z5=\"material\"),_xlfn.XLOOKUP(Z6,mat!$A:$A, mat!$B:$B,\"\") & \"\",\"\")", "cached_value": null},
+    {"sheet": "polygon", "cell": "AB7", "formula": "=IF(OR(AC5=\"\",AC5=\"material\"),_xlfn.XLOOKUP(AC6,mat!$A:$A, mat!$B:$B,\"\") & \"\",\"\")", "cached_value": null},
+    {"sheet": "polygon", "cell": "AE7", "formula": "=IF(OR(AF5=\"\",AF5=\"material\"),_xlfn.XLOOKUP(AF6,mat!$A:$A, mat!$B:$B,\"\") & \"\",\"\")", "cached_value": null},
+    {"sheet": "polygon", "cell": "AH7", "formula": "=IF(OR(AI5=\"\",AI5=\"material\"),_xlfn.XLOOKUP(AI6,mat!$A:$A, mat!$B:$B,\"\") & \"\",\"\")", "cached_value": null},
+    {"sheet": "polygon", "cell": "AK7", "formula": "=IF(OR(AL5=\"\",AL5=\"material\"),_xlfn.XLOOKUP(AL6,mat!$A:$A, mat!$B:$B,\"\") & \"\",\"\")", "cached_value": null},
+    {"sheet": "polygon", "cell": "AN7", "formula": "=IF(OR(AO5=\"\",AO5=\"material\"),_xlfn.XLOOKUP(AO6,mat!$A:$A, mat!$B:$B,\"\") & \"\",\"\")", "cached_value": null},
+    {"sheet": "polygon", "cell": "AQ7", "formula": "=IF(OR(AR5=\"\",AR5=\"material\"),_xlfn.XLOOKUP(AR6,mat!$A:$A, mat!$B:$B,\"\") & \"\",\"\")", "cached_value": null},
+    {"sheet": "dloads", "cell": "B2", "formula": "=IF(main!$D$23=\"auto\",\"Enter non-water loads only — water loads derive automatically from the piezometric line / seepage boundary conditions.\",\"\")", "cached_value": "Enter non-water loads only — water loads derive automatically from the piezometric line / seepage boundary conditions."},
+    {"sheet": "dloads (2)", "cell": "B2", "formula": "=IF(main!$D$23=\"auto\",\"Enter non-water loads only — water loads derive automatically from the piezometric line / seepage boundary conditions.\",\"\")", "cached_value": "Enter non-water loads only — water loads derive automatically from the piezometric line / seepage boundary conditions."},
+    {"sheet": "reinforce", "cell": "H3", "formula": "=IF($G3=\"\",\"\",IFERROR(VLOOKUP($G3,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I3", "formula": "=IF($G3=\"\",\"\",IFERROR(VLOOKUP($G3,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H4", "formula": "=IF($G4=\"\",\"\",IFERROR(VLOOKUP($G4,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I4", "formula": "=IF($G4=\"\",\"\",IFERROR(VLOOKUP($G4,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H5", "formula": "=IF($G5=\"\",\"\",IFERROR(VLOOKUP($G5,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I5", "formula": "=IF($G5=\"\",\"\",IFERROR(VLOOKUP($G5,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H6", "formula": "=IF($G6=\"\",\"\",IFERROR(VLOOKUP($G6,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I6", "formula": "=IF($G6=\"\",\"\",IFERROR(VLOOKUP($G6,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H7", "formula": "=IF($G7=\"\",\"\",IFERROR(VLOOKUP($G7,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I7", "formula": "=IF($G7=\"\",\"\",IFERROR(VLOOKUP($G7,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H8", "formula": "=IF($G8=\"\",\"\",IFERROR(VLOOKUP($G8,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I8", "formula": "=IF($G8=\"\",\"\",IFERROR(VLOOKUP($G8,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H9", "formula": "=IF($G9=\"\",\"\",IFERROR(VLOOKUP($G9,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I9", "formula": "=IF($G9=\"\",\"\",IFERROR(VLOOKUP($G9,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H10", "formula": "=IF($G10=\"\",\"\",IFERROR(VLOOKUP($G10,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I10", "formula": "=IF($G10=\"\",\"\",IFERROR(VLOOKUP($G10,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H11", "formula": "=IF($G11=\"\",\"\",IFERROR(VLOOKUP($G11,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I11", "formula": "=IF($G11=\"\",\"\",IFERROR(VLOOKUP($G11,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H12", "formula": "=IF($G12=\"\",\"\",IFERROR(VLOOKUP($G12,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I12", "formula": "=IF($G12=\"\",\"\",IFERROR(VLOOKUP($G12,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H13", "formula": "=IF($G13=\"\",\"\",IFERROR(VLOOKUP($G13,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I13", "formula": "=IF($G13=\"\",\"\",IFERROR(VLOOKUP($G13,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H14", "formula": "=IF($G14=\"\",\"\",IFERROR(VLOOKUP($G14,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I14", "formula": "=IF($G14=\"\",\"\",IFERROR(VLOOKUP($G14,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H15", "formula": "=IF($G15=\"\",\"\",IFERROR(VLOOKUP($G15,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I15", "formula": "=IF($G15=\"\",\"\",IFERROR(VLOOKUP($G15,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H16", "formula": "=IF($G16=\"\",\"\",IFERROR(VLOOKUP($G16,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I16", "formula": "=IF($G16=\"\",\"\",IFERROR(VLOOKUP($G16,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H17", "formula": "=IF($G17=\"\",\"\",IFERROR(VLOOKUP($G17,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I17", "formula": "=IF($G17=\"\",\"\",IFERROR(VLOOKUP($G17,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H18", "formula": "=IF($G18=\"\",\"\",IFERROR(VLOOKUP($G18,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I18", "formula": "=IF($G18=\"\",\"\",IFERROR(VLOOKUP($G18,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H19", "formula": "=IF($G19=\"\",\"\",IFERROR(VLOOKUP($G19,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I19", "formula": "=IF($G19=\"\",\"\",IFERROR(VLOOKUP($G19,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H20", "formula": "=IF($G20=\"\",\"\",IFERROR(VLOOKUP($G20,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I20", "formula": "=IF($G20=\"\",\"\",IFERROR(VLOOKUP($G20,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H21", "formula": "=IF($G21=\"\",\"\",IFERROR(VLOOKUP($G21,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I21", "formula": "=IF($G21=\"\",\"\",IFERROR(VLOOKUP($G21,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "H22", "formula": "=IF($G22=\"\",\"\",IFERROR(VLOOKUP($G22,$Z$8:$AB$11,2,0),\"\"))", "cached_value": null},
+    {"sheet": "reinforce", "cell": "I22", "formula": "=IF($G22=\"\",\"\",IFERROR(VLOOKUP($G22,$Z$8:$AB$11,3,0),\"\"))", "cached_value": null}
+  ]
+}

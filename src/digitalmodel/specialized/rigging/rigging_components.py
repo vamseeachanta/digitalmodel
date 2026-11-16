@@ -4,6 +4,7 @@ import math
 import pkgutil
 
 from assetutilities.common.data import ReadFromExcel
+from digitalmodel.asset_integrity.common.data import FromString
 from digitalmodel.solvers.fea_model.LineType_components import LineType
 from digitalmodel.solvers.fea_model.line_components import Line
 
@@ -174,6 +175,9 @@ class Shackles:
         if matches.empty:
             raise ValueError(f"Unknown shackle part number {cfg['part_number']!r}")
         shackle = matches.to_dict("records")[0]
+        size = shackle.get("size_in")
+        if isinstance(size, str) and "/" in size:
+            shackle["size_in"] = FromString().convert_fraction_to_float(size)
         # Coerce numpy scalars to plain Python so downstream summaries stay
         # deterministic and serialise cleanly to JSON/YAML.
         shackle = {key: _to_number(value) for key, value in shackle.items()}

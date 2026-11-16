@@ -1,0 +1,24 @@
+{
+  "source": "src/digitalmodel/data/crosby/26_shackles_bolt_type_anchor_g2130.xlsx",
+  "sheets": [
+    {
+      "sheet": "Sheet1",
+      "formula_count": 4,
+      "cached_count": 4
+    }
+  ],
+  "defined_names": {},
+  "external_links_count": 0,
+  "vba_present": false,
+  "constants": {
+    "Sheet1": {
+      "A1": "size_in"
+    }
+  },
+  "formulas": [
+    {"sheet": "Sheet1", "cell": "A2", "formula": "=3/16", "cached_value": 0.1875},
+    {"sheet": "Sheet1", "cell": "A4", "formula": "=5/16", "cached_value": 0.3125},
+    {"sheet": "Sheet1", "cell": "A5", "formula": "=3/8", "cached_value": 0.375},
+    {"sheet": "Sheet1", "cell": "A6", "formula": "=7/16", "cached_value": 0.4375}
+  ]
+}
