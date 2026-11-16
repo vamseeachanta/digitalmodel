@@ -2,6 +2,8 @@
 
 Clay response follows API RP 2A-WSD, 21st Ed. (2000), clause 6.8.3,
 and API RP 2A-WSD, Errata and Supplement 3 (2007), replacement clause 6.8.3.
+Clause, equation and figure numbers are cited as stated in the legacy source;
+they are not independently verified against the standard.
 The source uses the smooth expression p/pu = 0.5 (y/yc)^(1/3) at its
 interior knots, rather than the rounded reference-table ordinates. Its last
 cyclic knot uses the previous knot's response times min(1, z/XR).
@@ -70,6 +72,9 @@ def symmetric_spring_points(
     Duplicate displacements are preserved for legacy knot sets. Decreasing
     forces are permitted for cyclic softening. No standard clause is stated
     in the source for the tail multiplier or its displacement.
+    ``digitalmodel.drilling_riser.global_model.foundation.spring_table_kn``
+    handles monotonic ``PYCurve`` tables in kN link form; this helper exists
+    because cyclic soft-clay knots can soften and repeat displacements.
     """
     _ordered_positive(tuple(p.displacement_m for p in positive_points))
     _check_values(positive=(tail_displacement_m, tail_factor_one),

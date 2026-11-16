@@ -3,11 +3,16 @@
 Clay: API RP 2A-WSD, 21st Ed. (2000), clauses 6.8.2 and 6.8.3;
 API RP 2A-WSD, Errata and Supplement 3 (2007), replacement clause 6.8.3.
 Sand: the 2000 reference, clauses 6.8.6 and 6.8.7.
-These clauses are visible in the source's embedded reference images.
+Clause, equation and figure numbers are cited as stated in the legacy source;
+they are not independently verified against the standard.
 
 Inputs use m, Pa, N/m3 and dimensionless ratios. Clay ultimate resistance is
 pressure (Pa); sand ultimate resistance is force per length (N/m).
 Multiply clay pressure by diameter to obtain force per length.
+Callers convert imperial lengths with
+``digitalmodel.units.Q_(value, "inch").to("m").magnitude``.
+``linear_property_at_depth`` is the caller-side layer-property helper used
+before building ``ClayPoint``/``SandPoint``.
 
 Limits: soft-clay and sand local response only; no pile equilibrium solution,
 layered-overburden integration, stiff-clay model or cyclic history model.
@@ -24,6 +29,7 @@ for those regressions or for the generic property interpolation.
 
 from dataclasses import dataclass
 from math import atanh, isfinite, tanh
+from numbers import Real
 
 
 def _check_values(
@@ -32,7 +38,7 @@ def _check_values(
 ) -> None:
     """Reject nonfinite values and quantities outside their scalar domains."""
     values = positive + nonnegative + signed
-    if any(isinstance(v, bool) or not isinstance(v, (int, float)) for v in values):
+    if any(not isinstance(v, Real) or isinstance(v, bool) for v in values):
         raise ValueError("quantities must be real numbers")
     if not all(isfinite(v) for v in values):
         raise ValueError("quantities must be finite")
@@ -210,9 +216,3 @@ def linear_property_at_depth(
         raise ValueError("depth outside layer interval")
     return start_value_si + (depth_m - start_depth_m) * (
         (end_value_si - start_value_si) / (end_depth_m - start_depth_m))
-
-
-def inches_to_metres(length_in: float) -> float:
-    """Exact dimensional boundary conversion: 1 international inch = 0.0254 m."""
-    _check_values(positive=(), nonnegative=(length_in,))
-    return length_in * 0.0254

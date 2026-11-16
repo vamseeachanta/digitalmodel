@@ -3,6 +3,7 @@
 import math
 from dataclasses import FrozenInstanceError, replace
 
+import numpy as np
 import pytest
 
 from digitalmodel.geotechnical.lateral_soil_response import (
@@ -24,6 +25,12 @@ def test_clay_shallow_and_deep_limits():
     deep = replace(point, depth_m=20.0)
     assert clay_ultimate_pressure_pa(deep) == 9 * 20000
     assert clay_ultimate_pressure_pa(replace(point, depth_m=transition)) == 180000
+
+
+@pytest.mark.parametrize("depth_m", [np.float32(2.0), np.int64(2)])
+def test_clay_accepts_numpy_real_scalars(depth_m):
+    point = ClayPoint(depth_m, 1.0, 8000.0, 20000.0, 0.02, 0.4)
+    assert point.depth_m == 2.0
 
 
 def test_sand_capacity_and_inverse_tanh():
@@ -51,14 +58,12 @@ def test_sand_capacity_and_inverse_tanh():
 def test_caller_supplied_fit_and_linear_properties():
     from digitalmodel.geotechnical.lateral_soil_response import (
         SandCoefficientFit, sand_coefficients_one, linear_property_at_depth,
-        inches_to_metres,
     )
 
     # Illustrative polynomials: constant, linear, and quadratic identities.
     fit = SandCoefficientFit((2.0, 0.0, 0.0, 0.0), (1.0, 0.1, 0.0, 0.0),
                              (0.0, 0.0, 0.01, 0.0), 10.0, 50.0)
     assert sand_coefficients_one(30.0, fit) == pytest.approx((2, 4, 9))
-    assert inches_to_metres(7.5) == pytest.approx(0.1905)
     args = dict(start_depth_m=2.0, end_depth_m=6.0,
                 start_value_si=4000.0, end_value_si=12000.0)
     assert linear_property_at_depth(3.0, **args, allow_extrapolation=False) == 6000
@@ -67,6 +72,13 @@ def test_caller_supplied_fit_and_linear_properties():
         linear_property_at_depth(7.0, **args, allow_extrapolation=False)
     with pytest.raises(ValueError):
         sand_coefficients_one(60.0, fit)
+
+
+def test_shared_units_convert_inches_to_metres():
+    from digitalmodel.units import Q_
+
+    assert Q_(7.5, "inch").to("m").magnitude == pytest.approx(0.1905)
+    assert Q_(0.0, "inch").to("m").magnitude == 0.0
 
 
 @pytest.mark.parametrize("field,value", [
@@ -116,7 +128,7 @@ def test_sand_shallow_branch_loading_floor_and_zero_response():
 
 def test_frozen_inputs_and_fit_validation():
     from digitalmodel.geotechnical.lateral_soil_response import (
-        SandCoefficientFit, linear_property_at_depth, inches_to_metres,
+        SandCoefficientFit, linear_property_at_depth,
     )
 
     point = ClayPoint(2.0, 1.0, 8000.0, 20000.0, 0.02, 0.4)
@@ -128,8 +140,6 @@ def test_frozen_inputs_and_fit_validation():
         with pytest.raises(ValueError):
             SandCoefficientFit(coefficients, (1.0, 0.0, 0.0, 0.0),
                                (1.0, 0.0, 0.0, 0.0), 10.0, 50.0)
-    with pytest.raises(ValueError):
-        inches_to_metres(-1)
     with pytest.raises(ValueError):
         linear_property_at_depth(2, start_depth_m=2, end_depth_m=2,
                                  start_value_si=4, end_value_si=8, allow_extrapolation=False)
