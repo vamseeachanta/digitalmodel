@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 ABOUTME: End-to-end FEM analysis chain — geometry creation via gmsh, INP export,
 CalculiX solve, and result extraction in a single pipeline call.
@@ -303,7 +306,13 @@ class FEMChain:
         """
         Full chain: plate with hole -> mesh -> solve -> Kt.
 
-        Uses quarter-symmetry model with W/d > 5 so theoretical Kt ~ 3.0.
+        Uses quarter-symmetry and equal nodal forces on the x = W/2 face.
+        The comparison is Kirsch's infinite-plate Kt = 3.0, referred to
+        gross-section stress (the applied far-field stress):
+        https://doc.comsol.com/6.3/doc/com.comsol.help.models.sme.kirsch_plate/kirsch_plate.html
+        Net-section Kt = gross-section Kt * (W - d)/W, where d = 2 * hole_r.
+        At W/d = 10 the finite-width strip correction is small but nonzero;
+        the existing 5% test criterion is retained, without applying a correction.
         """
         plate_w = 200.0
         plate_h = 200.0
@@ -315,7 +324,7 @@ class FEMChain:
             plate_w, plate_h, hole_r, thickness, element_size,
         )
 
-        # Applied traction as equivalent nodal loads on quarter model
+        # Equal nodal forces on the x = W/2 face of the quarter model
         # Far edge spans y=0..plate_h/2, total force = σ × t × (H/2)
         n_load = len(self._node_sets.get("LOAD", [1]))
         force_per_node = sigma_applied * thickness * (plate_h / 2.0) / n_load
@@ -356,20 +365,27 @@ class FEMChain:
     # ------------------------------------------------------------------
 
     def _extract_gmsh_data(self, gmsh_module):
-        """Extract nodes and elements from gmsh into internal storage."""
+        """Install a volume mesh only after validating its one-based node tags."""
         node_tags, node_coords, _ = gmsh_module.model.mesh.getNodes()
-        self._nodes = node_coords.reshape(-1, 3)
+        if not np.array_equal(node_tags, np.arange(1, len(node_tags) + 1)):
+            raise ValueError("Gmsh node tags must be exactly 1..N in coordinate order")
+        nodes = node_coords.reshape(-1, 3)
 
-        self._elements = {}
-        for etype in gmsh_module.model.mesh.getElementTypes():
+        elements = {}
+        for etype in gmsh_module.model.mesh.getElementTypes(dim=3):
             etags, enodes = gmsh_module.model.mesh.getElementsByType(etype)
             props = gmsh_module.model.mesh.getElementProperties(etype)
             name, dim, npn = props[0], props[1], props[3]
+            if not np.isin(enodes, node_tags).all():
+                raise ValueError("Element connectivity references an absent node")
             conn = enodes.reshape(-1, npn)
-            self._elements[name] = {
+            elements[name] = {
                 "connectivity": conn - 1,  # 0-based
                 "dimension": dim,
             }
+        if not elements or not any(len(e["connectivity"]) for e in elements.values()):
+            raise ValueError("Gmsh mesh must contain volume elements")
+        self._nodes, self._elements = nodes, elements
 
     def _identify_plate_sets(self, gmsh_module, hw, hh, thickness, hole_r):
         """Identify node sets for boundary conditions on the plate model."""
