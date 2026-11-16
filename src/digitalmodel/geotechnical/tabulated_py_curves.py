@@ -29,6 +29,14 @@ inferred. All inputs are finite, nonnegative magnitudes except signed spring
 points and sensitivity >= -1. Quantization uses the exact binary input ratio;
 converting units before quantization can change the selected quantum at a boundary.
 
+Related code
+------------
+digitalmodel.drilling_riser.global_model.foundation.interpolate_py and
+digitalmodel.drilling_riser.global_model.foundation.spring_table_kn operate on
+line resistance (N/m), reject decreasing resistance, and hold end curves outside
+the tabulated depth range. This module retains softening, raises for out-of-range
+depths instead of holding end curves, and uses a pressure basis (Pa).
+
 Standards stated in the source
 -----------------------------
 Reference images identify API-RP-2A (2000), with the heading API Recommended
@@ -39,19 +47,12 @@ Those references are dormant theory. No standard or clause is attributed to
 the active interpolation, area conversion, rounding or spring-table arithmetic.
 No standard-derived numeric constant is introduced by this module.
 
-Input gaps and next revision
----------------------------
-The source explicitly marks its p-y units unknown and also uses conflicting
-pressure/line-load labels. A declared physical input basis is required before
-engineering use. Source conversion factors and independently entered mesh units
-are not mutually exact. Constitutive parameters, confirmed standard editions,
-layer definitions, and derivation of supplied curves from a standard are missing.
-The source's limited-lookahead interpolation and anomalous references are not
-adopted as a general algorithm. Exact reproduction of its decimal force rounding
-after SI conversion is not established. Next revision: resolve these inputs and
-rounding semantics before adding soil-law generation, diagnostic correlations,
-or solver-specific text exports. This revision supplies no design acceptance
-criterion or qualification for engineering use.
+Input gaps
+----------
+Callers must declare the physical basis of supplied ordinates and use exact unit
+conversions at the input boundary. Soil-law generation would require constitutive
+parameters, layer definitions, and confirmed governing standard editions and
+clauses; these are not inferred from the supplied tables.
 """
 
 from __future__ import annotations

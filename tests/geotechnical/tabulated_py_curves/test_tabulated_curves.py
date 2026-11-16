@@ -2,7 +2,7 @@
 
 import pytest
 
-from digitalmodel.geotechnical.py_curves import ForceCurve, interpolate_force
+from digitalmodel.geotechnical.tabulated_py_curves import ForceCurve, interpolate_force
 
 
 def test_force_interpolation_preserves_softening_and_endpoints():
@@ -15,7 +15,7 @@ def test_force_interpolation_preserves_softening_and_endpoints():
 
 
 def test_pressure_and_line_load_normalization_have_distinct_units():
-    from digitalmodel.geotechnical.py_curves import (
+    from digitalmodel.geotechnical.tabulated_py_curves import (
         SpringGeometry, force_from_pressure, force_from_line_resistance,
         pressure_from_force,
     )
@@ -30,7 +30,7 @@ def test_pressure_and_line_load_normalization_have_distinct_units():
 
 def test_force_quantization_preserves_exact_boundaries():
     from math import nextafter
-    from digitalmodel.geotechnical.py_curves import round_force_up
+    from digitalmodel.geotechnical.tabulated_py_curves import round_force_up
 
     assert round_force_up(0.0, 0.25) == 0.0
     assert round_force_up(1.0, 0.25) == 1.0
@@ -40,7 +40,7 @@ def test_force_quantization_preserves_exact_boundaries():
 
 
 def test_depth_interpolation_uses_one_common_displacement_grid():
-    from digitalmodel.geotechnical.py_curves import PressureCurve, interpolate_depth
+    from digitalmodel.geotechnical.tabulated_py_curves import PressureCurve, interpolate_depth
 
     shallow = PressureCurve(1.0, (0.0, 0.04), (0.0, 20000.0))
     deep = PressureCurve(5.0, (0.0, 0.04), (0.0, 60000.0))
@@ -56,7 +56,7 @@ def test_depth_interpolation_uses_one_common_displacement_grid():
 
 
 def test_spring_table_is_odd_and_scales_pressure_by_projected_area():
-    from digitalmodel.geotechnical.py_curves import (
+    from digitalmodel.geotechnical.tabulated_py_curves import (
         PressureCurve, SpringGeometry, symmetric_spring_points,
     )
 

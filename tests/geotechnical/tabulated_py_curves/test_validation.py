@@ -5,7 +5,7 @@ from math import inf, nan
 
 import pytest
 
-from digitalmodel.geotechnical.py_curves import (
+from digitalmodel.geotechnical.tabulated_py_curves import (
     ForceCurve, PressureCurve, SpringGeometry, SpringPoint, force_from_pressure,
     force_from_line_resistance, pressure_from_force, interpolate_depth,
     interpolate_force, round_force_up, symmetric_spring_points,
