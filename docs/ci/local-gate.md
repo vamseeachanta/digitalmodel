@@ -25,8 +25,9 @@ scripts/ci/local_gate.sh --pr 1234 --sha <40-character head> --work-root <direct
    domain. The shard commands come from `.claude/quality-gates.yaml` and the
    harness command from the workflow file, both read from the tree under test.
 5. Runs the modules in parallel (`--jobs`, default 4), each with its own log
-   and time limit (`--module-timeout`, default 900 s) inside one overall budget
-   (`--budget-seconds`, default 1800 s).
+   and time limit (`--module-timeout`, default 1500 s) inside one overall budget
+   (`--budget-seconds`, default 3600 s). The longest hosted shard ran for
+   1122 s in the full sweep of 16 Nov 2026.
 6. Posts the `local-gate` status on `--sha`, writes `result.json` and the logs
    under `<work-root>/runs/`, and removes the worktree.
 
@@ -86,6 +87,18 @@ These runs are not advisory:
   that executes every shard, so it is the check on shards the touched-domain
   selection did not run and on drift between a gate run and a later base tip.
 - Every push run on `main`, `Deploy Docs to Pages` and `Publish to PyPI`.
+
+## Host requirements
+
+- A native Linux file system for `--work-root`. A trial on an NTFS volume
+  mounted through FUSE failed during package installation with `No space left
+  on device` while the volume reported 120 GB free.
+- The interpreter the hosted jobs use, passed as `--python <path>`. A
+  downloaded standalone CPython 3.11 build lacks `fcntl.F_SEAL_WRITE`, and 22
+  tests in `tests/workflows/test_hosted_execution.py` fail on it for that reason.
+- `npm` for the `contracts` module and `libglu1-mesa` for `solver-smoke` and
+  `specialized`. A missing prerequisite fails that module; nothing is installed
+  with elevated rights.
 
 ## Limits
 

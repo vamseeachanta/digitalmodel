@@ -231,7 +231,9 @@ def prepare_tree(args: argparse.Namespace, base: str, worktree: Path) -> str:
     mirror = args.work_root / "mirror.git"
     url = f"https://github.com/{args.repo}.git"
     if not mirror.exists():
-        capture(["git", "clone", "--quiet", "--bare", "--filter=blob:none", url, str(mirror)])
+        # A complete clone, as the workflows use (fetch-depth: 0): citation and pin tests read
+        # old revisions, and a partial clone would fetch each missing object over the network.
+        capture(["git", "clone", "--quiet", "--bare", url, str(mirror)])
     git = ["git", "-C", str(mirror)]
     capture(git + ["fetch", "--quiet", "--no-tags", url,
                    f"+refs/heads/{base}:refs/local-gate/base",
@@ -277,11 +279,12 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--work-root", type=Path, required=True,
                         help="directory on a volume with room for the mirror, worktrees and caches")
     parser.add_argument("--jobs", type=int, default=4, help="modules run in parallel")
-    parser.add_argument("--budget-seconds", type=int, default=1800)
-    parser.add_argument("--module-timeout", type=int, default=900)
+    parser.add_argument("--budget-seconds", type=int, default=3600)
+    parser.add_argument("--module-timeout", type=int, default=1500)
     parser.add_argument("--min-free-gb", type=float, default=20.0,
                         help="refuse to start when the work-root volume has less free space")
-    parser.add_argument("--python", default="3.11", help="interpreter the pull-request gates use")
+    parser.add_argument("--python", default="3.11",
+                        help="version or interpreter path; give the path of the interpreter the hosted jobs use")
     parser.add_argument("--no-post", action="store_true", help="run and report, post no status")
     parser.add_argument("--keep", action="store_true", help="keep the worktree for inspection")
     args = parser.parse_args(argv)
@@ -319,6 +322,9 @@ def gate(args: argparse.Namespace, run_dir: Path, worktree: Path) -> tuple[str, 
                UV_PYTHON_INSTALL_DIR=str(args.work_root / "uv-python"),
                UV_PYTHON=args.python, PYTHONDONTWRITEBYTECODE="1", TMPDIR=str(scratch),
                GITHUB_BASE_REF=info["base"], GITHUB_SHA=args.sha)
+    # Prefer an interpreter installed on the host over a downloaded standalone build: the
+    # standalone 3.11 build lacks fcntl.F_SEAL_WRITE, which tests/workflows needs.
+    env.setdefault("UV_PYTHON_PREFERENCE", "system")
     uv = ["uv", "run", "--no-sources"]
     detect = capture(uv + ["python", "scripts/ci/detect_touched_domains.py", "--mode", "touched",
                            "--base", tip, "--head", args.sha, "--domains-file", "tests/DOMAINS.md",
