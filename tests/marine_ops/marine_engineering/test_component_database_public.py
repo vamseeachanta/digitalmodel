@@ -218,3 +218,28 @@ def test_legacy_chain_query_interface(tmp_path):
     assert db.find_chain_by_mbl(chain.mbl, chain.grade, chain.link_type) == chain
     assert not db.list_available_chains(chain.grade, chain.link_type).empty
     assert db.wire_db.empty and db.line_db.empty
+
+
+@pytest.mark.parametrize(
+    'value', [None, [], ['metadata'], 'metadata', 0, 1.5, True, False],
+    ids=['null', 'empty_array', 'array', 'string', 'integer', 'float', 'true', 'false'],
+)
+def test_non_object_sidecar_is_rejected(copied_data, value):
+    (copied_data / 'provenance.json').write_text(json.dumps(value))
+    with pytest.raises(ValueError, match='provenance.*expected a JSON object'):
+        ComponentDatabase(copied_data)
+
+
+@pytest.mark.parametrize('kind', ['chain', 'wire', 'line'])
+def test_null_sidecar_cannot_mask_missing_csv(copied_data, kind):
+    (copied_data / 'provenance.json').write_text('null')
+    path = copied_data / f'{kind}_properties.csv'
+    path.rename(path.with_suffix('.saved'))
+    with pytest.raises(ValueError, match='provenance.*expected a JSON object'):
+        ComponentDatabase(copied_data)
+
+
+def test_empty_object_sidecar_is_incomplete(copied_data):
+    (copied_data / 'provenance.json').write_text('{}')
+    with pytest.raises(ValueError, match='provenance.*incomplete sidecar'):
+        ComponentDatabase(copied_data)
