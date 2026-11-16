@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 import plotly.io as pio
 
 from digitalmodel.common.assumption_ledger import AssumptionLedger, AssumptionSource, Confidence
+from digitalmodel.reporting._metadata import package_code_edition
 from digitalmodel.reporting import Provenance, ReportSection, SectionMode, assemble_report
 
 
@@ -19,7 +20,12 @@ def render_report(result, *, inputs, data_source, output_path=None):
         ReportSection("utilization", "Utilization", SectionMode.ALWAYS, _chart),
         ReportSection("citations", "Citations", SectionMode.ALWAYS, _citations),
     ]
-    provenance = Provenance(sources=[] if data_source is None else [data_source])
+    provenance = Provenance(
+        code_edition=package_code_edition(),
+        units_system="US customary (in, lbf, psi)",
+        validated_path="screening",
+        sources=[] if data_source is None else [data_source],
+    )
     return assemble_report(
         "Analytical flange rating (ASME App 2)", provenance=provenance,
         sections=sections, data={"result": result, "inputs": inputs},

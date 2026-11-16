@@ -347,6 +347,7 @@ def assess_sweep(basis, records, weather=None):
 
 def build_report(basis, result, *, date):
     """Render the standard report form with comparisons and explicit gaps."""
+    from digitalmodel.reporting._metadata import package_code_edition
     from digitalmodel.reporting import (
         DocumentMeta,
         Provenance,
@@ -409,7 +410,11 @@ def build_report(basis, result, *, date):
                 )
             ],
         ),
-        provenance=Provenance().add(
+        provenance=Provenance(
+            code_edition=package_code_edition(),
+            units_system="SI",
+            validated_path="screening",
+        ).add(
             "input", basis["basis_id"], description=basis["purpose"]
         ),
         sections=[

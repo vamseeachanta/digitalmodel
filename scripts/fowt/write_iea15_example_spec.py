@@ -3,8 +3,10 @@
     python scripts/fowt/write_iea15_example_spec.py
 
 Writes ``docs/domains/orcaflex/examples/fowt/iea15-volturnus-s/spec.yml``
-(static equilibrium, no wind, no waves) and regenerates the golden model in
-``tests/solvers/orcaflex/modular_generator/goldens/fowt_iea15_lc0/``.
+(static equilibrium, no wind, no waves) and ``spec-flexible.yml`` (the same
+case with a finite-element tower and a lumped RNA), and regenerates their
+golden models in ``tests/solvers/orcaflex/modular_generator/goldens/``
+(``fowt_iea15_lc0/`` and ``fowt_iea15_flexible_lc0/``).
 """
 from __future__ import annotations
 
@@ -13,12 +15,19 @@ from pathlib import Path
 
 import yaml
 
-from digitalmodel.floating_wind.iea15_orcaflex_spec import build_spec, load_sources
+from digitalmodel.floating_wind.iea15_orcaflex_spec import (
+    build_flexible_spec,
+    build_spec,
+    load_sources,
+)
 from digitalmodel.solvers.orcaflex.modular_generator import ModularModelGenerator
 
 ROOT = Path(__file__).resolve().parents[2]
 SPEC = ROOT / "docs" / "domains" / "orcaflex" / "examples" / "fowt" / "iea15-volturnus-s" / "spec.yml"
-GOLDEN = ROOT / "tests" / "solvers" / "orcaflex" / "modular_generator" / "goldens" / "fowt_iea15_lc0"
+GOLDENS = ROOT / "tests" / "solvers" / "orcaflex" / "modular_generator" / "goldens"
+GOLDEN = GOLDENS / "fowt_iea15_lc0"
+FLEXIBLE_SPEC = SPEC.with_name("spec-flexible.yml")
+FLEXIBLE_GOLDEN = GOLDENS / "fowt_iea15_flexible_lc0"
 
 HEADER = (
     "# IEA 15 MW reference turbine on the UMaine VolturnUS-S semi-submersible.\n"
@@ -29,20 +38,27 @@ HEADER = (
 )
 
 
-def main() -> int:
-    basis, data = load_sources()
-    spec = build_spec(basis, data)
-    SPEC.parent.mkdir(parents=True, exist_ok=True)
-    SPEC.write_text(HEADER + yaml.safe_dump(spec, sort_keys=False, width=100),
+def _write(spec: dict, path: Path, golden: Path, header: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(header + yaml.safe_dump(spec, sort_keys=False, width=100),
                     encoding="utf-8", newline="\n")
-    if GOLDEN.exists():
-        shutil.rmtree(GOLDEN)
-    ModularModelGenerator(SPEC).generate(GOLDEN)
+    if golden.exists():
+        shutil.rmtree(golden)
+    ModularModelGenerator(path).generate(golden)
     # The input manifest hashes platform-dependent line endings; the golden
     # test compares normalised text instead, so the manifest is not kept.
-    (GOLDEN / "input-manifest.json").unlink(missing_ok=True)
-    for path in GOLDEN.rglob("*.yml"):
-        path.write_bytes(path.read_bytes().replace(b"\r\n", b"\n"))
+    (golden / "input-manifest.json").unlink(missing_ok=True)
+    for item in golden.rglob("*.yml"):
+        item.write_bytes(item.read_bytes().replace(b"\r\n", b"\n"))
+
+
+def main() -> int:
+    basis, data = load_sources()
+    _write(build_spec(basis, data), SPEC, GOLDEN, HEADER)
+    _write(build_flexible_spec(basis, data), FLEXIBLE_SPEC, FLEXIBLE_GOLDEN,
+           HEADER.replace("semi-submersible.\n",
+                          "semi-submersible,\n# flexible representation (finite-element "
+                          "tower, lumped RNA).\n", 1))
     return 0
 
 
