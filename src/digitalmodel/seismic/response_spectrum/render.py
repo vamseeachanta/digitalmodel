@@ -14,6 +14,7 @@ from digitalmodel.common.assumption_ledger import (
     AssumptionSource,
     Confidence,
 )
+from digitalmodel.reporting._metadata import package_code_edition
 from digitalmodel.reporting import (
     DataSource,
     Provenance,
@@ -35,7 +36,12 @@ def render_report(
 ) -> str | Path:
     """Render a provenance-gated, deterministic PR1 report."""
 
-    provenance = Provenance(sources=[] if data_source is None else [data_source])
+    provenance = Provenance(
+        code_edition=package_code_edition(),
+        units_system="SI",
+        validated_path="screening",
+        sources=[] if data_source is None else [data_source],
+    )
     label = generated_label or DEFAULT_GENERATED_LABEL
     sections = [
         ReportSection("summary", "Summary", SectionMode.ALWAYS, _summary_section),

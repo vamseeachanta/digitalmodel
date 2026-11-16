@@ -425,6 +425,7 @@ except ImportError:
     ORCAFLEX_AVAILABLE = False
 
 
+@pytest.mark.solver
 @pytest.mark.skipif(not ORCAFLEX_AVAILABLE, reason="OrcFxAPI not available")
 class TestRiserOrcaFlexLoad:
     """Tests for loading generated riser models in OrcFxAPI."""
@@ -459,6 +460,7 @@ class TestRiserOrcaFlexLoad:
         assert line.typeName == "Line"
 
 
+@pytest.mark.solver
 @pytest.mark.skipif(not ORCAFLEX_AVAILABLE, reason="OrcFxAPI not available")
 class TestPliantWaveOrcaFlexConvergence:
     """Tests for pliant wave riser with tether link in OrcFxAPI."""

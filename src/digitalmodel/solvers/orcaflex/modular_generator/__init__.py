@@ -43,6 +43,7 @@ from .post_validator import (
     ValidationWarning,
     check_collection_collisions,
 )
+from .routers.fowt_router import FowtRouter
 from .routers.mooring_router import MooringRouter
 from .routers.vessel_router import VesselRouter
 from .schema.generic import GenericModel
@@ -159,6 +160,14 @@ class ModularModelGenerator:
         into GenericModel-compatible dicts, then merge them into
         spec.generic for processing by GenericModelBuilder.
         """
+        if self.spec.fowt is not None:
+            # FOWT input excludes a user-supplied generic model. Rebuild its
+            # derived objects on each call, retaining the engineering source
+            # for repeat generation and subsequent domain edits.
+            generic = GenericModel(**FowtRouter().route(self.spec.fowt))
+            self.spec = self.spec.model_copy(update={"generic": generic})
+            return
+
         if self.spec.riser is not None and self.spec.generic is not None:
             from .riser_conversion import render_riser
 

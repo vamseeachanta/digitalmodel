@@ -12,10 +12,11 @@ class TestBuilderRegistry:
     """Test the builder registry system."""
 
     def test_all_builders_registered(self):
-        """Verify all 19 builders are registered.
+        """Verify all 20 builders are registered.
 
         10 original + 3 S-lay + 5 riser (drilling-riser automation epic #807)
-        + 1 generic-object builder (#495-#505 spec-to-YAML overhaul).
+        + 1 generic-object builder (#495-#505 spec-to-YAML overhaul)
+        + 1 riser buoy builder (#3974).
         """
         from digitalmodel.solvers.orcaflex.modular_generator.builders.registry import (
             BuilderRegistry,
@@ -24,7 +25,7 @@ class TestBuilderRegistry:
         import digitalmodel.solvers.orcaflex.modular_generator.builders  # noqa: F401
 
         ordered = BuilderRegistry.get_ordered_builders()
-        assert len(ordered) == 19
+        assert len(ordered) == 20
         file_names = [name for name, _ in ordered]
         assert "01_general.yml" in file_names
         assert "10_groups.yml" in file_names
@@ -38,6 +39,7 @@ class TestBuilderRegistry:
         assert "06_riser_vessels.yml" in file_names
         assert "07_riser_lines.yml" in file_names
         assert "08_riser_links.yml" in file_names
+        assert "06_riser_buoys.yml" in file_names  # #3974
         # Generic-object builder (#495-#505)
         assert "20_generic_objects.yml" in file_names
 
@@ -66,6 +68,10 @@ class TestBuilderRegistry:
         assert file_names.index("11_winches.yml") < file_names.index("10_groups.yml")
         # lines before groups (line names needed)
         assert file_names.index("07_lines.yml") < file_names.index("10_groups.yml")
+        # riser vessel before riser buoys before riser lines and links (#3974)
+        assert file_names.index("06_riser_vessels.yml") < file_names.index("06_riser_buoys.yml")
+        assert file_names.index("06_riser_buoys.yml") < file_names.index("07_riser_lines.yml")
+        assert file_names.index("06_riser_buoys.yml") < file_names.index("08_riser_links.yml")
 
     def test_get_include_order(self):
         """Verify include order matches expected list."""
@@ -84,6 +90,7 @@ class TestBuilderRegistry:
             "05_line_types.yml",
             "05_riser_line_types.yml",
             "06_riser_vessels.yml",
+            "06_riser_buoys.yml",
             "13_supports.yml",
             "06_vessels.yml",
             "14_morison.yml",
