@@ -1,0 +1,105 @@
+# Local pull-request gate
+
+`scripts/ci/local_gate.sh` runs the pull-request gates on any Linux host with
+`git`, `gh`, `uv` and Python 3.11 or later, then posts a commit status named
+`local-gate` on the tested head. It exists because a reviewed pull request can
+wait far longer for a self-hosted runner than its jobs take to run: on
+16 Nov 2026 the measured queue wait was 15 to 54 minutes for jobs that ran in
+0.1 to 8 minutes.
+
+## What one run does
+
+```bash
+scripts/ci/local_gate.sh --pr 1234 --sha <40-character head> --work-root <directory>
+```
+
+1. Refuses to start when the volume that holds `--work-root` has less free
+   space than `--min-free-gb` (default 20). The gate deletes nothing to make room.
+2. Confirms through the GitHub API that the pull request is open, comes from
+   this repository and still has `--sha` as its head.
+3. Fetches the base branch and the head into its own bare mirror under the work
+   root, checks out the base tip in a temporary worktree and merges the head
+   into it. This is the same tree the hosted workflows test.
+4. Runs `scripts/ci/detect_touched_domains.py --mode touched`, the detector the
+   `Quality Gates by Domain` workflow uses, and plans one module per touched
+   domain. The shard commands come from `.claude/quality-gates.yaml` and the
+   harness command from the workflow file, both read from the tree under test.
+5. Runs the modules in parallel (`--jobs`, default 4), each with its own log
+   and time limit (`--module-timeout`, default 900 s) inside one overall budget
+   (`--budget-seconds`, default 1800 s).
+6. Posts the `local-gate` status on `--sha`, writes `result.json` and the logs
+   under `<work-root>/runs/`, and removes the worktree.
+
+Table 1 lists the modules.
+
+| Module | Content | Hosted equivalent |
+| --- | --- | --- |
+| `lint` | Text-encoding check on changed Python lines, report-provenance ratchet, repository-structure validation, engineering-register check on changed documents | `Text Encoding`, `Repository Structure`, the two static steps of `Quality Gates` |
+| `ci-harness` | The harness and compliance test list of the domain workflow | `CI harness and compliance tests` |
+| one per touched domain | The `tests-<domain>` command, with the same additions the workflow applies to `contracts`, `orcaflex`, `specialized` and `subsea` | `tests-<domain>` |
+
+Table 1: modules of one local gate run.
+
+## Result rules
+
+The result is fail-closed. Table 2 gives every outcome.
+
+| Condition | Status posted | Exit code |
+| --- | --- | --- |
+| Every planned module ran and returned 0 | `success` | 0 |
+| A module failed, timed out or was not started inside the budget | `failure` | 1 |
+| The head does not merge into the current base tip | `failure` | 1 |
+| Low disk, fetch failure, detector failure, a touched domain without a command, a pull request from a fork | `error` | 2 |
+| The head moved or the pull request is closed | none | 3 |
+
+Table 2: local gate outcomes.
+
+The status description names the module count, the elapsed time, the base tip
+the head was merged into and every module that did not pass. A status applies
+only to the exact commit it is posted on; a new push needs a new run.
+
+## Workflows that become advisory
+
+A merge step may take `local-gate` `success` at the exact head in place of
+waiting for the runner queue. Under that rule the pull-request runs of the
+following workflows are advisory, which means a queued or running job no longer
+delays a merge:
+
+- `Quality Gates by Domain` (the local gate runs the same shards)
+- `Quality Gates`
+- `Text Encoding`
+- `Repository Structure`
+- `Build API Docs`, `Content store tests`, `Gmsh and OpenFOAM Bridge Tests`,
+  `Parametric atlas drift`, `Workflow Automation Tests`, `Capability card links`
+
+Advisory does not mean ignored. A hosted job that has finished with a failure
+at the head still blocks the merge; only a job that has not finished is
+disregarded.
+
+These runs are not advisory:
+
+- `Full Matrix Sweep` on every push to `main` and nightly. It is the only run
+  that executes every shard, so it is the check on shards the touched-domain
+  selection did not run and on drift between a gate run and a later base tip.
+- Every push run on `main`, `Deploy Docs to Pages` and `Publish to PyPI`.
+
+## Limits
+
+- The local gate does not run the repository-wide test and coverage job of
+  `Quality Gates`, the Python 3.12 matrix leg, or the baseline comparison of the
+  domain aggregate. Those results arrive from the hosted runs and from the push
+  to `main`.
+- Modules share one worktree. A test that writes outside its own temporary
+  directory can disturb a module running beside it; `--jobs 1` removes that
+  interaction at the cost of time.
+- The gate executes code from the pull request with the credentials of the
+  account that runs it. It accepts same-repository pull requests only, the same
+  boundary the self-hosted workflow jobs apply.
+- Branch protection is unchanged by this script. Making `local-gate` a required
+  status is a repository setting and a separate decision.
+
+## Tests
+
+`tests/scripts/test_local_gate.py` covers module planning, the budget and
+timeout rules, the status text and every outcome in Table 2 with the network,
+the shell and the clock replaced by fakes.
