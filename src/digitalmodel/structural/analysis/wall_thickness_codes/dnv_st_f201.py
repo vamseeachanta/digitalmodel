@@ -108,8 +108,9 @@ class DnvStF201Strategy:
     SafetyClass at check time, matching the DnvStF101Strategy convention.
 
     Combined loading delegates to DNV-OS-F201 (2010) Sec. 5, clause D,
-    with Eqs 5.25-5.26 resistances and pressure-dependent alpha_c. Moment
-    and effective tension are design (already factored) load effects Md/Td;
+    with Eqs 5.25-5.26 resistances and pressure-dependent alpha_c capped
+    at 1.2 before computing Mk/Tk. Moment and effective tension are design
+    (already factored) load effects Md/Td;
     gamma_dyn amplifies only the separate pressure-containment demand.
     Temperature de-rating is zero: screening inputs carry no temperature.
     The combined gamma_SC table is 1.04/1.14/1.26 (medium maps to normal),
@@ -172,17 +173,19 @@ class DnvStF201Strategy:
         }
 
     def _combined_resistances(self, geometry, material, loads):
-        """Compute the legacy resistance pipeline in SI, in its original order."""
+        """Compute SI resistances with the F201 flow-stress upper bound."""
         diameter, t2 = geometry.outer_diameter, geometry.t2
         if t2 <= 0:
             raise ValueError("F201 combined loading requires positive corroded thickness")
         f_y = lrfd.yield_strength(material.smys, 0.0, self.alpha_U)
         f_u = lrfd.tensile_strength(material.smts, 0.0, self.alpha_U)
         p_b = lrfd.bursting_resistance(diameter, t2, f_y, f_u)
-        alpha_c = lrfd.flow_stress_coefficient(
+        # Public F201 combined-loading equations cap alpha_c before Mk/Tk:
+        # https://www.orcina.com/webhelp/OrcaFlex/Content/html/Codechecks,DNVOSF201.htm
+        alpha_c = min(1.2, lrfd.flow_stress_coefficient(
             diameter, t2, f_y, f_u, loads.internal_pressure,
             loads.external_pressure, p_b,
-        )
+        ))
         return {
             "t2": t2, "f_y": f_y, "f_u": f_u, "alpha_U": self.alpha_U,
             "temperature_derating": 0.0, "p_b": p_b, "alpha_c": alpha_c,

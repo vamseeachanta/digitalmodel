@@ -83,3 +83,46 @@ def test_f201_example_describes_its_screening_inputs():
     assert cfg["material"]["smys"] == 552e6
     assert cfg["material"]["smts"] == 621e6
     assert cfg["load_cases"][0]["external_pressure"] == 12e6
+
+
+def test_capped_boundary_case_is_persisted_as_failed(tmp_path):
+    cfg = {"riser_screening": {
+        "code": "DNV-ST-F201", "output_dir": str(tmp_path), "label": "boundary",
+        "geometry": {"outer_diameter": 0.27305, "wall_thickness": 0.025},
+        "material": {"grade": "screening", "smys": 358e6, "smts": 455e6},
+        "load_cases": [{"name": "boundary", "internal_pressure": 39.99672254e6,
+                        "bending_moment": 429920.856}],
+    }}
+    run_riser_screening(copy.deepcopy(cfg))
+    saved = json.loads((tmp_path / "boundary_results.json").read_bytes(),
+                       parse_constant=reject_nonfinite_constant)
+    assert saved["overall_status"] == "FAIL"
+    assert saved["governing_check"] == "combined"
+    assert saved["max_utilisation"] > 1.0
+    assert saved["cases"][0]["details"]["combined"]["alpha_c"] == 1.2
+    note = (tmp_path / "boundary_calcnote.md").read_text(encoding="utf-8")
+    assert "**Overall status:** FAIL" in note
+    assert "capped at 1.2" in note
+
+
+def test_factor_echo_includes_non_governing_external_case(tmp_path):
+    cfg = {"riser_screening": {
+        "code": "DNV-ST-F201", "output_dir": str(tmp_path), "label": "mixed",
+        "geometry": {"outer_diameter": 0.27305, "wall_thickness": 0.025},
+        "material": {"grade": "screening", "smys": 358e6, "smts": 455e6},
+        "load_cases": [
+            {"name": "internal", "internal_pressure": 39.99672254e6,
+             "bending_moment": 429920.856},
+            {"name": "external", "external_pressure": 1e6},
+        ],
+    }}
+    result = run_riser_screening(cfg)["riser_screening"]["result"]
+    assert result["governing_case"] == "internal"
+    external = result["cases"][1]["details"]["combined"]
+    applied = result["input_echo"]["factors"]["applied"]["combined"]
+    for key in ("f_0", "alpha_fab"):
+        assert applied[key] == external[key]
+    note = (tmp_path / "mixed_calcnote.md").read_text(encoding="utf-8")
+    provenance_section = note.split("## Provenance\n", 1)[1]
+    assert "file modification time" in provenance_section
+    assert "not an execution time or a source publication date" in provenance_section

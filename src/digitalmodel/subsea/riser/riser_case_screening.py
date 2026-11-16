@@ -5,8 +5,8 @@
 
 Each load case carries its own pressures, bending moment, effective tension and
 limit-state category. For every case the registered design-code strategy is run
-(API STD 2RD by default), to pick the governing
-check and report the max utilisation. Cases are then ranked by max utilisation so
+(API STD 2RD by default); the governing check is picked and the max
+utilisation is reported. Cases are then ranked by max utilisation so
 the governing load case for the riser configuration is the first row.
 
 Deterministic and unit-consistent (SI: metres, Pascals, Newtons, N*m). No random
@@ -205,7 +205,12 @@ def run_riser_screening(cfg: dict) -> dict:
 
     note = build_calc_note(geometry, material, code, results, label)
     for title, key in (("Input echo", "input_echo"), ("Provenance", "provenance")):
-        note += f"\n## {title}\n\n```json\n{json.dumps(context[key], indent=2)}\n```\n"
+        note += f"\n## {title}\n"
+        if key == "provenance":
+            note += ("\nThe provenance timestamp uses file modification time "
+                     "(see timestamp_basis), not an execution time or a source "
+                     "publication date. It can change after checkout.\n")
+        note += f"\n```json\n{json.dumps(context[key], indent=2)}\n```\n"
     (out_dir / f"{label}_calcnote.md").write_text(note, encoding="utf-8")
     (out_dir / f"{label}_results.json").write_text(
         json.dumps(_json_safe(rs["result"]), indent=2, allow_nan=False), encoding="utf-8"
@@ -239,8 +244,11 @@ def _report_context(geometry, material, cases, code, factors, cfg, results):
     strategy = CODE_REGISTRY[code]()
     factor_keys = {"f_d", "f_c", "gamma_sc", "gamma_m", "gamma_dyn", "alpha_U",
                    "f_0", "alpha_fab", "temperature_derating"}
-    applied = {name: {k: v for k, v in details.items() if k in factor_keys}
-               for name, details in results[0].details.items()} if results else {}
+    applied = {}
+    for result in results:
+        for name, details in result.details.items():
+            applied.setdefault(name, {}).update(
+                {key: value for key, value in details.items() if key in factor_keys})
     material_echo = asdict(material)
     material_echo["fabrication_type"] = material.fabrication_type.value
     echo = {
@@ -369,7 +377,9 @@ def _f201_basis(results):
         "DNV-ST-F201 (2021), formerly DNV-OS-F201 (2010), Sec. 5: bursting "
         "limit state and combined loading, clause D. Eqs 5.25-5.26 give "
         "plastic resistances Mk/Tk including the pressure-dependent flow-stress "
-        "coefficient alpha_c, recomputed for every load case.", "",
+        "coefficient alpha_c, capped at 1.2 and recomputed for every load case. "
+        "The cap follows the [public F201 combined-loading equations]"
+        "(https://www.orcina.com/webhelp/OrcaFlex/Content/html/Codechecks,DNVOSF201.htm).", "",
         f"Factors: {factors}. Combined safety class medium maps to normal.",
         "Moment and tension are design load effects (already factored Md/Td). "
         "gamma_dyn acts on the pressure-containment demand only. Temperature "
