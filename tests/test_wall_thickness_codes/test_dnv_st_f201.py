@@ -332,8 +332,9 @@ def test_combined_flow_stress_cap_rejects_boundary_case():
     Source: https://www.orcina.com/webhelp/OrcaFlex/Content/html/Codechecks,DNVOSF201.htm
     LRFD combined loading: cap the flow coefficient before computing Mk/Tk.
     """
+    strategy = DnvStF201Strategy()
     diameter, thickness = 0.27305, 0.025
-    fy, fu = 358e6 * 0.96, 455e6 * 0.96
+    fy, fu = 358e6 * strategy.alpha_U, 455e6 * strategy.alpha_U
     pressure, moment = 39.99672254e6, 429920.856
     pb = 2 * thickness / (diameter - thickness) * (2 / math.sqrt(3)) * min(fy, fu / 1.15)
     beta = 0.4 + (2 / math.sqrt(3)) * pressure / pb
@@ -341,8 +342,10 @@ def test_combined_flow_stress_cap_rejects_boundary_case():
     assert raw_alpha > 1.2
     mk = fy * 1.2 * (diameter - thickness)**2 * thickness
     tk = fy * 1.2 * math.pi * (diameter - thickness) * thickness
-    expected = 1.15 * 1.14 * abs(moment) / mk * math.sqrt(1 - (pressure / pb)**2) + (pressure / pb)**2
-    checks = DnvStF201Strategy().run_checks(
+    expected = (strategy.gamma_m * legacy.SAFETY_CLASS_FACTOR["normal"]
+                * abs(moment) / mk * math.sqrt(1 - (pressure / pb)**2)
+                + (pressure / pb)**2)
+    checks = strategy.run_checks(
         PipeGeometry(diameter, thickness), PipeMaterial("screening", 358e6, 455e6),
         DesignLoads(internal_pressure=pressure, bending_moment=moment), DesignFactors())
     utilisation, details = checks["combined"]
@@ -358,22 +361,25 @@ def test_combined_flow_stress_cap_rejects_boundary_case():
 @pytest.mark.parametrize("internal", [True, False])
 @pytest.mark.parametrize("offset", [-1e-6, 0.0, 1e-6])
 def test_combined_flow_stress_cap_boundary(diameter_over_t, internal, offset):
-    """Exercise both sides of the public cap, both regimes and all beta branches."""
+    """Exercise the cap and both regimes; zero beta pins the unchanged branch."""
+    strategy = DnvStF201Strategy()
     diameter = 0.3
     thickness = diameter / diameter_over_t
     qh = (2 / math.sqrt(3)) * 0.5 if internal else 0.0
     beta = (0.4 + qh) * (1 if diameter_over_t < 15 else
                             (60 - diameter_over_t) / 45 if diameter_over_t < 60 else 0)
     ratio = 1 + (0.2 + offset) / beta if beta else 1.5
-    fy, fu = 358e6 * 0.96, 358e6 * ratio * 0.96
+    fy, fu = 358e6 * strategy.alpha_U, 358e6 * ratio * strategy.alpha_U
     pb = 2 * thickness / (diameter - thickness) * (2 / math.sqrt(3)) * min(fy, fu / 1.15)
     alpha = min(1.2, 1 + beta * (ratio - 1))
     loads = DesignLoads(internal_pressure=pb * 0.5 if internal else 0.0,
                         external_pressure=0.0 if internal else 1e6)
-    _, details = DnvStF201Strategy().run_checks(
+    _, details = strategy.run_checks(
         PipeGeometry(diameter, thickness), PipeMaterial("screening", 358e6, 358e6 * ratio),
         loads, DesignFactors())["combined"]
     assert details["alpha_c"] == pytest.approx(alpha, abs=1e-12)
     assert details["alpha_c"] <= 1.2
-    assert details["Mk"] == pytest.approx(fy * alpha * (diameter - thickness)**2 * thickness)
-    assert details["Tk"] == pytest.approx(fy * alpha * math.pi * (diameter - thickness) * thickness)
+    assert details["Mk"] == pytest.approx(
+        fy * alpha * (diameter - thickness)**2 * thickness, rel=1e-12)
+    assert details["Tk"] == pytest.approx(
+        fy * alpha * math.pi * (diameter - thickness) * thickness, rel=1e-12)
