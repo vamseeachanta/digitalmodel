@@ -217,13 +217,16 @@ def table_b_reference_basis():
 def evaluate_static_acceptance(*, wire_length, end_a_reaction, last_support_force,
                                grounded_tension, overbend_strain, lift_off_arc,
                                departure_angle, reference, touchdown_x=None,
-                               sag_bend_strain=None, diameter=0.762, radius=150):
+                               sag_bend_strain=None, diameter, radius):
     """Report static QA with separate pass, fail and NOT_EVALUATED counts.
 
     Touchdown, sag-bend and stiff closure await published references in #2608.
     Their readings and any supplied reference values do not affect acceptance.
     The reference_basis record identifies missing evidence without enabling rows.
     S1 bounds conformity; S2 design acceptance and convergence remain separate.
+    Required diameter (pipe outer diameter) and radius (stinger radius) are in
+    metres. The report retains both inputs, the dimensionless S1 limit
+    1.10 * diameter / (2 * radius), and their units (m, m, 1).
     """
     if len(grounded_tension) == 0:
         raise ValueError("Grounded tension readback is required")
@@ -235,11 +238,12 @@ def evaluate_static_acceptance(*, wire_length, end_a_reaction, last_support_forc
         raise ValueError("Finite native readings and reference values required")
     if diameter <= 0 or radius <= 0:
         raise ValueError("Positive diameter and radius required")
+    s1_limit = 1.10 * diameter / (2 * radius)
     checks = {
         "wire_length": (5 <= wire_length <= 15, "Tensioner wire must remain between 5 and 15 m"),
         "end_a_reaction": (end_a_reaction > 0, "End A must remain in contact with its nearest support"),
         "stinger_conformity": (
-            0 <= overbend_strain <= 1.10 * diameter / (2 * radius) and last_support_force == 0,
+            0 <= overbend_strain <= s1_limit and last_support_force == 0,
             "S1 requires strain conformity and zero last-support force"),
         "lift_off_arc": (abs(lift_off_arc - reference["lift_off_arc"]) <= 5 + 1e-12,
                          "lift_off_arc differs from Table B beyond its QA tolerance"),
@@ -258,6 +262,8 @@ def evaluate_static_acceptance(*, wire_length, end_a_reaction, last_support_forc
     status = ("rejected" if counts["failed"] else
               f"accepted with {counts['not_evaluated']} rows not evaluated")
     return {"status": status, "fully_accepted": False, "counts": counts, "rows": rows,
+            "diameter": diameter, "radius": radius, "s1_limit": s1_limit,
+            "units": {"diameter": "m", "radius": "m", "s1_limit": "1"},
             "reference_basis": table_b_reference_basis()}
 
 

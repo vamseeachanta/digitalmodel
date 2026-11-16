@@ -14,6 +14,7 @@ an applicable published comparison criterion for each row.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 0 | 2026-10-22 | Record the inspected source, missing evidence and worked reporting example so background equations cannot imply acceptance. |
+| 1 | 2026-11-13 | Require explicit pipe diameter and stinger radius and retain their units and S1 limit in QA reports (#2715); existing criteria and pending rows are unchanged. |
 
 ## Source review
 
@@ -58,6 +59,12 @@ The existing workflow checks are documented in the static-QA table in #2560 and
 implemented in `slay_probe.evaluate_static_acceptance`. Their bands are existing
 workflow choices; this example does not attribute them to a published standard.
 
+Pipe outer diameter `diameter` and stinger `radius` are required keyword inputs
+in metres. The example supplies the campaign geometry, D=0.762 m and R=150 m.
+Reports retain both inputs and the dimensionless `s1_limit` (`units` value `1`),
+computed as 1.10 D/(2R). This is the existing S1 conformity screen, with exact
+zero last-support force still required; it is not S2 design acceptance.
+
 ```python
 from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import (
     evaluate_static_acceptance,
@@ -65,11 +72,14 @@ from digitalmodel.solvers.orcaflex.modular_generator.slay_probe import (
 
 # Synthetic arithmetic inputs; the independent enumeration follows this block.
 inputs = dict(
+    diameter=0.762, radius=150,
     wire_length=10, end_a_reaction=1, last_support_force=0,
     grounded_tension=[0], overbend_strain=0, lift_off_arc=0,
     departure_angle=0, reference=dict(lift_off_arc=0, departure_angle=0),
 )
 result = evaluate_static_acceptance(**inputs)
+assert result["diameter"] == 0.762 and result["radius"] == 150
+assert result["units"] == {"diameter": "m", "radius": "m", "s1_limit": "1"}
 assert result["counts"] == {"passed": 6, "failed": 0, "not_evaluated": 3}
 assert result["status"] == "accepted with 3 rows not evaluated"
 assert result["fully_accepted"] is False

@@ -8,6 +8,9 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
+# RiserTensioner is re-exported from here for existing imports.
+from .riser_tensioner import RiserTensioner, validate_tensioners  # noqa: F401
+
 
 class RiserConfiguration(str, Enum):
     """Riser configuration types."""
@@ -304,7 +307,8 @@ class RiserLink(BaseModel):
         link_type: Type of link (tether or spring_damper).
         connections: Exactly 2 connection points.
         unstretched_length: Unstretched length (m).
-        stiffness: Axial stiffness (kN).
+        stiffness: Tether axial stiffness EA (kN), or spring/damper
+            stiffness (kN/m), as in the OrcaFlex link data.
         release_stage: Optional release stage number.
     """
 
@@ -314,7 +318,10 @@ class RiserLink(BaseModel):
         ..., min_length=2, max_length=2, description="Exactly 2 connection points"
     )
     unstretched_length: float = Field(..., gt=0, description="Unstretched length (m)")
-    stiffness: float = Field(..., gt=0, description="Axial stiffness (kN)")
+    stiffness: float = Field(
+        ..., gt=0,
+        description="Tether: axial stiffness EA (kN); spring/damper: stiffness (kN/m)",
+    )
     release_stage: int | None = Field(default=None, ge=1, description="Release stage")
 
 
@@ -493,6 +500,9 @@ class Riser(BaseModel):
     line_types: list[RiserLineType] = Field(..., min_length=1, description="Line types")
     clump_types: list[ClumpType] = Field(default_factory=list, description="Clump types")
     links: list[RiserLink] = Field(default_factory=list, description="Link/tether definitions")
+    tensioners: list[RiserTensioner] = Field(
+        default_factory=list, description="Top tensioner systems"
+    )
     buoys: list[RiserBuoy] = Field(default_factory=list, description="Lumped 6D buoys")
     lines: list[RiserLine] = Field(..., min_length=1, description="Riser lines")
 
@@ -554,6 +564,12 @@ class Riser(BaseModel):
                         f"Link '{link.name}' references unknown object "
                         f"'{conn.object_name}'. Available: {valid_names}"
                     )
+        return self
+
+    @model_validator(mode="after")
+    def validate_tensioners(self) -> "Riser":
+        """Tensioners support the free End A of a defined line; names unique."""
+        validate_tensioners(self.tensioners, self.lines, self.links)
         return self
 
     @model_validator(mode="after")

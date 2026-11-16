@@ -737,8 +737,19 @@ class BenchmarkRunner:
         report_data.notes = list(report.notes)
 
         # --- 8. Generate via unified template --------------------------------
+        from digitalmodel.hydrodynamics.diffraction.report_provenance import result_provenance
+
+        sources = [output_dir / "benchmark_report.json", output_dir / "hydro_data.yml"]
+        if report_data.source_file:
+            sources.append(Path(report_data.source_file))
+        units = "; ".join(
+            f"{name}: {result.unit_system}" for name, result in (solver_results or {}).items()
+        ) or "Per result source"
+        if report_data.source_file:
+            units += "; OrcaWave native report data (te, kN, m, s)"
         generate_diffraction_report(
             report_data, html_path, page_title=self.config.report_page_title,
+            provenance=result_provenance(sources, units_system=units),
         )
         return html_path
 

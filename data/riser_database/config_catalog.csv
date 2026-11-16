@@ -1,4 +1,18 @@
 config_id,riser_type,source_path,water_depth_m,od_mm,wt_mm,material_grade,analysis_kind,notes
+orcaflex_a01_catenary,catenary,docs/domains/orcaflex/examples/modular/A01/A01 Catenary riser/master.yml,100,355.6,,,orcaflex_public_example,"public example; bare 10"" flexible variable Cd on Catenary Hose; catalogue only"
+orcaflex_a01_lazy_wave,lazy_wave,docs/domains/orcaflex/examples/modular/A01/A01 Lazy wave riser/master.yml,100,355.6,,,orcaflex_public_example,"public example; bare 10"" flexible on 10"" Lazy Wave Distributed; catalogue only"
+orcaflex_a01_pliant_wave,pliant_wave,docs/domains/orcaflex/examples/modular/A01/A01 Pliant wave riser/master.yml,100,392.6,,,orcaflex_public_example,"public example; bare 10""Product on 10"" Pliant Simple; catalogue only"
+orcaflex_a01_steep_wave,steep_wave,docs/domains/orcaflex/examples/modular/A01/A01 Steep wave riser/master.yml,100,355.6,,,orcaflex_public_example,"public example; bare 10"" flexible on 10"" Steep Wave; catalogue only"
+orcaflex_a02_lazy_s_detailed,lazy_s,docs/domains/orcaflex/examples/modular/A02/A02 Lazy S detailed/master.yml,100,355.6,,,orcaflex_public_example,"public example; bare 10"" on 10"" up N; catalogue only"
+orcaflex_a02_lazy_s_simple,lazy_s,docs/domains/orcaflex/examples/modular/A02/A02 Lazy S simple/master.yml,100,355.6,,,orcaflex_public_example,"public example; bare 10"" on 10"" riser N; catalogue only"
+orcaflex_a02_pliant_s,pliant_s,docs/domains/orcaflex/examples/modular/A02/A02 Pliant S/master.yml,100,355.6,,,orcaflex_public_example,"public example; bare 10"" on 10"" upper East; catalogue only"
+orcaflex_a02_steep_s,steep_s,docs/domains/orcaflex/examples/modular/A02/A02 Steep S/master.yml,100,355.6,,,orcaflex_public_example,"public example; bare 10"" on 10"" upper East; catalogue only"
+orcaflex_a03_tower_jumper,tower_jumper,docs/domains/orcaflex/examples/modular/A03/A03 Jumper to high tower/master.yml,1350,381.4,,,orcaflex_public_example,public example; bare Production Jumper on Product N Out; catalogue only
+orcaflex_a05_fpso_lazy_wave,lazy_wave,docs/domains/orcaflex/examples/modular/A05/A05 Lazy wave with FPSO/master.yml,899.16,304.8,25.4,,orcaflex_public_example,public example; bare Lazy Bare on Riser with Flexjoint; catalogue only
+orcaflex_a05_semisub_catenary,catenary,docs/domains/orcaflex/examples/modular/A05/A05 Catenary with semisub/master.yml,1999.49,231.775,25.4,,orcaflex_public_example,public example; bare Riser Pipe on Riser with Flexjoint; catalogue only
+orcaflex_a05_spar_catenary,catenary,docs/domains/orcaflex/examples/modular/A05/A05 Catenary with spar/master.yml,1798.32,219.075,19.05,,orcaflex_public_example,public example; bare Riser Pipe on Riser; catalogue only
+orcaflex_b01_drilling,drilling,docs/domains/orcaflex/examples/modular/B01/B01 Drilling riser/master.yml,1020,650,25,,orcaflex_public_example,"public example; bare 24"" RISER on Riser; catalogue only"
+orcaflex_b06_running_bop,running_bop,docs/domains/orcaflex/examples/modular/B06/B06 Running BOP/master.yml,234,304.8,,,orcaflex_public_example,"public example; bare 12"" Marine Riser on Marine riser; catalogue only"
 pipe_py_06OD_1000in_10000ft_lower_riser,pipe_section,config/pipe/pipe_py_06OD_1000in_10000ft_lower_riser.yml,3048,165.1,25.4,API 5L X80,pipe_design:lower,seeded from the pipe capacity configs
 pipe_py_06OD_1000in_10000ft_upper_riser,pipe_section,config/pipe/pipe_py_06OD_1000in_10000ft_upper_riser.yml,3048,165.1,25.4,API 5L X80,pipe_design:upper,seeded from the pipe capacity configs
 pipe_py_06OD_1000in_2500ft_lower_riser,pipe_section,config/pipe/pipe_py_06OD_1000in_2500ft_lower_riser.yml,762,165.1,25.4,API 5L X80,pipe_design:lower,seeded from the pipe capacity configs
