@@ -199,17 +199,21 @@ def run_modules(modules: list[Module], jobs: int, run_one: Callable[[Module], Re
 
 
 def summarize(results: list[Result], seconds: float, tip: str) -> tuple[str, str]:
-    """Return the commit-status state and a description within the API limit."""
+    """Return the commit-status state and a description within the API limit.
+
+    The description starts with the full base commit the head was merged into,
+    so a merge step can require a result for the base tip it is about to merge into.
+    """
     bad = [r for r in results if r.status != "pass"]
     total = len(results)
     if not results:
         return "error", "no module was planned"
     if not bad:
         names = ", ".join(r.name for r in results)
-        text = f"{total}/{total} modules passed in {seconds:.0f} s on base {tip[:8]}: {names}"
+        text = f"base {tip}: {total}/{total} modules passed in {seconds:.0f} s ({names})"
         return "success", text[:DESCRIPTION_LIMIT]
     detail = ", ".join(f"{r.name} ({r.status})" for r in bad)
-    text = f"{total - len(bad)}/{total} modules passed in {seconds:.0f} s on base {tip[:8]}; not passed: {detail}"
+    text = f"base {tip}: {total - len(bad)}/{total} modules passed in {seconds:.0f} s; not passed: {detail}"
     return "failure", text[:DESCRIPTION_LIMIT]
 
 

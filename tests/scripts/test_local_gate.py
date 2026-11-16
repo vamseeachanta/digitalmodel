@@ -119,7 +119,7 @@ def test_summary_success_requires_every_module() -> None:
     passed = [gate.Result("lint", "pass", 3, 0), gate.Result("contracts", "pass", 9, 0)]
     state, text = gate.summarize(passed, 12.4, TIP)
     assert state == "success"
-    assert text == "2/2 modules passed in 12 s on base bbbbbbbb: lint, contracts"
+    assert text == f"base {TIP}: 2/2 modules passed in 12 s (lint, contracts)"
     for status in ("fail", "timeout", "not-run"):
         state, text = gate.summarize(passed + [gate.Result("subsea", status)], 20, TIP)
         assert state == "failure"
@@ -130,6 +130,12 @@ def test_summary_success_requires_every_module() -> None:
 def test_summary_fits_the_status_description_limit() -> None:
     many = [gate.Result(f"domain-number-{i}", "fail") for i in range(40)]
     assert len(gate.summarize(many, 1, TIP)[1]) <= gate.DESCRIPTION_LIMIT
+
+
+@pytest.mark.parametrize("status", ["pass", "fail"])
+def test_summary_always_names_the_full_tested_base_first(status: str) -> None:
+    many = [gate.Result(f"domain-number-{i}", status) for i in range(40)]
+    assert gate.summarize(many, 1, TIP)[1].startswith(f"base {TIP}: ")
 
 
 def test_run_modules_keeps_plan_order() -> None:

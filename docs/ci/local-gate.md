@@ -55,9 +55,12 @@ The result is fail-closed. Table 2 gives every outcome.
 
 Table 2: local gate outcomes.
 
-The status description names the module count, the elapsed time, the base tip
-the head was merged into and every module that did not pass. A status applies
-only to the exact commit it is posted on; a new push needs a new run.
+The status description starts with `base <full commit id>:`, the base tip the
+head was merged into, followed by the module count, the elapsed time and every
+module that did not pass. A result is evidence for one head on one base: a new
+push needs a new run, and a merge step that requires an up-to-date result
+compares that commit id with the current tip of the base branch and runs the
+gate again when the base has moved.
 
 ## Workflows that become advisory
 
