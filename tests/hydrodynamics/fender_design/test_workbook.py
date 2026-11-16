@@ -255,14 +255,14 @@ def test_fenders_sheet_design_reaction_carries_the_curve_peak(tmp_path):
         k = 1.10 if f.fender_type == res.base_fender.fender_type else 1.0
         assert vals[f"FENDERS!M{i}"] == pytest.approx(f.reaction_kn * k * (1 + rtol), rel=1e-9), f.fender_id
         if k == 1.0:
-            assert ws.cell(row=i, column=13).value == f"=H{i}*(1+RTOL)"
+            assert ws.cell(row=i, column=13).value == f"=H{i}*(1+RTOLC)"
 
 
 def test_fenders_sheet_design_reaction_formula_unchanged_for_a_monotonic_curve(built):
     res, out = built
     ws = openpyxl.load_workbook(out)["Fenders"]
     for i in range(2, len(res.catalogue) + 2):
-        assert ws.cell(row=i, column=13).value == f"=H{i}*(1+RTOL)"
+        assert ws.cell(row=i, column=13).value == f"=H{i}*(1+RTOLC)"
 
 
 def test_capacity_text_names_the_wg211_divisor(tmp_path):
@@ -328,7 +328,7 @@ def test_contact_and_angular_factor_are_read_only_through_checked_cells(built):
     assert cell("XG") == "=LBP/2-XC" and cell("XA") == "=ABS(LBP/2-XC)"
     fen = wb["Fenders"]
     for i in range(2, len(res.catalogue) + 2):
-        assert fen.cell(row=i, column=11).value == f"=G{i}*(1-ETOL)*ANGC/GAMMA_M"
+        assert fen.cell(row=i, column=11).value == f"=G{i}*(1-ETOLC)*ANGC/GAMMA_M"
 
 
 def test_inputs_check_column_names_the_error(built):
@@ -452,3 +452,128 @@ def test_ufc_f_reading_other_than_0_or_1_is_an_error_in_the_ufc_row(built, tmp_p
     assert _number(vals[f"METHODS!J{other}"])                # other methods do not read it
     irow = int(_ref(wb, "UFCF").split("!B")[1])
     assert vals[f"INPUTS!E{irow}"].startswith("ERROR: UFC F reading must be 1")
+
+
+# Second-provider review at 1be46a8d (P2): the Fenders sheet read ETOL and RTOL
+# without the bounds design_performance applies, so a negative tolerance raised
+# the capacity (ETOL = -0.20: 700 kNm became 840 kNm against the UFC demand of
+# 773.0 kNm) or lowered the design reaction (RTOL = -0.10: 1,440 kN instead of
+# 1,760 kN against the 1,600 kN limit). ETOL and RTOL are now read only through
+# the checked cells ETOLC and RTOLC, and both input cells carry a data-validation
+# rule with the same bounds.
+
+ETOLC_FORMULA = "=IF(AND(ISNUMBER(ETOL),ETOL>=0,ETOL<1),ETOL,NA())"
+RTOLC_FORMULA = "=IF(AND(ISNUMBER(RTOL),RTOL>=0),RTOL,NA())"
+
+
+def _input_row(wb, name):
+    return int(_ref(wb, name).split("!B")[1])
+
+
+def test_tolerances_are_read_only_through_checked_cells(built):
+    # fails if the generator ever writes a formula that reads a tolerance unchecked
+    res, out = built
+    wb = openpyxl.load_workbook(out)
+    assert _formulas_reading(wb, "ETOL") == {_ref(wb, "ETOLC")}
+    assert _formulas_reading(wb, "RTOL") == {_ref(wb, "RTOLC")}
+    calc = wb["Calc"]
+    assert calc[_ref(wb, "ETOLC").split("!")[1]].value == ETOLC_FORMULA
+    assert calc[_ref(wb, "RTOLC").split("!")[1]].value == RTOLC_FORMULA
+    fen = wb["Fenders"]
+    for i in range(2, len(res.catalogue) + 2):
+        assert "ETOLC" in fen.cell(row=i, column=11).value                       # capacity
+        assert "RTOLC" in fen.cell(row=i, column=13).value                       # design reaction
+        assert "RTOLC" in fen.cell(row=i, column=14).value                       # design hull pressure
+
+
+def test_tolerance_inputs_carry_a_validation_rule_and_a_check(built):
+    _, out = built
+    wb = openpyxl.load_workbook(out)
+    ws = wb["Inputs"]
+    rules = {}
+    for dv in ws.data_validations.dataValidation:
+        for rng in dv.sqref.ranges:
+            rules[rng.coord] = dv
+    for name, formula, text in (
+            ("ETOL", "AND(ISNUMBER(B{r}),B{r}>=0,B{r}<1)", "ERROR: energy tolerance must be in [0, 1)"),
+            ("RTOL", "AND(ISNUMBER(B{r}),B{r}>=0)", "ERROR: reaction tolerance must not be negative")):
+        r = _input_row(wb, name)
+        dv = rules[f"B{r}"]
+        assert dv.type == "custom" and dv.formula1 == formula.format(r=r), name
+        assert dv.showErrorMessage and dv.errorStyle == "stop" and not dv.allow_blank, name
+        assert ws.cell(row=r, column=5).value.startswith(f'=IF(ISNUMBER({name}C),"ok","{text}'), name
+
+
+def _python_refuses(base, **kw):
+    from digitalmodel.hydrodynamics import fender_design as fd
+    try:
+        fd.design_performance(base, **kw)
+    except ValueError:
+        return True
+    return False
+
+
+@pytest.mark.parametrize("etol", [-0.20, -1e-9, 1.0, 1.5])
+def test_energy_tolerance_outside_0_to_1_is_an_error_in_capacity_and_checks(built, tmp_path, etol):
+    res, out = built
+    assert _python_refuses(res.base_fender, energy_tolerance=etol)          # the same condition
+    changed = tmp_path / "etol.xlsx"
+    _set_inputs(out, changed, dict(ETOL=etol))
+    vals = _evaluate(changed)
+    wb = openpyxl.load_workbook(changed)
+    assert _na(vals[_ref(wb, "ETOLC")])
+    for i in range(2, len(res.catalogue) + 2):
+        for col in "KLO":                                   # capacity, utilisation, Energy OK
+            assert _na(vals[f"FENDERS!{col}{i}"]), (col, i)
+        assert _number(vals[f"FENDERS!M{i}"])                # the reaction does not use it
+    assert _number(vals[_ref(wb, "E_DESIGN")])
+    assert vals[f"INPUTS!E{_input_row(wb, 'ETOL')}"].startswith("ERROR: energy tolerance must be in [0, 1)")
+    assert vals[f"INPUTS!E{_input_row(wb, 'RTOL')}"] == "ok"
+
+
+@pytest.mark.parametrize("rtol", [-0.10, -1e-9])
+def test_negative_reaction_tolerance_is_an_error_in_reaction_and_checks(built, tmp_path, rtol):
+    res, out = built
+    assert _python_refuses(res.base_fender, reaction_tolerance=rtol)        # the same condition
+    assert res.case["design"]["reaction_limit_kn"] is not None
+    changed = tmp_path / "rtol.xlsx"
+    _set_inputs(out, changed, dict(RTOL=rtol))
+    vals = _evaluate(changed)
+    wb = openpyxl.load_workbook(changed)
+    assert _na(vals[_ref(wb, "RTOLC")])
+    for i, f in enumerate(res.catalogue, start=2):
+        assert _na(vals[f"FENDERS!M{i}"]) and _na(vals[f"FENDERS!P{i}"]), i   # design R, Reaction OK
+        if f.hull_pressure_kpa is not None:
+            assert _na(vals[f"FENDERS!N{i}"]) and _na(vals[f"FENDERS!Q{i}"]), i  # design p, Pressure OK
+        assert _number(vals[f"FENDERS!K{i}"])                                    # capacity does not use it
+    assert vals[f"INPUTS!E{_input_row(wb, 'RTOL')}"].startswith("ERROR: reaction tolerance must not be negative")
+    assert vals[f"INPUTS!E{_input_row(wb, 'ETOL')}"] == "ok"
+
+
+def test_zero_tolerances_are_accepted_and_match_the_module(built, tmp_path):
+    res, out = built
+    assert not _python_refuses(res.base_fender, energy_tolerance=0.0, reaction_tolerance=0.0)
+    changed = tmp_path / "tol0.xlsx"
+    _set_inputs(out, changed, dict(ETOL=0.0, RTOL=0.0))
+    vals = _evaluate(changed)
+    wb = openpyxl.load_workbook(changed)
+    case = load_case(EXAMPLE / "generic_case.yaml")
+    case["design"]["energy_tolerance"] = 0.0
+    case["design"]["reaction_tolerance"] = 0.0
+    checks = {c.fender_id: c for c in compute(case, citations="record").size_checks}
+    ids = [f.fender_id for f in res.catalogue]
+    for fid, c in checks.items():
+        i = ids.index(fid) + 2
+        assert vals[f"FENDERS!K{i}"] == pytest.approx(c.capacity_knm, rel=1e-12), fid
+        assert vals[f"FENDERS!M{i}"] == pytest.approx(c.reaction_kn, rel=1e-12), fid
+    for name in ("ETOL", "RTOL"):
+        assert vals[f"INPUTS!E{_input_row(wb, name)}"] == "ok"
+
+
+def test_committed_workbook_reads_tolerances_only_through_checked_cells():
+    path = ROOT / "docs" / "reports" / "modules" / "fender_design" / "fender-design-generic.xlsx"
+    wb = openpyxl.load_workbook(path)
+    assert _formulas_reading(wb, "ETOL") == {_ref(wb, "ETOLC")}
+    assert _formulas_reading(wb, "RTOL") == {_ref(wb, "RTOLC")}
+    ranges = {rng.coord for dv in wb["Inputs"].data_validations.dataValidation for rng in dv.sqref.ranges}
+    assert {f"B{_input_row(wb, n)}" for n in ("ETOL", "RTOL")} <= ranges

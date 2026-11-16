@@ -468,3 +468,74 @@ def test_sweep_limit_label_is_clear_of_the_reaches_limit_line(tmp_path):
     assert xs[-2] > x_lim > 0.6 * xs[-1]
     problems = _chart_problems(lambda: fc.sweep_chart(sweep, tmp_path / "s.png", "Berthing velocity", "PNE"))
     assert problems == []
+
+
+# Second-provider review at 1be46a8d (P3): the layout check looked only at text that
+# was drawn, so an axis that had lost its tick labels passed. The check now also
+# requires tick labels on every axis (numbers on a value axis), at the point the
+# chart is saved; the x-axis of the upper panel of a stacked chart is exempt when
+# the panel below shows the shared values.
+
+
+def test_layout_check_finds_a_value_axis_without_tick_labels():
+    from matplotlib.ticker import NullFormatter
+    fig = _fig_with(lambda ax: ax.yaxis.set_major_formatter(NullFormatter()))
+    issues = fc.layout_issues(fig)
+    assert any("no tick labels on the y-axis" in i for i in issues), issues
+    fig = _fig_with(lambda ax: ax.tick_params(labelbottom=False))
+    issues = fc.layout_issues(fig)
+    assert any("no tick labels on the x-axis" in i for i in issues), issues
+
+
+def test_layout_check_finds_a_value_axis_with_text_for_numbers():
+    from matplotlib.ticker import FuncFormatter
+    fig = _fig_with(lambda ax: ax.yaxis.set_major_formatter(FuncFormatter(lambda v, _: "n/a")))
+    issues = fc.layout_issues(fig)
+    assert any("no numeric tick labels on the y-axis" in i for i in issues), issues
+
+
+def test_layout_check_accepts_the_shared_x_axis_of_a_stacked_chart():
+    import matplotlib.pyplot as plt
+    fig, (a1, a2) = plt.subplots(2, 1, sharex=True, figsize=(4.0, 4.0), dpi=100)
+    for ax in (a1, a2):
+        ax.set_xlim(0, 10)
+        ax.set_ylim(0, 2000)
+    fig.tight_layout()
+    assert fc.layout_issues(fig) == []
+    a2.tick_params(labelbottom=False)                 # neither panel shows the shared x values
+    issues = fc.layout_issues(fig)
+    assert any("no tick labels on the x-axis" in i for i in issues), issues
+    plt.close(fig)
+
+
+@pytest.mark.parametrize("text, number", [("2,000", True), ("\u221250", True), ("0.10", True),
+                                          (r"$\mathdefault{10^{3}}$", True), ("10 %", True),
+                                          ("GEN-PN-4", False), ("n/a", False), ("", False)])
+def test_numeric_tick_label_reading(text, number):
+    assert fc._is_number_label(text) is number
+
+
+@pytest.mark.parametrize("parameter", ["displacement_t", "berthing_angle_deg", "velocity_m_s", "cs"])
+def test_saved_sweep_panels_show_numeric_tick_labels(tmp_path, parameter):
+    """Read at save time: both value axes and the shared x-axis of the reaction panel carry numbers."""
+    import matplotlib.pyplot as plt
+    res = compute(load_case(EXAMPLE / "generic_case.yaml"), citations="record")
+    sw = next(s for s in res.sweeps if s.parameter == parameter)
+    seen = {}
+    orig = fc._finish
+
+    def finish(fig, path):
+        seen["labels"] = [(fc._tick_texts(ax.xaxis), fc._tick_texts(ax.yaxis)) for ax in fig.axes]
+        seen["issues"] = fc.tick_label_issues(fig)
+        return orig(fig, path)
+    fc._finish = finish
+    try:
+        fc.sweep_chart(sw, tmp_path / f"{parameter}.png", sw.label, "GEN-PN-4")
+    finally:
+        fc._finish = orig
+        plt.close("all")
+    assert (tmp_path / f"{parameter}.png").exists()
+    assert seen["issues"] == []
+    (_, energy_y), (reaction_x, reaction_y) = seen["labels"]
+    for texts in (energy_y, reaction_y, reaction_x):
+        assert sum(fc._is_number_label(t) for t in texts) >= 2, texts

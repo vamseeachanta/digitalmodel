@@ -10,13 +10,16 @@ Sheets:
   condition, condition class, ship type, consequence class, factor
   position, method) are listed below them as fixed at generation: change
   them in the case file and regenerate. The ``Check`` column shows an
-  error when the first contact is off the ship or the angular factor is
-  outside (0, 1].
+  error when the first contact is off the ship, the angular factor is
+  outside (0, 1], the energy tolerance is outside [0, 1) or the reaction
+  tolerance is negative; the tolerance cells also carry a data-validation
+  rule with the same bounds.
 * ``Calc``: block coefficient, radius of gyration, contact geometry, Ce (and
   the K-squared-numerator error, for comparison), keel clearance and Cm by
-  three methods, as live formulas. ``XC`` and ``ANGC`` are the checked
-  contact position and angular factor, #N/A when invalid, so the error
-  carries into every energy and energy check.
+  three methods, as live formulas. ``XC``, ``ANGC``, ``ETOLC`` and ``RTOLC``
+  are the checked contact position, angular factor and tolerances, #N/A when
+  invalid, so the error carries into every energy, capacity, reaction and
+  check that uses them.
 * ``Velocity``: the Brolsma table (conditions a to e) and log-log
   interpolation at the ship's DWT and displacement, as live formulas.
 * ``Methods``: berthing energy by every method. Every coefficient that
@@ -44,6 +47,7 @@ from pathlib import Path
 from openpyxl import Workbook
 from openpyxl.chart import Reference, ScatterChart, Series
 from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.worksheet.datavalidation import DataValidation
 from openpyxl.workbook.defined_name import DefinedName
 
 from digitalmodel.hydrodynamics import fender_design as fd
@@ -117,6 +121,13 @@ def _inputs(wb, case):
         if name in INPUT_CHECKS:
             checked, error = INPUT_CHECKS[name]
             ws.cell(row=i, column=5, value=f'=IF(ISNUMBER({checked}),"ok","{error}")').font = WARN_FONT
+        if name in INPUT_VALIDATION:
+            rule, error = INPUT_VALIDATION[name]
+            dv = DataValidation(type="custom", formula1=rule.format(cell=f"B{i}"), allow_blank=False,
+                                showErrorMessage=True, errorStyle="stop",
+                                errorTitle=f"{name} out of range", error=error)
+            dv.add(f"B{i}")
+            ws.add_data_validation(dv)
         _name(wb, name, f"Inputs!$B${i}")
     r = len(INPUT_ROWS) + 3
     head = ws.cell(row=r, column=1, value="Fixed at generation: change in the case file and REGENERATE the workbook")
@@ -196,6 +207,12 @@ CALC_ROWS = (
      "=IF(AND(ISNUMBER(UFCF),OR(UFCF=0,UFCF=1)),UFCF,NA())", "fender_design.Case.ufc_f_basis"),
     ("CF_UFC", "Cb in UFC F: berthing coefficient CB_UFC (UFCF 1) or block coefficient CB (UFCF 0)",
      "=IF(UFCFC=1,CB_UFC,CB)", "UFC 4-152-01 5-2.1.1 e, p. 109; fender_design.ufc_f_cb"),
+    # The only cells that read ETOL and RTOL, with the bounds design_performance applies:
+    # energy tolerance not negative and below 1, reaction tolerance not negative.
+    ("ETOLC", "Energy tolerance, checked: #N/A unless 0 <= tolerance < 1",
+     "=IF(AND(ISNUMBER(ETOL),ETOL>=0,ETOL<1),ETOL,NA())", "fender_design.design_performance"),
+    ("RTOLC", "Reaction tolerance, checked: #N/A unless tolerance >= 0",
+     "=IF(AND(ISNUMBER(RTOL),RTOL>=0),RTOL,NA())", "fender_design.design_performance"),
 )
 
 #: Inputs whose value is checked in Calc: input name -> (checked name, error text shown on Inputs).
@@ -204,6 +221,18 @@ INPUT_CHECKS = {
     "ANG": ("ANGC", "ERROR: angular factor must be in (0, 1]; fender capacity and energy checks are #N/A"),
     "UFCF": ("UFCFC", "ERROR: UFC F reading must be 1 (berthing coefficient) or 0 (block coefficient); "
                       "UFC energy is #N/A"),
+    "ETOL": ("ETOLC", "ERROR: energy tolerance must be in [0, 1); fender capacity and energy checks are #N/A"),
+    "RTOL": ("RTOLC", "ERROR: reaction tolerance must not be negative; design reaction, hull pressure "
+                      "and their checks are #N/A"),
+}
+
+#: Data-validation rule on the Inputs value cell (``{cell}``: its address) and the message
+#: Excel shows when a value outside it is typed; the same bounds as the checked cell.
+INPUT_VALIDATION = {
+    "ETOL": ("AND(ISNUMBER({cell}),{cell}>=0,{cell}<1)",
+             "Energy tolerance must be a fraction from 0 up to (not including) 1, as design_performance requires."),
+    "RTOL": ("AND(ISNUMBER({cell}),{cell}>=0)",
+             "Reaction tolerance must be a fraction of 0 or more, as design_performance requires."),
 }
 
 
@@ -446,13 +475,13 @@ def _fenders(wb, res):
                 f.rated_deflection_pct]
         for j, v in enumerate(vals, start=1):
             ws.cell(row=i, column=j, value=v)
-        ws.cell(row=i, column=11, value=f"=G{i}*(1-ETOL)*ANGC/GAMMA_M")
+        ws.cell(row=i, column=11, value=f"=G{i}*(1-ETOLC)*ANGC/GAMMA_M")
         ws.cell(row=i, column=12, value=f"=E_FENDER/K{i}")
         # a curve above the rated reaction before the rated point raises rows of its type
         # (fender_case.size_checks); otherwise the rated-deflection value x (1 + tolerance)
         k = res.reaction_peak_factor(f)
-        ws.cell(row=i, column=13, value=f"=H{i}*(1+RTOL)" if k == 1.0 else f"=H{i}*{k:.12g}*(1+RTOL)")
-        ws.cell(row=i, column=14, value=f'=IF(I{i}="","",I{i}*(1+RTOL))')
+        ws.cell(row=i, column=13, value=f"=H{i}*(1+RTOLC)" if k == 1.0 else f"=H{i}*{k:.12g}*(1+RTOLC)")
+        ws.cell(row=i, column=14, value=f'=IF(I{i}="","",I{i}*(1+RTOLC))')
         ws.cell(row=i, column=15, value=f'=IF(L{i}<=1,"yes","no")')
         ws.cell(row=i, column=16, value=f'=IF(RLIM="","-",IF(M{i}<=RLIM,"yes","no"))')
         # a set limit with no hull-pressure datum is not met (as size_checks and select_fenders)
@@ -584,9 +613,10 @@ def _readme(wb, res):
         "Yellow cells on Inputs are inputs. Calc, Velocity, Methods and Fenders recalculate in Excel. "
         "The choices listed on Inputs as fixed at generation (red), and the Sensitivity, Tornado and Sizes "
         "sheets and the Methods flags, are written by the generator: REGENERATE after changing them or any input.",
-        "The first contact x must lie on the ship (0 to LBP) and the angular factor in (0, 1], as the Python "
-        "module requires. Outside these ranges the Check column on Inputs shows ERROR and every quantity "
-        "that depends on the value, including the energy checks, shows #N/A.",
+        "The first contact x must lie on the ship (0 to LBP), the angular factor in (0, 1], the energy "
+        "tolerance in [0, 1) and the reaction tolerance at 0 or more, as the Python module requires. Outside "
+        "these ranges the Check column on Inputs shows ERROR and every quantity that depends on the value, "
+        "including the energy, reaction and pressure checks, shows #N/A.",
         "The workbook gives numbers only; it does not clear a design. Every value marked secondary "
         "in Sources was read in a vendor manual that reproduces the standard.",
     ]

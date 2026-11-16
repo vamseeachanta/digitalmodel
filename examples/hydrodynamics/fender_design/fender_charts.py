@@ -15,13 +15,14 @@ room, the limits of the size chart are named in the headroom, long category
 names are wrapped, footnotes are wrapped inside a band reserved below the
 axes, and every chart is checked
 before it is written (:func:`layout_issues`): text outside the figure,
-overlapping text or text across a limit line raises a
-:class:`ChartLayoutWarning`.
+overlapping text, text across a limit line or an axis without tick labels
+(numbers on a value axis) raises a :class:`ChartLayoutWarning`.
 """
 
 from __future__ import annotations
 
 import math
+import re
 import textwrap
 import warnings
 from pathlib import Path
@@ -33,6 +34,7 @@ import matplotlib.colors as mcolors  # noqa: E402
 import matplotlib.pyplot as plt  # noqa: E402
 import numpy as np  # noqa: E402
 from matplotlib.text import Annotation  # noqa: E402
+from matplotlib.ticker import FixedFormatter, FixedLocator, FuncFormatter  # noqa: E402
 
 SERIES = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#6250d6", "#e34948"]
 LIMIT = "#d03b3b"
@@ -53,7 +55,8 @@ GAP_PT = 2.5
 
 
 class ChartLayoutWarning(UserWarning):
-    """A chart has text outside the figure, overlapping text or text across a limit line."""
+    """A chart has text outside the figure, overlapping text, text across a limit
+    line or an axis without tick labels (numbers on a value axis)."""
 
 
 def _style(ax):
@@ -190,6 +193,57 @@ def _drawn_texts(fig):
     return [(t, ax) for t, ax in out if t.get_visible() and t.get_text().strip()]
 
 
+#: A tick label that reads as a number: thousands separators, a minus sign,
+#: a percent sign and matplotlib's mathtext powers (``$\mathdefault{10^{3}}$``).
+_NUMBER = re.compile(r"^[-+]?(\d[\d,]*(\.\d*)?|\.\d+)([eE][-+]?\d+)?(\^[-+]?\d+)?\s*%?$")
+
+
+def _is_number_label(text: str) -> bool:
+    t = text.replace("\u2212", "-").replace("$", "").replace(r"\mathdefault", "")
+    t = t.replace("{", "").replace("}", "").strip()
+    return bool(_NUMBER.match(t))
+
+
+def _tick_texts(axis):
+    """Visible, non-empty tick label texts of ``axis`` at ticks in view."""
+    lo, hi = sorted(axis.get_view_interval())
+    tol = 1e-9 * ((hi - lo) or 1.0)
+    out = []
+    for tick, loc in zip(axis.get_major_ticks(), axis.get_majorticklocs()):
+        if lo - tol <= loc <= hi + tol:
+            out += [t.get_text() for t in (tick.label1, tick.label2) if t.get_visible() and t.get_text().strip()]
+    return out
+
+
+def _is_category_axis(axis) -> bool:
+    return (isinstance(axis.get_major_locator(), FixedLocator)
+            and isinstance(axis.get_major_formatter(), (FixedFormatter, FuncFormatter)))
+
+
+def tick_label_issues(fig) -> list[str]:
+    """Axes of a drawn figure without tick labels: every axis shows tick labels,
+    except an x-axis shared with another axes of the figure that shows them (the
+    upper panel of a stacked chart); a value axis shows at least two numbers. A
+    category axis (fixed tick positions with labels set as text, as
+    ``set_yticklabels`` writes) needs labels only."""
+    issues = []
+    for ax in fig.axes:
+        if not ax.axison:
+            continue
+        name = (ax.get_ylabel() or ax.get_title() or ax.get_title(loc="left") or "axes").strip()
+        for key, axis, shared in (("x", ax.xaxis, ax.get_shared_x_axes()), ("y", ax.yaxis, ax.get_shared_y_axes())):
+            texts = _tick_texts(axis)
+            if not texts:
+                others = [o for o in shared.get_siblings(ax) if o is not ax and o in fig.axes]
+                if any(_tick_texts(getattr(o, f"{key}axis")) for o in others):
+                    continue
+                issues.append(f"no tick labels on the {key}-axis of {name!r}")
+            elif not _is_category_axis(axis):
+                if sum(_is_number_label(t) for t in texts) < 2:
+                    issues.append(f"no numeric tick labels on the {key}-axis of {name!r}: {texts}")
+    return issues
+
+
 def _limit_lines(ax):
     """(kind, display position, (lo, hi) display extent, half width) of each
     straight limit line (colour :data:`LIMIT`) of ``ax``."""
@@ -212,7 +266,8 @@ def _limit_lines(ax):
 def layout_issues(fig) -> list[str]:
     """Layout defects of a figure: text outside the figure or within 2 px of
     its edge, an annotation or label outside its own axes, texts that overlap
-    one another, and text across a limit line (colour :data:`LIMIT`)."""
+    one another, text across a limit line (colour :data:`LIMIT`) and an axis
+    without tick labels (:func:`tick_label_issues`)."""
     fig.canvas.draw()
     renderer = fig.canvas.get_renderer()
     fb = fig.bbox
@@ -242,7 +297,7 @@ def layout_issues(fig) -> list[str]:
                 a0, a1, s0, s1 = (bb.y0, bb.y1, bb.x0, bb.x1) if kind == "h" else (bb.x0, bb.x1, bb.y0, bb.y1)
                 if a0 < at + half and a1 > at - half and min(s1, hi) - max(s0, lo) > 1.0:
                     issues.append(f"text across a limit line: {t.get_text()!r}")
-    return issues
+    return issues + tick_label_issues(fig)
 
 
 def _finish(fig, path):
