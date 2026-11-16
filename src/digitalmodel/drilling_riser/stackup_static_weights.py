@@ -1,4 +1,4 @@
-"""Static riser weight and tension arithmetic from a legacy engineering workbook.
+"""Static riser stack-up weight and tension arithmetic.
 
 Source reference: ``API-RP-16Q``; clause not stated in source. No standard
 edition is identified. Factors are required inputs, never code defaults.
