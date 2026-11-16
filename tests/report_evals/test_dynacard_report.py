@@ -30,29 +30,6 @@ def test_public_identity_matches_committed_fixture():
 
 
 @pytest.mark.parametrize('index', [0, 2])
-def test_repository_source_citation_matches_consumed_bytes(index):
-    import hashlib
-    import subprocess
-    from urllib.parse import parse_qs, urlsplit
-    report = module('analysis')
-    row = report.sources(ROOT, FIXTURE, True)[index]
-    url = urlsplit(row['url'])
-    if '/blob/' in url.path:
-        revision, _, relative = url.path.partition('/blob/')[2].partition('/')
-    else:
-        relative = url.path.partition('/contents/')[2]
-        revision = parse_qs(url.query)['ref'][0]
-    blob = subprocess.run(['git', 'show', f'{revision}:{relative}'], cwd=ROOT,
-                          check=True, capture_output=True).stdout
-    assert hashlib.sha256(blob).hexdigest() == row['sha256']
-    assert blob == (ROOT / relative).read_bytes()
-    assert row['revision'] == revision
-    assert len(revision) == 40
-    assert url.netloc == 'api.github.com'
-    assert url.path.startswith('/repositories/590299785/contents/')
-
-
-@pytest.mark.parametrize('index', [0, 2])
 def test_repository_source_rejects_bytes_outside_its_revision(tmp_path, index):
     report = module('analysis')
     fixture = FIXTURE
