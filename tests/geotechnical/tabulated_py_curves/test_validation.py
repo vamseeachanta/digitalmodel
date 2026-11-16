@@ -1,8 +1,10 @@
 """Illustrative examples for rejected or bounded tabulated-curve inputs."""
 
 from dataclasses import FrozenInstanceError
+from fractions import Fraction
 from math import inf, nan
 
+import numpy as np
 import pytest
 
 from digitalmodel.geotechnical.tabulated_py_curves import (
@@ -102,6 +104,16 @@ def test_nonfinite_computed_outputs_are_rejected():
 def test_interpolation_avoids_overflow_in_a_finite_linear_result():
     curve = ForceCurve(1.0, (0.0, 1e100), (0.0, 1e308))
     assert interpolate_force(curve, 5e99) == pytest.approx(5e307)
+
+
+@pytest.mark.parametrize("force_n,quantum_n,expected_n", [
+    (1, 0.25, 1.0),
+    (Fraction(11, 10), 0.25, 1.25),
+    (np.int64(1), 0.25, 1.0),
+    (1.1, np.int64(1), 2.0),
+])
+def test_quantization_accepts_integer_and_fraction_inputs(force_n, quantum_n, expected_n):
+    assert round_force_up(force_n, quantum_n) == expected_n
 
 
 def test_quantization_handles_small_quanta_and_rejects_output_overflow():

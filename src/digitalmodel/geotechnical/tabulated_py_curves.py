@@ -1,4 +1,4 @@
-"""Tabulated lateral soil p-y construction from a legacy engineering workbook.
+"""Tabulated lateral soil p-y curve construction from supplied force-displacement tables.
 
 What is computed
 ----------------
@@ -10,7 +10,7 @@ strength, friction angle, layer type, or an API constitutive law.
 
 Inputs and units
 ----------------
-Frozen inputs store depths, displacements, diameters and tributary lengths in m;
+Inputs store depths, displacements, diameters and tributary lengths in m;
 force in N; pressure in Pa; sensitivity as a dimensionless fraction. Pressure
 and line resistance (N/m) have distinct functions. Conversion to SI belongs at
 the caller boundary; no approximate imperial factors are public defaults.
@@ -59,6 +59,7 @@ from __future__ import annotations
 
 from bisect import bisect_left
 from dataclasses import dataclass
+from fractions import Fraction
 from math import isfinite
 from numbers import Real
 
@@ -118,7 +119,7 @@ def _linear(x: float, axis: tuple[float, ...], values: tuple[float, ...]) -> flo
 def interpolate_force(curve: ForceCurve, displacement_m: float) -> float:
     """F = F0 + (y-y0)*(F1-F0)/(y1-y0), within supplied displacements.
 
-    This is the tabulated interpolation in a legacy engineering workbook;
+    This is the tabulated interpolation of a legacy calculation;
     no standard or clause is attributed to that interpolation in the source.
     Extrapolation raises ValueError; force reduction is retained.
     """
@@ -182,7 +183,7 @@ def pressure_from_force(force_n: float, geometry: SpringGeometry) -> float:
 def round_force_up(force_n: float, quantum_n: float) -> float:
     """Fq = ceil(F / quantum) * quantum, for nonnegative force magnitudes.
 
-    This generalizes the source's ROUNDUP step. The caller declares quantum_n;
+    This generalizes the source's round-up step. The caller declares quantum_n;
     no source-specific precision or force conversion factor is assumed.
     Exact binary input ratios determine which side of a boundary applies.
     No standard or clause is attributed to rounding in the source.
@@ -191,8 +192,10 @@ def round_force_up(force_n: float, quantum_n: float) -> float:
     _finite(quantum_n, "quantum_n")
     if quantum_n == 0:
         raise ValueError("quantum_n must be positive")
-    fn, fd = force_n.as_integer_ratio()
-    qn, qd = quantum_n.as_integer_ratio()
+    f = Fraction(force_n)
+    q = Fraction(quantum_n)
+    fn, fd = f.numerator, f.denominator
+    qn, qd = q.numerator, q.denominator
     numerator, denominator = fn * qd, fd * qn
     steps = -(-numerator // denominator)
     try:
