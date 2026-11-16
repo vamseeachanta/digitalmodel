@@ -139,7 +139,9 @@ FM6 = FenderRating("GEN-FM-6", "generic", "foam", 2800, 5000, None, 1000.0, 1400
 
 
 def test_neighbour_reaction_carries_the_curve_peak_for_the_curve_type():
-    c = {x.fender_id: x for x in size_checks([PN4, PN5, FM6], "GEN-PN-4", 500.0, DESIGN,
+    # foam rows take their own tolerances (fictional 0.10 here, the base's value)
+    design = dict(DESIGN, tolerances_by_type={"foam": dict(energy_tolerance=0.0, reaction_tolerance=0.10)})
+    c = {x.fender_id: x for x in size_checks([PN4, PN5, FM6], "GEN-PN-4", 500.0, design,
                                              curve=ABOVE, curve_type="pneumatic")}
     assert c["GEN-PN-4"].reaction_kn == pytest.approx(1450.0 * 1.10 * 1.10)   # 1,754.5 kN
     assert c["GEN-PN-4"].meets_reaction is False                               # 1,595 kN alone passes
@@ -246,7 +248,7 @@ def test_methods_table_and_results_carry_the_method_capacity():
     import fender_study
     res = _crossing_case()
     row = next(ln for ln in fender_study.tables(res)["methods_table"].splitlines() if ln.startswith(f"| {WG211}"))
-    assert "| 1.04 |" in row
+    assert "| 1.037 |" in row          # three decimals for a value judged against 1
     m = {x["method"]: x for x in fender_study.results_dict(res)["methods"]}
     assert m["wg211"]["capacity"] == pytest.approx(636.364, abs=5e-4)
     assert m["wg211"]["utilisation"] > 1.0

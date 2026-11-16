@@ -19,7 +19,7 @@ openpyxl = pytest.importorskip("openpyxl")
 pytest.importorskip("yaml")
 
 from build_fender_workbook import build_workbook  # noqa: E402
-from fender_case import compute, load_case  # noqa: E402
+from fender_case import compute, load_case, type_tolerances  # noqa: E402
 
 
 @pytest.fixture(scope="module")
@@ -67,9 +67,10 @@ def _set_inputs(path, out, values):
 
 # Every input a method coefficient depends on, moved so that thresholds are
 # crossed: ROM 85,000 t, ROM and WG211 300 / 100 calls, quarter point (UFC Cg),
-# fender deflection 0.15 m (Cs), solid quay (Cc), larger angle (Ce).
-CHANGED = dict(M=90_000.0, DWT=70_000.0, DEPTH=15.5, X=90.0, ALPHA=3.0, STRUCT="closed", DEFL=0.12,
-               NCALLS=400.0, CONT=1, TUGS=1)
+# fender deflection 0.15 m (ROM Cs), solid quay (Cc), larger angle (Ce). LBP and
+# beam grow with the displacement, so the block coefficient stays below 1 (0.884).
+CHANGED = dict(M=90_000.0, DWT=70_000.0, LBP=230.0, BEAM=36.0, DEPTH=15.5, X=90.0, ALPHA=3.0, STRUCT="closed",
+               DEFL=0.12, NCALLS=400.0, CONT=1, TUGS=1)
 
 
 def test_changed_inputs_recompute_every_method(built, tmp_path):
@@ -78,7 +79,8 @@ def test_changed_inputs_recompute_every_method(built, tmp_path):
     _set_inputs(out, changed, CHANGED)
     vals = _calculate(changed)
     case = load_case(EXAMPLE / "generic_case.yaml")
-    case["ship"].update(displacement_t=CHANGED["M"], dwt_t=CHANGED["DWT"])
+    case["ship"].update(displacement_t=CHANGED["M"], dwt_t=CHANGED["DWT"], lbp_m=CHANGED["LBP"],
+                        beam_m=CHANGED["BEAM"])
     case["berth"].update(water_depth_m=CHANGED["DEPTH"], contact_x_from_bow_m=CHANGED["X"],
                          berthing_angle_deg=CHANGED["ALPHA"], structure="closed", fender_deflection_m=0.12)
     case["conditions"].update(berthings_per_year=400, continuous_berth=True, tugs=True)
@@ -250,19 +252,21 @@ def test_fenders_sheet_design_reaction_carries_the_curve_peak(tmp_path):
     build_workbook(res, out)
     ws = openpyxl.load_workbook(out)["Fenders"]
     vals = _calculate(out)
-    rtol = res.case["design"].get("reaction_tolerance", 0.10)
     for i, f in enumerate(res.catalogue, start=2):
         k = 1.10 if f.fender_type == res.base_fender.fender_type else 1.0
+        rtol = type_tolerances(res.case["design"], f.fender_type)[1]
         assert vals[f"FENDERS!M{i}"] == pytest.approx(f.reaction_kn * k * (1 + rtol), rel=1e-9), f.fender_id
-        if k == 1.0:
-            assert ws.cell(row=i, column=13).value == f"=T{i}*(1+RTOLC)*INPUTS_OK"   # T: rated R checked
+        if k == 1.0:   # another type: its own tolerance, fixed at generation
+            assert ws.cell(row=i, column=13).value == f"=T{i}*(1+{rtol!r})*INPUTS_OK"   # T: rated R checked
 
 
 def test_fenders_sheet_design_reaction_formula_unchanged_for_a_monotonic_curve(built):
     res, out = built
     ws = openpyxl.load_workbook(out)["Fenders"]
-    for i in range(2, len(res.catalogue) + 2):
-        assert ws.cell(row=i, column=13).value == f"=T{i}*(1+RTOLC)*INPUTS_OK"
+    for i, f in enumerate(res.catalogue, start=2):
+        rtol = "RTOLC" if f.fender_type == res.base_fender.fender_type else \
+            repr(type_tolerances(res.case["design"], f.fender_type)[1])
+        assert ws.cell(row=i, column=13).value == f"=T{i}*(1+{rtol})*INPUTS_OK"
 
 
 def test_capacity_text_names_the_wg211_divisor(tmp_path):
@@ -327,8 +331,10 @@ def test_contact_and_angular_factor_are_read_only_through_checked_cells(built):
     assert cell("ANGC") == ANGC_FORMULA
     assert cell("XG") == "=LBPC/2-XC" and cell("XA") == "=ABS(LBPC/2-XC)"
     fen = wb["Fenders"]
-    for i in range(2, len(res.catalogue) + 2):
-        assert fen.cell(row=i, column=11).value == f"=S{i}*(1-ETOLC)*ANGC/GAMMA_M*INPUTS_OK"   # S: checked
+    for i, f in enumerate(res.catalogue, start=2):
+        etol = "ETOLC" if f.fender_type == res.base_fender.fender_type else \
+            repr(type_tolerances(res.case["design"], f.fender_type)[0])
+        assert fen.cell(row=i, column=11).value == f"=S{i}*(1-{etol})*ANGC/GAMMA_M*INPUTS_OK"   # S: checked
 
 
 def test_inputs_check_column_names_the_error(built):
@@ -390,13 +396,19 @@ def test_off_ship_contact_is_an_error_in_every_energy_and_check(built, tmp_path,
 def test_contact_at_the_ends_of_the_ship_matches_the_module(built, tmp_path, x):
     res, out = built
     changed = tmp_path / "ends.xlsx"
-    _set_inputs(out, changed, dict(X=x))
+    # the first contact is on the end nearer the berth: stern nearer (-5 deg) for the aft end
+    alpha = 5.0 if x <= 90.0 else -5.0
+    _set_inputs(out, changed, dict(X=x, ALPHA=alpha))
     vals = _evaluate(changed)
     wb = openpyxl.load_workbook(changed)
     assert vals[_ref(wb, "XC")] == pytest.approx(x)
     case = load_case(EXAMPLE / "generic_case.yaml")
     assert case["ship"]["lbp_m"] == 180.0
     case["berth"]["contact_x_from_bow_m"] = x
+    case["berth"]["berthing_angle_deg"] = alpha
+    if alpha < 0:   # sweeps on the aft end: no forward contact range, angles 0 and below
+        case["sweeps"].pop("contact_x_over_lbp")
+        case["sweeps"]["berthing_angle_deg"] = dict(low=-10.0, high=0.0, basis="test")
     new = {r.method: r for r in compute(case, citations="record").methods}
     for i, r in enumerate(res.methods, start=2):
         assert vals[f"METHODS!J{i}"] == pytest.approx(new[r.method].design_energy_knm, rel=1e-9), r.method
@@ -480,10 +492,17 @@ def test_tolerances_are_read_only_through_checked_cells(built):
     assert calc[_ref(wb, "ETOLC").split("!")[1]].value == ETOLC_FORMULA
     assert calc[_ref(wb, "RTOLC").split("!")[1]].value == RTOLC_FORMULA
     fen = wb["Fenders"]
-    for i in range(2, len(res.catalogue) + 2):
-        assert "ETOLC" in fen.cell(row=i, column=11).value                       # capacity
-        assert "RTOLC" in fen.cell(row=i, column=13).value                       # design reaction
-        assert "RTOLC" in fen.cell(row=i, column=14).value                       # design hull pressure
+    by_type = res.case["design"]["tolerances_by_type"]
+    for i, f in enumerate(res.catalogue, start=2):
+        if f.fender_type == res.base_fender.fender_type:
+            assert "ETOLC" in fen.cell(row=i, column=11).value                   # capacity
+            assert "RTOLC" in fen.cell(row=i, column=13).value                   # design reaction
+            assert "RTOLC" in fen.cell(row=i, column=14).value                   # design hull pressure
+        else:   # another type: the case's tolerances by type, fixed at generation (gate P3 at 2b6bb8a0)
+            t = by_type[f.fender_type]
+            assert f"(1-{float(t['energy_tolerance'])!r})" in fen.cell(row=i, column=11).value
+            assert f"(1+{float(t['reaction_tolerance'])!r})" in fen.cell(row=i, column=13).value
+            assert f"(1+{float(t['reaction_tolerance'])!r})" in fen.cell(row=i, column=14).value
 
 
 def test_tolerance_inputs_carry_a_validation_rule_and_a_check(built):

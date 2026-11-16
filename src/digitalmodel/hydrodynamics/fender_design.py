@@ -69,6 +69,9 @@ class Source:
     verification: str
     read_in: str = ""
     note: str = ""
+    #: date the source was read for this register: the commit that first
+    #: recorded it (15 Nov 2026), or the later re-reading named in the note
+    accessed_on: str = "2026-11-15"
 
 
 SOURCES: dict[str, Source] = {}
@@ -81,17 +84,27 @@ def _register(*sources: Source) -> None:
 
 TFADM = "Trelleborg Fender Application Design Manual MN-FEN-V4.0-EN (2024)"
 SFTDM = "ShibataFenderTeam Design Manual (English, 2026)"
+#: How the PIANC WG33 (2002) report is named where it was read: the primary text.
+PIANC2002_PRIMARY = "PIANC WG33 (2002), primary text"
+#: Vendor manuals: a coefficient may come from them (a caller-selected option
+#: or a reading the primary text does not give); they are named in the
+#: result, never cited as a standard (no :data:`CITATION_TARGETS` entry).
+VENDOR_SOURCES = ("tfadm-2024", "sft-2026")
 
 _register(
     Source(
         "pianc2002", "PIANC MarCom WG33, Guidelines for the Design of Fender Systems",
         "2002", "section 4.2 (energy), Table 4.2.5 (abnormal factor), Table 4.4.1 (hull pressure)",
-        "secondary", f"{TFADM} pp. 23-28, 46; {SFTDM} pp. 17-22, 33",
+        "full-text", f"{PIANC2002_PRIMARY}; also {TFADM} pp. 23-28, 46; {SFTDM} pp. 17-22, 33",
+        "primary text read 16 Nov 2026: Table 4.2.5 factors and Table 4.4.1 (bulk carriers below "
+        "200 kN/m2) match the values used", accessed_on="2026-11-16",
     ),
     Source(
         "pianc2002-velocity", "PIANC 2002 design berthing velocity (Brolsma et al. 1977 curves a to e)",
         "2002", "Fig. 4.2.1; table keyed by DWT", "secondary", f"{TFADM} p. 23",
-        "values below 0.1 m/s marked for caution in the manual",
+        "tabulated values read in the manual; the primary text (Fig. 4.2.1, read 16 Nov 2026) confirms "
+        "the keying by DWT and that curves d and e are to be used with caution; values below 0.1 m/s "
+        "marked for caution in the manual", accessed_on="2026-11-16",
     ),
     Source(
         "bs6349-4-velocity", "BS 6349-4:2014 design berthing velocity (Brolsma curves)",
@@ -105,29 +118,43 @@ _register(
     Source(
         "vasco-costa-1964", "Vasco Costa, F. The berthing ship", "1964",
         "Cm = 1 + 2D/B; valid for v >= 0.08 m/s and UKC >= 0.1 D", "formula",
-        f"{TFADM} p. 24; {SFTDM} p. 18",
+        f"{TFADM} p. 24; {SFTDM} p. 18; {PIANC2002_PRIMARY} section 4.2.5",
+        "form and validity limits match the PIANC 2002 primary text (read 16 Nov 2026)",
+        accessed_on="2026-11-16",
     ),
     Source(
         "ueda-1981", "Ueda, S. et al. added mass of berthing ships", "1981",
-        "Cm = 1 + pi D / (2 Cb B)", "formula", f"{TFADM} p. 24; {SFTDM} p. 18",
+        "Cm = 1 + pi D / (2 Cb B)", "formula",
+        f"{TFADM} p. 24; {SFTDM} p. 18; {PIANC2002_PRIMARY} section 4.2.5",
+        "form matches the PIANC 2002 primary text (read 16 Nov 2026)", accessed_on="2026-11-16",
     ),
     Source(
         "pianc2002-cm", "PIANC 2002 added mass from keel clearance", "2002", "section 4.2.5",
-        "secondary", f"{SFTDM} p. 18; {TFADM} p. 24",
-        "1.8 at KC/D <= 0.1; 1.875 - 0.75 KC/D between; 1.5 at KC/D >= 0.5; use Cc = 1",
+        "full-text", f"{PIANC2002_PRIMARY}; also {SFTDM} p. 18; {TFADM} p. 24",
+        "1.8 at KC/D <= 0.1; 1.875 - 0.75 KC/D between; 1.5 at KC/D >= 0.5; longitudinal approach 1.1. "
+        "Cc 1.0 with this Cm is the manuals' rule (TFADM p. 27, SFT p. 18), not a clause of 4.2.7",
+        accessed_on="2026-11-16",
     ),
     Source(
         "pianc2002-ce", "PIANC 2002 eccentricity", "2002", "section 4.2.4",
-        "secondary", f"{TFADM} p. 25; {SFTDM} p. 19",
-        "Ce = (K^2 + R^2 cos^2 phi)/(K^2 + R^2); K = (0.19 Cb + 0.11) LBP",
+        "full-text", f"{PIANC2002_PRIMARY}; also {TFADM} p. 25; {SFTDM} p. 19",
+        "Ce = (K^2 + R^2 cos^2 phi)/(K^2 + R^2); K = (0.19 Cb + 0.11) LBP", accessed_on="2026-11-16",
     ),
     Source(
-        "pianc2002-cc", "PIANC 2002 berth configuration factor", "2002", "section 4.2.7",
-        "secondary", f"{SFTDM} p. 20; {TFADM} p. 27",
+        "pianc2002-cc", "PIANC 2002 berth configuration factor", "2002", "section 4.2.7, p. 22",
+        "full-text", f"{PIANC2002_PRIMARY} p. 22",
+        "1.0 for open berths and corners of quay walls; solid quay walls under parallel approach "
+        "'generally taken as 0.9'; the cushion effect disappears above a 5 deg approach angle. No "
+        "partly closed class and no 0.8 value (those are the SFT table, option cc_basis 'sft-2026')",
+        accessed_on="2026-11-16",
     ),
     Source(
-        "pianc2002-cs", "PIANC 2002 softness factor", "2002", "section 4.2.6",
-        "secondary", f"{TFADM} p. 27; {SFTDM} p. 20",
+        "pianc2002-cs", "PIANC 2002 softness factor", "2002", "section 4.2.6, p. 21",
+        "full-text", f"{PIANC2002_PRIMARY} p. 21",
+        "1.0 for soft fenders and smaller vessels, 0.9 to 1.0 for hard fenders and larger vessels; "
+        "concludes a general value Cs = 1.0. The 0.15 m deflection rule is BS 6349-4's definition of a "
+        "hard fender, applied as Cs 0.9 by the manuals (option cs_basis 'tfadm-2024')",
+        accessed_on="2026-11-16",
     ),
     Source("tfadm-2024", TFADM, "2024", "pp. 22-46", "full-text"),
     Source("sft-2026", SFTDM, "2026", "pp. 17-36", "full-text"),
@@ -176,6 +203,12 @@ class Ship:
                 _finite(name, getattr(self, name), positive=True)
         if self.ship_type not in SHIP_TYPES:
             raise ValueError(f"ship_type must be one of {SHIP_TYPES}")
+        # plausibility: a block coefficient above 1 is a hull larger than its own box
+        cb = self.cb
+        if cb > 1.0:
+            raise ValueError(
+                f"block coefficient M/(rho LBP B T) = {cb:.3f} is above 1: check displacement, LBP, beam "
+                "and draught (the draught at berthing, not the moulded depth)")
 
     @property
     def cb(self) -> float:
@@ -190,7 +223,10 @@ class Berth:
 
     ``contact_x_from_bow_m``: first-contact point, aft of the forward
     perpendicular. ``berthing_angle_deg``: between the ship's centreline and
-    the berthing line. ``navigation``: Brolsma condition ``a`` to ``e``.
+    the berthing line, positive with the bow nearer the berth, negative with
+    the stern nearer (:func:`~digitalmodel.hydrodynamics.berthing_energy.contact_geometry`),
+    below 90 deg in magnitude; the first contact must be on the end nearer
+    the berth (:func:`contact_offset_m`). ``navigation``: Brolsma condition ``a`` to ``e``.
     ``structure``: ``open`` (piled or floating; water passes beneath),
     ``semi_closed`` or ``closed`` (solid quay). ``fender_deflection_m``:
     rated deflection of the fender, for the softness factor.
@@ -206,7 +242,8 @@ class Berth:
     def __post_init__(self) -> None:
         _finite("water_depth_m", self.water_depth_m, positive=True)
         _finite("contact_x_from_bow_m", self.contact_x_from_bow_m, nonneg=True)
-        _finite("berthing_angle_deg", self.berthing_angle_deg)
+        if not abs(_finite("berthing_angle_deg", self.berthing_angle_deg)) < 90.0:
+            raise ValueError(f"berthing angle {self.berthing_angle_deg:g} deg must be below 90 deg in magnitude")
         _finite("fender_deflection_m", self.fender_deflection_m, positive=True)
         if self.navigation not in BROLSMA_CONDITIONS:
             raise ValueError(f"navigation must be one of {tuple(BROLSMA_CONDITIONS)}")
@@ -325,12 +362,24 @@ def contact_offset_m(ship: Ship, berth: Berth) -> float:
 
     The one check that the contact lies on the ship, used by every method's
     eccentricity: a contact point outside 0 to LBP from the forward
-    perpendicular is refused, so no method returns an energy for it.
+    perpendicular is refused, so no method returns an energy for it. The
+    berthing angle must agree with it: with the bow nearer the berth
+    (angle above 0) the first contact is forward of mid-LBP or at it, with
+    the stern nearer (below 0) aft of it or at it. The other sign would
+    put the first contact on the end further from the berth and lowers
+    Ce (down to -14 % for the generic ship), so it is refused.
     """
     x = berth.contact_x_from_bow_m
     if not 0.0 <= x <= ship.lbp_m:
         raise ValueError(f"first contact {x:g} m from the bow is not on the ship (0 to LBP {ship.lbp_m:g} m)")
-    return ship.lbp_m / 2.0 - x
+    arm = ship.lbp_m / 2.0 - x
+    a = berth.berthing_angle_deg
+    if (a > 0.0 and arm < 0.0) or (a < 0.0 and arm > 0.0):
+        raise ValueError(
+            f"berthing angle {a:g} deg puts the {'bow' if a > 0 else 'stern'} nearer the berth, but the first "
+            f"contact {x:g} m from the bow is {'aft' if arm < 0 else 'forward'} of mid-LBP: the first contact "
+            "is on the end nearer the berth (angle above 0: forward half; below 0: aft half)")
+    return arm
 
 
 def eccentricity(ship: Ship, berth: Berth) -> dict[str, float]:
@@ -355,32 +404,90 @@ def eccentricity_k2_numerator(k_m: float, r_m: float, phi_deg: float) -> float:
     return (k2 + k2 * math.cos(math.radians(phi_deg)) ** 2) / (k2 + r2)
 
 
-def softness_factor(fender_deflection_m: float) -> float:
-    """Cs: 1.0 for fender deflection above 0.15 m, 0.9 at or below (PIANC 2002
-    section 4.2.6, as read in TFADM p. 27)."""
+#: Bases of the softness factor Cs: ``pianc2002`` (default) is the PIANC WG33
+#: (2002) 4.2.6 general value 1.0 (p. 21); ``tfadm-2024`` is the manuals' rule
+#: (TFADM p. 27, SFT p. 20): 0.9 for a fender deflecting 0.15 m or less (BS
+#: 6349-4's definition of a hard fender), else 1.0. The caller selects it.
+CS_BASES = ("pianc2002", "tfadm-2024")
+
+#: Bases of the berth configuration factor Cc: ``pianc2002`` (default) gives
+#: only the values PIANC WG33 (2002) 4.2.7 (p. 22) prints (open berth or
+#: corner 1.0, solid quay under parallel approach 0.9, above 5 deg 1.0);
+#: ``sft-2026`` is the ShibataFenderTeam table (SFT p. 20: solid quay 0.8 or
+#: 0.9 and partly closed 0.9 or 1.0 by KC/D), selected by the caller.
+CC_BASES = ("pianc2002", "sft-2026")
+
+#: Note on the partly closed Cc under the PIANC basis, which prints no value for it.
+CC_PARTLY_CLOSED_ASSUMED = ("ASSUMED - to be confirmed: PIANC 2002 4.2.7 gives no partly closed value; "
+                            "1.0 (no reduction, the open-berth value) taken")
+
+
+def softness(fender_deflection_m: float, basis: str = "pianc2002") -> Coefficient:
+    """Cs with its source under ``basis`` (:data:`CS_BASES`)."""
     d = _finite("fender_deflection_m", fender_deflection_m, positive=True)
-    return 1.0 if d > 0.15 else 0.9
+    if basis not in CS_BASES:
+        raise ValueError(f"cs_basis must be one of {CS_BASES}, got {basis!r}")
+    if basis == "pianc2002":
+        return Coefficient("cs", 1.0, "pianc2002-cs",
+                           f"general value 1.0 (PIANC 2002 4.2.6, p. 21); fender deflection {d:g} m")
+    return Coefficient("cs", 1.0 if d > 0.15 else 0.9, "tfadm-2024",
+                       f"0.9 at or below 0.15 m deflection (TFADM p. 27, SFT p. 20; option cs_basis "
+                       f"'tfadm-2024'); fender deflection {d:g} m")
 
 
-def berth_configuration_factor(
-    structure: str, ukc_over_draft: float, berthing_angle_deg: float, cm_method: str
-) -> float:
-    """Cc (PIANC 2002 section 4.2.7, table as read in SFT p. 20).
+def softness_factor(fender_deflection_m: float, basis: str = "pianc2002") -> float:
+    """Cs under ``basis`` (:data:`CS_BASES`): 1.0, the PIANC 2002 4.2.6 general
+    value (default), or the manuals' 0.9 at or below 0.15 m deflection."""
+    return softness(fender_deflection_m, basis).value
 
-    With the PIANC keel-clearance Cm the confined-water effect is already in
-    Cm, so Cc = 1.0. Otherwise: open piled or floating structures 1.0;
-    berthing angle above 5 deg 1.0; at 5 deg or less, solid quay 0.8 (KC/D
-    <= 0.5) or 0.9 (KC/D > 0.5), partly closed 0.9 or 1.0.
+
+def berth_configuration(
+    structure: str, ukc_over_draft: float, berthing_angle_deg: float, cm_method: str,
+    basis: str = "pianc2002",
+) -> Coefficient:
+    """Cc with its source under ``basis`` (:data:`CC_BASES`).
+
+    Open berths and an approach angle above 5 deg: 1.0 (PIANC 2002 4.2.7,
+    p. 22). With the PIANC keel-clearance Cm the confined-water effect is
+    already in Cm, so Cc = 1.0: this pairing is the manuals' rule (TFADM
+    p. 27 "usually assumed", SFT p. 18), not a clause of 4.2.7. Otherwise,
+    at 5 deg or less: under ``pianc2002`` (default) a solid quay takes 0.9
+    and a partly closed berth 1.0 (assumed: PIANC gives no value for it);
+    under ``sft-2026`` the SFT p. 20 table: solid quay 0.8 (KC/D <= 0.5) or
+    0.9, partly closed 0.9 or 1.0.
     """
     if structure not in STRUCTURES:
         raise ValueError(f"structure must be one of {STRUCTURES}")
+    if basis not in CC_BASES:
+        raise ValueError(f"cc_basis must be one of {CC_BASES}, got {basis!r}")
     ratio = _finite("ukc_over_draft", ukc_over_draft)
     angle = abs(_finite("berthing_angle_deg", berthing_angle_deg))
-    if cm_method == "pianc2002" or structure == "open" or angle > 5.0:
-        return 1.0
+    where = f"{structure} structure, angle {berthing_angle_deg:g} deg"
+    if structure == "open" or angle > 5.0:
+        return Coefficient("cc", 1.0, "pianc2002-cc",
+                           f"{where}: open berth or angle above 5 deg, 1.0 (PIANC 2002 4.2.7, p. 22)")
+    if cm_method == "pianc2002":
+        return Coefficient("cc", 1.0, "tfadm-2024",
+                           f"{where}: 1.0 with the keel-clearance Cm (TFADM p. 27 'usually assumed'; SFT p. 18)")
+    if basis == "pianc2002":
+        if structure == "closed":
+            return Coefficient("cc", 0.9, "pianc2002-cc",
+                               f"{where}: solid quay, parallel approach, 'generally 0.9' (PIANC 2002 4.2.7, p. 22)")
+        return Coefficient("cc", 1.0, "pianc2002-cc", f"{where}: {CC_PARTLY_CLOSED_ASSUMED}")
     if structure == "closed":
-        return 0.8 if ratio <= 0.5 else 0.9
-    return 0.9 if ratio <= 0.5 else 1.0
+        v = 0.8 if ratio <= 0.5 else 0.9
+    else:
+        v = 0.9 if ratio <= 0.5 else 1.0
+    return Coefficient("cc", v, "sft-2026",
+                       f"{where}, KC/D {ratio:.3f}: SFT p. 20 table (option cc_basis 'sft-2026')")
+
+
+def berth_configuration_factor(
+    structure: str, ukc_over_draft: float, berthing_angle_deg: float, cm_method: str,
+    basis: str = "pianc2002",
+) -> float:
+    """Cc under ``basis`` (:data:`CC_BASES`); see :func:`berth_configuration`."""
+    return berth_configuration(structure, ukc_over_draft, berthing_angle_deg, cm_method, basis).value
 
 
 #: PIANC 2002 Table 4.2.5 abnormal impact factor (largest, smallest ship of
@@ -461,7 +568,9 @@ _register(
     Source(
         "ufc-4-152-01", "UFC 4-152-01 Design: Piers and Wharves", "2017, Change 1 2024",
         "5-2.1 (Eq. 5-1, 5-2; Ce, Cg, Cd, Cc, Cm), 5-1.5.3 (+50 % accidental), Figs. 5-3 and 5-4",
-        "full-text", "WBDG copy", "velocity figures digitized (about +/-0.03 ft/s)",
+        "full-text", "WBDG copy",
+        "velocity figures digitized from the gridlines (about +/-0.01 ft/s), both figures re-read 16 Nov "
+        "2026; overlap 5,000 to 20,000 LT: the larger of Figs. 5-3 and 5-4", accessed_on="2026-11-16",
     ),
     Source(
         "rom-2.0-11", "ROM 2.0-11 Recomendaciones para el proyecto y ejecucion en obras de atraque y amarre",
@@ -559,7 +668,14 @@ class Case:
     the ROM accidental factor and the WG211 frequency correction.
     ``ufc_f_basis`` chooses the reading of the Cb inside the UFC 4-152-01
     added-mass factor F (one of :data:`UFC_F_BASES`; see
-    :func:`ufc_added_mass`).
+    :func:`ufc_added_mass`). ``cs_basis`` and ``cc_basis`` choose the
+    softness and berth configuration factors of PIANC 2002, Ueda, BS 6349-4
+    and EAU (:data:`CS_BASES`, :data:`CC_BASES`): the PIANC 2002 values by
+    default, a vendor manual's table only when selected.
+
+    ``cov_m`` defaults to ``low``, the column of R24A Table 8 with the
+    largest factor: a smaller factor (``moderate``, ``high``) needs a basis,
+    the spread of displacements of the ships using the berth.
     """
 
     ship: Ship
@@ -568,16 +684,22 @@ class Case:
     tugs: bool = True
     berthings_per_year: float = 100.0
     consequence_class: str = "B"
-    cov_m: str = "high"
+    cov_m: str = "low"
     multiple_contact: bool = False
     continuous_berth: bool = True
     ufc_f_basis: str = "berthing_coefficient"
+    cs_basis: str = "pianc2002"
+    cc_basis: str = "pianc2002"
 
     def __post_init__(self) -> None:
         if self.condition not in CONDITIONS:
             raise ValueError(f"condition must be one of {CONDITIONS}")
         if self.ufc_f_basis not in UFC_F_BASES:
             raise ValueError(f"ufc_f_basis must be one of {UFC_F_BASES}, got {self.ufc_f_basis!r}")
+        if self.cs_basis not in CS_BASES:
+            raise ValueError(f"cs_basis must be one of {CS_BASES}, got {self.cs_basis!r}")
+        if self.cc_basis not in CC_BASES:
+            raise ValueError(f"cc_basis must be one of {CC_BASES}, got {self.cc_basis!r}")
         if self.consequence_class not in "ABCD" or len(self.consequence_class) != 1:
             raise ValueError("consequence_class must be A, B, C or D")
         if self.cov_m not in ("high", "moderate", "low"):
@@ -598,12 +720,27 @@ def _ukc_ratio(ship: Ship, berth: Berth) -> float:
     return ukc / ship.draft_m
 
 
+#: Plausibility range of the block coefficient: outside it a result is
+#: flagged (above 1 the ship is refused). ASSUMED - to be confirmed: the span
+#: of merchant hull forms, not a value from the cited standards.
+CB_PLAUSIBLE = (0.45, 0.90)
+
+
+def cb_flags(cb: float) -> list[str]:
+    """Flag for a block coefficient outside :data:`CB_PLAUSIBLE`."""
+    lo, hi = CB_PLAUSIBLE
+    if lo <= cb <= hi:
+        return []
+    return [f"block coefficient {cb:.3f} outside {lo:g} to {hi:g} (plausibility range, ASSUMED - to be "
+            "confirmed): check displacement, LBP, beam and draught"]
+
+
 def _result(method, label, case, v, cm, ce, cs, cc, factor, geo, *, extra=(), divisor=1.0, flags=()):
     product = 1.0
     for c in extra:
         product *= c.value
     normal = berthing_energy(case.ship.displacement_t, v.value, ce.value, cm.value, cs.value, cc.value) * product
-    flags = list(flags) + velocity_flags(v.value)
+    flags = list(dict.fromkeys(list(flags) + cb_flags(case.ship.cb))) + velocity_flags(v.value)
     return MethodResult(method, label, v, cm, ce, cs, cc, factor, normal, normal * factor.value, geo,
                         tuple(extra), divisor, tuple(flags))
 
@@ -642,9 +779,10 @@ def _brolsma(case: Case, basis: str) -> Coefficient:
                        f"curve {b.navigation} ({BROLSMA_CONDITIONS[b.navigation]}) at {s.displacement_t:,.0f} t")
 
 
-def _abnormal(case: Case, position: str, source="pianc2002") -> Coefficient:
+def _abnormal(case: Case, position: str, note: str = "") -> Coefficient:
     f = abnormal_factor(case.ship.ship_type, position)
-    return Coefficient("abnormal_factor", f, source, f"PIANC 2002 Table 4.2.5, {case.ship.ship_type}, {position} ships")
+    return Coefficient("abnormal_factor", f, "pianc2002",
+                       f"PIANC 2002 Table 4.2.5, {case.ship.ship_type}, {position} ships{note}")
 
 
 def _common(case: Case, cm_method: str):
@@ -652,10 +790,8 @@ def _common(case: Case, cm_method: str):
     cm_src = {"pianc2002": "pianc2002-cm", "vasco_costa": "vasco-costa-1964", "ueda": "ueda-1981"}[cm_method]
     cm = Coefficient("cm", added_mass_factor(case.ship, case.berth.water_depth_m, cm_method), cm_src,
                      f"{cm_method}; KC/D = {r:.3f}")
-    cs = Coefficient("cs", softness_factor(case.berth.fender_deflection_m), "pianc2002-cs",
-                     f"fender deflection {case.berth.fender_deflection_m:g} m")
-    cc = Coefficient("cc", berth_configuration_factor(case.berth.structure, r, case.berth.berthing_angle_deg, cm_method),
-                     "pianc2002-cc", f"{case.berth.structure} structure, angle {case.berth.berthing_angle_deg:g} deg")
+    cs = softness(case.berth.fender_deflection_m, case.cs_basis)
+    cc = berth_configuration(case.berth.structure, r, case.berth.berthing_angle_deg, cm_method, case.cc_basis)
     return r, cm, cs, cc
 
 
@@ -688,9 +824,7 @@ def _m_bs6349(case: Case, position: str, velocity_m_s: float | None = None) -> M
     if case.ship.ship_type == "gas":
         fac = Coefficient("energy_factor", 2.0, "bs6349-4", "2.0 for gas carriers at LNG facilities (as summarised)")
     else:
-        fac = _abnormal(case, position, "pianc2002")
-        fac = Coefficient(fac.name, fac.value, fac.source,
-                          fac.note + "; BS 6349-4 own factor table not read")
+        fac = _abnormal(case, position, "; BS 6349-4 own factor table not read")
     v = _velocity(lambda: _brolsma(case, "displacement"), velocity_m_s)
     if v.value < 0.08:
         flags.append("Vasco Costa Cm outside its stated validity (v < 0.08 m/s)")
@@ -746,9 +880,21 @@ def wg211_gamma_eref(condition: str, cov_m: str, consequence_class: str, multipl
     return row["ABCD".index(consequence_class) + (4 if multiple_contact else 0)]
 
 
+#: Lowest berthing frequency (per year) at which the gamma_n fit is used. The
+#: range of validity of R24A Table 9 was not read; below one berthing a year
+#: the logarithm turns negative and the fit falls without bound (gamma_E below
+#: 1 under 0.22 a year for class B), so the module does not extrapolate there.
+WG211_GAMMA_N_MIN_PER_YEAR = 1.0
+
+
 def wg211_gamma_n(consequence_class: str, berthings_per_year: float) -> float:
-    """Berthing-frequency correction gamma_n = a ln(n) + b (R24A Table 9)."""
+    """Berthing-frequency correction gamma_n = a ln(n) + b (R24A Table 9),
+    for n of :data:`WG211_GAMMA_N_MIN_PER_YEAR` or more berthings a year."""
     n = _finite("berthings_per_year", berthings_per_year, positive=True)
+    if n < WG211_GAMMA_N_MIN_PER_YEAR:
+        raise ValueError(
+            f"WG211 gamma_n: {n:g} berthings a year is below {WG211_GAMMA_N_MIN_PER_YEAR:g}; the fit "
+            "a ln(n) + b is not extrapolated there (R24A Table 9 range not read)")
     lo, hi = WG211_GAMMA_N[consequence_class]
     a, b = lo if n <= 100 else hi
     return a * math.log(n) + b
@@ -781,14 +927,30 @@ def _m_wg211(case: Case, position: str, velocity_m_s: float | None = None) -> Me
 
 _LT = 1.0160469088  # t per long ton
 _FT = 0.3048
-#: Berthing velocity normal to berth, UFC 4-152-01 Fig. 5-3 (below 5,000 LT)
-#: and Fig. 5-4 (5,000 LT and above), digitized: (LT, sheltered, moderate, exposed) ft/s.
+#: Berthing velocity normal to berth, UFC 4-152-01 Figs. 5-3 and 5-4, digitized:
+#: (LT, sheltered, moderate, exposed) ft/s. Fig. 5-3 ("Small Ships (up to
+#: 20,000 tons)") covers 1,000 to 20,000 LT and Fig. 5-4 ("Large Ship") 5,000
+#: to 100,000 LT. Below 5,000 LT the rows are Fig. 5-3; from 5,000 to 20,000 LT,
+#: where both figures apply, each class takes the larger of the two figures
+#: (Fig. 5-3 is higher for the moderate class, by up to 0.08 ft/s at 5,000 LT,
+#: Fig. 5-4 for the sheltered class from 8,000 LT); above 20,000 LT Fig. 5-4.
+#: Both figures were digitized from the gridlines of the WBDG copy (about
+#: +/-0.01 ft/s): Fig. 5-3 at 5,000 / 6,000 / 8,000 / 10,000 / 15,000 /
+#: 20,000 LT gives 0.36 / 0.34 / 0.31 / 0.28 / 0.25 / 0.24 (sheltered),
+#: 0.73 / 0.70 / 0.63 / 0.57 / 0.48 / 0.45 (moderate), 0.99 / 0.94 / 0.87 /
+#: 0.83 / 0.76 / 0.72 (exposed); Fig. 5-4 gives 0.35 / 0.34 / 0.33 / 0.31 /
+#: 0.28 / 0.25, 0.66 / 0.63 / 0.59 / 0.55 / 0.49 / 0.45, 0.99 / 0.95 / 0.88 /
+#: 0.83 / 0.74 / 0.69.
 UFC_VELOCITY_FT_S = (
     (1_000, 0.53, 0.95, 1.47), (2_000, 0.47, 0.87, 1.22), (4_000, 0.38, 0.77, 1.03),
-    (5_000, 0.35, 0.66, 1.00), (10_000, 0.31, 0.55, 0.83), (20_000, 0.25, 0.45, 0.68),
+    (5_000, 0.36, 0.73, 0.99), (6_000, 0.34, 0.70, 0.95), (8_000, 0.33, 0.63, 0.88),
+    (10_000, 0.31, 0.57, 0.83), (15_000, 0.28, 0.49, 0.76), (20_000, 0.25, 0.45, 0.72),
     (30_000, 0.21, 0.41, 0.62), (50_000, 0.18, 0.35, 0.55), (70_000, 0.17, 0.30, 0.47),
     (100_000, 0.16, 0.28, 0.40),
 )
+#: How the overlap of Figs. 5-3 and 5-4 is resolved (stated with every UFC velocity).
+UFC_VELOCITY_RULE = ("Fig. 5-3 below 5,000 LT; larger of Figs. 5-3 and 5-4 from 5,000 to 20,000 LT; "
+                     "Fig. 5-4 above")
 _UFC_CLASS = {"monitored": 1, "favourable": 1, "moderate": 2, "unfavourable": 3}
 
 
@@ -838,7 +1000,7 @@ def _m_ufc(case: Case, position: str, velocity_m_s: float | None = None) -> Meth
     s, b = case.ship, case.berth
     _ukc_ratio(s, b)
     v = _velocity(lambda: Coefficient("velocity_m_s", ufc_velocity(s.displacement_t, case.condition), "ufc-4-152-01",
-                                      f"Fig. 5-3/5-4, {case.condition} (sheltered/moderate/exposed), digitized"),
+                                      f"Figs. 5-3/5-4, {case.condition} (sheltered/moderate/exposed), digitized; {UFC_VELOCITY_RULE}"),
                   velocity_m_s)
     k = radius_of_gyration(s.cb, s.lbp_m)
     a = abs(contact_offset_m(s, b))
@@ -854,7 +1016,7 @@ def _m_ufc(case: Case, position: str, velocity_m_s: float | None = None) -> Meth
     elif b.structure == "closed":
         cc_v, note = 0.8, "solid pier, parallel approach"
     else:
-        cc_v, note = 0.9, "between open and solid (UFC: 'in between'); midpoint assumed"
+        cc_v, note = 0.9, "between open and solid (UFC: 'in between'); ASSUMED - to be confirmed: midpoint 0.9"
     cc = Coefficient("cc", cc_v, "ufc-4-152-01", note)
     cm = _ufc_cm(case, ce, cg, cd, cc, geo)
     fac = Coefficient("accidental_factor", 1.5, "ufc-4-152-01", "5-1.5.3: increase by at least 50 %")
@@ -962,16 +1124,25 @@ def eau_velocity(dwt_t: float, condition: str) -> float:
     return pts[-1][1] if d >= pts[-1][0] else _loglog(d, pts)
 
 
-def _m_eau(case: Case, position: str, velocity_m_s: float | None = None) -> MethodResult:
+def _eau_own_velocity(case: Case) -> Coefficient:
+    """The EAU table velocity, keyed by DWT: DWT is needed only here, so a
+    caller's velocity override needs no DWT (as in the PIANC 2002 and Ueda
+    methods and the workbook)."""
     s = case.ship
     if s.dwt_t is None:
         raise ValueError("the EAU velocity is keyed by DWT; give ship.dwt_t")
+    return Coefficient("velocity_m_s", eau_velocity(s.dwt_t, case.condition), "eau-2012",
+                       f"{case.condition} (normal), characteristic value, digitized")
+
+
+def _m_eau(case: Case, position: str, velocity_m_s: float | None = None) -> MethodResult:
     _, cm, cs, cc = _common(case, "pianc2002")
     ce, geo = _pianc_ce(case)
-    v = _velocity(lambda: Coefficient("velocity_m_s", eau_velocity(s.dwt_t, case.condition), "eau-2012",
-                                      f"{case.condition} (normal), characteristic value, digitized"),
-                  velocity_m_s)
-    return _result("eau", "EAU 2012", case, v, cm, ce, cs, cc, _abnormal(case, position, "eau-2012"), geo,
+    v = _velocity(lambda: _eau_own_velocity(case), velocity_m_s)
+    # the factor is the PIANC 2002 table; SFT p. 22 says it was "also adopted by EAU-2004"; EAU 2012 not read
+    fac = _abnormal(case, position, "; applied to EAU (SFT p. 22: adopted by EAU-2004; the EAU 2012 text "
+                                    "was not read)")
+    return _result("eau", "EAU 2012", case, v, cm, ce, cs, cc, fac, geo,
                    flags=["EAU velocities digitized at two sizes only"])
 
 
@@ -1097,10 +1268,12 @@ def citation_for(source_id: str) -> Citation:
 
 
 def result_citations(coefficients) -> tuple[Citation, ...]:
-    """One citation per cited source among ``coefficients`` (caller values excluded)."""
+    """One citation per cited source among ``coefficients`` (caller values and
+    vendor manuals, :data:`VENDOR_SOURCES`, excluded: a manual is named in the
+    coefficient's source, not cited as a standard)."""
     out, seen = [], set()
     for c in coefficients:
-        if c.source == "caller" or c.source in seen:
+        if c.source == "caller" or c.source in VENDOR_SOURCES or c.source in seen:
             continue
         seen.add(c.source)
         out.append(citation_for(c.source))
@@ -1252,7 +1425,12 @@ def compare_methods_skipped(ship_or_case, berth=None, methods=None, **kwargs) ->
 
 def wg211_fender_capacity(e_base_knm: float, c_ang: float = 1.0, c_t: float = 1.0, c_v: float = 1.0,
                           c_mult: float = 1.0, gamma_m: float = WG211_GAMMA_M) -> float:
-    """E_f,d = E_base C_ang C_t C_v C_mult / gamma_m (R24A Eq. 5, 10; R24B Table 4)."""
+    """E_f,d = E_base C_ang C_t C_v C_mult / gamma_m (R24A Eq. 5, 10; R24B Table 4).
+
+    C_ang is taken as given (R24B prints 1.03 to 1.05 for cone fenders), to
+    reproduce the worked example; the design path (:func:`design_performance`)
+    does not credit an angular factor above 1.
+    """
     e = _finite("e_base_knm", e_base_knm, positive=True)
     for name, x in (("c_ang", c_ang), ("c_t", c_t), ("c_v", c_v), ("c_mult", c_mult), ("gamma_m", gamma_m)):
         _finite(name, x, positive=True)
@@ -1406,7 +1584,11 @@ def design_performance(
     rated x (1 + reaction tolerance) x velocity x temperature factors (at the
     fastest velocity and lowest temperature) (TFADM p. 30; SFT p. 26).
     Pneumatic fenders are rated at GEA with 0 % energy tolerance (SFT p. 26).
-    The angular factor must be in (0, 1], as in ``select_fenders``.
+    The angular factor must be in (0, 1], as in ``select_fenders``: a vendor
+    angle factor above 1 (cone fenders at small angles, TFADM p. 36 Super
+    Cone 1.039 to 1.055; R24B Table 4 C_ang 1.03 to 1.05) is not credited
+    here. :func:`wg211_fender_capacity` takes C_ang as given, to reproduce the
+    R24B worked example only.
     """
     et = _finite("energy_tolerance", energy_tolerance, nonneg=True)
     rt = _finite("reaction_tolerance", reaction_tolerance, nonneg=True)
@@ -1462,7 +1644,12 @@ VELOCITY_FACTOR_USES = ("energy", "reaction")
 
 
 def velocity_factor(compression_time: float, compound: str = "blend", use: str | None = None) -> float:
-    """VF from the TFADM p. 35 table, nearest lower tabulated time (1 to 20 s).
+    """VF from the TFADM p. 35 table (1 to 20 s), by row: the factor falls as
+    the time grows, so between rows ``use="energy"`` takes the next higher
+    tabulated time (the smaller factor, so the minimum energy is not
+    overstated) and ``use="reaction"`` or no ``use`` the nearest lower time
+    (the larger factor, an upper bound for the maximum reaction). At a
+    tabulated time the three agree.
 
     The table stops at 20 s, where the blend and SBR factors are still above
     1.00. Beyond 20 s the factor depends on what it is used for, and ``use``
@@ -1476,7 +1663,6 @@ def velocity_factor(compression_time: float, compound: str = "blend", use: str |
       an upper bound because the tabulated factor does not increase with time.
 
     Without ``use`` a time beyond 20 s raises ValueError rather than guess.
-    Within the table ``use`` does not change the value.
     """
     t = _finite("compression_time", compression_time, positive=True)
     if compound not in _COMPOUND:
@@ -1494,7 +1680,10 @@ def velocity_factor(compression_time: float, compound: str = "blend", use: str |
                 f"(VF 1.00, TFADM pp. 39-40 example) or use='reaction' (the {t_max} s value, an upper bound)"
             )
         return 1.0 if use == "energy" else VELOCITY_FACTOR_TABLE[-1][j]
-    row = max((r for r in VELOCITY_FACTOR_TABLE if r[0] <= t), key=lambda r: r[0])
+    if use == "energy":
+        row = min((r for r in VELOCITY_FACTOR_TABLE if r[0] >= t), key=lambda r: r[0])
+    else:
+        row = max((r for r in VELOCITY_FACTOR_TABLE if r[0] <= t), key=lambda r: r[0])
     return row[j]
 
 
@@ -1547,6 +1736,11 @@ class Sweep:
     method results behind the sweep (:func:`standard_sweeps`): the status of
     each citation and the flag of an explicit opt-out (``record``, ``off``).
     Both are empty for a sweep built from a bare function.
+
+    ``crossing`` is the swept value at which utilisation reaches 1, solved
+    on the method by :func:`standard_sweeps` (``crossing_basis`` says how:
+    closed form or bisection); :meth:`limit_value` returns it. A sweep built
+    from a bare function has no ``crossing_basis`` and interpolates.
     """
 
     parameter: str
@@ -1565,6 +1759,8 @@ class Sweep:
     reaction_factor: float = 1.0
     citation_status: tuple[tuple[str, str], ...] = ()
     flags: tuple[str, ...] = ()
+    crossing: float | None = None
+    crossing_basis: str = ""
 
     def at(self, value: float) -> SweepPoint:
         for p in self.points:
@@ -1576,15 +1772,17 @@ class Sweep:
         return (self.at(value).design_energy_knm / self.base_design_energy_knm - 1.0) * 100.0
 
     def limit_value(self) -> float | None:
-        """Smallest swept value at which utilisation reaches 1 (linear
-        interpolation between points), or None if it never does."""
-        pts = self.points
-        for a, b in zip(pts, pts[1:]):
-            if a.utilisation <= 1.0 <= b.utilisation and b.utilisation != a.utilisation:
-                return a.value + (1.0 - a.utilisation) / (b.utilisation - a.utilisation) * (b.value - a.value)
-            if a.utilisation >= 1.0 >= b.utilisation and b.utilisation != a.utilisation:
-                return a.value + (a.utilisation - 1.0) / (a.utilisation - b.utilisation) * (b.value - a.value)
-        return None
+        """Smallest swept value at which utilisation reaches 1, or None if it
+        never does: the value solved on the method (:attr:`crossing`) when the
+        sweep carries one, else linear interpolation between the points (which
+        drifts where a coefficient has a break between them)."""
+        if self.crossing_basis:
+            return self.crossing
+        br = _utilisation_bracket(self.points)
+        if br is None:
+            return None
+        a, b = br
+        return a.value + (1.0 - a.utilisation) / (b.utilisation - a.utilisation) * (b.value - a.value)
 
     def reaction_limit_value(self) -> float | None:
         """Smallest swept value at which the factored reaction reaches the
@@ -1606,6 +1804,80 @@ class Sweep:
             return []
         return [p.value for p in self.points
                 if p.reaction_kn is not None and p.reaction_kn > self.reaction_limit_kn]
+
+
+def _utilisation_bracket(points) -> tuple[SweepPoint, SweepPoint] | None:
+    """The first pair of neighbouring points between which utilisation
+    reaches 1 (either way), or None."""
+    for a, b in zip(points, points[1:]):
+        if a.utilisation != b.utilisation and min(a.utilisation, b.utilisation) <= 1.0 <= max(
+                a.utilisation, b.utilisation):
+            return a, b
+    return None
+
+
+def ukc_depth_for_cm(draft_m: float, cm: float) -> float:
+    """Water depth (m) at which the PIANC 2002 keel-clearance Cm
+    (:func:`~digitalmodel.hydrodynamics.berthing_energy.added_mass_factor_ukc`)
+    equals ``cm``, on its sloped part (1.5 < cm < 1.8): the closed-form
+    inverse, KC/D = 0.1 + 0.4 (1.8 - cm) / 0.3. Outside the slope the depth is
+    not unique and ValueError is raised."""
+    t = _finite("draft_m", draft_m, positive=True)
+    c = _finite("cm", cm, positive=True)
+    if not 1.5 < c < 1.8:
+        raise ValueError(f"keel-clearance Cm {c:g} is not on the sloped part (1.5 to 1.8): depth not unique")
+    return t * (1.0 + 0.1 + 0.4 * (1.8 - c) / 0.3)
+
+
+#: Methods whose energy depends on the water depth only through the PIANC
+#: keel-clearance Cm (Cc fixed at 1.0 with it, or removed): their depth at
+#: utilisation 1 is solved in closed form (:func:`ukc_depth_for_cm`).
+KEEL_CLEARANCE_ONLY = ("pianc2002", "eau", "wg211")
+
+
+def _crossing(sweep: Sweep, fn, cap: float, n: int, *, method: str, base: MethodResult,
+              draft_m: float) -> tuple[float | None, str]:
+    """Swept value at which utilisation reaches 1, solved on the method.
+
+    Water depth for :data:`KEEL_CLEARANCE_ONLY` methods: closed form, since
+    utilisation is base utilisation x Cm(depth) / Cm(base). Otherwise the
+    bracket found between the sweep points is bisected on ``fn`` (the
+    method itself) to 1e-12 of the value, so a coefficient break between two
+    points (the Cm kink at KC/D 0.1, the ROM velocity step) is not
+    interpolated across.
+    """
+    br = _utilisation_bracket(sweep.points)
+    if br is None:
+        return None, "utilisation does not reach 1 within the swept values"
+    a, b = br
+    if sweep.parameter == "water_depth_m" and method in KEEL_CLEARANCE_ONLY:
+        u0 = base.design_energy_knm / n / cap
+        try:
+            d = ukc_depth_for_cm(draft_m, base.cm.value / u0)
+        except ValueError:
+            d = None
+        if d is not None and min(a.value, b.value) - 1e-9 <= d <= max(a.value, b.value) + 1e-9:
+            return d, (f"closed form: keel-clearance Cm {base.cm.value / u0:.5f} needed "
+                       f"(base Cm {base.cm.value:.5f} / base utilisation {u0:.5f})")
+    lo, hi = a.value, b.value
+    f_lo = a.utilisation - 1.0
+    if f_lo == 0.0:
+        return lo, "a swept point"
+    if b.utilisation == 1.0:
+        return hi, "a swept point"
+    for _ in range(200):
+        mid = 0.5 * (lo + hi)
+        f_mid = float(fn(mid)) / n / cap - 1.0
+        if f_mid == 0.0:
+            lo = hi = mid
+            break
+        if (f_mid < 0.0) == (f_lo < 0.0):
+            lo, f_lo = mid, f_mid
+        else:
+            hi = mid
+        if abs(hi - lo) <= 1e-12 * max(1.0, abs(hi)):
+            break
+    return 0.5 * (lo + hi), "bisection on the method between the bracketing sweep points"
 
 
 def check_fenders_in_contact(fenders_in_contact) -> int:
@@ -1726,10 +1998,13 @@ SWEEP_KEYS = ("velocity_m_s", "displacement_t", "water_depth_m", "contact_x_over
 #: A coefficient range partly outside these is clipped to them and a range
 #: with no value in them is refused (:func:`constrained_sweep_range`); a
 #: coefficient the method fixes or removes is not swept (:data:`SWEEP_EXCLUSIONS`).
+#: Cc of Ueda and BS 6349-4 is 0.9 to 1.0 under the default PIANC 2002 basis
+#: (4.2.7, p. 22); :func:`sweep_coefficient_limits` widens it to 0.8 to 1.0
+#: under the SFT table (``cc_basis`` ``sft-2026``).
 SWEEP_COEFFICIENT_LIMITS: dict[str, dict[str, tuple[float, float]]] = {
     "pianc2002": {"cs": (0.9, 1.0)},
-    "ueda": {"cs": (0.9, 1.0), "cc": (0.8, 1.0)},
-    "bs6349": {"cs": (0.9, 1.0), "cc": (0.8, 1.0)},
+    "ueda": {"cs": (0.9, 1.0), "cc": (0.9, 1.0)},
+    "bs6349": {"cs": (0.9, 1.0), "cc": (0.9, 1.0)},
     "eau": {"cs": (0.9, 1.0)},
     "rom": {"cs": (0.9, 1.0), "cc": (0.9, 1.0)},
     "ufc": {"cc": (0.8, 1.0)},
@@ -1738,7 +2013,7 @@ SWEEP_COEFFICIENT_LIMITS: dict[str, dict[str, tuple[float, float]]] = {
 }
 
 _KEEL_CLEARANCE_CC = ("Cc is 1.0 with the PIANC keel-clearance Cm, which already includes the "
-                      "confined-water effect (PIANC 2002 4.2.7 pairing rule)")
+                      "confined-water effect (pairing rule of the manuals: TFADM p. 27, SFT p. 18)")
 
 #: Sweeps a method does not admit, with the reason.
 SWEEP_EXCLUSIONS: dict[str, dict[str, str]] = {
@@ -1761,7 +2036,22 @@ def inapplicable_sweeps(method: str) -> dict[str, str]:
     return dict(SWEEP_EXCLUSIONS[method])
 
 
-def constrained_sweep_range(method: str, key: str, rng: SweepRange) -> tuple[float, float, str]:
+#: Cc limits of Ueda and BS 6349-4 under the SFT p. 20 table (``cc_basis`` ``sft-2026``).
+_SFT_CC_LIMITS = (0.8, 1.0)
+
+
+def sweep_coefficient_limits(method: str, cc_basis: str = "pianc2002") -> dict[str, tuple[float, float]]:
+    """:data:`SWEEP_COEFFICIENT_LIMITS` of ``method`` under the case's Cc basis."""
+    if cc_basis not in CC_BASES:
+        raise ValueError(f"cc_basis must be one of {CC_BASES}, got {cc_basis!r}")
+    lim = dict(SWEEP_COEFFICIENT_LIMITS[method])
+    if cc_basis == "sft-2026" and method in ("ueda", "bs6349"):
+        lim["cc"] = _SFT_CC_LIMITS
+    return lim
+
+
+def constrained_sweep_range(method: str, key: str, rng: SweepRange,
+                            cc_basis: str = "pianc2002") -> tuple[float, float, str]:
     """``(low, high, basis)`` of ``rng`` as :func:`standard_sweeps` sweeps it
     for ``method``.
 
@@ -1777,7 +2067,7 @@ def constrained_sweep_range(method: str, key: str, rng: SweepRange) -> tuple[flo
     if lo > hi:
         raise ValueError(f"{key} sweep range: low {lo:g} is above high {hi:g}")
     basis = rng.basis
-    limits = SWEEP_COEFFICIENT_LIMITS[method]
+    limits = sweep_coefficient_limits(method, cc_basis)
     if key in limits:
         a, b = limits[key]
         if hi < a or lo > b:
@@ -1860,6 +2150,8 @@ def standard_sweeps(
     """
     if citations not in CITATION_MODES:
         raise ValueError(f"citation mode must be one of {CITATION_MODES}")
+    if isinstance(points, bool) or not isinstance(points, int) or points < 2:
+        raise ValueError(f"points must be a whole number of 2 or more, got {points!r}")
     # checked here as well, so an empty set of ranges does not skip them
     fenders_in_contact = check_fenders_in_contact(fenders_in_contact)
     reaction_limit_kn = check_limit("reaction_limit_kn", reaction_limit_kn)
@@ -1871,7 +2163,7 @@ def standard_sweeps(
         if key not in SWEEP_KEYS:
             raise KeyError(f"unknown sweep {key!r}")
         if key not in excluded:
-            constrained[key] = constrained_sweep_range(method, key, rng)
+            constrained[key] = constrained_sweep_range(method, key, rng, case.cc_basis)
     ship, berth = case.ship, case.berth
     kw = dict(velocity_m_s=velocity_m_s, factor=factor, factor_position=factor_position, citations="off")
     if base is None:
@@ -1888,7 +2180,7 @@ def standard_sweeps(
         # the method's divisor applies to the default as to a caller's capacity
         capacity_knm = fender.rated_energy_knm / base.capacity_divisor
     m0 = ship.displacement_t
-    limits = SWEEP_COEFFICIENT_LIMITS[method]
+    limits = sweep_coefficient_limits(method, case.cc_basis)
     base_keys = set(checked)
     used: list[Citation] = []   # citations of the current sweep beyond the base's
 
@@ -1931,6 +2223,18 @@ def standard_sweeps(
             lo_s = max(lo_s, ship.draft_m * 1.001)
         if key == "contact_x_over_lbp":
             lo_s, hi_s = max(lo_s, 0.0), min(hi_s, 1.0)
+            # the first contact stays on the end nearer the berth (contact_offset_m)
+            if berth.berthing_angle_deg > 0.0:
+                hi_s = min(hi_s, 0.5)
+            elif berth.berthing_angle_deg < 0.0:
+                lo_s = max(lo_s, 0.5)
+        if key == "berthing_angle_deg":
+            lo_s, hi_s = max(lo_s, -89.0), min(hi_s, 89.0)
+            arm = ship.lbp_m / 2.0 - berth.contact_x_from_bow_m
+            if arm > 0.0:       # forward contact: bow nearer the berth, angle 0 or above
+                lo_s = max(lo_s, 0.0)
+            elif arm < 0.0:     # aft contact: stern nearer, angle 0 or below
+                hi_s = min(hi_s, 0.0)
         if key in ("velocity_m_s", "displacement_t", "factor"):
             lo_s = max(lo_s, 1e-6)
         if key in limits:
@@ -1942,8 +2246,11 @@ def standard_sweeps(
             curve=curve, reaction_limit_kn=reaction_limit_kn, hull_pressure_limit_kpa=hull_pressure_limit_kpa,
             reaction_factor=reaction_factor,
         )
+        cross, how = _crossing(sw, fn, sw.capacity_knm, fenders_in_contact, method=method, base=base,
+                               draft_m=ship.draft_m)
         st = tuple(status) + tuple((c.code_id, checked[c]) for c in used)
-        out.append(replace(sw, citation_status=st, flags=tuple(_citation_flags(st, citations))))
+        out.append(replace(sw, citation_status=st, flags=tuple(_citation_flags(st, citations)),
+                           crossing=cross, crossing_basis=how))
     return out
 
 

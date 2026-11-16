@@ -8,7 +8,7 @@ workbook and the generic method report in `docs/reports/modules/fender_design/`.
 |---|---|
 | `database_schema.yaml` | Column, unit and meaning of every field of the fender database |
 | `catalogue_index.csv` | One row per manufacturer catalogue read: title, edition, URL, fender types and row counts, date read. No catalogue values |
-| `sources.csv` | The method source register (`fender_design.SOURCES`): document, edition, clause, verification level, where it was read |
+| `sources.csv` | The method source register (`fender_design.SOURCES`): document, edition, clause, verification level, where it was read, note, date read (`accessed_on`) |
 | `method_matrix.csv` | What each method uses for velocity, Cm, Ce, Cs, Cc, design factor and fender capacity |
 | `illustrative_fenders.csv` | Fictional fender rows (`GEN-*`) in the selection layout, for tests and the generic example |
 | `illustrative_curves.csv` | A fictional normalised load-deflection curve (shape only) |
@@ -30,5 +30,5 @@ workbook and the generic method report in `docs/reports/modules/fender_design/`.
 - Every method value in the module names its source in `sources.csv`. Values marked
   `secondary` were read in a manufacturer's design manual or a paper that reproduces the
   standard and should be checked against the standard before use as a design basis.
-- When `fender_design.SOURCES` changes, regenerate `sources.csv`; a test checks the two
-  agree.
+- When `fender_design.SOURCES` changes, regenerate `sources.csv` (one row per source, one
+  column per `Source` field); a test checks that every field agrees.

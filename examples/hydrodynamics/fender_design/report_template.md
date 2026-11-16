@@ -1,4 +1,4 @@
-# Fender design: methods, coefficients, database and sensitivity (generic method report, revision 3)
+# Fender design: methods, coefficients, database and sensitivity (generic method report, revision 4)
 
 Living method report for the berthing-energy design of ship fenders. It sits beside the
 calculation module `digitalmodel.hydrodynamics.fender_design` (with
@@ -20,12 +20,14 @@ no result here clears a fender for any berth.
   ROM 2.0-11, UFC 4-152-01, the Ueda added mass used in Japanese practice, and IS 4651-3:1974
   (withdrawn, for comparison).
 - For the same ship and berth the design energy ranges from the lowest to the highest method
-  by about a factor of two (Table 3; Figure 1 gives the fender utilisation by method). The
+  by about a factor of two (Table 3; Figure 3 gives the fender utilisation by method). The
   spread comes mostly from the velocity each method assigns, then from the design factor; the
   energy equation itself is common.
 - For the generic case the design energy by the selected method, {{selected_label}}, is
   {{E_design}} kNm (normal energy {{E_normal}} kNm). The illustrative base fender has a
   capacity of {{capacity}} kNm, a utilisation of {{util}}.
+- {{base_checks}}
+- Assumed values are collected in Table 10, each marked "ASSUMED - to be confirmed".
 - One-at-a-time sensitivity (Section 7) ranks the inputs. In this case the three largest
   are: {{top1}}; {{top2}}; {{top3}}. The berthing velocity enters squared and is the
   largest single term in this case.
@@ -61,7 +63,13 @@ Verification levels used throughout: **full-text** (read in the document), **sec
 **formula** (closed form of the cited paper, reproduced in the documents named) and
 **digitized** (read off a published figure, about ±0.02 m/s). Secondary values should be
 checked against the primary document before they are used as a design basis. Table 8 lists
-every source.
+every source with the date it was read. The PIANC WG33 (2002) values used here were checked
+against the primary text: section 4.2.4 (C_e and K = (0.19 C_b + 0.11) L), 4.2.5 (keel-clearance
+C_m 1.8 / 1.5, linear between; Ueda and Vasco Costa with their validity limits; longitudinal
+approach 1.1), 4.2.6 (C_s, p. 21), 4.2.7 (C_c, p. 22), Table 4.2.5 (abnormal factor), Fig. 4.2.1
+(keyed by DWT; curves d and e to be used with caution) and Table 4.4.1 (bulk carriers below
+200 kN/m²). The Brolsma values themselves are read from the manuals' table of Fig. 4.2.1 and
+stay secondary.
 
 ### 3.1 Berthing velocity
 
@@ -80,12 +88,17 @@ every source.
 - **ROM 2.0-11:** Table 4.6.4.36 (with tugs) and 4.6.4.37 (without), by displacement and
   climate class; digitized. The plateau above 40,000 t is 0.08, 0.15 and 0.20 m/s.
 - **UFC 4-152-01:** Figs. 5-3 and 5-4 by displacement in long tons, sheltered, moderate and
-  exposed; digitized and converted to SI.
+  exposed; digitized from the gridlines (about ±0.01 ft/s) and converted to SI. Fig. 5-3
+  ("Small Ships (up to 20,000 tons)") and Fig. 5-4 ("Large Ship", from 5,000 LT) overlap from
+  5,000 to 20,000 LT. There the module takes, for each class, the larger of the two figures:
+  Fig. 5-3 is higher for the moderate class (0.73 against 0.66 ft/s at 5,000 LT) and Fig. 5-4
+  for the sheltered class from 8,000 LT. Below 5,000 LT it reads Fig. 5-3 and above 20,000 LT
+  Fig. 5-4. The generic ship (59,052 LT) is outside the overlap.
 - **EAU 2012:** characteristic values, favourable, normal and unfavourable; digitized at two
   sizes only (5,000 DWT and 50,000 DWT and above).
 - **IS 4651-3:1974:** step table by displacement band and site condition.
 
-Table 1 gives the Brolsma values the module uses at selected sizes; Figure 2 compares the
+Table 1 gives the Brolsma values the module uses at selected sizes; Figure 1 compares the
 methods.
 
 {{velocity_table}}
@@ -95,17 +108,17 @@ Table 1 – Brolsma design berthing velocity (m/s) by size (t) and curve a to e;
 
 ![Velocity by method](charts/velocity_methods.png)
 
-Figure 2 – Design berthing velocity against ship size by method.
+Figure 1 – Design berthing velocity against ship size by method.
 
 ### 3.2 Added mass C_m
 
 | Method | Formula | Validity and pairing | Source |
 |---|---|---|---|
-| PIANC 2002 (also ROM, WG211 example, EAU) | 1.8 at KC/D ≤ 0.1; 1.875 − 0.75 KC/D; 1.5 at KC/D ≥ 0.5 | use with C_c = 1.0 | secondary (SFT p. 18; TFADM p. 24); ROM p. 265 full-text |
-| Vasco Costa (1964) (BS 6349-4, IS 4651) | 1 + 2T/B | v ≥ 0.08 m/s, KC ≥ 0.1T; pair with C_c | formula |
-| Ueda (1981) (Japanese practice) | 1 + πT/(2 C_b B) | pair with C_c | formula |
+| PIANC 2002 (also ROM, WG211 example, EAU) | 1.8 at KC/D ≤ 0.1; 1.875 − 0.75 KC/D; 1.5 at KC/D ≥ 0.5 | use with C_c = 1.0 (the manuals' pairing rule: TFADM p. 27, SFT p. 18) | full-text (PIANC WG33 (2002) 4.2.5); ROM p. 265 full-text |
+| Vasco Costa (1964) (BS 6349-4, IS 4651) | 1 + 2T/B | v ≥ 0.08 m/s, KC ≥ 0.1T; pair with C_c | formula (also in PIANC WG33 (2002) 4.2.5) |
+| Ueda (1981) (Japanese practice) | 1 + πT/(2 C_b B) | pair with C_c | formula (also in PIANC WG33 (2002) 4.2.5) |
 | UFC 4-152-01 surface vessels | C_M0 + (C_m1 − C_M0)(T/d)^3.5, C_M0 = 1.3 + 1.5T/B, C_m1 = F[12.4(T/B)^0.3 − 50T/L] | F = 1.5C_b (C_b < 0.6) or 0.9; the C_b in F is read two ways (printed wording: the berthing coefficient C_e·C_g·C_d·C_c, Eq. 5-2, p. 106, restated p. 109; alternative: the block coefficient), option `ufc_f_basis`, this build `{{ufc_f_basis}}` | full-text |
-| Longitudinal approach | 1.1 | | secondary |
+| Longitudinal approach | 1.1 | | full-text (PIANC WG33 (2002) 4.2.5) |
 
 Table 2 – Added-mass methods.
 
@@ -121,13 +134,13 @@ source text does not settle it, so both readings are an explicit option: the cas
 This build uses `{{ufc_f_basis}}`. For the generic case the UFC design energy is
 {{E_ufc_berthing}} kNm under the berthing-coefficient reading and {{E_ufc_block}} kNm under the
 block-coefficient reading. Under the berthing-coefficient reading the UFC C_m depends on the
-contact point; the UFC curve in Figure 3 uses the C_b in F of the base case. TR-6074-OCN, which
+contact point; the UFC curve in Figure 2 uses the C_b in F of the base case. TR-6074-OCN, which
 UFC cites for the added mass, was not read, so the reading is not resolved against that source.
-Figure 3 shows the four forms for the generic ship.
+Figure 2 shows the four forms for the generic ship.
 
 ![Cm against keel clearance](charts/cm_methods.png)
 
-Figure 3 – Added mass factor against keel clearance for the generic ship.
+Figure 2 – Added mass factor against keel clearance for the generic ship.
 
 ### 3.3 Eccentricity C_e
 
@@ -148,17 +161,29 @@ computes φ from the geometry and the test suite checks it equals this form).
 
 ### 3.4 Softness C_s and berth configuration C_c
 
-- C_s = 1.0 for fender deflection above 0.15 m, 0.9 at or below (PIANC 2002; ROM also 0.9
-  for ships of 300 m and longer). WG211 removes C_s.
-- C_c = 1.0 for open (piled or floating) berths, berthing angle above 5° and with the PIANC
-  keel-clearance C_m. For solid quays at angles of 5° or less the sources differ: 0.8
-  (KC/D ≤ 0.5) or 0.9 (KC/D > 0.5) in the SFT reading of PIANC; 0.9 in the Trelleborg reading
-  and ROM; 0.8 in UFC. The module implements the SFT table and records the alternative.
-  WG211 removes C_c.
+- C_s: PIANC WG33 (2002) 4.2.6 (p. 21) gives 1.0 for soft fenders and smaller vessels and 0.9
+  to 1.0 for hard fenders and larger vessels, and concludes a general value of 1.0. The module
+  takes 1.0 by default (`cs_basis` `pianc2002`, source `pianc2002-cs`). The 0.15 m deflection
+  figure is BS 6349-4's definition of a hard fender, which the Trelleborg manual (p. 27) and
+  the ShibataFenderTeam manual (p. 20) apply as C_s 0.9 at or below 0.15 m; the module offers
+  that rule only when the caller selects it (`cs_basis` `tfadm-2024`, source `tfadm-2024`). ROM
+  has its own rule (0.9 also for ships of 300 m and longer). WG211 removes C_s. This build uses
+  `{{cs_basis}}`.
+- C_c: PIANC WG33 (2002) 4.2.7 (p. 22) gives 1.0 for open berths and corners of quay walls,
+  "generally 0.9" for solid quay walls under parallel approach, and no cushion effect above
+  a 5° approach angle (1.0). It gives no value for a partly closed berth and no 0.8. The
+  module takes these values by default (`cc_basis` `pianc2002`, source `pianc2002-cc`); for a
+  partly closed berth it takes 1.0, the open-berth value, as an assumption (Table 10). The
+  ShibataFenderTeam table (p. 20: solid quay 0.8 at KC/D ≤ 0.5 or 0.9 above, partly closed 0.9
+  or 1.0) is an option the caller selects (`cc_basis` `sft-2026`, source `sft-2026`); it is never
+  cited as PIANC. With the PIANC keel-clearance C_m, C_c is 1.0: this pairing is the manuals'
+  rule (Trelleborg p. 27, "usually assumed"; ShibataFenderTeam p. 18), not a clause of 4.2.7.
+  ROM and UFC keep their own C_c (ROM 0.9 for a solid quay; UFC 0.8). WG211 removes C_c. This
+  build uses `{{cc_basis}}`; the generic berth is open, so its C_c is 1.0 under either basis.
 
 ### 3.5 Design factor
 
-- PIANC 2002 Table 4.2.5 (secondary): tankers, bulk and cargo 1.25 (largest) to 1.75
+- PIANC 2002 Table 4.2.5 (full-text): tankers, bulk and cargo 1.25 (largest) to 1.75
   (smallest); container 1.5 to 2.0; general cargo 1.75; Ro-Ro and ferries 2.0 or more; tugs
   2.0. PIANC gives no rule between largest and smallest; the module takes the caller's
   choice. One manual reads "largest" by class (Capesize and above for bulk carriers, Handymax
@@ -166,6 +191,9 @@ computes φ from the geometry and the test suite checks it equals this form).
   choice changes the design energy by 40 % and is carried as a sensitivity.
 - BS 6349-4: energy factor 2.0 for gas carriers at LNG facilities (secondary); otherwise
   the PIANC table is used by the module, as the BS table itself was not read.
+- EAU: the module applies the PIANC 2002 Table 4.2.5 factor and labels it so (source
+  `pianc2002`). The ShibataFenderTeam manual (p. 22) says the factors were "also adopted by
+  EAU-2004"; the EAU 2012 text was not read.
 - ROM 2.0-11 Table 4.6.4.43: product of four factors (displacement ≤ 85,000 t 1.50 else
   1.25; without tugs 1.25; v ≤ 0.10 m/s 1.20; more than 300 calls a year 1.15), scaled by
   (T_R/500)^(1/20), not below 1.10.
@@ -173,7 +201,11 @@ computes φ from the geometry and the test suite checks it equals this form).
 - WG211: γ_E = γ_Eref · γ_n · γ_p · γ_c, with γ_Eref by navigation condition, spread of
   displacements (CoV_M), consequence class A to D and single or multiple contact, and γ_n
   = a ln(n) + b for n berthings a year (background-paper tables). The fender capacity is
-  divided by γ_m = 1.10 (worked example).
+  divided by γ_m = 1.10 (worked example). CoV_M defaults to `low`, the column with the largest
+  factor; `moderate` or `high` gives a smaller factor and needs a basis in the spread of
+  displacements using the berth (the generic case assumes `high`, Table 10). γ_n is not
+  extrapolated below one berthing a year, where the logarithm turns negative (γ_E would fall
+  below 1 under 0.22 a year for class B); the range of the fit was not read.
 
 ### 3.6 Fender performance
 
@@ -182,14 +214,23 @@ computes φ from the geometry and the test suite checks it equals this form).
   × (1 + reaction tolerance) × velocity × temperature factors at the fastest velocity and
   lowest temperature (Trelleborg manual p. 30; SFT p. 26).
 - Tolerances: moulded rubber ±10 %, extruded ±20 %, foam ±10 to ±15 %, pneumatic 0 % on
-  energy (guaranteed energy absorption, GEA, ISO 17357-1) and ±10 % on reaction.
+  energy (guaranteed energy absorption, GEA, ISO 17357-1) and ±10 % on reaction. Each fender
+  type takes its own tolerance: the case's `energy_tolerance` and `reaction_tolerance` apply to
+  the base fender's type, and `tolerances_by_type` gives every other type in the catalogue (a
+  catalogue with another type and no entry for it is refused). The generic case gives foam
+  0.15 on energy and reaction, the upper end of its range (Table 10).
+- Angular factor: a reduction only, in (0, 1]. Vendor factors above 1 for cone fenders at
+  small angles (Trelleborg p. 36; R24B Table 4 C_ang 1.03 to 1.05) are not credited in the
+  design path; `wg211_fender_capacity` takes C_ang as given only to reproduce the R24B example.
 - Velocity factor by compression time t = d/(0.74 v) and temperature factor by compound are
-  tabulated in the module (Trelleborg manual p. 35). The table stops at 20 s, where the blend
+  tabulated in the module (Trelleborg manual p. 35). Between rows the factor for minimum
+  energy is read at the next higher tabulated time (the smaller factor) and the factor for
+  maximum reaction at the next lower (the larger). The table stops at 20 s, where the blend
   and SBR factors are still above 1.00, so beyond 20 s the module needs to know the use:
   for minimum energy it takes 1.00, as the manual's worked example does at 48 s (pp. 39–40);
   for maximum reaction it holds the 20 s value, an upper bound because the factor does not
   rise with time. Without the use stated, a time beyond 20 s is an error.
-- Hull pressure guidance (PIANC 2002 Table 4.4.1, secondary): bulk carriers below 200 kPa;
+- Hull pressure guidance (PIANC 2002 Table 4.4.1, full-text): bulk carriers below 200 kPa;
   other values in `HULL_PRESSURE_KPA`. The sources disagree for bulk carriers (one paper lists
   200 to 320 kPa for WG33); the module uses 200 kPa and records the conflict.
 - Reaction at part energy is read from a normalised curve when one is supplied; without a
@@ -222,6 +263,14 @@ computes φ from the geometry and the test suite checks it equals this form).
    DWT-keyed velocity read at the displacement, changes the energy without any change of
    assumption. Each method in the module carries its own basis.
 
+Plausibility checks on the inputs: a block coefficient M/(ρ L_BP B T) above 1 is refused,
+and one outside {{cb_range}} is flagged on every result (an assumed range, Table 10). The
+berthing angle is below 90° in magnitude, and its sign agrees with the end of first contact:
+with the bow nearer the berth (angle above 0) the first contact is in the forward half, with
+the stern nearer (below 0) in the aft half. The other sign would put the contact on the far
+end and lower C_e (to −14 % for the generic ship at −19.6°). The workbook applies the same
+rules to its inputs.
+
 ## 4. Comparison of methods
 
 {{methods_table}}
@@ -234,7 +283,7 @@ only. The citation qualification common to all rows is in Table 9.
 
 ![Methods](charts/methods.png)
 
-Figure 1 – Utilisation of the base fender by method: energy per fender over the fender
+Figure 3 – Utilisation of the base fender by method: energy per fender over the fender
 capacity under that method (for WG211 divided by γ_m), against the limit 1.0. Each method is
 compared with its own capacity, and a bar beyond 1.0 is over capacity. The bar label gives
 the design energy. A hatched bar is outside the stated validity of a formula it uses (note
@@ -285,8 +334,9 @@ Figure 4 – Rows in the fender database by fender type.
 - **Inputs:** the case values with their basis (yellow cells), including berth structure,
   fender deflection, tugs, calls a year, continuous berth and an optional velocity override.
   Below them, in red, the choices fixed at generation (method, Brolsma condition, condition
-  class, ship type, factor position or override, WG211 class, CoV_M and contact, fender and
-  curve): these select table rows or constants, and changing one needs the workbook to be
+  class, ship type, factor position or override, WG211 class, CoV_M and contact, the C_s and
+  C_c bases, the tolerances of fender types other than the base fender's, fender and curve):
+  these select table rows or constants, and changing one needs the workbook to be
   regenerated.
 - **Calc:** C_b, K, R, φ, C_e (and the error form), KC/D, C_m by four methods, the UFC and
   IS 4651 eccentricity, C_s, C_c and C_g by method, as live formulas.
@@ -328,7 +378,10 @@ the inputs left out for this method are:
 {{sweep_table}}
 
 Table 5 – One-at-a-time sensitivity of the design energy by the selected method,
-{{selected_label}}, for the generic case.
+{{selected_label}}, for the generic case. A utilisation is given to three decimals, and to
+more where three would round it onto 1.000. The value at utilisation 1 is solved on the method,
+not interpolated between swept points (which drifts at a coefficient break such as the C_m
+kink at KC/D 0.1): {{crossing_note}}.
 
 ![Tornado](charts/tornado.png)
 
@@ -369,6 +422,9 @@ The tests (`tests/hydrodynamics/fender_design/`) reproduce published worked exam
   and temperature factors, maximum reaction (1,172 kN) and minimum energy (512 kNm), the
   latter with the velocity factor computed by the module at the 48.6 s compression time
   (1.00), not entered by hand;
+- Roubos et al. (2024), Example 1, WG211 factor from the tables: γ_Eref · γ_n for class B,
+  CoV_M `low`, single contact, 100 calls a year gives 1.819 (moderate) and 1.569 (monitored)
+  against the printed 1.80 and 1.55, and design energies within 1.5 % of 4,659 and 1,783 kNm;
 - ROM 2.0-11 Table 4.6.4.43 under a velocity override: at 0.08 m/s the accidental factor is
   1.80, and the result equals ROM's own result where its table gives 0.08 m/s;
 - UFC 4-152-01 added mass: an independent hand calculation from the UFC text (LBP 180 m,
@@ -382,13 +438,15 @@ The tests (`tests/hydrodynamics/fender_design/`) reproduce published worked exam
 
 ## 10. Limitations
 
-- PIANC WG33 (2002) and WG211 (2024) were not read directly; their values here are
-  secondary (manufacturers' manuals and two 2024 papers by members of WG211). The WG211
-  partial factors are the background paper's derivation; the final guideline tables may
+- PIANC WG33 (2002) was read in the primary text for the values listed in Section 3; the
+  Brolsma velocities are still the manuals' tabulation of its Fig. 4.2.1. PIANC WG211 (2024)
+  was not read directly; its values are secondary (two 2024 papers by members of WG211). The
+  WG211 partial factors are the background paper's derivation; the final guideline tables may
   differ, and the WG211 velocity table by vessel size is not included.
 - BS 6349-4, EAU and the Japanese standards were not read directly. ROM, UFC and EAU
   velocities are digitized from figures.
-- Hull-pressure guidance and the solid-quay C_c differ between sources (Section 3.4, 3.6).
+- Hull-pressure guidance differs between sources (Section 3.6). The solid-quay C_c is the
+  PIANC WG33 (2002) value by default; the vendor table is an explicit option (Section 3.4).
 - The sweeps are one at a time; combined adverse values are not shown and are not the sum
   of the individual changes.
 - Ship-to-ship (floating fender between ships) energy and dolphin layout methods are not
@@ -403,9 +461,13 @@ The tests (`tests/hydrodynamics/fender_design/`) reproduce published worked exam
 
 {{sources_table}}
 
-Table 8 – Source register (`fender_design.SOURCES`).
+Table 8 – Source register (`fender_design.SOURCES`), with the date each source was read for it.
 
 {{citations_table}}
 
 Table 9 – Citation sidecar of the method results and its resolution status when this report
 was built (`fender_design.CITATION_TARGETS`).
+
+{{assumptions_table}}
+
+Table 10 – Assumed values, each to be confirmed before a design uses it.

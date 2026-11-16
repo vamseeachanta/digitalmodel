@@ -4,7 +4,9 @@ rows to the schema (fictional input rows)."""
 from __future__ import annotations
 
 import csv
+import dataclasses
 import importlib.util
+import re
 from pathlib import Path
 
 import pytest
@@ -25,9 +27,13 @@ def _rows(path):
 def test_sources_csv_matches_register():
     rows = _rows(DATA / "sources.csv")
     assert [r["source_id"] for r in rows] == list(fd.SOURCES)
+    names = [f.name for f in dataclasses.fields(fd.Source)]
+    assert list(rows[0]) == names
     for r in rows:
         s = fd.SOURCES[r["source_id"]]
-        assert (r["title"], r["edition"], r["verification"]) == (s.title, s.edition, s.verification)
+        assert [r[n] for n in names] == [getattr(s, n) for n in names], r["source_id"]
+        # date read: an ISO date for every source
+        assert re.fullmatch(r"\d{4}-\d{2}-\d{2}", r["accessed_on"]), r["source_id"]
 
 
 def test_method_matrix_covers_methods():

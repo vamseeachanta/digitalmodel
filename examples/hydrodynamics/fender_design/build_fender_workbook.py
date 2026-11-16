@@ -156,7 +156,14 @@ FIXED_ROWS = (
     ("Abnormal factor position (largest or smallest ships)", lambda c: c["design"].get("factor_position", "smallest")),
     ("Factor override (blank: each method's own)", lambda c: c["design"].get("factor")),
     ("WG211 consequence class", lambda c: c.get("conditions", {}).get("consequence_class", "B")),
-    ("WG211 spread of displacements CoV_M", lambda c: c.get("conditions", {}).get("cov_m", "high")),
+    ("WG211 spread of displacements CoV_M", lambda c: c.get("conditions", {}).get("cov_m", "low")),
+    ("Cs basis (pianc2002: 4.2.6 general value 1.0; tfadm-2024: 0.9 at or below 0.15 m)",
+     lambda c: c.get("conditions", {}).get("cs_basis", "pianc2002")),
+    ("Cc basis (pianc2002: 4.2.7 values; sft-2026: SFT p. 20 table)",
+     lambda c: c.get("conditions", {}).get("cc_basis", "pianc2002")),
+    ("Tolerances of fender types other than the base fender's (energy, reaction)",
+     lambda c: "; ".join(f"{t}: {v['energy_tolerance']:g}, {v['reaction_tolerance']:g}"
+                         for t, v in (c["design"].get("tolerances_by_type") or {}).items()) or None),
     ("WG211 multiple contact", lambda c: c.get("conditions", {}).get("multiple_contact", False)),
     ("Base fender, curve, catalogue", lambda c: f"{c['design'].get('base_fender_id')}; {c['design'].get('curve')}; "
                                               f"{c['database'].get('catalogue')}"),
@@ -222,12 +229,15 @@ def _either(v0, v1):
 #: mirrors (docs/reports/modules/fender_design/workbook-input-checks.md lists
 #: each rule with the module function that applies it).
 INPUT_RULES: dict[str, InputRule] = {
-    "M": InputRule("number", "{v}>0", _pos("displacement") + "; every energy is #N/A",
-                   "Ship.displacement_t"),
+    # a block coefficient M / (rho LBP B T) above 1 is refused (Ship); the bound reads the checked cells
+    "M": InputRule("number", "AND({v}>0,{v}<=RHOC*LBPC*BEAMC*TC)",
+                   "ERROR: displacement must be a number above 0 and at most rho LBP B T (block coefficient "
+                   "up to 1); every energy is #N/A", "Ship.displacement_t, Ship block coefficient"),
     "DWT": InputRule("number", "{v}>0", _pos("deadweight") + " or blank; the methods keyed by DWT are #N/A",
                      "Ship.dwt_t",
-                     blank="no DWT: the methods keyed by DWT (PIANC 2002, Ueda, EAU) are #N/A, as the module "
-                           "leaves them out"),
+                     blank="no DWT: the methods that read a velocity table keyed by DWT (PIANC 2002, Ueda, EAU) "
+                           "are #N/A, as the module leaves them out; with a velocity override (VOVR) they are "
+                           "evaluated, as in the module"),
     "LBP": InputRule("number", "{v}>0", _pos("LBP") + "; every energy is #N/A", "Ship.lbp_m"),
     "BEAM": InputRule("number", "{v}>0", _pos("beam") + "; every energy is #N/A", "Ship.beam_m"),
     "T": InputRule("number", "{v}>0", _pos("draught") + "; every energy is #N/A", "Ship.draft_m"),
@@ -239,8 +249,11 @@ INPUT_RULES: dict[str, InputRule] = {
     "X": InputRule("number", "AND({v}>=0,{v}<=LBPC)",
                    "ERROR: first contact is not on the ship (0 to LBP); every energy and energy check is #N/A",
                    "Berth.contact_x_from_bow_m, contact_offset_m"),
-    "ALPHA": InputRule("number", None, "ERROR: berthing angle must be a number; every energy is #N/A",
-                       "Berth.berthing_angle_deg"),
+    # below 90 deg in magnitude, and the first contact on the end nearer the berth (contact_offset_m)
+    "ALPHA": InputRule("number", "AND(ABS({v})<90,OR({v}=0,AND({v}>0,XC<=LBPC/2),AND({v}<0,XC>=LBPC/2)))",
+                       "ERROR: berthing angle must be a number below 90 deg in magnitude, with the first contact "
+                       "on the end nearer the berth (angle above 0: X up to LBP/2; below 0: X from LBP/2); every "
+                       "energy is #N/A", "Berth.berthing_angle_deg, contact_offset_m"),
     "STRUCT": InputRule("text", 'OR(EXACT({v},"open"),EXACT({v},"semi_closed"),EXACT({v},"closed"))',
                         "ERROR: berth structure must be open, semi_closed or closed (lower case); every energy "
                         "is #N/A", "Berth.structure"),
@@ -248,8 +261,9 @@ INPUT_RULES: dict[str, InputRule] = {
                       "Berth.fender_deflection_m"),
     "TUGS": InputRule("number", _either(0, 1), "ERROR: tug-assisted must be 1 (yes) or 0 (no); the ROM energy is "
                       "#N/A", "Case.tugs"),
-    "NCALLS": InputRule("number", "{v}>0", _pos("berthings a year") + "; the ROM and WG211 energies are #N/A",
-                        "Case.berthings_per_year"),
+    "NCALLS": InputRule("number", "{v}>0", _pos("berthings a year") + "; the ROM and WG211 energies are #N/A "
+                        "(below 1 a year the WG211 row alone is #N/A: gamma_n is not extrapolated)",
+                        "Case.berthings_per_year, wg211_gamma_n"),
     "CONT": InputRule("number", _either(0, 1), "ERROR: continuous berth must be 1 (yes) or 0 (no); the ROM energy "
                       "is #N/A", "Case.continuous_berth"),
     "VOVR": InputRule("number", "{v}>0", "ERROR: velocity override must be a number above 0 or blank; every "
@@ -325,12 +339,16 @@ CALC_ROWS = (
      "UFC 4-152-01 5-2.1"),
     ("CE_IS", "Ce, IS 4651 (1 + (l/r)^2 sin^2 theta) / (1 + (l/r)^2), r = L/4",
      "=(1+(XA/(0.25*LBPC))^2*SIN(RADIANS(ALPHAC))^2)/(1+(XA/(0.25*LBPC))^2)", "IS 4651-3 5.2.1.3"),
-    ("CS_P", "Cs, PIANC 2002: 1.0 above 0.15 m deflection, else 0.9", "=IF(DEFLC>0.15,1,0.9)", "PIANC 2002 4.2.6"),
+    # Cs and Cc of PIANC 2002, Ueda, BS 6349-4 and EAU: the PIANC values here; a case that selects
+    # a vendor table (cs_basis, cc_basis) gets the rows of VENDOR_ROWS (calc_rows)
+    ("CS_P", "Cs, PIANC 2002 4.2.6 general value 1.0 (option cs_basis: pianc2002)", "=1",
+     "PIANC WG33 (2002) 4.2.6, p. 21"),
     ("CS_ROM", "Cs, ROM 2.0-11: 1.0 above 0.15 m and LBP below 300 m, else 0.9",
      "=IF(AND(DEFLC>0.15,LBPC<300),1,0.9)", "ROM 2.0-11 p. 272"),
-    ("CC_P", "Cc, PIANC 2002 table (with Vasco Costa or Ueda Cm)",
-     '=IF(OR(STRUCTC="open",ABS(ALPHAC)>5),1,IF(STRUCTC="closed",IF(KCD<=0.5,0.8,0.9),IF(KCD<=0.5,0.9,1)))',
-     "PIANC 2002 4.2.7 (SFT p. 20)"),
+    ("CC_P", "Cc with Vasco Costa or Ueda Cm, PIANC 2002 4.2.7: open or angle above 5 deg 1.0, solid quay 0.9, "
+     "partly closed 1.0 (ASSUMED - to be confirmed: no PIANC value) (option cc_basis: pianc2002)",
+     '=IF(OR(STRUCTC="open",ABS(ALPHAC)>5),1,IF(STRUCTC="closed",0.9,1))',
+     "PIANC WG33 (2002) 4.2.7, p. 22"),
     ("CC_UFC", "Cc, UFC: open or angled 1.0, solid 0.8, between 0.9",
      '=IF(OR(STRUCTC="open",ABS(ALPHAC)>5),1,IF(STRUCTC="closed",0.8,0.9))', "UFC 4-152-01 5-2.1"),
     ("CB_UFC", "Berthing coefficient, UFC Cb = Ce Cg Cd Cc (Cd 1.0)", "=CE_UFC*CG_UFC*1*CC_UFC",
@@ -355,6 +373,27 @@ CALC_ROWS = (
     # the other checked inputs follow, so that no earlier cell moves
     *(_checked_row(n) for n, *_ in INPUT_ROWS if n not in _EARLY_CHECKS),
 )
+
+#: Calc rows replacing the PIANC Cs and Cc rows when a case selects a vendor table.
+VENDOR_ROWS = {
+    ("CS_P", "tfadm-2024"): (
+        "CS_P", "Cs, manuals' rule: 1.0 above 0.15 m deflection, else 0.9 (option cs_basis: tfadm-2024)",
+        "=IF(DEFLC>0.15,1,0.9)", "TFADM p. 27; SFT p. 20"),
+    ("CC_P", "sft-2026"): (
+        "CC_P", "Cc with Vasco Costa or Ueda Cm, SFT table: solid quay 0.8 (KC/D <= 0.5) or 0.9, partly "
+        "closed 0.9 or 1.0 (option cc_basis: sft-2026)",
+        '=IF(OR(STRUCTC="open",ABS(ALPHAC)>5),1,IF(STRUCTC="closed",IF(KCD<=0.5,0.8,0.9),IF(KCD<=0.5,0.9,1)))',
+        "SFT p. 20"),
+}
+
+
+def calc_rows(fcase=None):
+    """:data:`CALC_ROWS` with the Cs and Cc rows of the case's bases (fd.CS_BASES, fd.CC_BASES)."""
+    if fcase is None:
+        return CALC_ROWS
+    swap = {"CS_P": VENDOR_ROWS.get(("CS_P", fcase.cs_basis)), "CC_P": VENDOR_ROWS.get(("CC_P", fcase.cc_basis))}
+    return tuple(swap.get(r[0]) or r for r in CALC_ROWS)
+
 
 #: Catalogue columns on Fenders that a formula reads, each through its checked column:
 #: column -> (checked column, header). The row-check column applies FenderRating's
@@ -408,10 +447,10 @@ def inputs_ok_formula(n_fenders):
     return f"=IF(OR({','.join(na)}),NA(),1)"
 
 
-def _calc(wb, n_fenders):
+def _calc(wb, n_fenders, fcase=None):
     ws = wb.create_sheet("Calc")
     _header(ws, 1, ["Quantity", "Value", "Formula", "Source"], [52, 14, 60, 34])
-    rows = (*CALC_ROWS, ("INPUTS_OK", "Every input and catalogue row accepted by the module: 1, else #N/A "
+    rows = (*calc_rows(fcase), ("INPUTS_OK", "Every input and catalogue row accepted by the module: 1, else #N/A "
                                       "(every energy, capacity, reaction and check reads it)",
                          inputs_ok_formula(n_fenders), "fender_case.compute refuses the case"))
     for i, (name, label, formula, src) in enumerate(rows, start=2):
@@ -575,7 +614,10 @@ def _factor_formula(r, res, i):
         c = res.fcase
         g_ref = fd.wg211_gamma_eref(c.condition, c.cov_m, c.consequence_class, c.multiple_contact)
         (a1, b1), (a2, b2) = fd.WG211_GAMMA_N[c.consequence_class]
-        return f"={g_ref!r}*(IF(NCALLSC<=100,{a1!r},{a2!r})*LN(NCALLSC)+IF(NCALLSC<=100,{b1!r},{b2!r}))"
+        lo = fd.WG211_GAMMA_N_MIN_PER_YEAR
+        # gamma_n is not extrapolated below the fit's lowest frequency (fd.wg211_gamma_n)
+        return (f"=IF(NCALLSC<{lo!r},NA(),{g_ref!r}*(IF(NCALLSC<=100,{a1!r},{a2!r})*LN(NCALLSC)"
+                f"+IF(NCALLSC<=100,{b1!r},{b2!r})))")
     return r.factor.value
 
 
@@ -649,6 +691,7 @@ def _fenders(wb, res):
     last = len(res.catalogue) + 1
     s_e, s_r, s_p = (FENDER_CHECKED_COLS[c][0] for c in "GHI")
     chk = FENDER_ROW_CHECK_COL
+    by_type = res.case["design"].get("tolerances_by_type") or {}
     for i, f in enumerate(res.catalogue, start=2):
         vals = [f.fender_id, f.manufacturer, f.fender_type, f.diameter_mm, f.length_mm,
                 f.internal_pressure_kpa, f.rated_energy_knm, f.reaction_kn, f.hull_pressure_kpa,
@@ -661,15 +704,22 @@ def _fenders(wb, res):
         ws[f"{s_e}{i}"] = f'=IF({chk}{i}="ok",G{i},NA())'
         ws[f"{s_r}{i}"] = f'=IF({chk}{i}="ok",H{i},NA())'
         ws[f"{s_p}{i}"] = f'=IF({chk}{i}="ok",IF(I{i}="","",I{i}),NA())'
+        # tolerances: the Inputs values (ETOL, RTOL) for the base fender's type; the case's
+        # tolerances_by_type (fixed at generation) for any other type (fender_case.type_tolerances)
+        if f.fender_type in by_type:
+            etol = repr(float(by_type[f.fender_type]["energy_tolerance"]))
+            rtol = repr(float(by_type[f.fender_type]["reaction_tolerance"]))
+        else:
+            etol, rtol = "ETOLC", "RTOLC"
         # INPUTS_OK: 1, or #N/A when the module would refuse the case
-        ws.cell(row=i, column=11, value=f"={s_e}{i}*(1-ETOLC)*ANGC/GAMMA_M*INPUTS_OK")
+        ws.cell(row=i, column=11, value=f"={s_e}{i}*(1-{etol})*ANGC/GAMMA_M*INPUTS_OK")
         ws.cell(row=i, column=12, value=f"=E_FENDER/K{i}")
         # a curve above the rated reaction before the rated point raises rows of its type
         # (fender_case.size_checks); otherwise the rated-deflection value x (1 + tolerance)
         k = res.reaction_peak_factor(f)
-        ws.cell(row=i, column=13, value=f"={s_r}{i}*(1+RTOLC)*INPUTS_OK" if k == 1.0
-                else f"={s_r}{i}*{k:.12g}*(1+RTOLC)*INPUTS_OK")
-        ws.cell(row=i, column=14, value=f'=IF({s_p}{i}="","",{s_p}{i}*(1+RTOLC)*INPUTS_OK)')
+        ws.cell(row=i, column=13, value=f"={s_r}{i}*(1+{rtol})*INPUTS_OK" if k == 1.0
+                else f"={s_r}{i}*{k:.12g}*(1+{rtol})*INPUTS_OK")
+        ws.cell(row=i, column=14, value=f'=IF({s_p}{i}="","",{s_p}{i}*(1+{rtol})*INPUTS_OK)')
         ws.cell(row=i, column=15, value=f'=IF(L{i}<=1,"yes","no")')
         # Energy OK reads the gated energy and capacity; the limit checks read INPUTS_OK first,
         # so that a blank limit cannot show "-" while an input is refused
@@ -784,10 +834,11 @@ def _sizes(wb, res):
 
 def _sources(wb):
     ws = wb.create_sheet("Sources")
-    _header(ws, 1, ["Id", "Title", "Edition", "Clause", "Verification", "Read in", "Note"],
-            [20, 60, 10, 40, 12, 60, 60])
+    _header(ws, 1, ["Id", "Title", "Edition", "Clause", "Verification", "Read in", "Note", "Date read"],
+            [20, 60, 10, 40, 12, 60, 60, 11])
     for i, s in enumerate(fd.SOURCES.values(), start=2):
-        for j, v in enumerate([s.source_id, s.title, s.edition, s.clause, s.verification, s.read_in, s.note], start=1):
+        for j, v in enumerate([s.source_id, s.title, s.edition, s.clause, s.verification, s.read_in, s.note,
+                               s.accessed_on], start=1):
             ws.cell(row=i, column=j, value=v)
     return ws
 
@@ -819,6 +870,8 @@ def _readme(wb, res):
         "when typed. The catalogue rows on Fenders are checked the same way (Row check column). As the module "
         "refuses the whole case for any such value, every energy, capacity, reaction and check is then #N/A "
         "as well (Calc INPUTS_OK); the Check column names the value to correct.",
+        "The tolerances on Inputs (ETOL, RTOL) apply to fenders of the base fender's type; other types on "
+        "Fenders take the case's tolerances by type, listed on Inputs as fixed at generation.",
         "The workbook gives numbers only; it does not clear a design. Every value marked secondary "
         "in Sources was read in a vendor manual that reproduces the standard.",
     ]
@@ -832,7 +885,7 @@ def build_workbook(res, out_path) -> Path:
     wb = Workbook()
     _readme(wb, res)
     _inputs(wb, res.case)
-    _calc(wb, len(res.catalogue))
+    _calc(wb, len(res.catalogue), res.fcase)
     _velocity(wb)
     _methods(wb, res)
     _fenders(wb, res)

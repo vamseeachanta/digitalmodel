@@ -28,8 +28,8 @@
         "velocity_m_s": "pianc2002-velocity: curve b (difficult berthing, sheltered) at 48,000 DWT",
         "cm": "pianc2002-cm: pianc2002; KC/D = 0.167",
         "ce": "pianc2002-ce: K 48.76 m, R 47.76 m, phi 65.4 deg",
-        "cs": "pianc2002-cs: fender deflection 1.56 m",
-        "cc": "pianc2002-cc: open structure, angle 5 deg",
+        "cs": "pianc2002-cs: general value 1.0 (PIANC 2002 4.2.6, p. 21); fender deflection 1.56 m",
+        "cc": "pianc2002-cc: open structure, angle 5 deg: open berth or angle above 5 deg, 1.0 (PIANC 2002 4.2.7, p. 22)",
         "abnormal_factor": "pianc2002: PIANC 2002 Table 4.2.5, bulk, smallest ships"
       },
       "citations": [
@@ -50,12 +50,12 @@
         },
         {
           "code_id": "PIANC-WG33-2002",
-          "section": "section 4.2.6",
+          "section": "section 4.2.6, p. 21",
           "wiki_path": "wikis/marine-engineering/wiki/standards/pianc-wg33-2002.md"
         },
         {
           "code_id": "PIANC-WG33-2002",
-          "section": "section 4.2.7",
+          "section": "section 4.2.7, p. 22",
           "wiki_path": "wikis/marine-engineering/wiki/standards/pianc-wg33-2002.md"
         },
         {
@@ -141,8 +141,8 @@
         "velocity_m_s": "bs6349-4-velocity: curve b (difficult berthing, sheltered) at 60,000 t",
         "cm": "vasco-costa-1964: vasco_costa; KC/D = 0.167",
         "ce": "pianc2002-ce: K 48.76 m, R 47.76 m, phi 65.4 deg",
-        "cs": "pianc2002-cs: fender deflection 1.56 m",
-        "cc": "pianc2002-cc: open structure, angle 5 deg",
+        "cs": "pianc2002-cs: general value 1.0 (PIANC 2002 4.2.6, p. 21); fender deflection 1.56 m",
+        "cc": "pianc2002-cc: open structure, angle 5 deg: open berth or angle above 5 deg, 1.0 (PIANC 2002 4.2.7, p. 22)",
         "abnormal_factor": "pianc2002: PIANC 2002 Table 4.2.5, bulk, smallest ships; BS 6349-4 own factor table not read"
       },
       "citations": [
@@ -163,12 +163,12 @@
         },
         {
           "code_id": "PIANC-WG33-2002",
-          "section": "section 4.2.6",
+          "section": "section 4.2.6, p. 21",
           "wiki_path": "wikis/marine-engineering/wiki/standards/pianc-wg33-2002.md"
         },
         {
           "code_id": "PIANC-WG33-2002",
-          "section": "section 4.2.7",
+          "section": "section 4.2.7, p. 22",
           "wiki_path": "wikis/marine-engineering/wiki/standards/pianc-wg33-2002.md"
         },
         {
@@ -207,9 +207,9 @@
         "velocity_m_s": "eau-2012: moderate (normal), characteristic value, digitized",
         "cm": "pianc2002-cm: pianc2002; KC/D = 0.167",
         "ce": "pianc2002-ce: K 48.76 m, R 47.76 m, phi 65.4 deg",
-        "cs": "pianc2002-cs: fender deflection 1.56 m",
-        "cc": "pianc2002-cc: open structure, angle 5 deg",
-        "abnormal_factor": "eau-2012: PIANC 2002 Table 4.2.5, bulk, smallest ships"
+        "cs": "pianc2002-cs: general value 1.0 (PIANC 2002 4.2.6, p. 21); fender deflection 1.56 m",
+        "cc": "pianc2002-cc: open structure, angle 5 deg: open berth or angle above 5 deg, 1.0 (PIANC 2002 4.2.7, p. 22)",
+        "abnormal_factor": "pianc2002: PIANC 2002 Table 4.2.5, bulk, smallest ships; applied to EAU (SFT p. 22: adopted by EAU-2004; the EAU 2012 text was not read)"
       },
       "citations": [
         {
@@ -229,12 +229,17 @@
         },
         {
           "code_id": "PIANC-WG33-2002",
-          "section": "section 4.2.6",
+          "section": "section 4.2.6, p. 21",
           "wiki_path": "wikis/marine-engineering/wiki/standards/pianc-wg33-2002.md"
         },
         {
           "code_id": "PIANC-WG33-2002",
-          "section": "section 4.2.7",
+          "section": "section 4.2.7, p. 22",
+          "wiki_path": "wikis/marine-engineering/wiki/standards/pianc-wg33-2002.md"
+        },
+        {
+          "code_id": "PIANC-WG33-2002",
+          "section": "section 4.2 (energy), Table 4.2.5 (abnormal factor), Table 4.4.1 (hull pressure)",
           "wiki_path": "wikis/marine-engineering/wiki/standards/pianc-wg33-2002.md"
         }
       ],
@@ -303,7 +308,7 @@
       ],
       "outside_validity": [],
       "sources": {
-        "velocity_m_s": "ufc-4-152-01: Fig. 5-3/5-4, moderate (sheltered/moderate/exposed), digitized",
+        "velocity_m_s": "ufc-4-152-01: Figs. 5-3/5-4, moderate (sheltered/moderate/exposed), digitized; Fig. 5-3 below 5,000 LT; larger of Figs. 5-3 and 5-4 from 5,000 to 20,000 LT; Fig. 5-4 above",
         "cm": "ufc-4-152-01: 5-2.1.1 e surface vessels; F 0.770 from berthing coefficient Ce Cg Cd Cc = 0.513 (Eq. 5-2, p. 106; p. 109, printed wording; the block coefficient reading is the alternative)",
         "ce": "ufc-4-152-01: k^2/(a^2 + k^2), k 48.76 m, a 45.00 m",
         "cs": "ufc-4-152-01: Cd 1.0 for larger ships on energy-absorbing fenders",
@@ -345,8 +350,8 @@
         "velocity_m_s": "pianc2002-velocity: curve b (difficult berthing, sheltered) at 48,000 DWT",
         "cm": "ueda-1981: ueda; KC/D = 0.167",
         "ce": "pianc2002-ce: K 48.76 m, R 47.76 m, phi 65.4 deg",
-        "cs": "pianc2002-cs: fender deflection 1.56 m",
-        "cc": "pianc2002-cc: open structure, angle 5 deg",
+        "cs": "pianc2002-cs: general value 1.0 (PIANC 2002 4.2.6, p. 21); fender deflection 1.56 m",
+        "cc": "pianc2002-cc: open structure, angle 5 deg: open berth or angle above 5 deg, 1.0 (PIANC 2002 4.2.7, p. 22)",
         "abnormal_factor": "pianc2002: PIANC 2002 Table 4.2.5, bulk, smallest ships"
       },
       "citations": [
@@ -367,12 +372,12 @@
         },
         {
           "code_id": "PIANC-WG33-2002",
-          "section": "section 4.2.6",
+          "section": "section 4.2.6, p. 21",
           "wiki_path": "wikis/marine-engineering/wiki/standards/pianc-wg33-2002.md"
         },
         {
           "code_id": "PIANC-WG33-2002",
-          "section": "section 4.2.7",
+          "section": "section 4.2.7, p. 22",
           "wiki_path": "wikis/marine-engineering/wiki/standards/pianc-wg33-2002.md"
         },
         {
@@ -440,7 +445,7 @@
       "change_high": 137.56098769053384,
       "util_low": 0.22522309233827706,
       "util_high": 2.3105812218843176,
-      "limit_value": 0.11314547614015484,
+      "limit_value": 0.11315345708972259,
       "reaction_factor": 1.1,
       "reaction_low": 534.680832279552,
       "reaction_high": null,
@@ -463,7 +468,7 @@
       "change_high": 9.999999999999986,
       "util_low": 0.7294699071847186,
       "util_high": 1.069889197204254,
-      "limit_value": 61688.63109606653,
+      "limit_value": 61688.63109608155,
       "reaction_factor": 1.1,
       "reaction_low": 1249.8036015677012,
       "reaction_high": null,
@@ -486,7 +491,7 @@
       "change_high": -14.28571428571428,
       "util_low": 1.0004158727104715,
       "util_high": 0.8336798939253928,
-      "limit_value": 13.159857011836177,
+      "limit_value": 13.211972155168956,
       "reaction_factor": 1.1,
       "reaction_low": null,
       "reaction_high": 1382.7755446488013,
@@ -509,7 +514,7 @@
       "change_high": 35.54742993167239,
       "util_low": 0.8258344809301372,
       "util_high": 1.3183702817517895,
-      "limit_value": 0.2585525634307494,
+      "limit_value": 0.25855458737427406,
       "reaction_factor": 1.1,
       "reaction_low": 1372.764797666855,
       "reaction_high": null,
@@ -532,7 +537,7 @@
       "change_high": 5.812146049911093,
       "util_low": 0.924048721826128,
       "util_high": 1.0291570181072607,
-      "limit_value": 7.499123807882226,
+      "limit_value": 7.500002835850713,
       "reaction_factor": 1.1,
       "reaction_low": 1498.0861690501395,
       "reaction_high": null,
@@ -550,7 +555,7 @@
       "base": 1.0,
       "low": 0.9,
       "high": 1.0,
-      "basis": "PIANC 2002 4.2.6 hard to soft fenders",
+      "basis": "PIANC WG33 (2002) 4.2.6, p. 21: 0.9 to 1.0 hard fenders and larger vessels, 1.0 soft",
       "change_low": -9.999999999999998,
       "change_high": 0.0,
       "util_low": 0.8753638886216624,
@@ -578,7 +583,7 @@
       "change_high": 0.0,
       "util_low": 0.6947332449378273,
       "util_high": 0.9726265429129582,
-      "limit_value": 1.7992517403019406,
+      "limit_value": 1.7992517403023158,
       "reaction_factor": 1.1,
       "reaction_low": 1205.4796205406676,
       "reaction_high": 1560.0714687569348,
@@ -593,7 +598,7 @@
     }
   ],
   "sweeps_skipped": {
-    "cc": "Cc is 1.0 with the PIANC keel-clearance Cm, which already includes the confined-water effect (PIANC 2002 4.2.7 pairing rule)"
+    "cc": "Cc is 1.0 with the PIANC keel-clearance Cm, which already includes the confined-water effect (pairing rule of the manuals: TFADM p. 27, SFT p. 18)"
   },
   "tornado": [
     {
@@ -697,16 +702,16 @@
       "fender_id": "GEN-FM-6",
       "is_base": false,
       "rated_energy": 1000.0,
-      "capacity": 1000.0,
-      "utilisation": 0.6808385800390707,
+      "capacity": 850.0,
+      "utilisation": 0.8009865647518479,
       "rated_reaction": 1400.0,
-      "reaction": 1540.0000000000002,
-      "hull_pressure": 198.00000000000003,
+      "reaction": 1609.9999999999998,
+      "hull_pressure": 206.99999999999997,
       "meets_energy": true,
-      "meets_reaction": true,
-      "meets_pressure": true,
+      "meets_reaction": false,
+      "meets_pressure": false,
       "pressure_missing": false,
-      "meets_all": true
+      "meets_all": false
     }
   ],
   "citation_mode": "record",

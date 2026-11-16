@@ -126,10 +126,16 @@ def test_velocity_factor_beyond_the_table_needs_its_use():
     assert fd.velocity_factor(48.65, "sbr", use="energy") == 1.0
     assert fd.velocity_factor(48.65, "sbr", use="reaction") == 1.08   # 20 s row, upper bound
     assert fd.velocity_factor(48.65, "blend", use="reaction") == 1.03
-    # inside the table the use does not change the value
-    for t in (1.0, 6.08, 19.9, 20.0):
+    # at a tabulated time the use does not change the value
+    for t in (1.0, 6.0, 19.0, 20.0):
         assert fd.velocity_factor(t, "sbr", use="energy") == fd.velocity_factor(t, "sbr", use="reaction") \
             == fd.velocity_factor(t, "sbr")
+    # between rows (gate P3 at 2b6bb8a0): energy takes the next higher time, the smaller factor;
+    # reaction the nearest lower, the larger. SBR at 1.9 s: 1.25 (2 s) for energy, 1.31 (1 s) for reaction
+    assert fd.velocity_factor(1.9, "sbr", use="energy") == 1.25
+    assert fd.velocity_factor(1.9, "sbr", use="reaction") == fd.velocity_factor(1.9, "sbr") == 1.31
+    assert fd.velocity_factor(6.08, "sbr", use="energy") == 1.16
+    assert fd.velocity_factor(19.9, "sbr", use="energy") == 1.08
     with pytest.raises(ValueError):
         fd.velocity_factor(5.0, "sbr", use="both")
     with pytest.raises(ValueError):
@@ -162,19 +168,54 @@ def test_added_mass_methods():
 
 
 @pytest.mark.parametrize(
-    "structure,ratio,angle,cm,expect",
-    [("open", 0.2, 0, "vasco_costa", 1.0), ("closed", 0.2, 3, "vasco_costa", 0.8),
-     ("closed", 0.6, 3, "vasco_costa", 0.9), ("semi_closed", 0.2, 3, "ueda", 0.9),
-     ("semi_closed", 0.6, 3, "ueda", 1.0), ("closed", 0.2, 8, "vasco_costa", 1.0),
-     ("closed", 0.2, 3, "pianc2002", 1.0)],
+    "structure,ratio,angle,cm,expect,source",
+    # default basis: only the values PIANC WG33 (2002) 4.2.7 (p. 22) gives
+    [("open", 0.2, 0, "vasco_costa", 1.0, "pianc2002-cc"), ("closed", 0.2, 3, "vasco_costa", 0.9, "pianc2002-cc"),
+     ("closed", 0.6, 3, "vasco_costa", 0.9, "pianc2002-cc"), ("semi_closed", 0.2, 3, "ueda", 1.0, "pianc2002-cc"),
+     ("semi_closed", 0.6, 3, "ueda", 1.0, "pianc2002-cc"), ("closed", 0.2, 8, "vasco_costa", 1.0, "pianc2002-cc"),
+     ("closed", 0.2, 3, "pianc2002", 1.0, "tfadm-2024")],
 )
-def test_berth_configuration_factor(structure, ratio, angle, cm, expect):
+def test_berth_configuration_factor_pianc_default(structure, ratio, angle, cm, expect, source):
     assert fd.berth_configuration_factor(structure, ratio, angle, cm) == expect
+    c = fd.berth_configuration(structure, ratio, angle, cm)
+    assert (c.value, c.source) == (expect, source)
+
+
+def test_solid_quay_cc_is_the_pianc_value_and_the_sft_table_is_an_option():
+    # gate P2 at 2b6bb8a0: PIANC 2002 4.2.7 p. 22 gives 0.9 for a solid quay under parallel approach;
+    # the 0.8 is the SFT table and carries the SFT source, never the PIANC citation
+    c = fd.berth_configuration("closed", 0.2, 3, "vasco_costa")
+    assert c.value == 0.9 and c.source == "pianc2002-cc" and "p. 22" in c.note
+    assert "ASSUMED - to be confirmed" in fd.berth_configuration("semi_closed", 0.2, 3, "ueda").note
+    sft = {(st, r): fd.berth_configuration(st, r, 3, "vasco_costa", "sft-2026")
+           for st in ("closed", "semi_closed") for r in (0.2, 0.6)}
+    assert [sft[k].value for k in sorted(sft)] == [0.8, 0.9, 0.9, 1.0]
+    assert {c.source for c in sft.values()} == {"sft-2026"}
+    assert "sft-2026" not in fd.CITATION_TARGETS            # a vendor table is named, not cited
+    with pytest.raises(ValueError, match="cc_basis"):
+        fd.berth_configuration("closed", 0.2, 3, "vasco_costa", "trelleborg")
+    # through the methods: BS 6349-4 and Ueda at a solid quay, PIANC value by default
+    closed = fd.Berth(**{**BERTH.__dict__, "structure": "closed"})
+    for m in ("bs6349", "ueda"):
+        r = fd.energy_by_method(fd.Case(SHIP, closed), method=m, citations="off")
+        r8 = fd.energy_by_method(fd.Case(SHIP, closed, cc_basis="sft-2026"), method=m, citations="off")
+        assert (r.cc.value, r.cc.source) == (0.9, "pianc2002-cc")
+        assert (r8.cc.value, r8.cc.source) == (0.8, "sft-2026")
+        assert r8.design_energy_knm == pytest.approx(r.design_energy_knm * 0.8 / 0.9, rel=1e-12)
+        assert "PIANC-WG33-2002" in {c.code_id for c in r.citations}
 
 
 def test_softness_and_abnormal_and_hull_pressure():
+    # PIANC 2002 4.2.6 (p. 21) concludes a general value of 1.0 (default); the manuals'
+    # 0.9 at or below 0.15 m deflection is an option with the vendor source
     assert fd.softness_factor(0.20) == 1.0
-    assert fd.softness_factor(0.15) == 0.9
+    assert fd.softness_factor(0.15) == 1.0
+    assert fd.softness(0.15).source == "pianc2002-cs"
+    assert fd.softness_factor(0.20, "tfadm-2024") == 1.0
+    assert fd.softness_factor(0.15, "tfadm-2024") == 0.9
+    assert fd.softness(0.15, "tfadm-2024").source == "tfadm-2024"
+    with pytest.raises(ValueError, match="cs_basis"):
+        fd.softness_factor(0.15, "bs6349")
     assert fd.abnormal_factor("bulk", "largest") == 1.25
     assert fd.abnormal_factor("bulk", "smallest") == 1.75
     assert fd.abnormal_factor("container", "smallest") == 2.0

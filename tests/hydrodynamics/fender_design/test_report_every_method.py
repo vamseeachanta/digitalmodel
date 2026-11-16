@@ -12,6 +12,7 @@ the generic case and its fictional fender rows are read only.
 
 from __future__ import annotations
 
+import itertools
 import json
 import re
 import sys
@@ -99,6 +100,21 @@ def test_report_generated_for_every_method(tmp_path, method):
     numbers = [int(n) for n in re.findall(r"^Figure (\d+) –", md, flags=re.M)]
     assert sorted(numbers) == list(range(1, len(numbers) + 1))
     assert len(numbers) == len(targets)
+    # ... and in the order they appear (gate P3 at 2b6bb8a0: Figures 2 and 3 came before 1)
+    assert numbers == list(range(1, len(numbers) + 1))
+    # the methods chart is the one numbered 3
+    assert "Figure 3 – Utilisation of the base fender by method" in md
+    # Table 5: no e-notation and no bare "-" unit (gate P3 at 2b6bb8a0)
+    lines = md.splitlines()
+    head = next(i for i, ln in enumerate(lines) if ln.startswith("| Input | Base | Credible range"))
+    sweep_rows = list(itertools.takewhile(lambda ln: ln.startswith("| "), lines[head + 2:]))
+    assert len(sweep_rows) == len(data["sweeps"])
+    for ln in sweep_rows:
+        assert not re.search(r"\d[eE][+-]\d", ln), ln
+        assert not re.search(r"\d -( |\|)", ln), ln
+    # assumptions in one table, each marked
+    assert "Table 10 – Assumed values" in md
+    assert md.count("ASSUMED - to be confirmed") >= 5
 
 
 EXPECTED_SWEEP_CHARTS = {
@@ -183,3 +199,39 @@ def test_report_states_both_ufc_f_readings(tmp_path, basis):
     assert data["ufc_design_energy_knm_by_f_reading"] == pytest.approx(e)
     ufc = next(m for m in res.methods if m.method == "ufc")
     assert ufc.design_energy_knm == pytest.approx(e[basis])
+
+
+def test_utilisation_never_rounds_onto_the_limit():
+    u = fender_study._util
+    assert u(0.97263) == "0.973"
+    assert u(1.0004) == "1.0004"            # gate P3 at 2b6bb8a0: printed "1.00" beside "not rated"
+    assert u(0.99996) == "0.99996"
+    assert u(1.0) == "1.000" and u(1.104) == "1.104" and u(None) == "-"
+    s = fender_study._sig
+    assert s(61_688.6) == "61,689" and s(60_000.0) == "60,000" and s(13.21197) == "13.21"
+    assert s(0.1131535) == "0.1132" and s(0.25855) == "0.2586" and s(0.0) == "0"
+    assert fender_study._unit("-") == "" and fender_study._unit("t") == " t"
+
+
+def test_generic_report_states_the_failed_checks_and_the_solved_crossing(tmp_path):
+    out = tmp_path / "out"
+    assert fender_study.main(["--case", str(_case_file(tmp_path, "pianc2002")), "--out", str(out),
+                              "--template", str(EXAMPLE / "report_template.md"), "--stem", "r",
+                              "--allow-unresolved-citations"]) == 0
+    md = (out / "r.md").read_text(encoding="utf-8")
+    flat = " ".join(md.split())
+    # summary: the hull-pressure failure and the reaction margin of the base fender
+    assert "design hull pressure 231 kPa against the 200 kPa limit (**not met**, 15.5 % over)" in flat
+    assert "design reaction 1,595 kN against the 1,600 kN limit (met, margin 0.3 %)" in flat
+    assert "does **not** meet every check" in flat
+    # Table 5: displacement with separators, water depth solved (13.21 m, not 13.16), 1.0004 at 12.6 m
+    assert "| 60,000 t |" in md and "61,689 t" in md
+    assert "13.21 m" in md and "13.16" not in md
+    assert "1.0004 /" in md
+    assert "closed form: keel-clearance Cm 1.79925" in flat
+    # the UFC overlap rule and the PIANC 2002 reading are stated
+    assert "the larger of the two figures" in flat
+    assert "4.2.7 (p. 22)" in flat and "4.2.6 (p. 21)" in flat
+    data = json.loads((out / "results.json").read_text(encoding="utf-8"))
+    depth = next(s for s in data["sweeps"] if s["parameter"] == "water_depth_m")
+    assert depth["limit_value"] == pytest.approx(13.212, abs=5e-4)

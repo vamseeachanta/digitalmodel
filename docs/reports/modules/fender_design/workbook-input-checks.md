@@ -42,31 +42,33 @@ applies to it, and the workbook cell that applies the rule.
 
 | Input | Row | Python argument | Module rule (function that applies it) | Checked cell | Blank means |
 |---|---|---|---|---|---|
-| `M` | 2 | `Ship.displacement_t` | number above 0 (`Ship`, `_finite`); BS 6349-4 velocity: 1,000 to 500,000 t (`brolsma_velocity`), UFC 4-152-01 velocity: 1,000 to 100,000 LT (`ufc_velocity`), method rows only | `MC` | refused |
-| `DWT` | 3 | `Ship.dwt_t` | number above 0 or None (`Ship`); None: PIANC 2002, Ueda and EAU refuse (`_brolsma`, `_m_eau`); PIANC 2002 and Ueda velocity: 1,000 to 500,000 t (`brolsma_velocity`); EAU velocity: 5,000 DWT or more (`eau_velocity`), method rows only | `DWTC` | no DWT: PIANC 2002, Ueda and EAU rows `#N/A` |
+| `M` | 2 | `Ship.displacement_t` | number above 0 and at most ρ L_BP B T, a block coefficient up to 1 (`Ship`, `_finite`); BS 6349-4 velocity: 1,000 to 500,000 t (`brolsma_velocity`), UFC 4-152-01 velocity: 1,000 to 100,000 LT (`ufc_velocity`), method rows only | `MC` | refused |
+| `DWT` | 3 | `Ship.dwt_t` | number above 0 or None (`Ship`); None: PIANC 2002, Ueda and EAU refuse their own velocity table (`_brolsma`, `_eau_own_velocity`) and are evaluated under a velocity override; PIANC 2002 and Ueda velocity: 1,000 to 500,000 t (`brolsma_velocity`); EAU velocity: 5,000 DWT or more (`eau_velocity`), method rows only | `DWTC` | no DWT: PIANC 2002, Ueda and EAU rows `#N/A` unless `VOVR` is given |
 | `LBP` | 4 | `Ship.lbp_m` | number above 0 (`Ship`) | `LBPC` | refused |
 | `BEAM` | 5 | `Ship.beam_m` | number above 0 (`Ship`) | `BEAMC` | refused |
 | `T` | 6 | `Ship.draft_m` | number above 0 (`Ship`) | `TC` | refused |
 | `RHO` | 7 | `Ship.water_density_t_m3` | number above 0 (`Ship`) | `RHOC` | refused |
 | `DEPTH` | 8 | `Berth.water_depth_m` | number above 0 (`Berth`); above the draught T, keel clearance (`_ukc_ratio`, every method) | `DEPTHC` | refused |
 | `X` | 9 | `Berth.contact_x_from_bow_m` | number, not negative (`Berth`); at most LBP, contact on the ship (`contact_offset_m`) | `XC` | refused |
-| `ALPHA` | 10 | `Berth.berthing_angle_deg` | finite number, any sign (`Berth`) | `ALPHAC` | refused |
+| `ALPHA` | 10 | `Berth.berthing_angle_deg` | finite number below 90 in magnitude (`Berth`); above 0 only with the first contact in the forward half (X up to L_BP/2), below 0 only in the aft half (`contact_offset_m`) | `ALPHAC` | refused |
 | `STRUCT` | 11 | `Berth.structure` | one of `open`, `semi_closed`, `closed`, exact lower case (`Berth`, `STRUCTURES`) | `STRUCTC` | refused |
 | `DEFL` | 12 | `Berth.fender_deflection_m` | number above 0 (`Berth`) | `DEFLC` | refused |
 | `TUGS` | 13 | `Case.tugs` | true or false (`Case`); workbook code 1 (true) or 0 (false) | `TUGSC` | refused |
-| `NCALLS` | 14 | `Case.berthings_per_year` | number above 0 (`Case`) | `NCALLSC` | refused |
+| `NCALLS` | 14 | `Case.berthings_per_year` | number above 0 (`Case`); WG211: 1 or more (`wg211_gamma_n`), method row only | `NCALLSC` | refused |
 | `CONT` | 15 | `Case.continuous_berth` | true or false (`Case`); workbook code 1 (true) or 0 (false) | `CONTC` | refused |
 | `VOVR` | 16 | `energy_by_method(velocity_m_s=...)`, case `design.velocity_m_s` | None or a number above 0 (`_caller_velocity`) | `VOVRC` | each method's own velocity |
 | `N` | 17 | case `design.fenders_in_contact` | whole number, 1 or more, not a logical (`check_fenders_in_contact`, called by `compute`, `standard_sweeps` and `parameter_sweep`) | `NC` | refused |
-| `ETOL` | 18 | `design_performance(energy_tolerance=...)` | number from 0 up to, not including, 1 (`design_performance`) | `ETOLC` | refused |
-| `RTOL` | 19 | `design_performance(reaction_tolerance=...)` | number, not negative (`design_performance`) | `RTOLC` | refused |
+| `ETOL` | 18 | `design_performance(energy_tolerance=...)` | number from 0 up to, not including, 1 (`design_performance`); rows of the base fender's type only, other types take `tolerances_by_type` (fixed at generation) | `ETOLC` | refused |
+| `RTOL` | 19 | `design_performance(reaction_tolerance=...)` | number, not negative (`design_performance`); rows of the base fender's type only, other types take `tolerances_by_type` (fixed at generation) | `RTOLC` | refused |
 | `ANG` | 20 | `design_performance(angular_factor=...)` | number above 0 and at most 1 (`design_performance`) | `ANGC` | refused |
 | `RLIM` | 21 | case `design.reaction_limit_kn` | None or a number above 0 (`check_limit`, called by `compute`, `size_checks`, `standard_sweeps` and `parameter_sweep`; the rule `select_fenders` applies) | `RLIMC` | no reaction limit: Reaction OK `-` |
 | `PLIM` | 22 | case `design.hull_pressure_limit_kpa` | None or a number above 0 (`check_limit`, as for `RLIM`) | `PLIMC` | no hull-pressure limit: Pressure OK `-` |
 | `UFCF` | 23 | `Case.ufc_f_basis` | `berthing_coefficient` or `block_coefficient` (`Case`, `UFC_F_BASES`); workbook code 1 or 0 | `UFCFC` | refused |
 
-Table 1. The 22 named inputs: Python argument, the 29 module rules on them (5 of them
-limits of one method's table) and the checked cell. Row is the row on `Inputs`.
+Table 1. The 22 named inputs: Python argument, the 33 module rules on them (6 of them
+limits of one method's table or fit) and the checked cell. Row is the row on `Inputs`. Revision
+4 added four: the block-coefficient bound on `M`, the two berthing-angle rules on `ALPHA` and
+the WG211 frequency bound on `NCALLS`.
 
 ## Catalogue values (`Fenders`, one row per fender)
 
@@ -86,10 +88,12 @@ carries the rule as data validation (stop style) over the catalogue rows.
 ## Cells that are not inputs
 
 - `Fenders` columns A to C and R (identifier, manufacturer, type, source): text, read
-  by no formula. The fender type selects the curve peak factor at generation.
+  by no formula. The fender type selects the curve peak factor and, for a type other than
+  the base fender's, its tolerances (`tolerances_by_type`) at generation.
 - `Inputs` rows below "Fixed at generation" (method, navigation condition, condition
   class, ship type, factor position, factor override, consequence class, CoV_M,
-  multiple contact, base fender and catalogue): read by no formula; they select
+  multiple contact, C_s basis, C_c basis, tolerances of other fender types, base fender
+  and catalogue): read by no formula; they select
   tables and constants when the workbook is generated and need regeneration.
 - `Velocity` tables, `Methods` constants (Cm, Ce, Cs, Cc where the method fixes them,
   factors, capacity divisor), `Sensitivity`, `Tornado`, `Sizes` and `Sources`: written

@@ -8,6 +8,8 @@ Ship and berth values are the generic round numbers of the method report.
 
 from __future__ import annotations
 
+import dataclasses
+
 import math
 
 import pytest
@@ -19,7 +21,8 @@ from digitalmodel.hydrodynamics.berthing_energy import FenderRating
 SHIP = fd.Ship(displacement_t=60_000, lbp_m=180.0, beam_m=32.0, draft_m=12.0, ship_type="bulk", dwt_t=48_000)
 BERTH = fd.Berth(water_depth_m=14.0, contact_x_from_bow_m=45.0, berthing_angle_deg=5.0, navigation="b",
                  structure="open", fender_deflection_m=1.56)
-CASE = fd.Case(SHIP, BERTH, condition="moderate")
+# CoV_M high as in the generic case (the module default is low, the largest WG211 factor)
+CASE = fd.Case(SHIP, BERTH, condition="moderate", cov_m="high")
 FENDER = FenderRating("GEN-PN-4", "generic", "pneumatic", 2600, 4500, 80, 700.0, 1450.0, 210.0, 60.0,
                       "fictional test row")
 
@@ -91,7 +94,11 @@ def test_sweep_coefficient_ranges_clipped_to_method_rule():
     assert (cc.range_low, cc.range_high) == (0.9, 1.0)
     assert "clipped to 0.9 to 1" in cc.range_basis
     assert min(p.value for p in cc.points) >= 0.9 and max(p.value for p in cc.points) <= 1.0
+    # PIANC 2002 4.2.7 (default cc_basis) gives 0.9 to 1.0; the SFT table option 0.8 to 1.0
     bs = {s.parameter: s for s in fd.standard_sweeps(CASE, "bs6349", FENDER, RANGES, citations="off")}
+    assert (bs["cc"].range_low, bs["cc"].range_high) == (0.9, 1.0) and "clipped to 0.9 to 1" in bs["cc"].range_basis
+    sft = dataclasses.replace(CASE, cc_basis="sft-2026")
+    bs = {s.parameter: s for s in fd.standard_sweeps(sft, "bs6349", FENDER, RANGES, citations="off")}
     assert (bs["cc"].range_low, bs["cc"].range_high) == (0.8, 1.0) and "clipped" not in bs["cc"].range_basis
 
 
@@ -423,8 +430,8 @@ def test_ufc_cc_sweep_recomputes_cm_and_crosses_capacity():
 def test_cc_override_scales_linearly_where_nothing_depends_on_cc():
     bs = fd.energy_by_method(CLOSED, method="bs6349", citations="off")
     hi = fd.energy_by_method(CLOSED, method="bs6349", cc=1.0, citations="off")
-    assert bs.cc.value == 0.8 and hi.cm.value == bs.cm.value
-    assert hi.design_energy_knm == pytest.approx(bs.design_energy_knm / 0.8, rel=1e-12)
+    assert bs.cc.value == 0.9 and hi.cm.value == bs.cm.value          # PIANC 2002 4.2.7 solid quay
+    assert hi.design_energy_knm == pytest.approx(bs.design_energy_knm / 0.9, rel=1e-12)
 
 
 @pytest.mark.parametrize("method", ["pianc2002", "eau", "wg211", "is4651"])

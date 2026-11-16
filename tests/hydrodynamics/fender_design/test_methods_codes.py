@@ -276,7 +276,9 @@ def test_all_methods_evaluate_for_generic_case():
 
 
 def _contact_berth(x_from_bow_m):
-    return fd.Berth(water_depth_m=14.0, contact_x_from_bow_m=x_from_bow_m, berthing_angle_deg=5.0,
+    # the first contact is on the end nearer the berth: bow nearer (+5 deg) forward, stern nearer (-5 deg) aft
+    return fd.Berth(water_depth_m=14.0, contact_x_from_bow_m=x_from_bow_m,
+                    berthing_angle_deg=5.0 if x_from_bow_m <= 90.0 else -5.0,
                     navigation="b", structure="open", fender_deflection_m=1.56)
 
 

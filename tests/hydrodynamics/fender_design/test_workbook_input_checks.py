@@ -282,10 +282,12 @@ _POS_OR_BLANK = [0, -1.0, "abc", True]        # blank allowed
 _CODE = [2, -1, 0.5, "yes", BLANK]            # 1 or 0 required (TRUE: see STRICTER)
 
 INVALID = {
-    "M": _POS, "DWT": _POS_OR_BLANK, "LBP": _POS, "BEAM": _POS, "T": _POS, "RHO": _POS,
+    # block coefficient above 1 (rho LBP B T = 70,848 t for the generic ship): gate P3 at 2b6bb8a0
+    "M": [*_POS, 90_000.0, 600_000.0], "DWT": _POS_OR_BLANK, "LBP": _POS, "BEAM": _POS, "T": _POS, "RHO": _POS,
     "DEPTH": [*_POS, 12.0, 11.0],             # draught 12 m: no keel clearance
     "X": [-1.0, 180.5, 1800.0, "abc", True, BLANK],
-    "ALPHA": ["abc", True, BLANK],
+    # 90 deg or more, or a sign that puts the first contact (45 m, forward) on the far end
+    "ALPHA": ["abc", True, BLANK, 90.0, -90.0, 95.0, -5.0, -0.001],
     "STRUCT": ["OPEN", "piled", 1, True, BLANK],
     "DEFL": _POS, "TUGS": _CODE, "NCALLS": _POS, "CONT": _CODE,
     "VOVR": _POS_OR_BLANK,
@@ -308,7 +310,8 @@ DEPENDS = {
     "M": ("CB",), "DWT": ("V_b_DWT", "V_a_DWT"), "LBP": ("CB", "K", "XG", "XA"),
     "BEAM": ("CB", "RCG", "CM_VC"), "T": ("CB", "KCD", "CM_VC"), "RHO": ("CB",),
     "DEPTH": ("KCD", "CM_P", "CM_UFC"), "X": ("XG", "XA", "CE", "CE_UFC", "CE_IS"),
-    "ALPHA": ("RN", "CE", "CE_IS", "CC_UFC"), "STRUCT": ("CC_P", "CC_UFC"), "DEFL": ("CS_P", "CS_ROM"),
+    # DEFL: the PIANC 2002 Cs (default cs_basis) is the general value 1.0 and reads no deflection
+    "ALPHA": ("RN", "CE", "CE_IS", "CC_UFC"), "STRUCT": ("CC_P", "CC_UFC"), "DEFL": ("CS_ROM",),
     "TUGS": (), "NCALLS": (), "CONT": ("CG_ROM",), "VOVR": (), "N": (), "ETOL": (), "RTOL": (),
     "ANG": (), "RLIM": (), "PLIM": (), "UFCF": ("CF_UFC", "CM_UFC"),
 }
@@ -407,12 +410,13 @@ def _yn(x):
 
 
 ACCEPTED = [
-    ("X", 0.0), ("X", 180.0), ("ALPHA", 0.0), ("ALPHA", -5.0), ("DEPTH", 12.0001),
+    ("X", 0.0), ("X", 90.0), ("ALPHA", 0.0), ("ALPHA", 10.0), ("ALPHA", 89.9), ("DEPTH", 12.0001),
     ("STRUCT", "closed"), ("STRUCT", "semi_closed"), ("DEFL", 0.15), ("TUGS", 0), ("CONT", 0),
-    ("NCALLS", 301.0), ("UFCF", 0), ("VOVR", 0.08), ("VOVR", BLANK), ("N", 1), ("N", 2.0),
+    ("NCALLS", 301.0), ("NCALLS", 1.0), ("NCALLS", 0.5), ("UFCF", 0), ("VOVR", 0.08), ("VOVR", BLANK),
+    ("N", 1), ("N", 2.0),
     ("ETOL", 0.0), ("ETOL", 0.999), ("RTOL", 0.0), ("ANG", 1.0), ("ANG", 1e-6),
-    ("RLIM", BLANK), ("RLIM", 1e-6), ("PLIM", BLANK), ("PLIM", 1e9), ("M", 90_000.0),
-    ("DWT", 3_000.0), ("DWT", 600_000.0), ("DWT", BLANK), ("M", 500.0), ("M", 600_000.0),
+    ("RLIM", BLANK), ("RLIM", 1e-6), ("PLIM", BLANK), ("PLIM", 1e9), ("M", 70_800.0),
+    ("DWT", 3_000.0), ("DWT", 600_000.0), ("DWT", BLANK), ("M", 500.0),
 ]
 
 
@@ -453,7 +457,76 @@ def test_accepted_values_include_each_method_table_limit(built):
     for name, value in ACCEPTED:
         energies, _, _ = _module({name: value}, res)
         refused |= {m for m, e in energies.items() if e is None}
-    assert {"pianc2002", "ueda", "eau", "bs6349", "ufc"} <= refused
+    assert {"pianc2002", "ueda", "eau", "bs6349", "ufc", "wg211"} <= refused
+
+
+#: Inputs changed together (gate findings at 2b6bb8a0): a blank DWT with a velocity
+#: override evaluates every DWT-keyed method, EAU included; the aft end of the ship
+#: with the stern nearer; a displacement at the block-coefficient limit with WG211
+#: below one call a year (WG211 alone left out).
+COMBINED = [
+    {"DWT": BLANK, "VOVR": 0.08},
+    {"X": 180.0, "ALPHA": -5.0},
+    {"X": 135.0, "ALPHA": -3.0, "STRUCT": "closed"},
+    {"M": 70_800.0, "NCALLS": 0.5},
+]
+
+
+@pytest.mark.parametrize("changes", COMBINED, ids=lambda c: ",".join(f"{k}={v}" for k, v in c.items()))
+def test_combined_inputs_match_the_module(built, changes):
+    res, _, book = built
+    vals = book.calc(changes)
+    for name, value in changes.items():
+        text = vals[f"INPUTS!E{book.row(name)}"]
+        assert text == "ok" or (value == BLANK and text.startswith("blank: ")), (name, text)
+    assert vals[book.ref("INPUTS_OK")] == 1
+    energies, sel, checks = _module(changes, res)
+    for i, r in enumerate(res.methods, start=2):
+        e = energies[r.method]
+        if e is None:
+            assert _na(vals[f"METHODS!J{i}"]), r.method
+        else:
+            assert vals[f"METHODS!J{i}"] == pytest.approx(e.design_energy_knm, rel=1e-9), r.method
+    if changes.get("DWT") == BLANK:
+        # every DWT-keyed method is evaluated under the override, in the module and the workbook
+        assert all(energies[m] is not None for m in ("pianc2002", "ueda", "eau"))
+        assert energies["eau"].design_energy_knm == pytest.approx(349.899, abs=5e-4)
+        assert energies["eau"].design_energy_knm == pytest.approx(energies["pianc2002"].design_energy_knm,
+                                                                  rel=1e-12)
+    assert vals[book.ref("E_DESIGN")] == pytest.approx(sel.design_energy_knm, rel=1e-9)
+
+
+def test_dwt_blank_text_names_the_override():
+    assert "velocity override" in bw.INPUT_RULES["DWT"].blank
+
+
+def _basis_book(tmp_path, cs_basis, cc_basis):
+    case = load_case(EXAMPLE / "generic_case.yaml")
+    case["conditions"].update(cs_basis=cs_basis, cc_basis=cc_basis)
+    res = compute(case, citations="record")
+    out = tmp_path / f"{cs_basis}-{cc_basis}.xlsx"
+    bw.build_workbook(res, out)
+    return res, Book(out)
+
+
+@pytest.mark.parametrize("cs_basis, cc_basis, cs, cc", [
+    ("pianc2002", "pianc2002", 1.0, 0.9),       # PIANC WG33 (2002) 4.2.6 general value; 4.2.7 solid quay
+    ("tfadm-2024", "sft-2026", 0.9, 0.8),       # the manuals' rule and the SFT table, selected explicitly
+])
+def test_cs_and_cc_rows_follow_the_case_basis(tmp_path, cs_basis, cc_basis, cs, cc):
+    pytest.importorskip("formulas")
+    res, book = _basis_book(tmp_path, cs_basis, cc_basis)
+    changes = {"STRUCT": "closed", "DEFL": 0.12}
+    vals = book.calc(changes)
+    assert vals[book.ref("CS_P")] == cs and vals[book.ref("CC_P")] == cc
+    case = _case(changes)
+    case["conditions"].update(cs_basis=cs_basis, cc_basis=cc_basis)
+    fcase = fd.Case(fd.Ship(**case["ship"]), fd.Berth(**case["berth"]), **case["conditions"])
+    for i, r in enumerate(res.methods, start=2):
+        m = fd.energy_by_method(fcase, method=r.method, factor_position="smallest", citations="off")
+        assert vals[f"METHODS!E{i}"] == pytest.approx(m.cs.value), r.method
+        assert vals[f"METHODS!F{i}"] == pytest.approx(m.cc.value), r.method
+        assert vals[f"METHODS!J{i}"] == pytest.approx(m.design_energy_knm, rel=1e-9), r.method
 
 
 @pytest.mark.parametrize("col, value", [("J", 100.0), ("D", BLANK), ("E", BLANK), ("F", BLANK), ("I", BLANK)],

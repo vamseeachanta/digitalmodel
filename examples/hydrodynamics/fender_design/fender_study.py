@@ -65,6 +65,47 @@ def _f(x, nd=1):
     return "-" if x is None else f"{x:,.{nd}f}"
 
 
+def _util(x, limit=1.0, nd=3):
+    """A value judged against ``limit`` (utilisation): three decimals, and more
+    where three would round it onto the limit (1.0004 is "1.0004", never
+    "1.000" or "1.00"), so a value over the limit never reads as on it."""
+    if x is None:
+        return "-"
+    for d in range(nd, 8):
+        txt = f"{x:.{d}f}"
+        if x == limit or float(txt) != limit:
+            return txt
+    return f"{x:.8f}"
+
+
+def _sig(x, n=4):
+    """A number to ``n`` significant figures without e-notation: thousands
+    separators from 1,000 up (61,689 not 6.169e+04)."""
+    if x is None:
+        return "-"
+    if x == 0:
+        return "0"
+    if abs(x) >= 1000:
+        return f"{x:,.0f}"
+    d = max(0, n - 1 - math.floor(math.log10(abs(x))))
+    return f"{x:,.{d}f}"
+
+
+def _g(x):
+    """An input value as given, up to four significant figures, trailing zeros
+    dropped and no e-notation: thousands separators from 1,000 up."""
+    if x is None:
+        return "-"
+    if abs(x) >= 1000:
+        return f"{x:,.0f}"
+    return f"{x:.4g}"
+
+
+def _unit(u):
+    """A unit after a number; a dimensionless value takes none (never a bare "-")."""
+    return "" if u in ("-", "") else f" {u}"
+
+
 def md_table(header, rows):
     out = ["| " + " | ".join(header) + " |", "|" + "|".join("---" for _ in header) + "|"]
     out += ["| " + " | ".join(str(c) for c in r) + " |" for r in rows]
@@ -249,7 +290,7 @@ def tables(res) -> dict[str, str]:
           f"{r.cm.value:.3f}", f"{r.ce.value:.3f}", f"{r.cs.value:.2f}",
           f"{r.cc.value:.2f}", f"{math.prod(c.value for c in r.extra) if r.extra else 1.0:.2f}",
           _f(r.normal_energy_knm), f"{r.factor.value:.2f}", _f(r.design_energy_knm),
-          f"{res.method_utilisation(r):.2f}",
+          _util(res.method_utilisation(r)),
           method_notes(r)]
          for r in res.methods])
     t["citations_table"] = md_table(
@@ -267,12 +308,15 @@ def tables(res) -> dict[str, str]:
         ["Input", "Base", "Credible range", "Basis", "Design energy change at range ends",
          "Utilisation at range ends", "Value at utilisation 1",
          f"Reaction x {res.reaction_factor:.2f} at range ends (kN)", "Value at reaction limit"],
-        [[s.label, f"{s.base_value:.4g} {s.unit}", f"{s.range_low:g} to {s.range_high:g}", s.range_basis,
+        [[s.label, f"{_g(s.base_value)}{_unit(s.unit)}",
+          f"{_g(s.range_low)} to {_g(s.range_high)}{_unit(s.unit)}", s.range_basis,
           f"{s.change_pct(s.range_low):+.0f} % / {s.change_pct(s.range_high):+.0f} %",
-          f"{s.at(s.range_low).utilisation:.2f} / {s.at(s.range_high).utilisation:.2f}",
-          "-" if s.limit_value() is None else f"{s.limit_value():.4g}",
+          f"{_util(s.at(s.range_low).utilisation)} / {_util(s.at(s.range_high).utilisation)}",
+          "-" if s.limit_value() is None else f"{_sig(s.limit_value())}{_unit(s.unit)}",
           f"{_r(s.at(s.range_low).reaction_kn)} / {_r(s.at(s.range_high).reaction_kn)}",
-          "-" if s.reaction_limit_value() is None else f"{s.reaction_limit_value():.4g}"] for s in res.sweeps])
+          "-" if s.reaction_limit_value() is None else f"{_sig(s.reaction_limit_value())}{_unit(s.unit)}"]
+         for s in res.sweeps])
+    t["crossing_note"] = crossing_note(res)
     t["tornado_table"] = md_table(
         ["Rank", "Input", "Span of design energy (percentage points)"],
         [[i, b.label, f"{b.span_pct:.0f}"] for i, b in enumerate(res.bars, start=1)])
@@ -287,19 +331,112 @@ def tables(res) -> dict[str, str]:
              "Rated reaction (kN)", "Design reaction (kN)", "Design hull pressure (kPa)",
              "Energy", f"Reaction <= {_f(r_lim, 0)} kN", f"Pressure <= {_f(p_lim, 0)} kPa"],
             [[c.fender_id + (" (base)" if c.is_base else ""), _f(c.rated_energy_knm, 0), _f(c.capacity_knm, 0),
-              f"{c.utilisation:.2f}", _f(c.rated_reaction_kn, 0), _f(c.reaction_kn, 0),
+              _util(c.utilisation), _f(c.rated_reaction_kn, 0), _f(c.reaction_kn, 0),
               _f(c.hull_pressure_kpa, 0), yn(c.meets_energy), yn(c.meets_reaction),
               "**no** (no datum)" if c.pressure_missing else yn(c.meets_pressure)]
              for c in res.size_checks])
         t["sizes_basis"] = size_basis(res)
     t["sources_table"] = md_table(
-        ["Id", "Document", "Edition", "Clause", "Verification", "Read in"],
-        [[s.source_id, s.title, s.edition, s.clause, s.verification, s.read_in] for s in fd.SOURCES.values()])
+        ["Id", "Document", "Edition", "Clause", "Verification", "Read in", "Date read"],
+        [[s.source_id, s.title, s.edition, s.clause, s.verification, s.read_in, s.accessed_on]
+         for s in fd.SOURCES.values()])
+    t["assumptions_table"] = assumptions_table(res)
     t["velocity_table"] = md_table(
         ["Size (t)"] + [f"{c}" for c in "abcde"],
         [[f"{x:,.0f}"] + [f"{fd.brolsma_velocity(x, c):.3f}" for c in "abcde"]
          for x in (5_000, 10_000, 20_000, 50_000, 100_000, 200_000)])
     return t
+
+
+def crossing_note(res) -> str:
+    """How each value at utilisation 1 in Table 5 was solved, grouped by method of solution."""
+    groups: dict[str, list[str]] = {}
+    for s in res.sweeps:
+        if s.crossing_basis and s.limit_value() is not None:
+            key = s.crossing_basis
+            if key.startswith("bisection"):
+                key = "bisection on the method between the bracketing swept points"
+            groups.setdefault(key, []).append(s.label)
+    if not groups:
+        return "no input reaches utilisation 1 within its swept values"
+    return "; ".join(f"{', '.join(labels)}: {how}" for how, labels in groups.items())
+
+
+def assumptions(res) -> list[tuple[str, str, str, str]]:
+    """Every assumed value the module and the case use: (value, where it
+    enters, used in this case, basis). Each is ASSUMED - to be confirmed."""
+    c, d = res.fcase, res.case["design"]
+    b = res.berth
+    by_type = d.get("tolerances_by_type") or {}
+    used = {r.method for r in res.methods}
+
+    def yes(cond):
+        return "yes" if cond else "no"
+    rows = [
+        ("UFC 4-152-01 C_c 0.9 for a partly closed berth", "UFC method, `semi_closed` structure",
+         yes("ufc" in used and b.structure == "semi_closed"),
+         "UFC prints 1.0 (open) and 0.8 (solid) and 'in between'; the midpoint is taken"),
+        ("C_c 1.0 for a partly closed berth (PIANC basis)",
+         "PIANC 2002, Ueda, BS 6349-4, EAU; `semi_closed`, angle 5° or less",
+         yes(c.cc_basis == "pianc2002" and b.structure == "semi_closed"),
+         "PIANC WG33 (2002) 4.2.7 gives no partly closed value; the open-berth value (no reduction) is taken"),
+        (f"WG211 γ_m = {fd.WG211_GAMMA_M:.2f}", "WG211 fender capacity divisor", yes("wg211" in used),
+         "the R24B worked example (Table 4); the final guideline value was not read"),
+        ("WG211 favourable and monitored velocities 0.125 and 0.115 m/s", "WG211 velocity",
+         yes("wg211" in used and c.condition in ("favourable", "monitored")),
+         "derived from the R24A Weibull fits at 0.02 % exceedance; not printed values"),
+        (f"WG211 γ_n not extrapolated below {fd.WG211_GAMMA_N_MIN_PER_YEAR:g} berthing a year",
+         "WG211 frequency correction", yes("wg211" in used and c.berthings_per_year < 1),
+         "the range of validity of R24A Table 9 was not read"),
+        (f"WG211 CoV_M `{c.cov_m}`", "WG211 γ_Eref column", yes("wg211" in used),
+         "generic case: a berth used by ships of widely varying displacement; the module default is `low`, "
+         "the largest factor"),
+        ("ROM 2.0-11 return period T_R = 500 yr", "ROM accidental factor (T_R/500)^(1/20)", yes("rom" in used),
+         "the table's reference period; no site return period is given"),
+        *[(f"{t} tolerances: energy {v['energy_tolerance']:.2f}, reaction {v['reaction_tolerance']:.2f}",
+           "neighbouring sizes and the workbook Fenders sheet", "yes",
+           "upper end of the manufacturer range (foam ±10 to ±15 %, TFADM p. 30, SFT p. 26)")
+          for t, v in by_type.items()],
+        (f"Block coefficient plausibility range {fd.CB_PLAUSIBLE[0]:g} to {fd.CB_PLAUSIBLE[1]:g}",
+         "a flag on every method result outside it (above 1 the ship is refused)", "check only",
+         "span of merchant hull forms; not a value from the cited standards"),
+        (f"Reaction limit {_f(d.get('reaction_limit_kn'), 0)} kN", "reaction checks",
+         yes(d.get("reaction_limit_kn") is not None), "illustrative structural limit of the generic case"),
+    ]
+    return rows
+
+
+def assumptions_table(res) -> str:
+    return md_table(["Assumed value", "Where it enters", "Used in this case", "Status", "Basis"],
+                    [[v, w, u, "ASSUMED - to be confirmed", basis] for v, w, u, basis in assumptions(res)])
+
+
+def summary_values(res) -> dict[str, str]:
+    """Template values of the summary's check outcomes for the base fender
+    (energy, reaction and hull pressure, each with its limit)."""
+    base = next((c for c in res.size_checks if c.is_base), None)
+    d = res.case["design"]
+    if base is None:
+        return dict(base_checks="No neighbouring-size check was run for the base fender.")
+    r_lim, p_lim = d.get("reaction_limit_kn"), d.get("hull_pressure_limit_kpa")
+    parts = [f"energy utilisation {_util(base.utilisation)} against 1.0 "
+             f"({'met' if base.meets_energy else '**not met**'})"]
+    if r_lim is not None:
+        margin = (r_lim - base.reaction_kn) / r_lim * 100.0
+        parts.append(f"design reaction {_f(base.reaction_kn, 0)} kN against the {_f(r_lim, 0)} kN limit "
+                     + (f"(met, margin {margin:.1f} %)" if base.meets_reaction else
+                        f"(**not met**, {-margin:.1f} % over)"))
+    if p_lim is not None:
+        p = base.hull_pressure_kpa
+        parts.append("hull pressure: no datum against the "
+                     f"{_f(p_lim, 0)} kPa limit (**not met**)" if p is None else
+                     f"design hull pressure {_f(p, 0)} kPa against the {_f(p_lim, 0)} kPa limit "
+                     + ("(met)" if base.meets_pressure else
+                        f"(**not met**, {(p / p_lim - 1) * 100:.1f} % over)"))
+    verdict = ("The base fender meets every check." if base.meets_all else
+               "The base fender therefore does **not** meet every check, and is not a solution for this case "
+               "as it stands.")
+    return dict(base_checks=f"Base fender {base.fender_id} (Table 7): " + "; ".join(parts) + ". " + verdict)
 
 
 def _citation_rows(res) -> dict:
@@ -448,9 +585,12 @@ def main(argv=None) -> int:
         values.update(method_values(res))
         values.update(ufc_f_values(res))
         values.update(sweep_figure_values(res, made))
+        values.update(summary_values(res))
         values.update(
             E_design=_f(res.selected.design_energy_knm), E_normal=_f(res.selected.normal_energy_knm),
-            capacity=_f(res.capacity_knm), util=f"{data['utilisation']:.2f}",
+            capacity=_f(res.capacity_knm), util=_util(data["utilisation"]),
+            cs_basis=res.fcase.cs_basis, cc_basis=res.fcase.cc_basis,
+            cb_range=f"{fd.CB_PLAUSIBLE[0]:g} to {fd.CB_PLAUSIBLE[1]:g}",
             n_methods=len(res.methods), n_tests="see the test count in the pull request",
             top1=res.bars[0].label, top2=res.bars[1].label, top3=res.bars[2].label,
             rf=f"{res.reaction_factor:.2f}", R_design=_f(res.design.reaction_kn, 0),

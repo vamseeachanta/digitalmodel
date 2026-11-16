@@ -66,23 +66,63 @@ class SizeCheck:
         return self.meets_pressure is False and self.hull_pressure_kpa is None
 
 
+def type_tolerances(design: dict, fender_type: str) -> tuple[float, float]:
+    """(energy tolerance, reaction tolerance) for a fender of ``fender_type``.
+
+    The design block's ``energy_tolerance`` and ``reaction_tolerance`` belong
+    to the base fender's type; ``tolerances_by_type`` gives every other type
+    in the catalogue (manufacturing tolerances differ by type: moulded rubber
+    +/-10 %, extruded +/-20 %, foam +/-10 to 15 %, pneumatic 0 % on energy;
+    TFADM p. 30, SFT p. 26). A type without an entry takes the base values;
+    :func:`check_type_tolerances` refuses a catalogue in which a type other
+    than the base fender's has none.
+    """
+    t = (design.get("tolerances_by_type") or {}).get(fender_type)
+    if t is None:
+        return design.get("energy_tolerance", 0.0), design.get("reaction_tolerance", 0.10)
+    return t["energy_tolerance"], t["reaction_tolerance"]
+
+
+def check_type_tolerances(fenders, base_type: str, design: dict) -> None:
+    """Refuse fender types other than ``base_type`` without their own
+    tolerances (``design["tolerances_by_type"]``), and an entry for the base
+    type itself (the base type's tolerances are the design block's own, the
+    workbook's live ETOL and RTOL). Raises ValueError naming the types."""
+    by_type = design.get("tolerances_by_type") or {}
+    if base_type in by_type:
+        raise ValueError(f"tolerances_by_type names the base fender's type {base_type!r}; its tolerances are "
+                         "design.energy_tolerance and design.reaction_tolerance")
+    for t, v in by_type.items():
+        if set(v) != {"energy_tolerance", "reaction_tolerance"}:
+            raise ValueError(f"tolerances_by_type[{t!r}] needs energy_tolerance and reaction_tolerance only")
+    missing = sorted({f.fender_type for f in fenders} - {base_type} - set(by_type))
+    if missing:
+        raise ValueError(
+            f"no tolerances for fender type(s) {', '.join(missing)} (base type {base_type}): give "
+            "design.tolerances_by_type for every other type, since manufacturing tolerances differ by type")
+
+
 def size_checks(fenders, base_id: str, energy_per_fender_knm: float, design: dict,
                 capacity_divisor: float = 1.0, curve: fd.PerformanceCurve | None = None,
                 curve_type: str | None = None) -> list[SizeCheck]:
     """Check each fender in ``fenders`` against the case demand and limits,
-    with the configured tolerances, angular factor and capacity divisor
-    (``design`` is the case's ``design`` block). ``curve`` is the normalised
+    with the configured tolerances (by fender type, :func:`type_tolerances`),
+    angular factor and capacity divisor (``design`` is the case's ``design``
+    block). When the base row is among ``fenders``, a row of another type
+    without its own tolerances is refused (:func:`check_type_tolerances`). ``curve`` is the normalised
     curve of fender type ``curve_type``; the reaction of a row of that type
     carries the curve's peak up to the rated point (``rated_peak_factor``)."""
     peak = fd.rated_peak_factor(curve)
     r_lim = fd.check_limit("reaction_limit_kn", design.get("reaction_limit_kn"))
     p_lim = fd.check_limit("hull_pressure_limit_kpa", design.get("hull_pressure_limit_kpa"))
+    base = next((f for f in fenders if f.fender_id == base_id), None)
+    if base is not None:
+        check_type_tolerances(fenders, base.fender_type, design)
     out = []
     for f in fenders:
+        et, rt = type_tolerances(design, f.fender_type)
         dp = fd.design_performance(
-            f,
-            energy_tolerance=design.get("energy_tolerance", 0.0),
-            reaction_tolerance=design.get("reaction_tolerance", 0.10),
+            f, energy_tolerance=et, reaction_tolerance=rt,
             angular_factor=design.get("angular_factor", 1.0),
         )
         cap = dp.energy_knm / capacity_divisor
@@ -110,9 +150,14 @@ def size_basis(res) -> str:
     d = res.case["design"]
     div = res.selected.capacity_divisor
     k = res.reaction_peak_factor(res.base_fender)
-    return (f"Energy: rated x (1 - {d.get('energy_tolerance', 0.0):.2f}) x angular {d.get('angular_factor', 1.0):.2f}"
+    others = d.get("tolerances_by_type") or {}
+    other = "".join(f"; {t} rows {v['energy_tolerance']:.2f}" for t, v in others.items())
+    other_r = "".join(f"; {t} rows {v['reaction_tolerance']:.2f}" for t, v in others.items())
+    return (f"Energy: rated x (1 - energy tolerance: {res.base_fender.fender_type} rows "
+            f"{d.get('energy_tolerance', 0.0):.2f}{other}) x angular {d.get('angular_factor', 1.0):.2f}"
             + (f" / {div:.2f} ({res.selected.label} capacity divisor)" if div != 1.0 else "")
-            + f". Reaction and hull pressure: rated-deflection value x (1 + {d.get('reaction_tolerance', 0.10):.2f})."
+            + f". Reaction and hull pressure: rated-deflection value x (1 + reaction tolerance: "
+              f"{res.base_fender.fender_type} rows {d.get('reaction_tolerance', 0.10):.2f}{other_r})."
             + (f" Reaction of {res.base_fender.fender_type} rows also x {k:.3f}, the curve's largest reaction "
                "before the rated point over the rated reaction." if k != 1.0 else ""))
 
@@ -271,6 +316,7 @@ def compute(case: dict, catalogue_path: str | Path | None = None, citations: str
     check_one_basis(catalogue, bases)
     by_id = {f.fender_id: f for f in catalogue}
     base_fender = by_id[d["base_fender_id"]]
+    check_type_tolerances(catalogue, base_fender.fender_type, d)
     design = fd.design_performance(
         base_fender,
         energy_tolerance=d.get("energy_tolerance", 0.0),
