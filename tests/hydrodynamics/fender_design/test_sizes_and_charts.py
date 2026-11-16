@@ -400,3 +400,71 @@ def test_sweep_chart_keeps_headroom_above_the_limit_and_the_data():
     rtop = max([p.reaction_kn for p in sw.points if p.reaction_kn is not None] + [sw.reaction_limit_kn])
     assert ax2.get_ylim()[1] >= 1.25 * rtop
     plt.close(figs["wd.png"])
+
+
+# Second-provider review of a client report built from this module (16 Nov 2026):
+# the checks above passed for the generic case while another case still had a
+# limit label over a bar label, a limit label crossed by the "reaches limit"
+# line, a utilisation-line label past the right edge and long size names.
+
+
+def _chart_problems(draw):
+    import warnings
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        draw()
+    return [str(w.message) for w in caught if issubclass(w.category, fc.ChartLayoutWarning)]
+
+
+def test_size_chart_is_clear_when_a_bar_ends_near_a_limit_and_names_are_long(tmp_path):
+    names = ["PNE 2000x3500-50", "PNE 2000x3500-80", "PNE 2500x4000-50", "PNE 2500x4000-80",
+             "PNE 2500x5500-50", "PNE 3300x4500-50", "PNE 3300x6500-50"]
+    energy = [308.0, 430.0, 663.0, 925.0, 943.0, 1175.0, 1814.0]
+    reaction = [963.0, 1260.0, 1519.0, 1997.0, 2222.0, 2062.0, 3317.0]
+    rows = [dict(label=n, is_base=i == 2, energy_knm=e, reaction_kn=r,
+                 energy_change_pct=(e / 663.0 - 1) * 100, reaction_change_pct=(r / 1519.0 - 1) * 100)
+            for i, (n, e, r) in enumerate(zip(names, energy, reaction))]
+    problems = _chart_problems(lambda: fc.size_comparison_chart(
+        rows, tmp_path / "sizes.png", "Neighbouring fender sizes against the base", 271.0, 1381.0,
+        basis_note="Energy: rated x (1 - 0.00) x angular 1.00. Reaction and hull pressure: rated-deflection "
+                   "value x (1 + 0.10)."))
+    assert problems == []
+
+
+@pytest.mark.parametrize("utilisations", [[0.41, 0.98], [0.41, 1.08], [0.41, 2.6]])
+def test_utilisation_line_label_stays_inside_the_axes(tmp_path, utilisations):
+    from types import SimpleNamespace
+    results = [SimpleNamespace(label=f"method {i} with a long label, velocity 0.12 m/s, factor 1.25",
+                               design_energy_knm=600.0 * u, flags=())
+               for i, u in enumerate(utilisations)]
+    problems = _chart_problems(lambda: fc.method_utilisation_chart(
+        results, utilisations, tmp_path / "u.png", "Utilisation by method", note="Capacity note."))
+    assert problems == []
+
+
+def test_capacity_line_label_stays_inside_the_axes(tmp_path):
+    from types import SimpleNamespace
+    results = [SimpleNamespace(label=f"step {i}", design_energy_knm=e, flags=())
+               for i, e in enumerate([540.0, 360.0, 271.0])]
+    problems = _chart_problems(lambda: fc.method_chart(
+        results, tmp_path / "m.png", "Design energy by step", capacity_knm=663.0,
+        capacity_label="a long capacity label: rated energy of the selected fender"))
+    assert problems == []
+
+
+def test_sweep_limit_label_is_clear_of_the_reaches_limit_line(tmp_path):
+    """The reaction reaches its limit just before the end of the sweep and the last point is unrated."""
+    from types import SimpleNamespace
+    xs = [0.03 + 0.135 * i / 40 for i in range(41)]
+    pts = [SimpleNamespace(value=x, energy_per_fender_knm=25_000.0 * x * x,
+                           reaction_kn=(56_000.0 * x * x + 60.0) if i < 40 else None)
+           for i, x in enumerate(xs)]
+    x_lim = ((1381.0 - 60.0) / 56_000.0) ** 0.5
+    sweep = SimpleNamespace(
+        points=pts, range_low=0.049, range_high=0.15, base_value=0.1043, capacity_knm=663.0,
+        reaction_limit_kn=1381.0, unit="m/s", label="berthing velocity", range_basis="test range",
+        reaction_factor=1.10, parameter="velocity_m_s",
+        at=lambda v: min(pts, key=lambda p: abs(p.value - v)), reaction_limit_value=lambda: x_lim)
+    assert xs[-2] > x_lim > 0.6 * xs[-1]
+    problems = _chart_problems(lambda: fc.sweep_chart(sweep, tmp_path / "s.png", "Berthing velocity", "PNE"))
+    assert problems == []

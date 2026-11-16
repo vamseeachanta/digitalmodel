@@ -9,8 +9,11 @@ Colours follow a fixed categorical order; limit lines use one reserved
 "limit" colour and always carry a text label, so colour is never the only cue.
 
 Layout: value axes keep headroom above the largest value or limit
-(:data:`HEADROOM`), limit labels sit just clear of their line, footnotes are
-wrapped inside a band reserved below the axes, and every chart is checked
+(:data:`HEADROOM`), limit labels sit just clear of their line and of any
+vertical limit line, a label beside a vertical line turns to the side with
+room, the limits of the size chart are named in the headroom, long category
+names are wrapped, footnotes are wrapped inside a band reserved below the
+axes, and every chart is checked
 before it is written (:func:`layout_issues`): text outside the figure,
 overlapping text or text across a limit line raises a
 :class:`ChartLayoutWarning`.
@@ -90,9 +93,14 @@ def _headroom(ax, *values):
     ax.set_ylim(0, HEADROOM * top if top > 0 else 1.0)
 
 
-def _limit_label(ax, xs, ys, y_line, text):
+def _limit_label(ax, xs, ys, y_line, text, clear_x=()):
     """Label a horizontal limit line just above it, at the end of the x range
-    where the data are lower (an end without data counts as lower)."""
+    where the data are lower (an end without data counts as lower).
+
+    ``clear_x`` are the x positions of vertical lines in the same axes: after
+    layout a label that one of them would cross is moved beside it, to the
+    side with room (:func:`_beside`).
+    """
     first, last = ys[0], ys[-1]
     if not math.isfinite(first):
         left = True
@@ -101,8 +109,31 @@ def _limit_label(ax, xs, ys, y_line, text):
     else:
         left = first <= last
     x, ha, dx = (xs[0], "left", 2.0) if left else (xs[-1], "right", -2.0)
-    return ax.annotate(text, (x, y_line), textcoords="offset points", xytext=(dx, GAP_PT),
-                       ha=ha, va="bottom", fontsize=7.5, color=INK)
+    label = ax.annotate(text, (x, y_line), textcoords="offset points", xytext=(dx, GAP_PT),
+                        ha=ha, va="bottom", fontsize=7.5, color=INK)
+    if clear_x:
+        _beside(ax.figure, ax, label, clear_x)
+    return label
+
+
+def _beside(fig, ax, label, at):
+    """After layout, move the offset-point annotation ``label`` off each
+    vertical line at the data positions ``at`` that crosses it: to the right
+    of the line when the label then still ends inside the axes, else to its
+    left."""
+    def hook(renderer):
+        gap = (GAP_PT + 1.0) * fig.dpi / 72.0
+        ab = ax.get_window_extent(renderer)
+        for v in sorted(at):
+            bb = label.get_window_extent(renderer)
+            p = ax.transData.transform((v, 0.0))[0]
+            if not (bb.x0 - gap < p < bb.x1 + gap):
+                continue
+            right = p + gap + bb.width <= ab.x1 - 1.0
+            shift = (p + gap - bb.x0) if right else (p - gap - bb.x1)
+            dx, dy = label.xyann
+            label.xyann = (dx + shift * 72.0 / fig.dpi, dy)
+    fig._after_layout.append(hook)
 
 
 def _corner_label(ax, x_mark, text):
@@ -278,8 +309,9 @@ def sweep_chart(sweep, path, title: str, fender_label: str):
     _headroom(ax2, sweep.reaction_limit_kn, *r)
     if sweep.reaction_limit_kn is not None:
         ax2.axhline(sweep.reaction_limit_kn, color=LIMIT, linewidth=1.5, linestyle="--")
-        _limit_label(ax2, xs, r, sweep.reaction_limit_kn, f"reaction limit {sweep.reaction_limit_kn:,.0f} kN")
         x_lim = sweep.reaction_limit_value()
+        _limit_label(ax2, xs, r, sweep.reaction_limit_kn, f"reaction limit {sweep.reaction_limit_kn:,.0f} kN",
+                     clear_x=() if x_lim is None else (x_lim,))
         if x_lim is not None:
             ax2.axvline(x_lim, color=LIMIT, linewidth=1.0, linestyle=":")
             lo, hi = ax2.get_xlim()
@@ -363,9 +395,28 @@ def outside_validity(res) -> list[str]:
 
 
 def _vline_label(ax, x, y, text):
-    """Label a vertical limit line at ``x`` just right of it."""
-    return ax.annotate(text, (x, y), textcoords="offset points", xytext=(GAP_PT + 1.0, 0.0),
-                       fontsize=7.5, color=INK, va="center")
+    """Label a vertical limit line at ``x`` just right of it; after layout a
+    label that would run past the right end of the axes turns to the left of
+    the line."""
+    label = ax.annotate(text, (x, y), textcoords="offset points", xytext=(GAP_PT + 1.0, 0.0),
+                        fontsize=7.5, color=INK, va="center")
+    fig = ax.figure
+
+    def hook(renderer):
+        if label.get_window_extent(renderer).x1 > ax.get_window_extent(renderer).x1 - 1.0:
+            label.set_ha("right")
+            label.xyann = (-(GAP_PT + 1.0), 0.0)
+    fig._after_layout.append(hook)
+    return label
+
+
+def _wrap_names(fig, names, font_pt: float) -> list[str]:
+    """Category names wrapped at spaces so that each fits its share of the
+    figure width (about 80 % of the width is axes) at ``font_pt``."""
+    slot_pt = 0.8 * fig.get_figwidth() * 72.0 / max(len(names), 1)
+    chars = max(int(slot_pt / (0.62 * font_pt)), 6)
+    return ["\n".join(textwrap.wrap(str(n), width=chars, break_long_words=False, break_on_hyphens=False)
+                      or [str(n)]) for n in names]
 
 
 def method_chart(results, path, title: str, capacity_knm: float | None = None,
@@ -509,7 +560,9 @@ def size_comparison_chart(rows, path, title: str, design_energy_knm: float,
     ``energy_knm`` and ``reaction_kn`` in each row are the values to compare
     with the demand and the limit, i.e. after the case's tolerances,
     reductions and capacity divisor; ``basis_note`` states that basis. Bar
-    labels that would cross a limit line are moved just above it.
+    labels that would cross a limit line are moved just above it; the limit
+    lines are named in the headroom above the bars, and the size names are
+    wrapped and upright.
     """
     fig, (ax1, ax2) = _fig(2, height=5.4, sharex=True)
     names = [r["label"] for r in rows]
@@ -523,8 +576,10 @@ def size_comparison_chart(rows, path, title: str, design_energy_knm: float,
     ax1.axhline(design_energy_knm, color=LIMIT, linestyle="--", linewidth=1.5)
     ax1.set_xlim(-0.6, len(rows) - 0.4)
     _headroom(ax1, design_energy_knm, *energy)
-    _limit_label(ax1, [-0.6, len(rows) - 0.4], [energy[0], energy[-1]], design_energy_knm,
-                 f"energy per fender {design_energy_knm:,.0f} kNm")
+    # a bar can end at any height, so the dashed lines are named in the headroom
+    # above every bar, not beside the line where a bar label may sit
+    ax1.text(0.01, 0.97, f"dashed: energy per fender {design_energy_knm:,.0f} kNm", transform=ax1.transAxes,
+             ha="left", va="top", fontsize=7.5, color=INK)
     lab1 = [ax1.annotate(f"{r['energy_change_pct']:+.0f} %", (x, r["energy_knm"]), textcoords="offset points",
                          xytext=(0, 1.5), ha="center", va="bottom", fontsize=7, color=INK)
             for x, r in zip(xs, rows)]
@@ -534,8 +589,8 @@ def size_comparison_chart(rows, path, title: str, design_energy_knm: float,
     _headroom(ax2, reaction_limit_kn, *reaction)
     if reaction_limit_kn:
         ax2.axhline(reaction_limit_kn, color=LIMIT, linestyle="--", linewidth=1.5)
-        _limit_label(ax2, [-0.6, len(rows) - 0.4], [reaction[0], reaction[-1]], reaction_limit_kn,
-                     f"reaction limit {reaction_limit_kn:,.0f} kN")
+        ax2.text(0.01, 0.97, f"dashed: reaction limit {reaction_limit_kn:,.0f} kN", transform=ax2.transAxes,
+                 ha="left", va="top", fontsize=7.5, color=INK)
     lab2 = [ax2.annotate(f"{r['reaction_change_pct']:+.0f} %", (x, r["reaction_kn"]), textcoords="offset points",
                          xytext=(0, 1.5), ha="center", va="bottom", fontsize=7, color=INK)
             for x, r in zip(xs, rows)]
@@ -543,7 +598,7 @@ def size_comparison_chart(rows, path, title: str, design_energy_knm: float,
         _clear_of(fig, ax2, lab2, [reaction_limit_kn])
     ax2.set_ylabel("design reaction (kN)")
     ax2.set_xticks(xs)
-    ax2.set_xticklabels(names, fontsize=7.5, rotation=20, ha="right", color=INK)
+    ax2.set_xticklabels(_wrap_names(fig, names, 7.0), fontsize=7.0, color=INK)
     ax1.set_title(title, fontsize=9.5, color=INK, loc="left")
     _footnote(fig, "Orange: base choice. Labels: % change from the base. Dashed: demand and limit."
               + (f" {basis_note}" if basis_note else ""))
