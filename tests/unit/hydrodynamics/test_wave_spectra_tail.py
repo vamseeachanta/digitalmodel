@@ -14,7 +14,7 @@ from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
 PERIODS = [5.0, 6.0, 10.0, 15.0]
 FAMILIES = ["pierson_moskowitz", "jonswap"]
 GENERATORS = FAMILIES + ["bretschneider", "issc"]
-TRAPZ = getattr(np, "trapezoid", None) or np.trapz
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
 
 def _shape(omega, tp, gamma):
@@ -42,7 +42,7 @@ def _check_moments(tp, family):
     omega, density = getattr(WaveSpectra(), family)(hs=4.0, tp=tp)
     reference, _ = _reference(tp, family)
     for n, tolerance in [(0, 1e-9), (1, 0.005), (2, 0.01), (-1, 0.005)]:
-        assert TRAPZ(omega**n * density, omega) == pytest.approx(reference[n], rel=tolerance)
+        assert _trapezoid(omega**n * density, omega) == pytest.approx(reference[n], rel=tolerance)
 
 
 @pytest.mark.parametrize("tp", PERIODS)
@@ -71,7 +71,7 @@ def test_default_grid_periods(tp, family):
     ws = WaveSpectra()
     omega, density = getattr(ws, family)(hs=4.0, tp=tp)
     reference, _ = _reference(tp, family)
-    m0, m1 = (TRAPZ(omega**n * density, omega) for n in (0, 1))
+    m0, m1 = (_trapezoid(omega**n * density, omega) for n in (0, 1))
     assert ws.zero_crossing_period_from_spectrum(omega, density) == pytest.approx(
         2 * math.pi * math.sqrt(reference[0] / reference[2]), rel=0.005)
     assert 2 * math.pi * m0 / m1 == pytest.approx(
@@ -106,7 +106,7 @@ def test_explicit_legacy_grid_unchanged(family):
         if family == "jonswap":
             sigma = np.where(omega <= wp, 0.07, 0.09)
             raw *= 3.3 ** np.exp(-(omega - wp)**2 / (2 * sigma**2 * wp**2))
-    expected = raw * (hs**2 / 16.0 / float(TRAPZ(raw, omega)))
+    expected = raw * (hs**2 / 16.0 / float(_trapezoid(raw, omega)))
     actual_omega, actual = getattr(WaveSpectra(), family)(hs=hs, tp=tp, freq_max=2.0)
     assert np.array_equal(actual_omega, omega)
     assert np.array_equal(actual, expected)
@@ -157,7 +157,7 @@ def test_spectrum_statistics_keys():
     stats = ws.spectrum_statistics(omega, density)
     assert {"m0", "m1", "m2", "m4", "Hs_m", "Tz_s", "Tp_s", "omega_p_rad_s",
             "spectral_width", "m_minus1", "Te_s"} <= stats.keys()
-    assert stats["m_minus1"] == pytest.approx(TRAPZ(density / omega, omega))
+    assert stats["m_minus1"] == pytest.approx(_trapezoid(density / omega, omega))
     assert stats["Te_s"] == pytest.approx(ws.energy_period_from_spectrum(omega, density))
 
 
