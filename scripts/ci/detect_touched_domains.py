@@ -64,6 +64,8 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("data/vessels/processed/drillship_basis.json", ("subsea",)),
     ("data/vessels/processed/metocean_criteria.csv", ("subsea",)),
     ("docs/domains/orcaflex/risers/", ("contracts", "subsea")),
+    ("docs/domains/orcaflex/library/line_types/", ("contracts", "subsea")),
+    ("docs/domains/orcaflex/library/buoy_types/", ("contracts", "subsea")),
     ("docs/domains/risers/riser-capability-inventory.md", ("contracts", "subsea")),
     ("docs/domains/risers/riser-input-database-register.md", ("contracts", "subsea")),
     ("docs/domains/risers/riser-input-database-register.json", ("contracts", "subsea")),
