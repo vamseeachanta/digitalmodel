@@ -33,6 +33,12 @@ FILES = {
     "hydrodyn": "OpenFAST/IEA-15-240-RWT-UMaineSemi/IEA-15-240-RWT-UMaineSemi_HydroDyn.dat",
 }
 
+# Derived centres and centre differences are serialized to 12 decimal places
+# in metres. Use fsum rather than sum (whose float algorithm changed in Python
+# 3.12), and round only the final reported quantity, not intermediate centres.
+# Source values, matrices and digests retain their original precision.
+DERIVED_DECIMAL_PLACES = 12
+
 # Expected bytes at COMMIT, independently pinned from the generated output.
 EXPECTED_SHA256 = {
     "tabular": "9ed6ee219a97c443d0b900498e3ef4fefa12d855d9a7c9e4c5b9bc0702b9078a",
@@ -68,6 +74,15 @@ def read_tabular(path: Path) -> tuple[dict, dict, list]:
             performance.append([float(row[0]), float(row[1]), float(row[5]),
                                 float(row[7]) * 1e6, float(row[2]) * 1e6])
     return overview, nacelle, performance
+
+
+def read_floating_tower(path: Path) -> list[list[float]]:
+    """Floating Tower Properties rows 2:21, columns B:K, in sheet units."""
+    import openpyxl
+
+    book = openpyxl.load_workbook(path, data_only=True, read_only=True)
+    rows = list(book["Floating Tower Properties"].iter_rows(values_only=True))
+    return [[float(value) for value in row[1:11]] for row in rows[1:21]]
 
 
 def read_hst(path: Path) -> list[list[float]]:
@@ -128,9 +143,9 @@ def build(raw: Path) -> dict:
             raise ValueError(f"source digest mismatch: {names[key].name}")
     overview, nacelle, performance = read_tabular(names["tabular"])
     rotor_rows = [nacelle["Blades"], nacelle["Hub_System"]]
-    # Keep accumulation independent of Python's built-in sum implementation.
     rotor_mass = math.fsum(float(r[1]) for r in rotor_rows)
-    rotor_cm = [math.fsum(float(r[1]) * float(r[c]) for r in rotor_rows) / rotor_mass
+    rotor_cm = [round(math.fsum(float(r[1]) * float(r[c]) for r in rotor_rows) / rotor_mass,
+                      DERIVED_DECIMAL_PLACES)
                 for c in (2, 3, 4)]
     parts = rotor_rows + [nacelle["nacelle"]]
     total_mass = math.fsum(float(r[1]) for r in parts)
@@ -188,7 +203,8 @@ def build(raw: Path) -> dict:
                 [float(nacelle["RNA"][c]) for c in (2, 3, 4)], "m",
                 src("tabular", f"{nms} row RNA C:E")),
             "rna_component_centre_discrepancy": item(
-                [combined[k] - float(nacelle["RNA"][c]) for k, c in enumerate((2, 3, 4))], "m",
+                [round(combined[k] - float(nacelle["RNA"][c]), DERIVED_DECIMAL_PLACES)
+                 for k, c in enumerate((2, 3, 4))], "m",
                 src("tabular", f"{nms}; mass-weighted centre of rows nacelle, Blades and "
                                "Hub_System minus row RNA C:E. The RNA row is not the "
                                "mass-weighted combination of its component rows; the "
@@ -201,6 +217,17 @@ def build(raw: Path) -> dict:
             "value": performance,
             "source": src("tabular", "Rotor Performance rows 2:51 columns A,B,F,H,C; "
                                      "MN and MW converted to N and W; WISDEM steady-state values"),
+        },
+        "floating_tower": {
+            "columns": ["height above SWL m", "outer diameter m", "wall thickness mm",
+                        "mass per length kg/m", "fore-aft section inertia kg m",
+                        "side-side section inertia kg m", "fore-aft bending stiffness N m^2",
+                        "side-side bending stiffness N m^2", "torsional stiffness N m^2",
+                        "axial stiffness N"],
+            "unit": "per column",
+            "value": read_floating_tower(names["tabular"]),
+            "source": src("tabular", "Floating Tower Properties rows 2:21 columns B:K; "
+                                     "values between stations vary linearly"),
         },
         "hydrodynamics": {
             "wamit_length_scale": item(read_value(names["hydrodyn"], "WAMITULEN"), "m",

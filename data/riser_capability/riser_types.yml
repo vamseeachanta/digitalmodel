@@ -258,6 +258,10 @@ databases:
     category: Structural sections
     path: data/riser_database/structure_properties/data.json
     provenance: citation_id per row resolved in sources.yml
+  - id: riser_buoyancy
+    category: Buoyancy modules
+    path: data/riser_buoyancy/data.json
+    provenance: citation_id per row resolved in sources.yml
   - id: soil_stiffness
     category: Soil
     path: data/soil_stiffness/data.json
@@ -287,8 +291,6 @@ databases:
     path: data/vessels/processed/metocean_criteria.csv
     provenance: n_citations column; citations in the raw JSON
 absent_database_categories:
-  - category: Buoyancy modules
-    issue: 3953
   - category: Coatings, insulation and vortex-induced vibration suppression
     issue: 3953
   - category: Flex joints, stress joints and keel joints
