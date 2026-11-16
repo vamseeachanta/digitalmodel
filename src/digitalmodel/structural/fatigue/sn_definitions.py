@@ -144,6 +144,9 @@ def thickness_stress_factor(definition: ThicknessDefinition) -> float:
 
     Reuse the existing thickness correction with a unit stress range. Both
     thicknesses use metres, so their ratio is unchanged.
+
+    Related: `sn_curves.ThicknessCorrection.apply_thickness_effect` returns a
+    corrected curve; this function returns only the stress factor.
     """
     return _positive_output(lambda: thickness_correction(
         1.0, definition.actual_thickness_m, definition.reference_thickness_m,
