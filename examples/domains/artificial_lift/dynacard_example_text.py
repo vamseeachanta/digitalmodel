@@ -134,7 +134,7 @@ def top_three(diagnosis):
                      for d in diagnosis["differential"][:3])
 
 
-def matrix_section(matrix):
+def matrix_section(matrix, phase):
     rows = []
     for row in matrix["rows"]:
         cells = [f"{p:.2f}" for p in row["probabilities_pct"]]
@@ -146,6 +146,7 @@ def matrix_section(matrix):
             "An outline marks the expected cell; a star marks the single-mode argmax "
             "(located in the aggregate column when outside the plate modes). "
             "The right-hand column reports the shipped-model HYPOTHESIS.\n\n" +
+            phase["reason"] + "\n\n" +
             table(["Example"] + [matrix_header(c) + " (%)" for c in matrix["columns"]]
                   + ["Shipped HYPOTHESIS"], rows,
                   "Table 2. Shape-only model probabilities (%) on the pump card computed "
@@ -226,14 +227,15 @@ def basis_section(document):
             "is not a multiplier in that calculation. Runtime source `card` denotes the "
             "InputParameters default, not measured runtime. Both CPIP density and "
             "gradient are retained above; negative computed intake pressures are "
-            "retained without clamping. The module's CPIP uses its own default mixture "
-            "density (35° API oil, 1.03 water specific gravity, 50 % water cut, "
-            "58.651 lb/ft³), not the context fluid density of 63.237 lb/ft³ used to scale "
-            "the load, so the computed fluid load can exceed the CPIP discharge-pressure "
-            "basis; CPIP for these examples is therefore not established.\n")
+            "retained without clamping. The module's CPIP uses the supplied context "
+            "fluid density of 63.237 lb/ft³ (density source `context`), the same "
+            "density that scales the load. The load scale assumes zero intake "
+            "pressure, so computed CPIP restates that assumption and does not "
+            "establish a physical intake pressure; CPIP for these examples is "
+            "therefore not established.\n")
 
 
-def limitations():
+def limitations(phase):
     return ("## What these examples do not establish\n\n"
             "The surface cards are synthesised, not measured. The plate is normalised "
             "and dimensionless; engineering scale and pump-card space are ASSUMED. "
@@ -245,7 +247,8 @@ def limitations():
             "condition whose physical pump load would be near zero, that uniform scale "
             "makes the result a shape illustration, not a physical pump card. Classifier "
             "probabilities describe model class separation; they are not calibrated "
-            "field probabilities. Every classifier call remains **HYPOTHESIS**.\n\n"
+            "field probabilities. Every classifier call remains **HYPOTHESIS**.\n\n" +
+            phase["reason"] + "\n\n" +
             "The forward model is the discrete inverse of the default solver on the "
             "same grid. Round-trip load nRMSE tests inverse consistency under that "
             "basis, not physical accuracy. The numerical criterion is derived from "
@@ -344,13 +347,15 @@ def readme(document, matrix):
     revisions = ("## Revision history\n\n" + table(
         ["Revision", "Date", "Change and reason"],
         [["1", "2026-11-12", "Ten dependent plate examples with assumed physical scales."],
-         ["2", "2026-11-13", "Absolute delta resolution, lossless model storage, source-derived numerical criterion and input provenance correct reproducibility and evidence gaps."]],
+         ["2", "2026-11-13", "Absolute delta resolution, lossless model storage, source-derived numerical criterion and input provenance correct reproducibility and evidence gaps."],
+         ["3", "2026-11-16", "Disclose reported cycle-origin sensitivity and use supplied density for CPIP so limitations and generated values match the calculation."]],
         "Table R1. Report revisions.") + "\n")
     digests = "\nModel SHA-256 digests (decompressed inference JSON): " + "; ".join(
         f"{key} `{digest}`" for key, digest in document["model_digests"].items()) + ".\n"
     return (header + revisions + reading_guide(records) + "\n" + score_section(records) + "\n" + summary_table(records) + "\n" +
-            matrix_section(matrix) + "\n" + "\n".join(example_section(r) for r in records) +
-            "\n" + basis_section(document) + digests + "\n" + limitations() + "\n" + rebuild)
+            matrix_section(matrix, document["basis"]["shape_phase_sensitivity"]) + "\n" +
+            "\n".join(example_section(r) for r in records) + "\n" + basis_section(document) +
+            digests + "\n" + limitations(document["basis"]["shape_phase_sensitivity"]) + "\n" + rebuild)
 
 
 def text_artifacts(document):

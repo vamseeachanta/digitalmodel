@@ -231,6 +231,25 @@ def build_examples(workbook_path: str | Path) -> list[dict]:
     return [_build_example(c, i, manifest, models, digests) for i, c in enumerate(curves, 1)]
 
 
+def shape_phase_sensitivity() -> dict:
+    """Retain the reported probe; phase invariance is not established."""
+    return {
+        "status": "ASSUMED",
+        "value": {"normal_one_sample_shift_from": "NORMAL",
+                  "normal_one_sample_shift_to": "STUCK_PUMP",
+                  "near_minimum_shifts": 104, "changed_labels": 33,
+                  "tracking_issue": "#4079"},
+        "reason": ("Shape-only inference is sensitive to cycle origin: the reported "
+                   "one-sample shift changes NORMAL to STUCK_PUMP, and 33 of 104 "
+                   "near-minimum shifts change the label. Phase stability is ASSUMED, "
+                   "not established; every shape label remains HYPOTHESIS. "
+                   "Phase normalization is tracked in #4079."),
+        "provenance": ("Reported cycle-origin probe at revision 5f223b4e; "
+                       "these counts are retained observations, not field accuracy "
+                       "or a new measurement from this build."),
+    }
+
+
 def _basis() -> dict:
     well = example_well()
     context = DynacardAnalysisContext(**well, surface_card=CardData(position=[0, 1, 0], load=[0, 1, 0]))
@@ -247,13 +266,15 @@ def _basis() -> dict:
         "surface_card": ({"origin": "synthesised from the plate shape", "position_decimals": SURFACE_POSITION_DECIMALS, "load_decimals": SURFACE_LOAD_DECIMALS}, "Forward rod-string model, not a measured polished-rod card. Rounded to the published CSV precision before analysis, so the published card reproduces the stored results."),
         "crosswalks": (_ASSUMED_MODES, "Supply insufficiency does not establish fluid pound; sand production does not establish abrasion."),
         "uniform_scale": ("All ten shapes use the same stroke and load range", "Rod parting and other near-zero physical-load conditions are shape illustrations, not physical pump cards."),
-        "cpip_defaults": ({"oil_api": 35.0, "water_sg": 1.03, "water_cut_pct": 50.0}, "CPIP derives density from this default mixture, not context fluid_density; retained as the module reports it."),
+        "cpip_density_basis": ({"density_source": "context", "fluid_density_lb_ft3": well["fluid_density"], "tubing_gradient": "fluid_density / 144 psi/ft"}, "CPIP uses the supplied context fluid density, the same density that scales the load; the scale assumes zero intake pressure, so computed CPIP restates that assumption."),
         "production": ({"runtime_hours": context.input_params.runtime, "pump_efficiency_pct": 100 * context.pump.efficiency}, "InputParameters defaults runtime to 24 h (reported source: card); no measured runtime or efficiency. Production = net displacement * runtime / 24; reported efficiency is not a multiplier."),
         "solver_defaults": ({"method": "everitt_jennings", "nodes": 200, "viscosity_cp": 10.0, "tubing_id_in": 2.441, "zero_surface_position_datum": True}, "Forward and default inverse use matching grids, damping defaults and vertical survey; inverse output smoothing remains enabled."),
     }
-    return {key: {"status": "ASSUMED", "value": value, "reason": reason,
-                  "provenance": "assumed, based on previous experience"}
-            for key, (value, reason) in rows.items()}
+    basis = {key: {"status": "ASSUMED", "value": value, "reason": reason,
+                   "provenance": "assumed, based on previous experience"}
+             for key, (value, reason) in rows.items()}
+    basis["shape_phase_sensitivity"] = shape_phase_sensitivity()
+    return basis
 
 
 def _rounded(value):

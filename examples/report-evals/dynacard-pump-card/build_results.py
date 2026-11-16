@@ -51,7 +51,8 @@ def manifest(data):
                 'basis': 'fixed', 'limits': ['Arithmetic reproduction only; derived pump quantities depend on the ASSUMED inputs recorded in the analysis and report.']}
                for key, label, value, unit, digits in numerical_results(data)]
     inputs = [{'id': f'source_{index}', 'description': row['what'], 'source': row['source'],
-               'url': row['url'], 'licence': row['licence'], 'version_or_date': row['date'],
+               'url': row['url'], 'licence': row['licence'],
+               'version_or_date': row.get('revision', row['date']),
                'sha256_published': row['sha256'], 'updates': 'never',
                'supplied_by': 'repository', 'required': True}
               for index, row in enumerate(data['sources'])]

@@ -133,7 +133,7 @@ def sensitivity_section(data):
 
 
 def source_table(data):
-    rows = [(s['what'], s['source'], s['licence'], s['date'], f"[Source]({s['url']})")
+    rows = [(s['what'], s['source'], s['licence'], s.get('revision', s['date']), f"[Source]({s['url']})")
             for s in data['sources']]
     return table(('Data', 'Source', 'Licence', 'Version or date', 'Link'), rows,
                  'Table B1. Retained data sources; input and source digests are recorded by the analysis and eval.')
@@ -168,6 +168,8 @@ The public example well gives a pump stroke of {number(key['pump_stroke_in'])} i
 | --- | --- | --- |
 | 0 | 2026-11-12 | Initial calculation note with public-card results, assumptions and sensitivity. |
 | 1 | 2026-11-12 | Correct cycle endpoints, refresh derived results and declare metadata precision for reproducible comparison. |
+| 2 | 2026-11-14 | Bind the fixture and plate-score citations to the consumed bytes so their revisions and digests agree. |
+| 3 | 2026-11-16 | Disclose reported cycle-origin sensitivity beside the shape-model limitations. |
 
 ## 1 Introduction
 
@@ -192,6 +194,8 @@ The wave solutions terminate at the supplied rod-string length of {number(geomet
 The well record of the public example well carries two notes that bear on the results. Its own system reports that corner detection failed on this card, so the fillage and fluid load here rest on this package's corner detection alone. Its last well test gives a liquid rate below the displacement computed here at the stated basis; displacement from a card is not production.
 
 Model probabilities describe synthetic class separation and are not calibrated field probabilities. The public plate is dependent shape evidence because it also constrains the synthetic generators used for training.
+
+{data['validation']['shape_phase_sensitivity']['reason']}
 
 The assumed damping, anchoring, time sampling, material properties and load calibration are registered in Table 2. Reproduction within rounding tolerance establishes arithmetic consistency for this governing case; it does not establish those assumptions.
 

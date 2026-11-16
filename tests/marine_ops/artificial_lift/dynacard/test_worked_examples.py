@@ -249,7 +249,10 @@ def test_round_trip_criterion_has_independent_sampling_oracle():
 
 
 def test_assumed_numerical_inputs_have_previous_experience_provenance(document):
-    for entry in document["basis"].values():
+    for key, entry in document["basis"].items():
+        if key == "shape_phase_sensitivity":
+            assert "Reported cycle-origin probe" in entry["provenance"]
+            continue
         assert entry["provenance"] == "assumed, based on previous experience"
 
 
@@ -378,7 +381,8 @@ def test_plot_positions_shift_only_for_display(document, builder):
     assert json.dumps(document, sort_keys=True) == before
 
 
-def test_check_cli_detects_drift(tmp_path, document, builder):
+@pytest.mark.parametrize("artifact", ["results.json", "README.md"])
+def test_check_cli_detects_drift(tmp_path, document, builder, artifact):
     for name, content in builder.text_artifacts(document).items():
         (tmp_path / name).write_bytes(content)
     env = dict(os.environ, PYTHONPATH=str(ROOT / "src"), PYTHONIOENCODING="utf-8")
@@ -387,10 +391,18 @@ def test_check_cli_detects_drift(tmp_path, document, builder):
                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0), timeout=45)
     check = subprocess.run(command, **options)
     assert check.returncode == 0, check.stdout + check.stderr
-    (tmp_path / "README.md").write_text("drift\n", encoding="utf-8")
+    path = tmp_path / artifact
+    if artifact == "results.json":
+        saved = json.loads(path.read_text(encoding="utf-8"))
+        del saved["basis"]["shape_phase_sensitivity"]
+        path.write_text(json.dumps(saved), encoding="utf-8")
+    else:
+        text = path.read_text(encoding="utf-8")
+        path.write_text(text.replace(document["basis"]["shape_phase_sensitivity"]["reason"], ""),
+                        encoding="utf-8")
     check = subprocess.run(command, **options)
     assert check.returncode != 0
-    assert "README.md" in check.stdout + check.stderr
+    assert artifact in check.stdout + check.stderr
 
 
 def test_published_surface_csv_reproduces_stored_analysis(document):
@@ -420,3 +432,35 @@ def test_published_surface_csv_reproduces_stored_analysis(document):
                            (result.fillage.net_stroke, "pump_net_stroke_in")):
             # results.json keeps nine significant digits.
             assert value == pytest.approx(stored[key], rel=1e-8, abs=1e-9), (record["index"], key)
+
+
+def test_shape_phase_limitation_is_retained_on_result_surfaces(document, builder):
+    phase = document["basis"]["shape_phase_sensitivity"]
+    assert phase["status"] == "ASSUMED"
+    assert phase["value"] == {
+        "normal_one_sample_shift_from": "NORMAL",
+        "normal_one_sample_shift_to": "STUCK_PUMP",
+        "near_minimum_shifts": 104, "changed_labels": 33, "tracking_issue": "#4079",
+    }
+    assert "5f223b4e" in phase["provenance"]
+    readme = builder.text_artifacts(document)["README.md"].decode("utf-8")
+    for heading in ("## Diagnostics matrix", "## What these examples do not establish"):
+        section = readme.split(heading, 1)[1].split("\n## ", 1)[0]
+        assert phase["reason"] in section
+        for phrase in ("one-sample shift", "NORMAL", "STUCK_PUMP", "33 of 104", "#4079"):
+            assert phrase in section
+
+
+def test_worked_cpip_uses_the_supplied_density(document, builder):
+    assert "cpip_defaults" not in document["basis"]
+    basis = document["basis"]["cpip_density_basis"]["value"]
+    assert basis["density_source"] == "context"
+    assert basis["fluid_density_lb_ft3"] == 63.237
+    for record in document["examples"]:
+        values = record["analysis"]
+        assert values["cpip_fluid_density_lb_ft3"] == 63.237
+        assert values["cpip_tubing_gradient_psi_ft"] == pytest.approx(63.237 / 144)
+        assert values["pump_discharge_pressure_psi"] == pytest.approx(100 + 63.237 * 4844 / 144)
+    readme = builder.text_artifacts(document)["README.md"].decode("utf-8")
+    assert "density source `context`" in readme
+    assert "CPIP uses its own default mixture" not in readme

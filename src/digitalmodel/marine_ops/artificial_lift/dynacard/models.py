@@ -228,11 +228,23 @@ class FluidLoadAnalysis(BaseModel):
 
 
 class CPIPAnalysis(BaseModel):
-    """Results from CPIP (Calculated Pump Intake Pressure) analysis."""
+    """Calculated pressures; status does not establish field qualification.
+
+    Negative intake values are retained for diagnosis, without asserting an
+    absolute-pressure basis. Density source records the selected calculation
+    input, not whether it was measured. Older/manual results are unestablished.
+    """
     pump_intake_pressure: float = 0.0  # psi
     pump_discharge_pressure: float = 0.0  # psi
     fluid_density: float = 0.0  # lbs/ft^3
     tubing_gradient: float = 0.0  # psi/ft
+    density_source: Literal[
+        "unestablished", "context", "well_test_mixture", "assumed_50pct_mixture"
+    ] = "unestablished"
+    pressure_status: Literal[
+        "unestablished", "calculated", "negative_calculated_pressure"
+    ] = "unestablished"
+    warnings: List[str] = Field(default_factory=list)
 
 
 class PumpFillageAnalysis(BaseModel):

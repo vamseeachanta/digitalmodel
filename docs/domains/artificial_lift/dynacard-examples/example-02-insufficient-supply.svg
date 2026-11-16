@@ -3208,7 +3208,7 @@ z
     <use xlink:href="#DejaVuSans-56" transform="translate(1980.03125 0)"/>
     <use xlink:href="#DejaVuSans-c" transform="translate(2032.125 0)"/>
    </g>
-   <!-- CPIP intake / discharge: 362 / 2071 psi -->
+   <!-- CPIP intake / discharge: 518 / 2227 psi -->
    <g transform="translate(75.6 524.523375) scale(0.1 -0.1)">
     <use xlink:href="#DejaVuSans-26"/>
     <use xlink:href="#DejaVuSans-33" transform="translate(69.828125 0)"/>
@@ -3235,16 +3235,16 @@ z
     <use xlink:href="#DejaVuSans-48" transform="translate(1082.3125 0)"/>
     <use xlink:href="#DejaVuSans-1d" transform="translate(1143.84375 0)"/>
     <use xlink:href="#DejaVuSans-3" transform="translate(1177.53125 0)"/>
-    <use xlink:href="#DejaVuSans-16" transform="translate(1209.3125 0)"/>
-    <use xlink:href="#DejaVuSans-19" transform="translate(1272.9375 0)"/>
-    <use xlink:href="#DejaVuSans-15" transform="translate(1336.5625 0)"/>
+    <use xlink:href="#DejaVuSans-18" transform="translate(1209.3125 0)"/>
+    <use xlink:href="#DejaVuSans-14" transform="translate(1272.9375 0)"/>
+    <use xlink:href="#DejaVuSans-1b" transform="translate(1336.5625 0)"/>
     <use xlink:href="#DejaVuSans-3" transform="translate(1400.1875 0)"/>
     <use xlink:href="#DejaVuSans-12" transform="translate(1431.96875 0)"/>
     <use xlink:href="#DejaVuSans-3" transform="translate(1465.65625 0)"/>
     <use xlink:href="#DejaVuSans-15" transform="translate(1497.4375 0)"/>
-    <use xlink:href="#DejaVuSans-13" transform="translate(1561.0625 0)"/>
-    <use xlink:href="#DejaVuSans-1a" transform="translate(1624.6875 0)"/>
-    <use xlink:href="#DejaVuSans-14" transform="translate(1688.3125 0)"/>
+    <use xlink:href="#DejaVuSans-15" transform="translate(1561.0625 0)"/>
+    <use xlink:href="#DejaVuSans-15" transform="translate(1624.6875 0)"/>
+    <use xlink:href="#DejaVuSans-1a" transform="translate(1688.3125 0)"/>
     <use xlink:href="#DejaVuSans-3" transform="translate(1751.9375 0)"/>
     <use xlink:href="#DejaVuSans-53" transform="translate(1783.71875 0)"/>
     <use xlink:href="#DejaVuSans-56" transform="translate(1847.203125 0)"/>

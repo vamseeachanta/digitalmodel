@@ -16,7 +16,7 @@ def test_figure_exports_physical_cards_and_ten_reference_shapes(tmp_path, monkey
     def capture_svg(figure, path, *args, **kwargs):
         savefig(figure, path, *args, **kwargs)
         if Path(path).suffix == '.svg':
-            raw_svg.append(Path(path).read_text())
+            raw_svg.append(Path(path).read_text(encoding='utf-8'))
     monkeypatch.setattr(Figure, 'savefig', capture_svg)
     spec = importlib.util.spec_from_file_location('dynacard_plotting', HERE / 'plotting.py')
     module = importlib.util.module_from_spec(spec)
@@ -54,8 +54,8 @@ def test_figure_exports_physical_cards_and_ten_reference_shapes(tmp_path, monkey
         assert phrase.lower() in text.lower()
     assert text.count('(label mapping assumed)') == 2
     assert '−' not in text  # The load axis is labelled from zero; no negative load is implied.
-    assert all(line == line.rstrip() for line in svg.read_text().splitlines())
+    assert all(line == line.rstrip() for line in svg.read_text(encoding='utf-8').splitlines())
     def parsed(text):
         return [(node.tag, {key: ' '.join(value.split()) for key, value in node.attrib.items()},
                  ' '.join((node.text or '').split())) for node in ET.fromstring(text).iter()]
-    assert parsed(svg.read_text()) == parsed(raw_svg[0])
+    assert parsed(svg.read_text(encoding='utf-8')) == parsed(raw_svg[0])

@@ -11,6 +11,8 @@ The public example well gives a pump stroke of 39.57 in from a measured surface 
 | --- | --- | --- |
 | 0 | 2026-11-12 | Initial calculation note with public-card results, assumptions and sensitivity. |
 | 1 | 2026-11-12 | Correct cycle endpoints, refresh derived results and declare metadata precision for reproducible comparison. |
+| 2 | 2026-11-14 | Bind the fixture and plate-score citations to the consumed bytes so their revisions and digests agree. |
+| 3 | 2026-11-16 | Disclose reported cycle-origin sensitivity beside the shape-model limitations. |
 
 ## 1 Introduction
 
@@ -40,6 +42,8 @@ The wave solutions terminate at the supplied rod-string length of 4750 ft; the s
 The well record of the public example well carries two notes that bear on the results. Its own system reports that corner detection failed on this card, so the fillage and fluid load here rest on this package's corner detection alone. Its last well test gives a liquid rate below the displacement computed here at the stated basis; displacement from a card is not production.
 
 Model probabilities describe synthetic class separation and are not calibrated field probabilities. The public plate is dependent shape evidence because it also constrains the synthetic generators used for training.
+
+Shape-only inference is sensitive to cycle origin: the reported one-sample shift changes NORMAL to STUCK_PUMP, and 33 of 104 near-minimum shifts change the label. Phase stability is ASSUMED, not established; every shape label remains HYPOTHESIS. Phase normalization is tracked in #4079.
 
 The assumed damping, anchoring, time sampling, material properties and load calibration are registered in Table 2. Reproduction within rounding tolerance establishes arithmetic consistency for this governing case; it does not establish those assumptions.
 
@@ -210,9 +214,9 @@ The [reusable prompt](../../../examples/report-evals/dynacard-pump-card/PROMPT.m
 
 | Data | Source | Licence | Version or date | Link |
 | --- | --- | --- | --- | --- |
-| Public example surface card, rod string and stored pump card | Repository field fixture | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/c2a62ac98957044e6b34bf0c0b0c9d19900dd4fc/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json) |
+| Public example surface card, rod string and stored pump card | Repository field fixture | MIT | 9680e7e1ac4a4c225b788e4308322cf87460af70 | [Source](https://api.github.com/repositories/590299785/contents/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json?ref=9680e7e1ac4a4c225b788e4308322cf87460af70) |
 | Public reference shapes | Public diagnostic plate | CC0 1.0 | 2026-10-11 | [Source](https://doi.org/10.17632/hnfwm9mjs6.1) |
-| Recorded shape-only plate score | Repository benchmark | MIT | 2026-11-12 | [Source](https://github.com/vamseeachanta/digitalmodel/blob/c2a62ac98957044e6b34bf0c0b0c9d19900dd4fc/tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json) |
+| Recorded shape-only plate score | Repository benchmark | MIT | 91e9ad115c6994d4d2546b515ba0751efa782277 | [Source](https://api.github.com/repositories/590299785/contents/tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json?ref=91e9ad115c6994d4d2546b515ba0751efa782277) |
 
 Table B1. Retained data sources; input and source digests are recorded by the analysis and eval.
 
