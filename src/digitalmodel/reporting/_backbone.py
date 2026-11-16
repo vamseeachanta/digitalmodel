@@ -32,12 +32,18 @@ class ReportSection:
     block). It is invoked as ``builder(data, mode=..., benchmark_sections=...,
     **builder_kwargs)`` and is expected to return an HTML fragment (possibly
     the empty string, which is omitted from the output).
+
+    ``reads`` declares source identifier patterns or exact kinds. Only
+    ``assemble_report`` validates these against Provenance; rendering a bare
+    ReportBackbone leaves them as metadata.
     """
 
     key: str
     label: str
     mode: SectionMode
     builder: Callable[..., str]
+    # Checked only by assemble_report; bare-backbone rendering is unchanged.
+    reads: Optional[List[str]] = None
 
 
 @dataclass

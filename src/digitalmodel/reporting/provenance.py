@@ -5,16 +5,32 @@ ABOUTME: Makes a report a *view* over a single source of truth, with
 **mandatory provenance**. A report assembled through :func:`assemble_report`
 must declare where its numbers came from (one or more :class:`DataSource`) or
 rendering fails closed -- killing the hand-pasted-results anti-pattern. The
-non-user-supplied :class:`~digitalmodel.common.assumption_ledger.AssumptionLedger`
+non-user-supplied assumption ledger
 renders as a first-class provenance block (the #622 "no silent assumptions"
 surface), reusable by every reporter instead of being diffraction-only.
+
+Authoring rules (#1019):
+* Construct Provenance with sources, code_edition (package/SHA and applicable
+  standard edition), and validated_path: validated, screening or unvalidated.
+  Supply units_system when known; assumptions travel in the existing ledger.
+  Construction remains permissive; require() gates completed reports.
+* Declare ReportSection.reads as literal identifiers, fnmatch patterns or exact source
+  kinds. Every read must match a declared source before any builder runs.
+  This validation lives ONLY in assemble_report; ReportBackbone.render treats
+  reads as inert metadata. It does not intercept file I/O or detect literals.
+* Results SSOT: examples/workflows/<slug>/results/ and registry-declared
+  outputs in docs/registry/workflows.yaml. Prefer workflow_results, registry,
+  spec and file source kinds; do not invent solver-queue completed paths.
+* Skeleton drafts may render before provenance exists; completeness checks
+  the same requirements as require() when provenance is mandatory.
 """
 
 from __future__ import annotations
 
 import html
+from fnmatch import fnmatch
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, List, Optional
+from typing import TYPE_CHECKING, Any, List, Literal, Optional
 
 from pydantic import Field
 
@@ -25,21 +41,27 @@ from digitalmodel.reporting._renderer import ReportRenderer
 if TYPE_CHECKING:  # avoid importing the ledger at module load
     from digitalmodel.common.assumption_ledger import AssumptionLedger
 
+ValidatedPath = Literal["validated", "screening", "unvalidated"]
+
 
 class ProvenanceError(RuntimeError):
     """Raised when a report is assembled without declared provenance."""
 
 
+class ContractError(ProvenanceError):
+    """A section declares a read outside the report's source contract."""
+
+
 class DataSource(ReportDataModel):
     """One declared origin of a report's data -- *where the numbers came from*.
 
-    ``retrieved_at`` is caller-supplied (kept out of the library so reports stay
-    deterministic and testable); pass an ISO timestamp when you have one.
+    ``retrieved_at`` is caller-supplied to keep reports deterministic and
+    testable; pass an ISO timestamp when you have one.
     """
 
     kind: str = Field(
-        description="Source category, e.g. 'spec', 'solver_queue', "
-        "'analysis_store', 'file'."
+        description="Source category, e.g. 'workflow_results', 'registry', "
+        "'spec', 'file'."
     )
     identifier: str = Field(description="Path, run-id, or store key.")
     digest: Optional[str] = Field(
@@ -53,6 +75,9 @@ class Provenance(ReportDataModel):
     """The set of sources a report is a view over."""
 
     sources: List[DataSource] = Field(default_factory=list)
+    code_edition: Optional[str] = None
+    units_system: Optional[str] = None
+    validated_path: Optional[ValidatedPath] = None
 
     def add(
         self,
@@ -76,14 +101,26 @@ class Provenance(ReportDataModel):
         return self
 
     def require(self) -> "Provenance":
-        """Enforce mandatory provenance; raise if no source is declared."""
+        """Enforce sources, code edition and validation status on rendering."""
         if not self.sources:
             raise ProvenanceError(
-                "Report has no declared data source -- provenance is mandatory "
-                "(#1019: a report is a view over a source, not a copy). Declare "
-                "at least one DataSource."
+                "Report has no declared data source -- provenance is "
+                "mandatory (#1019: a report is a view over a source, not a "
+                "copy). Declare at least one DataSource."
             )
+        if not self.code_edition or not self.code_edition.strip():
+            raise ProvenanceError("Report provenance requires code_edition.")
+        if not self.validated_path:
+            raise ProvenanceError("Report provenance requires validated_path.")
         return self
+
+    def is_complete(self) -> bool:
+        """Non-raising twin of :meth:`require` for draft completeness."""
+        try:
+            self.require()
+        except ProvenanceError:
+            return False
+        return True
 
 
 # ---------------------------------------------------------------------------
@@ -107,11 +144,16 @@ def provenance_block(provenance: Provenance, **_: Any) -> str:
     body = "".join(rows) or (
         '<tr><td colspan="5"><em>No sources declared.</em></td></tr>'
     )
+    edition = html.escape(provenance.code_edition or "Not supplied")
+    units = html.escape(provenance.units_system or "Not supplied")
+    status = html.escape(provenance.validated_path or "Not supplied")
     return (
         '<div class="section" id="provenance">'
         "<h2>Data provenance</h2>"
         "<p>This report is a <strong>view</strong> over the sources below; "
         "values are read from them, not copied in.</p>"
+        f"<p>Code edition: {edition}; Units: {units}; "
+        f"Validated path: {status}</p>"
         "<table><thead><tr><th>Kind</th><th>Identifier</th><th>Digest</th>"
         "<th>Retrieved</th><th>Description</th></tr></thead>"
         f"<tbody>{body}</tbody></table>"
@@ -176,13 +218,27 @@ def assemble_report(
 ) -> str | Path:
     """Assemble a provenance-gated report on the shared backbone.
 
-    Fails closed via :meth:`Provenance.require` if no source is declared. Body
-    ``sections`` (standard :class:`ReportSection` builders over ``data``) render
+    Fails closed via :meth:`Provenance.require` on missing mandatory metadata.
+    Every declared section read must match a source identifier (literal or fnmatch) or
+    exact kind; unmatched reads raise :class:`ContractError` before rendering.
+    Sections without reads retain their existing behavior. Body
+    ``sections`` (:class:`ReportSection` builders over ``data``) render
     first, then the mandatory **provenance** block, then the **assumption
     ledger** block (when a ledger is given). Returns the HTML string, or writes
     to ``output_path`` and returns the :class:`Path`.
     """
     provenance.require()
+    for section in sections or []:
+        for read in section.reads or []:
+            if not any(
+                read == source.kind
+                or read == source.identifier
+                or fnmatch(source.identifier, read)
+                for source in provenance.sources
+            ):
+                raise ContractError(
+                    f"Section {section.key!r} has unmatched read {read!r}."
+                )
 
     body: List[str] = []
     if sections:
@@ -201,6 +257,7 @@ def assemble_report(
 
 __all__ = [
     "ProvenanceError",
+    "ContractError",
     "DataSource",
     "Provenance",
     "provenance_block",

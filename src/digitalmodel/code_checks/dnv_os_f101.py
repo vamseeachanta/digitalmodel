@@ -186,6 +186,9 @@ def local_buckling_lcc(
 # with initial ovality f0 = (Dmax - Dmin)/D (>= 0.005 per code minimum).
 # Pc is taken as the relevant (smallest positive) real root.
 
+# Code minimum initial ovality f0 applied as a floor by collapse_pressure().
+MINIMUM_OVALITY = 0.005
+
 
 def elastic_collapse_pressure(
     diameter: float, t: float, youngs_modulus: float, poisson_ratio: float = 0.3
@@ -244,8 +247,8 @@ def collapse_pressure(
     float
         Characteristic collapse resistance Pc [pressure].
     """
-    if ovality < 0.005:
-        ovality = 0.005  # DNV code minimum imperfection
+    if ovality < MINIMUM_OVALITY:
+        ovality = MINIMUM_OVALITY  # DNV code minimum imperfection
 
     pel = elastic_collapse_pressure(diameter, t, youngs_modulus, poisson_ratio)
     pp = plastic_collapse_pressure(diameter, t, f_y, alpha_fab)

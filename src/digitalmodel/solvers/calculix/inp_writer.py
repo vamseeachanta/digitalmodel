@@ -11,6 +11,8 @@ from typing import Optional
 
 import numpy as np
 
+from .beam_validation import validate_beam_sections
+
 # Element type mapping: gmsh name -> CalculiX type
 ELEMENT_TYPE_MAP = {
     "Tetrahedron 4": "C3D4",
@@ -203,8 +205,14 @@ class INPWriter:
             material: Material name (must match an add_material call).
             section_type: Cross-section shape — RECT, CIRC, PIPE, etc.
             dimensions: Section dimensions tuple (depends on section_type).
-                RECT: (width, height), CIRC: (radius,), PIPE: (outer_r, thickness).
+                RECT: (width, height), CIRC: (diameter,), PIPE: (outer_r, thickness).
             direction: Normal direction vector for the beam cross-section.
+
+        CIRC takes a diameter, not a radius; values are serialized unchanged.
+        PIPE retains outer radius and wall thickness. Issue #1676's approved
+        review cites CalculiX 2.22 sections 6.2 and 7.3 for these dimensions.
+        At write time, CIRC requires B32 under the issue's recorded v2.21
+        compatibility policy. PIPE requires B32R, currently unsupported here.
         """
         self._beam_sections.append({
             "elset": elset,
@@ -258,6 +266,11 @@ class INPWriter:
     def write(self, filepath: Path) -> Path:
         """Write the .inp file and return its path."""
         filepath = Path(filepath)
+        validate_beam_sections(
+            self.elements, self._element_sets, self._beam_sections,
+            element_type_map=ELEMENT_TYPE_MAP, beam_types=BEAM_ELEMENT_TYPES,
+            shell_types=SHELL_ELEMENT_TYPES,
+        )
         self._validate_shell_sections()
         lines: list[str] = []
 

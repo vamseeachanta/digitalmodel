@@ -115,6 +115,9 @@ docs/api/installation/installation-forecast.manifest.json text eol=lf
 # Preserve manifest-bound riser database fingerprints across checkout settings.
 data/riser_database/** text eol=lf
 
+# Keep the generated riser input register byte-identical across checkouts.
+docs/domains/risers/riser-input-database-register.* text eol=lf
+
 # Preserve digest-bound screening inputs under Windows text checkout settings.
 examples/data/jackup_screening/inputs.json text eol=lf
 examples/data/jackup_screening/environment.json text eol=lf
@@ -162,3 +165,5 @@ src/digitalmodel/marine_ops/marine_analysis/catenary/simplified.py text eol=lf
 src/digitalmodel/orcaflex/mooring_design.py text eol=lf
 tests/marine_ops/marine_engineering/catenary/test_simplified.py text eol=lf
 tests/orcaflex/test_mooring_design.py text eol=lf
+# GEBCO 2025 subset fixture: subset.asc bytes are bound by SHA-256 in provenance.json.
+tests/data_systems/fixtures/gebco_2025/* text eol=lf

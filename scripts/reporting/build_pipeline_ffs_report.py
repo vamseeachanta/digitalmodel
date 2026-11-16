@@ -33,6 +33,7 @@ from digitalmodel.asset_integrity.assessment.ffs_decision import (
     DecisionBands, decide, reduced_mawp, remaining_life,
 )
 from digitalmodel.reporting.engine import render_html
+from digitalmodel.reporting._metadata import package_code_edition
 from digitalmodel.reporting.provenance import Provenance
 from digitalmodel.reporting.spec import DocumentMeta, FigureBlock, ReportSpec, RevisionRow, Section, TableBlock, TextBlock
 from digitalmodel.units import Q_
@@ -706,7 +707,11 @@ def report_spec(root, result):
                   ["UT", "Ultrasonic thickness"], ["COV", "Coefficient of variation"], ["in / psi / MPa / yr", "inch / pounds per square inch / megapascal / year"],
                   ["F₁ / F₂", "Modelling / operational usage factor"], ["D / t / d / L", "Diameter / nominal wall / loss depth / axial length"],
               ])]]
-    provenance = Provenance()
+    provenance = Provenance(
+        code_edition=package_code_edition(),
+        units_system="US customary",
+        validated_path="screening",
+    )
     for source in result["sources"]:
         provenance.add("synthetic", source["path"], digest="sha256-lf:" + source["sha256_lf"])
     return ReportSpec(

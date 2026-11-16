@@ -1,0 +1,281 @@
+{
+ "description": "Licence-free checks of the generated NREL 5 MW / OC4-DeepCwind fowt model (rigid representation). SI units.",
+ "system_mass": 14072324.492717916,
+ "system_centre_of_gravity": [
+  -0.010129812534732885,
+  0.0,
+  -9.894318090911867
+ ],
+ "still_water": {
+  "surge": -0.0019371683443951647,
+  "heave": 0.0005008492004786044,
+  "pitch_deg": -0.07476690934013921,
+  "lines": [
+   {
+    "horizontal": 900630.3100594878,
+    "vertical": 629003.1586268467,
+    "tension": 1098535.356263238,
+    "span": 796.7238429098157,
+    "grounded_length": 245.03156739613803,
+    "utilisation": null
+   },
+   {
+    "horizontal": 900602.646748681,
+    "vertical": 628845.8479991781,
+    "tension": 1098422.6089609293,
+    "span": 796.7483666246317,
+    "grounded_length": 245.1792406764348,
+    "utilisation": null
+   },
+   {
+    "horizontal": 900630.3100594878,
+    "vertical": 629003.1586268467,
+    "tension": 1098535.356263238,
+    "span": 796.7238429098157,
+    "grounded_length": 245.03156739613803,
+    "utilisation": null
+   }
+  ]
+ },
+ "natural_periods": {
+  "surge": 113.68403132111585,
+  "heave": 17.277879364503537,
+  "pitch": 25.43366213014032,
+  "yaw": 79.79622285014078
+ },
+ "natural_periods_infinite_frequency_added_mass": {
+  "surge": 107.90824265731203,
+  "heave": 17.199941922758494,
+  "pitch": 25.280957246315015,
+  "yaw": 76.38008958112172
+ },
+ "openfast_linearisation_periods": {
+  "surge": 106.892115,
+  "sway": 106.971271,
+  "heave": 17.2833272,
+  "roll": 25.3263294,
+  "pitch": 25.4474769,
+  "yaw": 80.2215727
+ },
+ "mooring_stiffness": [
+  [
+   70133.69203846087,
+   -0.0,
+   5.52669531898573,
+   -0.0,
+   -105024.75943241734,
+   -0.0
+  ],
+  [
+   -0.0,
+   70111.96310328087,
+   -0.0,
+   101351.74482769798,
+   -0.0,
+   1338.3900478947908
+  ],
+  [
+   5.527132574934512,
+   -1.1641532182693481e-08,
+   19080.207577033434,
+   1.1641532182693481e-06,
+   -1529.055181890726,
+   -0.0
+  ],
+  [
+   -0.0,
+   101350.12095784768,
+   0.0,
+   86702591.21844542,
+   0.0,
+   39139.91333916783
+  ],
+  [
+   -105024.79616552591,
+   -0.0,
+   -1529.054622258991,
+   0.0,
+   86707111.72241724,
+   -0.0
+  ],
+  [
+   -0.0,
+   1338.3956739970017,
+   -0.0,
+   77677.61942503057,
+   -0.0,
+   116083652.59374808
+  ]
+ ],
+ "comparisons": [
+  {
+   "quantity": "Displaced volume",
+   "unit": "m3",
+   "computed": 13917.0,
+   "comparator": 13917.0,
+   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Table 4-6",
+   "tolerance": 0.01,
+   "deviation": 0.0,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Buoyancy force",
+   "unit": "N",
+   "computed": 139891126.75125,
+   "comparator": 139890000.0,
+   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Table 4-6",
+   "tolerance": 0.01,
+   "deviation": 8.054551790684165e-06,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Heave hydrostatic stiffness",
+   "unit": "N/m",
+   "computed": 3820308.3616993744,
+   "comparator": 3836000.0,
+   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Table 4-6",
+   "tolerance": 0.02,
+   "deviation": -0.004090625208713662,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Pitch hydrostatic stiffness, weight term excluded",
+   "unit": "N m/rad",
+   "computed": -380715254.4591374,
+   "comparator": -377600000.0,
+   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Table 4-6",
+   "tolerance": 0.03,
+   "deviation": 0.008250144224410434,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Mooring vertical load at the undisplaced position",
+   "unit": "N",
+   "computed": -1886852.1652528716,
+   "comparator": -1839000.0,
+   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 28",
+   "tolerance": 0.03,
+   "deviation": 0.02602075326420423,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Mooring stiffness, surge",
+   "unit": "N/m",
+   "computed": 70133.69203846087,
+   "comparator": 70800.0,
+   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 28",
+   "tolerance": 0.03,
+   "deviation": -0.009411129400270233,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Mooring stiffness, heave",
+   "unit": "N/m",
+   "computed": 19080.207577033434,
+   "comparator": 19100.0,
+   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 28",
+   "tolerance": 0.03,
+   "deviation": -0.0010362525113385306,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Mooring stiffness, pitch",
+   "unit": "N m/rad",
+   "computed": 86707111.72241724,
+   "comparator": 87300000.0,
+   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 28",
+   "tolerance": 0.03,
+   "deviation": -0.006791389204842665,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Mooring stiffness, yaw",
+   "unit": "N m/rad",
+   "computed": 116083652.59374808,
+   "comparator": 117000000.0,
+   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 28",
+   "tolerance": 0.03,
+   "deviation": -0.007832029113264293,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Mooring stiffness, surge-pitch",
+   "unit": "N/rad",
+   "computed": -105024.75943241734,
+   "comparator": -108000.0,
+   "comparator_source": "Robertson et al. (2014), NREL/TP-5000-60601, Eq. (5-14) and (5-15), printed page 28",
+   "tolerance": 0.05,
+   "deviation": -0.02754852377391351,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Natural period, surge",
+   "unit": "s",
+   "computed": 113.68403132111585,
+   "comparator": 106.892115,
+   "comparator_source": "OpenFAST linearisation in OpenFAST/r-test (basis.yml comparators)",
+   "tolerance": 0.1,
+   "deviation": 0.06353991892775111,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Natural period, heave",
+   "unit": "s",
+   "computed": 17.277879364503537,
+   "comparator": 17.2833272,
+   "comparator_source": "OpenFAST linearisation in OpenFAST/r-test (basis.yml comparators)",
+   "tolerance": 0.05,
+   "deviation": -0.00031520756584771197,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Natural period, pitch",
+   "unit": "s",
+   "computed": 25.43366213014032,
+   "comparator": 25.4474769,
+   "comparator_source": "OpenFAST linearisation in OpenFAST/r-test (basis.yml comparators)",
+   "tolerance": 0.05,
+   "deviation": -0.0005428738540158287,
+   "within_tolerance": true
+  },
+  {
+   "quantity": "Natural period, yaw",
+   "unit": "s",
+   "computed": 79.79622285014078,
+   "comparator": 80.2215727,
+   "comparator_source": "OpenFAST linearisation in OpenFAST/r-test (basis.yml comparators)",
+   "tolerance": 0.1,
+   "deviation": -0.005302187872205808,
+   "within_tolerance": true
+  }
+ ],
+ "phase_ii_text_frequencies": {
+  "surge": {
+   "computed_frequency": 0.008796310162289772,
+   "quoted": 0.01,
+   "rounding_band": [
+    0.005,
+    0.015
+   ],
+   "inside_band": true
+  },
+  "heave": {
+   "computed_frequency": 0.05787747320741488,
+   "quoted": 0.058,
+   "rounding_band": [
+    0.0575,
+    0.0585
+   ],
+   "inside_band": true
+  },
+  "pitch": {
+   "computed_frequency": 0.03931797139095214,
+   "quoted": 0.04,
+   "rounding_band": [
+    0.035,
+    0.045
+   ],
+   "inside_band": true
+  }
+ }
+}
