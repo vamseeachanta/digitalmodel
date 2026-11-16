@@ -12,9 +12,15 @@ def from_cpt(data: CPTData, layers: tuple[SoilLayer, ...]) -> SoilProfile:
     return SoilProfile(layers, data)
 
 
+def _profile(profile) -> SoilProfile:
+    if not isinstance(profile, SoilProfile):
+        raise ValueError("profile must be SoilProfile")
+    return profile
+
+
 def to_cpt(profile: SoilProfile) -> CPTData:
     """Return the original measurements, retaining object identity and Pa arrays."""
-    if profile.cpt is None:
+    if _profile(profile).cpt is None:
         raise ValueError("cpt is missing")
     return profile.cpt
 
@@ -29,7 +35,7 @@ def _required(layer: SoilLayer, name: str) -> float:
 def to_spudcan_layers(profile: SoilProfile) -> tuple[SpudcanLayer, ...]:
     """Return native layers; geometry and bearing-method settings remain external."""
     result = []
-    for index, layer in enumerate(profile.layers):
+    for index, layer in enumerate(_profile(profile).layers):
         weight = _required(layer, "submerged_weight_n_m3") / 1000
         if layer.kind == SoilType.CLAY:
             strength = _required(layer, "su_pa") / 1000
@@ -52,6 +58,7 @@ def to_spudcan_layers(profile: SoilProfile) -> tuple[SpudcanLayer, ...]:
 def to_slope_profile(profile: SoilProfile, *, x_extent_m, mudline_elevation_m,
                      water_unit_weight_n_m3, circles) -> dict:
     """Build horizontal, constant-property inputs and call native validation."""
+    _profile(profile)
     if not isinstance(x_extent_m, (tuple, list)) or len(x_extent_m) != 2:
         raise ValueError("x_extent_m requires two coordinates")
     xs = [_number("x_extent_m", x) for x in x_extent_m]

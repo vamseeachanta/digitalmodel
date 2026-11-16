@@ -12,6 +12,8 @@ missing; zero is supplied. Undrained and drained strengths cannot be combined.
 Optional `cpt` uses existing `CPTData` fields: `depth_m`, `qc_pa`, `fs_pa`,
 `u2_pa` (nullable entries), and required `area_ratio`; omitted `u2_pa` remains missing.
 Duplicate/unknown keys, object tags, invalid units and nonfinite values are rejected.
+Exponent notation needs a decimal point (`1.0e+3`): YAML 1.1 reads `1e3` as text,
+which is rejected as not a finite number.
 
 `soil_profile_adapters.from_cpt(data, layers)` attaches the existing CPT object;
 `to_cpt(profile)` returns it without classification or inferred strengths.
@@ -23,4 +25,9 @@ water_unit_weight_n_m3=9810, circles=[dict(x_m=10, y_m=105, radius_m=20)])`
 requires separate bulk weight and explicit Su or cohesion/friction. Elevations are
 mudline elevation minus depth. Only horizontal constant layers are supported;
 varying boundaries, gradients and saturated weight are omitted. No solver is imported.
+The output is a level, dry profile: the ground surface is flat at the mudline and no
+`water_table_m` is set, so `water_unit_weight_kn_m3` has no effect until a piezometric
+line is added. Add slope geometry and `water_table_m` before analysing a submerged
+seabed; otherwise the bulk weights act as dry weights.
+The adapters raise `ValueError` when the argument is not a `SoilProfile`.
 These records do not implement correlations, cyclic curves, GEF or AGS4 ingestion.

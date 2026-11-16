@@ -108,6 +108,8 @@ def test_spudcan_conversion_and_missing_properties(profile):
 
 
 def test_slope_geometry_units_and_no_solver_import(profile, monkeypatch):
+    # The guard is installed after the adapter modules are imported, so it
+    # covers imports made by this call only, not module-level isolation.
     original_import = builtins.__import__
     def guarded(name, *args, **kwargs):
         assert name.split(".")[0] not in {"OrcFxAPI", "xslope", "gmsh"}
@@ -145,10 +147,35 @@ def test_slope_requires_explicit_strength(profile, changes, field):
 
 
 @pytest.mark.parametrize("kwargs", [dict(water_unit_weight_n_m3=True), dict(x_extent_m=(0, 0)),
-    dict(mudline_elevation_m=True), dict(su_gradient_pa_per_m=1), dict(top_boundary_m=[[0, 0], [30, -1]])])
-def test_slope_rejects_invalid_or_unsupported_geometry(profile, kwargs):
-    with pytest.raises((ValueError, TypeError)):
+    dict(mudline_elevation_m=True)])
+def test_slope_rejects_invalid_geometry(profile, kwargs):
+    with pytest.raises(ValueError):
         slope(profile, **kwargs)
+
+
+@pytest.mark.parametrize("kwargs", [dict(su_gradient_pa_per_m=1), dict(top_boundary_m=[[0, 0], [30, -1]])])
+def test_slope_signature_has_no_gradient_or_boundary_arguments(profile, kwargs):
+    # Signature check only: Python rejects the keyword. The data-level guard
+    # against gradient and boundary fields is test_unknown_fields_and_units.
+    with pytest.raises(TypeError):
+        slope(profile, **kwargs)
+
+
+@pytest.mark.parametrize("convert", [to_cpt, to_spudcan_layers, lambda p: slope(p)])
+@pytest.mark.parametrize("value", [None, object(), {"layers": []}])
+def test_adapters_reject_non_profile(convert, value):
+    with pytest.raises(ValueError, match="SoilProfile"):
+        convert(value)
+
+
+@pytest.mark.parametrize("literal,accepted", [("1.0e+3", True), ("1e3", False)])
+def test_yaml_exponent_needs_decimal_point(literal, accepted):
+    text = f"schema_version: 1\nunits: SI\nlayers: [{{kind: clay, top_m: 0, bottom_m: 2, su_pa: {literal}}}]"
+    if accepted:
+        assert load_soil_profile(text).layers[0].su_pa == 1000
+    else:
+        with pytest.raises(ValueError, match="finite number"):
+            load_soil_profile(text)
 
 
 @pytest.mark.parametrize("data", [None, object()])
