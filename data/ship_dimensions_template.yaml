@@ -49,6 +49,8 @@
 #   define the underlying waterline, keel-to-deck and ship-weight concepts.
 #   Cite the loading condition, water density, datum and deck in source.
 #   Leave a value blank when its basis is unknown; compare only matched bases.
+#   Exception: loa_ft, beam_ft and draft_ft are required; if a basis is unknown,
+#   omit the entry, or record the value and state that in source.
 #   full_load_lt denotes total ship weight with full payload and consumables.
 #   Equality with displacement_lt is allowed when its cited basis is full-load;
 #   the >= constraint alone does not establish a different loading condition.

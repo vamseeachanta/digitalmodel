@@ -104,6 +104,8 @@ class TestTemplateLoading:
             "depth_ft: molded baseline to the uppermost continuous deck at side",
             "lwl_ft: waterline length at draft_ft and the same loading condition",
             "Leave a value blank when its basis is unknown",
+            "Exception: loa_ft, beam_ft and draft_ft are required;",
+            "omit the entry, or record the value and state that in source",
             "The validator does not check loading condition or dimension basis",
         ):
             assert guidance in basis
