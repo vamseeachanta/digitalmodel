@@ -931,3 +931,12 @@ excluded:
   for the clay adhesion method and the soft-clay lateral curves: unverified.'
 - 'EMODnet and Dutch public-registry licence terms: pages did not expose them.'
 - 'S05 reuse notice and the S09 title and author list: not captured by the extractor.'
+
+datasets:
+- dataset_id: usgs-cpt
+  source_id: S11
+  content: CPT soundings and index with position, elevation and water table
+  format: CSV per sounding plus index CSV; zipped legacy text files
+  access_route: https://doi.org/10.5066/P13M3WVY
+  size_description: not stated
+  readiness: metadata_only

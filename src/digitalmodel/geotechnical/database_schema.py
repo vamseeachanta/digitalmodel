@@ -44,6 +44,38 @@ class Source:
 
 
 @dataclass(frozen=True)
+class Dataset:
+    """Discovery metadata; source linkage does not qualify engineering input."""
+
+    dataset_id: str
+    source_id: str
+    content: str
+    format: str
+    access_route: str
+    readiness: str
+    source: Source
+    size_description: str | None = None
+
+    @classmethod
+    def from_entry(cls, entry: Mapping, sources: Mapping[str, Source]) -> "Dataset":
+        """Validate metadata without inferring size, rights or readiness."""
+        if not isinstance(entry, Mapping):
+            raise ValueError("dataset entry must be a mapping")
+        names = tuple(f.name for f in fields(cls)
+                      if f.name not in ("source", "size_description"))
+        required(entry, names)
+        if "size_description" in entry:
+            required(entry, ("size_description",))
+        if entry["readiness"] != "metadata_only":
+            raise ValueError("dataset readiness must be metadata_only")
+        if entry["source_id"] not in sources:
+            raise ValueError(f"unknown source {entry['source_id']!r}")
+        return cls(**{name: entry[name] for name in names},
+                   source=sources[entry["source_id"]],
+                   size_description=entry.get("size_description"))
+
+
+@dataclass(frozen=True)
 class ParameterRow:
     row_id: str
     soil_unit: str

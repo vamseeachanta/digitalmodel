@@ -1,6 +1,6 @@
 """Load the research-note transcription without inferring engineering inputs."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field as dataclass_field
 from pathlib import Path
 import re
 from types import MappingProxyType
@@ -10,7 +10,7 @@ import pint
 import yaml
 
 from digitalmodel.units import Q_, ureg
-from .database_schema import ParameterRow, Quantity, Source, UnitValue, freeze
+from .database_schema import Dataset, ParameterRow, Quantity, Source, UnitValue, freeze
 
 DEFAULT_PATH = Path(__file__).resolve().parents[3] / "data/geotechnical/geotech_database.yaml"
 LOOKUP_FIELDS = ("soil_unit", "parameter", "site_or_region", "source_id", "confidence_grade")
@@ -37,6 +37,7 @@ class Database:
     gaps: tuple
     excluded: tuple
     indexes: Mapping
+    datasets: Mapping[str, Dataset] = dataclass_field(default_factory=lambda: MappingProxyType({}))
 
     def lookup(self, field: str, value: str) -> tuple[ParameterRow, ...]:
         if field not in self.indexes:
@@ -159,6 +160,10 @@ def load_database(data=DEFAULT_PATH) -> Database:
         if not isinstance(data, Mapping) or section not in data:
             raise ValueError(f"required section {section!r} is missing")
     sources = _unique(data["sources"], Source.from_entry, "source_id")
+    dataset_entries = data.get("datasets", [])
+    if not isinstance(dataset_entries, list):
+        raise ValueError("datasets section must be a list")
+    datasets = _unique(dataset_entries, lambda e: Dataset.from_entry(e, sources), "dataset_id")
     rows = _unique(data["parameters"], lambda e: ParameterRow.from_entry(e, sources), "row_id")
     quantities = tuple(_quantity(row, *part) for row in rows.values() for part in _split(row))
     indexes = {}
@@ -168,4 +173,4 @@ def load_database(data=DEFAULT_PATH) -> Database:
             index.setdefault(getattr(row, field), []).append(row)
         indexes[field] = freeze(index)
     return Database(sources, rows, quantities, freeze(data["meta"]), freeze(data["gaps"]),
-                    freeze(data["excluded"]), freeze(indexes))
+                    freeze(data["excluded"]), freeze(indexes), datasets)
