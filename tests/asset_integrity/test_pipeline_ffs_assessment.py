@@ -489,6 +489,10 @@ def test_section_a_life_uses_reduced_rating(result):
 
 
 def test_sampling_criterion_and_interim_position(tmp_path, result):
+    provenance = builder.report_spec(ROOT, result).provenance
+    provenance.require()
+    assert provenance.units_system == "US customary"
+    assert provenance.validated_path == "screening"
     page = builder.build(ROOT, tmp_path)[0].read_text(encoding="utf-8")
     assert "minimum of 5 degraded cells" in page
     assert "Add readings to resolve at least 3 more degraded cells" in page
