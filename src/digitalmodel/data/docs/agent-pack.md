@@ -11,9 +11,11 @@
 | Implementation-map ref | `origin/codex/implmap-work` at `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4` |
 | Map data revision | `270c8759c374b67a7f032953e7fcdb14e0224461` |
 
+The code revision above pins the original audit. Schema locators are refreshed for the sidecar integrity change based on `8c09f59a0530baa8a29177b6adaf4e7454cee675`; its regression evidence is recorded below.
+
 ## 1. Purpose and scope
 
-The module validates curated chain, wire and synthetic-line CSV schemas and their provenance, while retaining an explicitly unverified route for historical directories without a sidecar. [src/digitalmodel/data/mooring_component_schema.py:L1-L4] [src/digitalmodel/data/mooring_component_schema.py:L127-L148]
+The module validates curated chain, wire and synthetic-line CSV schemas and their provenance, while retaining an explicitly unverified route for historical directories without a sidecar. [src/digitalmodel/data/mooring_component_schema.py:L1-L4] [src/digitalmodel/data/mooring_component_schema.py:L127-L152]
 
 `ComponentDatabase` outside this package calls `load_tables` and exposes `find_provenance` through `get_provenance`; historical property-formula helpers are separate from the curated seed. [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/component_database.py:L1-L6] [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/component_database.py:L305-L317]
 
@@ -32,15 +34,15 @@ UNVERIFIED: registry maturity is unassigned for this namespace package; there is
 | `weight_air`, `weight_water` | kg/m | finite and strictly positive; apparent mass rather than force | [src/digitalmodel/data/mooring_component_schema.py:L27-L28] [src/digitalmodel/data/marine_engineering/mooring_components/README.html:L16-L17] |
 | `bend_radius` | m | chain only, finite and strictly positive | [src/digitalmodel/data/mooring_component_schema.py:L14-L20] [src/digitalmodel/data/mooring_component_schema.py:L27-L28] [src/digitalmodel/data/mooring_component_schema.py:L50-L60] |
 | Other CSV fields | dimensionless text | nonempty except notes; missing-value coercion caveat S04 | [src/digitalmodel/data/mooring_component_schema.py:L50-L61] |
-| `provenance.json` | dimensionless metadata | optional for legacy loading; schema version 1, exact units, source records, table and excerpt hashes, per-row identities | [src/digitalmodel/data/mooring_component_schema.py:L92-L124] [src/digitalmodel/data/mooring_component_schema.py:L127-L148] |
+| `provenance.json` | dimensionless metadata | optional for legacy loading; schema version 1, exact units, source records, table and excerpt hashes, per-row identities | [src/digitalmodel/data/mooring_component_schema.py:L92-L124] [src/digitalmodel/data/mooring_component_schema.py:L127-L152] |
 | Source metadata | strings / UTC time | nonempty fields, lowercase hexadecimal commit and digest; zero UTC offset | [src/digitalmodel/data/mooring_component_schema.py:L29-L30] [src/digitalmodel/data/mooring_component_schema.py:L73-L89] |
 
 | Output | Unit | Contract | Evidence |
 | --- | --- | --- | --- |
-| `load_tables(data_dir)` | tables retain declared field units | `(tables, provenance)`; dictionary keyed by chain/wire/line; may contain empty tables on legacy route | [src/digitalmodel/data/mooring_component_schema.py:L127-L148] |
+| `load_tables(data_dir)` | tables retain declared field units | `(tables, provenance)`; dictionary keyed by chain/wire/line; may contain empty tables on legacy route | [src/digitalmodel/data/mooring_component_schema.py:L127-L152] |
 | `validate_table(kind, table)` | same units | mutates converted columns in place; raises `ValueError` for schema, positivity, duplicate identity or monotonicity defects | [src/digitalmodel/data/mooring_component_schema.py:L42-L70] |
 | `sha256(path)` | dimensionless hexadecimal string | hashes exact file bytes | [src/digitalmodel/data/mooring_component_schema.py:L33-L34] |
-| `find_provenance(...)` | metadata | exactly one matching row; deep copies of row, source and diameter source; absent/ambiguous evidence raises `ValueError` | [src/digitalmodel/data/mooring_component_schema.py:L151-L163] |
+| `find_provenance(...)` | metadata | exactly one matching row; deep copies of row, source and diameter source; absent/ambiguous evidence raises `ValueError` | [src/digitalmodel/data/mooring_component_schema.py:L155-L167] |
 
 These are scalar component properties, with no coordinate-frame, origin, sign or phase fields; positivity excludes floating components with negative apparent submerged mass. [src/digitalmodel/data/mooring_component_schema.py:L14-L28] [src/digitalmodel/data/mooring_component_schema.py:L50-L60] [src/digitalmodel/data/marine_engineering/mooring_components/README.html:L33-L33]
 
@@ -79,6 +81,8 @@ The two older suites implement their own property/database classes, so their res
 
 Execution record: `PYTHONPATH=src uv run --no-sources python -m pytest` with the three component test files, `tests/contracts` and `tests/docs/test_digitalmodel_routing_contract.py`, followed by `-q -rA -p no:cacheprovider` and a scratch `--basetemp`; no addopts override and no solver imports. BASE pin above: 555 run, 555 passed, 0 failed, 0 skipped, 0 NOT_RUN; after: 555 run, 555 passed, 0 failed, 0 skipped, 0 NOT_RUN. Of these, 58 are component tests (22 production and 18 per fixture copy), 487 contracts and 10 routing tests. These are measured execution records, not README counts.
 
+Current integrity-change record: the three component suites passed 64 tests at BASE and 76 after the change, with no failures or skips. The 12 added cases cover eight non-object values, null with each of three required CSVs missing, and an empty object. Before implementation, 11 cases failed and the existing empty-object completeness behavior passed.
+
 ## 5. QA gates and executable checks
 
 AQG r0, section 10, Python calculations, supplies G0, G1 and G2; G3 and G4 are NOT_APPLICABLE; G5 applies through evidence traceability. (AQG r0, sections 9–10.)
@@ -93,9 +97,10 @@ AQG r0, section 10, Python calculations, supplies G0, G1 and G2; G3 and G4 are N
 | G0 / C06 | Run `test_missing_sidecar_is_explicitly_unverified` and `test_provenance_lookup_does_not_guess` | 2 unsupported provenance requests rejected, count; no provenance inferred | Production tests, PASS. [tests/marine_ops/marine_engineering/test_component_database_public.py:L143-L155] |
 | G1 / C07 | Execute the section-4 offline command; production test directly loads `ComponentDatabase`, which calls the schema module | 555 collected tests pass; 0 failures and 0 skipped/NOT_RUN cases, count | BASE and after PASS. [tests/marine_ops/marine_engineering/test_component_database_public.py:L14-L24] [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/component_database.py:L305-L317] |
 | G2 / C08 | Run V1 against the pinned public coefficient/helper source and compare retained-source byte hashes | 0 mismatched source digests, count; numeric relative error at most 1e-7, dimensionless, absolute tolerance 0 kN or kg/m | Source opened successfully; test PASS; this is coefficient reproduction only. [tests/marine_ops/marine_engineering/test_component_database_public.py:L46-L65] [src/digitalmodel/data/marine_engineering/mooring_components/sources/moorpy_coefficients.json:L5-L15] |
-| G3 | NOT_APPLICABLE: no time-domain dynamics model is implemented in the schema functions | 0 applicable dynamics checks, count | [src/digitalmodel/data/mooring_component_schema.py:L33-L163] |
-| G4 | NOT_APPLICABLE: no diffraction mesh or hydrostatic body is implemented in the schema functions | 0 applicable diffraction checks, count | [src/digitalmodel/data/mooring_component_schema.py:L33-L163] |
+| G3 | NOT_APPLICABLE: no time-domain dynamics model is implemented in the schema functions | 0 applicable dynamics checks, count | [src/digitalmodel/data/mooring_component_schema.py:L33-L167] |
+| G4 | NOT_APPLICABLE: no diffraction mesh or hydrostatic body is implemented in the schema functions | 0 applicable diffraction checks, count | [src/digitalmodel/data/mooring_component_schema.py:L33-L167] |
 | G5 / C09 | Resolve every pack citation against the code pin, verify each listed case appears as PASS in both logs, and match every open item to an issue/draft | 0 unresolved citations, 0 missing case results, 0 untracked open items, count | Citation resolver, test logs and draft cross-check; PASS. |
+| G0 / C10 | Run `test_non_object_sidecar_is_rejected`, `test_null_sidecar_cannot_mask_missing_csv` and `test_empty_object_sidecar_is_incomplete` | 8 non-object values rejected before CSV reads, 3 missing-CSV null cases rejected and 1 incomplete object rejected, count | Production tests, PASS. [tests/marine_ops/marine_engineering/test_component_database_public.py:L223-L245] |
 
 C01–C06 refer to functions in `tests/marine_ops/marine_engineering/test_component_database_public.py`; their complete node IDs are formed by that path followed by `::` and the named test function. [tests/marine_ops/marine_engineering/test_component_database_public.py:L106-L155] [tests/marine_ops/marine_engineering/test_component_database_public.py:L186-L207]
 
@@ -103,7 +108,7 @@ C01–C06 refer to functions in `tests/marine_ops/marine_engineering/test_compon
 
 sweep: 17 found
 
-The following 17 reviewed sites include guarded errors and intentional compatibility behavior as well as confirmed gaps; they are not 17 confirmed defects. Each location is in `src/digitalmodel/data/mooring_component_schema.py` at the code pin. [src/digitalmodel/data/mooring_component_schema.py:L27-L163]
+The following 17 reviewed sites include guarded errors and intentional compatibility behavior as well as confirmed gaps; they are not 17 confirmed defects. Each location is in `src/digitalmodel/data/mooring_component_schema.py` at this document's revision. [src/digitalmodel/data/mooring_component_schema.py:L27-L167]
 
 Sweep commands (whole package; Python files only):
 
@@ -123,16 +128,16 @@ rg -n 'cache|write|dump|save|open\(' src/digitalmodel/data --glob '*.py'
 | S07 UTC, lines 87–89 | Missing timezone or nonzero UTC offset raises; no epoch fallback. [src/digitalmodel/data/mooring_component_schema.py:L87-L89] | No detection check exists for timezone variants; issue pending (1). |
 | S08 units, lines 95–96 | Exact schema/unit equality is required; no conversion is attempted. [src/digitalmodel/data/mooring_component_schema.py:L95-L96] | C03; no defect asserted. |
 | S09 exceptions, lines 123–124 | Key/type/attribute/file errors are rethrown as `ValueError`, not swallowed. [src/digitalmodel/data/mooring_component_schema.py:L123-L124] | C03; no defect asserted. |
-| S10 optional sidecar, lines 129–133 | JSON syntax errors raise, but a present JSON null becomes the legacy sentinel. [src/digitalmodel/data/mooring_component_schema.py:L129-L133] | C04 covers syntax errors; no detection check exists for null; issue pending (2). |
-| S11 CSV route, lines 138–140 | Missing provenance changes NA parsing and bypasses schema validation, including the null case. [src/digitalmodel/data/mooring_component_schema.py:L138-L140] | C06 covers absent sidecar; null remains issue pending (2). |
-| S12 missing CSV, lines 141–145 | Curated missing CSV raises; legacy missing CSV becomes an empty dataframe. [src/digitalmodel/data/mooring_component_schema.py:L141-L145] | `test_legacy_chain_query_interface` confirms empty wire/line compatibility; #1200 for readiness. [tests/marine_ops/marine_engineering/test_component_database_public.py:L210-L220] |
-| S13 validation route, lines 146–148 | Provenance validation runs only for a non-None decoded sidecar. [src/digitalmodel/data/mooring_component_schema.py:L146-L148] | No detection check exists for present-null bypass; issue pending (2). |
-| S14 no evidence, lines 152–153 | Absent provenance raises explicitly instead of returning unknown evidence silently. [src/digitalmodel/data/mooring_component_schema.py:L151-L153] | C06; no defect asserted. |
-| S15 lookup defaults, lines 154–159 | Unknown kind defaults to no candidates and raises; an unknown specification key with None can compare equal to a missing identity value. [src/digitalmodel/data/mooring_component_schema.py:L154-L159] | C06 covers no matches; no detection check exists for unknown keys; issue pending (1). |
-| S16 sampling `.get`, line 162 | Direct lookup can return a None diameter source, although normal loading requires sampling metadata first. [src/digitalmodel/data/mooring_component_schema.py:L97-L100] [src/digitalmodel/data/mooring_component_schema.py:L160-L163] | C03 tests missing sampling source at load time; direct-call coverage issue pending (1). |
+| S10 optional sidecar, lines 129–137 | JSON syntax errors raise; present non-object values, including null, are rejected before CSV loading. [src/digitalmodel/data/mooring_component_schema.py:L129-L137] | C04 covers syntax errors; C10 `test_non_object_sidecar_is_rejected` covers every non-object JSON type; fixed under #1200. |
+| S11 CSV route, lines 142–144 | Only absent provenance changes NA parsing and bypasses schema validation; present objects use curated validation. [src/digitalmodel/data/mooring_component_schema.py:L142-L144] | C06 covers absent sidecar; C10 `test_non_object_sidecar_is_rejected` prevents null from selecting this route; fixed under #1200. |
+| S12 missing CSV, lines 145–149 | Curated missing CSV raises; legacy missing CSV becomes an empty dataframe. [src/digitalmodel/data/mooring_component_schema.py:L145-L149] | C10 covers null with each required CSV missing; `test_legacy_chain_query_interface` confirms empty wire/line compatibility; #1200 for readiness. [tests/marine_ops/marine_engineering/test_component_database_public.py:L210-L220] |
+| S13 validation route, lines 150–152 | Present JSON objects select provenance validation after table validation; non-objects are rejected before table loading. Only absence selects the unverified route. [src/digitalmodel/data/mooring_component_schema.py:L150-L152] | C10 `test_non_object_sidecar_is_rejected` and `test_empty_object_sidecar_is_incomplete` cover invalid-present metadata; fixed under #1200. |
+| S14 no evidence, lines 156–157 | Absent provenance raises explicitly instead of returning unknown evidence silently. [src/digitalmodel/data/mooring_component_schema.py:L155-L157] | C06; no defect asserted. |
+| S15 lookup defaults, lines 158–163 | Unknown kind defaults to no candidates and raises; an unknown specification key with None can compare equal to a missing identity value. [src/digitalmodel/data/mooring_component_schema.py:L158-L163] | C06 covers no matches; no detection check exists for unknown keys; issue pending (1). |
+| S16 sampling `.get`, line 166 | Direct lookup can return a None diameter source, although normal loading requires sampling metadata first. [src/digitalmodel/data/mooring_component_schema.py:L97-L100] [src/digitalmodel/data/mooring_component_schema.py:L164-L167] | C03 tests missing sampling source at load time; direct-call coverage issue pending (1). |
 | S17 derivation presence, lines 120–122 | Nonempty unrelated formulas/coefficients satisfy the presence check without recomputation. [src/digitalmodel/data/mooring_component_schema.py:L120-L122] | No detection check exists; scratch probe confirmed acceptance; issue pending (3). |
 
-The schema file has no cache write, `continue`, error-path literal empty-list/dictionary return, epoch fallback or percentage default; its exception handlers raise errors. [src/digitalmodel/data/mooring_component_schema.py:L33-L163]
+The schema file has no cache write, `continue`, error-path literal empty-list/dictionary return, epoch fallback or percentage default; its exception handlers raise errors. [src/digitalmodel/data/mooring_component_schema.py:L33-L167]
 
 Documentation pitfall: historical marine summaries describe certified coverage, while the current seed documentation states partial computed coverage and unqualified ranges; no certification should be inferred from those summaries. [docs/domains/marine-engineering/MARINE_ENGINEERING_PHASE_1-3_SUMMARY.md:L42-L48] [src/digitalmodel/data/marine_engineering/mooring_components/README.html:L28-L38] Follow-up: issue pending (4).
 
@@ -142,8 +147,9 @@ No incident was named for this package; #1200 is the discovered data-establishme
 
 | Date | Change reference | Lesson | Evidence | Pack change / shared entry |
 | --- | --- | --- | --- | --- |
-| 2026-10-18 | Initial pack | Distinguish no sidecar from invalid present metadata; legacy compatibility is not curated readiness. | [src/digitalmodel/data/mooring_component_schema.py:L129-L148] | S10–S13; issue pending (2); shared entry not assigned. |
+| 2026-10-18 | Initial pack | Distinguish no sidecar from invalid present metadata; legacy compatibility is not curated readiness. | [src/digitalmodel/data/mooring_component_schema.py:L129-L152] | S10–S13; shared entry not assigned. |
 | 2026-10-18 | Initial pack | Byte/source metadata checks do not establish truth of a nonempty derivation. | [src/digitalmodel/data/mooring_component_schema.py:L101-L122] | S17; issue pending (3); shared entry not assigned. |
+| 2026-11-16 | #1200 | Validate the decoded JSON type before an optional-file compatibility branch; null does not mean absence. | C10; 12 production-path regression cases. | S10–S13 fixed; schema locators refreshed. |
 
 ## 8. Ownership
 
@@ -154,7 +160,7 @@ Review assignment for this draft: calculations quality manager, with an independ
 | Dependency | Direction / constraint | Evidence |
 | --- | --- | --- |
 | NumPy / pandas | Runtime numeric/table validation | [src/digitalmodel/data/mooring_component_schema.py:L50-L70] |
-| Python hashlib / JSON / datetime | Byte digests, sidecar decoding and UTC validation | [src/digitalmodel/data/mooring_component_schema.py:L33-L34] [src/digitalmodel/data/mooring_component_schema.py:L83-L89] [src/digitalmodel/data/mooring_component_schema.py:L129-L133] |
+| Python hashlib / JSON / datetime | Byte digests, sidecar decoding and UTC validation | [src/digitalmodel/data/mooring_component_schema.py:L33-L34] [src/digitalmodel/data/mooring_component_schema.py:L83-L89] [src/digitalmodel/data/mooring_component_schema.py:L129-L137] |
 | `scripts/data/generate_mooring_components.py` | Upstream offline generator uses schema constants and identity/hash helpers; polynomial calculation is outside this package | [scripts/data/generate_mooring_components.py:L11-L24] [scripts/data/generate_mooring_components.py:L28-L42] |
 | CSV tables / JSON sidecar / retained source excerpt | Upstream component dataset; raw-byte and identity binding, not solver results | [src/digitalmodel/data/mooring_component_schema.py:L101-L122] |
 | `ComponentDatabase` | Downstream caller of the schema functions; no solver interface in this route | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/component_database.py:L305-L317] |
@@ -167,15 +173,15 @@ A8 audit record: map ref and data revision are recorded in the header; parsing a
 
 The supplemental whole-repository Python search, including scripts and both test copies, used `rg -n 'mooring_component_schema|def (validate_table|validate_provenance|find_provenance)|TABLE_COLUMNS|IDENTITY_FIELDS' . --glob '*.py'`. The generator uses the schema helpers, and the production loader delegates to this module; the two older tests instead define their own component databases. [scripts/data/generate_mooring_components.py:L11-L13] [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/component_database.py:L305-L317] [tests/marine_ops/marine_engineering/test_component_database.py:L192-L227] [tests/marine_ops/marine_engineering/legacy/test_component_database.py:L192-L227]
 
-Map follow-up: add CSV schema validation, byte-bound provenance and component identity lookup method families, including their in-package definitions and repository callers, before they become counted families; issue pending (4). These methods are implemented here rather than physical mooring analysis. [src/digitalmodel/data/mooring_component_schema.py:L42-L70] [src/digitalmodel/data/mooring_component_schema.py:L92-L163]
+Map follow-up: add CSV schema validation, byte-bound provenance and component identity lookup method families, including their in-package definitions and repository callers, before they become counted families; issue pending (4). These methods are implemented here rather than physical mooring analysis. [src/digitalmodel/data/mooring_component_schema.py:L42-L70] [src/digitalmodel/data/mooring_component_schema.py:L92-L167]
 
 ## 10. Coverage and open items
 
-Read scope: the complete package Python file and all package subdirectories were inventoried; CSVs, sidecar, retained coefficient JSON and accompanying HTML were examined for the validator path; four discovery spreadsheets with identifying names were inventoried without evaluating their engineering contents, issue pending (4). [src/digitalmodel/data/mooring_component_schema.py:L1-L163] [src/digitalmodel/data/marine_engineering/mooring_components/README.html:L5-L38]
+Read scope: the complete package Python file and all package subdirectories were inventoried; CSVs, sidecar, retained coefficient JSON and accompanying HTML were examined for the validator path; four discovery spreadsheets with identifying names were inventoried without evaluating their engineering contents, issue pending (4). [src/digitalmodel/data/mooring_component_schema.py:L1-L167] [src/digitalmodel/data/marine_engineering/mooring_components/README.html:L5-L38]
 
 | Files read / discovered | Disposition and follow-up |
 | --- | --- |
-| `src/digitalmodel/data/mooring_component_schema.py` | Complete Python coverage; S01–S17; issue pending (1), issue pending (2), issue pending (3). |
+| `src/digitalmodel/data/mooring_component_schema.py` | Complete Python coverage; S01–S17; invalid-present metadata fixed under #1200; issue pending (1), issue pending (3). |
 | Package `marine_engineering/mooring_components/` | README.html, three property CSVs, provenance.json, sources/moorpy_coefficients.json and sources/MoorPy-LICENSE.txt; component qualification gaps remain #1200. |
 | `scripts/data/generate_mooring_components.py` and downstream `component_database.py` | Supporting source/loader route; historical formulas are not qualified hand-check references; #1200. |
 | Three `tests/marine_ops/marine_engineering/` component files | `test_component_database_public.py`, `test_component_database.py`, `legacy/test_component_database.py`; run all existing nodes, with regression-only status for fixture implementations; #1200 for physical qualification. |
@@ -194,7 +200,7 @@ Read scope: the complete package Python file and all package subdirectories were
 | U3 DNV-RP-C203 | UNVERIFIED: governing edition/clause/table not established. | issue pending (4) |
 | U4 inventory standard basis | UNVERIFIED: OCIMF/API 2C/DNV-RP-C203 leads do not establish validator compliance; reconcile inventory with code and docs. | issue pending (4) |
 | Input-contract test gaps | Reject missing strings/unknown identity keys; cover locale numeric text, timezone errors and direct sampling lookup; S02–S04, S07, S15–S16. | issue pending (1) |
-| Invalid-present sidecar | Reject JSON null before compatibility routing; S10–S13. | issue pending (2) |
+| Invalid-present sidecar | Fixed: reject non-object JSON before compatibility routing; S10–S13; C10 `test_non_object_sidecar_is_rejected` and `test_null_sidecar_cannot_mask_missing_csv`. | #1200 |
 | Derivation truth | Bind computed formulas/coefficients to source evidence and row values; S17. | issue pending (3) |
 | Map gaps, stale docs and discovery names | Add section-3 method families to map; reconcile stale paths/counts; introduce neutral discovery identifiers; appoint deputy. | issue pending (4) |
 | Engineering qualification / missing physical worked example | Establish eligible complete chain data, wire/fibre product ranges, buoyancy-sign support and independent component qualifications; V1 qualifies reproduction only. [src/digitalmodel/data/marine_engineering/mooring_components/README.html:L30-L38] | #1200 |
