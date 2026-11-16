@@ -229,7 +229,7 @@ def _spectral_fatigue_annual_damage(
         LEGACY_FREQ_MAX, LEGACY_N_POINTS, WaveSpectra,
     )
 
-    # Response-grid follow-up to #2613: preserve the legacy fatigue basis.
+    # Response-grid follow-up #4094 (from #2613): preserve the legacy fatigue basis.
     omega, s_omega = WaveSpectra().jonswap(
         hs=float(point["Hs"]), tp=float(point["Tp"]), gamma=gamma,
         freq_max=LEGACY_FREQ_MAX, n_points=LEGACY_N_POINTS,

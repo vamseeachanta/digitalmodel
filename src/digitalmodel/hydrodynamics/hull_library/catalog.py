@@ -431,7 +431,7 @@ class HullCatalog:
     ) -> tuple[np.ndarray, np.ndarray]:
         """Generate a wave spectrum from a ``SeaStateDefinition``."""
         spectrum_type = WaveSpectrumType(sea_state.spectrum_type)
-        # Response-grid follow-up to #2613: preserve the legacy motion basis.
+        # Response-grid follow-up #4094 (from #2613): preserve the legacy motion basis.
         params = WaveParameters(
             spectrum_type=spectrum_type,
             significant_height=sea_state.significant_height,

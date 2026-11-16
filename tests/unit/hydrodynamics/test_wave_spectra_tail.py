@@ -90,6 +90,26 @@ def test_wave_power_hand_value():
 
 
 @pytest.mark.parametrize("family", GENERATORS)
+def test_wave_power_matches_energy_period_form(family):
+    ws = WaveSpectra()
+    omega, density = getattr(ws, family)(hs=4.0, tp=10.0)
+    m0 = ws.spectral_moment(omega, density, n=0)
+    te = ws.energy_period_from_spectrum(omega, density)
+    assert ws.wave_power(omega, density) == pytest.approx(
+        1025.0 * 9.81**2 * m0 * te / (4 * math.pi), rel=1e-12)
+
+
+@pytest.mark.parametrize("family", GENERATORS)
+def test_zero_energy_wave_power(family):
+    ws = WaveSpectra()
+    omega, density = getattr(ws, family)(hs=0.0, tp=10.0)
+    assert not np.any(density)
+    assert ws.wave_power(omega, density) == 0.0
+    with pytest.raises(ValueError, match="zero-energy"):
+        ws.energy_period_from_spectrum(omega, density)
+
+
+@pytest.mark.parametrize("family", GENERATORS)
 def test_explicit_legacy_grid_unchanged(family):
     omega = np.linspace(0.02, 2.0, 100)
     hs, tp, g = 4.0, 10.0, 9.81

@@ -30,6 +30,20 @@ def default_frequency_grid(
         9 * omega_p     100    0.16   1.54   0.04    0.78   0.16   0.04
         15 * omega_p    100    0.61   1.06   0.39    0.53   0.61   0.39
         15 * omega_p    200    0.04   0.56   0.02    0.28   0.04   0.02
+
+    Applicability: the default grid is qualified for integrated quantities
+    only, to the bounds above: m_-1, m0, m1 and m2, the periods Tz, T1 and Te,
+    and deep-water wave power. Integrated-moment accuracy does not establish
+    peak or time-domain resolution. The spacing is 15 * omega_p / 199, about
+    0.075 * omega_p or one JONSWAP peak width, and is coarser than the legacy
+    0.02 rad/s spacing for Tp below about 23.6 s. For JONSWAP gamma=3.3 at
+    Tp=15 s the largest sample lies at a period of 14.64 s, and a harmonic
+    series built on the grid repeats after 2*pi/d_omega (66 s at Tp=5 s,
+    133 s at Tp=10 s). Peak extraction, narrow-band response and time-domain
+    synthesis therefore require an explicit freq_max and n_points and an
+    explicit resolution check, for example repeating the calculation with a
+    finer grid and confirming the quantity of interest changes by less than
+    its tolerance. Moments of order four and above remain cutoff-dependent.
     """
     default_points = LEGACY_N_POINTS if freq_max is not None else DEFAULT_N_POINTS_TP_GRID
     if freq_max is None:
@@ -368,9 +382,14 @@ class WaveSpectra:
         EPRI (2011), Mapping and Assessment of the United States Ocean Wave
         Energy Resource, Appendix A, equation A-5 (converted from Hz):
         https://www1.eere.energy.gov/water/pdfs/mappingandassessment.pdf#page=109
+
+        Raises ValueError for a zero-energy spectrum (m0 = 0), where Te is
+        undefined.
         """
         m_minus1 = self.spectral_moment(frequencies, spectrum, n=-1)
         m0 = self.spectral_moment(frequencies, spectrum, n=0)
+        if m0 <= 0.0:
+            raise ValueError("energy period is undefined for a zero-energy spectrum (m0 = 0)")
         return 2 * np.pi * m_minus1 / m0
 
     def wave_power(
@@ -378,14 +397,15 @@ class WaveSpectra:
     ) -> float:
         """Return deep-water power per metre of wave crest (W/m).
 
-        P = rho*g**2*m0*Te/(4*pi); rho is water density (kg/m**3).
+        P = rho*g**2*m0*Te/(4*pi) = rho*g**2*m_-1/2, with Te = 2*pi*m_-1/m0;
+        rho is water density (kg/m**3). The m_-1 form is evaluated, so a
+        zero-energy (calm-sea) spectrum gives 0 W/m.
         Deep water requires depth greater than half the wavelength.
         EPRI (2011), Appendix A, equation A-7:
         https://www1.eere.energy.gov/water/pdfs/mappingandassessment.pdf#page=112
         """
-        m0 = self.spectral_moment(frequencies, spectrum, n=0)
-        te = self.energy_period_from_spectrum(frequencies, spectrum)
-        return rho * self.g**2 * m0 * te / (4 * np.pi)
+        m_minus1 = self.spectral_moment(frequencies, spectrum, n=-1)
+        return rho * self.g**2 * m_minus1 / 2
 
     def peak_frequency_from_spectrum(
         self,

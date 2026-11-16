@@ -107,7 +107,7 @@ def _stress_psd_from_rao(
     tp = _positive(wave_spectrum, "Tp", f"{location_id} wave_spectrum.Tp")
 
     spectra = WaveSpectra()
-    # Response-grid follow-up to #2613: preserve each legacy fatigue basis.
+    # Response-grid follow-up #4094 (from #2613): preserve each legacy fatigue basis.
     grid = {"freq_max": LEGACY_FREQ_MAX, "n_points": LEGACY_N_POINTS}
     if kind == "jonswap":
         gamma = float(wave_spectrum.get("gamma", 3.3))

@@ -416,9 +416,9 @@ class TestZeroCrossingPeriodFromSpectrum:
         """Longer peak period should give longer zero-crossing period."""
         ws = _ws()
         omega, S_short = ws.jonswap(hs=3.0, tp=8.0, n_points=500)
-        _, S_long = ws.jonswap(hs=3.0, tp=14.0, n_points=500)
+        omega_long, S_long = ws.jonswap(hs=3.0, tp=14.0, n_points=500)
         tz_short = ws.zero_crossing_period_from_spectrum(omega, S_short)
-        tz_long = ws.zero_crossing_period_from_spectrum(omega, S_long)
+        tz_long = ws.zero_crossing_period_from_spectrum(omega_long, S_long)
         assert tz_long > tz_short
 
     def test_tz_pm_approximately_0711_tp(self):
