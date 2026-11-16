@@ -4,13 +4,16 @@ supported method selected in the generic case.
 The report's C_e worked example uses the common illustrative geometry (PIANC
 2002 4.2.4 form from the ship and berth), which every method shares; each
 method's own geometry fields are listed only where that method gives them
-(UFC has no R or phi, IS 4651 no C_b or K). Outputs go to a temporary
-directory; the generic case and its fictional fender rows are read only.
+(UFC has no R or phi, IS 4651 no C_b or K). The summary energy and the
+sensitivity table caption name the selected method, and only the sweep charts
+generated for that method are embedded. Outputs go to a temporary directory;
+the generic case and its fictional fender rows are read only.
 """
 
 from __future__ import annotations
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -70,6 +73,67 @@ def test_report_generated_for_every_method(tmp_path, method):
     common = fd.eccentricity(_generic_result(method).ship, _generic_result(method).berth)
     assert f"C_b {common['cb']:.3f}, K {common['k_m']:.2f} m, R {common['r_m']:.2f} m" in md
     assert f"C_e {common['ce']:.3f}" in md
+    # the summary energy and the Table 5 caption are those of the selected method
+    sel = _generic_result(method).selected
+    label = fd.METHODS[method].label
+    assert sel.label == label and data["design_energy_knm"] == pytest.approx(sel.design_energy_knm)
+    row = next(m for m in data["methods"] if m["method"] == method)
+    assert row["design"] == pytest.approx(sel.design_energy_knm)
+    summary = (f"For the generic case the design energy by the selected method, {label}, is\n"
+               f"  {fender_study._f(sel.design_energy_knm)} kNm (normal energy "
+               f"{fender_study._f(sel.normal_energy_knm)} kNm).")
+    assert summary in md
+    assert "PIANC 2002 design energy" not in md
+    assert (f"Table 5 – One-at-a-time sensitivity of the design energy by the selected method,\n"
+            f"{label}, for the generic case.") in md
+    assert "(PIANC 2002, generic case)" not in md
+    # every embedded image exists; the sweep charts are exactly those generated
+    targets = re.findall(r"!\[[^\]]*\]\(([^)]+)\)", md)
+    assert targets
+    for target in targets:
+        assert (out / target).is_file(), target
+    made = {f"charts/{name}" for key, name in data["charts"].items() if key.startswith("sweep_")}
+    assert {t for t in targets if t.startswith("charts/sweep_")} == made
+    assert made == {f"charts/sweep_{s['parameter']}.png" for s in data["sweeps"]}
+    # figures are numbered 1..n without gaps or repeats, one per image
+    numbers = [int(n) for n in re.findall(r"^Figure (\d+) –", md, flags=re.M)]
+    assert sorted(numbers) == list(range(1, len(numbers) + 1))
+    assert len(numbers) == len(targets)
+
+
+EXPECTED_SWEEP_CHARTS = {
+    "pianc2002": ("velocity_m_s", "displacement_t", "water_depth_m", "contact_x_over_lbp",
+                  "berthing_angle_deg", "cs", "factor"),
+    "wg211": ("velocity_m_s", "displacement_t", "water_depth_m", "contact_x_over_lbp",
+              "berthing_angle_deg", "factor"),
+    "ufc": ("velocity_m_s", "displacement_t", "water_depth_m", "contact_x_over_lbp",
+            "berthing_angle_deg", "cc", "factor"),
+    "is4651": ("velocity_m_s", "displacement_t", "water_depth_m", "contact_x_over_lbp",
+               "berthing_angle_deg"),
+}
+
+
+@pytest.mark.parametrize("method", sorted(EXPECTED_SWEEP_CHARTS))
+def test_sweep_figures_follow_the_method(method):
+    res = _generic_result(method)
+    made = {f"sweep_{s.parameter}": f"sweep_{s.parameter}.png" for s in res.sweeps}
+    v = fender_study.sweep_figure_values(res, made)
+    embedded = re.findall(r"\(charts/sweep_(\w+)\.png\)", v["sweep_figures"])
+    assert tuple(embedded) == EXPECTED_SWEEP_CHARTS[method]
+    first = fender_study.FIRST_SWEEP_FIGURE
+    numbers = [int(n) for n in re.findall(r"^Figure (\d+) –", v["sweep_figures"], flags=re.M)]
+    assert numbers == list(range(first, first + len(embedded)))
+    assert v["fig_sizes"] == str(first + len(embedded))
+    # a chart that was not written is not embedded
+    del made["sweep_displacement_t"]
+    v = fender_study.sweep_figure_values(res, made)
+    assert "sweep_displacement_t" not in v["sweep_figures"]
+
+
+@pytest.mark.parametrize("method", list(fd.METHODS))
+def test_selected_label_names_the_selected_method(method):
+    v = fender_study.method_values(_generic_result(method))
+    assert v["selected_label"] == fd.METHODS[method].label
 
 
 def test_geometry_values_separate_common_and_method_fields():

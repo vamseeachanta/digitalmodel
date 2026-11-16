@@ -45,6 +45,20 @@ SWEEP_TITLES = {
     "factor": "Abnormal / partial energy factor",
 }
 
+#: Report figure of each sweep chart: parameter -> (alt text, caption).
+SWEEP_FIGURES = {
+    "velocity_m_s": ("Velocity", "Berthing velocity."),
+    "displacement_t": ("Displacement", "Displacement."),
+    "water_depth_m": ("Water depth", "Water depth (C_m through keel clearance)."),
+    "contact_x_over_lbp": ("Contact point", "First-contact point (C_e)."),
+    "berthing_angle_deg": ("Berthing angle", "Berthing angle (C_e)."),
+    "cs": ("Cs", "Softness factor C_s."),
+    "cc": ("Cc", "Berth configuration factor C_c."),
+    "factor": ("Factor", "Abnormal (or partial) energy factor."),
+}
+#: Report figure number of the first sweep chart (after the tornado, Figure 5).
+FIRST_SWEEP_FIGURE = 6
+
 
 def _f(x, nd=1):
     return "-" if x is None else f"{x:,.{nd}f}"
@@ -315,6 +329,33 @@ def geometry_values(res) -> dict[str, str]:
     )
 
 
+def method_values(res) -> dict[str, str]:
+    """Template values that name the selected method: ``selected_label`` is
+    its label (:data:`fd.METHODS`), used wherever the report quotes the
+    selected method's energy, so a number is never attributed to another
+    method."""
+    return dict(selected_label=res.selected.label)
+
+
+def sweep_figure_values(res, made: dict[str, str], first: int = FIRST_SWEEP_FIGURE) -> dict[str, str]:
+    """Template values of the sensitivity figures.
+
+    ``sweep_figures`` embeds one figure per sweep chart generated for the
+    selected method (``made`` from :func:`charts`), in sweep order and
+    numbered from ``first``; a sweep the method does not admit has no chart
+    and no figure. ``fig_sizes`` is the number of the figure that follows.
+    """
+    blocks = []
+    for s in res.sweeps:
+        name = made.get(f"sweep_{s.parameter}")
+        if name is None:
+            continue
+        alt, caption = SWEEP_FIGURES.get(s.parameter, (s.label, f"{s.label}."))
+        blocks.append(f"![{alt}](charts/{name})\n\nFigure {first + len(blocks)} – {caption}")
+    return dict(sweep_figures="\n\n".join(blocks) or "No sweep chart was generated for this method.",
+                fig_sizes=str(first + len(blocks)))
+
+
 def render(template: Path, values: dict, out_md: Path, out_html: Path, title: str):
     text = template.read_text(encoding="utf-8")
     missing = sorted(set(re.findall(r"\{\{(\w+)\}\}", text)) - set(values))
@@ -372,6 +413,8 @@ def main(argv=None) -> int:
             values[f"v_{r.method}"] = f"{r.velocity_m_s.value:.3f}"
             values[f"f_{r.method}"] = f"{r.factor.value:.2f}"
         values.update(geometry_values(res))
+        values.update(method_values(res))
+        values.update(sweep_figure_values(res, made))
         values.update(
             E_design=_f(res.selected.design_energy_knm), E_normal=_f(res.selected.normal_energy_knm),
             capacity=_f(res.capacity_knm), util=f"{data['utilisation']:.2f}",

@@ -320,12 +320,27 @@ def added_mass_factor(ship: Ship, water_depth_m: float, method: str) -> float:
     raise ValueError(f"unknown added-mass method {method!r}")
 
 
+def contact_offset_m(ship: Ship, berth: Berth) -> float:
+    """Distance of the first contact forward of mid-LBP (m; negative aft).
+
+    The one check that the contact lies on the ship, used by every method's
+    eccentricity: a contact point outside 0 to LBP from the forward
+    perpendicular is refused, so no method returns an energy for it.
+    """
+    x = berth.contact_x_from_bow_m
+    if not 0.0 <= x <= ship.lbp_m:
+        raise ValueError(f"first contact {x:g} m from the bow is not on the ship (0 to LBP {ship.lbp_m:g} m)")
+    return ship.lbp_m / 2.0 - x
+
+
 def eccentricity(ship: Ship, berth: Berth) -> dict[str, float]:
     """K, R, phi and Ce (PIANC 2002 section 4.2.4) for the berth's first contact.
 
     Centre of mass at mid-LBP on the centreline; phi between the velocity
-    (normal to the berth) and the line from contact to centre of mass.
+    (normal to the berth) and the line from contact to centre of mass. A
+    contact off the ship is refused (:func:`contact_offset_m`).
     """
+    contact_offset_m(ship, berth)
     cb = ship.cb
     k = radius_of_gyration(cb, ship.lbp_m)
     r, phi = contact_geometry(ship.lbp_m, ship.beam_m, berth.contact_x_from_bow_m, berth.berthing_angle_deg)
@@ -797,7 +812,7 @@ def _m_ufc(case: Case, position: str, velocity_m_s: float | None = None) -> Meth
                                       f"Fig. 5-3/5-4, {case.condition} (sheltered/moderate/exposed), digitized"),
                   velocity_m_s)
     k = radius_of_gyration(s.cb, s.lbp_m)
-    a = abs(s.lbp_m / 2.0 - b.contact_x_from_bow_m)
+    a = abs(contact_offset_m(s, b))
     ce_v = k * k / (a * a + k * k)
     geo = dict(cb=s.cb, k_m=k, a_m=a, ce=ce_v)
     ce = Coefficient("ce", ce_v, "ufc-4-152-01", f"k^2/(a^2 + k^2), k {k:.2f} m, a {a:.2f} m")
@@ -942,7 +957,7 @@ def _m_is4651(case: Case, position: str, velocity_m_s: float | None = None) -> M
                                       "Table 2"), velocity_m_s)
     cm = Coefficient("cm", 1.0 + 2.0 * s.draft_m / s.beam_m, "is-4651-3-1974", "5.2.1.2: 1 + 2D/B")
     r_g = 0.25 * s.lbp_m
-    l_ = abs(s.lbp_m / 2.0 - b.contact_x_from_bow_m)
+    l_ = abs(contact_offset_m(s, b))
     q = (l_ / r_g) ** 2
     ce_v = (1.0 + q * math.sin(math.radians(b.berthing_angle_deg)) ** 2) / (1.0 + q)
     ce = Coefficient("ce", ce_v, "is-4651-3-1974", f"5.2.1.3, r = L/4, l {l_:.2f} m, theta {b.berthing_angle_deg:g} deg")

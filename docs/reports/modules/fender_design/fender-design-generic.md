@@ -23,9 +23,9 @@ no result here clears a fender for any berth.
   by about a factor of two (Table 3; Figure 1 gives the fender utilisation by method). The
   spread comes mostly from the velocity each method assigns, then from the design factor; the
   energy equation itself is common.
-- For the generic case the PIANC 2002 design energy is 680.8 kNm (normal energy
-  389.1 kNm). The illustrative base fender has a capacity of 700.0 kNm, a
-  utilisation of 0.97.
+- For the generic case the design energy by the selected method, PIANC WG33 (2002), is
+  680.8 kNm (normal energy 389.1 kNm). The illustrative base fender has a
+  capacity of 700.0 kNm, a utilisation of 0.97.
 - One-at-a-time sensitivity (Section 7) ranks the inputs. In this case the three largest
   are: berthing velocity; first contact from bow / LBP (Ce); displacement. The berthing velocity enters squared and is the
   largest single term in this case.
@@ -355,7 +355,8 @@ the inputs left out for this method are:
 | softness factor Cs | 1 - | 0.9 to 1 | PIANC 2002 4.2.6 hard to soft fenders | -10 % / +0 % | 0.88 / 0.97 | - | 1,436 / 1,560 | - |
 | abnormal / partial energy factor | 1.75 - | 1.25 to 1.75 | PIANC 2002 Table 4.2.5 bulk carriers, largest to smallest | -29 % / +0 % | 0.69 / 0.97 | 1.799 | 1,205 / 1,560 | - |
 
-Table 5 – One-at-a-time sensitivity of the design energy (PIANC 2002, generic case).
+Table 5 – One-at-a-time sensitivity of the design energy by the selected method,
+PIANC WG33 (2002), for the generic case.
 
 ![Tornado](charts/tornado.png)
 

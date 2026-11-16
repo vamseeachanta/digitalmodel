@@ -23,9 +23,9 @@ no result here clears a fender for any berth.
   by about a factor of two (Table 3; Figure 1 gives the fender utilisation by method). The
   spread comes mostly from the velocity each method assigns, then from the design factor; the
   energy equation itself is common.
-- For the generic case the PIANC 2002 design energy is {{E_design}} kNm (normal energy
-  {{E_normal}} kNm). The illustrative base fender has a capacity of {{capacity}} kNm, a
-  utilisation of {{util}}.
+- For the generic case the design energy by the selected method, {{selected_label}}, is
+  {{E_design}} kNm (normal energy {{E_normal}} kNm). The illustrative base fender has a
+  capacity of {{capacity}} kNm, a utilisation of {{util}}.
 - One-at-a-time sensitivity (Section 7) ranks the inputs. In this case the three largest
   are: {{top1}}; {{top2}}; {{top3}}. The berthing velocity enters squared and is the
   largest single term in this case.
@@ -320,7 +320,8 @@ the inputs left out for this method are:
 
 {{sweep_table}}
 
-Table 5 – One-at-a-time sensitivity of the design energy (PIANC 2002, generic case).
+Table 5 – One-at-a-time sensitivity of the design energy by the selected method,
+{{selected_label}}, for the generic case.
 
 ![Tornado](charts/tornado.png)
 
@@ -330,33 +331,7 @@ Figure 5 – Ranking of inputs by the span of design energy over their credible 
 
 Table 6 – Ranking.
 
-![Velocity](charts/sweep_velocity_m_s.png)
-
-Figure 6 – Berthing velocity.
-
-![Displacement](charts/sweep_displacement_t.png)
-
-Figure 7 – Displacement.
-
-![Water depth](charts/sweep_water_depth_m.png)
-
-Figure 8 – Water depth (C_m through keel clearance).
-
-![Contact point](charts/sweep_contact_x_over_lbp.png)
-
-Figure 9 – First-contact point (C_e).
-
-![Berthing angle](charts/sweep_berthing_angle_deg.png)
-
-Figure 10 – Berthing angle (C_e).
-
-![Cs](charts/sweep_cs.png)
-
-Figure 11 – Softness factor C_s.
-
-![Factor](charts/sweep_factor.png)
-
-Figure 12 – Abnormal (or partial) energy factor.
+{{sweep_figures}}
 
 ## 8. Neighbouring fender sizes
 
@@ -369,7 +344,7 @@ rated reaction before the rated point (Section 3.6).
 
 ![Sizes](charts/sizes.png)
 
-Figure 13 – Neighbouring sizes: design energy capacity against energy per fender and design
+Figure {{fig_sizes}} – Neighbouring sizes: design energy capacity against energy per fender and design
 reaction against the limit (adjustments as Table 7).
 
 ## 9. Verification

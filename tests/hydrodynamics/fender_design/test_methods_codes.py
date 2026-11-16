@@ -219,3 +219,39 @@ def test_all_methods_evaluate_for_generic_case():
     assert {r.method for r in results} == set(fd.METHODS)
     for r in results:
         assert all(c.source in fd.SOURCES or c.source == "caller" for c in r.coefficients()), r.method
+
+
+# ---- first-contact point within the LBP, the same check for every method ----
+
+
+def _contact_berth(x_from_bow_m):
+    return fd.Berth(water_depth_m=14.0, contact_x_from_bow_m=x_from_bow_m, berthing_angle_deg=5.0,
+                    navigation="b", structure="open", fender_deflection_m=1.56)
+
+
+@pytest.mark.parametrize("method", list(fd.METHODS))
+@pytest.mark.parametrize("x", [1_800.0, 180.5])
+def test_contact_beyond_the_lbp_is_refused_by_every_method(method, x):
+    # LBP 180 m. Before the check UFC gave 0.265 kNm and IS 4651 15.655 kNm at
+    # 1,800 m from the bow, while the PIANC 2002 family refused the geometry.
+    with pytest.raises(ValueError) as exc:
+        fd.energy_by_method(fd.Case(SHIP, _contact_berth(x)), method=method, citations="off")
+    assert str(exc.value) == (f"first contact {x:g} m from the bow is not on the ship "
+                              f"(0 to LBP {SHIP.lbp_m:g} m)")
+
+
+def test_contact_beyond_the_lbp_gives_one_error_for_all_methods():
+    case = fd.Case(SHIP, _contact_berth(1_800.0))
+    skipped = fd.compare_methods_skipped(case, citations="off")
+    assert set(skipped) == set(fd.METHODS)
+    assert set(skipped.values()) == {"first contact 1800 m from the bow is not on the ship (0 to LBP 180 m)"}
+    assert fd.compare_methods(case, citations="off") == []
+    with pytest.raises(ValueError, match=r"^first contact 1800 m from the bow is not on the ship"):
+        fd.eccentricity(SHIP, _contact_berth(1_800.0))
+
+
+@pytest.mark.parametrize("method", list(fd.METHODS))
+@pytest.mark.parametrize("x", [0.0, 180.0])
+def test_contact_at_the_ends_of_the_lbp_is_accepted_by_every_method(method, x):
+    r = fd.energy_by_method(fd.Case(SHIP, _contact_berth(x)), method=method, citations="off")
+    assert r.design_energy_knm > 0.0
