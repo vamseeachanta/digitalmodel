@@ -79,5 +79,9 @@ def test_full_sweep_includes_executed_regressions(pytestconfig):
         run_gate = next(step for step in steps if step.get("id") == "domain-gate")
         assert read_gate["env"]["GATE_NAME"] == "tests-${{ matrix.domain }}"
         assert ".claude/quality-gates.yaml" in read_gate["run"]
-        assert 'gates[os.environ["GATE_NAME"]]["command"]' in read_gate["run"]
+        assert (
+            "python scripts/ci/domain_gate_command.py "
+            '--gate-file .claude/quality-gates.yaml --gate "$GATE_NAME" '
+            f'--workflow {filename.removesuffix(".yml")}'
+        ) in read_gate["run"]
         assert "${{ steps.gate.outputs.command }}" in run_gate["run"]
