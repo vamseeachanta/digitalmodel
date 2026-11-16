@@ -2,7 +2,7 @@
 
 Source reference: ``API-RP-16Q``; clause not stated in source. No standard
 edition is identified. Factors are required inputs, never code defaults.
-See ``docs/drilling_riser/stackup_calculation.md`` for scope and Input gaps.
+See ``docs/domains/drilling/riser_stackup_static_tension.md`` for scope and Input gaps.
 """
 
 from __future__ import annotations
@@ -183,9 +183,12 @@ class TensionInput:
 
 @dataclass(frozen=True)
 class TensionResult:
-    """Algebraic static results [N]; capacity compliance is a separate check."""
+    """Algebraic static results [N]; capacity compliance is a separate check.
 
-    factored_steel_weight_n: float
+    Factored weight is factored steel plus unfactored supported weight.
+    """
+
+    factored_weight_n: float
     factored_buoyancy_n: float
     fluid_correction_n: float
     slip_ring_tension_n: float

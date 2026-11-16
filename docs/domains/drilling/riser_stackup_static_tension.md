@@ -1,6 +1,6 @@
 # Static riser stack-up weight and tension
 
-`digitalmodel.drilling_riser.stackup_calculation` implements static arithmetic
+`digitalmodel.drilling_riser.stackup_static_weights` implements static arithmetic
 extracted from a legacy engineering workbook. The functions are pure and the
 input dataclasses are frozen. All dimensional calculation inputs use SI units:
 metres, square metres, newtons, newtons per metre, kilograms per cubic metre,
@@ -44,14 +44,7 @@ factors are passed explicitly. The source omits mechanical-efficiency and
 fleet-angle reductions; this implementation supplies unity to the existing
 chain. It does not adopt that chain's other default assumptions.
 
-`stackup_units` provides boundary conversions from feet, inches, pounds mass,
-kips, ksi and pounds per US liquid gallon. Unit definitions are exact:
-1 foot = 0.3048 m, 1 inch = 0.0254 m, 1 pound mass = 0.45359237 kg,
-1 US liquid gallon = 231 cubic inches, and 1 pound-force =
-0.45359237 × 9.80665 N. The last identity defines a force unit; physical gravity
-remains a required calculation input. Signed forces are permitted. Density
-and stress conversions reject negative inputs. Source rounding is not built
-into these conversions.
+Inputs are SI. Convert customary units at the calling boundary with the shared registry in `digitalmodel.units` (pint).
 
 ## Standard and Input gaps
 

@@ -4,7 +4,7 @@ import pytest
 
 
 def test_failed_units_overpull_and_setting_limit():
-    from digitalmodel.drilling_riser.stackup_calculation import (
+    from digitalmodel.drilling_riser.stackup_static_weights import (
         TensionInput, minimum_tension,
     )
     inputs = TensionInput(
@@ -22,7 +22,7 @@ def test_failed_units_overpull_and_setting_limit():
     top_n = slip_n * 10.0 / (10.0 - 2.0)
     lower_overpull_n = top_n - slip_n - 150000.0
     extra_n = max(30000.0 - lower_overpull_n, 0.0)
-    assert result.factored_steel_weight_n == pytest.approx(400000.0 * 1.04 + 20000.0)
+    assert result.factored_weight_n == pytest.approx(400000.0 * 1.04 + 20000.0)
     assert result.factored_buoyancy_n == pytest.approx(80000.0 * 0.9)
     assert result.fluid_correction_n == pytest.approx(300000.0 - 200000.0)
     assert result.slip_ring_tension_n == pytest.approx(slip_n)
@@ -34,7 +34,7 @@ def test_failed_units_overpull_and_setting_limit():
 
 
 def test_governing_applied_tension_selects_larger_requirement():
-    from digitalmodel.drilling_riser.stackup_calculation import governing_tension_n
+    from digitalmodel.drilling_riser.stackup_static_weights import governing_tension_n
     assert governing_tension_n(500000.0, 600000.0) == 600000.0
     assert governing_tension_n(700000.0, 600000.0) == 700000.0
     assert governing_tension_n(0.0, 0.0) == 0.0

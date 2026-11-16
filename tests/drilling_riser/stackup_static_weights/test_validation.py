@@ -4,7 +4,7 @@ from dataclasses import FrozenInstanceError, replace
 import math
 import pytest
 
-from digitalmodel.drilling_riser.stackup_calculation import (
+from digitalmodel.drilling_riser.stackup_static_weights import (
     JointWeightInput, HydrostaticSectionInput, TensionInput, TubularCapacityInput,
     adjusted_joint_weights, section_weights, minimum_tension, axial_wall_capacity_n,
 )

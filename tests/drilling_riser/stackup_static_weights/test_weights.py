@@ -2,7 +2,7 @@
 
 import pytest
 
-from digitalmodel.drilling_riser.stackup_calculation import (
+from digitalmodel.drilling_riser.stackup_static_weights import (
     JointWeightInput,
     adjusted_joint_weights,
 )
@@ -16,7 +16,7 @@ def test_joint_weight_allowances_and_signed_buoyancy():
 
 
 def test_installed_section_includes_fluid_and_auxiliaries_once():
-    from digitalmodel.drilling_riser.stackup_calculation import (
+    from digitalmodel.drilling_riser.stackup_static_weights import (
         HydrostaticSectionInput, section_weights,
     )
     inputs = HydrostaticSectionInput(
