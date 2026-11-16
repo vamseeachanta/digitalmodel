@@ -9,6 +9,19 @@
 schema_version: 2
 invocation: "uv run python -m digitalmodel {input}"
 workflows:
+  - id: mooring-chain-degradation-screen
+    basename: mooring_chain_degradation
+    title: Mooring-chain dimensional analysis with unresolved strength and fatigue
+    version: 1
+    status: experimental
+    latest: false
+    input: examples/workflows/mooring-chain-degradation-screen/input.yml
+    invocation: "uv run python -m digitalmodel.asset_integrity.mooring_chain_cli {input} --output examples/workflows/mooring-chain-degradation-screen/results/screen.json"
+    outputs:
+      - examples/workflows/mooring-chain-degradation-screen/results/screen.json
+      - examples/workflows/mooring-chain-degradation-screen/results/screen.html
+    test: tests/asset_integrity/test_mooring_chain_cli.py::test_workflow_cli_and_registry
+    runtime: standalone
   - id: api653-tank-settlement-screen
     basename: tank_settlement_screen
     title: Tank settlement diagnostic analysis with unresolved Annex B criteria
