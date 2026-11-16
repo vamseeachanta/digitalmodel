@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pipeline integrity yield convergence analysis</title>
+<style>
+body { font: 1rem/1.6 system-ui, sans-serif; color: #202c38; background: #fafbfc;
+  max-width: 72rem; margin: 2rem auto; padding: 0 1rem; }
+h1, h2 { line-height: 1.25; color: #163c50; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; background: white; }
+th, td { border: 1px solid #bcc8ce; padding: .55rem; text-align: left; }
+td { font-variant-numeric: tabular-nums; }
+.table-wrap { overflow-x: auto; }
+code { overflow-wrap: anywhere; }
+a { color: #145579; }
+</style>
+</head>
+<body>
+<main>
+<h1>Pipeline integrity yield convergence analysis</h1>
+<h2>Summary</h2>
+<p>The pipeline integrity entry point now takes specified minimum yield strength
+(SMYS) from the maintained material accessor for its existing six grades.
+Five yield values increase; X100 stays unchanged. The hoop design factor stays
+0.72. Acceptance can change for pressures between the old and new yield-based
+limits. This is a change to one consumer under #1147, rather than full grade-table
+convergence or material qualification.</p>
+<h2>Revision history</h2>
+<table>
+<thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-11-16</td><td>Recorded the yield-only migration,
+allowable-stress changes and pressure-boundary tests to make the increased
+acceptance limits reviewable.</td></tr></tbody>
+</table>
+<h2>Basis and provenance</h2>
+<p>Comparison baseline: <code>c73997e92c145f1a11c0c3b7e9dfcc678a7eab11</code>.
+Old values come from <code>_LEGACY_SMYS_TABLE_MPA</code> at that revision.
+New values come from <code>digitalmodel.materials.smys_mpa</code>, defined in
+<a href="../../src/digitalmodel/materials/grades.py">materials/grades.py</a>
+at line 277, with the six registry entries at lines 160–168. Their SI designations
+are L360, L415, L450, L485, L555 and L690.</p>
+<p>The maintained source cites API 5L, 46th edition, 9.3.2 Table 7 (PSL2), SI,
+and identifies the ISO 3183 L-grade yield basis. This record compares existing
+repository data; no new licensed-table transcription or independent material
+certification is supplied. The outstanding material-basis verification remains
+visible in <a href="grade-table-migration-2026-06-28.md">the historical migration
+report</a>, whose tensile reference has been superseded. That historical tensile
+table is not a basis for this change.</p>
+<h2>Changed values and allowable stresses</h2>
+<p>All strengths and stresses below are MPa. Allowable hoop stress equals SMYS
+multiplied by 0.72. Each row applies to the pipeline integrity consumer only.
+Values are shown to one decimal place; acceptance uses unrounded calculations.</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Grade</th><th>Old SMYS</th><th>New SMYS</th><th>Yield increase</th>
+<th>Old allowable</th><th>New allowable</th></tr></thead>
+<tbody>
+<tr><th scope="row">X52</th><td>359.0</td><td>360.0</td><td>1.0</td><td>258.5</td><td>259.2</td></tr>
+<tr><th scope="row">X60</th><td>414.0</td><td>415.0</td><td>1.0</td><td>298.1</td><td>298.8</td></tr>
+<tr><th scope="row">X65</th><td>448.0</td><td>450.0</td><td>2.0</td><td>322.6</td><td>324.0</td></tr>
+<tr><th scope="row">X70</th><td>483.0</td><td>485.0</td><td>2.0</td><td>347.8</td><td>349.2</td></tr>
+<tr><th scope="row">X80</th><td>552.0</td><td>555.0</td><td>3.0</td><td>397.4</td><td>399.6</td></tr>
+<tr><th scope="row">X100</th><td>690.0</td><td>690.0</td><td>0.0</td><td>496.8</td><td>496.8</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Pressure-boundary checks</h2>
+<p>The thin-wall equation is hoop stress = pressure × outer diameter /
+(2 × wall thickness); pressure is in MPa and both lengths are in mm.
+Tests use a 128.0 mm outer diameter and 8.0 mm wall thickness, giving a
+hoop-to-pressure multiplier of 8.0. For each grade, they check pressures just
+below, at and just above the unrounded canonical allowable-stress threshold.
+They independently pin the allowable values and the unchanged design factor.
+The small offsets are intentionally below the displayed utilization precision:
+a displayed ratio of 1.0 can correspond to either acceptance or rejection.</p>
+<p>For each of the five changed grades, an additional case places pressure
+midway between the old and new limits. It exceeds the old limit and passes the
+new one. Increased yield therefore expands acceptance; no claim of automatic
+conservatism is made. The calculation formula, validation and corrosion routing
+are unchanged.</p>
+<h2>Verification</h2>
+<p><code>tests/asset_integrity/test_pipeline_skill.py</code> and
+<code>tests/materials/test_grade_matrix.py</code>: baseline 73 passed;
+tests before implementation 27 failed and 70 passed; after implementation
+97 passed. The original wall-thickness pass/fail, corrosion replacement and
+psi-adapter equality assertions remain in place. The added tests pin exactly
+the previous grade set, canonical values, stress limits and acceptance changes.</p>
+<h2>Known limits and way forward</h2>
+<p>Maintained engineering-basis review and material qualification remain required.
+The existing 0.72 hoop factor is an assessment assumption, not a universal design
+factor. Corrosion length is still not used in the existing calculation, and the
+existing comparisons do not reject all non-finite inputs. These pre-existing
+limits are not changed here.</p>
+<p>SMTS policy, the other four legacy consumers, retained legacy functions and
+exports, psi conventions, published examples and explorer reference cases remain
+for later slices of #1147. The historical migration report is preserved.
+This change does not close the issue. Subsequent work needs an explicit current
+product-level policy and corresponding consumer tests.</p>
+</main>
+</body>
+</html>

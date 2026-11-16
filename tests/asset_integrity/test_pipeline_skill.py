@@ -232,8 +232,8 @@ def test_all_material_grades_produce_valid_result(grade):
 
 
 @pytest.mark.parametrize("grade,smys", [
-    ("X52", 359.0), ("X60", 414.0), ("X65", 448.0),
-    ("X70", 483.0), ("X80", 552.0), ("X100", 690.0),
+    ("X52", 360.0), ("X60", 415.0), ("X65", 450.0),
+    ("X70", 485.0), ("X80", 555.0), ("X100", 690.0),
 ])
 def test_smys_table_values_correct(grade, smys):
     assert SMYS_TABLE[grade] == smys
@@ -316,3 +316,55 @@ def test_utilisation_increases_with_pressure():
     r_low = pipeline_integrity(_make(pressure=5.0))
     r_high = pipeline_integrity(_make(pressure=15.0))
     assert r_high.utilisation_ratio > r_low.utilisation_ratio
+
+
+# Canonical yield convergence: independent stress and acceptance boundaries.
+def test_smys_table_matches_canonical_for_exact_previous_grade_set():
+    from digitalmodel.materials import smys_mpa
+
+    grades = {"X52", "X60", "X65", "X70", "X80", "X100"}
+    assert SMYS_TABLE == {grade: smys_mpa(grade) for grade in grades}
+
+
+@pytest.mark.parametrize("grade,smys_mpa,allowable_mpa", [
+    ("X52", 360.0, 259.2), ("X60", 415.0, 298.8),
+    ("X65", 450.0, 324.0), ("X70", 485.0, 349.2),
+    ("X80", 555.0, 399.6), ("X100", 690.0, 496.8),
+])
+@pytest.mark.parametrize("pressure_factor,accepted", [
+    (1.0 - 1e-7, True), (1.0, True), (1.0 + 1e-7, False),
+])
+def test_canonical_yield_pressure_boundary(
+    grade, smys_mpa, allowable_mpa, pressure_factor, accepted
+):
+    # D/(2t) = 8; exact powers of two avoid roundoff at the equality boundary.
+    # Allowables above independently pin the existing 0.72 design factor.
+    # Use the unrounded threshold: decimal allowables are display values.
+    pressure_mpa = smys_mpa * 0.72 / 8.0 * pressure_factor
+    result = pipeline_integrity(_make(
+        od=128.0, wt=8.0, pressure=pressure_mpa, grade=grade
+    ))
+    assert result.summary["allowable_stress_mpa"] == allowable_mpa
+    assert result.summary["hoop_stress_mpa"] == round(pressure_mpa * 8.0, 3)
+    assert result.utilisation_ratio == round(pressure_factor, 6)
+    assert result.summary["utilisation_ratio"] == round(pressure_factor, 4)
+    # All three display 1.0; acceptance must use the unrounded calculation.
+    assert result.wall_thickness_ok is accepted
+    assert result.ffs_verdict == "not_applicable"
+
+
+@pytest.mark.parametrize("grade,old_smys,new_smys", [
+    ("X52", 359.0, 360.0), ("X60", 414.0, 415.0),
+    ("X65", 448.0, 450.0), ("X70", 483.0, 485.0),
+    ("X80", 552.0, 555.0),
+])
+def test_yield_convergence_accepts_pressure_between_old_and_new_limits(
+    grade, old_smys, new_smys
+):
+    hoop_mpa = (old_smys + new_smys) / 2.0 * 0.72
+    assert hoop_mpa / (old_smys * 0.72) > 1.0
+    result = pipeline_integrity(_make(
+        od=128.0, wt=8.0, pressure=hoop_mpa / 8.0, grade=grade
+    ))
+    assert result.wall_thickness_ok is True
+    assert result.utilisation_ratio == round(hoop_mpa / (new_smys * 0.72), 6)
