@@ -373,17 +373,16 @@ def smts_pa(name: str, *, psl: str = "PSL2") -> float:
 # ksi rounding, PSL1-vs-PSL2 tensile, and small per-module drift) the LEGACY
 # value is kept as-is.  Every delta is catalogued in
 # ``docs/domains/grade-table-migration-2026-06-28.md`` as a future-convergence
-# candidate. Issue #1147 adopts canonical yield for one integrity consumer;
-# the remaining consumers and tensile policy require separate convergence.
+# candidate; DO NOT "fix" these toward canonical without that sign-off.
 #
 # Per-module SMYS drift on the low grades (a reconciliation target):
-#   X52  -> 358 (riser_config, pipeline_pressure) | 359 (pipe_db,
-#           wall_thickness) | 360 canonical ISO
+#   X52  -> 358 (riser_config, pipeline_pressure) | 359 (pipeline_skill,
+#           pipe_db, wall_thickness) | 360 canonical ISO
 #   X60  -> 413 (pipeline_pressure) | 414 (others) | 415 canonical ISO
 #   X70  -> 482 (pipeline_pressure) | 483 (others) | 485 canonical ISO
 # ---------------------------------------------------------------------------
 
-# Retained historical US-customary yield snapshot in MPa.
+# asset_integrity.pipeline_skill.SMYS_TABLE — US-customary SMYS in MPa.
 _LEGACY_SMYS_TABLE_MPA: dict[str, float] = {
     "X52": 359.0, "X60": 414.0, "X65": 448.0,
     "X70": 483.0, "X80": 552.0, "X100": 690.0,
@@ -421,9 +420,8 @@ _LEGACY_PIPELINE_PRESSURE_MPA: dict[str, dict[str, float]] = {
 
 
 def legacy_smys_table_mpa() -> dict[str, float]:
-    """Return the retained historical yield snapshot (SMYS, MPa).
+    """Reproduce ``asset_integrity.pipeline_skill.SMYS_TABLE`` (SMYS, MPa).
 
-    The integrity consumer moved to ``smys_mpa`` under #1147.
     US-customary SMYS (grade ksi -> MPa); diverges 1-3 MPa below canonical ISO.
     """
     return dict(_LEGACY_SMYS_TABLE_MPA)

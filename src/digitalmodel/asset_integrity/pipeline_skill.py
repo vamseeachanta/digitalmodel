@@ -28,7 +28,7 @@ SMYS_TABLE: dict[str, float] = {
     for grade in ("X52", "X60", "X65", "X70", "X80", "X100")
 }
 
-# Hoop stress design factor (ASME B31.4 / B31.8 onshore buried pipelines)
+# Hoop stress factor assumed for this assessment; not a universal design factor.
 HOOP_DESIGN_FACTOR = 0.72
 
 

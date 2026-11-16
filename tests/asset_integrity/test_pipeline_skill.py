@@ -323,6 +323,7 @@ def test_smys_table_matches_canonical_for_exact_previous_grade_set():
     from digitalmodel.materials import smys_mpa
 
     grades = {"X52", "X60", "X65", "X70", "X80", "X100"}
+    assert set(SMYS_TABLE) == grades
     assert SMYS_TABLE == {grade: smys_mpa(grade) for grade in grades}
 
 

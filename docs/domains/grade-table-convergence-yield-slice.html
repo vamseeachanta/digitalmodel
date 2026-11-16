@@ -31,7 +31,10 @@ convergence or material qualification.</p>
 <thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead>
 <tbody><tr><td>1</td><td>2026-11-16</td><td>Recorded the yield-only migration,
 allowable-stress changes and pressure-boundary tests to make the increased
-acceptance limits reviewable.</td></tr></tbody>
+acceptance limits reviewable.</td></tr>
+<tr><td>2</td><td>2026-11-16</td><td>Restored the pinned grade-source comments,
+disclosed the hosted failures and expanded local checks to cover provenance
+and generated reports.</td></tr></tbody>
 </table>
 <h2>Basis and provenance</h2>
 <p>Comparison baseline: <code>c73997e92c145f1a11c0c3b7e9dfcc678a7eab11</code>.
@@ -86,6 +89,22 @@ tests before implementation 27 failed and 70 passed; after implementation
 97 passed. The original wall-thickness pass/fail, corrosion replacement and
 psi-adapter equality assertions remain in place. The added tests pin exactly
 the previous grade set, canonical values, stress limits and acceptance changes.</p>
+<p>At reviewed head <code>f7c8c187</code>, hosted
+<code>tests-asset-integrity</code> and <code>tests-capabilities</code> failed.
+Comment and docstring edits to <code>materials/grades.py</code> changed its
+source digest, invalidating the database provenance and FFS report manifests.
+The initial focused tests above did not cover those dependencies.</p>
+<p>The comment and docstring edits have been withdrawn, restoring the exact
+pinned source bytes without refreshing provenance or generated reports.
+The current local run covers <code>test_pipeline_skill.py</code>,
+<code>test_grade_matrix.py</code>, <code>test_database.py</code>,
+<code>test_pipeline_ffs_assessment.py</code> and
+<code>test_generated_html_freshness.py</code>: 314 passed, with
+<code>PYTHONUTF8</code> unset.
+The reproducibility run uses Plotly 5.17.0 to match the committed showcase's
+embedded library. All registered outputs match their generators in that run.
+These checks ran on the uncommitted tree; hosted checks for the repaired
+revision and independent re-review remain pending.</p>
 <h2>Known limits and way forward</h2>
 <p>Maintained engineering-basis review and material qualification remain required.
 The existing 0.72 hoop factor is an assessment assumption, not a universal design
@@ -97,6 +116,9 @@ exports, psi conventions, published examples and explorer reference cases remain
 for later slices of #1147. The historical migration report is preserved.
 This change does not close the issue. Subsequent work needs an explicit current
 product-level policy and corresponding consumer tests.</p>
+<p>The retained grade-source comments and legacy accessor docstring still name
+the former pipeline integrity consumer. That wording is stale; updating it
+will require a coordinated provenance and generated-report refresh.</p>
 </main>
 </body>
 </html>
