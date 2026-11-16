@@ -1650,8 +1650,9 @@ SWEEP_KEYS = ("velocity_m_s", "displacement_t", "water_depth_m", "contact_x_over
               "berthing_angle_deg", "cs", "cc", "factor")
 
 #: Values the method's own rules can give Cs and Cc: method -> {key: (low, high)}.
-#: A coefficient range outside these is clipped to them; a coefficient the
-#: method fixes or removes is not swept (:data:`SWEEP_EXCLUSIONS`).
+#: A coefficient range partly outside these is clipped to them and a range
+#: with no value in them is refused (:func:`constrained_sweep_range`); a
+#: coefficient the method fixes or removes is not swept (:data:`SWEEP_EXCLUSIONS`).
 SWEEP_COEFFICIENT_LIMITS: dict[str, dict[str, tuple[float, float]]] = {
     "pianc2002": {"cs": (0.9, 1.0)},
     "ueda": {"cs": (0.9, 1.0), "cc": (0.8, 1.0)},
@@ -1685,6 +1686,35 @@ def inapplicable_sweeps(method: str) -> dict[str, str]:
     if method not in METHODS:
         raise ValueError(f"unknown method {method!r}; one of {tuple(METHODS)}")
     return dict(SWEEP_EXCLUSIONS[method])
+
+
+def constrained_sweep_range(method: str, key: str, rng: SweepRange) -> tuple[float, float, str]:
+    """``(low, high, basis)`` of ``rng`` as :func:`standard_sweeps` sweeps it
+    for ``method``.
+
+    Raises ValueError when the range is not finite or its low is above its
+    high. A Cs or Cc range is intersected with
+    :data:`SWEEP_COEFFICIENT_LIMITS`: a range partly outside the method's
+    values is clipped to the overlap (the basis then says so); a range with
+    no value in common with them is refused, since clipping each bound alone
+    would invert it and sweep values the method's rule cannot give.
+    """
+    lo = _finite(f"{key} sweep low", rng.low)
+    hi = _finite(f"{key} sweep high", rng.high)
+    if lo > hi:
+        raise ValueError(f"{key} sweep range: low {lo:g} is above high {hi:g}")
+    basis = rng.basis
+    limits = SWEEP_COEFFICIENT_LIMITS[method]
+    if key in limits:
+        a, b = limits[key]
+        if hi < a or lo > b:
+            raise ValueError(
+                f"{key} sweep range {lo:g} to {hi:g} has no value in {a:g} to {b:g}, the values "
+                f"{method}'s rule gives; give a range that overlaps it")
+        if lo < a or hi > b:
+            lo, hi = max(lo, a), min(hi, b)
+            basis = f"{basis}; clipped to {a:g} to {b:g}, the values this method's rule gives"
+    return lo, hi, basis
 
 
 def standard_sweeps(
@@ -1726,7 +1756,9 @@ def standard_sweeps(
 
     A sweep in :func:`inapplicable_sweeps` is left out, and a Cs or Cc range
     is clipped to :data:`SWEEP_COEFFICIENT_LIMITS` (the range basis then
-    says so).
+    says so). Each range is checked by :func:`constrained_sweep_range`
+    before anything is computed: an inverted range, or a Cs or Cc range
+    with no value in the method's limits, raises ValueError.
 
     ``capacity_knm`` is the design energy capacity per fender, used as
     given. When it is omitted, the capacity is the rated energy divided by
@@ -1754,6 +1786,14 @@ def standard_sweeps(
     """
     if citations not in CITATION_MODES:
         raise ValueError(f"citation mode must be one of {CITATION_MODES}")
+    excluded = inapplicable_sweeps(method)
+    # every range is checked and constrained before the base result or any point is computed
+    constrained = {}
+    for key, rng in ranges.items():
+        if key not in SWEEP_KEYS:
+            raise KeyError(f"unknown sweep {key!r}")
+        if key not in excluded:
+            constrained[key] = constrained_sweep_range(method, key, rng)
     ship, berth = case.ship, case.berth
     kw = dict(velocity_m_s=velocity_m_s, factor=factor, factor_position=factor_position, citations="off")
     if base is None:
@@ -1770,7 +1810,6 @@ def standard_sweeps(
         # the method's divisor applies to the default as to a caller's capacity
         capacity_knm = fender.rated_energy_knm / base.capacity_divisor
     m0 = ship.displacement_t
-    excluded = inapplicable_sweeps(method)
     limits = SWEEP_COEFFICIENT_LIMITS[method]
     base_keys = set(checked)
     used: list[Citation] = []   # citations of the current sweep beyond the base's
@@ -1804,19 +1843,9 @@ def standard_sweeps(
         "factor": ("abnormal / partial energy factor", "-", f0, lambda x: e0 * x / f0),
     }
     out = []
-    for key, rng in ranges.items():
-        if key not in builders:
-            raise KeyError(f"unknown sweep {key!r}")
-        if key in excluded:
-            continue
+    for key, (r_lo, r_hi, basis) in constrained.items():
         used.clear()
         label, unit, b0, fn = builders[key]
-        r_lo, r_hi, basis = rng.low, rng.high, rng.basis
-        if key in limits:
-            a, b = limits[key]
-            if r_lo < a or r_hi > b:
-                r_lo, r_hi = max(r_lo, a), min(r_hi, b)
-                basis = f"{basis}; clipped to {a:g} to {b:g}, the values this method's rule gives"
         lo, hi = min(r_lo, b0), max(r_hi, b0)
         pad = 0.15 * (hi - lo) if hi > lo else 0.1 * abs(b0)
         lo_s, hi_s = lo - pad, hi + pad

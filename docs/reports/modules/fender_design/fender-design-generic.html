@@ -206,7 +206,9 @@ to the berth) and R; for a contact forward of midships with berthing angle α,
 φ = 90° − α − asin(B/2R), the form printed in the ShibataFenderTeam manual (the module
 computes φ from the geometry and the test suite checks it equals this form).</p>
 <ul>
-<li>For the generic case: C_b 0.847, K 48.76 m, R 47.76 m, φ 65.4°, C_e 0.595.</li>
+<li>For the generic case: C_b 0.847, K 48.76 m, R 47.76 m, φ 65.4°, C_e 0.595. These are
+  from the ship and berth in the form above, whichever method is selected.</li>
+<li>The selected method (<code>pianc2002</code>) gives these geometry fields: <code>cb</code> 0.847, <code>k_m</code> 48.763, <code>r_m</code> 47.760, <code>phi_deg</code> 65.427, <code>ce</code> 0.595.</li>
 <li>UFC uses C_e = k²/(a² + k²) with a the contact distance along the ship axis (φ = 90°).</li>
 <li>IS 4651 uses (1 + (l/r)² sin² θ)/(1 + (l/r)²) with r = L/4.</li>
 <li>Typical values for orientation (manufacturers' manuals): quarter point about 0.5,

@@ -295,6 +295,26 @@ def _citation_rows(res) -> dict:
     return rows
 
 
+def geometry_values(res) -> dict[str, str]:
+    """Template values of the ship and berth geometry.
+
+    ``cb``, ``K``, ``R``, ``phi``, ``ce`` and ``ce_err`` are the common
+    illustrative geometry: the PIANC 2002 4.2.4 eccentricity from the ship
+    and berth (:func:`fd.eccentricity`), the same whichever method is
+    selected. ``selected_geometry`` lists the selected method's own geometry
+    fields, only those the method gives (UFC has no R or phi, IS 4651 no
+    C_b or K); ``selected_method`` names the method.
+    """
+    g = fd.eccentricity(res.ship, res.berth)
+    own = res.selected.geometry
+    return dict(
+        cb=f"{g['cb']:.3f}", K=f"{g['k_m']:.2f}", R=f"{g['r_m']:.2f}", phi=f"{g['phi_deg']:.1f}",
+        ce=f"{g['ce']:.3f}", ce_err=f"{fd.eccentricity_k2_numerator(g['k_m'], g['r_m'], g['phi_deg']):.3f}",
+        selected_method=res.selected.method,
+        selected_geometry=", ".join(f"`{k}` {v:.3f}" for k, v in own.items()) or "none",
+    )
+
+
 def render(template: Path, values: dict, out_md: Path, out_html: Path, title: str):
     text = template.read_text(encoding="utf-8")
     missing = sorted(set(re.findall(r"\{\{(\w+)\}\}", text)) - set(values))
@@ -351,12 +371,10 @@ def main(argv=None) -> int:
             values[f"N_{r.method}"] = _f(r.normal_energy_knm)
             values[f"v_{r.method}"] = f"{r.velocity_m_s.value:.3f}"
             values[f"f_{r.method}"] = f"{r.factor.value:.2f}"
-        g = res.selected.geometry
+        values.update(geometry_values(res))
         values.update(
             E_design=_f(res.selected.design_energy_knm), E_normal=_f(res.selected.normal_energy_knm),
             capacity=_f(res.capacity_knm), util=f"{data['utilisation']:.2f}",
-            cb=f"{g['cb']:.3f}", K=f"{g['k_m']:.2f}", R=f"{g['r_m']:.2f}", phi=f"{g['phi_deg']:.1f}",
-            ce=f"{g['ce']:.3f}", ce_err=f"{fd.eccentricity_k2_numerator(g['k_m'], g['r_m'], g['phi_deg']):.3f}",
             n_methods=len(res.methods), n_tests="see the test count in the pull request",
             top1=res.bars[0].label, top2=res.bars[1].label, top3=res.bars[2].label,
             rf=f"{res.reaction_factor:.2f}", R_design=_f(res.design.reaction_kn, 0),

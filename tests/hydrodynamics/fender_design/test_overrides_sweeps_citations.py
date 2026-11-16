@@ -95,6 +95,73 @@ def test_sweep_coefficient_ranges_clipped_to_method_rule():
     assert (bs["cc"].range_low, bs["cc"].range_high) == (0.8, 1.0) and "clipped" not in bs["cc"].range_basis
 
 
+#: Generic case (PIANC 2002, Cs 1.0, 680.9 kNm) against a 600 kNm capacity
+#: (second-provider review at 39742345): Cs 0.8 would give 544.7 kNm
+#: (utilisation 0.908); the smallest Cs the method gives, 0.9, gives
+#: 612.8 kNm (1.021).
+CAP_600 = dict(capacity_knm=600.0, citations="off")
+
+
+@pytest.mark.parametrize("low, high", [(0.7, 0.8), (1.05, 1.2)], ids=["below", "above"])
+def test_disjoint_coefficient_range_is_refused(low, high):
+    with pytest.raises(ValueError, match="0.9 to 1"):
+        fd.standard_sweeps(CASE, "pianc2002", FENDER, {"cs": fd.SweepRange(low, high, "test")}, **CAP_600)
+
+
+def test_disjoint_range_refused_before_any_point_is_evaluated(monkeypatch):
+    # a valid sweep listed first is not computed when a later range is disjoint
+    calls = []
+    real = fd.energy_by_method
+
+    def counting(*a, **k):
+        calls.append(k.get("velocity_m_s"))
+        return real(*a, **k)
+    monkeypatch.setattr(fd, "energy_by_method", counting)
+    ranges = {"velocity_m_s": fd.SweepRange(0.06, 0.17, "test"), "cs": fd.SweepRange(0.7, 0.8, "test")}
+    with pytest.raises(ValueError):
+        fd.standard_sweeps(CASE, "pianc2002", FENDER, ranges, **CAP_600)
+    assert calls == []              # refused before the base result or any swept point
+
+
+def test_disjoint_range_refused_for_cc():
+    with pytest.raises(ValueError, match="0.9 to 1"):
+        fd.standard_sweeps(CASE, "rom", FENDER, {"cc": fd.SweepRange(0.7, 0.85, "test")}, citations="off")
+
+
+def test_range_touching_the_limit_gives_the_limit_point():
+    s = fd.standard_sweeps(CASE, "pianc2002", FENDER, {"cs": fd.SweepRange(0.8, 0.9, "test")}, **CAP_600)[0]
+    assert (s.range_low, s.range_high) == (0.9, 0.9)
+    assert min(p.value for p in s.points) == pytest.approx(0.9)
+
+
+def test_partly_overlapping_range_is_clipped_and_never_evaluated_outside():
+    s = fd.standard_sweeps(CASE, "pianc2002", FENDER, {"cs": fd.SweepRange(0.8, 0.95, "test")}, **CAP_600)[0]
+    assert (s.range_low, s.range_high) == (0.9, 0.95)
+    assert "clipped to 0.9 to 1" in s.range_basis
+    assert min(p.value for p in s.points) >= 0.9 and max(p.value for p in s.points) <= 1.0
+    with pytest.raises(KeyError):
+        s.at(0.8)
+    low = s.at(s.range_low)
+    assert round(low.design_energy_knm, 1) == 612.8
+    assert round(low.utilisation, 3) == 1.021 and low.utilisation > 1.0
+
+
+def test_inverted_range_is_refused():
+    with pytest.raises(ValueError, match="low .* above high"):
+        fd.standard_sweeps(CASE, "pianc2002", FENDER, {"velocity_m_s": fd.SweepRange(0.17, 0.06, "test")},
+                           citations="off")
+    with pytest.raises(ValueError, match="low .* above high"):
+        fd.standard_sweeps(CASE, "pianc2002", FENDER, {"cs": fd.SweepRange(0.95, 0.92, "test")},
+                           citations="off")
+
+
+def test_range_of_an_excluded_sweep_is_not_checked():
+    # the method does not sweep Cs at all, so its range is not constrained
+    assert [s.parameter for s in fd.standard_sweeps(
+        CASE, "wg211", FENDER, {"cs": fd.SweepRange(0.7, 0.8, "test"), "factor": RANGES["factor"]},
+        citations="off")] == ["factor"]
+
+
 def test_velocity_sweep_recomputes_rom_factor():
     sw = next(s for s in fd.standard_sweeps(CASE, "rom", FENDER, RANGES, citations="off") if s.parameter == "velocity_m_s")
     for p in sw.points:
