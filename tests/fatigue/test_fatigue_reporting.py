@@ -145,7 +145,7 @@ def test_report_to_html_is_provenance_gated_and_views_the_ssot():
     with pytest.raises(ProvenanceError):
         report_to_html(report, provenance=Provenance())
 
-    prov = Provenance().add("analysis_store", "fatigue/run_7", digest="abc")
+    prov = Provenance(code_edition="test", units_system="SI", validated_path="screening").add("analysis_store", "fatigue/run_7", digest="abc")
     html = report_to_html(report, provenance=prov)
     assert "<!DOCTYPE html>" in html
     assert 'id="provenance"' in html and "fatigue/run_7" in html
@@ -163,7 +163,7 @@ def test_report_to_html_writes_file(tmp_path):
     report = generate_report(_sample_locations(), structure="Jacket")
     out = tmp_path / "fatigue.html"
     written = report_to_html(
-        report, provenance=Provenance().add("file", "f.json"), output_path=out
+        report, provenance=Provenance(code_edition="test", units_system="SI", validated_path="screening").add("file", "f.json"), output_path=out
     )
     assert written == out and out.exists()
 

@@ -101,7 +101,7 @@ Table 1. Capability status by riser type.
 
 | Category | Path | Records | Population | Provenance mechanism |
 | --- | --- | --- | --- | --- |
-| Line pipe and tubulars | `data/riser_database/config_catalog.csv` | 28 | populated | source_path column (repository file per row) |
+| Line pipe and tubulars | `data/riser_database/config_catalog.csv` | 42 | populated | source_path column (repository file per row) |
 | Line pipe and tubulars | `data/line_pipe/data.json` | 0 | empty (schema and citation contract only) | citation_id per row resolved in sources.yml |
 | Drilling and completion stack-ups | `data/riser_database/riser_stackup.csv` | 84 | populated | wiki_path column |
 | Tensioners and rig interface | `data/riser_database/rig_riser_interface.csv` | 10 | populated | wiki_path column |

@@ -19,6 +19,7 @@ import yaml
 from digitalmodel.drilling_riser import generic_campaign
 from digitalmodel.drilling_riser.generic_campaign import METHOD, digest, write_text
 from digitalmodel.reporting.engine import render_html
+from digitalmodel.reporting._metadata import package_code_edition
 from digitalmodel.reporting.provenance import DataSource, Provenance
 from digitalmodel.reporting.spec import DocumentMeta, ReportSpec, Section, TableBlock, TextBlock
 
@@ -223,7 +224,8 @@ def build_spec(campaign: Path, results: Path, *, criteria_file: Path | None = No
                 'Difference (%)', 'Absolute difference'], rows=comparisons),
             TableBlock(title='Complete envelopes', columns=['Case', 'Criterion', 'Component', 'Demand', 'Limit',
                 'Unit', 'Comparison score'], rows=all_rows))],
-        provenance=Provenance(sources=[DataSource(kind='design data', identifier='generic-connected-basis',
+        provenance=Provenance(code_edition=package_code_edition(), units_system='SI',
+            validated_path='screening', sources=[DataSource(kind='design data', identifier='generic-connected-basis',
             digest=table['template_sha256']), DataSource(kind='analytical results', identifier='column-screen',
             digest=digest(screen_path)), DataSource(kind='acceptance criteria', identifier='runtime-criteria',
             digest=criteria_identity)] + [DataSource(kind='dynamic results', identifier=p.stem.split('.')[0],

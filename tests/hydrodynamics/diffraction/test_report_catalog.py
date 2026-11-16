@@ -74,7 +74,7 @@ def test_skeleton_is_provenance_gated_and_renders_pending() -> None:
 def test_filled_skeleton_with_provenance_is_complete() -> None:
     sk = diffraction_report_skeleton(StructureType.SHIP)
     content = {k: f"<p>{k}</p>" for k in sk.required_block_keys()}
-    status = sk.completeness(content, provenance=Provenance().add("spec", "s.yml"))
+    status = sk.completeness(content, provenance=Provenance(code_edition="test", units_system="SI", validated_path="screening").add("spec", "s.yml"))
     assert status.complete and status.missing_blocks == []
 
 
@@ -119,7 +119,7 @@ def test_render_structured_report_gates_on_completeness():
     )
 
     out, status = render_structured_report(
-        "fpso", _report_data(), provenance=Provenance().add("solver_queue", "run9")
+        "fpso", _report_data(), provenance=Provenance(code_edition="test", units_system="SI", validated_path="screening").add("workflow_results", "run9")
     )
     assert "<!DOCTYPE html>" in out and "run9" in out and "RAO plots" in out
     # FPSO is ship-shaped -> roll_damping required and unfilled -> incomplete
@@ -139,7 +139,7 @@ def test_render_structured_report_complete_when_all_slots_filled(tmp_path):
     out, status = render_structured_report(
         "ship",
         _report_data(),
-        provenance=Provenance().add("spec", "s.yml"),
+        provenance=Provenance(code_edition="test", units_system="SI", validated_path="screening").add("spec", "s.yml"),
         extra_blocks=extra,
         output_path=out_path,
     )

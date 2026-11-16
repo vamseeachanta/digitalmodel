@@ -118,6 +118,15 @@ repos:
   # Performance and complexity checks
   - repo: local
     hooks:
+      - id: orcaflex-spec-validate
+        name: OrcaFlex spec.yml strict validation
+        description: Requires bash and uv on PATH; the first run needs network access to populate the uv cache.
+        entry: scripts/check_spec_validity.sh
+        language: script
+        files: '(^|/)([^/]+\.)?spec\.yml$'
+        pass_filenames: false
+        stages: [pre-commit]
+
       - id: verify-repo-structure
         name: Verify repository structure
         entry: python scripts/maintenance/verify_repo_structure.py --repo . --config config/repo_structure.yml

@@ -437,6 +437,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/production_engineering/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#production_engineering
+  - module: provider_data
+    entry_point: src/digitalmodel/provider_data/
+    maturity: development
+    owner_wiki: docs/domains/README.md
+    key_tests: [tests/provider_data/]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#provider_data
   - module: reservoir
     entry_point: src/digitalmodel/reservoir/
     submodules:
