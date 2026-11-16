@@ -3698,6 +3698,86 @@
       }
     },
     {
+      "manifest": "atlases/spectral_fatigue/8e9bbf404b2e/manifest.yaml",
+      "workflow_id": "spectral-fatigue",
+      "recorded_code_version": "34c4a25c3",
+      "source_publication": "first-matching-artifact-publication",
+      "algorithm": "legacy-raw-v1",
+      "content_fingerprint": "8e9bbf404b2e8458bdec4449e6d7a4994ca8e233a4d660c7316386b676e37f0f",
+      "status": "VERIFIED",
+      "basis": {
+        "spec": {
+          "physics": "log_log",
+          "response": "annual_damage",
+          "axes": [
+            {
+              "name": "Hs",
+              "scale": "log",
+              "grid": [
+                1.0,
+                2.0,
+                3.0,
+                4.5,
+                6.0,
+                8.0
+              ]
+            },
+            {
+              "name": "Tp",
+              "scale": "linear",
+              "grid": [
+                6,
+                7,
+                8,
+                9,
+                10,
+                11,
+                12,
+                13,
+                14,
+                16
+              ]
+            }
+          ]
+        },
+        "response_kwargs": {
+          "gamma": 3.3,
+          "stress_gain_MPa_per_m": 20.0,
+          "sn_slope": 3.0,
+          "sn_intercept": 12.164
+        },
+        "standards": [
+          {
+            "id": "DNV-RP-C203",
+            "edition": "2021-09"
+          },
+          {
+            "id": "DNV-RP-C205",
+            "edition": "2021-09"
+          }
+        ],
+        "input": "examples/workflows/spectral-fatigue/input.yml",
+        "response_sources": [
+          "src/digitalmodel/fatigue/spectral_fatigue.py",
+          "src/digitalmodel/hydrodynamics/wave_spectra.py"
+        ]
+      },
+      "sources": {
+        "docs/registry/workflows.yaml": "155a8c461df8605f3386d6687c1fc4298a976544918901e118869a6eeadc3192",
+        "src/digitalmodel/parametric/refresh.py": "c12008133a45a59a513b42d29f5962bd8fd0c057371366600a4ef80a87da8f10",
+        "src/digitalmodel/parametric/generate.py": "5b0447c62beaffcdbd936816f49f062357232a8b1f8cdbaf101a20563fc69028",
+        "examples/workflows/spectral-fatigue/input.yml": "21dc2b6fb560c05baa6809b93902a195e8d8664af2d7f34a8c9e1300637b8960",
+        "src/digitalmodel/fatigue/spectral_fatigue.py": "05135f518c9237d04e470744a16491707e3517a413b190c3827518ef118d023b",
+        "src/digitalmodel/hydrodynamics/wave_spectra.py": "90fb82906efc3791ace266448d1e8996b6ccc262e605d25aa75784040a6c6861"
+      },
+      "artifacts": {
+        "atlases/spectral_fatigue/8e9bbf404b2e/grid.parquet": "3a27e2ed1b8289d748beb8f016faa1af576f2b96c33660c315816a0d3ffae195",
+        "atlases/spectral_fatigue/8e9bbf404b2e/manifest.yaml": "2bfa3b38a37d80752ec44419e54c3144601d32857e8faf1c390a911bf3634d0a",
+        "atlases/spectral_fatigue/8e9bbf404b2e/surrogate.json": "6908ea4a7b5643c16bb89096b8f51f6836aa245fc713907cc595fb017f971953",
+        "atlases/spectral_fatigue/8e9bbf404b2e/validation.json": "6b9b6b84600775108095bde84823b0e6123a04cb1ca896f5c069b4dd656db490"
+      }
+    },
+    {
       "manifest": "atlases/synthetic_rope_mooring_fatigue/cfc09a9f7593/manifest.yaml",
       "workflow_id": "synthetic-rope-mooring-fatigue",
       "recorded_code_version": "2f9ac35d9",
