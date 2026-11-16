@@ -71,15 +71,18 @@ def type_tolerances(design: dict, fender_type: str) -> tuple[float, float]:
 
     The design block's ``energy_tolerance`` and ``reaction_tolerance`` belong
     to the base fender's type; ``tolerances_by_type`` gives every other type
-    in the catalogue (manufacturing tolerances differ by type: moulded rubber
-    +/-10 %, extruded +/-20 %, foam +/-10 to 15 %, pneumatic 0 % on energy;
-    TFADM p. 30, SFT p. 26). A type without an entry takes the base values;
+    in the catalogue (performance tolerances differ by type: TFADM p. 76
+    gives moulded rubber +/-10 %, extruded +/-20 %, foam +/-10 %, pneumatic
+    +/-10 % on reaction and energy; SFT p. 26 gives pneumatic 0 % on energy
+    for guaranteed energy absorption, GEA). A type without an entry takes
+    the base values; the base values default to 0.10 (energy) and 0.10
+    (reaction), the pneumatic reading that gives the lower capacity;
     :func:`check_type_tolerances` refuses a catalogue in which a type other
     than the base fender's has none.
     """
     t = (design.get("tolerances_by_type") or {}).get(fender_type)
     if t is None:
-        return design.get("energy_tolerance", 0.0), design.get("reaction_tolerance", 0.10)
+        return design.get("energy_tolerance", 0.10), design.get("reaction_tolerance", 0.10)
     return t["energy_tolerance"], t["reaction_tolerance"]
 
 
@@ -154,7 +157,7 @@ def size_basis(res) -> str:
     other = "".join(f"; {t} rows {v['energy_tolerance']:.2f}" for t, v in others.items())
     other_r = "".join(f"; {t} rows {v['reaction_tolerance']:.2f}" for t, v in others.items())
     return (f"Energy: rated x (1 - energy tolerance: {res.base_fender.fender_type} rows "
-            f"{d.get('energy_tolerance', 0.0):.2f}{other}) x angular {d.get('angular_factor', 1.0):.2f}"
+            f"{d.get('energy_tolerance', 0.10):.2f}{other}) x angular {d.get('angular_factor', 1.0):.2f}"
             + (f" / {div:.2f} ({res.selected.label} capacity divisor)" if div != 1.0 else "")
             + f". Reaction and hull pressure: rated-deflection value x (1 + reaction tolerance: "
               f"{res.base_fender.fender_type} rows {d.get('reaction_tolerance', 0.10):.2f}{other_r})."
@@ -319,7 +322,7 @@ def compute(case: dict, catalogue_path: str | Path | None = None, citations: str
     check_type_tolerances(catalogue, base_fender.fender_type, d)
     design = fd.design_performance(
         base_fender,
-        energy_tolerance=d.get("energy_tolerance", 0.0),
+        energy_tolerance=d.get("energy_tolerance", 0.10),
         reaction_tolerance=d.get("reaction_tolerance", 0.10),
         angular_factor=d.get("angular_factor", 1.0),
     )

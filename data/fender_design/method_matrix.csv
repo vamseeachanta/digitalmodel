@@ -1,9 +1,9 @@
 method,velocity,added_mass_cm,eccentricity_ce,softness_cs,configuration_cc,other,design_factor,fender_capacity,verification
 pianc2002,Brolsma curves a-e by DWT (Fig. 4.2.1),keel clearance 1.8/1.5,"PIANC K, R, phi","1.0 general value (4.2.6); option 0.9 at 0.15 m (manuals)",1.0 with PIANC Cm (manuals' pairing rule),-,abnormal Table 4.2.5 (largest/smallest),rated x tolerance x factors,"full-text (velocities secondary)"
 wg211,"characteristic 0.02 %; defaults 0.15 moderate, 0.25 unfavourable",keel clearance (worked example),"PIANC K, R, phi",removed,removed,-,gamma_E = gamma_Eref x gamma_n x gamma_p x gamma_c,"E_f,c / gamma_m (1.10)",secondary (2024 background papers)
-bs6349,Brolsma curves by displacement (Figure 9),Vasco Costa 1 + 2T/B,"PIANC K, R, phi",PIANC,"PIANC 4.2.7 (solid quay 0.9, open 1.0); option SFT table",-,PIANC table; 2.0 gas carriers,as PIANC,secondary
+bs6349,Brolsma curves by displacement (Figure 9),Vasco Costa 1 + 2T/B,"PIANC K, R, phi",PIANC,"PIANC 4.2.7 (solid quay 0.9 below KC/D 0.15, 1.0 at or above per TFADM p. 27; open 1.0); option SFT table",-,PIANC table; 2.0 gas carriers,as PIANC,secondary
 eau,favourable/normal/unfavourable characteristic (digitized),keel clearance (EAU 2004 adopts PIANC),"PIANC K, R, phi",PIANC,1.0 with PIANC Cm,-,PIANC Table 4.2.5 (SFT: adopted by EAU-2004; EAU 2012 not read),as PIANC,"secondary, digitized"
 rom,Table 4.6.4.36/37 by displacement and climate (digitized),1.8/1.5 keel clearance,"PIANC form, r = L/4 default",0.9 rigid or L >= 300 m,1.0/0.9 rules,Cg 0.95 continuous / 1.0 dolphins,Table 4.6.4.43 product of four factors,as PIANC,"full-text, digitized"
 ufc,Figs. 5-3/5-4 by displacement (digitized),surface-vessel formula (T/d)^3.5,k^2/(a^2 + k^2),Cd 1.0,1.0 open / 0.8 solid parallel,Cg 0.95 at quarter points,accidental +50 %,+/-10 % tolerance,"full-text, digitized"
-ueda,Brolsma by DWT,Ueda 1 + pi T/(2 Cb B),"PIANC K, R, phi",PIANC,"PIANC 4.2.7 (solid quay 0.9, open 1.0); option SFT table",-,PIANC Table 4.2.5,as PIANC,formula
+ueda,Brolsma by DWT,Ueda 1 + pi T/(2 Cb B),"PIANC K, R, phi",PIANC,"PIANC 4.2.7 (solid quay 0.9 below KC/D 0.15, 1.0 at or above per TFADM p. 27; open 1.0); option SFT table",-,PIANC Table 4.2.5,as PIANC,formula
 is4651,Table 2 step values,1 + 2D/B,"(1 + (l/r)^2 sin^2 theta)/(1 + (l/r)^2), r = L/4",0.9,-,-,none,-,full-text (withdrawn)

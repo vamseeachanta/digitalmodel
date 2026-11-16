@@ -327,17 +327,21 @@ def test_neighbouring_sizes_take_the_tolerance_of_their_type():
     from fender_case import check_type_tolerances, compute, load_case, size_checks, type_tolerances
     res = compute(load_case(EXAMPLE / "generic_case.yaml"), citations="record")
     fm = next(c for c in res.size_checks if c.fender_id == "GEN-FM-6")
-    # foam: +/-10 to 15 % (TFADM p. 30; SFT p. 26), upper end assumed: 1,000 x 0.85 = 850 kNm
-    assert fm.capacity_knm == pytest.approx(850.0)
-    assert fm.utilisation == pytest.approx(680.839 / 850.0, rel=1e-5)
-    assert fm.reaction_kn == pytest.approx(1400.0 * 1.15)
-    assert fm.hull_pressure_kpa == pytest.approx(180.0 * 1.15)
-    assert (fm.meets_reaction, fm.meets_pressure) == (False, False)      # 1,610 kN > 1,600; 207 kPa > 200
+    # foam: +/-10 % on reaction and energy (TFADM p. 76): 1,000 x 0.90 = 900 kNm
+    assert fm.capacity_knm == pytest.approx(900.0)
+    assert fm.utilisation == pytest.approx(680.839 / 900.0, rel=1e-5)
+    assert fm.reaction_kn == pytest.approx(1400.0 * 1.10)
+    assert fm.hull_pressure_kpa == pytest.approx(180.0 * 1.10)
+    assert fm.meets_all                                                  # 1,540 kN <= 1,600; 198 kPa <= 200
+    # pneumatic: the conservative of TFADM p. 76 (+/-10 %) and SFT p. 26 (0 % on GEA): 700 x 0.90
     pn = next(c for c in res.size_checks if c.is_base)
-    assert pn.capacity_knm == pytest.approx(700.0) and pn.reaction_kn == pytest.approx(1595.0)
+    assert pn.capacity_knm == pytest.approx(630.0) and pn.reaction_kn == pytest.approx(1595.0)
+    assert pn.utilisation == pytest.approx(680.839 / 630.0, rel=1e-5) and not pn.meets_energy
     d = res.case["design"]
-    assert type_tolerances(d, "foam") == (0.15, 0.15)
-    assert type_tolerances(d, "pneumatic") == (0.0, 0.10)
+    assert type_tolerances(d, "foam") == (0.10, 0.10)
+    assert type_tolerances(d, "pneumatic") == (0.10, 0.10)
+    # without a stated base tolerance the default is the conservative 0.10, not the GEA 0 %
+    assert type_tolerances({}, "pneumatic") == (0.10, 0.10)
     # a catalogue with another type and no tolerance for it is refused
     bare = {k: v for k, v in d.items() if k != "tolerances_by_type"}
     with pytest.raises(ValueError, match="no tolerances for fender type"):
@@ -349,3 +353,20 @@ def test_neighbouring_sizes_take_the_tolerance_of_their_type():
                               dict(d, tolerances_by_type={"pneumatic": dict(energy_tolerance=0.0,
                                                                             reaction_tolerance=0.1)}))
     assert math.isfinite(fm.capacity_knm)
+
+
+def test_block_coefficient_of_one_within_rounding_is_the_box_and_above_never_prints_as_one():
+    # gate observation at 81dc2fe8: 70,848 t on the generic hull is rho LBP B T (1.025 x 180 x 32 x 12)
+    # and was refused with "1.000 is above 1"
+    box = fd.Ship(displacement_t=70_848, lbp_m=180.0, beam_m=32.0, draft_m=12.0, ship_type="bulk")
+    assert box.cb == pytest.approx(1.0, abs=1e-12)
+    with pytest.raises(ValueError, match=r"= 1\.00001 is above 1"):
+        fd.Ship(displacement_t=70_849, lbp_m=180.0, beam_m=32.0, draft_m=12.0, ship_type="bulk")
+    with pytest.raises(ValueError, match=r"= 1\.002 is above 1"):
+        fd.Ship(displacement_t=71_000, lbp_m=180.0, beam_m=32.0, draft_m=12.0, ship_type="bulk")
+
+
+def test_register_states_the_held_copy_and_the_two_reading_digitization_limit():
+    assert "held copy" in fd.SOURCES["pianc2002"].read_in
+    assert "+/-0.015 ft/s" in fd.SOURCES["ufc-4-152-01"].note
+    assert "independent readings" in fd.SOURCES["ufc-4-152-01"].note

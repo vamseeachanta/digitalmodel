@@ -220,18 +220,32 @@ def test_generic_report_states_the_failed_checks_and_the_solved_crossing(tmp_pat
                               "--allow-unresolved-citations"]) == 0
     md = (out / "r.md").read_text(encoding="utf-8")
     flat = " ".join(md.split())
-    # summary: the hull-pressure failure and the reaction margin of the base fender
+    # summary: the energy and hull-pressure failures and the reaction margin of the base fender;
+    # energy at the conservative 10 % pneumatic tolerance (TFADM p. 76), with the 0 % GEA verdict beside it
+    assert ("energy utilisation 1.081 against 1.0 at the 10 % pneumatic energy tolerance (**not met**; "
+            "0.973, met, at the 0 % of SFT p. 26") in flat
     assert "design hull pressure 231 kPa against the 200 kPa limit (**not met**, 15.5 % over)" in flat
     assert "design reaction 1,595 kN against the 1,600 kN limit (met, margin 0.3 %)" in flat
-    assert "does **not** meet every check" in flat
-    # Table 5: displacement with separators, water depth solved (13.21 m, not 13.16), 1.0004 at 12.6 m
-    assert "| 60,000 t |" in md and "61,689 t" in md
-    assert "13.21 m" in md and "13.16" not in md
-    assert "1.0004 /" in md
-    assert "closed form: keel-clearance Cm 1.79925" in flat
-    # the UFC overlap rule and the PIANC 2002 reading are stated
-    assert "the larger of the two figures" in flat
+    assert "The base fender therefore **fails** the energy and hull pressure checks" in flat
+    # the size statement agrees with Table 7: only the foam fender meets every check
+    assert "only GEN-FM-6 meets every check" in flat
+    assert "| GEN-FM-6 | 1,000 | 900 | 0.756 | 1,400 | 1,540 | 198 | yes | yes | yes |" in md
+    assert "| GEN-PN-4 (base) | 700 | 630 | 1.081 |" in md
+    # Section 3.6 records the conflict with both verdicts; Table 10 carries the choice
+    assert "1.081 at 10 % (**not met**) and 0.973 at 0 % (met); this build takes 10 %" in flat
+    assert "| Pneumatic energy tolerance 0.10 |" in md
+    assert "foam tolerances" not in md                  # foam 0.10 is the printed value, not assumed
+    # Section 3.4 states the keel-clearance condition of the solid-quay C_c
+    assert "0.9 when KC/D is below 0.15 and 1.0 when KC/D is 0.15 or more" in flat
+    # Table 5: displacement with separators, water depth solved in closed form
+    assert "| 60,000 t |" in md and "55,520 t" in md
+    assert "16.09 m" in md
+    assert "closed form: keel-clearance Cm 1.61933" in flat
+    # the UFC overlap rule, its digitization limit and the PIANC 2002 reading are stated
+    assert "the larger of the two figures" in flat and "±0.015 ft/s" in flat
     assert "4.2.7 (p. 22)" in flat and "4.2.6 (p. 21)" in flat
+    assert "with the design adjustments of each fender's type" in flat
     data = json.loads((out / "results.json").read_text(encoding="utf-8"))
     depth = next(s for s in data["sweeps"] if s["parameter"] == "water_depth_m")
-    assert depth["limit_value"] == pytest.approx(13.212, abs=5e-4)
+    # KC/D = (1.875 - 1.61933) / 0.75 = 0.34089; depth = 12 x 1.34089
+    assert depth["limit_value"] == pytest.approx(16.0908, abs=5e-4)

@@ -33,10 +33,10 @@ design:
   factor_position: smallest    # Handymax-size bulk carrier (SFT p. 22 class reading)
   fenders_in_contact: 1
   base_fender_id: GEN-PN-4
-  energy_tolerance: 0.0        # pneumatic GEA carries 0 % energy tolerance (SFT p. 26)
-  reaction_tolerance: 0.10
-  tolerances_by_type:          # other fender types in the catalogue (TFADM p. 30; SFT p. 26)
-    foam: {energy_tolerance: 0.15, reaction_tolerance: 0.15}   # ASSUMED - to be confirmed: upper end of foam +/-10 to 15 %
+  energy_tolerance: 0.10       # pneumatic: sources conflict, the lower-capacity reading taken: TFADM p. 76 +/-10 % on energy; SFT p. 26 0 % on GEA (report 3.6)
+  reaction_tolerance: 0.10     # pneumatic +/-10 % (TFADM p. 76)
+  tolerances_by_type:          # other fender types in the catalogue
+    foam: {energy_tolerance: 0.10, reaction_tolerance: 0.10}   # foam +/-10 % on reaction and energy (TFADM p. 76)
   angular_factor: 1.0
   reaction_limit_kn: 1600.0    # illustrative structural limit
   hull_pressure_limit_kpa: 200.0   # PIANC 2002 Table 4.4.1, bulk carriers

@@ -84,8 +84,9 @@ def _register(*sources: Source) -> None:
 
 TFADM = "Trelleborg Fender Application Design Manual MN-FEN-V4.0-EN (2024)"
 SFTDM = "ShibataFenderTeam Design Manual (English, 2026)"
-#: How the PIANC WG33 (2002) report is named where it was read: the primary text.
-PIANC2002_PRIMARY = "PIANC WG33 (2002), primary text"
+#: How the PIANC WG33 (2002) report is named where it was read: the primary
+#: text, from a held copy (the register gives no storage location).
+PIANC2002_PRIMARY = "PIANC WG33 (2002), primary text (held copy)"
 #: Vendor manuals: a coefficient may come from them (a caller-selected option
 #: or a reading the primary text does not give); they are named in the
 #: result, never cited as a standard (no :data:`CITATION_TARGETS` entry).
@@ -144,8 +145,10 @@ _register(
         "pianc2002-cc", "PIANC 2002 berth configuration factor", "2002", "section 4.2.7, p. 22",
         "full-text", f"{PIANC2002_PRIMARY} p. 22",
         "1.0 for open berths and corners of quay walls; solid quay walls under parallel approach "
-        "'generally taken as 0.9'; the cushion effect disappears above a 5 deg approach angle. No "
-        "partly closed class and no 0.8 value (those are the SFT table, option cc_basis 'sft-2026')",
+        "'generally taken as 0.9'; the cushion effect disappears above a 5 deg approach angle and "
+        "'will hardly occur' with a large keel clearance (no threshold printed: the KC/D 0.15 limit "
+        "is the TFADM p. 27 reading). No partly closed class and no 0.8 value (those are the SFT "
+        "table, option cc_basis 'sft-2026')",
         accessed_on="2026-11-16",
     ),
     Source(
@@ -203,11 +206,14 @@ class Ship:
                 _finite(name, getattr(self, name), positive=True)
         if self.ship_type not in SHIP_TYPES:
             raise ValueError(f"ship_type must be one of {SHIP_TYPES}")
-        # plausibility: a block coefficient above 1 is a hull larger than its own box
+        # plausibility: a block coefficient above 1 is a hull larger than its own box;
+        # 1 within floating-point rounding (M = rho LBP B T) is the box itself, not above it
         cb = self.cb
-        if cb > 1.0:
+        if cb > 1.0 + 1e-12:
+            # enough decimals that a value above 1 never prints as 1.000
+            shown = next((f"{cb:.{n}f}" for n in range(3, 13) if float(f"{cb:.{n}f}") > 1.0), repr(cb))
             raise ValueError(
-                f"block coefficient M/(rho LBP B T) = {cb:.3f} is above 1: check displacement, LBP, beam "
+                f"block coefficient M/(rho LBP B T) = {shown} is above 1: check displacement, LBP, beam "
                 "and draught (the draught at berthing, not the moulded depth)")
 
     @property
@@ -417,6 +423,12 @@ CS_BASES = ("pianc2002", "tfadm-2024")
 #: 0.9 and partly closed 0.9 or 1.0 by KC/D), selected by the caller.
 CC_BASES = ("pianc2002", "sft-2026")
 
+#: Keel clearance / draught at or above which a solid quay takes Cc 1.0 under
+#: the PIANC basis: PIANC 2002 4.2.7 (p. 22) says the cushion effect "will
+#: hardly occur" with a large keel clearance but prints no threshold; 0.15 is
+#: the TFADM p. 27 reading (0.9 for a keel clearance below 15 % of draught).
+CC_SOLID_QUAY_KCD_LIMIT = 0.15
+
 #: Note on the partly closed Cc under the PIANC basis, which prints no value for it.
 CC_PARTLY_CLOSED_ASSUMED = ("ASSUMED - to be confirmed: PIANC 2002 4.2.7 gives no partly closed value; "
                             "1.0 (no reduction, the open-berth value) taken")
@@ -452,6 +464,8 @@ def berth_configuration(
     already in Cm, so Cc = 1.0: this pairing is the manuals' rule (TFADM
     p. 27 "usually assumed", SFT p. 18), not a clause of 4.2.7. Otherwise,
     at 5 deg or less: under ``pianc2002`` (default) a solid quay takes 0.9
+    below KC/D :data:`CC_SOLID_QUAY_KCD_LIMIT` (0.15) and 1.0 at or above it
+    (large keel clearance: PIANC 4.2.7 prose, threshold from TFADM p. 27),
     and a partly closed berth 1.0 (assumed: PIANC gives no value for it);
     under ``sft-2026`` the SFT p. 20 table: solid quay 0.8 (KC/D <= 0.5) or
     0.9, partly closed 0.9 or 1.0.
@@ -470,9 +484,16 @@ def berth_configuration(
         return Coefficient("cc", 1.0, "tfadm-2024",
                            f"{where}: 1.0 with the keel-clearance Cm (TFADM p. 27 'usually assumed'; SFT p. 18)")
     if basis == "pianc2002":
-        if structure == "closed":
+        if structure == "closed" and ratio < CC_SOLID_QUAY_KCD_LIMIT:
             return Coefficient("cc", 0.9, "pianc2002-cc",
-                               f"{where}: solid quay, parallel approach, 'generally 0.9' (PIANC 2002 4.2.7, p. 22)")
+                               f"{where}, KC/D {ratio:.3f} below {CC_SOLID_QUAY_KCD_LIMIT:g}: solid quay, "
+                               "parallel approach, 'generally 0.9' (PIANC 2002 4.2.7, p. 22; KC/D limit "
+                               "TFADM p. 27)")
+        if structure == "closed":
+            return Coefficient("cc", 1.0, "tfadm-2024",
+                               f"{where}, KC/D {ratio:.3f} at or above {CC_SOLID_QUAY_KCD_LIMIT:g}: large keel "
+                               "clearance, cushion effect 'will hardly occur' (PIANC 2002 4.2.7, p. 22), 1.0 "
+                               "(KC/D limit TFADM p. 27)")
         return Coefficient("cc", 1.0, "pianc2002-cc", f"{where}: {CC_PARTLY_CLOSED_ASSUMED}")
     if structure == "closed":
         v = 0.8 if ratio <= 0.5 else 0.9
@@ -569,8 +590,8 @@ _register(
         "ufc-4-152-01", "UFC 4-152-01 Design: Piers and Wharves", "2017, Change 1 2024",
         "5-2.1 (Eq. 5-1, 5-2; Ce, Cg, Cd, Cc, Cm), 5-1.5.3 (+50 % accidental), Figs. 5-3 and 5-4",
         "full-text", "WBDG copy",
-        "velocity figures digitized from the gridlines (about +/-0.01 ft/s), both figures re-read 16 Nov "
-        "2026; overlap 5,000 to 20,000 LT: the larger of Figs. 5-3 and 5-4", accessed_on="2026-11-16",
+        "velocity figures digitized from the gridlines (+/-0.015 ft/s, the largest spread between two "
+        "independent readings), both figures re-read 16 Nov 2026; overlap 5,000 to 20,000 LT: the larger of Figs. 5-3 and 5-4", accessed_on="2026-11-16",
     ),
     Source(
         "rom-2.0-11", "ROM 2.0-11 Recomendaciones para el proyecto y ejecucion en obras de atraque y amarre",
@@ -932,10 +953,10 @@ _FT = 0.3048
 #: 20,000 tons)") covers 1,000 to 20,000 LT and Fig. 5-4 ("Large Ship") 5,000
 #: to 100,000 LT. Below 5,000 LT the rows are Fig. 5-3; from 5,000 to 20,000 LT,
 #: where both figures apply, each class takes the larger of the two figures
-#: (Fig. 5-3 is higher for the moderate class, by up to 0.08 ft/s at 5,000 LT,
+#: (Fig. 5-3 is higher for the moderate class, by up to 0.07 ft/s at 5,000 LT,
 #: Fig. 5-4 for the sheltered class from 8,000 LT); above 20,000 LT Fig. 5-4.
-#: Both figures were digitized from the gridlines of the WBDG copy (about
-#: +/-0.01 ft/s): Fig. 5-3 at 5,000 / 6,000 / 8,000 / 10,000 / 15,000 /
+#: Both figures were digitized from the gridlines of the WBDG copy (+/-0.015
+#: ft/s, the largest spread between two independent readings): Fig. 5-3 at 5,000 / 6,000 / 8,000 / 10,000 / 15,000 /
 #: 20,000 LT gives 0.36 / 0.34 / 0.31 / 0.28 / 0.25 / 0.24 (sheltered),
 #: 0.73 / 0.70 / 0.63 / 0.57 / 0.48 / 0.45 (moderate), 0.99 / 0.94 / 0.87 /
 #: 0.83 / 0.76 / 0.72 (exposed); Fig. 5-4 gives 0.35 / 0.34 / 0.33 / 0.31 /
@@ -1583,7 +1604,10 @@ def design_performance(
     factors (at the slowest velocity and highest temperature); reaction =
     rated x (1 + reaction tolerance) x velocity x temperature factors (at the
     fastest velocity and lowest temperature) (TFADM p. 30; SFT p. 26).
-    Pneumatic fenders are rated at GEA with 0 % energy tolerance (SFT p. 26).
+    Pneumatic fenders: the sources conflict. TFADM p. 76 gives +/-10 % on
+    reaction and energy; SFT p. 26 gives 0 % on energy for guaranteed energy
+    absorption (GEA). The tolerance is the caller's (default 0.10, the
+    reading that gives the lower capacity).
     The angular factor must be in (0, 1], as in ``select_fenders``: a vendor
     angle factor above 1 (cone fenders at small angles, TFADM p. 36 Super
     Cone 1.039 to 1.055; R24B Table 4 C_ang 1.03 to 1.05) is not credited

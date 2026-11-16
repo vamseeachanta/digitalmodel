@@ -104,7 +104,7 @@ INPUT_ROWS = (
     ("VOVR", "Velocity override for every method (blank: each method's own)", "m/s",
      lambda c: c["design"].get("velocity_m_s")),
     ("N", "Fenders in contact (equal share)", "-", lambda c: c["design"].get("fenders_in_contact", 1)),
-    ("ETOL", "Fender energy tolerance (fraction)", "-", lambda c: c["design"].get("energy_tolerance", 0.0)),
+    ("ETOL", "Fender energy tolerance (fraction)", "-", lambda c: c["design"].get("energy_tolerance", 0.10)),
     ("RTOL", "Fender reaction tolerance (fraction)", "-", lambda c: c["design"].get("reaction_tolerance", 0.10)),
     ("ANG", "Angular factor on fender energy", "-", lambda c: c["design"].get("angular_factor", 1.0)),
     ("RLIM", "Reaction limit per fender", "kN", lambda c: c["design"].get("reaction_limit_kn")),
@@ -345,10 +345,11 @@ CALC_ROWS = (
      "PIANC WG33 (2002) 4.2.6, p. 21"),
     ("CS_ROM", "Cs, ROM 2.0-11: 1.0 above 0.15 m and LBP below 300 m, else 0.9",
      "=IF(AND(DEFLC>0.15,LBPC<300),1,0.9)", "ROM 2.0-11 p. 272"),
-    ("CC_P", "Cc with Vasco Costa or Ueda Cm, PIANC 2002 4.2.7: open or angle above 5 deg 1.0, solid quay 0.9, "
-     "partly closed 1.0 (ASSUMED - to be confirmed: no PIANC value) (option cc_basis: pianc2002)",
-     '=IF(OR(STRUCTC="open",ABS(ALPHAC)>5),1,IF(STRUCTC="closed",0.9,1))',
-     "PIANC WG33 (2002) 4.2.7, p. 22"),
+    ("CC_P", "Cc with Vasco Costa or Ueda Cm, PIANC 2002 4.2.7: open or angle above 5 deg 1.0, solid quay 0.9 "
+     "below KC/D 0.15 and 1.0 at or above it (large keel clearance; 0.15 from TFADM p. 27), partly closed 1.0 "
+     "(ASSUMED - to be confirmed: no PIANC value) (option cc_basis: pianc2002)",
+     '=IF(OR(STRUCTC="open",ABS(ALPHAC)>5),1,IF(STRUCTC="closed",IF(KCD<0.15,0.9,1),1))',
+     "PIANC WG33 (2002) 4.2.7, p. 22; KC/D limit TFADM p. 27"),
     ("CC_UFC", "Cc, UFC: open or angled 1.0, solid 0.8, between 0.9",
      '=IF(OR(STRUCTC="open",ABS(ALPHAC)>5),1,IF(STRUCTC="closed",0.8,0.9))', "UFC 4-152-01 5-2.1"),
     ("CB_UFC", "Berthing coefficient, UFC Cb = Ce Cg Cd Cc (Cd 1.0)", "=CE_UFC*CG_UFC*1*CC_UFC",

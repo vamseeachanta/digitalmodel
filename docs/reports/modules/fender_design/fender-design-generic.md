@@ -25,8 +25,8 @@ no result here clears a fender for any berth.
   energy equation itself is common.
 - For the generic case the design energy by the selected method, PIANC WG33 (2002), is
   680.8 kNm (normal energy 389.1 kNm). The illustrative base fender has a
-  capacity of 700.0 kNm, a utilisation of 0.973.
-- Base fender GEN-PN-4 (Table 7): energy utilisation 0.973 against 1.0 (met); design reaction 1,595 kN against the 1,600 kN limit (met, margin 0.3 %); design hull pressure 231 kPa against the 200 kPa limit (**not met**, 15.5 % over). The base fender therefore does **not** meet every check, and is not a solution for this case as it stands.
+  capacity of 630.0 kNm, a utilisation of 1.081.
+- Base fender GEN-PN-4 (Table 7): energy utilisation 1.081 against 1.0 at the 10 % pneumatic energy tolerance (**not met**; 0.973, met, at the 0 % of SFT p. 26 for guaranteed energy absorption (GEA); Section 3.6); design reaction 1,595 kN against the 1,600 kN limit (met, margin 0.3 %); design hull pressure 231 kPa against the 200 kPa limit (**not met**, 15.5 % over). The base fender therefore **fails** the energy and hull pressure checks, and is not a solution for this case as it stands. Of the neighbouring sizes in Table 7, only GEN-FM-6 meets every check at the tolerances of its type (GEN-FM-6: utilisation 0.756, design reaction 1,540 kN, margin 3.7 %, hull pressure 198 kPa, margin 1.0 %); the fenders are illustrative, so this is not a selection.
 - Assumed values are collected in Table 10, each marked "ASSUMED - to be confirmed".
 - One-at-a-time sensitivity (Section 7) ranks the inputs. In this case the three largest
   are: berthing velocity; first contact from bow / LBP (Ce); displacement. The berthing velocity enters squared and is the
@@ -64,7 +64,7 @@ Verification levels used throughout: **full-text** (read in the document), **sec
 **digitized** (read off a published figure, about ±0.02 m/s). Secondary values should be
 checked against the primary document before they are used as a design basis. Table 8 lists
 every source with the date it was read. The PIANC WG33 (2002) values used here were checked
-against the primary text: section 4.2.4 (C_e and K = (0.19 C_b + 0.11) L), 4.2.5 (keel-clearance
+against the primary text, read from a held copy: section 4.2.4 (C_e and K = (0.19 C_b + 0.11) L), 4.2.5 (keel-clearance
 C_m 1.8 / 1.5, linear between; Ueda and Vasco Costa with their validity limits; longitudinal
 approach 1.1), 4.2.6 (C_s, p. 21), 4.2.7 (C_c, p. 22), Table 4.2.5 (abnormal factor), Fig. 4.2.1
 (keyed by DWT; curves d and e to be used with caution) and Table 4.4.1 (bulk carriers below
@@ -88,7 +88,8 @@ stay secondary.
 - **ROM 2.0-11:** Table 4.6.4.36 (with tugs) and 4.6.4.37 (without), by displacement and
   climate class; digitized. The plateau above 40,000 t is 0.08, 0.15 and 0.20 m/s.
 - **UFC 4-152-01:** Figs. 5-3 and 5-4 by displacement in long tons, sheltered, moderate and
-  exposed; digitized from the gridlines (about ±0.01 ft/s) and converted to SI. Fig. 5-3
+  exposed; digitized from the gridlines and converted to SI. Two independent readings of
+  each figure differ by up to 0.015 ft/s, which is the stated limit (±0.015 ft/s). Fig. 5-3
   ("Small Ships (up to 20,000 tons)") and Fig. 5-4 ("Large Ship", from 5,000 LT) overlap from
   5,000 to 20,000 LT. There the module takes, for each class, the larger of the two figures:
   Fig. 5-3 is higher for the moderate class (0.73 against 0.66 ft/s at 5,000 LT) and Fig. 5-4
@@ -178,9 +179,14 @@ computes φ from the geometry and the test suite checks it equals this form).
   `pianc2002`.
 - C_c: PIANC WG33 (2002) 4.2.7 (p. 22) gives 1.0 for open berths and corners of quay walls,
   "generally 0.9" for solid quay walls under parallel approach, and no cushion effect above
-  a 5° approach angle (1.0). It gives no value for a partly closed berth and no 0.8. The
-  module takes these values by default (`cc_basis` `pianc2002`, source `pianc2002-cc`); for a
-  partly closed berth it takes 1.0, the open-berth value, as an assumption (Table 10). The
+  a 5° approach angle (1.0). Its text adds that the cushion effect "will hardly occur" with a
+  large keel clearance, but it prints no threshold. It gives no value for a partly closed
+  berth and no 0.8. The module takes these values by default (`cc_basis` `pianc2002`, source
+  `pianc2002-cc`), with the keel-clearance condition stated: at a solid quay and an angle of 5°
+  or less, C_c is 0.9 when KC/D is below 0.15 and 1.0 when KC/D is 0.15 or more. The 0.15
+  threshold is the Trelleborg manual's reading (p. 27: 0.9 for a keel clearance below 15 % of
+  the draught), so the 1.0 result names that manual as its source (Table 10). For a partly
+  closed berth the module takes 1.0, the open-berth value, as an assumption (Table 10). The
   ShibataFenderTeam table (p. 20: solid quay 0.8 at KC/D ≤ 0.5 or 0.9 above, partly closed 0.9
   or 1.0) is an option the caller selects (`cc_basis` `sft-2026`, source `sft-2026`); it is never
   cited as PIANC. With the PIANC keel-clearance C_m, C_c is 1.0: this pairing is the manuals'
@@ -220,12 +226,17 @@ computes φ from the geometry and the test suite checks it equals this form).
   factors at the slowest velocity and highest temperature; maximum reaction = rated reaction
   × (1 + reaction tolerance) × velocity × temperature factors at the fastest velocity and
   lowest temperature (Trelleborg manual p. 30; SFT p. 26).
-- Tolerances: moulded rubber ±10 %, extruded ±20 %, foam ±10 to ±15 %, pneumatic 0 % on
-  energy (guaranteed energy absorption, GEA, ISO 17357-1) and ±10 % on reaction. Each fender
-  type takes its own tolerance: the case's `energy_tolerance` and `reaction_tolerance` apply to
-  the base fender's type, and `tolerances_by_type` gives every other type in the catalogue (a
-  catalogue with another type and no entry for it is refused). The generic case gives foam
-  0.15 on energy and reaction, the upper end of its range (Table 10).
+- Tolerances (Trelleborg manual p. 76, performance tolerances on reaction and energy):
+  moulded rubber ±10 %, extruded ±20 %, foam ±10 %, pneumatic ±10 %. Each fender type takes
+  its own tolerance: the case's `energy_tolerance` and `reaction_tolerance` apply to the base
+  fender's type, and `tolerances_by_type` gives every other type in the catalogue (a catalogue
+  with another type and no entry for it is refused). The generic case gives foam 0.10 on
+  energy and reaction, the printed value.
+- Pneumatic energy tolerance: the sources conflict. The Trelleborg table (p. 76) gives ±10 %
+  on energy; the ShibataFenderTeam manual (p. 26) gives 0 % on energy for guaranteed energy
+  absorption (GEA, ISO 17357-1). The module takes the tolerance the case gives (default 0.10);
+  the generic case takes 10 %, the reading that gives the lower capacity, since 0 % rests on
+  the supplier's GEA rating (Table 10). Both verdicts follow. For the base fender GEN-PN-4 the energy utilisation is 1.081 at 10 % (**not met**) and 0.973 at 0 % (met); this build takes 10 %.
 - Angular factor: a reduction only, in (0, 1]. Vendor factors above 1 for cone fenders at
   small angles (Trelleborg p. 36; R24B Table 4 C_ang 1.03 to 1.05) are not credited in the
   design path; `wg211_fender_capacity` takes C_ang as given only to reproduce the R24B example.
@@ -282,14 +293,14 @@ rules to its inputs.
 
 | Method | v (m/s) | Cm | Ce | Cs | Cc | Other | Normal (kNm) | Factor | Design (kNm) | Per fender / capacity | Flags |
 |---|---|---|---|---|---|---|---|---|---|---|---|
-| PIANC WG33 (2002) | 0.112 | 1.750 | 0.595 | 1.00 | 1.00 | 1.00 | 389.1 | 1.75 | 680.8 | 0.973 | - |
-| PIANC WG211 (2024) | 0.150 | 1.750 | 0.595 | 1.00 | 1.00 | 1.00 | 702.9 | 1.59 | 1,116.9 | 1.755 | WG211 factors from the 2024 background papers; final guideline tables not read |
-| BS 6349-4:2014 | 0.102 | 1.750 | 0.595 | 1.00 | 1.00 | 1.00 | 328.2 | 1.75 | 574.3 | 0.820 | - |
-| EAU 2012 | 0.153 | 1.750 | 0.595 | 1.00 | 1.00 | 1.00 | 727.1 | 1.75 | 1,272.5 | 1.818 | EAU velocities digitized at two sizes only |
-| ROM 2.0-11 (2012) | 0.150 | 1.750 | 0.595 | 1.00 | 1.00 | 0.95 | 667.8 | 1.50 | 1,001.7 | 1.431 | - |
-| UFC 4-152-01 (2017 C1) | 0.099 | 3.427 | 0.540 | 1.00 | 1.00 | 0.95 | 515.3 | 1.50 | 773.0 | 1.104 | below 0.10 m/s: use with caution (TFADM p. 23) |
-| Ueda Cm (Japan), PIANC 2002 v and factor | 0.112 | 1.696 | 0.595 | 1.00 | 1.00 | 1.00 | 376.9 | 1.75 | 659.7 | 0.942 | - |
-| IS 4651-3:1974 (withdrawn) | 0.200 | 1.750 | 0.504 | 0.90 | 1.00 | 1.00 | 952.2 | 1.00 | 952.2 | 1.360 | withdrawn standard; comparison only |
+| PIANC WG33 (2002) | 0.112 | 1.750 | 0.595 | 1.00 | 1.00 | 1.00 | 389.1 | 1.75 | 680.8 | 1.081 | - |
+| PIANC WG211 (2024) | 0.150 | 1.750 | 0.595 | 1.00 | 1.00 | 1.00 | 702.9 | 1.59 | 1,116.9 | 1.950 | WG211 factors from the 2024 background papers; final guideline tables not read |
+| BS 6349-4:2014 | 0.102 | 1.750 | 0.595 | 1.00 | 1.00 | 1.00 | 328.2 | 1.75 | 574.3 | 0.912 | - |
+| EAU 2012 | 0.153 | 1.750 | 0.595 | 1.00 | 1.00 | 1.00 | 727.1 | 1.75 | 1,272.5 | 2.020 | EAU velocities digitized at two sizes only |
+| ROM 2.0-11 (2012) | 0.150 | 1.750 | 0.595 | 1.00 | 1.00 | 0.95 | 667.8 | 1.50 | 1,001.7 | 1.590 | - |
+| UFC 4-152-01 (2017 C1) | 0.099 | 3.427 | 0.540 | 1.00 | 1.00 | 0.95 | 515.3 | 1.50 | 773.0 | 1.227 | below 0.10 m/s: use with caution (TFADM p. 23) |
+| Ueda Cm (Japan), PIANC 2002 v and factor | 0.112 | 1.696 | 0.595 | 1.00 | 1.00 | 1.00 | 376.9 | 1.75 | 659.7 | 1.047 | - |
+| IS 4651-3:1974 (withdrawn) | 0.200 | 1.750 | 0.504 | 0.90 | 1.00 | 1.00 | 952.2 | 1.00 | 952.2 | 1.511 | withdrawn standard; comparison only |
 
 Table 3 – Design berthing energy by method for the generic case (same ship and berth). The
 "per fender / capacity" column is energy per fender over the base fender capacity under that
@@ -404,19 +415,19 @@ the inputs left out for this method are:
 
 | Input | Base | Credible range | Basis | Design energy change at range ends | Utilisation at range ends | Value at utilisation 1 | Reaction x 1.10 at range ends (kN) | Value at reaction limit |
 |---|---|---|---|---|---|---|---|---|
-| berthing velocity | 0.1116 m/s | 0.0537 to 0.172 m/s | Brolsma conditions a to c at 48,000 DWT | -77 % / +138 % | 0.225 / 2.311 | 0.1132 m/s | 535 / not rated | - |
-| displacement | 60,000 t | 45,000 to 66,000 t | part-loaded to 10 % above the base | -25 % / +10 % | 0.729 / 1.070 | 61,689 t | 1,250 / not rated | - |
-| water depth (Cm through keel clearance) | 14 m | 12.6 to 18 m | KC/D 0.05 to 0.5, the PIANC Cm range | +3 % / -14 % | 1.0004 / 0.834 | 13.21 m | not rated / 1,383 | - |
-| first contact from bow / LBP (Ce) | 0.25 | 0.2 to 0.35 | SFT p. 17 side berthing contact 20 to 35 % from the bow | -15 % / +36 % | 0.826 / 1.318 | 0.2586 | 1,373 / not rated | - |
-| berthing angle (Ce) | 5 deg | 0 to 10 deg | TFADM p. 22 side berthing angles | -5 % / +6 % | 0.924 / 1.029 | 7.500 deg | 1,498 / not rated | - |
-| softness factor Cs | 1 | 0.9 to 1 | PIANC WG33 (2002) 4.2.6, p. 21: 0.9 to 1.0 hard fenders and larger vessels, 1.0 soft | -10 % / +0 % | 0.875 / 0.973 | - | 1,436 / 1,560 | - |
-| abnormal / partial energy factor | 1.75 | 1.25 to 1.75 | PIANC 2002 Table 4.2.5 bulk carriers, largest to smallest | -29 % / +0 % | 0.695 / 0.973 | 1.799 | 1,205 / 1,560 | - |
+| berthing velocity | 0.1116 m/s | 0.0537 to 0.172 m/s | Brolsma conditions a to c at 48,000 DWT | -77 % / +138 % | 0.250 / 2.567 | 0.1073 m/s | 575 / not rated | - |
+| displacement | 60,000 t | 45,000 to 66,000 t | part-loaded to 10 % above the base | -25 % / +10 % | 0.811 / 1.189 | 55,520 t | 1,353 / not rated | - |
+| water depth (Cm through keel clearance) | 14 m | 12.6 to 18 m | KC/D 0.05 to 0.5, the PIANC Cm range | +3 % / -14 % | 1.112 / 0.926 | 16.09 m | not rated / 1,501 | - |
+| first contact from bow / LBP (Ce) | 0.25 | 0.2 to 0.35 | SFT p. 17 side berthing contact 20 to 35 % from the bow | -15 % / +36 % | 0.918 / 1.465 | 0.2262 | 1,490 / not rated | - |
+| berthing angle (Ce) | 5 deg | 0 to 10 deg | TFADM p. 22 side berthing angles | -5 % / +6 % | 1.027 / 1.144 | - | not rated / not rated | - |
+| softness factor Cs | 1 | 0.9 to 1 | PIANC WG33 (2002) 4.2.6, p. 21: 0.9 to 1.0 hard fenders and larger vessels, 1.0 soft | -10 % / +0 % | 0.973 / 1.081 | 0.9253 | 1,560 / not rated | - |
+| abnormal / partial energy factor | 1.75 | 1.25 to 1.75 | PIANC 2002 Table 4.2.5 bulk carriers, largest to smallest | -29 % / +0 % | 0.772 / 1.081 | 1.619 | 1,304 / not rated | - |
 
 Table 5 – One-at-a-time sensitivity of the design energy by the selected method,
 PIANC WG33 (2002), for the generic case. A utilisation is given to three decimals, and to
 more where three would round it onto 1.000. The value at utilisation 1 is solved on the method,
 not interpolated between swept points (which drifts at a coefficient break such as the C_m
-kink at KC/D 0.1): berthing velocity, displacement, first contact from bow / LBP (Ce), berthing angle (Ce), abnormal / partial energy factor: bisection on the method between the bracketing swept points; water depth (Cm through keel clearance): closed form: keel-clearance Cm 1.79925 needed (base Cm 1.75000 / base utilisation 0.97263).
+kink at KC/D 0.1): berthing velocity, displacement, first contact from bow / LBP (Ce), softness factor Cs, abnormal / partial energy factor: bisection on the method between the bracketing swept points; water depth (Cm through keel clearance): closed form: keel-clearance Cm 1.61933 needed (base Cm 1.75000 / base utilisation 1.08070).
 
 ![Tornado](charts/tornado.png)
 
@@ -466,14 +477,14 @@ Figure 12 – Abnormal (or partial) energy factor.
 
 | Fender | Rated energy (kNm) | Design capacity (kNm) | Utilisation | Rated reaction (kN) | Design reaction (kN) | Design hull pressure (kPa) | Energy | Reaction <= 1,600 kN | Pressure <= 200 kPa |
 |---|---|---|---|---|---|---|---|---|---|
-| GEN-PN-4 (base) | 700 | 700 | 0.973 | 1,450 | 1,595 | 231 | yes | yes | **no** |
-| GEN-PN-2 | 250 | 250 | 2.723 | 800 | 880 | 143 | **no** | yes | yes |
-| GEN-PN-3 | 400 | 400 | 1.702 | 1,100 | 1,210 | 148 | **no** | yes | yes |
-| GEN-PN-5 | 900 | 900 | 0.756 | 1,600 | 1,760 | 165 | yes | **no** | yes |
-| GEN-FM-6 | 1,000 | 850 | 0.801 | 1,400 | 1,610 | 207 | yes | **no** | **no** |
+| GEN-PN-4 (base) | 700 | 630 | 1.081 | 1,450 | 1,595 | 231 | **no** | yes | **no** |
+| GEN-PN-2 | 250 | 225 | 3.026 | 800 | 880 | 143 | **no** | yes | yes |
+| GEN-PN-3 | 400 | 360 | 1.891 | 1,100 | 1,210 | 148 | **no** | yes | yes |
+| GEN-PN-5 | 900 | 810 | 0.841 | 1,600 | 1,760 | 165 | yes | **no** | yes |
+| GEN-FM-6 | 1,000 | 900 | 0.756 | 1,400 | 1,540 | 198 | yes | yes | yes |
 
-Table 7 – Illustrative fenders against the energy per fender and the limits, with the same
-design adjustments as the base fender. Energy: rated x (1 - energy tolerance: pneumatic rows 0.00; foam rows 0.15) x angular 1.00. Reaction and hull pressure: rated-deflection value x (1 + reaction tolerance: pneumatic rows 0.10; foam rows 0.15). The reaction and pressure are the
+Table 7 – Illustrative fenders against the energy per fender and the limits, with the
+design adjustments of each fender's type. Energy: rated x (1 - energy tolerance: pneumatic rows 0.10; foam rows 0.10) x angular 1.00. Reaction and hull pressure: rated-deflection value x (1 + reaction tolerance: pneumatic rows 0.10; foam rows 0.10). The reaction and pressure are the
 values at rated deflection, an upper bound for part load when the curve does not exceed the
 rated reaction before the rated point (Section 3.6).
 
@@ -520,8 +531,10 @@ The tests (`tests/hydrodynamics/fender_design/`) reproduce published worked exam
   differ, and the WG211 velocity table by vessel size is not included.
 - BS 6349-4, EAU and the Japanese standards were not read directly. ROM, UFC and EAU
   velocities are digitized from figures.
-- Hull-pressure guidance differs between sources (Section 3.6). The solid-quay C_c is the
-  PIANC WG33 (2002) value by default; the vendor table is an explicit option (Section 3.4).
+- Hull-pressure guidance differs between sources (Section 3.6), and so does the pneumatic
+  energy tolerance (10 % or 0 %; 10 %, the lower capacity, is the default, Section 3.6). The
+  solid-quay C_c is the PIANC WG33 (2002) value by default, with the Trelleborg keel-clearance
+  threshold (Section 3.4); the vendor table is an explicit option.
 - The sweeps are one at a time; combined adverse values are not shown and are not the sum
   of the individual changes.
 - Ship-to-ship (floating fender between ships) energy and dolphin layout methods are not
@@ -536,16 +549,16 @@ The tests (`tests/hydrodynamics/fender_design/`) reproduce published worked exam
 
 | Id | Document | Edition | Clause | Verification | Read in | Date read |
 |---|---|---|---|---|---|---|
-| pianc2002 | PIANC MarCom WG33, Guidelines for the Design of Fender Systems | 2002 | section 4.2 (energy), Table 4.2.5 (abnormal factor), Table 4.4.1 (hull pressure) | full-text | PIANC WG33 (2002), primary text; also Trelleborg Fender Application Design Manual MN-FEN-V4.0-EN (2024) pp. 23-28, 46; ShibataFenderTeam Design Manual (English, 2026) pp. 17-22, 33 | 2026-11-16 |
+| pianc2002 | PIANC MarCom WG33, Guidelines for the Design of Fender Systems | 2002 | section 4.2 (energy), Table 4.2.5 (abnormal factor), Table 4.4.1 (hull pressure) | full-text | PIANC WG33 (2002), primary text (held copy); also Trelleborg Fender Application Design Manual MN-FEN-V4.0-EN (2024) pp. 23-28, 46; ShibataFenderTeam Design Manual (English, 2026) pp. 17-22, 33 | 2026-11-16 |
 | pianc2002-velocity | PIANC 2002 design berthing velocity (Brolsma et al. 1977 curves a to e) | 2002 | Fig. 4.2.1; table keyed by DWT | secondary | Trelleborg Fender Application Design Manual MN-FEN-V4.0-EN (2024) p. 23 | 2026-11-16 |
 | bs6349-4-velocity | BS 6349-4:2014 design berthing velocity (Brolsma curves) | 2014 | Figure 9; keyed by displacement | secondary | ShibataFenderTeam Design Manual (English, 2026) p. 21 | 2026-11-15 |
 | bs6349-4 | BS 6349-4:2014 Maritime works. Code of practice for design of fendering and mooring systems | 2014 | berthing energy (as summarised) | secondary | ShibataFenderTeam Design Manual (English, 2026) pp. 4, 18, 21-22; Trelleborg Fender Application Design Manual MN-FEN-V4.0-EN (2024) pp. 15, 23 | 2026-11-15 |
-| vasco-costa-1964 | Vasco Costa, F. The berthing ship | 1964 | Cm = 1 + 2D/B; valid for v >= 0.08 m/s and UKC >= 0.1 D | formula | Trelleborg Fender Application Design Manual MN-FEN-V4.0-EN (2024) p. 24; ShibataFenderTeam Design Manual (English, 2026) p. 18; PIANC WG33 (2002), primary text section 4.2.5 | 2026-11-16 |
-| ueda-1981 | Ueda, S. et al. added mass of berthing ships | 1981 | Cm = 1 + pi D / (2 Cb B) | formula | Trelleborg Fender Application Design Manual MN-FEN-V4.0-EN (2024) p. 24; ShibataFenderTeam Design Manual (English, 2026) p. 18; PIANC WG33 (2002), primary text section 4.2.5 | 2026-11-16 |
-| pianc2002-cm | PIANC 2002 added mass from keel clearance | 2002 | section 4.2.5 | full-text | PIANC WG33 (2002), primary text; also ShibataFenderTeam Design Manual (English, 2026) p. 18; Trelleborg Fender Application Design Manual MN-FEN-V4.0-EN (2024) p. 24 | 2026-11-16 |
-| pianc2002-ce | PIANC 2002 eccentricity | 2002 | section 4.2.4 | full-text | PIANC WG33 (2002), primary text; also Trelleborg Fender Application Design Manual MN-FEN-V4.0-EN (2024) p. 25; ShibataFenderTeam Design Manual (English, 2026) p. 19 | 2026-11-16 |
-| pianc2002-cc | PIANC 2002 berth configuration factor | 2002 | section 4.2.7, p. 22 | full-text | PIANC WG33 (2002), primary text p. 22 | 2026-11-16 |
-| pianc2002-cs | PIANC 2002 softness factor | 2002 | section 4.2.6, p. 21 | full-text | PIANC WG33 (2002), primary text p. 21 | 2026-11-16 |
+| vasco-costa-1964 | Vasco Costa, F. The berthing ship | 1964 | Cm = 1 + 2D/B; valid for v >= 0.08 m/s and UKC >= 0.1 D | formula | Trelleborg Fender Application Design Manual MN-FEN-V4.0-EN (2024) p. 24; ShibataFenderTeam Design Manual (English, 2026) p. 18; PIANC WG33 (2002), primary text (held copy) section 4.2.5 | 2026-11-16 |
+| ueda-1981 | Ueda, S. et al. added mass of berthing ships | 1981 | Cm = 1 + pi D / (2 Cb B) | formula | Trelleborg Fender Application Design Manual MN-FEN-V4.0-EN (2024) p. 24; ShibataFenderTeam Design Manual (English, 2026) p. 18; PIANC WG33 (2002), primary text (held copy) section 4.2.5 | 2026-11-16 |
+| pianc2002-cm | PIANC 2002 added mass from keel clearance | 2002 | section 4.2.5 | full-text | PIANC WG33 (2002), primary text (held copy); also ShibataFenderTeam Design Manual (English, 2026) p. 18; Trelleborg Fender Application Design Manual MN-FEN-V4.0-EN (2024) p. 24 | 2026-11-16 |
+| pianc2002-ce | PIANC 2002 eccentricity | 2002 | section 4.2.4 | full-text | PIANC WG33 (2002), primary text (held copy); also Trelleborg Fender Application Design Manual MN-FEN-V4.0-EN (2024) p. 25; ShibataFenderTeam Design Manual (English, 2026) p. 19 | 2026-11-16 |
+| pianc2002-cc | PIANC 2002 berth configuration factor | 2002 | section 4.2.7, p. 22 | full-text | PIANC WG33 (2002), primary text (held copy) p. 22 | 2026-11-16 |
+| pianc2002-cs | PIANC 2002 softness factor | 2002 | section 4.2.6, p. 21 | full-text | PIANC WG33 (2002), primary text (held copy) p. 21 | 2026-11-16 |
 | tfadm-2024 | Trelleborg Fender Application Design Manual MN-FEN-V4.0-EN (2024) | 2024 | pp. 22-46 | full-text |  | 2026-11-15 |
 | sft-2026 | ShibataFenderTeam Design Manual (English, 2026) | 2026 | pp. 17-36 | full-text |  | 2026-11-15 |
 | iso17357-1 | ISO 17357-1:2014 Ships and marine technology. Floating pneumatic rubber fenders | 2014 | performance at 60 % deflection (GEA) | secondary | Trelleborg Pneumatic Fenders BC-PNE-V6-EN (2025) pp. 8-9; Yokohama floating fender web table | 2026-11-15 |
@@ -581,7 +594,8 @@ was built (`fender_design.CITATION_TARGETS`).
 | WG211 γ_n not extrapolated below 1 berthing a year | WG211 frequency correction | no | ASSUMED - to be confirmed | the range of validity of R24A Table 9 was not read |
 | WG211 CoV_M `high` | WG211 γ_Eref column | yes | ASSUMED - to be confirmed | generic case: a berth used by ships of widely varying displacement; the module default is `low`, the largest factor |
 | ROM 2.0-11 return period T_R = 500 yr | ROM accidental factor (T_R/500)^(1/20) | yes | ASSUMED - to be confirmed | the table's reference period; no site return period is given |
-| foam tolerances: energy 0.15, reaction 0.15 | neighbouring sizes and the workbook Fenders sheet | yes | ASSUMED - to be confirmed | upper end of the manufacturer range (foam ±10 to ±15 %, TFADM p. 30, SFT p. 26) |
+| Pneumatic energy tolerance 0.10 | base fender capacity (Table 7; workbook ETOL) | yes | ASSUMED - to be confirmed | the sources conflict: TFADM p. 76 ±10 %, SFT p. 26 0 % on GEA; 10 % is taken (the lower capacity of the two); 0 % needs the supplier's GEA rating to ISO 17357-1. Base utilisation 1.081 at 10 % / 0.973 at 0 % |
+| C_c solid quay 0.15 KC/D limit (PIANC basis) | PIANC 2002, Ueda, BS 6349-4, EAU; `closed`, angle 5° or less, Vasco Costa or Ueda C_m: 0.9 below the limit, 1.0 at or above it | no | ASSUMED - to be confirmed | PIANC WG33 (2002) 4.2.7 prints 'generally 0.9' and says the cushion effect 'will hardly occur' with a large keel clearance, with no threshold; 0.15 is the Trelleborg p. 27 reading |
 | Block coefficient plausibility range 0.45 to 0.9 | a flag on every method result outside it (above 1 the ship is refused) | check only | ASSUMED - to be confirmed | span of merchant hull forms; not a value from the cited standards |
 | Reaction limit 1,600 kN | reaction checks | yes | ASSUMED - to be confirmed | illustrative structural limit of the generic case |
 

@@ -169,9 +169,13 @@ def test_added_mass_methods():
 
 @pytest.mark.parametrize(
     "structure,ratio,angle,cm,expect,source",
-    # default basis: only the values PIANC WG33 (2002) 4.2.7 (p. 22) gives
-    [("open", 0.2, 0, "vasco_costa", 1.0, "pianc2002-cc"), ("closed", 0.2, 3, "vasco_costa", 0.9, "pianc2002-cc"),
-     ("closed", 0.6, 3, "vasco_costa", 0.9, "pianc2002-cc"), ("semi_closed", 0.2, 3, "ueda", 1.0, "pianc2002-cc"),
+    # default basis: the values PIANC WG33 (2002) 4.2.7 (p. 22) gives; a solid quay takes 0.9 below
+    # KC/D 0.15 and 1.0 at or above it (large keel clearance; the threshold is TFADM p. 27)
+    [("open", 0.2, 0, "vasco_costa", 1.0, "pianc2002-cc"), ("closed", 0.1, 3, "vasco_costa", 0.9, "pianc2002-cc"),
+     ("closed", 0.149, 3, "ueda", 0.9, "pianc2002-cc"), ("closed", 0.15, 3, "ueda", 1.0, "tfadm-2024"),
+     ("closed", 0.2, 3, "vasco_costa", 1.0, "tfadm-2024"), ("closed", 0.6, 3, "vasco_costa", 1.0, "tfadm-2024"),
+     ("closed", 0.1, 8, "vasco_costa", 1.0, "pianc2002-cc"), ("semi_closed", 0.1, 3, "ueda", 1.0, "pianc2002-cc"),
+     ("semi_closed", 0.2, 3, "ueda", 1.0, "pianc2002-cc"),
      ("semi_closed", 0.6, 3, "ueda", 1.0, "pianc2002-cc"), ("closed", 0.2, 8, "vasco_costa", 1.0, "pianc2002-cc"),
      ("closed", 0.2, 3, "pianc2002", 1.0, "tfadm-2024")],
 )
@@ -184,8 +188,13 @@ def test_berth_configuration_factor_pianc_default(structure, ratio, angle, cm, e
 def test_solid_quay_cc_is_the_pianc_value_and_the_sft_table_is_an_option():
     # gate P2 at 2b6bb8a0: PIANC 2002 4.2.7 p. 22 gives 0.9 for a solid quay under parallel approach;
     # the 0.8 is the SFT table and carries the SFT source, never the PIANC citation
-    c = fd.berth_configuration("closed", 0.2, 3, "vasco_costa")
+    c = fd.berth_configuration("closed", 0.1, 3, "vasco_costa")
     assert c.value == 0.9 and c.source == "pianc2002-cc" and "p. 22" in c.note
+    # gate P3 at 81dc2fe8: the keel-clearance condition; 1.0 at a large keel clearance names the
+    # manual that sets the 0.15 threshold, with the PIANC prose in the note
+    big = fd.berth_configuration("closed", fd.CC_SOLID_QUAY_KCD_LIMIT, 3, "vasco_costa")
+    assert (big.value, big.source) == (1.0, "tfadm-2024")
+    assert "will hardly occur" in big.note and "TFADM p. 27" in big.note
     assert "ASSUMED - to be confirmed" in fd.berth_configuration("semi_closed", 0.2, 3, "ueda").note
     sft = {(st, r): fd.berth_configuration(st, r, 3, "vasco_costa", "sft-2026")
            for st in ("closed", "semi_closed") for r in (0.2, 0.6)}
@@ -195,7 +204,7 @@ def test_solid_quay_cc_is_the_pianc_value_and_the_sft_table_is_an_option():
     with pytest.raises(ValueError, match="cc_basis"):
         fd.berth_configuration("closed", 0.2, 3, "vasco_costa", "trelleborg")
     # through the methods: BS 6349-4 and Ueda at a solid quay, PIANC value by default
-    closed = fd.Berth(**{**BERTH.__dict__, "structure": "closed"})
+    closed = fd.Berth(**{**BERTH.__dict__, "structure": "closed", "water_depth_m": 13.5})   # KC/D 0.125
     for m in ("bs6349", "ueda"):
         r = fd.energy_by_method(fd.Case(SHIP, closed), method=m, citations="off")
         r8 = fd.energy_by_method(fd.Case(SHIP, closed, cc_basis="sft-2026"), method=m, citations="off")

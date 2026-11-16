@@ -69,7 +69,7 @@ def _set_inputs(path, out, values):
 # crossed: ROM 85,000 t, ROM and WG211 300 / 100 calls, quarter point (UFC Cg),
 # fender deflection 0.15 m (ROM Cs), solid quay (Cc), larger angle (Ce). LBP and
 # beam grow with the displacement, so the block coefficient stays below 1 (0.884).
-CHANGED = dict(M=90_000.0, DWT=70_000.0, LBP=230.0, BEAM=36.0, DEPTH=15.5, X=90.0, ALPHA=3.0, STRUCT="closed",
+CHANGED = dict(M=90_000.0, DWT=70_000.0, LBP=230.0, BEAM=36.0, DEPTH=13.5, X=90.0, ALPHA=3.0, STRUCT="closed",
                DEFL=0.12, NCALLS=400.0, CONT=1, TUGS=1)
 
 
@@ -278,7 +278,7 @@ def test_capacity_text_names_the_wg211_divisor(tmp_path):
     wb = openpyxl.load_workbook(out)
     readme = " ".join(str(c.value) for c in wb["README"]["A"] if c.value)
     assert f"capacity divisor 1.10 {res.capacity_knm:,.1f} kNm" in readme
-    assert res.capacity_knm == pytest.approx(700.0 / 1.10)
+    assert res.capacity_knm == pytest.approx(700.0 * (1 - 0.10) / 1.10)   # pneumatic 10 % (TFADM p. 76)
     assert "/ 1.10 (PIANC WG211 (2024) capacity divisor)" in wb["Sensitivity"]["A1"].value
     for s in res.sweeps:
         assert s.capacity_knm == pytest.approx(res.capacity_knm)

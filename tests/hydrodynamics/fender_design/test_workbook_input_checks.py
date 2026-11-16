@@ -509,14 +509,17 @@ def _basis_book(tmp_path, cs_basis, cc_basis):
     return res, Book(out)
 
 
-@pytest.mark.parametrize("cs_basis, cc_basis, cs, cc", [
-    ("pianc2002", "pianc2002", 1.0, 0.9),       # PIANC WG33 (2002) 4.2.6 general value; 4.2.7 solid quay
-    ("tfadm-2024", "sft-2026", 0.9, 0.8),       # the manuals' rule and the SFT table, selected explicitly
+@pytest.mark.parametrize("cs_basis, cc_basis, depth, cs, cc", [
+    # PIANC WG33 (2002) 4.2.6 general value; 4.2.7 solid quay 0.9 below KC/D 0.15 (13.5 m: 0.125)
+    ("pianc2002", "pianc2002", 13.5, 1.0, 0.9),
+    # and 1.0 at a large keel clearance (14 m: KC/D 0.167; the 0.15 threshold is TFADM p. 27)
+    ("pianc2002", "pianc2002", 14.0, 1.0, 1.0),
+    ("tfadm-2024", "sft-2026", 13.5, 0.9, 0.8),   # the manuals' rule and the SFT table, selected explicitly
 ])
-def test_cs_and_cc_rows_follow_the_case_basis(tmp_path, cs_basis, cc_basis, cs, cc):
+def test_cs_and_cc_rows_follow_the_case_basis(tmp_path, cs_basis, cc_basis, depth, cs, cc):
     pytest.importorskip("formulas")
     res, book = _basis_book(tmp_path, cs_basis, cc_basis)
-    changes = {"STRUCT": "closed", "DEFL": 0.12}
+    changes = {"STRUCT": "closed", "DEFL": 0.12, "DEPTH": depth}
     vals = book.calc(changes)
     assert vals[book.ref("CS_P")] == cs and vals[book.ref("CC_P")] == cc
     case = _case(changes)

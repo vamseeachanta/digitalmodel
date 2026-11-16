@@ -116,7 +116,11 @@ def test_unrated_intervals_are_contiguous_runs():
 
 
 def test_water_depth_shading_leaves_the_base_point_unshaded():
-    res = compute(load_case(EXAMPLE / "generic_case.yaml"), citations="record")
+    # at the GEA reading (SFT p. 26, 0 %) the base point is within the 700 kNm capacity; at the
+    # generic case's 10 % (630 kNm) it is beyond it and is shaded with the rest
+    case = load_case(EXAMPLE / "generic_case.yaml")
+    case["design"]["energy_tolerance"] = 0.0
+    res = compute(case, citations="record")
     sw = next(s for s in res.sweeps if s.parameter == "water_depth_m")
     pts = sw.points
     spans = fc.unrated_intervals([p.value for p in pts], [p.reaction_kn is not None for p in pts])
@@ -197,6 +201,7 @@ WG211 = "PIANC WG211 (2024)"
 def _crossing_case():
     case = load_case(EXAMPLE / "generic_case.yaml")
     case["design"]["velocity_m_s"] = V_660
+    case["design"]["energy_tolerance"] = 0.0        # the GEA reading (SFT p. 26): rated 700 kNm as capacity
     return compute(case, citations="record")
 
 
@@ -277,7 +282,7 @@ def test_common_capacity_line_kept_for_bars_sharing_one_capacity(tmp_path, monke
 
 def _ufc_case(ang):
     case = load_case(EXAMPLE / "generic_case.yaml")
-    case["design"].update(method="ufc", angular_factor=ang)
+    case["design"].update(method="ufc", angular_factor=ang, energy_tolerance=0.0)   # GEA reading (SFT p. 26)
     return case
 
 

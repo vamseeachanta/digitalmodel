@@ -64,7 +64,7 @@ Verification levels used throughout: **full-text** (read in the document), **sec
 **digitized** (read off a published figure, about ±0.02 m/s). Secondary values should be
 checked against the primary document before they are used as a design basis. Table 8 lists
 every source with the date it was read. The PIANC WG33 (2002) values used here were checked
-against the primary text: section 4.2.4 (C_e and K = (0.19 C_b + 0.11) L), 4.2.5 (keel-clearance
+against the primary text, read from a held copy: section 4.2.4 (C_e and K = (0.19 C_b + 0.11) L), 4.2.5 (keel-clearance
 C_m 1.8 / 1.5, linear between; Ueda and Vasco Costa with their validity limits; longitudinal
 approach 1.1), 4.2.6 (C_s, p. 21), 4.2.7 (C_c, p. 22), Table 4.2.5 (abnormal factor), Fig. 4.2.1
 (keyed by DWT; curves d and e to be used with caution) and Table 4.4.1 (bulk carriers below
@@ -88,7 +88,8 @@ stay secondary.
 - **ROM 2.0-11:** Table 4.6.4.36 (with tugs) and 4.6.4.37 (without), by displacement and
   climate class; digitized. The plateau above 40,000 t is 0.08, 0.15 and 0.20 m/s.
 - **UFC 4-152-01:** Figs. 5-3 and 5-4 by displacement in long tons, sheltered, moderate and
-  exposed; digitized from the gridlines (about ±0.01 ft/s) and converted to SI. Fig. 5-3
+  exposed; digitized from the gridlines and converted to SI. Two independent readings of
+  each figure differ by up to 0.015 ft/s, which is the stated limit (±0.015 ft/s). Fig. 5-3
   ("Small Ships (up to 20,000 tons)") and Fig. 5-4 ("Large Ship", from 5,000 LT) overlap from
   5,000 to 20,000 LT. There the module takes, for each class, the larger of the two figures:
   Fig. 5-3 is higher for the moderate class (0.73 against 0.66 ft/s at 5,000 LT) and Fig. 5-4
@@ -171,9 +172,14 @@ computes φ from the geometry and the test suite checks it equals this form).
   `{{cs_basis}}`.
 - C_c: PIANC WG33 (2002) 4.2.7 (p. 22) gives 1.0 for open berths and corners of quay walls,
   "generally 0.9" for solid quay walls under parallel approach, and no cushion effect above
-  a 5° approach angle (1.0). It gives no value for a partly closed berth and no 0.8. The
-  module takes these values by default (`cc_basis` `pianc2002`, source `pianc2002-cc`); for a
-  partly closed berth it takes 1.0, the open-berth value, as an assumption (Table 10). The
+  a 5° approach angle (1.0). Its text adds that the cushion effect "will hardly occur" with a
+  large keel clearance, but it prints no threshold. It gives no value for a partly closed
+  berth and no 0.8. The module takes these values by default (`cc_basis` `pianc2002`, source
+  `pianc2002-cc`), with the keel-clearance condition stated: at a solid quay and an angle of 5°
+  or less, C_c is 0.9 when KC/D is below 0.15 and 1.0 when KC/D is 0.15 or more. The 0.15
+  threshold is the Trelleborg manual's reading (p. 27: 0.9 for a keel clearance below 15 % of
+  the draught), so the 1.0 result names that manual as its source (Table 10). For a partly
+  closed berth the module takes 1.0, the open-berth value, as an assumption (Table 10). The
   ShibataFenderTeam table (p. 20: solid quay 0.8 at KC/D ≤ 0.5 or 0.9 above, partly closed 0.9
   or 1.0) is an option the caller selects (`cc_basis` `sft-2026`, source `sft-2026`); it is never
   cited as PIANC. With the PIANC keel-clearance C_m, C_c is 1.0: this pairing is the manuals'
@@ -213,12 +219,17 @@ computes φ from the geometry and the test suite checks it equals this form).
   factors at the slowest velocity and highest temperature; maximum reaction = rated reaction
   × (1 + reaction tolerance) × velocity × temperature factors at the fastest velocity and
   lowest temperature (Trelleborg manual p. 30; SFT p. 26).
-- Tolerances: moulded rubber ±10 %, extruded ±20 %, foam ±10 to ±15 %, pneumatic 0 % on
-  energy (guaranteed energy absorption, GEA, ISO 17357-1) and ±10 % on reaction. Each fender
-  type takes its own tolerance: the case's `energy_tolerance` and `reaction_tolerance` apply to
-  the base fender's type, and `tolerances_by_type` gives every other type in the catalogue (a
-  catalogue with another type and no entry for it is refused). The generic case gives foam
-  0.15 on energy and reaction, the upper end of its range (Table 10).
+- Tolerances (Trelleborg manual p. 76, performance tolerances on reaction and energy):
+  moulded rubber ±10 %, extruded ±20 %, foam ±10 %, pneumatic ±10 %. Each fender type takes
+  its own tolerance: the case's `energy_tolerance` and `reaction_tolerance` apply to the base
+  fender's type, and `tolerances_by_type` gives every other type in the catalogue (a catalogue
+  with another type and no entry for it is refused). The generic case gives foam 0.10 on
+  energy and reaction, the printed value.
+- Pneumatic energy tolerance: the sources conflict. The Trelleborg table (p. 76) gives ±10 %
+  on energy; the ShibataFenderTeam manual (p. 26) gives 0 % on energy for guaranteed energy
+  absorption (GEA, ISO 17357-1). The module takes the tolerance the case gives (default 0.10);
+  the generic case takes 10 %, the reading that gives the lower capacity, since 0 % rests on
+  the supplier's GEA rating (Table 10). Both verdicts follow. {{pneumatic_tolerance_note}}
 - Angular factor: a reduction only, in (0, 1]. Vendor factors above 1 for cone fenders at
   small angles (Trelleborg p. 36; R24B Table 4 C_ang 1.03 to 1.05) are not credited in the
   design path; `wg211_fender_capacity` takes C_ang as given only to reproduce the R24B example.
@@ -397,8 +408,8 @@ Table 6 – Ranking.
 
 {{sizes_table}}
 
-Table 7 – Illustrative fenders against the energy per fender and the limits, with the same
-design adjustments as the base fender. {{sizes_basis}} The reaction and pressure are the
+Table 7 – Illustrative fenders against the energy per fender and the limits, with the
+design adjustments of each fender's type. {{sizes_basis}} The reaction and pressure are the
 values at rated deflection, an upper bound for part load when the curve does not exceed the
 rated reaction before the rated point (Section 3.6).
 
@@ -445,8 +456,10 @@ The tests (`tests/hydrodynamics/fender_design/`) reproduce published worked exam
   differ, and the WG211 velocity table by vessel size is not included.
 - BS 6349-4, EAU and the Japanese standards were not read directly. ROM, UFC and EAU
   velocities are digitized from figures.
-- Hull-pressure guidance differs between sources (Section 3.6). The solid-quay C_c is the
-  PIANC WG33 (2002) value by default; the vendor table is an explicit option (Section 3.4).
+- Hull-pressure guidance differs between sources (Section 3.6), and so does the pneumatic
+  energy tolerance (10 % or 0 %; 10 %, the lower capacity, is the default, Section 3.6). The
+  solid-quay C_c is the PIANC WG33 (2002) value by default, with the Trelleborg keel-clearance
+  threshold (Section 3.4); the vendor table is an explicit option.
 - The sweeps are one at a time; combined adverse values are not shown and are not the sum
   of the individual changes.
 - Ship-to-ship (floating fender between ships) energy and dolphin layout methods are not

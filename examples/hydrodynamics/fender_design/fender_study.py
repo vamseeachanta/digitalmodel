@@ -60,6 +60,19 @@ SWEEP_FIGURES = {
 #: Report figure number of the first sweep chart (after the tornado, Figure 5).
 FIRST_SWEEP_FIGURE = 6
 
+#: The two printed energy tolerances of a pneumatic fender, which conflict:
+#: (tolerance, where printed). The case chooses; the generic case takes
+#: 0.10, the reading that gives the lower capacity.
+PNEUMATIC_ENERGY_TOLERANCES = (
+    (0.10, "TFADM p. 76"),
+    (0.0, "SFT p. 26 for guaranteed energy absorption (GEA)"),
+)
+
+#: Performance tolerance on reaction and energy printed in the TFADM p. 76
+#: table, for the catalogue types it names; a case tolerance that differs is
+#: listed in Table 10 as assumed.
+TFADM_P76_TOLERANCE = {"pneumatic": 0.10, "foam": 0.10, "cylindrical": 0.10}
+
 
 def _f(x, nd=1):
     return "-" if x is None else f"{x:,.{nd}f}"
@@ -362,6 +375,30 @@ def crossing_note(res) -> str:
     return "; ".join(f"{', '.join(labels)}: {how}" for how, labels in groups.items())
 
 
+def pneumatic_tolerance_readings(res) -> list[tuple[float, str, float]]:
+    """(energy tolerance, where printed, base-fender utilisation) under each
+    printed pneumatic energy tolerance (:data:`PNEUMATIC_ENERGY_TOLERANCES`);
+    empty when the base fender is not pneumatic or no size check was run.
+    Capacity is rated x (1 - tolerance) x the other factors, so the
+    utilisation scales by (1 - case tolerance) / (1 - reading)."""
+    base = next((c for c in res.size_checks if c.is_base), None)
+    if base is None or res.base_fender.fender_type != "pneumatic":
+        return []
+    et = res.case["design"].get("energy_tolerance", 0.10)
+    return [(v, src, base.utilisation * (1.0 - et) / (1.0 - v)) for v, src in PNEUMATIC_ENERGY_TOLERANCES]
+
+
+def pneumatic_tolerance_note(res) -> str:
+    """Section 3.6 sentence: the base fender's energy verdict under each reading."""
+    readings = pneumatic_tolerance_readings(res)
+    if not readings:
+        return "The base fender of this build is not pneumatic, so the conflict does not enter it."
+    et = res.case["design"].get("energy_tolerance", 0.10)
+    parts = [f"{_util(u)} at {v * 100:.0f} % ({'met' if u <= 1.0 else '**not met**'})" for v, _, u in readings]
+    return (f"For the base fender {res.base_fender.fender_id} the energy utilisation is "
+            + " and ".join(parts) + f"; this build takes {et * 100:.0f} %.")
+
+
 def assumptions(res) -> list[tuple[str, str, str, str]]:
     """Every assumed value the module and the case use: (value, where it
     enters, used in this case, basis). Each is ASSUMED - to be confirmed."""
@@ -395,8 +432,23 @@ def assumptions(res) -> list[tuple[str, str, str, str]]:
          "the table's reference period; no site return period is given"),
         *[(f"{t} tolerances: energy {v['energy_tolerance']:.2f}, reaction {v['reaction_tolerance']:.2f}",
            "neighbouring sizes and the workbook Fenders sheet", "yes",
-           "upper end of the manufacturer range (foam ±10 to ±15 %, TFADM p. 30, SFT p. 26)")
-          for t, v in by_type.items()],
+           f"not the TFADM p. 76 value ({TFADM_P76_TOLERANCE[t]:.2f})" if t in TFADM_P76_TOLERANCE else
+           "no tolerance printed for this type in TFADM p. 76")
+          for t, v in by_type.items()
+          if not (TFADM_P76_TOLERANCE.get(t) == v["energy_tolerance"] == v["reaction_tolerance"])],
+        *[(f"Pneumatic energy tolerance {d.get('energy_tolerance', 0.10):.2f}",
+           "base fender capacity (Table 7; workbook ETOL)", "yes",
+           "the sources conflict: TFADM p. 76 ±10 %, SFT p. 26 0 % on GEA; "
+           + ("10 % is taken (the lower capacity of the two); 0 % needs the supplier's GEA rating to ISO 17357-1. "
+              if d.get("energy_tolerance", 0.10) >= 0.10 else "the GEA reading is taken. ")
+           + "Base utilisation " + " / ".join(f"{_util(u)} at {v * 100:.0f} %" for v, _, u in readings))
+          for readings in [pneumatic_tolerance_readings(res)] if readings],
+        (f"C_c solid quay {fd.CC_SOLID_QUAY_KCD_LIMIT:g} KC/D limit (PIANC basis)",
+         "PIANC 2002, Ueda, BS 6349-4, EAU; `closed`, angle 5° or less, Vasco Costa or Ueda C_m: 0.9 below "
+         "the limit, 1.0 at or above it",
+         yes(c.cc_basis == "pianc2002" and b.structure == "closed"),
+         "PIANC WG33 (2002) 4.2.7 prints 'generally 0.9' and says the cushion effect 'will hardly occur' "
+         "with a large keel clearance, with no threshold; 0.15 is the Trelleborg p. 27 reading"),
         (f"Block coefficient plausibility range {fd.CB_PLAUSIBLE[0]:g} to {fd.CB_PLAUSIBLE[1]:g}",
          "a flag on every method result outside it (above 1 the ship is refused)", "check only",
          "span of merchant hull forms; not a value from the cited standards"),
@@ -419,8 +471,14 @@ def summary_values(res) -> dict[str, str]:
     if base is None:
         return dict(base_checks="No neighbouring-size check was run for the base fender.")
     r_lim, p_lim = d.get("reaction_limit_kn"), d.get("hull_pressure_limit_kpa")
-    parts = [f"energy utilisation {_util(base.utilisation)} against 1.0 "
-             f"({'met' if base.meets_energy else '**not met**'})"]
+    et = d.get("energy_tolerance", 0.10)
+    alt = [(v, src, u) for v, src, u in pneumatic_tolerance_readings(res) if abs(v - et) > 1e-12]
+    parts = [f"energy utilisation {_util(base.utilisation)} against 1.0"
+             + (f" at the {et * 100:.0f} % pneumatic energy tolerance" if alt else "")
+             + f" ({'met' if base.meets_energy else '**not met**'}"
+             + "".join(f"; {_util(u)}, {'met' if u <= 1.0 else 'not met'}, at the {v * 100:.0f} % of {src}"
+                       for v, src, u in alt)
+             + ("; Section 3.6)" if alt else ")")]
     if r_lim is not None:
         margin = (r_lim - base.reaction_kn) / r_lim * 100.0
         parts.append(f"design reaction {_f(base.reaction_kn, 0)} kN against the {_f(r_lim, 0)} kN limit "
@@ -433,10 +491,29 @@ def summary_values(res) -> dict[str, str]:
                      f"design hull pressure {_f(p, 0)} kPa against the {_f(p_lim, 0)} kPa limit "
                      + ("(met)" if base.meets_pressure else
                         f"(**not met**, {(p / p_lim - 1) * 100:.1f} % over)"))
+    failed = [name for name, ok in (("energy", base.meets_energy), ("reaction", base.meets_reaction),
+                                    ("hull pressure", base.meets_pressure)) if ok is False]
     verdict = ("The base fender meets every check." if base.meets_all else
-               "The base fender therefore does **not** meet every check, and is not a solution for this case "
-               "as it stands.")
-    return dict(base_checks=f"Base fender {base.fender_id} (Table 7): " + "; ".join(parts) + ". " + verdict)
+               f"The base fender therefore **fails** the {' and '.join(failed)} "
+               f"check{'s' if len(failed) > 1 else ''}, and is not a solution for this case as it stands.")
+    ok = [c for c in res.size_checks if not c.is_base and c.meets_all]
+
+    def margins(c):
+        out = [f"utilisation {_util(c.utilisation)}"]
+        if r_lim is not None:
+            out.append(f"design reaction {_f(c.reaction_kn, 0)} kN, margin {(r_lim - c.reaction_kn) / r_lim * 100:.1f} %")
+        if p_lim is not None and c.hull_pressure_kpa is not None:
+            out.append(f"hull pressure {_f(c.hull_pressure_kpa, 0)} kPa, "
+                       f"margin {(p_lim - c.hull_pressure_kpa) / p_lim * 100:.1f} %")
+        return ", ".join(out)
+    sizes = ("Of the neighbouring sizes in Table 7, "
+             + (("only " if len(ok) == 1 else "") + " and ".join(c.fender_id for c in ok)
+                + (" meets" if len(ok) == 1 else " meet") + " every check at the tolerances of its type ("
+                + "; ".join(f"{c.fender_id}: {margins(c)}" for c in ok) + ")"
+                if ok else "none meets every check either")
+             + "; the fenders are illustrative, so this is not a selection.")
+    return dict(base_checks=f"Base fender {base.fender_id} (Table 7): " + "; ".join(parts) + ". " + verdict
+                + " " + sizes)
 
 
 def _citation_rows(res) -> dict:
@@ -586,6 +663,7 @@ def main(argv=None) -> int:
         values.update(ufc_f_values(res))
         values.update(sweep_figure_values(res, made))
         values.update(summary_values(res))
+        values.update(pneumatic_tolerance_note=pneumatic_tolerance_note(res))
         values.update(
             E_design=_f(res.selected.design_energy_knm), E_normal=_f(res.selected.normal_energy_knm),
             capacity=_f(res.capacity_knm), util=_util(data["utilisation"]),

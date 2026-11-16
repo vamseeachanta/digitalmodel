@@ -428,9 +428,13 @@ def test_ufc_cc_sweep_recomputes_cm_and_crosses_capacity():
 
 
 def test_cc_override_scales_linearly_where_nothing_depends_on_cc():
-    bs = fd.energy_by_method(CLOSED, method="bs6349", citations="off")
-    hi = fd.energy_by_method(CLOSED, method="bs6349", cc=1.0, citations="off")
+    # KC/D 0.125, below the 0.15 limit: the solid-quay 0.9 of PIANC 2002 4.2.7 applies
+    shallow = dataclasses.replace(CLOSED, berth=dataclasses.replace(CLOSED.berth, water_depth_m=13.5))
+    bs = fd.energy_by_method(shallow, method="bs6349", citations="off")
+    hi = fd.energy_by_method(shallow, method="bs6349", cc=1.0, citations="off")
     assert bs.cc.value == 0.9 and hi.cm.value == bs.cm.value          # PIANC 2002 4.2.7 solid quay
+    # at KC/D 0.167 (large keel clearance) the default is already 1.0
+    assert fd.energy_by_method(CLOSED, method="bs6349", citations="off").cc.value == 1.0
     assert hi.design_energy_knm == pytest.approx(bs.design_energy_knm / 0.9, rel=1e-12)
 
 
