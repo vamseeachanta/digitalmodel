@@ -27,6 +27,7 @@ import math
 import re
 from collections import Counter
 from dataclasses import replace
+from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
 
 from digitalmodel.hydrodynamics import fender_design as fd
@@ -102,6 +103,19 @@ def _sig(x, n=4):
         return f"{x:,.0f}"
     d = max(0, n - 1 - math.floor(math.log10(abs(x))))
     return f"{x:,.{d}f}"
+
+
+def _pct3(x) -> str:
+    """A percentage margin to three significant figures, half up, after
+    rounding to 12 figures to drop floating-point noise (5 / 1,600 is
+    0.313 %, not 0.312 from 0.31249999999; 60 / 1,600 is 3.75 %)."""
+    d = Decimal(f"{float(x):.12g}")
+    if d == 0:
+        return "0.00"
+    r = d.quantize(Decimal(1).scaleb(d.copy_abs().adjusted() - 2), rounding=ROUND_HALF_UP)
+    # rounding up past a power of ten (0.9999 to 1.000) keeps three figures (1.00)
+    r = r.quantize(Decimal(1).scaleb(r.copy_abs().adjusted() - 2), rounding=ROUND_HALF_UP)
+    return f"{r:f}"
 
 
 def _g(x):
@@ -263,7 +277,9 @@ def results_dict(res) -> dict:
                      basis=s.range_basis, change_low=s.change_pct(s.range_low),
                      change_high=s.change_pct(s.range_high),
                      util_low=s.at(s.range_low).utilisation, util_high=s.at(s.range_high).utilisation,
-                     limit_value=s.limit_value(), reaction_factor=s.reaction_factor,
+                     limit_value=s.limit_value(), crossing_basis=s.crossing_basis,
+                     crossing_step=None if s.crossing_step is None else list(s.crossing_step),
+                     reaction_factor=s.reaction_factor,
                      reaction_low=s.at(s.range_low).reaction_kn, reaction_high=s.at(s.range_high).reaction_kn,
                      reaction_base=s.at(s.base_value).reaction_kn,
                      reaction_limit_value=s.reaction_limit_value(),
@@ -325,11 +341,16 @@ def tables(res) -> dict[str, str]:
           f"{_g(s.range_low)} to {_g(s.range_high)}{_unit(s.unit)}", s.range_basis,
           f"{s.change_pct(s.range_low):+.0f} % / {s.change_pct(s.range_high):+.0f} %",
           f"{_util(s.at(s.range_low).utilisation)} / {_util(s.at(s.range_high).utilisation)}",
-          "-" if s.limit_value() is None else f"{_sig(s.limit_value())}{_unit(s.unit)}",
+          _limit_cell(s),
           f"{_r(s.at(s.range_low).reaction_kn)} / {_r(s.at(s.range_high).reaction_kn)}",
           "-" if s.reaction_limit_value() is None else f"{_sig(s.reaction_limit_value())}{_unit(s.unit)}"]
          for s in res.sweeps])
     t["crossing_note"] = crossing_note(res)
+    steps = base_step_notes(res)
+    t["step_note"] = ("Results on a coefficient step: " + "; ".join(steps) + ". Both sides are shown so the "
+                      "step is not mistaken for the sensitivity of the input." if steps else
+                      "No method's base result sits on a coefficient step (a 1 mm or 0.001 deg move of the "
+                      "first contact, angle or depth changes no design energy by more than 1 %).")
     t["tornado_table"] = md_table(
         ["Rank", "Input", "Span of design energy (percentage points)"],
         [[i, b.label, f"{b.span_pct:.0f}"] for i, b in enumerate(res.bars, start=1)])
@@ -359,6 +380,52 @@ def tables(res) -> dict[str, str]:
         [[f"{x:,.0f}"] + [f"{fd.brolsma_velocity(x, c):.3f}" for c in "abcde"]
          for x in (5_000, 10_000, 20_000, 50_000, 100_000, 200_000)])
     return t
+
+
+#: Small moves of the berth inputs that test whether a method's base result
+#: sits on a coefficient step: (berth field, move, words).
+STEP_PROBES = (
+    ("contact_x_from_bow_m", 0.001, "first contact 1 mm nearer midships"),
+    ("contact_x_from_bow_m", -0.001, "first contact 1 mm nearer the bow"),
+    ("berthing_angle_deg", 0.001, "berthing angle 0.001 deg larger"),
+    ("berthing_angle_deg", -0.001, "berthing angle 0.001 deg smaller"),
+    ("water_depth_m", 0.001, "water depth 1 mm larger"),
+    ("water_depth_m", -0.001, "water depth 1 mm smaller"),
+)
+
+
+def base_step_notes(res, threshold: float = 0.01) -> list[str]:
+    """Methods whose base result sits on a coefficient step: a move of the
+    berth from :data:`STEP_PROBES` changes the design energy by more than
+    ``threshold`` (1 %). The UFC Cg, for one, is 0.95 at or beyond the
+    quarter points and 1.0 nearer midships."""
+    d = res.case["design"]
+    kw = dict(velocity_m_s=d.get("velocity_m_s"), factor=d.get("factor"),
+              factor_position=d.get("factor_position", "smallest"), citations="off")
+    notes = []
+    for r in res.methods:
+        for field, dx, words in STEP_PROBES:
+            try:
+                b = replace(res.berth, **{field: getattr(res.berth, field) + dx})
+                e = fd.energy_by_method(replace(res.fcase, berth=b), method=r.method, **kw).design_energy_knm
+            except ValueError:
+                continue
+            change = e / r.design_energy_knm - 1.0
+            if abs(change) > threshold:
+                notes.append(f"{r.label}: the base sits on a coefficient step; {words} gives {_f(e)} kNm "
+                             f"({change * 100:+.1f} %)")
+    return notes
+
+
+def _limit_cell(s) -> str:
+    """Table 5 value at utilisation 1: the solved value, or at a coefficient
+    step the step with the utilisation on each side (no value gives 1)."""
+    if s.limit_value() is None:
+        return "-"
+    if s.crossing_step is not None:
+        lo, hi = s.crossing_step
+        return f"step at {_sig(s.limit_value())}{_unit(s.unit)} ({_util(lo)} to {_util(hi)})"
+    return f"{_sig(s.limit_value())}{_unit(s.unit)}"
 
 
 def crossing_note(res) -> str:
@@ -482,15 +549,15 @@ def summary_values(res) -> dict[str, str]:
     if r_lim is not None:
         margin = (r_lim - base.reaction_kn) / r_lim * 100.0
         parts.append(f"design reaction {_f(base.reaction_kn, 0)} kN against the {_f(r_lim, 0)} kN limit "
-                     + (f"(met, margin {margin:.1f} %)" if base.meets_reaction else
-                        f"(**not met**, {-margin:.1f} % over)"))
+                     + (f"(met, margin {_pct3(margin)} %)" if base.meets_reaction else
+                        f"(**not met**, {_pct3(-margin)} % over)"))
     if p_lim is not None:
         p = base.hull_pressure_kpa
         parts.append("hull pressure: no datum against the "
                      f"{_f(p_lim, 0)} kPa limit (**not met**)" if p is None else
                      f"design hull pressure {_f(p, 0)} kPa against the {_f(p_lim, 0)} kPa limit "
                      + ("(met)" if base.meets_pressure else
-                        f"(**not met**, {(p / p_lim - 1) * 100:.1f} % over)"))
+                        f"(**not met**, {_pct3((p / p_lim - 1) * 100)} % over)"))
     failed = [name for name, ok in (("energy", base.meets_energy), ("reaction", base.meets_reaction),
                                     ("hull pressure", base.meets_pressure)) if ok is False]
     verdict = ("The base fender meets every check." if base.meets_all else
@@ -501,10 +568,10 @@ def summary_values(res) -> dict[str, str]:
     def margins(c):
         out = [f"utilisation {_util(c.utilisation)}"]
         if r_lim is not None:
-            out.append(f"design reaction {_f(c.reaction_kn, 0)} kN, margin {(r_lim - c.reaction_kn) / r_lim * 100:.1f} %")
+            out.append(f"design reaction {_f(c.reaction_kn, 0)} kN, margin {_pct3((r_lim - c.reaction_kn) / r_lim * 100)} %")
         if p_lim is not None and c.hull_pressure_kpa is not None:
             out.append(f"hull pressure {_f(c.hull_pressure_kpa, 0)} kPa, "
-                       f"margin {(p_lim - c.hull_pressure_kpa) / p_lim * 100:.1f} %")
+                       f"margin {_pct3((p_lim - c.hull_pressure_kpa) / p_lim * 100)} %")
         return ", ".join(out)
     sizes = ("Of the neighbouring sizes in Table 7, "
              + (("only " if len(ok) == 1 else "") + " and ".join(c.fender_id for c in ok)

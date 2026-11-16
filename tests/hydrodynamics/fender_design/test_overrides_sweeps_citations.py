@@ -174,8 +174,10 @@ def test_velocity_sweep_recomputes_rom_factor():
     for p in sw.points:
         expect = fd.energy_by_method(CASE, method="rom", velocity_m_s=p.value, citations="off").design_energy_knm
         assert p.design_energy_knm == pytest.approx(expect, rel=1e-12)
-    # across 0.10 m/s the factor steps from 1.80 to 1.50
-    e = {round(p.value, 6): p.design_energy_knm / p.value**2 for p in sw.points}
+    # across 0.10 m/s the factor steps from 1.80 to 1.50; 0.10 m/s and a value just either side
+    # of it are swept (sweep_break_points), so the values are not rounded here
+    e = {p.value: p.design_energy_knm / p.value**2 for p in sw.points}
+    assert 0.10 in e and any(0.10 < k < 0.10 + 1e-8 for k in e)
     lo = [k for k in e if k <= 0.10]
     hi = [k for k in e if k > 0.10]
     assert e[max(lo)] / e[min(hi)] == pytest.approx(1.80 / 1.50, rel=1e-9)
@@ -215,8 +217,11 @@ def test_wg211_default_sweep_capacity_is_divided_by_gamma_m():
     assert base.utilisation == pytest.approx(660.0 / 636.364, abs=1e-4)
     assert round(base.utilisation, 3) == 1.037
     assert base.utilisation > 1.0
-    # over capacity: the curve does not rate the reaction there
-    assert base.reaction_kn is None
+    # over the design capacity but within the rated energy: the reaction is read on the nominal
+    # curve at 660 / 700 of rated energy (gamma_m is a resistance factor and does not move the
+    # point read; TFADM p. 76: tolerances do not apply at intermediate deflections)
+    assert base.reaction_kn == pytest.approx(FENDER.reaction_kn)        # no curve: rated reaction
+    assert all(p.reaction_kn is None for p in v.points if p.energy_per_fender_knm > 700.0 * (1 + 1e-12))
     # utilisation 1 is reached below the base velocity
     assert v.limit_value() < V_660
 

@@ -1,4 +1,4 @@
-# Fender design: methods, coefficients, database and sensitivity (generic method report, revision 4)
+# Fender design: methods, coefficients, database and sensitivity (generic method report, revision 5)
 
 Living method report for the berthing-energy design of ship fenders. It sits beside the
 calculation module `digitalmodel.hydrodynamics.fender_design` (with
@@ -13,6 +13,14 @@ The worked case is a generic Supramax-class bulk carrier in round numbers at an 
 with illustrative (fictional) fenders. It demonstrates the method. It is not a design, and
 no result here clears a fender for any berth.
 
+Revision 5 changes a verdict of revision 4. With the pneumatic energy tolerance of 10 %
+(Section 3.6; revision 4 took 0 %), the base fender now fails the energy check as well as
+the hull-pressure check, and the Table 5 values at utilisation 1 have moved. The foam
+tolerance is 10 %, the printed value (it was 15 %, assumed). A solid quay takes C_c 1.0 at
+a keel clearance of 15 % of the draught or more (Section 3.4). The reaction at part energy is
+read on the nominal curve, with the reaction tolerance applied once (Section 3.6). A
+coefficient step across utilisation 1 is reported as a step (Table 5).
+
 ## 1. Summary
 
 - Eight berthing-energy methods are implemented, each coefficient with its source and how
@@ -26,7 +34,7 @@ no result here clears a fender for any berth.
 - For the generic case the design energy by the selected method, PIANC WG33 (2002), is
   680.8 kNm (normal energy 389.1 kNm). The illustrative base fender has a
   capacity of 630.0 kNm, a utilisation of 1.081.
-- Base fender GEN-PN-4 (Table 7): energy utilisation 1.081 against 1.0 at the 10 % pneumatic energy tolerance (**not met**; 0.973, met, at the 0 % of SFT p. 26 for guaranteed energy absorption (GEA); Section 3.6); design reaction 1,595 kN against the 1,600 kN limit (met, margin 0.3 %); design hull pressure 231 kPa against the 200 kPa limit (**not met**, 15.5 % over). The base fender therefore **fails** the energy and hull pressure checks, and is not a solution for this case as it stands. Of the neighbouring sizes in Table 7, only GEN-FM-6 meets every check at the tolerances of its type (GEN-FM-6: utilisation 0.756, design reaction 1,540 kN, margin 3.7 %, hull pressure 198 kPa, margin 1.0 %); the fenders are illustrative, so this is not a selection.
+- Base fender GEN-PN-4 (Table 7): energy utilisation 1.081 against 1.0 at the 10 % pneumatic energy tolerance (**not met**; 0.973, met, at the 0 % of SFT p. 26 for guaranteed energy absorption (GEA); Section 3.6); design reaction 1,595 kN against the 1,600 kN limit (met, margin 0.313 %); design hull pressure 231 kPa against the 200 kPa limit (**not met**, 15.5 % over). The base fender therefore **fails** the energy and hull pressure checks, and is not a solution for this case as it stands. Of the neighbouring sizes in Table 7, only GEN-FM-6 meets every check at the tolerances of its type (GEN-FM-6: utilisation 0.756, design reaction 1,540 kN, margin 3.75 %, hull pressure 198 kPa, margin 1.00 %); the fenders are illustrative, so this is not a selection.
 - Assumed values are collected in Table 10, each marked "ASSUMED - to be confirmed".
 - One-at-a-time sensitivity (Section 7) ranks the inputs. In this case the three largest
   are: berthing velocity; first contact from bow / LBP (Ce); displacement. The berthing velocity enters squared and is the
@@ -252,7 +260,12 @@ computes φ from the geometry and the test suite checks it equals this form).
   other values in `HULL_PRESSURE_KPA`. The sources disagree for bulk carriers (one paper lists
   200 to 320 kPa for WG33); the module uses 200 kPa and records the conflict.
 - Reaction at part energy is read from a normalised curve when one is supplied; without a
-  curve the rated reaction is used as an upper bound. A curve must run from 0 % to at least
+  curve the rated reaction is used as an upper bound. The curve is the nominal one, read at
+  the energy per fender over the rated energy. The Trelleborg manual (p. 76) says the
+  performance tolerances apply to the rated point and not at intermediate deflections, so
+  the reaction tolerance enters once, through the reaction factor below. The design capacity
+  (energy tolerance, angular factor, WG211 γ_m) is used for the energy check only; it does
+  not shift the point read on the curve. Above the rated energy the reaction is not rated. A curve must run from 0 % to at least
   100 % of rated energy; a shorter curve is refused, because a reaction outside its data is
   not supported by them. A curve may fall after buckling and rise again, so the reaction at
   part energy is the largest reached along the curve up to that energy, not the value at the
@@ -306,7 +319,7 @@ Table 3 – Design berthing energy by method for the generic case (same ship and
 "per fender / capacity" column is energy per fender over the base fender capacity under that
 method (for WG211 the capacity is divided by γ_m). Flags in bold put a formula outside its
 stated validity; such a result is outside the method's basis and is shown for comparison
-only. The citation qualification common to all rows is in Table 9.
+only. The citation qualification common to all rows is in Table 9. Results on a coefficient step: UFC 4-152-01 (2017 C1): the base sits on a coefficient step; first contact 1 mm nearer midships gives 846.9 kNm (+9.6 %). Both sides are shown so the step is not mistaken for the sensitivity of the input.
 
 ![Methods](charts/methods.png)
 
@@ -401,8 +414,9 @@ factor 1.80 at 0.08 m/s).
 Each input is moved alone over a credible range with every other input at its base. Each
 chart shows the energy per fender with the base fender's capacity, and below it the
 reaction per fender, multiplied by the reaction factor 1.10, with the reaction limit; the
-credible range is shaded and the base is marked. Above the rated energy the catalogue does
-not rate the reaction, and the chart says so. A velocity sweep re-evaluates the method at
+credible range is shaded and the base is marked. The reaction is read on the nominal curve
+at the energy per fender over the rated energy (Section 3.6). Above the rated energy the
+catalogue does not rate the reaction, and the chart says so. A velocity sweep re-evaluates the method at
 each velocity, so velocity-dependent coefficients (the ROM accidental factor and C_c) follow
 it. A C_c sweep re-evaluates the method with C_c given, so terms derived from C_c follow it
 (the UFC 4-152-01 added mass, through the berthing coefficient C_e C_g C_d C_c in its factor
@@ -415,19 +429,24 @@ the inputs left out for this method are:
 
 | Input | Base | Credible range | Basis | Design energy change at range ends | Utilisation at range ends | Value at utilisation 1 | Reaction x 1.10 at range ends (kN) | Value at reaction limit |
 |---|---|---|---|---|---|---|---|---|
-| berthing velocity | 0.1116 m/s | 0.0537 to 0.172 m/s | Brolsma conditions a to c at 48,000 DWT | -77 % / +138 % | 0.250 / 2.567 | 0.1073 m/s | 575 / not rated | - |
-| displacement | 60,000 t | 45,000 to 66,000 t | part-loaded to 10 % above the base | -25 % / +10 % | 0.811 / 1.189 | 55,520 t | 1,353 / not rated | - |
-| water depth (Cm through keel clearance) | 14 m | 12.6 to 18 m | KC/D 0.05 to 0.5, the PIANC Cm range | +3 % / -14 % | 1.112 / 0.926 | 16.09 m | not rated / 1,501 | - |
-| first contact from bow / LBP (Ce) | 0.25 | 0.2 to 0.35 | SFT p. 17 side berthing contact 20 to 35 % from the bow | -15 % / +36 % | 0.918 / 1.465 | 0.2262 | 1,490 / not rated | - |
-| berthing angle (Ce) | 5 deg | 0 to 10 deg | TFADM p. 22 side berthing angles | -5 % / +6 % | 1.027 / 1.144 | - | not rated / not rated | - |
-| softness factor Cs | 1 | 0.9 to 1 | PIANC WG33 (2002) 4.2.6, p. 21: 0.9 to 1.0 hard fenders and larger vessels, 1.0 soft | -10 % / +0 % | 0.973 / 1.081 | 0.9253 | 1,560 / not rated | - |
-| abnormal / partial energy factor | 1.75 | 1.25 to 1.75 | PIANC 2002 Table 4.2.5 bulk carriers, largest to smallest | -29 % / +0 % | 0.772 / 1.081 | 1.619 | 1,304 / not rated | - |
+| berthing velocity | 0.1116 m/s | 0.0537 to 0.172 m/s | Brolsma conditions a to c at 48,000 DWT | -77 % / +138 % | 0.250 / 2.567 | 0.1073 m/s | 535 / not rated | - |
+| displacement | 60,000 t | 45,000 to 66,000 t | part-loaded to 10 % above the base | -25 % / +10 % | 0.811 / 1.189 | 55,520 t | 1,250 / not rated | - |
+| water depth (Cm through keel clearance) | 14 m | 12.6 to 18 m | KC/D 0.05 to 0.5, the PIANC Cm range | +3 % / -14 % | 1.112 / 0.926 | 16.09 m | not rated / 1,383 | - |
+| first contact from bow / LBP (Ce) | 0.25 | 0.2 to 0.35 | SFT p. 17 side berthing contact 20 to 35 % from the bow | -15 % / +36 % | 0.918 / 1.465 | 0.2262 | 1,373 / not rated | - |
+| berthing angle (Ce) | 5 deg | 0 to 10 deg | TFADM p. 22 side berthing angles | -5 % / +6 % | 1.027 / 1.144 | - | 1,498 / not rated | - |
+| softness factor Cs | 1 | 0.9 to 1 | PIANC WG33 (2002) 4.2.6, p. 21: 0.9 to 1.0 hard fenders and larger vessels, 1.0 soft | -10 % / +0 % | 0.973 / 1.081 | 0.9253 | 1,436 / 1,560 | - |
+| abnormal / partial energy factor | 1.75 | 1.25 to 1.75 | PIANC 2002 Table 4.2.5 bulk carriers, largest to smallest | -29 % / +0 % | 0.772 / 1.081 | 1.619 | 1,205 / 1,560 | - |
 
 Table 5 – One-at-a-time sensitivity of the design energy by the selected method,
 PIANC WG33 (2002), for the generic case. A utilisation is given to three decimals, and to
 more where three would round it onto 1.000. The value at utilisation 1 is solved on the method,
 not interpolated between swept points (which drifts at a coefficient break such as the C_m
-kink at KC/D 0.1): berthing velocity, displacement, first contact from bow / LBP (Ce), softness factor Cs, abnormal / partial energy factor: bisection on the method between the bracketing swept points; water depth (Cm through keel clearance): closed form: keel-clearance Cm 1.61933 needed (base Cm 1.75000 / base utilisation 1.08070).
+kink at KC/D 0.1). The swept values include each coefficient break of the method, with a
+value just either side (C_m at KC/D 0.1 and 0.5, C_c at KC/D 0.15 and 0.5 and at 5°, the ROM
+factor at 0.10 m/s and its C_c at 0.20 m/s, the UFC C_g at the quarter points), so a narrow
+band over 1 next to a break is not stepped over. After solving, the utilisation at the value
+is checked; where it is not 1, a coefficient steps across 1 there, and the cell gives the
+step and the utilisation on each side: berthing velocity, displacement, first contact from bow / LBP (Ce), softness factor Cs, abnormal / partial energy factor: bisection on the method between the bracketing swept points; water depth (Cm through keel clearance): closed form: keel-clearance Cm 1.61933 needed (base Cm 1.75000 / base utilisation 1.08070).
 
 ![Tornado](charts/tornado.png)
 

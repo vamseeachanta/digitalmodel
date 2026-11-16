@@ -172,9 +172,11 @@ def test_water_depth_at_utilisation_1_is_solved_not_interpolated_across_the_cm_b
                                                                         "water_depth_m": sw.limit_value()})),
                             method="pianc2002", citations="off").design_energy_knm
     assert e == pytest.approx(700.0, rel=1e-9)
-    # the old linear reading of the same points stays about 0.05 m low
+    # KC/D 0.1 (13.2 m) is now a swept value (sweep_break_points); Cm is linear on the slope, so
+    # even the linear reading of the points meets the closed form (it was 13.16 m without the break)
     plain = dataclasses.replace(sw, crossing=None, crossing_basis="")
-    assert plain.limit_value() == pytest.approx(13.16, abs=0.01)
+    assert plain.limit_value() == pytest.approx(sw.limit_value(), abs=1e-9)
+    assert any(p.value == pytest.approx(13.2, abs=1e-12) for p in sw.points)
     # the utilisation at 12.6 m is above 1 (1.0004): it must never print as 1.00
     assert sw.at(12.6).utilisation == pytest.approx(1.8 / 1.75 * 680.839 / 700.0, rel=1e-6)
     assert sw.at(12.6).utilisation > 1.0
@@ -370,3 +372,82 @@ def test_register_states_the_held_copy_and_the_two_reading_digitization_limit():
     assert "held copy" in fd.SOURCES["pianc2002"].read_in
     assert "+/-0.015 ft/s" in fd.SOURCES["ufc-4-152-01"].note
     assert "independent readings" in fd.SOURCES["ufc-4-152-01"].note
+
+
+# ---------------------------------------------- gate at 7e7cb6bf: steps, reaction, Cb, margins
+
+
+def _closed(depth, angle):
+    return fd.Case(SHIP, fd.Berth(water_depth_m=depth, contact_x_from_bow_m=45.0, berthing_angle_deg=angle,
+                                  navigation="b", structure="closed", fender_deflection_m=1.56),
+                   condition="moderate", cov_m="high")
+
+
+def test_a_coefficient_step_is_reported_as_a_transition_not_a_crossing():
+    # Codex P3 at 81dc2fe8: closed quay at 13.5 m (KC/D 0.125), BS 6349-4, capacity 545.606 kNm,
+    # midway between E(5 deg) 516.890 (Cc 0.9) and E(just above 5 deg) 574.322 kNm (Cc 1.0)
+    sw = fd.standard_sweeps(_closed(13.5, 5.0), "bs6349", FENDER, {"berthing_angle_deg": fd.SweepRange(0, 10, "t")},
+                            capacity_knm=545.606, citations="off")[0]
+    assert sw.limit_value() == pytest.approx(5.0, abs=1e-9)
+    lo, hi = sw.crossing_step
+    assert lo == pytest.approx(516.890 / 545.606, rel=1e-5) and hi == pytest.approx(574.322 / 545.606, rel=1e-5)
+    assert sw.crossing_basis.startswith("coefficient step at 5 deg") and "no value gives utilisation 1" in \
+        sw.crossing_basis
+    # the same at the keel-clearance step of the solid-quay Cc (KC/D 0.15, 13.8 m), 3 deg
+    sw = fd.standard_sweeps(_closed(14.0, 3.0), "bs6349", FENDER, {"water_depth_m": fd.SweepRange(12.6, 18, "t")},
+                            capacity_knm=534.121, citations="off")[0]
+    assert sw.limit_value() == pytest.approx(13.8, abs=1e-6) and sw.crossing_step is not None
+    assert sw.crossing_step[0] < 1.0 < sw.crossing_step[1]
+    # a smooth crossing carries no step and its residual is within CROSSING_RESIDUAL
+    v = _sweeps()["velocity_m_s"]
+    assert v.crossing_step is None and v.crossing_basis.startswith("bisection")
+
+
+def test_rom_band_over_capacity_below_the_factor_step_is_not_stepped_over():
+    # ROM: factor 1.80 at or below 0.10 m/s, 1.50 above, so energy falls as the velocity passes
+    # 0.10 m/s; 0.10 m/s and a value just either side are swept, so the band of utilisation over 1
+    # just below 0.10 m/s is found and the smallest value is reported
+    cap = 489.702
+    sw = fd.standard_sweeps(CASE, "rom", FENDER, {"velocity_m_s": fd.SweepRange(0.0537, 0.172, "t")},
+                            capacity_knm=cap, citations="off")[0]
+    x = sw.limit_value()
+    assert x < 0.10 and sw.crossing_step is None
+    e = fd.energy_by_method(CASE, method="rom", velocity_m_s=x, citations="off").design_energy_knm
+    assert e / cap == pytest.approx(1.0, abs=1e-9)
+    at = {p.value: p.utilisation for p in sw.points}
+    assert at[0.10] > 1.0 and min(u for v, u in at.items() if 0.10 < v < 0.1001) < 1.0
+    assert set(fd.sweep_break_points(CASE, "rom", "velocity_m_s")) == {0.10, 0.20}
+
+
+def test_part_load_reaction_is_read_on_the_nominal_curve_with_the_tolerance_once():
+    # TFADM p. 76: performance tolerances do not apply at intermediate deflections; the curve is
+    # read at energy / rated energy, not at energy / design capacity
+    curve = fd.PerformanceCurve("c", ((0, 0, 0), (30, 27, 16), (60, 100, 100)), "fictional")
+    sw = fd.standard_sweeps(CASE, "pianc2002", FENDER, {"velocity_m_s": fd.SweepRange(0.06, 0.12, "t")},
+                            capacity_knm=630.0, curve=curve, reaction_factor=1.10, citations="off")[0]
+    for p in sw.points:
+        r, _ = fd.reaction_at_energy(FENDER, p.energy_per_fender_knm, curve)        # nominal: rated energy
+        if r is None:
+            assert p.reaction_kn is None and p.energy_per_fender_knm > 700.0
+        else:
+            assert p.reaction_kn == pytest.approx(1.10 * r, rel=1e-12)
+    # between the design capacity (630 kNm) and the rated energy (700 kNm) the reaction is rated
+    assert any(630.0 < p.energy_per_fender_knm <= 700.0 and p.reaction_kn is not None for p in sw.points)
+
+
+def test_margins_are_given_to_three_significant_figures():
+    from fender_study import _pct3
+    assert _pct3(5 / 1600 * 100) == "0.313"
+    assert _pct3((1600 - 1450 * 1.1) / 1600 * 100) == "0.313"
+    assert _pct3(60 / 1600 * 100) == "3.75"
+    assert _pct3((200 - 180 * 1.1) / 200 * 100) == "1.00"
+    assert _pct3(15.500000000000004) == "15.5"
+
+
+def test_ufc_base_on_the_cg_step_is_named_in_table_3():
+    from fender_case import compute, load_case
+    from fender_study import base_step_notes
+    res = compute(load_case(EXAMPLE / "generic_case.yaml"), citations="record")
+    notes = base_step_notes(res)
+    assert len(notes) == 1 and notes[0].startswith("UFC 4-152-01")
+    assert "846.9 kNm (+9.6 %)" in notes[0]

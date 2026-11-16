@@ -229,8 +229,10 @@ def _either(v0, v1):
 #: mirrors (docs/reports/modules/fender_design/workbook-input-checks.md lists
 #: each rule with the module function that applies it).
 INPUT_RULES: dict[str, InputRule] = {
-    # a block coefficient M / (rho LBP B T) above 1 is refused (Ship); the bound reads the checked cells
-    "M": InputRule("number", "AND({v}>0,{v}<=RHOC*LBPC*BEAMC*TC)",
+    # a block coefficient M / (rho LBP B T) above 1 is refused (Ship), with the module's 1e-12 allowance
+    # so that M = rho LBP B T (Cb 1, the box) is accepted despite floating-point rounding; the bound
+    # reads the checked cells
+    "M": InputRule("number", "AND({v}>0,{v}<=RHOC*LBPC*BEAMC*TC*(1+1E-12))",
                    "ERROR: displacement must be a number above 0 and at most rho LBP B T (block coefficient "
                    "up to 1); every energy is #N/A", "Ship.displacement_t, Ship block coefficient"),
     "DWT": InputRule("number", "{v}>0", _pos("deadweight") + " or blank; the methods keyed by DWT are #N/A",
@@ -750,8 +752,9 @@ def _sensitivity(wb, res):
         "(1 - tolerance) x angular factor of the base fender"
         + ("" if res.selected.capacity_divisor == 1.0 else
            f" / {res.selected.capacity_divisor:.2f} ({res.selected.label} capacity divisor)")
-        + ". Reaction = curve reaction x reaction factor "
-        f"{res.reaction_factor:.3f} (1 + tolerance)."))
+        + ". Reaction = nominal curve reaction at energy / rated energy x reaction factor "
+        f"{res.reaction_factor:.3f} (1 + tolerance, applied once: TFADM p. 76); not rated above the "
+        "rated energy."))
     note.alignment = WRAP
     note.font = WARN_FONT
     note.fill = WARN_FILL

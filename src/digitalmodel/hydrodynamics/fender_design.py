@@ -1733,8 +1733,9 @@ class SweepPoint:
     ``reaction_factor`` (tolerance, velocity, temperature);
     ``hull_pressure_kpa`` is the catalogue hull pressure at rated deflection
     times the same factor: the pressure at part load is not calculated,
-    because no pressure-deflection relationship is sourced. Both are None
-    above the energy capacity, where the catalogue rates neither."""
+    because no pressure-deflection relationship is sourced. The curve is
+    read at energy / rated energy (the nominal curve). Both are None above
+    the rated energy, where the catalogue rates neither."""
 
     value: float
     design_energy_knm: float
@@ -1763,8 +1764,12 @@ class Sweep:
 
     ``crossing`` is the swept value at which utilisation reaches 1, solved
     on the method by :func:`standard_sweeps` (``crossing_basis`` says how:
-    closed form or bisection); :meth:`limit_value` returns it. A sweep built
-    from a bare function has no ``crossing_basis`` and interpolates.
+    closed form or bisection); :meth:`limit_value` returns it. Where a
+    coefficient steps across utilisation 1 (Cc at 5 deg, the ROM factor at
+    0.10 m/s, the UFC Cg at the quarter point), no value gives utilisation 1:
+    ``crossing`` is then the step, the first value past 1, and
+    ``crossing_step`` holds the utilisation (below, above) the step. A sweep
+    built from a bare function has no ``crossing_basis`` and interpolates.
     """
 
     parameter: str
@@ -1785,6 +1790,7 @@ class Sweep:
     flags: tuple[str, ...] = ()
     crossing: float | None = None
     crossing_basis: str = ""
+    crossing_step: tuple[float, float] | None = None
 
     def at(self, value: float) -> SweepPoint:
         for p in self.points:
@@ -1798,8 +1804,9 @@ class Sweep:
     def limit_value(self) -> float | None:
         """Smallest swept value at which utilisation reaches 1, or None if it
         never does: the value solved on the method (:attr:`crossing`) when the
-        sweep carries one, else linear interpolation between the points (which
-        drifts where a coefficient has a break between them)."""
+        sweep carries one (at a coefficient step, the step: see
+        :attr:`crossing_step`), else linear interpolation between the points
+        (which drifts where a coefficient has a break between them)."""
         if self.crossing_basis:
             return self.crossing
         br = _utilisation_bracket(self.points)
@@ -1853,6 +1860,38 @@ def ukc_depth_for_cm(draft_m: float, cm: float) -> float:
     return t * (1.0 + 0.1 + 0.4 * (1.8 - c) / 0.3)
 
 
+#: Keel clearance / draught at which a coefficient of some method changes its
+#: rule: the PIANC Cm kinks (0.1, 0.5; also ROM), the PIANC-basis solid-quay Cc
+#: (:data:`CC_SOLID_QUAY_KCD_LIMIT`) and the ROM and SFT-table Cc (0.5).
+_KCD_BREAKS = (0.1, 0.15, 0.5)
+
+
+def sweep_break_points(case: Case, method: str, key: str) -> tuple[float, ...]:
+    """Values of the swept input ``key`` at which a coefficient of ``method``
+    changes its rule (a step or a kink), in the units of the sweep.
+
+    :func:`standard_sweeps` adds each, with a value just either side, to the
+    swept values, so a step is located exactly and a narrow band over
+    utilisation 1 next to a step is not stepped over (ROM: the factor 1.20
+    at 0.10 m/s or less makes energy fall as the velocity passes 0.10 m/s).
+    """
+    s = case.ship
+    if key == "velocity_m_s" and method == "rom":
+        return (0.10, 0.20)          # accidental factor (Table 4.6.4.43); Cc (p. 271)
+    if key == "water_depth_m":
+        return tuple(s.draft_m * (1.0 + r) for r in _KCD_BREAKS)
+    if key == "berthing_angle_deg":
+        return (-5.0, 5.0)           # Cc: the cushion effect stops above 5 deg
+    if key == "contact_x_over_lbp" and method == "ufc":
+        return (0.25, 0.75)          # Cg: 0.95 at or beyond the quarter points
+    return ()
+
+
+#: Utilisation residual above which a bisection result is a coefficient step,
+#: not a solution of utilisation = 1.
+CROSSING_RESIDUAL = 1e-6
+
+
 #: Methods whose energy depends on the water depth only through the PIANC
 #: keel-clearance Cm (Cc fixed at 1.0 with it, or removed): their depth at
 #: utilisation 1 is solved in closed form (:func:`ukc_depth_for_cm`).
@@ -1860,19 +1899,24 @@ KEEL_CLEARANCE_ONLY = ("pianc2002", "eau", "wg211")
 
 
 def _crossing(sweep: Sweep, fn, cap: float, n: int, *, method: str, base: MethodResult,
-              draft_m: float) -> tuple[float | None, str]:
-    """Swept value at which utilisation reaches 1, solved on the method.
+              draft_m: float, unit: str = "") -> tuple[float | None, str, tuple[float, float] | None]:
+    """Swept value at which utilisation reaches 1, solved on the method:
+    (value, how, step), ``step`` the utilisation (below, above) where the
+    value is a coefficient step rather than a solution, else None.
 
     Water depth for :data:`KEEL_CLEARANCE_ONLY` methods: closed form, since
     utilisation is base utilisation x Cm(depth) / Cm(base). Otherwise the
-    bracket found between the sweep points is bisected on ``fn`` (the
-    method itself) to 1e-12 of the value, so a coefficient break between two
-    points (the Cm kink at KC/D 0.1, the ROM velocity step) is not
-    interpolated across.
+    bracket found between the sweep points (the first, so the smallest value)
+    is bisected on ``fn`` (the method itself) to 1e-12 of the value, so a
+    coefficient break between two points (the Cm kink at KC/D 0.1, the ROM
+    velocity step) is not interpolated across. The utilisation at the result
+    is then checked: where it differs from 1 by more than
+    :data:`CROSSING_RESIDUAL` the bracket closed on a coefficient step, which
+    is reported as a transition with the utilisation on each side.
     """
     br = _utilisation_bracket(sweep.points)
     if br is None:
-        return None, "utilisation does not reach 1 within the swept values"
+        return None, "utilisation does not reach 1 within the swept values", None
     a, b = br
     if sweep.parameter == "water_depth_m" and method in KEEL_CLEARANCE_ONLY:
         u0 = base.design_energy_knm / n / cap
@@ -1882,13 +1926,13 @@ def _crossing(sweep: Sweep, fn, cap: float, n: int, *, method: str, base: Method
             d = None
         if d is not None and min(a.value, b.value) - 1e-9 <= d <= max(a.value, b.value) + 1e-9:
             return d, (f"closed form: keel-clearance Cm {base.cm.value / u0:.5f} needed "
-                       f"(base Cm {base.cm.value:.5f} / base utilisation {u0:.5f})")
+                       f"(base Cm {base.cm.value:.5f} / base utilisation {u0:.5f})"), None
     lo, hi = a.value, b.value
     f_lo = a.utilisation - 1.0
     if f_lo == 0.0:
-        return lo, "a swept point"
+        return lo, "a swept point", None
     if b.utilisation == 1.0:
-        return hi, "a swept point"
+        return hi, "a swept point", None
     for _ in range(200):
         mid = 0.5 * (lo + hi)
         f_mid = float(fn(mid)) / n / cap - 1.0
@@ -1901,7 +1945,15 @@ def _crossing(sweep: Sweep, fn, cap: float, n: int, *, method: str, base: Method
             hi = mid
         if abs(hi - lo) <= 1e-12 * max(1.0, abs(hi)):
             break
-    return 0.5 * (lo + hi), "bisection on the method between the bracketing sweep points"
+    x = 0.5 * (lo + hi)
+    u = float(fn(x)) / n / cap
+    if abs(u - 1.0) <= CROSSING_RESIDUAL:
+        return x, "bisection on the method between the bracketing sweep points", None
+    # no value gives utilisation 1: a coefficient steps across it between lo and hi
+    u_lo, u_hi = float(fn(lo)) / n / cap, float(fn(hi)) / n / cap
+    where = f"{x:.6g}{(' ' + unit) if unit and unit != '-' else ''}"
+    return x, (f"coefficient step at {where}: utilisation {u_lo:.4f} below, {u_hi:.4f} above "
+               "(no value gives utilisation 1)"), (u_lo, u_hi)
 
 
 def check_fenders_in_contact(fenders_in_contact) -> int:
@@ -1948,8 +2000,13 @@ def parameter_sweep(
     that energy (a curve may fall after buckling) x
     ``reaction_factor`` (1 + reaction tolerance, times any velocity and
     temperature factors: :class:`DesignPerformance` reaction / rated
-    reaction). Hull pressure = catalogue hull pressure (at rated deflection)
-    x ``reaction_factor``; it is not scaled to part load.
+    reaction). The curve is the nominal one, read at energy per fender /
+    rated energy, not at the design capacity: TFADM p. 76 states that the
+    performance tolerances do not apply at intermediate deflections, so the
+    tolerance is applied once, through ``reaction_factor``. Above the rated
+    energy the reaction is not rated (None). Hull pressure = catalogue hull
+    pressure (at rated deflection) x ``reaction_factor``; it is not scaled
+    to part load.
     """
     fenders_in_contact = check_fenders_in_contact(fenders_in_contact)
     reaction_limit_kn = check_limit("reaction_limit_kn", reaction_limit_kn)
@@ -1964,7 +2021,11 @@ def parameter_sweep(
     for v in vals:
         e = float(design_energy(v))
         per = e / fenders_in_contact
-        r, d = reaction_at_energy(fender, per, curve, cap)
+        # the nominal curve, read at energy / rated energy: the performance tolerances
+        # apply to the rated point only (TFADM p. 76), so the reaction tolerance enters
+        # once, in reaction_factor, and the derated capacity (tolerance, angular factor,
+        # WG211 gamma_m) is the energy check only
+        r, d = reaction_at_energy(fender, per, curve)
         hp = None
         if r is not None:
             r *= rf
@@ -2158,7 +2219,8 @@ def standard_sweeps(
     ``velocity_m_s`` and ``factor`` are the caller's overrides of the base
     case (as in :func:`energy_by_method`). ``reaction_factor`` multiplies the
     reactions and hull pressures before they are compared with the limits.
-    The swept values span a little wider than each range.
+    The swept values span a little wider than each range, and include each
+    coefficient break of the method (:func:`sweep_break_points`).
 
     Citations follow ``citations`` and ``citation_root`` as in
     :func:`energy_by_method`: the default ``strict`` raises
@@ -2264,17 +2326,21 @@ def standard_sweeps(
         if key in limits:
             lo_s, hi_s = max(lo_s, limits[key][0]), min(hi_s, limits[key][1])
         values = [lo_s + (hi_s - lo_s) * i / (points - 1) for i in range(points)]
+        # each coefficient break of the method, and a value just either side of it
+        for x in sweep_break_points(case, method, key):
+            dx = 1e-9 * max(1.0, abs(x))
+            values += [v for v in (x - dx, x, x + dx) if lo_s <= v <= hi_s]
         sw = parameter_sweep(
             key, label, unit, b0, values, fn, fender, range_low=r_lo, range_high=r_hi,
             range_basis=basis, fenders_in_contact=fenders_in_contact, capacity_knm=capacity_knm,
             curve=curve, reaction_limit_kn=reaction_limit_kn, hull_pressure_limit_kpa=hull_pressure_limit_kpa,
             reaction_factor=reaction_factor,
         )
-        cross, how = _crossing(sw, fn, sw.capacity_knm, fenders_in_contact, method=method, base=base,
-                               draft_m=ship.draft_m)
+        cross, how, step = _crossing(sw, fn, sw.capacity_knm, fenders_in_contact, method=method, base=base,
+                                     draft_m=ship.draft_m, unit=unit)
         st = tuple(status) + tuple((c.code_id, checked[c]) for c in used)
         out.append(replace(sw, citation_status=st, flags=tuple(_citation_flags(st, citations)),
-                           crossing=cross, crossing_basis=how))
+                           crossing=cross, crossing_basis=how, crossing_step=step))
     return out
 
 

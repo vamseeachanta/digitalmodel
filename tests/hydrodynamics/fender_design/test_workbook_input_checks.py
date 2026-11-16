@@ -283,7 +283,7 @@ _CODE = [2, -1, 0.5, "yes", BLANK]            # 1 or 0 required (TRUE: see STRIC
 
 INVALID = {
     # block coefficient above 1 (rho LBP B T = 70,848 t for the generic ship): gate P3 at 2b6bb8a0
-    "M": [*_POS, 90_000.0, 600_000.0], "DWT": _POS_OR_BLANK, "LBP": _POS, "BEAM": _POS, "T": _POS, "RHO": _POS,
+    "M": [*_POS, 70_849.0, 90_000.0, 600_000.0], "DWT": _POS_OR_BLANK, "LBP": _POS, "BEAM": _POS, "T": _POS, "RHO": _POS,
     "DEPTH": [*_POS, 12.0, 11.0],             # draught 12 m: no keel clearance
     "X": [-1.0, 180.5, 1800.0, "abc", True, BLANK],
     # 90 deg or more, or a sign that puts the first contact (45 m, forward) on the far end
@@ -416,6 +416,7 @@ ACCEPTED = [
     ("N", 1), ("N", 2.0),
     ("ETOL", 0.0), ("ETOL", 0.999), ("RTOL", 0.0), ("ANG", 1.0), ("ANG", 1e-6),
     ("RLIM", BLANK), ("RLIM", 1e-6), ("PLIM", BLANK), ("PLIM", 1e9), ("M", 70_800.0),
+    ("M", 70_848.0),                          # rho LBP B T: Cb 1 within rounding, accepted as by Ship
     ("DWT", 3_000.0), ("DWT", 600_000.0), ("DWT", BLANK), ("M", 500.0),
 ]
 

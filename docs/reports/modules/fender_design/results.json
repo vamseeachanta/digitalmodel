@@ -446,10 +446,12 @@
       "util_low": 0.2502478803758634,
       "util_high": 2.567312468760353,
       "limit_value": 0.10734679485776319,
+      "crossing_basis": "bisection on the method between the bracketing sweep points",
+      "crossing_step": null,
       "reaction_factor": 1.1,
-      "reaction_low": 574.5953691995021,
+      "reaction_low": 534.680832279552,
       "reaction_high": null,
-      "reaction_base": null,
+      "reaction_base": 1560.0714687569348,
       "reaction_limit_value": null,
       "citation_status": {
         "PIANC-WG33-2002": "unresolved: page_missing"
@@ -469,10 +471,12 @@
       "util_low": 0.8105221190941317,
       "util_high": 1.1887657746713933,
       "limit_value": 55519.76798645319,
+      "crossing_basis": "bisection on the method between the bracketing sweep points",
+      "crossing_step": null,
       "reaction_factor": 1.1,
-      "reaction_low": 1353.2262239641123,
+      "reaction_low": 1249.8036015677012,
       "reaction_high": null,
-      "reaction_base": null,
+      "reaction_base": 1560.0714687569348,
       "reaction_limit_value": null,
       "citation_status": {
         "PIANC-WG33-2002": "unresolved: page_missing"
@@ -492,10 +496,12 @@
       "util_low": 1.1115731919005238,
       "util_high": 0.9263109932504364,
       "limit_value": 16.090774939652057,
+      "crossing_basis": "closed form: keel-clearance Cm 1.61933 needed (base Cm 1.75000 / base utilisation 1.08070)",
+      "crossing_step": null,
       "reaction_factor": 1.1,
       "reaction_low": null,
-      "reaction_high": 1500.9728273875573,
-      "reaction_base": null,
+      "reaction_high": 1382.7755446488013,
+      "reaction_base": 1560.0714687569348,
       "reaction_limit_value": null,
       "citation_status": {
         "PIANC-WG33-2002": "unresolved: page_missing"
@@ -515,10 +521,12 @@
       "util_low": 0.9175938677001525,
       "util_high": 1.4648558686130995,
       "limit_value": 0.22624650777037458,
+      "crossing_basis": "bisection on the method between the bracketing sweep points",
+      "crossing_step": null,
       "reaction_factor": 1.1,
-      "reaction_low": 1489.8497751853945,
+      "reaction_low": 1372.764797666855,
       "reaction_high": null,
-      "reaction_base": null,
+      "reaction_base": 1560.0714687569348,
       "reaction_limit_value": null,
       "citation_status": {
         "PIANC-WG33-2002": "unresolved: page_missing"
@@ -538,10 +546,12 @@
       "util_low": 1.026720802029031,
       "util_high": 1.1435077978969561,
       "limit_value": null,
+      "crossing_basis": "utilisation does not reach 1 within the swept values",
+      "crossing_step": null,
       "reaction_factor": 1.1,
-      "reaction_low": null,
+      "reaction_low": 1498.0861690501395,
       "reaction_high": null,
-      "reaction_base": null,
+      "reaction_base": 1560.0714687569348,
       "reaction_limit_value": null,
       "citation_status": {
         "PIANC-WG33-2002": "unresolved: page_missing"
@@ -561,10 +571,12 @@
       "util_low": 0.9726265429129582,
       "util_high": 1.0806961587921757,
       "limit_value": 0.9253294664410835,
+      "crossing_basis": "bisection on the method between the bracketing sweep points",
+      "crossing_step": null,
       "reaction_factor": 1.1,
-      "reaction_low": 1560.0714687569348,
-      "reaction_high": null,
-      "reaction_base": null,
+      "reaction_low": 1435.9643218812414,
+      "reaction_high": 1560.0714687569348,
+      "reaction_base": 1560.0714687569348,
       "reaction_limit_value": null,
       "citation_status": {
         "PIANC-WG33-2002": "unresolved: page_missing"
@@ -584,10 +596,12 @@
       "util_low": 0.7719258277086969,
       "util_high": 1.0806961587921757,
       "limit_value": 1.6193265662713507,
+      "crossing_basis": "bisection on the method between the bracketing sweep points",
+      "crossing_step": null,
       "reaction_factor": 1.1,
-      "reaction_low": 1303.9773561562972,
-      "reaction_high": null,
-      "reaction_base": null,
+      "reaction_low": 1205.4796205406676,
+      "reaction_high": 1560.0714687569348,
+      "reaction_base": 1560.0714687569348,
       "reaction_limit_value": null,
       "citation_status": {
         "PIANC-WG33-2002": "unresolved: page_missing"

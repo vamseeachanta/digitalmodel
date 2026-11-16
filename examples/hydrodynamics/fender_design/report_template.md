@@ -1,4 +1,4 @@
-# Fender design: methods, coefficients, database and sensitivity (generic method report, revision 4)
+# Fender design: methods, coefficients, database and sensitivity (generic method report, revision 5)
 
 Living method report for the berthing-energy design of ship fenders. It sits beside the
 calculation module `digitalmodel.hydrodynamics.fender_design` (with
@@ -12,6 +12,14 @@ this report is the same case with live formulas. Citation mode for this build: `
 The worked case is a generic Supramax-class bulk carrier in round numbers at an open berth
 with illustrative (fictional) fenders. It demonstrates the method. It is not a design, and
 no result here clears a fender for any berth.
+
+Revision 5 changes a verdict of revision 4. With the pneumatic energy tolerance of 10 %
+(Section 3.6; revision 4 took 0 %), the base fender now fails the energy check as well as
+the hull-pressure check, and the Table 5 values at utilisation 1 have moved. The foam
+tolerance is 10 %, the printed value (it was 15 %, assumed). A solid quay takes C_c 1.0 at
+a keel clearance of 15 % of the draught or more (Section 3.4). The reaction at part energy is
+read on the nominal curve, with the reaction tolerance applied once (Section 3.6). A
+coefficient step across utilisation 1 is reported as a step (Table 5).
 
 ## 1. Summary
 
@@ -245,7 +253,12 @@ computes φ from the geometry and the test suite checks it equals this form).
   other values in `HULL_PRESSURE_KPA`. The sources disagree for bulk carriers (one paper lists
   200 to 320 kPa for WG33); the module uses 200 kPa and records the conflict.
 - Reaction at part energy is read from a normalised curve when one is supplied; without a
-  curve the rated reaction is used as an upper bound. A curve must run from 0 % to at least
+  curve the rated reaction is used as an upper bound. The curve is the nominal one, read at
+  the energy per fender over the rated energy. The Trelleborg manual (p. 76) says the
+  performance tolerances apply to the rated point and not at intermediate deflections, so
+  the reaction tolerance enters once, through the reaction factor below. The design capacity
+  (energy tolerance, angular factor, WG211 γ_m) is used for the energy check only; it does
+  not shift the point read on the curve. Above the rated energy the reaction is not rated. A curve must run from 0 % to at least
   100 % of rated energy; a shorter curve is refused, because a reaction outside its data is
   not supported by them. A curve may fall after buckling and rise again, so the reaction at
   part energy is the largest reached along the curve up to that energy, not the value at the
@@ -290,7 +303,7 @@ Table 3 – Design berthing energy by method for the generic case (same ship and
 "per fender / capacity" column is energy per fender over the base fender capacity under that
 method (for WG211 the capacity is divided by γ_m). Flags in bold put a formula outside its
 stated validity; such a result is outside the method's basis and is shown for comparison
-only. The citation qualification common to all rows is in Table 9.
+only. The citation qualification common to all rows is in Table 9. {{step_note}}
 
 ![Methods](charts/methods.png)
 
@@ -376,8 +389,9 @@ factor 1.80 at 0.08 m/s).
 Each input is moved alone over a credible range with every other input at its base. Each
 chart shows the energy per fender with the base fender's capacity, and below it the
 reaction per fender, multiplied by the reaction factor {{rf}}, with the reaction limit; the
-credible range is shaded and the base is marked. Above the rated energy the catalogue does
-not rate the reaction, and the chart says so. A velocity sweep re-evaluates the method at
+credible range is shaded and the base is marked. The reaction is read on the nominal curve
+at the energy per fender over the rated energy (Section 3.6). Above the rated energy the
+catalogue does not rate the reaction, and the chart says so. A velocity sweep re-evaluates the method at
 each velocity, so velocity-dependent coefficients (the ROM accidental factor and C_c) follow
 it. A C_c sweep re-evaluates the method with C_c given, so terms derived from C_c follow it
 (the UFC 4-152-01 added mass, through the berthing coefficient C_e C_g C_d C_c in its factor
@@ -392,7 +406,12 @@ Table 5 – One-at-a-time sensitivity of the design energy by the selected metho
 {{selected_label}}, for the generic case. A utilisation is given to three decimals, and to
 more where three would round it onto 1.000. The value at utilisation 1 is solved on the method,
 not interpolated between swept points (which drifts at a coefficient break such as the C_m
-kink at KC/D 0.1): {{crossing_note}}.
+kink at KC/D 0.1). The swept values include each coefficient break of the method, with a
+value just either side (C_m at KC/D 0.1 and 0.5, C_c at KC/D 0.15 and 0.5 and at 5°, the ROM
+factor at 0.10 m/s and its C_c at 0.20 m/s, the UFC C_g at the quarter points), so a narrow
+band over 1 next to a break is not stepped over. After solving, the utilisation at the value
+is checked; where it is not 1, a coefficient steps across 1 there, and the cell gives the
+step and the utilisation on each side: {{crossing_note}}.
 
 ![Tornado](charts/tornado.png)
 

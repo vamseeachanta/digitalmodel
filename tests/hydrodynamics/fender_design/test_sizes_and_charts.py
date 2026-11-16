@@ -183,10 +183,11 @@ def test_compute_applies_the_curve_peak_to_sweeps_and_sizes(tmp_path):
         f = next(x for x in res.catalogue if x.fender_id == b.fender_id)
         k = 1.10 if f.fender_type == base_type else 1.0
         assert b.reaction_kn == pytest.approx(a.reaction_kn * k), b.fender_id
-    # every sweep reaction below the curve peak's energy share is at least the peak x factor
+    # every sweep reaction past the curve peak's energy share (40 % of the rated energy: the nominal
+    # curve is read at energy / rated energy) is the peak x factor
     for s in res.sweeps:
         for p in s.points:
-            if p.reaction_kn is not None and p.energy_per_fender_knm >= 0.40 * s.capacity_knm:
+            if p.reaction_kn is not None and p.energy_per_fender_knm >= 0.40 * res.base_fender.rated_energy_knm:
                 assert p.reaction_kn == pytest.approx(1.10 * res.base_fender.reaction_kn * res.reaction_factor)
 
 

@@ -42,7 +42,7 @@ applies to it, and the workbook cell that applies the rule.
 
 | Input | Row | Python argument | Module rule (function that applies it) | Checked cell | Blank means |
 |---|---|---|---|---|---|
-| `M` | 2 | `Ship.displacement_t` | number above 0 and at most ρ L_BP B T, a block coefficient up to 1 (`Ship`, `_finite`); BS 6349-4 velocity: 1,000 to 500,000 t (`brolsma_velocity`), UFC 4-152-01 velocity: 1,000 to 100,000 LT (`ufc_velocity`), method rows only | `MC` | refused |
+| `M` | 2 | `Ship.displacement_t` | number above 0 and at most ρ L_BP B T × (1 + 10⁻¹²), a block coefficient up to 1 with the module's rounding allowance, so ρ L_BP B T itself is accepted (`Ship`, `_finite`); BS 6349-4 velocity: 1,000 to 500,000 t (`brolsma_velocity`), UFC 4-152-01 velocity: 1,000 to 100,000 LT (`ufc_velocity`), method rows only | `MC` | refused |
 | `DWT` | 3 | `Ship.dwt_t` | number above 0 or None (`Ship`); None: PIANC 2002, Ueda and EAU refuse their own velocity table (`_brolsma`, `_eau_own_velocity`) and are evaluated under a velocity override; PIANC 2002 and Ueda velocity: 1,000 to 500,000 t (`brolsma_velocity`); EAU velocity: 5,000 DWT or more (`eau_velocity`), method rows only | `DWTC` | no DWT: PIANC 2002, Ueda and EAU rows `#N/A` unless `VOVR` is given |
 | `LBP` | 4 | `Ship.lbp_m` | number above 0 (`Ship`) | `LBPC` | refused |
 | `BEAM` | 5 | `Ship.beam_m` | number above 0 (`Ship`) | `BEAMC` | refused |

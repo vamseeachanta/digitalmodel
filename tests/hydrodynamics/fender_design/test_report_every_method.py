@@ -221,11 +221,21 @@ def test_generic_report_states_the_failed_checks_and_the_solved_crossing(tmp_pat
     md = (out / "r.md").read_text(encoding="utf-8")
     flat = " ".join(md.split())
     # summary: the energy and hull-pressure failures and the reaction margin of the base fender;
-    # energy at the conservative 10 % pneumatic tolerance (TFADM p. 76), with the 0 % GEA verdict beside it
+    # energy at the 10 % pneumatic tolerance (TFADM p. 76), with the 0 % GEA verdict beside it
     assert ("energy utilisation 1.081 against 1.0 at the 10 % pneumatic energy tolerance (**not met**; "
             "0.973, met, at the 0 % of SFT p. 26") in flat
     assert "design hull pressure 231 kPa against the 200 kPa limit (**not met**, 15.5 % over)" in flat
-    assert "design reaction 1,595 kN against the 1,600 kN limit (met, margin 0.3 %)" in flat
+    # margins to three significant figures (5 / 1,600 = 0.3125 %; 60 / 1,600 = 3.75 %)
+    assert "design reaction 1,595 kN against the 1,600 kN limit (met, margin 0.313 %)" in flat
+    assert "design reaction 1,540 kN, margin 3.75 %, hull pressure 198 kPa, margin 1.00 %" in flat
+    # revision 5, with the verdict change stated
+    assert md.startswith("# Fender design") and "revision 5)" in md.splitlines()[0]
+    assert "Revision 5 changes a verdict of revision 4" in flat
+    # Table 3: the UFC base sits on the Cg step at the quarter point; both sides are given
+    assert ("UFC 4-152-01 (2017 C1): the base sits on a coefficient step; first contact 1 mm nearer "
+            "midships gives 846.9 kNm (+9.6 %)") in flat
+    # part-load reaction on the nominal curve (TFADM p. 76), tolerance once
+    assert "read at the energy per fender over the rated energy" in flat
     assert "The base fender therefore **fails** the energy and hull pressure checks" in flat
     # the size statement agrees with Table 7: only the foam fender meets every check
     assert "only GEN-FM-6 meets every check" in flat
