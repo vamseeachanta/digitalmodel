@@ -17,7 +17,7 @@ name: Quality Gates by Domain
 "on":
   pull_request:
     # All edits rerun gates: filtering jobs to base edits could mask failures with skips.
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
   push:
     branches: [main, develop]
   workflow_dispatch:
@@ -33,6 +33,9 @@ permissions:
 jobs:
   detect-domains:
     name: Detect touched test domains
+    # Draft pull requests wait: detection is skipped, so every job that needs it is
+    # skipped too, and the gates start when the pull request is marked ready.
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
@@ -493,7 +496,7 @@ jobs:
   domain-tests-required:
     name: Domain test aggregate
     needs: [detect-domains, ci-harness-tests, domain-tests]
-    if: always()
+    if: ${{ always() && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - name: Report scope of this result

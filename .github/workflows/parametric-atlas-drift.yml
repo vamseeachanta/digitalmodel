@@ -12,7 +12,23 @@ name: Parametric atlas drift
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+    # The atlas fingerprint covers the registry spec, the workflow input, the
+    # listed source files and the standards table, all under these paths. Pushes
+    # to main and develop stay unfiltered, so a missed path still shows on main.
+    paths:
+      - 'src/**'
+      - 'atlases/**'
+      - 'docs/registry/**'
+      - 'docs/plans/parametric-refresh/**'
+      - 'examples/workflows/**'
+      - 'config/**'
+      - 'tests/parametric/**'
+      - 'tests/conftest.py'
+      - 'pytest.ini'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/parametric-atlas-drift.yml'
   push:
     branches: [main, develop]
 
@@ -26,6 +42,8 @@ permissions:
 jobs:
   atlas-drift:
     name: Atlas staleness check
+    # Draft pull requests wait: the gates start when the pull request is marked ready.
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - &atlas-checkout
