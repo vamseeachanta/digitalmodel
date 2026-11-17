@@ -111,6 +111,33 @@ def test_utf8_input_and_report_readback(tmp_path):
     ]
 
 
+@pytest.mark.parametrize("suffix", ["json", "html"])
+def test_report_bytes_with_windows_newline_translation(tmp_path, monkeypatch, suffix):
+    """Exercise each output with the Windows default text newline translation."""
+    cli = importlib.import_module(MODULE)
+    cfg = documented_input()
+    cfg["mooring_chain_degradation"]["component_id"] = "synthetic-chain-α"
+    source = write_input(tmp_path, cfg)
+    output = tmp_path / "results" / "screen.json"
+    translated = output.with_suffix(f".{suffix}")
+    real_open = Path.open
+
+    def windows_open(
+        path, mode="r", buffering=-1, encoding=None, errors=None, newline=None
+    ):
+        if path == translated and "b" not in mode and any(c in mode for c in "xwa"):
+            if newline is None:
+                newline = "\r\n"
+        return real_open(path, mode, buffering, encoding, errors, newline)
+
+    monkeypatch.setattr(Path, "open", windows_open)
+    assert cli.main([str(source), "--output", str(output)]) == 0
+    payload = assert_result(output)
+    assert output.read_bytes() == (
+        json.dumps(payload, ensure_ascii=False, allow_nan=False, indent=2) + "\n"
+    ).encode("utf-8")
+
+
 def test_workflow_cli_and_registry(tmp_path):
     registry = yaml.safe_load(
         (ROOT / "docs/registry/workflows.yaml").read_text(encoding="utf-8")

@@ -11,7 +11,6 @@ from pathlib import Path
 
 import yaml
 
-from digitalmodel.asset_integrity.assessment.screening_report import store_report
 from digitalmodel.asset_integrity.mooring_chain_degradation import router
 
 
@@ -46,10 +45,9 @@ def main(argv=None) -> int:
         # Exclusive creation also refuses outputs created after the preflight.
         # Paired writes are not transactional: an I/O failure can leave partial
         # files, which remain visible and will be refused by a subsequent run.
-        with output.open("x", encoding="utf-8") as stream:
-            with report.open("x", encoding="utf-8"):
-                pass
-            store_report(payload, {"output_dir": str(output.parent)}, report.name)
+        with output.open("x", encoding="utf-8", newline="\n") as stream:
+            with report.open("x", encoding="utf-8", newline="\n") as html:
+                html.write(payload["report_html"])
             stream.write(serialized)
     except (OSError, UnicodeError, ValueError, TypeError, yaml.YAMLError) as exc:
         parser.error(str(exc))
