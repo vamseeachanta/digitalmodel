@@ -113,12 +113,29 @@ def detect_command(tip: str, merged: str) -> list[str]:
             "--head", merged, "--domains-file", "tests/DOMAINS.md", "--output-format", "json-matrix"]
 
 
+# Variables that bind Git to a repository, index or object store. Git exports them to hooks
+# and some tools set them; each one overrides ``git -C <dir>`` and the working directory, so
+# an inherited value would point the gate's fetch, worktree and cleanup at the caller's repository.
+GIT_BINDINGS = frozenset({
+    "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY",
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_COMMON_DIR", "GIT_NAMESPACE", "GIT_PREFIX",
+    "GIT_QUARANTINE_PATH", "GIT_SHALLOW_FILE", "GIT_GRAFT_FILE", "GIT_REPLACE_REF_BASE",
+    "GIT_CEILING_DIRECTORIES", "GIT_DISCOVERY_ACROSS_FILESYSTEM",
+})
+
+
+def unbound_env(env: dict[str, str] | None = None) -> dict[str, str]:
+    """A copy of ``env`` (default: this process's) without Git repository bindings."""
+    source = os.environ if env is None else env
+    return {name: value for name, value in source.items() if name not in GIT_BINDINGS}
+
+
 def capture(cmd: list[str], cwd: Path | None = None, env: dict[str, str] | None = None,
             check: bool = True, timeout: float = 60.0) -> subprocess.CompletedProcess[str]:
     """Capture a bounded helper; terminate its whole process group on timeout."""
     if timeout <= 0:
         raise GateError("overall budget expired before helper could start")
-    proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdout=subprocess.PIPE,
+    proc = subprocess.Popen(cmd, cwd=cwd, env=unbound_env(env), stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE, text=True, encoding="utf-8",
                             errors="replace", start_new_session=True)
     try:
@@ -177,10 +194,16 @@ def run_shell(command: str, cwd: Path, env: dict[str, str], log: Path, timeout: 
     with log.open("a", encoding="utf-8") as handle:
         handle.write(f"\n$ {command}\n")
         handle.flush()
-        proc = subprocess.Popen(["bash", "-c", command], cwd=cwd, env=env, stdout=handle,
+        proc = subprocess.Popen(["bash", "-c", command], cwd=cwd, env=unbound_env(env), stdout=handle,
                                 stderr=subprocess.STDOUT, start_new_session=True)
         LIVE.add(proc)
         try:
+            # request_stop() sets STOP and then ends what LIVE holds. A process registered
+            # after that pass is not seen there; it is registered before this check, so one
+            # of the two always ends it.
+            if STOP.is_set():
+                stop_group(proc)
+                return 143
             return proc.wait(timeout=max(timeout, 0.1))
         except subprocess.TimeoutExpired:
             stop_group(proc)
@@ -269,10 +292,30 @@ def run_module(module: Module, cwd: Path, env: dict[str, str], logs: Path, deadl
         if remaining <= 0:
             return Result(module.name, "timeout", clock() - started, 124)
         code = shell(command, cwd, env, logs / f"{module.name}.log", remaining)
+        if STOP.is_set():  # the command may have been ended by the stop, or have missed it
+            return Result(module.name, "fail", clock() - started, 143)
         if code != 0:
             status = "timeout" if code == 124 else "fail"
             return Result(module.name, status, clock() - started, code)
     return Result(module.name, "pass", clock() - started, 0)
+
+
+def run_queued(module: Module, deadline: float, body: Callable[[Module], Result],
+               clock: Callable[[], float] | None = None) -> Result:
+    """Run ``body`` (checkout, commands, cleanup) for a module that has waited for a worker.
+
+    A module whose turn comes after the budget or after a stop is ``not-run``. A helper that
+    fails during its checkout fails that module only, so the results of the modules that did
+    run are kept and the gate reports ``failure``, not ``error``.
+    """
+    clock = time.monotonic if clock is None else clock
+    if clock() >= deadline or STOP.is_set():
+        return Result(module.name, "not-run")
+    try:
+        return body(module)
+    except GateError as exc:
+        print(f"local-gate: {module.name} could not run: {exc}", flush=True)
+        return Result(module.name, "not-run" if clock() >= deadline else "fail")
 
 
 def run_modules(modules: list[Module], jobs: int, run_one: Callable[[Module], Result]) -> list[Result]:
@@ -281,7 +324,7 @@ def run_modules(modules: list[Module], jobs: int, run_one: Callable[[Module], Re
         return list(pool.map(run_one, modules))
 
 
-def summarize(results: list[Result], seconds: float, tip: str) -> tuple[str, str]:
+def summarize(results: list[Result], seconds: float, tip: str, stopped: bool = False) -> tuple[str, str]:
     """Return the commit-status state and a description within the local cap.
 
     The description starts with the full base commit the head was merged into,
@@ -291,6 +334,9 @@ def summarize(results: list[Result], seconds: float, tip: str) -> tuple[str, str
     total = len(results)
     if not results:
         return "error", "no module was planned"
+    if stopped:  # whatever the modules report, a stopped run is not a complete one
+        text = f"base {tip}: stopped before completion; {total - len(bad)}/{total} modules had passed"
+        return "failure", text[:DESCRIPTION_LIMIT]
     if not bad:
         names = ", ".join(r.name for r in results)
         text = f"base {tip}: {total}/{total} modules passed in {seconds:.0f} s ({names})"
@@ -412,7 +458,7 @@ def gate(args: argparse.Namespace, run_dir: Path, tree_root: Path) -> tuple[str,
     logs = run_dir / "logs"
     scratch.mkdir(parents=True)
     logs.mkdir()
-    env = dict(os.environ)
+    env = unbound_env()
     env.update(UV_CACHE_DIR=str(args.work_root / "uv-cache"),
                UV_PYTHON_INSTALL_DIR=str(args.work_root / "uv-python"),
                UV_PYTHON=args.python, PYTHONDONTWRITEBYTECODE="1", TMPDIR=str(scratch),
@@ -446,9 +492,9 @@ def gate(args: argparse.Namespace, run_dir: Path, tree_root: Path) -> tuple[str,
         print(f"local-gate: {result.name} {result.status} in {result.seconds:.0f} s", flush=True)
         return result
 
-    results = run_modules(modules, args.jobs, run_one)
+    results = run_modules(modules, args.jobs, lambda module: run_queued(module, deadline, run_one))
     shutil.rmtree(scratch, ignore_errors=True)
-    state, description = summarize(results, time.monotonic() - started, tip)
+    state, description = summarize(results, time.monotonic() - started, tip, stopped=STOP.is_set())
     return state, description, results
 
 

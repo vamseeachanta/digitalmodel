@@ -305,6 +305,11 @@ def _stubborn_child_command(pidfile: Path) -> str:
     return shlex.join([sys.executable, "-c", leader])
 
 
+POSIX_GROUPS = pytest.mark.skipif(
+    not hasattr(os, "killpg"), reason="process groups and their signals are POSIX; the gate runs on Linux")
+
+
+@POSIX_GROUPS
 def test_shell_timeout_kills_descendant_after_leader_exits(tmp_path: Path) -> None:
     pidfile = tmp_path / "child.pid"
     pid = None
@@ -324,6 +329,7 @@ def test_shell_timeout_kills_descendant_after_leader_exits(tmp_path: Path) -> No
             os.kill(pid, signal.SIGKILL)
 
 
+@POSIX_GROUPS
 def test_capture_timeout_kills_descendant_and_closes_pipes(tmp_path: Path) -> None:
     pidfile = tmp_path / "capture-child.pid"
     pid = None
@@ -409,8 +415,15 @@ def test_setup_and_checkout_helpers_obey_overall_deadline(monkeypatch, tmp_path:
     # Serialize test fixtures so the fake clock cannot race another checkout.
     args = gate.parse_args(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository",
                             "--work-root", str(tmp_path), "--jobs", "1", "--budget-seconds", "100"])
-    with pytest.raises(gate.GateError, match="budget expired"):
-        gate.gate(args, tmp_path / "run", tmp_path / "wt")
+    if expire_at == "checkout":
+        # The budget ran out in a module's own checkout: that module and the ones still
+        # queued are not run, the result is a failure, and nothing further is launched.
+        state, _description, results = gate.gate(args, tmp_path / "run", tmp_path / "wt")
+        assert state == "failure"
+        assert results and {result.status for result in results} == {"not-run"}
+    else:
+        with pytest.raises(gate.GateError, match="budget expired"):
+            gate.gate(args, tmp_path / "run", tmp_path / "wt")
     assert expire_at in seen
 
 
@@ -482,3 +495,110 @@ def test_prepare_tree_uses_existing_git_identity(tmp_path: Path) -> None:
     merge = next(cmd for cmd in calls if "merge" in cmd)
     # Git obtains identity from its normal runtime configuration and environment.
     assert merge == ["git", "-C", str(tree), "merge", "--no-ff", "--no-edit", SHA]
+
+
+# --- review at 46eeff4b ------------------------------------------------------
+
+BINDINGS = {"GIT_DIR": "/elsewhere/.git", "GIT_WORK_TREE": "/elsewhere", "GIT_INDEX_FILE": "/elsewhere/index",
+            "GIT_OBJECT_DIRECTORY": "/elsewhere/objects", "GIT_COMMON_DIR": "/elsewhere/common",
+            "GIT_NAMESPACE": "other", "GIT_ALTERNATE_OBJECT_DIRECTORIES": "/elsewhere/alt",
+            "GIT_PREFIX": "sub/"}
+SHOW_GIT_ENV = "import json, os; print(json.dumps(sorted(k for k in os.environ if k.startswith('GIT_'))))"
+
+
+def test_helpers_do_not_inherit_repository_bindings(monkeypatch) -> None:
+    """A caller inside a Git hook or worktree exports bindings that override ``git -C``."""
+    for name, value in BINDINGS.items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.setenv("GIT_TERMINAL_PROMPT", "0")
+    for env in (None, {**os.environ, **BINDINGS}):
+        seen = set(json.loads(gate.capture([sys.executable, "-c", SHOW_GIT_ENV], env=env).stdout))
+        assert "GIT_TERMINAL_PROMPT" in seen, "settings that bind no repository are kept"
+        assert not seen & set(BINDINGS)
+
+
+@pytest.mark.skipif(not hasattr(os, "killpg"), reason="module commands run through bash process groups")
+def test_module_commands_do_not_inherit_repository_bindings(tmp_path: Path) -> None:
+    log = tmp_path / "m.log"
+    command = shlex.join([sys.executable, "-c", SHOW_GIT_ENV])
+    assert gate.run_shell(command, tmp_path, {**os.environ, **BINDINGS}, log, timeout=30.0) == 0
+    seen = set(json.loads(log.read_text(encoding="utf-8").strip().splitlines()[-1]))
+    assert not seen & set(BINDINGS)
+
+
+def test_gate_environment_drops_repository_bindings(monkeypatch) -> None:
+    for name, value in BINDINGS.items():
+        monkeypatch.setenv(name, value)
+    cleaned = gate.unbound_env()
+    assert not set(BINDINGS) & set(cleaned)
+    assert cleaned["PATH"] == os.environ["PATH"]
+
+
+def test_stop_during_the_last_command_is_not_a_pass(tmp_path: Path) -> None:
+    """A stop that arrives while a command starts must not leave the module passed."""
+    def shell(command, cwd, env, log, timeout):
+        gate.STOP.set()  # the signal lands after the stop check and before registration
+        return 0
+
+    try:
+        result = gate.run_module(gate.Module("m", ["one"]), tmp_path, {}, tmp_path, deadline=100.0,
+                                 module_timeout=50.0, shell=shell, clock=Clock())
+        assert (result.status, result.code) == ("fail", 143)
+    finally:
+        gate.STOP.clear()
+
+
+def test_a_stopped_run_never_reports_success() -> None:
+    passed = [gate.Result("lint", "pass", 1.0, 0), gate.Result("contracts", "pass", 2.0, 0)]
+    state, text = gate.summarize(passed, 3, TIP, stopped=True)
+    assert state == "failure"
+    assert text.startswith(f"base {TIP}: stopped before completion")
+    assert gate.summarize(passed, 3, TIP)[0] == "success"
+
+
+def test_process_started_after_a_stop_is_ended_at_once(monkeypatch, tmp_path: Path) -> None:
+    """The stop handler cannot see a process that registers after it ran; the starter must."""
+    ended: list[int] = []
+
+    class Proc:
+        pid = 4242
+
+        def wait(self, timeout=None):
+            return -9 if ended else 0
+
+    monkeypatch.setattr(gate.subprocess, "Popen", lambda *a, **k: Proc())
+    monkeypatch.setattr(gate, "stop_group", lambda proc: ended.append(proc.pid))
+    gate.STOP.set()
+    try:
+        code = gate.run_shell("true", tmp_path, {}, tmp_path / "m.log", timeout=5.0)
+    finally:
+        gate.STOP.clear()
+    assert ended == [4242]
+    assert code != 0
+
+
+def test_queued_module_after_the_budget_is_not_run_not_an_error() -> None:
+    """Checkout for a queued module must not turn an exhausted budget into a gate error."""
+    clock = Clock()
+    clock.now = 200.0
+    result = gate.run_queued(gate.Module("late", ["one"]), 100.0,
+                             lambda module: pytest.fail("no checkout after the budget"), clock=clock)
+    assert (result.name, result.status) == ("late", "not-run")
+    done = [gate.Result("first", "pass", 100.0, 0), result]
+    assert gate.summarize(done, 200, TIP)[0] == "failure"
+
+
+def test_budget_expiring_during_checkout_keeps_the_other_results() -> None:
+    clock = Clock()
+
+    def body(module):
+        clock.now = 150.0
+        raise gate.GateError("overall budget expired during helper")
+
+    result = gate.run_queued(gate.Module("late", ["one"]), 100.0, body, clock=clock)
+    assert result.status == "not-run"
+
+    def broken(module):
+        raise gate.GateError("git worktree add exited 128")
+
+    assert gate.run_queued(gate.Module("m", ["one"]), 100.0, broken, clock=Clock()).status == "fail"

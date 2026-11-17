@@ -29,7 +29,8 @@ scripts/ci/local_gate.sh --pr 1234 --sha <40-character head> --repo <owner/name>
    that also counts everything the base gained since the fork point, and one
    source merge on the base then selects every shard for every open pull
    request. In a trial on 17 Nov 2026 a four-module plan became a 24-module
-   plan after one unrelated merge to the base. The shard commands come from `.claude/quality-gates.yaml` and the
+   plan after one unrelated merge to the base (unverified: the run log is not
+   retained in this repository). The shard commands come from `.claude/quality-gates.yaml` and the
    harness command from the workflow file, both read from the tree under test.
 5. Runs the modules in parallel (`--jobs`, default 4), each in a separate
    checkout with its own log and time limit (`--module-timeout`, default 1500 s)
@@ -91,11 +92,19 @@ delays a merge:
   `Parametric atlas drift`, `Workflow Automation Tests`, `Capability card links`
 
 Advisory does not mean ignored. A hosted job that has finished with a failure
-at the head still blocks the merge, with one exception: the jobs the local gate
-runs itself on the same merged tree (the three `Quality Gates by Domain` job
-groups, `Text Encoding` and `Repository Structure`) are superseded by the
-`local-gate` result. A runner that refused or dropped one of those jobs
-therefore does not hold a pull request the gate has passed. A job that has not
+at the head still blocks the merge. A `local-gate` success supersedes a failed
+hosted job only when the gate ran the same check on the merged tree:
+
+- a failed hosted shard `tests-<domain>` is superseded only if `<domain>` is
+  among the modules named in the `local-gate` description;
+- the hosted harness job is superseded by the module `ci-harness`, and
+  `Text Encoding` and `Repository Structure` by the module `lint`.
+
+The gate selects shards from the pull request's own change, so it can run
+fewer shards than a hosted run that compared a head behind its base. A failed
+hosted shard that the gate did not run is not superseded and still blocks. The
+same holds when the description is cut at the length cap before a module name:
+a name that is not readable there counts as not run. A job that has not
 finished is disregarded.
 
 These runs are not advisory:
