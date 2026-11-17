@@ -76,6 +76,18 @@ def test_reachable_tree_produces_bound_evidence_without_mutation(tree):
     assert snapshot(tree) == before
 
 
+@pytest.mark.parametrize("source,options", [
+    ("def test_control(): pass\n", {}),
+    ("import missing_synthetic_dependency\n", {}),
+    ("import os\nos._exit(0)\n", {}),
+    ("import time\ntime.sleep(2)\n", {"timeout": 0.5}),
+])
+def test_child_scratch_is_removed_after_collection(tree, source, options):
+    write(tree, "tests/control/test_control.py", source)
+    observe(tree, **options)
+    assert not list(tree.parent.glob("collection-*"))
+
+
 @pytest.mark.parametrize("mechanism,config,extra", [
     ("ignore", "", "collect_ignore = ['tests/hidden']\n"),
     ("glob", "", "collect_ignore_glob = ['tests/hid*']\n"),
@@ -167,15 +179,18 @@ assert not any(key in os.environ for key in (
         "tests/control/test_control.py"]
 
 
-@pytest.mark.parametrize("source,reason", [
-    ("import os\nos._exit(0)\n", "missing_evidence"),
-    ("import time\ntime.sleep(2)\n", "child_timeout"),
+@pytest.mark.parametrize("source,reason,options", [
+    ("import os\nos._exit(0)\n", "missing_evidence", {}),
+    ("import time\ntime.sleep(2)\n", "child_timeout", {"timeout": 0.5}),
 ])
-def test_failed_child_cannot_reuse_stale_output(tree, source, reason):
+def test_failed_child_cannot_reuse_stale_output(tree, source, reason, options):
+    if reason == "missing_evidence":
+        with (tree / "conftest.py").open("a", encoding="utf-8") as stream:
+            stream.write("\nimport time\ntime.sleep(0.75)\n")
     output = tree.parent / "report.json"
     output.write_text('{"status":"pass","stale":true}', encoding="utf-8")
     write(tree, "tests/control/test_control.py", source)
-    result, report = observe(tree, output=output, timeout=0.5)
+    result, report = observe(tree, output=output, **options)
     assert result.returncode == 1
     assert report["status"] == "fail"
     assert reason in report["reasons"]
@@ -251,6 +266,7 @@ def pytest_unconfigure(config):
     result, report = observe(tree)
     assert result.returncode == 1
     assert "invalid_evidence" in report["reasons"]
+    assert not list(tree.parent.glob("collection-*"))
     assert report["nodes"] == []
 
 
@@ -266,6 +282,7 @@ def pytest_sessionfinish(session, exitstatus):
     assert result.returncode == 1
     assert report["nodes"]
     assert "child_failed" in report["reasons"]
+    assert not list(tree.parent.glob("collection-*"))
 
 
 def test_custom_filename_patterns_are_observed(tree):
@@ -278,7 +295,7 @@ def test_custom_filename_patterns_are_observed(tree):
 
 
 def test_absolute_configuration_values_are_not_shared(tree):
-    write(tree, "pytest.ini", f"[pytest]\ntestpaths = {tree / 'tests'}\n")
+    write(tree, "pytest.ini", f"[pytest]\ntestpaths = {(tree / 'tests').as_posix()}\n")
     result, report = observe(tree)
     assert result.returncode == 0, report
     assert report["configuration"]["testpaths"] == ["[root]/tests"]
@@ -326,6 +343,7 @@ def test_child_start_failure_is_reported(tree, monkeypatch):
     report = tool.observe(tree, tree.parent / "report.json", 1)
     assert report["status"] == "fail"
     assert "child_start_failed" in report["reasons"]
+    assert not list(tree.parent.glob("collection-*"))
 
 
 def test_parameter_ids_with_absolute_paths_are_redacted(tree):
@@ -337,6 +355,19 @@ def test_control(value): pass
     result, report = observe(tree)
     assert result.returncode == 0, report
     assert "[path removed]" in report["nodes"][0]["nodeid"]
+
+
+@pytest.mark.parametrize("locator", [
+    "C:synthetic_data", r"C:\synthetic_data\tests", "C:/synthetic_data/tests",
+])
+def test_windows_drive_locators_are_redacted(tree, locator):
+    tool = load_tool()
+    report = {"configuration": {"testpaths": [locator]},
+              "nodes": [{"nodeid": f"tests/test_sample.py::test_sample[{locator}]"}]}
+    shared = tool.shareable(report, tree)
+    assert shared["configuration"]["testpaths"] == ["[path removed]"]
+    assert shared["nodes"][0]["nodeid"] == (
+        "tests/test_sample.py::test_sample[[path removed]]")
 
 
 def test_ancestor_configuration_is_rejected_before_collection(tree):

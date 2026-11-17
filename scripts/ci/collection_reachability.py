@@ -112,36 +112,37 @@ def run_child(root: Path, output: Path, timeout: float) -> tuple[dict, list[str]
     _, config_file, _ = locate_config(root, [root])
     if config_file is not None and not config_file.resolve().is_relative_to(root):
         return {}, ["configuration_outside_root"]
-    scratch = Path(tempfile.mkdtemp(prefix="collection-", dir=output.parent))
-    evidence = scratch / "evidence.json"
-    env = {key: value for key, value in os.environ.items()
-           if not key.startswith(("GIT_", "PYTEST_")) and key != "PYTHONPATH"}
-    env.update(PYTHONDONTWRITEBYTECODE="1", PYTEST_DISABLE_PLUGIN_AUTOLOAD="1")
-    try:
-        with (scratch / "stdout.txt").open("wb") as stdout, (
-            scratch / "stderr.txt"
-        ).open("wb") as stderr:
-            child = subprocess.run([
-                sys.executable, str(Path(__file__).resolve()), "--_collect", str(root),
-                str(evidence),
-            ], cwd=root, env=env, stdout=stdout, stderr=stderr, timeout=timeout,
-                creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
-    except subprocess.TimeoutExpired:
-        return {}, ["child_timeout"]
-    except OSError:
-        return {}, ["child_start_failed"]
-    if not evidence.is_file() or evidence.is_symlink():
-        return {"child_exit": child.returncode}, ["missing_evidence"]
-    try:
-        data = json.loads(evidence.read_text(encoding="utf-8"))
-        validate_evidence(data)
-    except (OSError, UnicodeError, ValueError, KeyError, TypeError):
-        return {"child_exit": child.returncode}, ["invalid_evidence"]
-    reasons = []
-    if child.returncode not in (0, 5) or data["exitstatus"] != child.returncode:
-        reasons.append("child_failed")
-    data["child_exit"] = child.returncode
-    return data, reasons
+    with tempfile.TemporaryDirectory(prefix="collection-", dir=output.parent) as directory:
+        scratch = Path(directory)
+        evidence = scratch / "evidence.json"
+        env = {key: value for key, value in os.environ.items()
+               if not key.startswith(("GIT_", "PYTEST_")) and key != "PYTHONPATH"}
+        env.update(PYTHONDONTWRITEBYTECODE="1", PYTEST_DISABLE_PLUGIN_AUTOLOAD="1")
+        try:
+            with (scratch / "stdout.txt").open("wb") as stdout, (
+                scratch / "stderr.txt"
+            ).open("wb") as stderr:
+                child = subprocess.run([
+                    sys.executable, str(Path(__file__).resolve()), "--_collect", str(root),
+                    str(evidence),
+                ], cwd=root, env=env, stdout=stdout, stderr=stderr, timeout=timeout,
+                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+        except subprocess.TimeoutExpired:
+            return {}, ["child_timeout"]
+        except OSError:
+            return {}, ["child_start_failed"]
+        if not evidence.is_file() or evidence.is_symlink():
+            return {"child_exit": child.returncode}, ["missing_evidence"]
+        try:
+            data = json.loads(evidence.read_text(encoding="utf-8"))
+            validate_evidence(data)
+        except (OSError, UnicodeError, ValueError, KeyError, TypeError):
+            return {"child_exit": child.returncode}, ["invalid_evidence"]
+        reasons = []
+        if child.returncode not in (0, 5) or data["exitstatus"] != child.returncode:
+            reasons.append("child_failed")
+        data["child_exit"] = child.returncode
+        return data, reasons
 
 
 def relative_path(value: object) -> bool:
@@ -217,14 +218,14 @@ def observe(root: Path, output: Path, timeout: float) -> dict:
 
 
 def shareable(value: Any, root: Path) -> Any:
-    """Redact absolute locators, including paths embedded in parameter IDs."""
+    """Redact locators, including drive prefixes and paths in parameter IDs."""
     if isinstance(value, dict):
         return {key: shareable(item, root) for key, item in value.items()}
     if isinstance(value, list):
         return [shareable(item, root) for item in value]
     if isinstance(value, str):
         text = value.replace(str(root), "[root]").replace(root.as_posix(), "[root]")
-        return re.sub(r'''(?<![\w.*\]])(?:[A-Za-z]:[\\/]|/)[^\s\[\]"']*''',
+        return re.sub(r'''(?<![\w.*\]])(?:[A-Za-z]:|/)[^\s\[\]"']*''',
                       "[path removed]", text)
     return value
 
