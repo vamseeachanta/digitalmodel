@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -151,21 +152,37 @@ def run_swab_surge(cfg: dict[str, Any]) -> dict[str, Any]:
 
     result: dict[str, Any] = {"at_trip_speed": evaluated}
     window = params.get("window")
-    if window is not None:
-        limit = calc.max_safe_trip_speed(
-            pore_pressure_emw_ppg=float(window["pore_pressure_emw_ppg"]),
-            fracture_emw_ppg=float(window["fracture_emw_ppg"]),
-        )
+    if (
+        window is None
+        or window.get("pore_pressure_emw_ppg") is None
+        or window.get("fracture_emw_ppg") is None
+    ):
+        status = "warning"
+        reason = "Pressure window not evaluated because both limits are required."
+    else:
+        pore = float(window["pore_pressure_emw_ppg"])
+        fracture = float(window["fracture_emw_ppg"])
+        swab = evaluated["swab_emw_ppg"]
+        surge = evaluated["surge_emw_ppg"]
+        if not all(math.isfinite(value) for value in (pore, fracture, swab, surge)):
+            raise ValueError("Pressure-window comparisons require finite mud weights.")
+
+        limit = calc.max_safe_trip_speed(pore, fracture)
         result["safe_trip_speed"] = limit.as_dict()
-        result["kick_at_trip_speed"] = (
-            evaluated["swab_emw_ppg"] < float(window["pore_pressure_emw_ppg"])
-        )
-        result["loss_at_trip_speed"] = (
-            evaluated["surge_emw_ppg"] > float(window["fracture_emw_ppg"])
-        )
+        result["kick_at_trip_speed"] = swab < pore
+        result["loss_at_trip_speed"] = surge > fracture
+        violations = []
+        if result["kick_at_trip_speed"]:
+            violations.append("Swab mud weight is below the pore-pressure limit (kick risk).")
+        if result["loss_at_trip_speed"]:
+            violations.append("Surge mud weight is above the fracture limit (loss risk).")
+        status = "fail" if violations else "pass"
+        reason = " ".join(violations) or "Both mud weights are within the pressure window."
 
     summary = {
         "calculation": "swab_surge",
+        "screening_status": status,
+        "screening_reason": reason,
         "section": dict(section),
         "trip": dict(trip),
         "result": result,
@@ -179,6 +196,8 @@ def run_swab_surge(cfg: dict[str, Any]) -> dict[str, Any]:
             "swab_surge_summary.json",
         )
     )
+    cfg["screening_status"] = status
+    cfg["screening_reason"] = reason
     cfg["swab_surge"] = {**params, "result": result, "summary": summary}
     return cfg
 

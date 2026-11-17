@@ -1346,6 +1346,12 @@ def test_workflow_registry(workflow, monkeypatch, tmp_path):
         assert result["pressure_drop_annulus_psi"] == pytest.approx(127.087912088)
         assert result["ecd_ppg"] == pytest.approx(10.805499789)
         assert result["cuttings_transport_ratio"] == pytest.approx(1.0)
+    elif workflow["id"] == "swab-surge":
+        summary_path = output_root / workflow["outputs"][0]
+        saved = json.loads(summary_path.read_text(encoding="utf-8"))
+        assert saved["screening_status"] == cfg["screening_status"] == "pass"
+        assert saved["result"]["kick_at_trip_speed"] is False
+        assert saved["result"]["loss_at_trip_speed"] is False
     elif workflow["id"] == "wellpath":
         summary = cfg["wellpath"]
         results_path = Path(summary["wellpath_csv"])
