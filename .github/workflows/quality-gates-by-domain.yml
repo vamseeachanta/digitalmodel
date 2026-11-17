@@ -141,8 +141,13 @@ jobs:
           PUSH_AFTER_SHA: ${{ github.event.after }}
         run: |
           if [ "$EVENT_NAME" = "pull_request" ]; then
+            # Compare from the fork point. Comparing the base tip with the head
+            # directly also lists everything the base gained since the fork, so
+            # one source merge on the base dispatched every shard for every
+            # pull request behind it. The jobs still test the merged tree.
             matrix=$(uv run --no-sources python scripts/ci/detect_touched_domains.py \
               --mode touched \
+              --diff-from merge-base \
               --base "$PR_BASE_SHA" \
               --head "$PR_HEAD_SHA" \
               --domains-file tests/DOMAINS.md \
