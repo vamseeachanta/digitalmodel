@@ -599,7 +599,9 @@ def test_parametric_tests_have_a_hosted_job():
     )
     job = workflow["jobs"]["parametric-tests"]
     assert job["runs-on"] == "ubuntu-latest"
-    assert "if" not in job
+    # No draft or runner condition. The one condition skips a title or description edit,
+    # for which the job reports under another name (tests/workflows/test_ci_triggers.py).
+    assert job["if"] == "${{ !(github.event.action == 'edited' && !github.event.changes.base) }}"
     checkout = job["steps"][0]
     assert checkout["uses"] == "actions/checkout@v4"
     assert checkout["with"]["fetch-depth"] == 0
