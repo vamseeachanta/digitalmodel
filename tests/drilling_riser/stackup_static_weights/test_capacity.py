@@ -11,7 +11,7 @@ def test_axial_capacity_uses_caller_supplied_factor():
     p = TubularCapacityInput(0.6, 0.03, 400000000.0, 0.6)
     expected_n = 0.6 * 400000000.0 * math.pi / 4.0 * (0.6**2 - 0.54**2)
     assert axial_wall_capacity_n(p) == pytest.approx(expected_n)
-    assert axial_wall_capacity_n(p) == pytest.approx(12893095.0, rel=1e-6)
+    assert axial_wall_capacity_n(p) == pytest.approx(12893096.25)
 
 
 def test_flooded_material_weight_uses_density_ratio():

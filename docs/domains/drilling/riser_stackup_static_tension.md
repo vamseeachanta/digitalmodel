@@ -44,7 +44,8 @@ factors are passed explicitly. The source omits mechanical-efficiency and
 fleet-angle reductions; this implementation supplies unity to the existing
 chain. It does not adopt that chain's other default assumptions.
 
-Inputs are SI. Convert customary units at the calling boundary with the shared registry in `digitalmodel.units` (pint).
+Inputs are SI. Convert customary units at the calling boundary with the shared
+registry in `digitalmodel.units` (pint).
 
 ## Standard and Input gaps
 

@@ -23,7 +23,8 @@ def tension():
 def test_equal_fluids_recover_supplied_flooded_wet_weight():
     result = section_weights(section())
     assert result.filled_submerged_weight_n == pytest.approx(3.0 * 15000.0)
-    assert section_weights(replace(section(), installed_length_m=0.0)).filled_submerged_weight_n == 0.0
+    empty = section_weights(replace(section(), installed_length_m=0.0))
+    assert empty.filled_submerged_weight_n == 0.0
 
 
 def test_neutral_tension_factors_and_no_failures():
