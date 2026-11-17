@@ -41,34 +41,147 @@ def test_pull_request_accepts_any_base(filename: str) -> None:
     assert triggers["push"]["branches"] == ["main", "develop"]
 
 
+METADATA_EDIT = "github.event.action == 'edited' && !github.event.changes.base"
+EVENTS = {
+    "push": {"event_name": "push", "event": {}},
+    "code update": {"event_name": "pull_request", "event": {"action": "synchronize"}},
+    "reopen": {"event_name": "pull_request", "event": {"action": "reopened"}},
+    "title edit": {"event_name": "pull_request",
+                   "event": {"action": "edited", "changes": {"title": {"from": "old"}}}},
+    "description edit": {"event_name": "pull_request",
+                         "event": {"action": "edited", "changes": {"body": {"from": "old"}}}},
+    "base change": {"event_name": "pull_request",
+                    "event": {"action": "edited",
+                              "changes": {"base": {"ref": {"from": "main"}, "sha": {"from": "a" * 40}}}}},
+}
+
+
+def event_context(case: str, run_id: int = 101, number: int = 1, draft: bool = False) -> dict:
+    """An expression context for one event, with every earlier job successful."""
+    github = {"workflow": "W", "run_id": run_id, "ref": "refs/heads/main", **EVENTS[case]}
+    github["event"] = {**github["event"], "pull_request": {"number": number, "draft": draft}}
+    return {
+        "github": github,
+        "matrix": {"domain": "subsea", "python-version": "3.11"},
+        "needs": {"detect-domains": {"outputs": {"has-domains": "true"}}},
+    }
+
+
+def rendered(text: str, context: dict) -> Any:
+    """Evaluate a workflow value: a bare expression, or text with ``${{ }}`` parts."""
+    text = str(text).strip()
+    whole = re.fullmatch(r"\$\{\{(.*)\}\}", text, re.DOTALL)
+    if whole and "${{" not in whole[1]:
+        return evaluate_expression(whole[1], context)
+    if "${{" not in text:
+        return text
+    return re.sub(r"\$\{\{(.*?)\}\}", lambda match: str(evaluate_expression(match[1], context)), text)
+
+
+def job_state(filename: str, job_id: str, case: str, **kwargs: Any) -> tuple[str, bool]:
+    """The check name a job reports under and whether it runs, for one event.
+
+    As in Actions, a job whose condition has no ``always()`` is skipped when a
+    job it needs is skipped; every needed job that runs is taken to succeed.
+    """
+    jobs = load_workflow(filename)["jobs"]
+    job = jobs[job_id]
+    context = event_context(case, **kwargs)
+    name = rendered(job.get("name", job_id), context)
+    condition = str(job.get("if", "true"))
+    runs = truthy(rendered(condition if "${{" in condition else "${{ " + condition + " }}", context))
+    if "always()" not in condition:
+        needs = job.get("needs", [])
+        for needed in [needs] if isinstance(needs, str) else needs:
+            runs = runs and job_state(filename, needed, case, **kwargs)[1]
+    return str(name), bool(runs)
+
+
+def gate_jobs() -> list[tuple[str, str]]:
+    return [(filename, job_id) for filename in GATES for job_id in load_workflow(filename)["jobs"]]
+
+
 @pytest.mark.parametrize("filename", GATES)
 def test_pull_request_activity_types(filename: str) -> None:
-    """Code updates start the gates; a title or description edit does not.
+    """Code updates and base changes start the gates.
 
-    ``edited`` fires on every title or description edit as well as on a base
-    change. No gate reads the title or description (see the test below), so a
-    description edit re-ran every gate for an unchanged tree and, through the
-    per-pull-request concurrency group, cancelled the run already in progress.
-    ``reopened`` stays: it is rare, and it is the way to run the gates again
-    after a base change.
+    ``edited`` is the only event GitHub sends for a base change, and it also
+    fires on every title or description edit. The trigger stays, and the jobs
+    tell the two apart (the tests below).
     """
     workflow = load_workflow(filename)
     triggers = workflow["on"] if "on" in workflow else workflow[True]
     assert triggers["pull_request"]["types"] == [
-        "opened", "synchronize", "reopened", "ready_for_review"
+        "opened", "synchronize", "reopened", "edited", "ready_for_review"
     ]
     filtered = ("gmsh-meshing-tests.yml", "parametric-atlas-drift.yml")
     expected_keys = {"types", "paths"} if filename in filtered else {"types"}
     assert set(triggers["pull_request"]) == expected_keys
 
 
+@pytest.mark.parametrize(("filename", "job_id"), gate_jobs())
+def test_base_change_runs_every_job_as_a_code_update_does(filename: str, job_id: str) -> None:
+    """Changing the base changes the tree under test, so the gates run under their usual names."""
+    assert job_state(filename, job_id, "base change") == job_state(filename, job_id, "code update")
+    assert job_state(filename, job_id, "code update")[1] is True
+    assert job_state(filename, job_id, "reopen") == job_state(filename, job_id, "code update")
+
+
+@pytest.mark.parametrize(("filename", "job_id"), gate_jobs())
+@pytest.mark.parametrize("case", ("title edit", "description edit"))
+def test_metadata_edit_runs_nothing_and_replaces_no_result(filename: str, job_id: str, case: str) -> None:
+    """A title or description edit runs no job and reports under no usual check name.
+
+    A skipped job still posts a check. Under the usual name that check would
+    stand as the newest result at the head and hide an earlier failure, so every
+    job takes another name for this event and the earlier results stay newest.
+    """
+    usual, _ = job_state(filename, job_id, "code update")
+    name, runs = job_state(filename, job_id, case)
+    assert runs is False
+    usual_names = {job_state(*job, "code update")[0] for job in gate_jobs()}
+    assert name not in usual_names and name != job_id
+    assert usual.split(" (")[0].split("-")[0] in name, "the other name still says which job it is"
+
+
+@pytest.mark.parametrize(("filename", "job_id"), gate_jobs())
+def test_draft_condition_is_unchanged_by_the_edit_condition(filename: str, job_id: str) -> None:
+    drafted = {job: job_state(filename, job, "code update", draft=True)[1]
+               for job in load_workflow(filename)["jobs"]}
+    gated = DRAFT_GATED[filename]
+    assert all(drafted[job] is False for job in gated)
+    assert job_state(filename, job_id, "push")[1] is True
+
+
 @pytest.mark.parametrize("filename", GATES)
-def test_edits_cannot_skip_jobs_or_steps(filename: str) -> None:
-    """Edit-specific conditions cannot replace failing checks with skips."""
-    for job in load_workflow(filename)["jobs"].values():
-        for entry in [job, *job.get("steps", [])]:
-            condition = str(entry.get("if", ""))
-            assert not re.search(r"github\s*\.\s*event\s*\.\s*(action|changes)\b", condition)
+def test_metadata_edit_cancels_no_run(filename: str) -> None:
+    """The edit's own run sits in a group of its own; a base change supersedes like a push."""
+    def group(case: str, run_id: int) -> str:
+        return str(rendered(load_workflow(filename)["concurrency"]["group"], event_context(case, run_id)))
+
+    assert group("base change", 102) == group("code update", 101)
+    assert group("title edit", 102) != group("code update", 101)
+    assert group("title edit", 102) != group("description edit", 103)
+
+
+@pytest.mark.parametrize("filename", GATES)
+def test_edit_conditions_are_the_one_guard_on_renamed_jobs(filename: str) -> None:
+    """No other edit-specific condition exists, and no step carries one.
+
+    An edit-specific skip under the usual name would replace a failing check
+    with a skipped one. The guard is allowed only where the job name switches on
+    the same expression.
+    """
+    pattern = re.compile(r"github\s*\.\s*event\s*\.\s*(action|changes)\b")
+    for job_id, job in load_workflow(filename)["jobs"].items():
+        for step in job.get("steps", []):
+            assert not pattern.search(str(step.get("if", ""))), (job_id, step.get("name"))
+        condition = str(job.get("if", ""))
+        assert condition.count(METADATA_EDIT) == condition.count(f"!({METADATA_EDIT})") <= 1, job_id
+        assert not pattern.search(condition.replace(METADATA_EDIT, "")), job_id
+        if not job.get("needs") or "always()" in condition:
+            assert f"!({METADATA_EDIT})" in condition, f"{job_id} does not inherit a skip"
+        assert str(job.get("name", "")).count(METADATA_EDIT) == 1, job_id
 
 
 NOT_DRAFT = "github.event_name != 'pull_request' || !github.event.pull_request.draft"
@@ -76,15 +189,15 @@ NOT_DRAFT = "github.event_name != 'pull_request' || !github.event.pull_request.d
 # with them, and the aggregates carry the same condition under always().
 DRAFT_GATED = {
     "quality-gates-by-domain.yml": {
-        "detect-domains": f"${{{{ {NOT_DRAFT} }}}}",
-        "domain-tests-required": f"${{{{ always() && ({NOT_DRAFT}) }}}}",
+        "detect-domains": f"${{{{ ({NOT_DRAFT}) && !({METADATA_EDIT}) }}}}",
+        "domain-tests-required": f"${{{{ always() && ({NOT_DRAFT}) && !({METADATA_EDIT}) }}}}",
     },
     "quality-gates.yml": {
-        "quality-gates": f"${{{{ {NOT_DRAFT} }}}}",
-        "quality-gates-aggregate": f"${{{{ always() && ({NOT_DRAFT}) }}}}",
+        "quality-gates": f"${{{{ ({NOT_DRAFT}) && !({METADATA_EDIT}) }}}}",
+        "quality-gates-aggregate": f"${{{{ always() && ({NOT_DRAFT}) && !({METADATA_EDIT}) }}}}",
     },
-    "parametric-atlas-drift.yml": {"atlas-drift": f"${{{{ {NOT_DRAFT} }}}}"},
-    "gmsh-meshing-tests.yml": {"focused-tests": f"${{{{ {NOT_DRAFT} }}}}"},
+    "parametric-atlas-drift.yml": {"atlas-drift": f"${{{{ ({NOT_DRAFT}) && !({METADATA_EDIT}) }}}}"},
+    "gmsh-meshing-tests.yml": {"focused-tests": f"${{{{ ({NOT_DRAFT}) && !({METADATA_EDIT}) }}}}"},
     "docs.yml": {"docs": f"${{{{ {NOT_DRAFT} }}}}"},
     "repo-structure.yml": {"repo-structure": f"${{{{ {NOT_DRAFT} }}}}"},
     "store-data-tests.yml": {"content-store": f"${{{{ {NOT_DRAFT} }}}}"},
@@ -147,25 +260,142 @@ def test_pull_requests_test_one_interpreter() -> None:
     )
 
 
+TOKEN = re.compile(
+    r"\s*(?:(\|\||&&|==|!=|!|\(|\)|,)|'((?:[^']|'')*)'|(\d+)|([A-Za-z_][\w.\-]*))")
+
+
+def truthy(value: Any) -> bool:
+    return value not in (False, 0, "", None)
+
+
+def loosely_equal(left: Any, right: Any) -> bool:
+    """Actions equality: same types compare directly (strings without case), others as numbers."""
+    if isinstance(left, str) and isinstance(right, str):
+        return left.lower() == right.lower()
+    if type(left) is type(right) and not isinstance(left, (dict, list)):
+        return left == right
+
+    def number(value: Any) -> float:
+        if value is None or value == "":
+            return 0.0
+        if isinstance(value, bool):
+            return float(value)
+        if isinstance(value, (int, float)):
+            return float(value)
+        try:
+            return float(value)
+        except (TypeError, ValueError):
+            return float("nan")
+
+    return number(left) == number(right)
+
+
 def evaluate_expression(expression: str, context: dict[str, Any]) -> Any:
-    """Evaluate the small Actions expression subset used by concurrency."""
-    expression = expression.strip()
-    for operator in (" || ", " && ", " == "):
-        if operator in expression:
-            left, right = expression.split(operator, 1)
-            value = evaluate_expression(left, context)
-            if operator == " || ":
-                return value or evaluate_expression(right, context)
-            if operator == " && ":
-                return value and evaluate_expression(right, context)
-            return value == evaluate_expression(right, context)
-    formatted = re.fullmatch(r"format\('([^']+)', (github\.[\w.]+)\)", expression)
-    if formatted:
-        template, variable = formatted.groups()
-        return template.format(context[variable])
-    if expression.startswith("'") and expression.endswith("'"):
-        return expression[1:-1]
-    return context[expression]
+    """Evaluate the Actions expression subset the gate workflows use.
+
+    Covers ``||`` and ``&&`` (which return an operand, as in Actions), ``!``,
+    ``==``, ``!=``, parentheses, string and integer literals, ``always()``,
+    ``format()`` and context paths. A missing context path is null. A context
+    may be nested, or flat with the dotted path as the key.
+    """
+    tokens: list[tuple[str, Any]] = []
+    position = 0
+    text = expression.strip()
+    while position < len(text):
+        match = TOKEN.match(text, position)
+        assert match, f"cannot read {text[position:]!r}"
+        operator, string, integer, name = match.groups()
+        if operator:
+            tokens.append(("op", operator))
+        elif string is not None:
+            tokens.append(("value", string.replace("''", "'")))
+        elif integer:
+            tokens.append(("value", int(integer)))
+        else:
+            tokens.append(("name", name))
+        position = match.end()
+    index = 0
+
+    def peek() -> tuple[str, Any]:
+        return tokens[index] if index < len(tokens) else ("end", None)
+
+    def take() -> tuple[str, Any]:
+        nonlocal index
+        index += 1
+        return tokens[index - 1]
+
+    def lookup(name: str) -> Any:
+        if name in context:
+            return context[name]
+        value: Any = context
+        for part in name.split("."):
+            value = value.get(part) if isinstance(value, dict) else None
+        return value
+
+    def primary() -> Any:
+        kind, value = take()
+        if (kind, value) == ("op", "("):
+            inner = either()
+            assert take() == ("op", ")")
+            return inner
+        if (kind, value) == ("op", "!"):
+            return not truthy(primary())
+        if kind == "value":
+            return value
+        assert kind == "name", f"unexpected {value!r}"
+        if peek() != ("op", "("):
+            return {"true": True, "false": False, "null": None}.get(value, lookup(value))
+        take()
+        arguments = []
+        while peek() != ("op", ")"):
+            arguments.append(either())
+            if peek() == ("op", ","):
+                take()
+        take()
+        if value == "always":
+            return True
+        assert value == "format", f"function {value} is not modelled"
+        return re.sub(r"\{(\d+)\}", lambda found: str(arguments[1 + int(found[1])]), arguments[0])
+
+    def comparison() -> Any:
+        left = primary()
+        while peek() in (("op", "=="), ("op", "!=")):
+            operator = take()[1]
+            equal = loosely_equal(left, primary())
+            left = equal if operator == "==" else not equal
+        return left
+
+    def both() -> Any:
+        left = comparison()
+        while peek() == ("op", "&&"):
+            take()
+            right = comparison()
+            left = right if truthy(left) else left
+        return left
+
+    def either() -> Any:
+        left = both()
+        while peek() == ("op", "||"):
+            take()
+            right = both()
+            left = left if truthy(left) else right
+        return left
+
+    result = either()
+    assert index == len(tokens), f"unread input in {expression!r}"
+    return result
+
+
+@pytest.mark.parametrize(("expression", "expected"), [
+    ("null == ''", True), ("github.event.missing == ''", True), ("!github.event.missing", True),
+    ("!github.event.changes.base", False), ("github.event.changes.base == ''", False),
+    ("'a' && 'b' || 'c'", "b"), ("'' && 'b' || 'c'", "c"), ("!('a' == 'A')", False),
+    ("format('x-{0}-{1}', 1, 'y')", "x-1-y"), ("always() && (1 != 2)", True),
+    ("github.event.action == 'edited' && !github.event.changes.base", False),
+])
+def test_expression_model(expression: str, expected: Any) -> None:
+    context = event_context("base change")
+    assert evaluate_expression(expression, context) == expected
 
 
 def concurrency_result(
@@ -191,7 +421,7 @@ def concurrency_result(
     assert cancel.startswith("${{") and cancel.endswith("}}")
     result = evaluate_expression(cancel[3:-2], context)
     assert isinstance(result, bool)
-    return group, result
+    return str(group), result
 
 
 @pytest.mark.parametrize("filename", GATES)
@@ -225,7 +455,8 @@ def test_non_pr_runs_are_never_cancelled(filename: str, event: str) -> None:
 )
 def test_required_check_names(filename: str, job_id: str, name: str) -> None:
     """Keep the check names consumed by branch protection stable."""
-    assert load_workflow(filename)["jobs"][job_id]["name"] == name
+    for case in ("push", "code update", "reopen", "base change"):
+        assert job_state(filename, job_id, case)[0] == name
 
 
 def test_meshing_path_filters_are_preserved() -> None:
@@ -512,17 +743,18 @@ def test_push_to_main_still_runs_the_touched_domains() -> None:
 
 
 def test_no_workflow_reads_the_pull_request_title_or_description() -> None:
-    """The reason ``edited`` can go: nothing in any workflow depends on the edited text."""
+    """The reason a title or description edit needs no run: no workflow reads either text."""
     readers = [
         path.name for path in sorted(WORKFLOWS.glob("*.yml"))
-        if re.search(r"pull_request\s*\.\s*(body|title)\b|event\s*\.\s*changes\b",
+        if re.search(r"pull_request\s*\.\s*(body|title)\b|event\s*\.\s*changes\s*\.\s*(body|title)\b",
                      path.read_text(encoding="utf-8"))
     ]
     assert readers == []
 
 
 def test_no_pull_request_workflow_starts_on_edits_labels_or_reviews() -> None:
-    """Rerun rule R2: only a code update, a reopen or leaving draft starts a run."""
+    """Rerun rule R2: a code update, a reopen, leaving draft or a base change starts a run.
+    ``edited`` is accepted only on the gates, whose jobs run for a base change alone."""
     allowed = {"opened", "synchronize", "reopened", "ready_for_review"}
     for path in sorted(WORKFLOWS.glob("*.yml")):
         workflow = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -534,7 +766,8 @@ def test_no_pull_request_workflow_starts_on_edits_labels_or_reviews() -> None:
             assert event not in triggers, (path.name, event)
         pull_request = triggers.get("pull_request")
         if isinstance(pull_request, dict) and "types" in pull_request:
-            assert set(pull_request["types"]) <= allowed, path.name
+            extra = {"edited"} if path.name in GATES else set()
+            assert set(pull_request["types"]) <= allowed | extra, path.name
 
 
 LIGHT_JOBS = (
@@ -549,7 +782,7 @@ def test_light_jobs_run_on_hosted_runners_under_the_same_names(filename: str, jo
     """These jobs select, wait and summarize; they queued for hours behind test shards."""
     job = load_workflow(filename)["jobs"][job_id]
     assert job["runs-on"] == "ubuntu-latest"
-    assert job["name"] == name
+    assert job_state(filename, job_id, "code update")[0] == name
 
 
 @pytest.mark.parametrize("filename,job_id", (
@@ -667,3 +900,55 @@ def test_repo_structure_cancels_superseded_runs(
     )
     assert group == expected
     assert concurrency["cancel-in-progress"] is True
+
+
+def test_lockfile_change_runs_every_shard() -> None:
+    """With no full sweep on a merge, a dependency update must select the full matrix itself."""
+    import importlib.util
+
+    script = WORKFLOWS.parents[1] / "scripts" / "ci" / "detect_touched_domains.py"
+    spec = importlib.util.spec_from_file_location("detector_for_triggers", script)
+    assert spec is not None and spec.loader is not None
+    detector = importlib.util.module_from_spec(spec)
+    import sys as _sys
+    _sys.modules[spec.name] = detector
+    spec.loader.exec_module(detector)
+    domains = detector.parse_domains(WORKFLOWS.parents[1] / "tests" / "DOMAINS.md")
+    assert len(domains) > 1
+    for path in ("uv.lock", "pyproject.toml", "src/digitalmodel/__init__.py"):
+        assert detector.touched_domains([path], domains) == domains, path
+    assert detector.touched_domains(["README.md"], domains) == []
+
+
+def test_shard_scope_summaries_name_the_nightly_sweep() -> None:
+    """Both places that tell a reader when unselected shards run state the present schedule."""
+    import importlib.util
+
+    script = WORKFLOWS.parents[1] / "scripts" / "ci" / "report_shard_scope.py"
+    spec = importlib.util.spec_from_file_location("report_shard_scope_for_triggers", script)
+    assert spec is not None and spec.loader is not None
+    report = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(report)
+    summary = report.summary_markdown(["a"], ["a", "b"], "pull_request")
+    aggregate = (WORKFLOWS / "quality-gates-by-domain.yml").read_text(encoding="utf-8")
+    for text in (summary, aggregate):
+        assert "every push to" not in text
+    assert "nightly" in summary and "manual" in summary
+    sweep = load_workflow("full-matrix-sweep.yml")
+    triggers = sweep["on"] if "on" in sweep else sweep[True]
+    assert set(triggers) == {"schedule", "workflow_dispatch"}
+
+
+def test_rerun_rules_name_the_jobs_that_skip_drafts() -> None:
+    """R4 lists the jobs that carry the draft condition and the ones that do not."""
+    rules = (WORKFLOWS.parents[1] / "docs" / "ci" / "rerun-rules.md").read_text(encoding="utf-8")
+    ungated = []
+    for filename in GATES:
+        for job_id, job in load_workflow(filename)["jobs"].items():
+            needs = job.get("needs", [])
+            needs = [needs] if isinstance(needs, str) else needs
+            if "pull_request.draft" not in str(job.get("if", "")) and not needs:
+                ungated.append(str(job_state(filename, job_id, "code update")[0]))
+    assert ungated, "every job is draft-gated: R4 can say so and this test can go"
+    for name in ungated:
+        assert name in rules, name

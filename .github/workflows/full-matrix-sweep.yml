@@ -9,7 +9,7 @@
 #   * manual dispatch       -> on-demand "what is the true state of the matrix?"
 #
 # It no longer runs on every push to `main`: each merge then cost one full
-# matrix (about 134 runner-minutes on 16 Nov 2026) on top of the touched-domain
+# matrix (133.8 runner-minutes in run 43824707679, 16 Nov 2026) on top of the touched-domain
 # run that `Quality Gates by Domain` already makes for the same push. A push
 # that changes shared source or dependencies still selects every shard there.
 #
