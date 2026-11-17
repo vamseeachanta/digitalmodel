@@ -9,6 +9,7 @@ The exporter and its geometry remain unchanged.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-11-16 | Define a read-only scene boundary for data consumers. |
+| 2 | 2026-11-17 | Clarify native input types and direct exporter compatibility. |
 
 ## Consumer example
 
@@ -47,6 +48,11 @@ are finite and nonnegative. Booleans, numeric strings and numbers outside the
 supported floating-point range are rejected in numeric fields. Invalid input
 raises `ValueError` with a structural field path and no supplied names or values.
 Version 1 is rejected. Byte parsing and input-size bounds remain caller duties.
+
+Numeric fields require native Python `int` or `float` values, flags require
+native `bool` values, and arrays require lists. NumPy scalars (including
+`np.float64` and `np.bool_`) and tuples are rejected. Both the in-memory result
+of `layout_scene_dict(model)` and its JSON round trip satisfy these type checks.
 
 ## Qualification limits
 

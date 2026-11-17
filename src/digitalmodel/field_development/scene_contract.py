@@ -115,7 +115,6 @@ def validate_scene(scene: Any) -> dict[str, Any]:
     )
     for i, asset in enumerate(assets):
         field = f"scene.assets[{i}]"
-        asset = _mapping(asset, field)
         for key in ("name", "subtype"):
             _string(asset.get(key), f"{field}.{key}")
         _boolean(asset.get("on_surface"), f"{field}.on_surface")

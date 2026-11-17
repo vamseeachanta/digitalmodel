@@ -6,6 +6,7 @@
 from copy import deepcopy
 import json
 
+import numpy as np
 import pytest
 
 from digitalmodel.field_development.scene_contract import validate_scene
@@ -248,6 +249,20 @@ def test_missing_exporter_field_is_rejected_without_mutation(scene, path):
     assert scene == before
 
 
+@pytest.mark.parametrize(
+    "path,value",
+    [
+        (("assets", 0, "x_m"), np.float64(0.0)),
+        (("is_subsea",), np.bool_(True)),
+        (("surface", "x_m"), (0.0, 10.0)),
+    ],
+)
+def test_rejects_non_native_scene_values(scene, path, value):
+    replace(scene, path, value)
+    with pytest.raises(ValueError):
+        validate_scene(scene)
+
+
 def test_existing_exporter_round_trip(tmp_path):
     model = build_layout_model(
         {
@@ -281,11 +296,14 @@ def test_existing_exporter_round_trip(tmp_path):
         }
     )
     dest = tmp_path / "scene.json"
-    export_layout_scene_json(model, dest)
-    exported = json.loads(dest.read_text(encoding="utf-8"))
-    assert exported == layout_scene_dict(model)
-    assert validate_scene(exported) == {
-        "schema": exported["schema"],
+    native_scene = layout_scene_dict(model)
+    expected = {
+        "schema": native_scene["schema"],
         "asset_count": len(model.assets),
         "connection_count": len(model.connections),
     }
+    assert validate_scene(native_scene) == expected
+    export_layout_scene_json(model, dest)
+    exported = json.loads(dest.read_text(encoding="utf-8"))
+    assert exported == native_scene
+    assert validate_scene(exported) == expected
