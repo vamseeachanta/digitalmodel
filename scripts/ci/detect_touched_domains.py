@@ -582,10 +582,13 @@ def main(argv: list[str] | None = None) -> int:
             selected = domains
         else:
             try:
+                # The comparison start is separate from --base: record routes below
+                # are still read at the base tip, whose records the merged tree holds.
+                diff_start = args.base
                 if args.diff_from == "merge-base":
                     # No common ancestor is handled like an unreachable base below.
-                    args.base = git_merge_base(args.base, args.head)
-                changed = git_changed_files(args.base, args.head)
+                    diff_start = git_merge_base(args.base, args.head)
+                changed = git_changed_files(diff_start, args.head)
             except subprocess.CalledProcessError:
                 # Base SHA unreachable: zero-SHA new branch or force-push pruned
                 # history. Fail SAFE to the full matrix when asked; otherwise let
@@ -597,7 +600,7 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 try:
                     pin_domains: dict[str, set[str]] = {}
-                    for ref in dict.fromkeys((args.base, args.head)):
+                    for ref in dict.fromkeys((args.base, diff_start, args.head)):
                         for path, names in git_pinned_domains(ref, domains).items():
                             pin_domains.setdefault(path, set()).update(names)
                 except (subprocess.CalledProcessError, OSError):
@@ -607,7 +610,7 @@ def main(argv: list[str] | None = None) -> int:
                     selected = touched_domains(
                         changed,
                         domains,
-                        args.base,
+                        diff_start,
                         args.head,
                         pinned_domains=pin_domains,
                     )
