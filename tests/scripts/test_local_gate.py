@@ -262,7 +262,7 @@ def test_gate_refuses_low_disk_before_any_fetch(monkeypatch, tmp_path: Path) -> 
     monkeypatch.setattr(gate, "pull_request", lambda *a, **kw: pytest.fail("no API call below the floor"))
     args = gate.parse_args(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository",
                             "--work-root", str(tmp_path)])
-    with pytest.raises(gate.GateError, match="below the 20 GB floor"):
+    with pytest.raises(gate.GateError, match="work root volume has 5 GB free, below the 20 GB floor"):
         gate.gate(args, tmp_path / "run", tmp_path / "wt")
 
 
@@ -602,3 +602,78 @@ def test_budget_expiring_during_checkout_keeps_the_other_results() -> None:
         raise gate.GateError("git worktree add exited 128")
 
     assert gate.run_queued(gate.Module("m", ["one"]), 100.0, broken, clock=Clock()).status == "fail"
+
+
+# --- disk location rule ------------------------------------------------------
+
+@pytest.fixture(autouse=True)
+def _data_volume(monkeypatch):
+    """Test folders sit on the system volume; the rule itself is tested below."""
+    monkeypatch.setattr(gate, "on_root_volume", lambda path: False)
+    monkeypatch.setattr(gate, "free_gb", lambda path: 500.0)
+
+
+def _args(tmp_path: Path, *extra: str):
+    return gate.parse_args(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository",
+                            "--work-root", str(tmp_path), *extra])
+
+
+def test_work_root_on_the_root_volume_is_refused_before_anything_is_written(monkeypatch, tmp_path: Path) -> None:
+    work = tmp_path / "work"
+    work.mkdir()
+    monkeypatch.setattr(gate, "on_root_volume", lambda path: True)
+    monkeypatch.setattr(gate, "free_gb", lambda path: 500.0)
+    monkeypatch.setattr(gate, "pull_request", lambda *a, **kw: pytest.fail("no API call"))
+    posted: list[str] = []
+    monkeypatch.setattr(gate, "post_status", lambda repo, sha, state, text, **kw: posted.append(state))
+    code = gate.main(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository", "--work-root", str(work)])
+    assert code == gate.EXIT_ERROR and posted == ["error"]
+    assert list(work.iterdir()) == [], "nothing may be written to a refused volume"
+
+
+def test_cache_on_the_root_volume_is_refused(monkeypatch, tmp_path: Path) -> None:
+    cache = tmp_path / "elsewhere" / "cache"
+    monkeypatch.setattr(gate, "on_root_volume", lambda path: Path(path) == cache)
+    monkeypatch.setattr(gate, "free_gb", lambda path: 500.0)
+    with pytest.raises(gate.GateError, match="cache folder .* root volume"):
+        gate.check_volumes(_args(tmp_path, "--cache-dir", str(cache)))
+
+
+def test_root_volume_needs_an_explicit_flag(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(gate, "on_root_volume", lambda path: True)
+    monkeypatch.setattr(gate, "free_gb", lambda path: 500.0)
+    gate.check_volumes(_args(tmp_path, "--allow-root-volume"))
+
+
+def test_each_volume_is_checked_for_free_space(monkeypatch, tmp_path: Path) -> None:
+    cache = tmp_path / "cache"
+    monkeypatch.setattr(gate, "free_gb", lambda path: 5.0 if Path(path) == cache else 500.0)
+    with pytest.raises(gate.GateError, match="cache folder volume has 5 GB free, below the 20 GB floor"):
+        gate.check_volumes(_args(tmp_path, "--cache-dir", str(cache)))
+
+
+def test_folders_come_from_the_environment_when_not_given(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("LOCAL_GATE_WORK_ROOT", str(tmp_path / "w"))
+    monkeypatch.setenv("LOCAL_GATE_CACHE_DIR", str(tmp_path / "c"))
+    args = gate.parse_args(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository"])
+    assert (args.work_root, args.cache_dir) == (tmp_path / "w", tmp_path / "c")
+    monkeypatch.delenv("LOCAL_GATE_CACHE_DIR")
+    args = gate.parse_args(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository"])
+    assert args.cache_dir == tmp_path / "w" / "uv-cache"
+    monkeypatch.delenv("LOCAL_GATE_WORK_ROOT")
+    with pytest.raises(SystemExit):
+        gate.parse_args(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository"])
+
+
+def test_module_queued_when_the_volume_falls_below_the_floor_is_not_run() -> None:
+    """Caches grow while modules run; a module is not started into a volume below the floor."""
+    result = gate.run_queued(gate.Module("late", ["one"]), 100.0,
+                             lambda module: pytest.fail("no checkout below the floor"),
+                             clock=Clock(), has_room=lambda: False)
+    assert result.status == "not-run"
+
+
+def test_root_volume_probe_uses_the_nearest_existing_folder(tmp_path: Path) -> None:
+    real = _load().on_root_volume  # a fresh copy: the fixture replaced the shared one
+    assert real(tmp_path / "not" / "created" / "yet") == real(tmp_path)
+    assert real(Path(os.path.abspath(os.sep))) is True

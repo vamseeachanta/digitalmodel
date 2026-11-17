@@ -212,9 +212,38 @@ def run_shell(command: str, cwd: Path, env: dict[str, str], log: Path, timeout: 
             LIVE.discard(proc)
 
 
+def nearest_existing(path: Path) -> Path:
+    """``path``, or its closest parent that exists (the volume a new folder would land on)."""
+    probe = Path(os.path.abspath(path))
+    while not probe.exists() and probe != probe.parent:
+        probe = probe.parent
+    return probe
+
+
 def free_gb(path: Path) -> float:
     """Free space on the volume holding ``path``."""
-    return shutil.disk_usage(path).free / 1024 ** 3
+    return shutil.disk_usage(nearest_existing(path)).free / 1024 ** 3
+
+
+def on_root_volume(path: Path) -> bool:
+    """Whether ``path`` is on the volume that holds the root file system."""
+    return os.stat(nearest_existing(path)).st_dev == os.stat(os.path.abspath(os.sep)).st_dev
+
+
+def check_volumes(args: argparse.Namespace) -> None:
+    """Refuse a work root or cache on the root volume, or on a volume below the free-space floor.
+
+    A full run writes tens of gigabytes of package cache and several checkouts with their
+    environments. On the root volume that growth takes the host's own free space, so the
+    root volume is refused unless ``--allow-root-volume`` is given.
+    """
+    for label, path in (("work root", args.work_root), ("cache folder", args.cache_dir)):
+        if not args.allow_root_volume and on_root_volume(path):
+            raise GateError(f"{label} is on the root volume; use a data volume or pass --allow-root-volume")
+        available = free_gb(path)
+        if available < args.min_free_gb:
+            raise GateError(f"{label} volume has {available:.0f} GB free, "
+                            f"below the {args.min_free_gb:.0f} GB floor")
 
 
 def plan_modules(matrix: dict, plan: dict, tip: str, scratch: str) -> list[Module]:
@@ -301,7 +330,8 @@ def run_module(module: Module, cwd: Path, env: dict[str, str], logs: Path, deadl
 
 
 def run_queued(module: Module, deadline: float, body: Callable[[Module], Result],
-               clock: Callable[[], float] | None = None) -> Result:
+               clock: Callable[[], float] | None = None,
+               has_room: Callable[[], bool] | None = None) -> Result:
     """Run ``body`` (checkout, commands, cleanup) for a module that has waited for a worker.
 
     A module whose turn comes after the budget or after a stop is ``not-run``. A helper that
@@ -310,6 +340,10 @@ def run_queued(module: Module, deadline: float, body: Callable[[Module], Result]
     """
     clock = time.monotonic if clock is None else clock
     if clock() >= deadline or STOP.is_set():
+        return Result(module.name, "not-run")
+    if has_room is not None and not has_room():
+        # The cache and the checkouts grow during a run; the floor is checked again per module.
+        print(f"local-gate: {module.name} not run: a volume is below the free-space floor", flush=True)
         return Result(module.name, "not-run")
     try:
         return body(module)
@@ -409,18 +443,29 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--sha", required=True, help="full 40-character head commit")
     parser.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY"),
                         help="owner/name; defaults to GITHUB_REPOSITORY")
-    parser.add_argument("--work-root", type=Path, required=True,
-                        help="directory on a volume with room for the mirror, worktrees and caches")
+    parser.add_argument("--work-root", type=Path, default=os.environ.get("LOCAL_GATE_WORK_ROOT"),
+                        help="folder for the mirror, checkouts and run logs, on a data volume; "
+                             "defaults to LOCAL_GATE_WORK_ROOT")
+    parser.add_argument("--cache-dir", type=Path, default=os.environ.get("LOCAL_GATE_CACHE_DIR"),
+                        help="package cache folder, on a data volume; defaults to LOCAL_GATE_CACHE_DIR, "
+                             "else <work-root>/uv-cache")
+    parser.add_argument("--allow-root-volume", action="store_true",
+                        help="accept a work root or cache on the volume of the root file system")
     parser.add_argument("--jobs", type=int, default=4, help="modules run in parallel")
     parser.add_argument("--budget-seconds", type=int, default=3600)
     parser.add_argument("--module-timeout", type=int, default=1500)
     parser.add_argument("--min-free-gb", type=float, default=20.0,
-                        help="refuse to start when the work-root volume has less free space")
+                        help="refuse to start, and start no further module, when the work-root or "
+                             "cache volume has less free space")
     parser.add_argument("--python", default="3.11",
                         help="version or interpreter path; give the path of the interpreter the hosted jobs use")
     parser.add_argument("--no-post", action="store_true", help="run and report, post no status")
     parser.add_argument("--keep", action="store_true", help="keep the worktree for inspection")
     args = parser.parse_args(argv)
+    if args.work_root is None:
+        parser.error("provide --work-root or set LOCAL_GATE_WORK_ROOT")
+    args.work_root = Path(args.work_root)
+    args.cache_dir = Path(args.cache_dir) if args.cache_dir else args.work_root / "uv-cache"
     if not re.fullmatch(r"[0-9a-f]{40}", args.sha):
         parser.error("--sha must be a full lower-case commit id")
     if not args.repo or not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", args.repo):
@@ -438,9 +483,7 @@ def gate(args: argparse.Namespace, run_dir: Path, tree_root: Path) -> tuple[str,
     """
     started = time.monotonic()
     deadline = started + args.budget_seconds
-    available = free_gb(args.work_root)
-    if available < args.min_free_gb:
-        raise GateError(f"work volume has {available:.0f} GB free, below the {args.min_free_gb:.0f} GB floor")
+    check_volumes(args)
     run = deadline_runner(deadline)
     info = pull_request(args.repo, args.pr, run=run)
     if info["head"] != args.sha or info["state"] != "open":
@@ -459,7 +502,7 @@ def gate(args: argparse.Namespace, run_dir: Path, tree_root: Path) -> tuple[str,
     scratch.mkdir(parents=True)
     logs.mkdir()
     env = unbound_env()
-    env.update(UV_CACHE_DIR=str(args.work_root / "uv-cache"),
+    env.update(UV_CACHE_DIR=str(args.cache_dir),
                UV_PYTHON_INSTALL_DIR=str(args.work_root / "uv-python"),
                UV_PYTHON=args.python, PYTHONDONTWRITEBYTECODE="1", TMPDIR=str(scratch),
                GITHUB_BASE_REF=info["base"], GITHUB_SHA=args.sha, GITHUB_REPOSITORY=args.repo)
@@ -492,7 +535,11 @@ def gate(args: argparse.Namespace, run_dir: Path, tree_root: Path) -> tuple[str,
         print(f"local-gate: {result.name} {result.status} in {result.seconds:.0f} s", flush=True)
         return result
 
-    results = run_modules(modules, args.jobs, lambda module: run_queued(module, deadline, run_one))
+    def has_room() -> bool:
+        return min(free_gb(args.work_root), free_gb(args.cache_dir)) >= args.min_free_gb
+
+    results = run_modules(modules, args.jobs,
+                          lambda module: run_queued(module, deadline, run_one, has_room=has_room))
     shutil.rmtree(scratch, ignore_errors=True)
     state, description = summarize(results, time.monotonic() - started, tip, stopped=STOP.is_set())
     return state, description, results
@@ -514,6 +561,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if not args.work_root.is_dir():
             raise GateError("work root does not exist")
+        check_volumes(args)  # before the first write
         (args.work_root / "wt").mkdir(exist_ok=True)
         if worktree.exists():
             raise GateError("a gate run for this head is already present")

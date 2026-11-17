@@ -116,6 +116,18 @@ These runs are not advisory:
 
 ## Host requirements
 
+- A data volume for the work root and the package cache, not the volume of
+  the root file system. The gate refuses a work root or cache folder on the
+  root volume unless `--allow-root-volume` is given, and refuses either volume
+  below `--min-free-gb`; it checks before its first write and again before each
+  module starts, and a module that would start below the floor is `not-run`.
+  The folders come from `--work-root` and `--cache-dir`, or from
+  `LOCAL_GATE_WORK_ROOT` and `LOCAL_GATE_CACHE_DIR`; the cache defaults to
+  `<work-root>/uv-cache`. The reason is measured: a 21-shard trial on
+  17 Nov 2026 grew the package cache to 44 GB at up to about 2 GB a minute on a
+  root volume (unverified here: the host log is not retained in this
+  repository). The gate does not prune the cache; clearing it is a host
+  maintenance task.
 - A native Linux file system for `--work-root`. A trial on an NTFS volume
   mounted through FUSE reportedly failed during package installation with
   `No space left on device` while reporting 120 GB free. This trial observation
