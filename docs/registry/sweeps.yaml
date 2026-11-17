@@ -79,6 +79,6 @@ families:
       - {issue: 1528, reason: Establish a reviewed coupled roll model and workflow}
     unresolved:
       vessel_id: Vessel eligibility and input rights require review
-      base_input: The coupled roll model and workflow remain prerequisites
+      base_input: The coupled roll model remains unreviewed; coupled-roll-study is proposed and unregistered
       grid: Roll-period and fill-fraction ranges require a reviewed basis
       batch_size: Mini-run sizing requires runtime and resource evidence
