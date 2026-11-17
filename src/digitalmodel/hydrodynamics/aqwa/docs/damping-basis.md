@@ -61,6 +61,8 @@ with both ratios explicitly in percent; 5% versus 2% and B = 1000 gives 1500.
 An unlabelled target below 1 is rejected as ambiguous. Explicit percent permits
 sub-percent targets. Zero current damping cannot determine a scale and raises.
 
+Regression evidence: `tests/hydrodynamics/aqwa/test_critical_ratio_scaling.py`.
+
 ## DAT conventions
 
 AQWA Reference Manual 2025 R1 [section 10.3](https://ansyshelp.ansys.com/public/Views/Secured/corp/v251/en/aqwa_ref/aqwaref_deck6_freq_perd_hrtz.html)
