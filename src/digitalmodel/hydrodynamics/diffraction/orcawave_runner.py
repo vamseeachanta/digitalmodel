@@ -57,6 +57,10 @@ from digitalmodel.hydrodynamics.diffraction.diffraction_units import (
     rad_per_s_to_period_s,
     tonnes_to_kg,
 )
+from digitalmodel.hydrodynamics.diffraction.export_contract import (
+    ExportDisposition,
+    describe_exports,
+)
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 from digitalmodel.hydrodynamics.diffraction.mesh_packaging import (
     copy_spec_meshes,
@@ -208,8 +212,9 @@ class RunResult:
 
     Output contract (#611): explicit result paths replace the previous
     ``log_file = .owr`` overload. ``owr_path`` / ``data_file`` populate for real
-    when OrcaWave produces them; ``xlsx_path`` / ``report_path`` are reserved for
-    a later exporter/report phase and remain ``None`` here (locked decision D2).
+    when OrcaWave produces them. Automatic XLSX/report production is deferred;
+    ``export_dispositions`` describes the current compatible path fields as
+    ``NOT_PRODUCED`` or ``PATH_RECORDED_UNVERIFIED``, without checking files.
 
     Validation contract (#625): ``validation_verdict`` defaults to ``"SKIPPED"``
     and uses canonical strings ``PASS``/``WARNING``/``FAIL``/``ERROR``/``SKIPPED``
@@ -246,6 +251,11 @@ class RunResult:
     orcf_api_version: str | None = None
     thread_count: int | None = None
     assumption_ledger: "AssumptionLedger | None" = None
+
+    @property
+    def export_dispositions(self) -> dict[str, ExportDisposition]:
+        """Describe current XLSX/report paths without claiming export success."""
+        return describe_exports(self.xlsx_path, self.report_path)
 
 
 # Owner resource policy (dm#1553/#1555): one OrcaWave solve may use ~90% of the
