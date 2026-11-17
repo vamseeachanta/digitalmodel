@@ -228,7 +228,16 @@ def with_named_units(root: Path, payload: dict) -> dict:
 
 
 def render(payload: dict) -> str:
-    return json.dumps(payload, indent=1, sort_keys=True) + "\n"
+    """One row per line, keys sorted, so a regenerated table reads as a row-by-row difference."""
+    def rows(mapping: dict) -> str:
+        body = ",\n".join(f"  {json.dumps(key)}: {json.dumps(mapping[key])}" for key in sorted(mapping))
+        return "{\n" + body + "\n }" if mapping else "{}"
+
+    return ("{\n"
+            f' "trace": {json.dumps(payload.get("trace", {}), sort_keys=True)},\n'
+            f' "routes": {rows(payload["routes"])},\n'
+            f' "unrouted": {rows(payload.get("unrouted", {}))}\n'
+            "}\n")
 
 
 def shard_states(results: list[Path]) -> dict[str, str]:
