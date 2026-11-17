@@ -37,6 +37,8 @@ from pathlib import Path
 from typing import Callable
 
 CONTEXT = "local-gate"
+# Local compatibility policy, not a documented numeric API bound. The API asks
+# for a short description: https://docs.github.com/en/rest/commits/statuses#create-a-commit-status
 DESCRIPTION_LIMIT = 140
 HARNESS_JOB = "ci-harness-tests"
 HARNESS_STEP = "Run harness tests"
@@ -83,14 +85,62 @@ Runner = Callable[..., "subprocess.CompletedProcess[str]"]
 
 
 def capture(cmd: list[str], cwd: Path | None = None, env: dict[str, str] | None = None,
-            check: bool = True) -> subprocess.CompletedProcess[str]:
-    """Run a short helper command and capture its text output."""
-    done = subprocess.run(cmd, cwd=cwd, env=env, capture_output=True, text=True,
-                          encoding="utf-8", errors="replace", check=False)
+            check: bool = True, timeout: float = 60.0) -> subprocess.CompletedProcess[str]:
+    """Capture a bounded helper; terminate its whole process group on timeout."""
+    if timeout <= 0:
+        raise GateError("overall budget expired before helper could start")
+    proc = subprocess.Popen(cmd, cwd=cwd, env=env, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, text=True, encoding="utf-8",
+                            errors="replace", start_new_session=True)
+    try:
+        stdout, stderr = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired as exc:
+        stop_group(proc)
+        proc.communicate(timeout=1.0)
+        raise GateError(f"{' '.join(cmd[:3])} timed out") from exc
+    done = subprocess.CompletedProcess(cmd, proc.returncode, stdout, stderr)
     if check and done.returncode != 0:
         tail = (done.stderr or done.stdout).strip()[-300:]
         raise GateError(f"{' '.join(cmd[:3])} exited {done.returncode}: {tail}")
     return done
+
+
+def deadline_runner(deadline: float, run: Runner | None = None,
+                    clock: Callable[[], float] | None = None) -> Runner:
+    """Give every setup/helper subprocess only the remaining overall budget."""
+    run = capture if run is None else run
+    clock = time.monotonic if clock is None else clock
+
+    def bounded(cmd: list[str], **kwargs) -> subprocess.CompletedProcess[str]:
+        remaining = deadline - clock()
+        if remaining <= 0:
+            raise GateError("overall budget expired before helper could start")
+        done = run(cmd, timeout=remaining, **kwargs)
+        if clock() >= deadline:
+            raise GateError("overall budget expired during helper")
+        return done
+
+    return bounded
+
+
+def stop_group(proc: subprocess.Popen) -> None:
+    """Send TERM, wait at most one second, then kill the whole group."""
+    try:
+        os.killpg(proc.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        pass
+    try:
+        proc.wait(timeout=1.0)
+    except subprocess.TimeoutExpired:
+        pass
+    finally:
+        # wait() observes only the leader. Descendants can ignore TERM and keep
+        # running (or retain capture pipes) after that leader has been reaped.
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        proc.wait(timeout=1.0)
 
 
 def run_shell(command: str, cwd: Path, env: dict[str, str], log: Path, timeout: float) -> int:
@@ -103,16 +153,7 @@ def run_shell(command: str, cwd: Path, env: dict[str, str], log: Path, timeout: 
         try:
             return proc.wait(timeout=max(timeout, 0.1))
         except subprocess.TimeoutExpired:
-            for sig in (signal.SIGTERM, signal.SIGKILL):
-                try:
-                    os.killpg(proc.pid, sig)
-                except (ProcessLookupError, PermissionError, AttributeError):
-                    proc.kill()
-                try:
-                    proc.wait(timeout=15)
-                    break
-                except subprocess.TimeoutExpired:
-                    continue
+            stop_group(proc)
             return 124
 
 
@@ -135,6 +176,14 @@ def plan_modules(matrix: dict, plan: dict, tip: str, scratch: str) -> list[Modul
         "--repo . --config config/repo_structure.yml",
         "uv run --no-project python scripts/enforcement/check-engineering-register.py "
         f"--diff {shlex.quote(tip)}",
+    ])
+    lint.commands.extend([
+        "uv run --no-project --with pytest --with pyyaml --with ruff==0.15.1 python -m pytest "
+        "tests/scripts/test_check_text_encoding.py -q -rA -p no:cacheprovider "
+        f"--basetemp={shlex.quote(scratch + '/text-encoding-tests')}",
+        "uv run --no-project --with pytest --with pytest-asyncio --with pyyaml python -m pytest "
+        "tests/repo_structure -q -rA -p no:cacheprovider "
+        f"--basetemp={shlex.quote(scratch + '/repo-structure-tests')}",
     ])
     modules = [lint, Module("ci-harness", [plan["harness"]])]
     for entry in matrix.get("include", []):
@@ -199,7 +248,7 @@ def run_modules(modules: list[Module], jobs: int, run_one: Callable[[Module], Re
 
 
 def summarize(results: list[Result], seconds: float, tip: str) -> tuple[str, str]:
-    """Return the commit-status state and a description within the API limit.
+    """Return the commit-status state and a description within the local cap.
 
     The description starts with the full base commit the head was merged into,
     so a merge step can require a result for the base tip it is about to merge into.
@@ -230,27 +279,26 @@ def pull_request(repo: str, number: int, run: Runner = capture) -> dict:
     return dict(json.loads(out.stdout))
 
 
-def prepare_tree(args: argparse.Namespace, base: str, worktree: Path) -> str:
+def prepare_tree(args: argparse.Namespace, base: str, worktree: Path, run: Runner = capture) -> str:
     """Fetch into the gate's own mirror and build the merged tree; return the base tip."""
     mirror = args.work_root / "mirror.git"
     url = f"https://github.com/{args.repo}.git"
     if not mirror.exists():
         # A complete clone, as the workflows use (fetch-depth: 0): citation and pin tests read
         # old revisions, and a partial clone would fetch each missing object over the network.
-        capture(["git", "clone", "--quiet", "--bare", url, str(mirror)])
+        run(["git", "clone", "--quiet", "--bare", url, str(mirror)])
     git = ["git", "-C", str(mirror)]
-    capture(git + ["fetch", "--quiet", "--no-tags", url,
-                   f"+refs/heads/{base}:refs/local-gate/base",
-                   f"+refs/pull/{args.pr}/head:refs/local-gate/pr-{args.pr}"])
-    fetched = capture(git + ["rev-parse", f"refs/local-gate/pr-{args.pr}"]).stdout.strip()
+    run(git + ["fetch", "--quiet", "--no-tags", url,
+               f"+refs/heads/{base}:refs/local-gate/base",
+               f"+refs/pull/{args.pr}/head:refs/local-gate/pr-{args.pr}"])
+    fetched = run(git + ["rev-parse", f"refs/local-gate/pr-{args.pr}"]).stdout.strip()
     if fetched != args.sha:
         raise StaleHead(f"fetched head {fetched[:8]} is not the requested {args.sha[:8]}")
-    tip = capture(git + ["rev-parse", "refs/local-gate/base"]).stdout.strip()
-    capture(git + ["worktree", "prune"])
-    capture(git + ["worktree", "add", "--quiet", "--detach", str(worktree), tip])
-    merge = capture(["git", "-C", str(worktree), "-c", "user.name=local-gate",
-                     "-c", "user.email=local-gate@users.noreply.github.com",
-                     "merge", "--no-ff", "--no-edit", args.sha], check=False)
+    tip = run(git + ["rev-parse", "refs/local-gate/base"]).stdout.strip()
+    run(git + ["worktree", "prune"])
+    run(git + ["worktree", "add", "--quiet", "--detach", str(worktree), tip])
+    merge = run(["git", "-C", str(worktree), "merge", "--no-ff", "--no-edit", args.sha],
+                check=False)
     if merge.returncode != 0:
         raise MergeConflict(f"head does not merge into base {tip[:8]}")
     return tip
@@ -279,7 +327,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     parser.add_argument("--pr", type=int, required=True)
     parser.add_argument("--sha", required=True, help="full 40-character head commit")
-    parser.add_argument("--repo", default="vamseeachanta/digitalmodel")
+    parser.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY"),
+                        help="owner/name; defaults to GITHUB_REPOSITORY")
     parser.add_argument("--work-root", type=Path, required=True,
                         help="directory on a volume with room for the mirror, worktrees and caches")
     parser.add_argument("--jobs", type=int, default=4, help="modules run in parallel")
@@ -294,8 +343,8 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     args = parser.parse_args(argv)
     if not re.fullmatch(r"[0-9a-f]{40}", args.sha):
         parser.error("--sha must be a full lower-case commit id")
-    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", args.repo):
-        parser.error("--repo must be owner/name")
+    if not args.repo or not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", args.repo):
+        parser.error("provide --repo owner/name or set GITHUB_REPOSITORY")
     if args.pr <= 0 or args.jobs <= 0 or args.budget_seconds <= 0 or args.module_timeout <= 0:
         parser.error("--pr, --jobs, --budget-seconds and --module-timeout must be positive")
     return args
@@ -312,7 +361,8 @@ def gate(args: argparse.Namespace, run_dir: Path, tree_root: Path) -> tuple[str,
     available = free_gb(args.work_root)
     if available < args.min_free_gb:
         raise GateError(f"work volume has {available:.0f} GB free, below the {args.min_free_gb:.0f} GB floor")
-    info = pull_request(args.repo, args.pr)
+    run = deadline_runner(deadline)
+    info = pull_request(args.repo, args.pr, run=run)
     if info["head"] != args.sha or info["state"] != "open":
         raise StaleHead(f"pull request head is {str(info['head'])[:8]} ({info['state']})")
     if info["head_repo"] != args.repo:
@@ -320,8 +370,8 @@ def gate(args: argparse.Namespace, run_dir: Path, tree_root: Path) -> tuple[str,
     if not re.fullmatch(r"[A-Za-z0-9._/-]{1,100}", info["base"]):
         raise GateError("unexpected base branch name")
     worktree = tree_root / "plan"
-    tip = prepare_tree(args, info["base"], worktree)
-    merged = capture(["git", "-C", str(worktree), "rev-parse", "HEAD"]).stdout.strip()
+    tip = prepare_tree(args, info["base"], worktree, run=run)
+    merged = run(["git", "-C", str(worktree), "rev-parse", "HEAD"]).stdout.strip()
     mirror = args.work_root / "mirror.git"
 
     scratch = run_dir / "scratch"
@@ -332,25 +382,25 @@ def gate(args: argparse.Namespace, run_dir: Path, tree_root: Path) -> tuple[str,
     env.update(UV_CACHE_DIR=str(args.work_root / "uv-cache"),
                UV_PYTHON_INSTALL_DIR=str(args.work_root / "uv-python"),
                UV_PYTHON=args.python, PYTHONDONTWRITEBYTECODE="1", TMPDIR=str(scratch),
-               GITHUB_BASE_REF=info["base"], GITHUB_SHA=args.sha)
+               GITHUB_BASE_REF=info["base"], GITHUB_SHA=args.sha, GITHUB_REPOSITORY=args.repo)
     # Prefer an interpreter installed on the host over a downloaded standalone build: the
     # standalone 3.11 build lacks fcntl.F_SEAL_WRITE, which tests/workflows needs.
     env.setdefault("UV_PYTHON_PREFERENCE", "system")
     uv = ["uv", "run", "--no-sources"]
-    detect = capture(uv + ["python", "scripts/ci/detect_touched_domains.py", "--mode", "touched",
-                           "--base", tip, "--head", args.sha, "--domains-file", "tests/DOMAINS.md",
-                           "--output-format", "json-matrix"], cwd=worktree, env=env)
+    detect = run(uv + ["python", "scripts/ci/detect_touched_domains.py", "--mode", "touched",
+                       "--base", tip, "--head", args.sha, "--domains-file", "tests/DOMAINS.md",
+                       "--output-format", "json-matrix"], cwd=worktree, env=env)
     matrix = json.loads(detect.stdout.strip().splitlines()[-1])
-    reader = capture(uv + ["--with", "pyyaml==6.0.2", "python", "-c", PLAN_READER, GATES_FILE,
-                           DOMAIN_WORKFLOW, HARNESS_JOB, HARNESS_STEP], cwd=worktree, env=env)
+    reader = run(uv + ["--with", "pyyaml==6.0.2", "python", "-c", PLAN_READER, GATES_FILE,
+                       DOMAIN_WORKFLOW, HARNESS_JOB, HARNESS_STEP], cwd=worktree, env=env)
     plan = json.loads(reader.stdout.strip().splitlines()[-1])
     modules = plan_modules(matrix, plan, tip, str(scratch))
     print(f"local-gate: {len(modules)} modules: {', '.join(m.name for m in modules)}", flush=True)
 
     def run_one(module: Module) -> Result:
         tree = tree_root / module.name
-        added = capture(["git", "-C", str(mirror), "worktree", "add", "--quiet", "--detach",
-                         str(tree), merged], check=False)
+        added = run(["git", "-C", str(mirror), "worktree", "add", "--quiet", "--detach",
+                     str(tree), merged], check=False)
         if added.returncode != 0:
             print(f"local-gate: {module.name} checkout failed", flush=True)
             return Result(module.name, "fail", 0.0, added.returncode)
