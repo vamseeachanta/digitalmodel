@@ -22,11 +22,11 @@ install-dev:
 
 install-test:
 	@echo "Installing test dependencies..."
-	@uv sync --no-sources --extra test
+	@uv run --no-project --python 3.11 --no-sources --with-editable '.[test]' python -c "print('Test dependencies ready')"
 
 test:
 	@echo "Running tests..."
-	@uv run --no-sources --with-editable '.[test]' python -m pytest $(TEST_ARGS)
+	@uv run --no-project --python 3.11 --no-sources --with-editable '.[test]' python -m pytest $(TEST_ARGS)
 
 lint:
 	@echo "Running linters..."

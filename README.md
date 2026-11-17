@@ -204,16 +204,17 @@ digitalmodel registers 27 CLI entry points. Run `digitalmodel --help` for the fu
 
 ## Testing
 
-Run from the repository root with Python 3.11 (the CI version) and `uv` installed.
-The command below installs the package and the complete `test` extra, including
-pytest plugins and collection-time dependencies, using the same invocation as CI.
-To preserve an existing environment, set `UV_PROJECT_ENVIRONMENT` to a new,
-disposable directory before running these commands.
+Run from the repository root with `uv` installed. The commands below install the
+package and the complete `test` extra, including pytest plugins and collection-time
+dependencies, using the same extra and public-index dependencies as CI.
+`--no-project` uses an isolated cached environment without resolving the project
+or rewriting `uv.lock`; an existing project environment is preserved.
+`--python 3.11` explicitly selects the interpreter version used by CI.
 
 Start with the offline-capable documentation contract:
 
 ```bash
-uv run --no-sources --with-editable '.[test]' python -m pytest tests/contracts/test_test_environment_docs.py -q -p no:cacheprovider
+uv run --no-project --python 3.11 --no-sources --with-editable '.[test]' python -m pytest tests/contracts/test_test_environment_docs.py -q -p no:cacheprovider
 ```
 
 Dependency installation may access the public package index; the contract tests
@@ -223,11 +224,11 @@ to `uv run` to prohibit network access during subsequent runs.
 Select a bounded test directory separately, for example:
 
 ```bash
-uv run --no-sources --with-editable '.[test]' python -m pytest tests/contracts/ -q
+uv run --no-project --python 3.11 --no-sources --with-editable '.[test]' python -m pytest tests/contracts/ -q
 ```
 
-With `make` available, `make install-test` provisions the project environment with
-`uv sync --no-sources --extra test`. `make test` uses the same CI invocation;
+With `make` available, `make install-test` provisions the isolated cached test
+environment with the same flags. `make test` runs pytest in that environment;
 override its default whole-suite arguments for a bounded run:
 
 ```bash

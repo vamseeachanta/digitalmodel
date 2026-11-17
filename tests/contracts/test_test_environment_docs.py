@@ -28,12 +28,26 @@ def pytest_commands(text):
     ]
 
 
-def assert_test_environment(command):
+def assert_complete_extra(command):
     """Require the full extra and the same explicit source choice as CI."""
     assert command[:2] == ["uv", "run"]
     assert "--no-sources" in command
     index = command.index("--with-editable")
     assert command[index + 1] == ".[test]"
+    return index
+
+
+def assert_contributor_environment(command):
+    """Keep contributor runs outside project resolution on the CI interpreter."""
+    index = assert_complete_extra(command)
+    assert "--no-project" in command
+    assert command[command.index("--python") + 1] == "3.11"
+    return index
+
+
+def assert_test_environment(command):
+    """Require an isolated contributor environment running pytest."""
+    index = assert_contributor_environment(command)
     assert command[index + 2 : index + 5] == ["python", "-m", "pytest"]
 
 
@@ -56,19 +70,25 @@ def test_readme_smoke_uses_complete_test_environment():
     assert "no:cacheprovider" in smoke[0]
 
 
-def test_readme_matches_ci_test_invocation():
+def test_readme_retains_ci_extra_and_source_choice():
     workflow = (ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(
         encoding="utf-8"
     )
     match = re.search(r"^\s+(uv run[^\n]+python -m pytest) \\\s*$", workflow, re.M)
     assert match is not None, "CI must declare its pytest invocation"
     ci_command = shlex.split(match.group(1))
-    assert_test_environment(ci_command)
+    index = assert_complete_extra(ci_command)
+    assert ci_command[index + 2 :] == ["python", "-m", "pytest"]
     smoke = [
         command for command in pytest_commands(testing_block()) if SMOKE_PATH in command
     ]
     assert len(smoke) == 1
-    assert smoke[0][: len(ci_command)] == ci_command
+    assert_test_environment(smoke[0])
+    contributor_prefix = smoke[0][: smoke[0].index("pytest") + 1]
+    contributor_prefix.remove("--no-project")
+    python_index = contributor_prefix.index("--python")
+    del contributor_prefix[python_index : python_index + 2]
+    assert contributor_prefix == ci_command
 
 
 def test_agent_test_command_uses_complete_test_environment():
@@ -96,7 +116,14 @@ def test_make_install_test_supplies_declared_extra():
     text = (ROOT / "Makefile").read_text(encoding="utf-8")
     phony = re.findall(r"^\.PHONY:\s*(.+)$", text, re.M)
     assert "install-test" in " ".join(phony).split()
-    assert "uv sync --no-sources --extra test" in recipe("install-test")
+    commands = [
+        shlex.split(line.strip().removeprefix("@"))
+        for line in recipe("install-test").splitlines()
+        if "uv " in line
+    ]
+    assert len(commands) == 1
+    index = assert_contributor_environment(commands[0])
+    assert commands[0][index + 2 : index + 4] == ["python", "-c"]
     config = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     extra = config["project"]["optional-dependencies"]["test"]
     assert any(requirement.startswith("pytest>=") for requirement in extra)
@@ -104,7 +131,9 @@ def test_make_install_test_supplies_declared_extra():
 
 @pytest.mark.parametrize("replacement", ["", "--with-editable '.[dev]'"])
 def test_missing_or_dev_only_extra_is_rejected(replacement):
-    command = f"uv run --no-sources {replacement} python -m pytest"
+    command = (
+        f"uv run --no-project --python 3.11 --no-sources {replacement} python -m pytest"
+    )
     with pytest.raises((AssertionError, ValueError)):
         assert_test_environment(shlex.split(command))
 
@@ -112,5 +141,29 @@ def test_missing_or_dev_only_extra_is_rejected(replacement):
 def test_implicit_source_choice_is_rejected():
     with pytest.raises(AssertionError):
         assert_test_environment(
-            shlex.split("uv run --with-editable '.[test]' python -m pytest")
+            shlex.split(
+                "uv run --no-project --python 3.11 "
+                "--with-editable '.[test]' python -m pytest"
+            )
+        )
+
+
+def test_project_resolution_is_rejected():
+    with pytest.raises(AssertionError):
+        assert_test_environment(
+            shlex.split(
+                "uv run --python 3.11 --no-sources "
+                "--with-editable '.[test]' python -m pytest"
+            )
+        )
+
+
+@pytest.mark.parametrize("python_option", ["", "--python 3.12"])
+def test_unpinned_or_different_python_is_rejected(python_option):
+    with pytest.raises((AssertionError, ValueError)):
+        assert_test_environment(
+            shlex.split(
+                f"uv run --no-project {python_option} --no-sources "
+                "--with-editable '.[test]' python -m pytest"
+            )
         )
