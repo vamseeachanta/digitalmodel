@@ -3,7 +3,7 @@ name: Quality Gates
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main, develop]
 
@@ -23,7 +23,8 @@ jobs:
     needs: quality-gates
     # Draft pull requests wait: the gates start when the pull request is marked ready.
     if: ${{ always() && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
+    # Light job on a hosted runner: one shell test of the matrix result.
+    runs-on: ubuntu-latest
     steps:
       - name: Verify matrix result
         env:

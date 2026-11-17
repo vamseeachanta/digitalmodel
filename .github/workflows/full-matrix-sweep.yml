@@ -5,9 +5,13 @@
 # green indefinitely. This workflow is the counterweight: it runs EVERY domain
 # shard, ignoring touched-domain detection entirely, on
 #
-#   * every push to `main`  -> main's green is earned, not assumed
-#   * a nightly cron        -> drift is caught within a day even without merges
+#   * a nightly cron        -> an untouched-but-broken shard is caught within a day
 #   * manual dispatch       -> on-demand "what is the true state of the matrix?"
+#
+# It no longer runs on every push to `main`: each merge then cost one full
+# matrix (about 134 runner-minutes on 16 Nov 2026) on top of the touched-domain
+# run that `Quality Gates by Domain` already makes for the same push. A push
+# that changes shared source or dependencies still selects every shard there.
 #
 # Job names here are deliberately distinct from the PR-gating workflow's
 # (`sweep-tests-*` / `Full matrix sweep result` vs `tests-*` / `Domain test
@@ -16,8 +20,6 @@
 name: Full Matrix Sweep
 
 "on":
-  push:
-    branches: [main]
   schedule:
     - cron: "17 7 * * *"
   workflow_dispatch:

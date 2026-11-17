@@ -12,7 +12,7 @@ name: Parametric atlas drift
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited, ready_for_review]
+    types: [opened, synchronize, reopened, ready_for_review]
     # The atlas fingerprint covers the registry spec, the workflow input, the
     # listed source files and the standards table, all under these paths. Pushes
     # to main and develop stay unfiltered, so a missed path still shows on main.

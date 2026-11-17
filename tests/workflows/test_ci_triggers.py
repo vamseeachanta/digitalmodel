@@ -43,11 +43,19 @@ def test_pull_request_accepts_any_base(filename: str) -> None:
 
 @pytest.mark.parametrize("filename", GATES)
 def test_pull_request_activity_types(filename: str) -> None:
-    """Retargets and ordinary edits start the same gates as code updates."""
+    """Code updates start the gates; a title or description edit does not.
+
+    ``edited`` fires on every title or description edit as well as on a base
+    change. No gate reads the title or description (see the test below), so a
+    description edit re-ran every gate for an unchanged tree and, through the
+    per-pull-request concurrency group, cancelled the run already in progress.
+    ``reopened`` stays: it is rare, and it is the way to run the gates again
+    after a base change.
+    """
     workflow = load_workflow(filename)
     triggers = workflow["on"] if "on" in workflow else workflow[True]
     assert triggers["pull_request"]["types"] == [
-        "opened", "synchronize", "reopened", "edited", "ready_for_review"
+        "opened", "synchronize", "reopened", "ready_for_review"
     ]
     filtered = ("gmsh-meshing-tests.yml", "parametric-atlas-drift.yml")
     expected_keys = {"types", "paths"} if filename in filtered else {"types"}
@@ -481,13 +489,80 @@ def test_trigger_tests_run_in_harness() -> None:
 
 
 def test_full_sweep_keeps_nightly_schedule() -> None:
-    """The full sweep runs nightly without changing pull request selection."""
+    """The full sweep runs nightly and on demand, not on every merge."""
     workflow = load_workflow("full-matrix-sweep.yml")
     triggers = workflow["on"] if "on" in workflow else workflow[True]
     assert triggers["schedule"] == [{"cron": "17 7 * * *"}]
-    assert triggers["push"]["branches"] == ["main"]
+    assert "push" not in triggers
     assert "pull_request" not in triggers
     assert "workflow_dispatch" in triggers
+
+
+def test_push_to_main_still_runs_the_touched_domains() -> None:
+    """A merge is covered by the touched-domain run; the full sweep is the nightly tier.
+    A change to shared source or dependencies still selects every shard on that push."""
+    workflow = load_workflow("quality-gates-by-domain.yml")
+    triggers = workflow["on"] if "on" in workflow else workflow[True]
+    assert "main" in triggers["push"]["branches"]
+    text = (WORKFLOWS / "quality-gates-by-domain.yml").read_text(encoding="utf-8")
+    push_arm = text[text.index('elif [ "$EVENT_NAME" = "push" ]; then'):]
+    push_arm = push_arm[:push_arm.index("else")]
+    assert "--mode touched" in push_arm
+    assert "--on-missing-base full" in push_arm
+
+
+def test_no_workflow_reads_the_pull_request_title_or_description() -> None:
+    """The reason ``edited`` can go: nothing in any workflow depends on the edited text."""
+    readers = [
+        path.name for path in sorted(WORKFLOWS.glob("*.yml"))
+        if re.search(r"pull_request\s*\.\s*(body|title)\b|event\s*\.\s*changes\b",
+                     path.read_text(encoding="utf-8"))
+    ]
+    assert readers == []
+
+
+def test_no_pull_request_workflow_starts_on_edits_labels_or_reviews() -> None:
+    """Rerun rule R2: only a code update, a reopen or leaving draft starts a run."""
+    allowed = {"opened", "synchronize", "reopened", "ready_for_review"}
+    for path in sorted(WORKFLOWS.glob("*.yml")):
+        workflow = yaml.safe_load(path.read_text(encoding="utf-8"))
+        triggers = workflow["on"] if "on" in workflow else workflow[True]
+        if not isinstance(triggers, dict):
+            continue
+        for event in ("pull_request_review", "pull_request_review_comment", "issue_comment",
+                      "pull_request_target"):
+            assert event not in triggers, (path.name, event)
+        pull_request = triggers.get("pull_request")
+        if isinstance(pull_request, dict) and "types" in pull_request:
+            assert set(pull_request["types"]) <= allowed, path.name
+
+
+LIGHT_JOBS = (
+    ("quality-gates-by-domain.yml", "detect-domains", "Detect touched test domains"),
+    ("quality-gates-by-domain.yml", "domain-tests-required", "Domain test aggregate"),
+    ("quality-gates.yml", "quality-gates-aggregate", "Run Quality Gates"),
+)
+
+
+@pytest.mark.parametrize("filename,job_id,name", LIGHT_JOBS)
+def test_light_jobs_run_on_hosted_runners_under_the_same_names(filename: str, job_id: str, name: str) -> None:
+    """These jobs select, wait and summarize; they queued for hours behind test shards."""
+    job = load_workflow(filename)["jobs"][job_id]
+    assert job["runs-on"] == "ubuntu-latest"
+    assert job["name"] == name
+
+
+@pytest.mark.parametrize("filename,job_id", (
+    ("quality-gates-by-domain.yml", "ci-harness-tests"),
+    ("quality-gates.yml", "quality-gates"),
+))
+def test_test_jobs_stay_on_self_hosted_runners(filename: str, job_id: str) -> None:
+    assert "self-hosted" in load_workflow(filename)["jobs"][job_id]["runs-on"]
+
+
+def test_domain_shards_keep_their_matrix_runner() -> None:
+    job = load_workflow("quality-gates-by-domain.yml")["jobs"]["domain-tests"]
+    assert job["runs-on"] == "${{ matrix.runner }}"
 
 
 @pytest.mark.parametrize("filename,job_id", (
