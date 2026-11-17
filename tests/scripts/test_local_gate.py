@@ -57,6 +57,40 @@ class Clock:
         return self.now
 
 
+def test_detector_compares_the_base_tip_with_the_merged_tree() -> None:
+    merged = "e" * 40
+    command = gate.detect_command(TIP, merged)
+    assert command[command.index("--base") + 1] == TIP
+    assert command[command.index("--head") + 1] == merged
+    assert SHA not in command
+    assert "detect_touched_domains.py" in command[1] and "touched" in command
+
+
+def test_stop_request_ends_running_modules_and_starts_no_other(monkeypatch, tmp_path: Path) -> None:
+    killed: list[str] = []
+
+    class Proc:
+        pid = 123456789
+
+        def kill(self) -> None:
+            killed.append("kill")
+
+    def no_group(pid, sig):
+        raise ProcessLookupError
+
+    monkeypatch.setattr(gate.os, "killpg", no_group, raising=False)
+    monkeypatch.setattr(gate, "LIVE", {Proc()})
+    try:
+        gate.request_stop(15, None)
+        assert killed == ["kill"]
+        result = gate.run_module(gate.Module("m", ["one"]), tmp_path, {}, tmp_path, deadline=1e12,
+                                 module_timeout=50.0, shell=lambda *a: pytest.fail("no start after a stop"))
+        assert result.status == "not-run"
+        assert gate.summarize([result], 1, TIP)[0] == "failure"
+    finally:
+        gate.STOP.clear()
+
+
 def test_plan_always_has_lint_and_harness() -> None:
     modules = gate.plan_modules(_matrix(), PLAN, TIP, "/scratch")
     assert [m.name for m in modules] == ["lint", "ci-harness"]

@@ -32,6 +32,7 @@ import shutil
 import signal
 import subprocess
 import sys
+import threading
 import time
 from pathlib import Path
 from typing import Callable
@@ -82,6 +83,34 @@ class Result:
 
 
 Runner = Callable[..., "subprocess.CompletedProcess[str]"]
+LIVE: set[subprocess.Popen] = set()
+STOP = threading.Event()
+
+
+def request_stop(signum: int, frame: object) -> None:
+    """On SIGTERM or SIGINT end the running modules and start no further one.
+
+    The run then finishes through its normal path: the stopped modules count as
+    not passed, the checkouts are removed and the result is ``failure``.
+    """
+    STOP.set()
+    for proc in list(LIVE):
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError, AttributeError):
+            proc.kill()
+
+
+def detect_command(tip: str, merged: str) -> list[str]:
+    """Detector call for the change the merge makes on the base: base tip against the merged tree.
+
+    The hosted pull-request job passes the pull-request head here. For a head that is behind the
+    base, that two-commit comparison also lists everything the base gained since the fork point,
+    so one unrelated source merge on the base selects every shard for every open pull request.
+    The merged tree differs from the base tip by the pull request's own change only.
+    """
+    return ["python", "scripts/ci/detect_touched_domains.py", "--mode", "touched", "--base", tip,
+            "--head", merged, "--domains-file", "tests/DOMAINS.md", "--output-format", "json-matrix"]
 
 
 def capture(cmd: list[str], cwd: Path | None = None, env: dict[str, str] | None = None,
@@ -150,11 +179,14 @@ def run_shell(command: str, cwd: Path, env: dict[str, str], log: Path, timeout: 
         handle.flush()
         proc = subprocess.Popen(["bash", "-c", command], cwd=cwd, env=env, stdout=handle,
                                 stderr=subprocess.STDOUT, start_new_session=True)
+        LIVE.add(proc)
         try:
             return proc.wait(timeout=max(timeout, 0.1))
         except subprocess.TimeoutExpired:
             stop_group(proc)
             return 124
+        finally:
+            LIVE.discard(proc)
 
 
 def free_gb(path: Path) -> float:
@@ -227,10 +259,12 @@ def run_module(module: Module, cwd: Path, env: dict[str, str], logs: Path, deadl
                clock: Callable[[], float] = time.monotonic) -> Result:
     """Run one module unless the budget is already spent."""
     started = clock()
-    if started >= deadline:
+    if started >= deadline or STOP.is_set():
         return Result(module.name, "not-run")
     limit = started + module_timeout
     for command in module.commands:
+        if STOP.is_set():
+            return Result(module.name, "fail", clock() - started, 143)
         remaining = min(limit, deadline) - clock()
         if remaining <= 0:
             return Result(module.name, "timeout", clock() - started, 124)
@@ -387,9 +421,7 @@ def gate(args: argparse.Namespace, run_dir: Path, tree_root: Path) -> tuple[str,
     # standalone 3.11 build lacks fcntl.F_SEAL_WRITE, which tests/workflows needs.
     env.setdefault("UV_PYTHON_PREFERENCE", "system")
     uv = ["uv", "run", "--no-sources"]
-    detect = run(uv + ["python", "scripts/ci/detect_touched_domains.py", "--mode", "touched",
-                       "--base", tip, "--head", args.sha, "--domains-file", "tests/DOMAINS.md",
-                       "--output-format", "json-matrix"], cwd=worktree, env=env)
+    detect = run(uv + detect_command(tip, merged), cwd=worktree, env=env)
     matrix = json.loads(detect.stdout.strip().splitlines()[-1])
     reader = run(uv + ["--with", "pyyaml==6.0.2", "python", "-c", PLAN_READER, GATES_FILE,
                        DOMAIN_WORKFLOW, HARNESS_JOB, HARNESS_STEP], cwd=worktree, env=env)
@@ -404,7 +436,13 @@ def gate(args: argparse.Namespace, run_dir: Path, tree_root: Path) -> tuple[str,
         if added.returncode != 0:
             print(f"local-gate: {module.name} checkout failed", flush=True)
             return Result(module.name, "fail", 0.0, added.returncode)
-        result = run_module(module, tree, env, logs, deadline, args.module_timeout)
+        try:
+            result = run_module(module, tree, env, logs, deadline, args.module_timeout)
+        finally:
+            if not args.keep:  # disk in use is bounded by --jobs checkouts, not by the module count
+                capture(["git", "-C", str(mirror), "worktree", "remove", "--force", str(tree)],
+                        check=False, timeout=300.0)
+                shutil.rmtree(tree, ignore_errors=True)
         print(f"local-gate: {result.name} {result.status} in {result.seconds:.0f} s", flush=True)
         return result
 
@@ -424,6 +462,9 @@ def main(argv: list[str] | None = None) -> int:
     worktree = args.work_root / "wt" / tag
     results: list[Result] = []
     created = False
+    STOP.clear()
+    for signum in (signal.SIGTERM, signal.SIGINT):
+        signal.signal(signum, request_stop)
     try:
         if not args.work_root.is_dir():
             raise GateError("work root does not exist")

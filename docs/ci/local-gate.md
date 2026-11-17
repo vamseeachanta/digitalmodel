@@ -23,7 +23,13 @@ scripts/ci/local_gate.sh --pr 1234 --sha <40-character head> --repo <owner/name>
    into it. This is the same tree the hosted workflows test.
 4. Runs `scripts/ci/detect_touched_domains.py --mode touched`, the detector the
    `Quality Gates by Domain` workflow uses, and plans one module per touched
-   domain. The shard commands come from `.claude/quality-gates.yaml` and the
+   domain. The comparison is the base tip against the merged tree, so the
+   selection reflects the pull request's own change. The hosted job compares
+   the base tip with the pull-request head; for a head that is behind the base
+   that also counts everything the base gained since the fork point, and one
+   source merge on the base then selects every shard for every open pull
+   request. In a trial on 17 Nov 2026 a four-module plan became a 24-module
+   plan after one unrelated merge to the base. The shard commands come from `.claude/quality-gates.yaml` and the
    harness command from the workflow file, both read from the tree under test.
 5. Runs the modules in parallel (`--jobs`, default 4), each in a separate
    checkout with its own log and time limit (`--module-timeout`, default 1500 s)
@@ -132,8 +138,11 @@ These runs are not advisory:
   hosted job has, so a file one shard writes cannot change the result of
   another. Unverified trial notes report about 25 GB under the work root with
   four modules: a complete mirror (3.4 GB), the package cache (19 GB) and the
-  checkouts. The underlying measurement evidence is unavailable. The checkouts
-  and the scratch directory are removed at the end of a run; the mirror and the cache stay for the next run.
+  checkouts. The underlying measurement evidence is unavailable. Each checkout
+  is removed as soon as its module ends, so the checkouts in use are bounded by
+  `--jobs`; the scratch directory is removed at the end of a run. The mirror
+  and the cache stay for the next run. A stop signal ends the running modules,
+  starts no further one and leaves the result `failure`.
 - The gate executes code from the pull request with the credentials of the
   account that runs it. It accepts same-repository pull requests only, the same
   boundary the self-hosted workflow jobs apply.
