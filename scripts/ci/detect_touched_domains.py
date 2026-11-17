@@ -181,6 +181,17 @@ def git_changed_files(base: str, head: str) -> list[str]:
     return [path for path in result.stdout.split("\0") if path]
 
 
+def git_merge_base(base: str, head: str) -> str:
+    """Return the fork point of ``head`` from ``base``; raise when there is none."""
+    result = subprocess.run(
+        ["git", "merge-base", base, head],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    return result.stdout.strip()
+
+
 def git_file_text(ref: str, path: str) -> str:
     """Read a tracked text file at a revision."""
     result = subprocess.run(
@@ -544,6 +555,18 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "'full' fails SAFE to the full matrix."
         ),
     )
+    parser.add_argument(
+        "--diff-from",
+        choices=("base", "merge-base"),
+        default="base",
+        help=(
+            "Start of the comparison. 'base' (default) compares --base with --head "
+            "directly, which is right for a push (before and after on one line of "
+            "history). 'merge-base' compares the fork point of --head from --base "
+            "with --head, so a pull request that is behind its base selects only "
+            "the shards its own change touches, not everything the base gained."
+        ),
+    )
     args = parser.parse_args(argv)
     if args.mode == "touched" and (not args.base or not args.head):
         parser.error("--mode touched requires --base and --head")
@@ -559,6 +582,9 @@ def main(argv: list[str] | None = None) -> int:
             selected = domains
         else:
             try:
+                if args.diff_from == "merge-base":
+                    # No common ancestor is handled like an unreachable base below.
+                    args.base = git_merge_base(args.base, args.head)
                 changed = git_changed_files(args.base, args.head)
             except subprocess.CalledProcessError:
                 # Base SHA unreachable: zero-SHA new branch or force-push pruned
