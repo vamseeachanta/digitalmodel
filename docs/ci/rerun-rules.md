@@ -41,6 +41,9 @@ the jobs that need those are skipped with them:
   `Not run for a metadata edit - <job>` for this event, and the run takes a
   concurrency group of its own so that it cancels nothing. The earlier checks
   remain the newest under their names.
+  GitHub lists a skipped job under the unevaluated text of its name
+  expression (observed on runs 44006083186 and 44006083244); that text is not
+  the usual name either, so the outcome is the same.
 
 The cost of a metadata edit is four workflow runs with no job started.
 
