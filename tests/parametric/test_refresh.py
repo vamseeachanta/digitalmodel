@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # Copyright (c) 2024 Digital Model Project
 # Licensed under the MIT License. See LICENSE file for details.
 
@@ -179,10 +182,14 @@ def stub_refresh_builds(monkeypatch, tmp_path):
         built = []
         monkeypatch.setattr(refresh, "DEFAULT_ATLAS_ROOT", tmp_path)
         monkeypatch.setattr(refresh, "parametric_workflow_ids", lambda: ids)
-        monkeypatch.setattr(
-            refresh, "refresh_status",
-            lambda wid: {"stale": True, "reason": "basis changed"},
-        )
+
+        def installed_status(wid):
+            pointer = tmp_path / f"atlas-{wid}" / "default.txt"
+            current = pointer.is_file() and pointer.read_text() == "rebuilt"
+            return {"stale": not current,
+                    "reason": "current" if current else "basis changed"}
+
+        monkeypatch.setattr(refresh, "refresh_status", installed_status)
         monkeypatch.setattr(
             refresh, "LIBRARY_EXPECTATIONS",
             {"stub_library": {}} if stale_library else {},
