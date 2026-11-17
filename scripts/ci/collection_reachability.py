@@ -15,9 +15,11 @@ import math
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
+import time
 from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -112,8 +114,9 @@ def run_child(root: Path, output: Path, timeout: float) -> tuple[dict, list[str]
     _, config_file, _ = locate_config(root, [root])
     if config_file is not None and not config_file.resolve().is_relative_to(root):
         return {}, ["configuration_outside_root"]
-    with tempfile.TemporaryDirectory(prefix="collection-", dir=output.parent) as directory:
-        scratch = Path(directory)
+    scratch = Path(tempfile.mkdtemp(prefix="collection-", dir=output.parent))
+    reasons: list[str] = []
+    try:
         evidence = scratch / "evidence.json"
         env = {key: value for key, value in os.environ.items()
                if not key.startswith(("GIT_", "PYTEST_")) and key != "PYTHONPATH"}
@@ -128,21 +131,41 @@ def run_child(root: Path, output: Path, timeout: float) -> tuple[dict, list[str]
                 ], cwd=root, env=env, stdout=stdout, stderr=stderr, timeout=timeout,
                     creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
         except subprocess.TimeoutExpired:
-            return {}, ["child_timeout"]
+            reasons.append("child_timeout")
+            return {}, reasons
         except OSError:
-            return {}, ["child_start_failed"]
+            reasons.append("child_start_failed")
+            return {}, reasons
         if not evidence.is_file() or evidence.is_symlink():
-            return {"child_exit": child.returncode}, ["missing_evidence"]
+            reasons.append("missing_evidence")
+            return {"child_exit": child.returncode}, reasons
         try:
             data = json.loads(evidence.read_text(encoding="utf-8"))
             validate_evidence(data)
         except (OSError, UnicodeError, ValueError, KeyError, TypeError):
-            return {"child_exit": child.returncode}, ["invalid_evidence"]
-        reasons = []
+            reasons.append("invalid_evidence")
+            return {"child_exit": child.returncode}, reasons
         if child.returncode not in (0, 5) or data["exitstatus"] != child.returncode:
             reasons.append("child_failed")
         data["child_exit"] = child.returncode
         return data, reasons
+    finally:
+        if not remove_scratch(scratch):
+            reasons.append("scratch_cleanup_failed")
+
+
+def remove_scratch(scratch: Path) -> bool:
+    """Retry transient output locks without replacing the collection outcome."""
+    for attempt in range(3):
+        try:
+            shutil.rmtree(scratch)
+            return True
+        except FileNotFoundError:
+            return not scratch.exists()
+        except OSError:
+            if attempt < 2:
+                time.sleep(0.1 * (attempt + 1))
+    return False
 
 
 def relative_path(value: object) -> bool:
@@ -217,15 +240,20 @@ def observe(root: Path, output: Path, timeout: float) -> dict:
                 status="fail" if reasons else "pass")
 
 
-def shareable(value: Any, root: Path) -> Any:
-    """Redact locators, including drive prefixes and paths in parameter IDs."""
+def shareable(value: Any, root: Path, *, configuration: bool = False) -> Any:
+    """Redact locators; separator-free drives apply only to configuration."""
     if isinstance(value, dict):
-        return {key: shareable(item, root) for key, item in value.items()}
+        return {key: shareable(item, root, configuration=configuration
+                               or key == "configuration")
+                for key, item in value.items()}
     if isinstance(value, list):
-        return [shareable(item, root) for item in value]
+        return [shareable(item, root, configuration=configuration) for item in value]
     if isinstance(value, str):
-        text = value.replace(str(root), "[root]").replace(root.as_posix(), "[root]")
-        return re.sub(r'''(?<![\w.*\]])(?:[A-Za-z]:|/)[^\s\[\]"']*''',
+        text = value
+        for locator in {str(root), root.as_posix()}:
+            text = re.sub(re.escape(locator) + r"(?=[/\\]|$)", "[root]", text)
+        drive = r"[A-Za-z]:" if configuration else r"[A-Za-z]:[/\\]"
+        return re.sub(r'''(?<![\w.*\]])(?:''' + drive + r'''|/)[^\s\[\]"']*''',
                       "[path removed]", text)
     return value
 

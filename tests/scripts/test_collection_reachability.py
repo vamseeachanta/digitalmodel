@@ -5,7 +5,8 @@
 import hashlib
 import importlib.util
 import json
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
+import shutil
 import subprocess
 import sys
 
@@ -346,6 +347,56 @@ def test_child_start_failure_is_reported(tree, monkeypatch):
     assert not list(tree.parent.glob("collection-*"))
 
 
+def test_cleanup_retries_without_losing_child_timeout(tree, monkeypatch):
+    tool = load_tool()
+    remove = shutil.rmtree
+    attempts = []
+
+    def transient_lock(path, *args, **kwargs):
+        attempts.append(path)
+        if len(attempts) == 1:
+            raise PermissionError("synthetic output handle still open")
+        return remove(path, *args, **kwargs)
+
+    def timeout(*args, **kwargs):
+        kwargs["stderr"].write(b"synthetic child output")
+        raise subprocess.TimeoutExpired(args[0], kwargs["timeout"])
+
+    monkeypatch.setattr(shutil, "rmtree", transient_lock)
+    monkeypatch.setattr(tool.subprocess, "run", timeout)
+    report = tool.observe(tree, tree.parent / "report.json", 0.5)
+    assert "child_timeout" in report["reasons"]
+    assert "scratch_cleanup_failed" not in report["reasons"]
+    assert len(attempts) == 2
+    assert not list(tree.parent.glob("collection-*"))
+
+
+@pytest.mark.parametrize("timed_out", [True, False])
+def test_persistent_cleanup_failure_is_explicit_and_fails_closed(tree, monkeypatch,
+                                                               timed_out):
+    tool = load_tool()
+    attempts = []
+
+    def locked(path, *args, **kwargs):
+        attempts.append(path)
+        raise PermissionError("synthetic output handle still open")
+
+    def timeout(*args, **kwargs):
+        raise subprocess.TimeoutExpired(args[0], kwargs["timeout"])
+
+    monkeypatch.setattr(shutil, "rmtree", locked)
+    if timed_out:
+        monkeypatch.setattr(tool.subprocess, "run", timeout)
+    report = tool.observe(tree, tree.parent / "report.json", 0.5 if timed_out else 30)
+    assert report["status"] == "fail"
+    assert "scratch_cleanup_failed" in report["reasons"]
+    assert ("child_timeout" in report["reasons"]) == timed_out
+    assert len(attempts) == 3
+    assert len(list(tree.parent.glob("collection-*"))) == 1
+    if not timed_out:
+        assert report["nodes"]
+
+
 def test_parameter_ids_with_absolute_paths_are_redacted(tree):
     write(tree, "tests/control/test_control.py", '''import pytest
 from pathlib import Path
@@ -366,8 +417,35 @@ def test_windows_drive_locators_are_redacted(tree, locator):
               "nodes": [{"nodeid": f"tests/test_sample.py::test_sample[{locator}]"}]}
     shared = tool.shareable(report, tree)
     assert shared["configuration"]["testpaths"] == ["[path removed]"]
+    expected = locator if locator == "C:synthetic_data" else "[path removed]"
     assert shared["nodes"][0]["nodeid"] == (
-        "tests/test_sample.py::test_sample[[path removed]]")
+        f"tests/test_sample.py::test_sample[{expected}]")
+
+
+@pytest.mark.parametrize("nodeid", [
+    "tests/test_a.py::B::test_x", "test_p[a:1]", "test_p[a:2]",
+])
+def test_node_identifiers_are_preserved_outside_configuration(tree, nodeid):
+    tool = load_tool()
+    report = {"nodes": [{"nodeid": nodeid}], "errors": [nodeid], "skips": [nodeid]}
+    assert tool.shareable(report, tree) == report
+
+
+@pytest.mark.parametrize("suffix", ["", "/tests", "2/tests", "_other/tests"])
+def test_root_redaction_respects_path_boundaries(tree, suffix):
+    tool = load_tool()
+    locator = tree.as_posix() + suffix
+    expected = "[root]" + suffix if suffix in ("", "/tests") else "[path removed]"
+    assert tool.shareable({"configuration": {"testpaths": [locator]}}, tree) == {
+        "configuration": {"testpaths": [expected]}}
+
+
+@pytest.mark.parametrize("suffix", ["", r"\tests", r"2\tests"])
+def test_windows_root_redaction_respects_path_boundaries(suffix):
+    tool = load_tool()
+    root = PureWindowsPath(r"C:\synthetic\tree")
+    expected = "[root]" + suffix if suffix in ("", r"\tests") else "[path removed]"
+    assert tool.shareable(str(root) + suffix, root) == expected
 
 
 def test_ancestor_configuration_is_rejected_before_collection(tree):
