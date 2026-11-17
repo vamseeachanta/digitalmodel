@@ -3,13 +3,15 @@
 """Table-only supplied-result view; the standalone catenary report API is retained.
 
 Arc-length plots, sensitivities and workflow routing are outside this slice.
-No fatigue quantities or certification status are calculated here.
+Supplied life and margin are cross-checked; no fatigue solution or certification
+status is calculated here.
 """
 from functools import partial
 from hashlib import sha256
 from html import escape
 import json
 import math
+from numbers import Real
 from pathlib import Path
 from typing import Any, Iterable
 
@@ -44,7 +46,16 @@ def _require_text(value: Any) -> None:
         raise ValueError("Evidence text must be nonempty")
 
 
-def _validate_results(results: dict) -> dict:
+def _positive_real(value: Any, name: str) -> None:
+    if isinstance(value, bool) or not isinstance(value, Real) or not math.isfinite(value) or value <= 0:
+        raise ValueError(f"{name} must be a finite positive number")
+
+
+def _validate_results(results: dict, inputs: dict) -> dict:
+    for key in ("design_life_years", "dff"):
+        _positive_real(inputs.get(key), key)
+    required_life = inputs["design_life_years"] * inputs["dff"]
+    _positive_real(required_life, "Input-derived required life")
     if not isinstance(results, dict) or not isinstance(results.get("segments"), list):
         raise ValueError("Results require a segment list")
     rows = results["segments"]
@@ -56,19 +67,28 @@ def _validate_results(results: dict) -> dict:
         _require_text(row["segment_id"])
         for key in COLUMNS[1:-1]:
             value = row[key]
-            if type(value) not in (int, float) or not math.isfinite(value) or value < 0:
+            if isinstance(value, bool) or not isinstance(value, Real) or not math.isfinite(value) or value < 0:
                 raise ValueError(f"{key} must be a finite nonnegative number")
             if key not in ("wave_damage", "viv_damage") and value == 0:
                 raise ValueError(f"{key} must be positive")
+        # Relative tolerance admits floating-point roundoff, without an absolute
+        # allowance that would hide discrepancies in small positive quantities.
+        if not math.isclose(row["required_life_years"], required_life, rel_tol=1e-9, abs_tol=0.0):
+            raise ValueError("Supplied required life conflicts with design life times DFF")
+        expected_margin = row["fatigue_life_years"] / row["required_life_years"]
+        if not math.isclose(row["dff_margin"], expected_margin, rel_tol=1e-9, abs_tol=0.0):
+            raise ValueError("Supplied DFF margin conflicts with the life ratio")
         if type(row["passes_dff"]) is not bool or row["passes_dff"] != (
                 row["fatigue_life_years"] >= row["required_life_years"]):
             raise ValueError("Supplied segment verdict conflicts with its life criterion")
+        if row["passes_dff"] != (row["dff_margin"] >= 1):
+            raise ValueError("Supplied DFF margin conflicts with the segment verdict")
     ids = [row["segment_id"] for row in rows]
     if len(set(ids)) != len(ids) or results.get("governing_segment") not in ids:
         raise ValueError("Segment identifiers must be unique and include the governing segment")
     governing = rows[ids.index(results["governing_segment"])]
     margin = results.get("governing_dff_margin")
-    if type(margin) not in (int, float) or margin != governing["dff_margin"]:
+    if isinstance(margin, bool) or not isinstance(margin, Real) or margin != governing["dff_margin"]:
         raise ValueError("Governing DFF margin conflicts with the segment record")
     passed = results["screening_status"] == "pass"
     if passed != governing["passes_dff"] or passed != all(r["passes_dff"] for r in rows):
@@ -84,7 +104,7 @@ def _validate_metadata(method: str, references: list, assumptions: list[str] | N
     for reference in references:
         if not isinstance(reference, dict):
             raise ValueError("Each reference must be a record")
-        for key in ("identifier", "edition", "locator", "qualification"):
+        for key in ("identifier", "title", "edition", "locator", "qualification"):
             _require_text(reference.get(key))
         if reference["qualification"] not in ("verified", "unverified"):
             raise ValueError("Reference qualification must be verified or unverified")
@@ -138,7 +158,7 @@ def _content(results: dict, inputs: dict, metadata: dict, sources: dict, governi
     if assumptions is not None:
         note = "; ".join(assumptions) or "Supplied assumptions record is empty; completeness is not established."
     reference_rows = [[reference[key] for key in
-                       ("identifier", "edition", "locator", "qualification")]
+                       ("identifier", "title", "edition", "locator", "qualification")]
                       for reference in metadata["references"]]
     return {
         "summary": ("Executive summary", f"<p>{status.upper()} supplied-result view; not certified.</p>" + finding),
@@ -147,7 +167,7 @@ def _content(results: dict, inputs: dict, metadata: dict, sources: dict, governi
              for key, value in sorted(inputs.items())]) + f"<p>{_text(note)}</p>"
             f'<p>Source: {_text(sources["spec"])}; metadata: {_text(sources["metadata"])}.</p>'),
         "method": ("Method and standards", f'<p id="references">{_text(metadata["method"])}</p>'
-            + _table(("Identifier", "Edition", "Locator", "Supplied qualification"), reference_rows)
+            + _table(("Identifier", "Title", "Edition", "Locator", "Supplied qualification"), reference_rows)
             + f'<p>Workflow version: {_text(metadata["workflow_version"])}; '
             f'source: {_text(sources["metadata"])}. Reference qualification is caller-supplied.</p>'),
         "results": ("Results", _table(HEADERS, [[row[key] for key in COLUMNS]
@@ -176,7 +196,7 @@ def render_fatigue_view(results: dict, inputs: dict, *, method: str, references:
     _require_text(title)
     if not isinstance(inputs, dict):
         raise ValueError("Original inputs must be a mapping")
-    governing = _validate_results(results)
+    governing = _validate_results(results, inputs)
     metadata = _validate_metadata(method, references, assumptions, workflow_version)
     sources = _bind_sources(provenance, inputs, results, metadata)
     data = _content(results, inputs, metadata, sources, governing, str(provenance.validated_path))
