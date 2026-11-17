@@ -66,9 +66,8 @@ def test_every_configured_gate_matches_legacy(reader, workflow):
         visited.add(gate)
     assert "temporary-new-gate" in visited
     document["gates"]["temporary-new-gate"]["command"] = None
-    with pytest.raises(ValueError):
-        for gate in document["gates"]:
-            reader.effective_command(document, gate, workflow)
+    with pytest.raises(ValueError, match="nonempty string"):
+        reader.effective_command(document, "temporary-new-gate", workflow)
 
 
 @pytest.mark.parametrize("document,gate,workflow", [
@@ -154,7 +153,9 @@ def test_cli_fails_without_command_or_traceback(tmp_path, kind):
 
 
 def workflow_steps(workflow):
-    document = yaml.safe_load((ROOT / f".github/workflows/{workflow}.yml").read_text())
+    document = yaml.safe_load(
+        (ROOT / f".github/workflows/{workflow}.yml").read_text(encoding="utf-8")
+    )
     job = "domain-tests" if workflow == WORKFLOWS[0] else "sweep-tests"
     return document, document["jobs"][job]["steps"]
 
