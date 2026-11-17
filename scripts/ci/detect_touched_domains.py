@@ -35,6 +35,9 @@ FULL_MATRIX_PATHS = {
     "conftest.py",
     "pytest.ini",
     PYPROJECT_PATH,
+    # Every shard installs from the lockfile. The full sweep no longer runs on a
+    # merge, so a dependency update selects the full matrix here.
+    "uv.lock",
 }
 DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("src/digitalmodel/process_piping/", ("asset-integrity",)),

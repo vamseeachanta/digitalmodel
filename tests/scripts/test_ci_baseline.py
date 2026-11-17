@@ -289,7 +289,8 @@ def test_missing_or_invalid_results_fail_closed(tmp_path):
 def test_workflow_keeps_required_name_and_infrastructure_failures():
     workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text())
     job = workflow["jobs"]["domain-tests-required"]
-    assert job["name"] == "Domain test aggregate"
+    # The name is an expression: this name for every event but a title or description edit.
+    assert job["name"].endswith("|| 'Domain test aggregate' }}")
     step = next(s for s in job["steps"] if s["name"] == "Enforce required domain result")
     assert step["env"]["CI_BASELINE_MODE"] == "report"
     for variable in ("DETECT_RESULT", "HARNESS_RESULT"):
@@ -618,7 +619,7 @@ def test_workflows_pilot_only_orcaflex_in_report_mode():
         assert 'if [ "${{ matrix.domain }}" = "orcaflex" ]; then' in run
         assert "--mode report" in run and "--with pyyaml" in run
         assert "--mode enforce" not in run
-        assert "${{ matrix.domain }}" in workflow["jobs"][job]["name"]
+        assert "matrix.domain" in workflow["jobs"][job]["name"]
         import runpy
         assert "contracts" in runpy.run_path(str(ROOT / "scripts/ci/run_shard.py"))["NO_RETRY_SHARDS"]
         direct = '${{ steps.gate.outputs.command }} --junitxml=reports/junit-${{ matrix.domain }}.xml -o junit_family=xunit2'
