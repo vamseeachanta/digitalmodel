@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from digitalmodel.asset_integrity import inspection_planning as planning
+from digitalmodel.asset_integrity import crack_inspection_policy as planning
 from digitalmodel.asset_integrity.assessment.fe_crack_growth import growth_life
 
 

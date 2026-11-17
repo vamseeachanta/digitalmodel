@@ -13,12 +13,13 @@ table { border-collapse: collapse; } th, td { border: 1px solid #bbb; padding: .
 qualifies neither a service inspection interval nor the supplied material law.</p>
 <h2>Revision history</h2>
 <table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
-<tr><td>1</td><td>2026-11-16</td><td>Document explicit policy inputs and unknown target-life handling.</td></tr></table>
+<tr><td>1</td><td>2026-11-16</td><td>Document explicit policy inputs and unknown target-life handling.</td></tr>
+<tr><td>2</td><td>2026-11-17</td><td>Use the separate crack policy module to preserve the corrosion atlas basis.</td></tr></table>
 <h2>Synthetic example</h2>
 <p>All numerical inputs below are artificial controls. Depth is in metres, DeltaK in
 MPa sqrt(m), C in m/cycle/(MPa sqrt(m)) raised to the growth exponent, and time in years.
 A constant cycle rate is assumed throughout the predicted life. No automatic unit conversion occurs.</p>
-<pre id="example">from digitalmodel.asset_integrity.inspection_planning import plan_crack_inspection
+<pre id="example">from digitalmodel.asset_integrity.crack_inspection_policy import plan_crack_inspection
 
 result = plan_crack_inspection(
     table=[[0.001, 5.0], [0.002, 2.0]],
