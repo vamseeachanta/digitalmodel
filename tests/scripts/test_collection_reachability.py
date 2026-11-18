@@ -9,6 +9,7 @@ from pathlib import Path, PureWindowsPath
 import shutil
 import subprocess
 import sys
+from types import SimpleNamespace
 
 import pytest
 
@@ -407,6 +408,49 @@ def test_cleanup_of_already_removed_folder_succeeds_without_retry(tree, monkeypa
 
     monkeypatch.setattr(tool.time, "sleep", unexpected_sleep)
     assert tool.remove_scratch(tree.parent / "already_removed")
+
+
+@pytest.mark.parametrize("persistent", [False, True])
+@pytest.mark.parametrize("timed_out", [True, False])
+def test_cleanup_exists_error_preserves_child_result(tree, monkeypatch,
+                                                   timed_out, persistent):
+    tool = load_tool()
+    remove, exists = shutil.rmtree, Path.exists
+    attempts, sleeps = [], []
+
+    def missing_entry(path, *args, **kwargs):
+        attempts.append(path)
+        if persistent or len(attempts) == 1:
+            raise FileNotFoundError("synthetic missing entry")
+        return remove(path, *args, **kwargs)
+
+    def unreadable(path):
+        if path in attempts:
+            raise PermissionError("synthetic denied existence check")
+        return exists(path)
+
+    def timeout(*args, **kwargs):
+        raise subprocess.TimeoutExpired(args[0], kwargs["timeout"])
+
+    monkeypatch.setattr(shutil, "rmtree", missing_entry)
+    monkeypatch.setattr(Path, "exists", unreadable)
+    monkeypatch.setattr(tool, "time", SimpleNamespace(sleep=sleeps.append))
+    if timed_out:
+        monkeypatch.setattr(tool.subprocess, "run", timeout)
+    report = tool.observe(tree, tree.parent / "report.json", 0.5 if timed_out else 30)
+    expected = ["child_timeout"] if timed_out else []
+    if persistent:
+        expected.append("scratch_cleanup_failed")
+    if timed_out:
+        expected.extend(["empty_candidates", "zero_nodes"])
+    assert report["reasons"] == expected
+    assert report["status"] == ("fail" if expected else "pass")
+    assert len(attempts) == (3 if persistent else 2)
+    assert sleeps == ([0.1, 0.2] if persistent else [0.1])
+    assert len(list(tree.parent.glob("collection-*"))) == int(persistent)
+    if not timed_out:
+        assert report["nodes"]
+        assert report["child_exit"] == 0
 
 
 def test_parameter_ids_with_absolute_paths_are_redacted(tree):

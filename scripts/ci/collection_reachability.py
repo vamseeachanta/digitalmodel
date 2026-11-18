@@ -161,8 +161,11 @@ def remove_scratch(scratch: Path) -> bool:
             shutil.rmtree(scratch)
             return True
         except FileNotFoundError:
-            if not scratch.exists():
-                return True
+            try:
+                if not scratch.exists():
+                    return True
+            except OSError:
+                pass  # An unreadable folder is not confirmed removed.
         except OSError:
             pass
         if attempt < 2:
