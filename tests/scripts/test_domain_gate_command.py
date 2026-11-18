@@ -112,7 +112,7 @@ def test_invalid_yaml_fails(reader, tmp_path, text):
 def invoke(path, gate="tests-subsea", workflow=WORKFLOWS[0]):
     return subprocess.run(
         [sys.executable, str(READER), "--gate-file", str(path), "--gate", gate,
-         "--workflow", workflow], capture_output=True, text=True,
+         "--workflow", workflow], capture_output=True, encoding="utf-8",
     )
 
 
@@ -124,7 +124,10 @@ def test_cli_returns_shell_text_without_evaluation(tmp_path, workflow, suffix):
     sentinel = tmp_path / "sentinel"
     command = f"pytest; touch '{sentinel}' $(touch '{sentinel}') `touch '{sentinel}'"
     gate_file = tmp_path / "gates.yaml"
-    gate_file.write_text(yaml.safe_dump({"gates": {"tests-subsea": {"command": command}}}))
+    gate_file.write_text(
+        yaml.safe_dump({"gates": {"tests-subsea": {"command": command}}}),
+        encoding="utf-8",
+    )
     result = invoke(gate_file, workflow=workflow)
     assert result.returncode == 0, result.stderr
     assert result.stdout == command + suffix + "\n"
@@ -202,7 +205,7 @@ def test_guard_is_enrolled_unconditionally(pytestconfig):
 @pytest.mark.parametrize("args", [[], ["--unknown", "untrusted-text"], ["--gate-file"]])
 def test_cli_argument_errors_have_bounded_diagnostics(args):
     result = subprocess.run([sys.executable, str(READER), *args],
-                            capture_output=True, text=True)
+                            capture_output=True, encoding="utf-8")
     assert result.returncode != 0
     assert result.stdout == ""
     assert result.stderr == "domain gate command: invalid configuration or selection\n"
