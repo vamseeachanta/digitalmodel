@@ -32,6 +32,10 @@ CASES = [
     ("obligation", "obligation changed"), ("selection", "missing closure shard"),
     ("saving", None), ("failed-replacement", "missing passing replacement"),
     ("invalid", "invalid input"),
+    ("dirty", "dirty worktree"), ("overlay", None),
+    ("partial-overlay", "dirty worktree"), ("missing-blob", "dirty worktree"),
+    ("missing-touched-modules", "invalid input"), ("removal-missing-touched-modules", "invalid input"),
+    ("unchecked-closure", "pre-merge closure not checked"), ("daily", None),
 ]
 
 
@@ -40,6 +44,8 @@ def test_compare(case, reason, tmp_path):
     for side in ("before", "after"):
         shutil.copytree(FIXTURES / "reference", tmp_path / side / "py")
     folder = FIXTURES / case
+    if not (folder / "before.json").exists():
+        shutil.copytree(FIXTURES / "defaults", tmp_path, dirs_exist_ok=True)
     shutil.copytree(folder, tmp_path, dirs_exist_ok=True)
     if (folder / "omit.json").exists():
         for path in json.loads((folder / "omit.json").read_text()):
@@ -51,12 +57,13 @@ def test_compare(case, reason, tmp_path):
     flags = []
     for name in ("required-envs", "required-modules", "touched-modules", "mapping",
                  "closure", "pr-path-nodes", "nightly-path-nodes"):
-        if (folder / f"{name}.json").exists():
-            flags.extend(["--" + name, folder / f"{name}.json"])
+        manifest = tmp_path / f"{name}.json"
+        if manifest.exists():
+            flags.extend(["--" + name, manifest])
     report = tmp_path / "report.md"
     code = run("compare", "--before", before, "--after", after, "--kind", kind,
                "--commit", SHA, "--report", report, *flags)
-    assert code == (2 if case == "invalid" else int(reason is not None))
+    assert code == (2 if reason == "invalid input" else int(reason is not None))
     content = report.read_text()
     headline = content.splitlines()[0]
     assert headline.startswith(f"Coverage gate at {SHA[:8]}: ")
@@ -66,6 +73,12 @@ def test_compare(case, reason, tmp_path):
         assert headline.endswith(": PASS")
     if case == "saving":
         assert "intended saving" in content and "large" in content
+    if case == "overlay":
+        assert "line check: no touched modules" in content
+    if case.endswith("missing-touched-modules"):
+        assert "--touched-modules" in content
+    if case in ("unchecked-closure", "mapped"):
+        assert "pre-merge closure: not checked (no closure supplied)" in content
 
 
 def test_usage_error(tmp_path):
@@ -78,15 +91,25 @@ def test_usage_error(tmp_path):
 def test_collect(tmp_path):
     subprocess.run(["git", "clone", "-q", "--shared", "--no-checkout", "--single-branch",
                     "--no-tags", str(GATE.parents[2]), str(tmp_path)], check=True)
-    (tmp_path / "test_pair.py").write_text("def test_one(): pass\ndef test_two(): pass\n")
-    assert run("collect", "--env", "py", "--out", "reports", "--", "test_pair.py", "-q",
+    subprocess.run(["git", "sparse-checkout", "set", "--no-cone", "/README.md"], cwd=tmp_path, check=True)
+    subprocess.run(["git", "checkout", "-q", "HEAD"], cwd=tmp_path, check=True)
+    (tmp_path / "README.md").write_text("overlay\n")
+    (tmp_path / "inputs").mkdir()
+    extra = "inputs/extra config"
+    (tmp_path / extra).write_text("test input\n")
+    (tmp_path / "inputs/test_pair.py").write_text("def test_one(): pass\ndef test_two(): pass\n")
+    paths = ["README.md", extra, "inputs/test_pair.py"]
+    assert run("collect", "--env", "py", "--out", "reports", "--overlay", *paths, "--", "inputs/test_pair.py", "-q",
                cwd=tmp_path) == 0
     evidence = tmp_path / "reports/py"
     record = json.loads((evidence / "env.json").read_text())
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=tmp_path, text=True).strip()
     assert record["commit"] == head and record["clean"] is False
+    assert sorted(record["changed_paths"]) == sorted(paths)
+    assert record["overlay"] == {p: subprocess.check_output(["git", "hash-object", "--", p],
+                                                            cwd=tmp_path, text=True).strip() for p in paths}
     assert record["complete"] is True and record["pytest_exit_code"] == 0
     assert record["obligation"] == "pre-merge" and record["python_version"]
-    assert "test_pair.py" in record["command"]
+    assert "inputs/test_pair.py" in record["command"]
     assert len(ElementTree.parse(evidence / "junit.xml").findall(".//testcase")) == 2
-    assert "test_pair.py" in json.loads((evidence / "coverage.json").read_text())["files"]
+    assert "inputs/test_pair.py" in json.loads((evidence / "coverage.json").read_text())["files"]

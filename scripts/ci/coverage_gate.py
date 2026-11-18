@@ -20,6 +20,23 @@ else:
     from ci_baseline import junit_id, write_json
 
 
+def tree_record(overlay_paths):
+    root = Path(subprocess.check_output(["git", "rev-parse", "--show-toplevel"], text=True).rstrip("\n"))
+    status = subprocess.check_output(["git", "status", "--porcelain=v1", "-z", "--untracked-files=all",
+                                      "--no-renames", "--ignore-submodules=none"], cwd=root)
+    # With renames disabled each NUL-delimited entry is "XY path", relative to the root.
+    changed = sorted(os.fsdecode(entry[3:]) for entry in status.split(b"\0") if entry)
+    overlay = {}
+    for name in overlay_paths:
+        path = Path(name)
+        if (path.is_absolute() or ".." in path.parts or not (root / path).is_file()
+                or (root / path).resolve() != root / path):
+            raise ValueError(f"expected a repository-relative regular file for --overlay: {name}")
+        blob = subprocess.check_output(["git", "hash-object", "--", path], cwd=root, text=True).strip()
+        overlay[path.as_posix()] = blob
+    return dict(clean=not changed, changed_paths=changed, overlay=overlay)
+
+
 def collect(args):
     if args.env in ("", ".", "..") or Path(args.env).name != args.env:
         raise ValueError("expected a single environment name")
@@ -29,7 +46,7 @@ def collect(args):
     if not cov_plugin and find_spec("coverage") is None:
         raise ValueError("install pytest-cov or coverage")
     sha = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
-    clean = not subprocess.check_output(["git", "status", "--porcelain"])
+    tree = tree_record(args.overlay)
     dest = (args.out / args.env).resolve()
     dest.mkdir(parents=True, exist_ok=False)
     xml, cov = dest / "junit.xml", dest / "coverage.json"
@@ -41,7 +58,7 @@ def collect(args):
         command = py + ["pytest", *pytest_args, f"--cov-report=json:{cov}", "--cov-fail-under=0"]
     else:
         command = py + ["coverage", "run", "--parallel-mode", "-m", "pytest", *pytest_args]
-    record = dict(commit=sha, clean=clean, command=command, python_version=platform.python_version(),
+    record = dict(commit=sha, **tree, command=command, python_version=platform.python_version(),
                   obligation=args.obligation, pytest_exit_code=None, complete=False)
     write_json(dest / "env.json", record)
     with tempfile.TemporaryDirectory(dir=dest) as tmp:
@@ -62,6 +79,17 @@ def collect(args):
 
 def string_list(value):
     return isinstance(value, list) and all(isinstance(s, str) and s for s in value)
+
+
+def tree_matches_record(meta):
+    changed = meta.get("changed_paths", [])
+    if meta.get("clean") is True:
+        return changed == []
+    overlay = meta.get("overlay")
+    return (meta.get("clean") is False and string_list(changed) and bool(changed)
+            and isinstance(overlay, dict) and set(changed) <= overlay.keys()
+            and all(isinstance(blob, str) and re.fullmatch(r"[0-9a-f]{40}|[0-9a-f]{64}", blob)
+                    for blob in overlay.values()))
 
 
 def read_json(path):
@@ -146,10 +174,12 @@ def evidence(folder, side, args, required, issues):
         raise ValueError(f"{record}: expected environment record")
     if meta.get("commit") != args.commit:
         issues["commit mismatch"].add(str(record))
+    if not tree_matches_record(meta):
+        issues["dirty worktree"].add(str(record))
     code = meta.get("pytest_exit_code")
     if meta.get("complete") is not True or type(code) is not int or code not in (0, 1):
         issues["incomplete run"].add(str(record))
-    if (meta.get("obligation") not in ("pre-merge", "daily") or type(meta.get("clean")) is not bool
+    if (meta.get("obligation") not in ("pre-merge", "daily")
             or not isinstance(meta.get("python_version"), str) or not meta["python_version"]
             or not string_list(meta.get("command")) or not meta["command"]):
         raise ValueError(f"{record}: invalid environment record")
@@ -194,6 +224,10 @@ def compare_env(args, env, required, touched, mapping, paths, issues, notes):
     issues["passing node now skipped"].update(n for n in skipped & old.keys() if old[n][0] == "passed")
     issues["skip reason changed"].update(changed)
     closure, pr, nightly = paths
+    if not args.closure and "pre-merge" in (old_meta["obligation"], meta["obligation"]):
+        notes.append(f"{env}: pre-merge closure: not checked (no closure supplied)")
+        if args.kind == "consolidation":
+            issues["pre-merge closure not checked"].add(env)
     if old_meta["obligation"] == "pre-merge":
         replacements = {n for n in mapped if mapping[n] in pr}
         missing = closure - (pr & new.keys()) - replacements
@@ -233,6 +267,8 @@ def compare(args):
             savings = before - after - closure
             notes.append(f"Shards dropped outside the closure (intended saving, {len(savings)}): {sample(savings)}")
         else:
+            if args.touched_modules is None:
+                raise ValueError(f"--touched-modules is required for {args.kind}")
             paths = (args.closure, args.pr_path_nodes, args.nightly_path_nodes)
             if any(paths) and not all(paths):
                 raise ValueError("supply closure, pr-path-nodes and nightly-path-nodes together")
@@ -242,6 +278,8 @@ def compare(args):
             if not isinstance(mapping, dict) or not string_list(list(mapping.values())) or "" in mapping:
                 raise ValueError("expected mapping of node IDs to node IDs")
             required, touched = names(args.required_modules), names(args.touched_modules)
+            if not touched:
+                notes.append("line check: no touched modules")
             envs = names(args.required_envs)
             for folder in (args.before, args.after):
                 envs.update(p.name for p in folder.iterdir() if p.is_dir())
@@ -281,6 +319,8 @@ def main():
     run = commands.add_parser("collect")
     run.add_argument("--env", required=True)
     run.add_argument("--out", required=True, type=Path)
+    run.add_argument("--overlay", nargs="+", action="extend", default=[], metavar="PATH",
+                     help="repository-relative files deliberately overlaid on the base commit")
     run.add_argument("--obligation", choices=["pre-merge", "daily"], default="pre-merge")
     run.add_argument("pytest", nargs=argparse.REMAINDER)
     diff = commands.add_parser("compare")
