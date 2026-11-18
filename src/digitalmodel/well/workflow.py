@@ -135,19 +135,23 @@ def run_swab_surge(cfg: dict[str, Any]) -> dict[str, Any]:
     section = params["section"]
     trip = params.get("trip", {})
 
+    numeric_section = {
+        key: float(section[key])
+        for key in (
+            "pipe_od", "pipe_id", "hole_diameter", "mud_weight", "tvd",
+            "plastic_viscosity", "yield_point",
+        )
+    }
+    numeric_section["clinging_constant"] = float(section.get("clinging_constant", 0.45))
+    trip_speed = float(trip.get("trip_speed_ft_min", 60.0))
+    if not all(math.isfinite(value) for value in (*numeric_section.values(), trip_speed)):
+        raise ValueError("Swab/surge section and trip inputs must be finite.")
+
     calc = SwabSurge(
-        pipe_od=float(section["pipe_od"]),
-        pipe_id=float(section["pipe_id"]),
-        hole_diameter=float(section["hole_diameter"]),
-        mud_weight=float(section["mud_weight"]),
-        tvd=float(section["tvd"]),
-        plastic_viscosity=float(section["plastic_viscosity"]),
-        yield_point=float(section["yield_point"]),
-        clinging_constant=float(section.get("clinging_constant", 0.45)),
+        **numeric_section,
         pipe_config=section.get("pipe_config", "closed"),
     )
 
-    trip_speed = float(trip.get("trip_speed_ft_min", 60.0))
     evaluated = calc.evaluate(trip_speed).as_dict()
     swab = evaluated["swab_emw_ppg"]
     surge = evaluated["surge_emw_ppg"]

@@ -15,6 +15,11 @@ Read `screening_status` and `screening_reason` together. A value of `pass`
 means both mud weights are within the supplied limits, including equality.
 A value of `fail` identifies a kick risk, a loss risk, or both. A missing pore
 or fracture limit gives `warning` because the pressure window was not evaluated.
+In a partial window, the supplied limit is not validated or included in the
+summary, even if it is non-finite; the status remains `warning`.
+Non-finite numeric section or trip inputs, non-finite evaluated mud weights or
+complete-window limits, and equal or reversed complete-window limits raise
+`ValueError` before any summary is written.
 
 The method uses Burkhardt (1961) clinging-constant effective velocity with
 Bingham-plastic annular friction, a screening class of API RP 13D,

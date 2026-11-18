@@ -53,7 +53,10 @@ def test_pressure_window_summary(tmp_path, window, status, flags, reason_words):
 
     output = run_swab_surge(cfg)
     returned = output["swab_surge"]
-    saved = json.loads((tmp_path / SUMMARY).read_text("utf-8"))
+    saved = json.loads(
+        (tmp_path / SUMMARY).read_text("utf-8"),
+        parse_constant=lambda value: pytest.fail(f"Non-finite JSON number: {value}"),
+    )
     assert output["screening_status"] == saved["screening_status"] == status
     assert output["screening_reason"] == saved["screening_reason"]
     assert all(word in saved["screening_reason"].lower() for word in reason_words)
@@ -91,6 +94,42 @@ def test_nonfinite_pressure_comparison_is_rejected(
     with pytest.raises(ValueError, match="finite"):
         run_swab_surge(cfg)
     assert not (tmp_path / SUMMARY).exists()
+
+
+@pytest.mark.parametrize(
+    "field",
+    ["pipe_od", "pipe_id", "hole_diameter", "mud_weight", "tvd", "plastic_viscosity",
+     "yield_point", "clinging_constant"],
+)
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+@pytest.mark.parametrize("with_window", [True, False])
+def test_nonfinite_section_input_is_rejected(tmp_path, field, value, with_window):
+    cfg = _example_config(tmp_path)
+    cfg["swab_surge"]["section"]["pipe_config"] = "closed"
+    cfg["swab_surge"]["section"][field] = value
+    if not with_window:
+        del cfg["swab_surge"]["window"]
+
+    with pytest.raises(ValueError, match="finite"):
+        run_swab_surge(cfg)
+    assert not (tmp_path / "results").exists()
+
+
+@pytest.mark.parametrize("field", ["pore_pressure_emw_ppg", "fracture_emw_ppg"])
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+def test_partial_window_ignores_supplied_nonfinite_limit(tmp_path, field, value):
+    cfg = _example_config(tmp_path)
+    cfg["swab_surge"]["window"] = {field: value}
+
+    output = run_swab_surge(cfg)
+    saved = json.loads(
+        (tmp_path / SUMMARY).read_text("utf-8"),
+        parse_constant=lambda value: pytest.fail(f"Non-finite JSON number: {value}"),
+    )
+    assert output["screening_status"] == saved["screening_status"] == "warning"
+    assert "not evaluated" in saved["screening_reason"]
+    assert set(saved["result"]) == {"at_trip_speed"}
+    assert "window" not in saved
 
 
 @pytest.mark.parametrize("pore, fracture", [(12.0, 12.0), (13.0, 11.5)])
