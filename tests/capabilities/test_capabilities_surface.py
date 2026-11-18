@@ -3,8 +3,10 @@
 """Synthetic offline fixtures; no correspondence to a published site is asserted."""
 
 import hashlib
+from html import escape
 import importlib.util
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -30,16 +32,16 @@ def declared(tmp_path):
     path.parent.mkdir(parents=True)
     path.write_text(yaml.safe_dump({
         "canonical_surface": "https://example.invalid/capabilities/",
-        "sections": [{"id": "alpha", "title": "Alpha & work"},
+        "sections": [{"id": "alpha", "title": "Alpha & work — analysis"},
                      {"id": "beta", "title": "Beta"}],
-    }), encoding="utf-8")
+    }, allow_unicode=True), encoding="utf-8")
     return tmp_path
 
 
 def page(beta="<section id='beta'><h2>Beta</h2></section>"):
     return ("<nav><a href='#alpha'>A</a><a href='#beta'>B</a>"
             "<a href='/elsewhere#other'>Other</a></nav>"
-            "<section id='alpha'><header><h2> Alpha &amp; <em>work</em> </h2>"
+            "<section id='alpha'><header><h2> Alpha &amp; <em>work</em> — analysis </h2>"
             "</header><h3>Detail</h3></section>" + beta +
             "<footer id='unrelated'><a href='#footer'>Footer</a></footer>")
 
@@ -55,6 +57,28 @@ def test_match_normalization_and_provenance(surface, declared):
     assert report["diagnostics"]["nav_fragment_count"] == 2
     assert report["diagnostics"]["section_ids"] == ["alpha", "beta"]
     assert not any(report["mismatches"].values())
+
+
+@pytest.mark.parametrize("real_census", [False, True])
+def test_census_uses_utf8_under_legacy_locale(surface, declared, monkeypatch, real_census):
+    repo = REPO if real_census else declared
+    source = repo / surface._inventory.SECTIONS_YML
+    config = yaml.safe_load(source.read_bytes().decode("utf-8"))
+    html = "".join(f"<section id='{s['id']}'><h2>{escape(s['title'])}</h2></section>"
+                   for s in config["sections"])
+    read_text = Path.read_text
+    reads = []
+
+    def legacy_read_text(path, encoding=None, errors=None):
+        reads.append((path, encoding))
+        return read_text(path, encoding=encoding or "cp1252", errors=errors)
+
+    monkeypatch.setattr(Path, "read_text", legacy_read_text)
+    report = surface.compare_surface(html, repo)
+    assert report["status"] == "match"
+    assert report["expected_count"] == report["observed_count"] == len(config["sections"])
+    assert not report["mismatches"]["changed_title"]
+    assert reads == [(source, "utf-8")]
 
 
 @pytest.mark.parametrize("replacement,key,value", [
@@ -95,9 +119,36 @@ def test_nav_absence_is_separate(surface, declared, nav, state):
     assert report["diagnostics"]["navigation"] == state
 
 
+@pytest.mark.parametrize("html,state", [
+    (page().replace("</section>", "", 1), "present"),
+    (page().replace("</h2>", "", 1), "present"),
+    (page().replace("<nav><a href='#alpha'>A</a><a href='#beta'>B</a>"
+                    "<a href='/elsewhere#other'>Other</a></nav>", "<nav></nav>")
+     .replace("</h2>", "", 1), "empty"),
+    ("<nav><section><h2>Heading</section><a href='#alpha'>A</a></nav>" + page(), "present"),
+])
+def test_section_errors_leave_navigation_independent(surface, declared, html, state):
+    report = surface.compare_surface(html, declared)
+    assert report["status"] == "unrecognized-shape"
+    assert "malformed_structure" in report["diagnostics"]["reasons"]
+    assert report["diagnostics"]["navigation"] == state
+
+
+@pytest.mark.parametrize("nav", [
+    "<nav><a href='#alpha'>A</a>",
+    "</nav>",
+    "<section><nav><a href='#alpha'>A</a></section>",
+    "<nav><section><h2>Heading</h2></nav></section>",
+])
+def test_malformed_navigation_boundaries(surface, declared, nav):
+    report = surface.compare_surface(nav + page().split("</nav>", 1)[1], declared)
+    assert report["status"] == "unrecognized-shape"
+    assert report["diagnostics"]["navigation"] == "malformed"
+
+
 def test_nested_sections_and_inert_content(surface, declared):
     html = ("<section id='alpha'><section id='beta'><h2>Beta</h2></section>"
-            "<h2>Alpha &amp; work</h2></section>"
+            "<h2>Alpha &amp; work — analysis</h2></section>"
             "<template><section id='fake'><h2>Fake</h2></section></template>"
             "<script>throw Error('must not execute')</script>")
     assert surface.compare_surface(html, declared)["status"] == "match"
@@ -138,3 +189,16 @@ def test_cli_explicit_utf8_input_and_no_inventory_writes(surface, declared, tmp_
         assert json.loads(result.stdout)["status"] == status
         assert not result.stderr
     assert source.read_bytes() == before
+
+
+def test_cli_json_under_legacy_console(declared, tmp_path):
+    html = tmp_path / "supplied.html"
+    html.write_text(page("<section id='beta'><h2>Tools 雪</h2></section>"), encoding="utf-8")
+    result = subprocess.run([sys.executable, str(SCRIPT), str(html), "--repo", str(declared)],
+                            env={**os.environ, "PYTHONIOENCODING": "cp1252:strict"},
+                            capture_output=True, check=True)
+    report = json.loads(result.stdout.decode("ascii"))
+    assert report["status"] == "drift"
+    assert report["mismatches"]["changed_title"] == [
+        {"id": "beta", "expected": "Beta", "observed": ["Tools 雪"]}]
+    assert not result.stderr

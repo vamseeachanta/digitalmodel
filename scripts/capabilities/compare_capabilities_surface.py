@@ -51,6 +51,7 @@ class SurfaceParser(HTMLParser):
         self.tags: Counter[str] = Counter()
         self.nav_count = 0
         self.nav_fragments = 0
+        self.nav_malformed = False
         self.malformed = False
         self.redirect = False
 
@@ -101,9 +102,12 @@ class SurfaceParser(HTMLParser):
         tags = [t for t, _ in self.stack]
         if tag not in tags:
             self.malformed = True
+            self.nav_malformed |= tag == "nav"
             return
         index = len(tags) - 1 - tags[::-1].index(tag)
         self.malformed |= index != len(tags) - 1
+        if index != len(tags) - 1:
+            self.nav_malformed |= "nav" in tags[index:]
         _, record = self.stack[index]
         if tag in _HEADINGS and record["section"] is not None:
             record["section"]["headings"].append(_title("".join(record["text"])))
@@ -112,9 +116,11 @@ class SurfaceParser(HTMLParser):
 
 def compare_surface(html: str, repo: Path | str = _inventory.REPO_DEFAULT) -> dict:
     """Return a deterministic report; an empty or unusable census cannot match."""
-    expected = {s["id"]: _title(s["title"])
-                for s in _inventory.census(_inventory.load_sections(repo))}
     config = yaml.safe_load((Path(repo) / _inventory.SECTIONS_YML).read_text(encoding="utf-8"))
+    sections = [{"id": s["id"], "title": s.get("title", ""),
+                 "hrefs": list(s.get("hrefs") or []), "card_id": s.get("card_id")}
+                for s in (config.get("sections") or [])]
+    expected = {s["id"]: _title(s["title"]) for s in _inventory.census(sections)}
     parser = SurfaceParser()
     parser.feed(html)
     parser.close()
@@ -156,8 +162,9 @@ def compare_surface(html: str, repo: Path | str = _inventory.REPO_DEFAULT) -> di
             "tag_counts": {tag[:120]: count for tag, count in sorted(parser.tags.items())[:40]},
             "section_ids": [sid[:120] for sid in sorted(observed)[:40]],
             "nav_fragment_count": parser.nav_fragments,
-            "navigation": ("absent" if not parser.nav_count else
-                           "malformed" if parser.malformed or parser.stack else
+            "navigation": ("malformed" if parser.nav_malformed
+                           or any(t == "nav" for t, _ in parser.stack) else
+                           "absent" if not parser.nav_count else
                            "present" if parser.nav_fragments else "empty"),
         },
     }
@@ -170,7 +177,7 @@ def main() -> int:
     ap.add_argument("--repo", type=Path, default=_inventory.REPO_DEFAULT)
     args = ap.parse_args()
     print(json.dumps(compare_surface(args.html.read_bytes().decode("utf-8"), args.repo),
-                     indent=2, sort_keys=True, ensure_ascii=False))
+                     indent=2, sort_keys=True, ensure_ascii=True))
     return 0
 
 
