@@ -20,9 +20,24 @@ pile diameter. No soil constitutive relation or interpolation is evaluated.
 
 Inputs and outputs use m, kg, s, N and Pa; units are in field names. Boundary
 constructors use exact length definitions (inch to m, foot to m) and kPa to Pa.
+Unit basis: NIST SP 811 (2008), Guide for the Use of the International System
+of Units, Appendix B.8: 1 ft = 0.3048 m and 1 in = 0.0254 m, both printed in
+boldface as exact; Sec. 4.3 Table 5: kilo = 10**3 (kPa to Pa, kN to N).
 Mass and force conversion coefficients are required: exact definitions can be
-supplied, or historical rounding can be reproduced explicitly without silently
-changing the engineering data. No source-specific coefficient is a default.
+supplied (NIST SP 811 Appendix B footnote 22: 1 lb = 0.45359237 kg; footnote
+23: 1 lbf = 4.4482216152605 N for g_n = 9.80665 m/s2), or historical rounding
+can be reproduced explicitly without silently changing the engineering data.
+No source-specific coefficient is a default.
+
+Joint dry and apparent submerged masses are on one load basis: the same
+contents, coatings and attachments. On that basis the apparent submerged mass
+is the dry mass less the displaced water mass, which cannot be negative, so a
+submerged mass above the dry mass is rejected. A caller whose two weights
+include different contents or loads must reconcile them before construction.
+
+The Poisson ratio interval -1 < nu < 0.5 is derived, not sourced: for linear
+isotropic elasticity with E > 0, the shear modulus G = E/(2*(1+nu)) is positive
+only for nu > -1 and the bulk modulus K = E/(3*(1-2*nu)) only for nu < 0.5.
 
 Standards as stated in the source: API-1111; clause not stated in source.
 That name appears in a cover subject, without an edition or a demonstrated
@@ -46,12 +61,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from math import isfinite, pi, sqrt
-from numbers import Real
+from numbers import Integral, Real
 
 from digitalmodel.drilling_riser.section import INCH_TO_METER, section_properties
 from digitalmodel.drilling_riser.stackup import effective_tension
 
-FOOT_TO_METER = 0.3048  # Exact by definition.
+FOOT_TO_METER = 0.3048  # NIST SP 811 (2008) Appendix B.8, boldface (exact).
+KILO = 1000.0  # NIST SP 811 (2008) Sec. 4.3 Table 5: kilo = 10**3.
 
 
 def _finite(value: float, name: str) -> None:
@@ -76,6 +92,8 @@ class RiserJointInput:
     """One repeated joint: SI geometry, elastic data and mass equivalents.
 
     ``from_imperial`` converts imperial lengths and masses; the modulus is accepted in kPa.
+    The joint count accepts any integral number except a boolean (for example
+    a NumPy integer) and is stored as a Python int.
     """
 
     joint_count_dimensionless: int
@@ -89,8 +107,9 @@ class RiserJointInput:
 
     def __post_init__(self) -> None:
         count = self.joint_count_dimensionless
-        if isinstance(count, bool) or not isinstance(count, int) or count < 1:
+        if isinstance(count, bool) or not isinstance(count, Integral) or count < 1:
             raise ValueError('joint_count_dimensionless must be a positive integer')
+        object.__setattr__(self, 'joint_count_dimensionless', int(count))
         for name in ('joint_length_m', 'outer_diameter_m', 'wall_thickness_m',
                      'youngs_modulus_pa'):
             _positive(getattr(self, name), name)
@@ -100,7 +119,11 @@ class RiserJointInput:
         if 2 * self.wall_thickness_m > self.outer_diameter_m:
             raise ValueError('wall thickness exceeds the outer radius')
         if not -1 < self.poisson_ratio_dimensionless < 0.5:
+            # Derived in the module docstring from G > 0 and K > 0.
             raise ValueError('isotropic elasticity requires -1 < Poisson ratio < 0.5')
+        if self.submerged_mass_per_joint_kg > self.dry_mass_per_joint_kg:
+            # One load basis: displaced water mass = dry - submerged >= 0.
+            raise ValueError('submerged mass exceeds dry mass: negative displacement')
 
     @classmethod
     def from_imperial(
@@ -130,7 +153,7 @@ class RiserJointInput:
             outer_diameter_in * INCH_TO_METER, wall_thickness_in * INCH_TO_METER,
             dry_mass_per_joint_lb * mass_conversion_kg_per_lb,
             submerged_mass_per_joint_lb * mass_conversion_kg_per_lb,
-            youngs_modulus_kpa * 1000, poisson_ratio_dimensionless,
+            youngs_modulus_kpa * KILO, poisson_ratio_dimensionless,
         )
 
 
@@ -247,10 +270,12 @@ def compute_tension_balance(inputs: TensionInput) -> TensionBalance:
     """Return W=m_service*g and Tbottom=Ttop-W, without a pressure correction.
 
     The existing ``stackup.effective_tension`` function is reused for the balance.
+    Its contract is in kN, so forces are converted N -> kN at the call and the
+    result kN -> N on return.
     """
     weight = inputs.inservice_mass_kg * inputs.gravity_m_per_s2
-    bottom = effective_tension(inputs.top_tension_n, weight, 1.0)
-    return TensionBalance(weight, bottom)
+    bottom_kn = effective_tension(inputs.top_tension_n / KILO, weight / KILO, 1.0)
+    return TensionBalance(weight, bottom_kn * KILO)
 
 
 @dataclass(frozen=True)

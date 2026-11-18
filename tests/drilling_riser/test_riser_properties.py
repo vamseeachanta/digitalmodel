@@ -1,10 +1,20 @@
-"""Illustrative example tests; expectations follow independent hand formulas."""
+"""Illustrative example tests; expectations follow independent hand formulas.
+
+Unit reference values are typed from NIST SP 811 (2008), Guide for the Use of
+the International System of Units: Appendix B.8 gives 1 ft = 0.3048 m and
+1 in = 0.0254 m (boldface, exact); footnote 22 gives the exact avoirdupois
+pound 0.45359237 kg; footnote 23 gives the exact pound-force 4.4482216152605 N
+for the standard acceleration of free fall 9.80665 m/s2; Sec. 4.3 Table 5
+gives kilo = 10**3.
+"""
 
 from dataclasses import FrozenInstanceError, replace
 from math import pi, sqrt
 
+import numpy as np
 import pytest
 
+from digitalmodel.drilling_riser import riser_properties
 from digitalmodel.drilling_riser.riser_properties import (
     BuoyancyInput,
     RiserJointInput,
@@ -17,7 +27,11 @@ from digitalmodel.drilling_riser.riser_properties import (
     compute_tension_balance,
     mass_from_linear_density,
 )
-from digitalmodel.drilling_riser.stackup import effective_tension
+
+# NIST SP 811 (2008), Appendix B footnote 22 (exact avoirdupois pound).
+KG_PER_LB_NIST_SP811 = 0.45359237
+# NIST SP 811 (2008), Appendix B footnote 23 (exact for g_n = 9.80665 m/s2).
+N_PER_LBF_NIST_SP811 = 4.4482216152605
 
 
 def illustrative_joint():
@@ -66,13 +80,13 @@ def test_exact_imperial_boundary_and_explicit_mass_coefficient():
         outer_diameter_in=10.0, wall_thickness_in=0.5,
         dry_mass_per_joint_lb=200.0, submerged_mass_per_joint_lb=100.0,
         youngs_modulus_kpa=200e6, poisson_ratio_dimensionless=0.25,
-        mass_conversion_kg_per_lb=0.45359237,
+        mass_conversion_kg_per_lb=KG_PER_LB_NIST_SP811,
     )
     assert joint.joint_length_m == 3.048
     assert joint.outer_diameter_m == pytest.approx(0.254)
     assert joint.wall_thickness_m == pytest.approx(0.0127)
-    assert joint.dry_mass_per_joint_kg == 200 * 0.45359237
-    assert joint.submerged_mass_per_joint_kg == 100 * 0.45359237
+    assert joint.dry_mass_per_joint_kg == 200 * KG_PER_LB_NIST_SP811
+    assert joint.submerged_mass_per_joint_kg == 100 * KG_PER_LB_NIST_SP811
     assert joint.youngs_modulus_pa == 200e9
     with pytest.raises(FrozenInstanceError):
         joint.joint_length_m = 4.0
@@ -104,20 +118,34 @@ def test_zero_mass_and_solid_circular_section():
 def test_weight_and_tension_equilibrium_including_compression_and_uplift():
     params = TensionInput(10000.0, 300.0, 10.0)
     result = compute_tension_balance(params)
+    exact = pytest.approx  # kN boundary division leaves at most rounding error.
     assert result.inservice_weight_n == 3000.0
-    assert result.bottom_tension_n == 7000.0
-    assert result.bottom_tension_n + result.inservice_weight_n == params.top_tension_n
-    assert compute_tension_balance(replace(params, top_tension_n=100.0)).bottom_tension_n == -2900
-    assert compute_tension_balance(replace(params, inservice_mass_kg=-20.0)).bottom_tension_n == 10200
-    assert compute_tension_balance(replace(params, inservice_mass_kg=0.0)).bottom_tension_n == 10000
+    assert result.bottom_tension_n == exact(7000.0, rel=1e-12)
+    assert result.bottom_tension_n + result.inservice_weight_n == exact(params.top_tension_n,
+                                                                        rel=1e-12)
+    # Hand values: 100 - 3000 = -2900 N; 10000 - (-20 * 10) = 10200 N; 10000 - 0.
+    assert compute_tension_balance(
+        replace(params, top_tension_n=100.0)).bottom_tension_n == exact(-2900, rel=1e-12)
+    assert compute_tension_balance(
+        replace(params, inservice_mass_kg=-20.0)).bottom_tension_n == exact(10200, rel=1e-12)
+    assert compute_tension_balance(
+        replace(params, inservice_mass_kg=0.0)).bottom_tension_n == exact(10000, rel=1e-12)
 
 
-def test_tension_balance_matches_existing_effective_tension():
-    assert (
-        compute_tension_balance(TensionInput(10000.0, 300.0, 10.0)).bottom_tension_n
-        == effective_tension(10000.0, 3000.0, 1.0)
-        == 7000.0
-    )
+def test_tension_balance_passes_kilonewtons_to_existing_effective_tension(monkeypatch):
+    # stackup.effective_tension takes and returns kN; the boundary converts
+    # N -> kN on the way in and kN -> N on the way out (kilo = 10**3).
+    calls = []
+
+    def spy(top_tension_kn, submerged_weight_kn, depth_factor):
+        calls.append((top_tension_kn, submerged_weight_kn, depth_factor))
+        return top_tension_kn - submerged_weight_kn * depth_factor
+
+    monkeypatch.setattr(riser_properties, 'effective_tension', spy)
+    result = compute_tension_balance(TensionInput(10000.0, 300.0, 10.0))
+    assert calls == [(10.0, 3.0, 1.0)]
+    # Hand calculation: 10000 N - 300 kg * 10 m/s2 = 7000 N.
+    assert result.bottom_tension_n == pytest.approx(7000.0, rel=1e-12)
 
 
 def test_apparent_mass_ratio_requires_explicit_factor():
@@ -134,10 +162,10 @@ def test_soil_load_is_normalized_by_reference_diameter_only():
     assert compute_soil_pressure_pa(replace(params, line_load_n_per_m=-12000)) == -20000
     converted = SoilResistanceInput.from_imperial(
         deflection_in=0.5, line_load_lbf_per_in=10.0,
-        reference_diameter_in=20.0, force_conversion_n_per_lbf=4.4482216152605,
+        reference_diameter_in=20.0, force_conversion_n_per_lbf=N_PER_LBF_NIST_SP811,
     )
     assert converted.deflection_m == pytest.approx(0.0127)
-    expected = (10 * 4.4482216152605 / 0.0254) / (20 * 0.0254)
+    expected = (10 * N_PER_LBF_NIST_SP811 / 0.0254) / (20 * 0.0254)
     assert compute_soil_pressure_pa(converted) == pytest.approx(expected)
 
 
@@ -192,6 +220,69 @@ def test_invalid_boundary_coefficient(scale):
             deflection_in=0.5, line_load_lbf_per_in=10,
             reference_diameter_in=20, force_conversion_n_per_lbf=scale,
         )
+
+
+def imperial_joint_arguments():
+    return dict(
+        joint_count_dimensionless=2, joint_length_ft=10.0,
+        outer_diameter_in=10.0, wall_thickness_in=0.5,
+        dry_mass_per_joint_lb=200.0, submerged_mass_per_joint_lb=100.0,
+        youngs_modulus_kpa=200e6, poisson_ratio_dimensionless=0.25,
+        mass_conversion_kg_per_lb=KG_PER_LB_NIST_SP811,
+    )
+
+
+@pytest.mark.parametrize('field,value', [
+    ('mass_conversion_kg_per_lb', 0), ('mass_conversion_kg_per_lb', -1),
+    ('mass_conversion_kg_per_lb', float('nan')), ('mass_conversion_kg_per_lb', True),
+    ('joint_length_ft', float('inf')), ('outer_diameter_in', float('nan')),
+    ('wall_thickness_in', float('-inf')), ('dry_mass_per_joint_lb', float('nan')),
+    ('submerged_mass_per_joint_lb', float('inf')), ('youngs_modulus_kpa', float('nan')),
+])
+def test_invalid_imperial_joint_boundary(field, value):
+    with pytest.raises(ValueError):
+        RiserJointInput.from_imperial(**{**imperial_joint_arguments(), field: value})
+
+
+def test_submerged_mass_cannot_exceed_dry_mass_on_one_load_basis():
+    # Apparent submerged mass = dry mass - displaced water mass, and displaced
+    # mass >= 0, so 110 kg submerged against 100 kg dry implies negative volume.
+    with pytest.raises(ValueError, match='submerged mass exceeds dry mass'):
+        replace(illustrative_joint(), joint_length_m=10.0,
+                dry_mass_per_joint_kg=100.0, submerged_mass_per_joint_kg=110.0)
+    with pytest.raises(ValueError, match='submerged mass exceeds dry mass'):
+        RiserJointInput.from_imperial(**{**imperial_joint_arguments(),
+                                         'submerged_mass_per_joint_lb': 200.5})
+    # Equality (no displaced water) is accepted; the buoyancy diameter is the bore.
+    neutral = compute_joint_properties(replace(
+        illustrative_joint(), dry_mass_per_joint_kg=100.0, submerged_mass_per_joint_kg=100.0))
+    assert neutral.dry_mass_kg_per_m == neutral.submerged_mass_kg_per_m == 10.0
+    assert compute_buoyancy_diameter_m(BuoyancyInput(
+        neutral.dry_mass_kg_per_m, neutral.submerged_mass_kg_per_m,
+        neutral.inner_diameter_m, 1000.0)) == pytest.approx(0.72)
+    # Net uplift (negative apparent mass) is accepted and feeds the buoyancy step.
+    uplift = compute_joint_properties(replace(
+        illustrative_joint(), dry_mass_per_joint_kg=100.0, submerged_mass_per_joint_kg=-20.0))
+    assert uplift.submerged_mass_kg_per_m == -2.0
+    # Hand value: sqrt(4 * (10 - (-2)) / (pi * 1000) + 0.72**2) m.
+    assert compute_buoyancy_diameter_m(BuoyancyInput(
+        uplift.dry_mass_kg_per_m, uplift.submerged_mass_kg_per_m,
+        uplift.inner_diameter_m, 1000.0)) == pytest.approx(sqrt(48 / (pi * 1000) + 0.5184))
+
+
+def test_integral_numpy_joint_count_is_normalised_to_int():
+    joint = replace(illustrative_joint(), joint_count_dimensionless=np.int64(3))
+    assert joint.joint_count_dimensionless == 3
+    assert type(joint.joint_count_dimensionless) is int
+    for bad in (np.bool_(True), np.float64(3.0), np.int64(0)):
+        with pytest.raises(ValueError):
+            replace(illustrative_joint(), joint_count_dimensionless=bad)
+
+
+@pytest.mark.parametrize('nu', [-0.999, 0.0, 0.499])
+def test_poisson_ratio_inside_positive_moduli_interval_is_accepted(nu):
+    # G = E / (2 (1 + nu)) > 0 needs nu > -1; K = E / (3 (1 - 2 nu)) > 0 needs nu < 0.5.
+    assert replace(illustrative_joint(), poisson_ratio_dimensionless=nu)
 
 
 def test_mass_from_required_linear_density():
