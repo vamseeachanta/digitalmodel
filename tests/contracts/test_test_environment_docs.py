@@ -31,8 +31,8 @@ def pytest_commands(text):
 def assert_complete_extra(command):
     """Require the full extra and the same explicit source choice as CI."""
     assert command[:2] == ["uv", "run"]
-    assert "--no-sources" in command
     index = command.index("--with-editable")
+    assert "--no-sources" in command[:index]
     assert command[index + 1] == ".[test]"
     return index
 
@@ -40,8 +40,10 @@ def assert_complete_extra(command):
 def assert_contributor_environment(command):
     """Keep contributor runs outside project resolution on the CI interpreter."""
     index = assert_complete_extra(command)
-    assert "--no-project" in command
-    assert command[command.index("--python") + 1] == "3.11"
+    uv_options = command[:index]
+    assert "--no-project" in uv_options
+    python_index = uv_options.index("--python")
+    assert command[python_index + 1] == "3.11"
     return index
 
 
@@ -167,3 +169,20 @@ def test_unpinned_or_different_python_is_rejected(python_option):
                 "--with-editable '.[test]' python -m pytest"
             )
         )
+
+
+@pytest.mark.parametrize(
+    ("uv_options", "pytest_options"),
+    [
+        ("--python 3.11 --no-sources", "--no-project"),
+        ("--no-project --no-sources", "--python 3.11"),
+        ("--no-project --python 3.11", "--no-sources"),
+    ],
+)
+def test_uv_options_passed_to_pytest_are_rejected(uv_options, pytest_options):
+    command = (
+        f"uv run {uv_options} --with-editable '.[test]' "
+        f"python -m pytest {pytest_options}"
+    )
+    with pytest.raises((AssertionError, ValueError)):
+        assert_test_environment(shlex.split(command))

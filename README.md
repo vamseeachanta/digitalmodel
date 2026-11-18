@@ -209,7 +209,7 @@ package and the complete `test` extra, including pytest plugins and collection-t
 dependencies, using the same extra and public-index dependencies as CI.
 `--no-project` uses an isolated cached environment without resolving the project
 or rewriting `uv.lock`; an existing project environment is preserved.
-`--python 3.11` explicitly selects the interpreter version used by CI.
+`--python 3.11` selects the interpreter version used by the domain test gates.
 
 Start with the offline-capable documentation contract:
 
