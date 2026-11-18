@@ -6,8 +6,9 @@
 The evidence directory holds push-runs.tsv and sweep-runs.tsv (SHA, run, name,
 conclusion, attempt), jobs/ and sweep-jobs/ (SHA-run-attempt.json job lists),
 and failed-reports.json and sweep-failed-reports.json (result and JUnit summaries).
-"verified" counts shard membership with complete observed outcomes. "with_gate_operands"
-also requires a pytest operand for each changed test. Either shortfall exits 1.
+"verified" counts shard membership with complete observed outcomes. Candidate declarations
+can supply a missing historical owner. "with_gate_operands" also requires a historical
+pytest operand for each changed test. Either shortfall exits 1.
 """
 
 import argparse
@@ -62,7 +63,8 @@ def owns(path, roots):
                for root in roots)
 
 
-def changed_owners(paths, parent, sha):
+def changed_owners(paths, parent, sha, candidate_domains=()):
+    """Fill historical ownership gaps from the candidate. Only historical gates supply operands."""
     owners, unowned, without_operand = set(), [], []
     for path in map(Path, paths):
         if path.parts[0] != "tests" or path.suffix != ".py":
@@ -74,11 +76,13 @@ def changed_owners(paths, parent, sha):
             matches.update(shard for shard, roots in groups.items() if owns(path, roots))
             has_operand |= any(owns(path, roots) and not any(under_root(path, r) for r in ignored)
                                for roots, ignored in commands.values())
-        if path.name.startswith("test_") or path.name.endswith("_test.py") or path.name == "conftest.py":
+        if detector.is_test_path(path.as_posix()):
             if not matches:
-                unowned.append(str(path))
+                matches.update(domain.name for domain in candidate_domains if owns(path, domain.roots))
+            if not matches:
+                unowned.append(path.as_posix())
             elif not has_operand:
-                without_operand.append(str(path))
+                without_operand.append(path.as_posix())
         owners.update(matches)
     return sorted(owners), unowned, without_operand
 
@@ -202,7 +206,7 @@ def main():
                 pins[path].update(names)
         selected = detector.touched_domains(paths, domains, parent, sha, pinned_domains=pins,
                                              src_routes=table)
-        owners, unowned, without_operand = changed_owners(paths, parent, sha)
+        owners, unowned, without_operand = changed_owners(paths, parent, sha, domains)
         issues, failures, runs, other_failures = outcomes(args.evidence, sha, push[sha], sweep[sha])
         result = assess(sha, parent, selected=[d.name for d in selected], owners=owners,
                         unowned=unowned, problems=issues, failures=failures, reports=reports,

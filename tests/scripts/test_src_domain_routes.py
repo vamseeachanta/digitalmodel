@@ -481,3 +481,37 @@ def test_replay_distinguishes_declared_roots_from_gate_operands(replay, monkeypa
     monkeypatch.setattr(replay, "ownership", lambda ref: (declared, commands))
     paths = ["tests/parametric/test_refresh.py", "tests/solver/test_smoke.py", "tests/test_loose.py"]
     assert replay.changed_owners(paths, "parent", "merge") == ([shard], [paths[2]], [paths[0]])
+
+
+@pytest.mark.parametrize("name", [
+    "test_propeller_rudder_driveoff.py", "test_propeller_rudder_review.py",
+    "test_rectangular_buoy_inertia.py",
+])
+def test_candidate_owns_historical_hydrodynamics_test(detector, replay, monkeypatch, name):
+    domains = detector.parse_domains(ROOT / "tests/DOMAINS.md")
+    path = f"tests/hydrodynamics/{name}"
+    assert [d.name for d in detector.touched_domains([path], domains)] == ["hydrodynamics-other"]
+    # Neither historical revision had a matching declaration or gate operand.
+    monkeypatch.setattr(replay, "ownership", lambda ref: ({}, {}))
+    assert replay.changed_owners([path], "parent", "merge", domains) == (
+        ["hydrodynamics-other"], [], [path])
+
+
+@pytest.mark.parametrize("name", ["test_new.py", "new_test.py", "conftest.py"])
+def test_unowned_test_selects_every_shard_even_in_a_mixed_change(detector, name):
+    domains = domains_of(detector, "alpha", "beta")
+    path = f"tests/new/{name}"
+    for changes in ([path], ["tests/alpha/test_first.py", path]):
+        assert detector.touched_domains(changes, domains) == domains
+
+
+def test_replay_reads_subsea_operands_from_current_workflow(replay, monkeypatch):
+    workflow = (ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(encoding="utf-8")
+    inputs = {
+        "fixture:tests/DOMAINS.md": "| subsea | `tests/subsea/` |",
+        "fixture:.claude/quality-gates.yaml": "gates: {tests-subsea: {command: pytest}}",
+        "fixture:.github/workflows/quality-gates-by-domain.yml": workflow,
+    }
+    monkeypatch.setattr(replay, "git", lambda command, spec: inputs[spec])
+    _, commands = replay.ownership("fixture")
+    assert commands["subsea"] == ({"tests/riser_fatigue/", "tests/riser_bom/"}, set())

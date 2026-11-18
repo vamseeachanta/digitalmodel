@@ -493,6 +493,14 @@ def is_no_domain_path(path: str) -> bool:
     )
 
 
+def is_test_path(path: str) -> bool:
+    """Changed pytest modules and collection hooks under the test tree."""
+    path = normalize_root(path)
+    name = posixpath.basename(path)
+    return (path.startswith("tests/") and name.endswith(".py")
+            and (name.startswith("test_") or name.endswith("_test.py") or name == "conftest.py"))
+
+
 def path_matches_root(path: str, root: str) -> bool:
     """Match an exact file or a directory prefix."""
     normalized_path = path[2:] if path.startswith("./") else path
@@ -595,9 +603,11 @@ def touched_domains(
         if is_full_matrix_trigger(path):
             return domains
 
-        for domain in domains:
-            if any(path_matches_root(path, root) for root in domain.roots):
-                selected_names.add(domain.name)
+        owners = {domain.name for domain in domains
+                  if any(path_matches_root(path, root) for root in domain.roots)}
+        if not owners and is_test_path(path):
+            return domains
+        selected_names.update(owners)
 
     if "contracts" in selected_names and not any(d.name == "contracts" for d in domains):
         return domains
