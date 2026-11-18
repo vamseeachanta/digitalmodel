@@ -77,7 +77,9 @@ def test_caller_supplied_fit_and_linear_properties():
 def test_shared_units_convert_inches_to_metres():
     from digitalmodel.units import Q_
 
-    assert Q_(7.5, "inch").to("m").magnitude == pytest.approx(0.1905)
+    diameter_m = Q_(7.5, "inch").to("m").magnitude
+    point = ClayPoint(2.0, diameter_m, 8000.0, 20000.0, 0.02, 0.4)
+    assert clay_characteristic_displacement_m(point) == pytest.approx(2.5 * 0.02 * 0.1905)
     assert Q_(0.0, "inch").to("m").magnitude == 0.0
 
 
@@ -159,3 +161,43 @@ def test_signed_quantities_reject_boolean_inputs():
     with pytest.raises(ValueError):
         linear_property_at_depth(2, start_depth_m=1, end_depth_m=3,
                                  start_value_si=True, end_value_si=8, allow_extrapolation=False)
+
+
+@pytest.mark.parametrize("inverse", [False, True])
+def test_sand_numpy_integer_products_match_hand_calculation(inverse):
+    from digitalmodel.geotechnical.lateral_soil_response import (
+        SandPoint, sand_displacement_m, sand_resistance_n_per_m,
+    )
+
+    point = SandPoint(20, 2, 9000, 2, 4, 6, np.int32(120000000))
+    limit = 0.9 * (6 * 2 * 9000 * 20)
+    if inverse:
+        # atanh(0.8) = log(9)/2; k*z = 2400000000 without overflow.
+        expected = limit * math.log(9) / (2 * 2400000000)
+        assert sand_displacement_m(
+            point, resistance_fraction_one=0.8, cyclic=True,
+        ) == pytest.approx(expected)
+    else:
+        e = math.exp(2 * 2400000 / limit)
+        expected = limit * (e - 1) / (e + 1)
+        assert sand_resistance_n_per_m(point, 0.001, cyclic=True) == pytest.approx(expected)
+
+
+def test_low_strength_capacity_crossover_is_not_cyclic_transition():
+    from digitalmodel.geotechnical.lateral_soil_response import (
+        clay_capacity_crossover_depth_m,
+    )
+
+    point = ClayPoint(1.5, 1, 10000, 2000, 0.02, 0.5)
+    # OpenPile Matlock notes distinguish the capacity minimum from XR >= 2.5D.
+    assert clay_capacity_crossover_depth_m(point) == pytest.approx(12000 / 11000)
+    assert clay_transition_depth_m(point) == 2.5
+    assert clay_ultimate_pressure_pa(point) == 18000
+
+
+def test_shared_validation_interface_rejects_invalid_reals():
+    from digitalmodel.geotechnical.lateral_soil_response import check_values
+
+    check_values(positive=(np.int32(2),), nonnegative=(0,), signed=(-1,))
+    with pytest.raises(ValueError):
+        check_values(positive=(), nonnegative=(), signed=(True,))

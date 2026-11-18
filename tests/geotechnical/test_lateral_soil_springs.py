@@ -29,14 +29,14 @@ def test_clay_spring_units_symmetry_and_cyclic_reduction():
         point, positive_displacement_ratios_one=(0.125, 1.0, 16.0), cyclic=True,
         tributary_length_m=2.0, tail_displacement_m=2.0, tail_factor_one=1.0,
     )
-    # XR = 7.5 m; the last knot alone uses depth/XR reduction.
-    assert cyclic_curve[-2].force_n == pytest.approx(expected_force * 0.5 * 2 / 7.5)
+    # XR = 7.5 m; beyond ratio 15 the cyclic backbone is at its residual.
+    assert cyclic_curve[-2].force_n == pytest.approx(expected_force * 0.72 * 2 / 7.5)
     assert cyclic_curve[-3].force_n == pytest.approx(expected_force * 0.5)
     deep_curve = clay_spring_curve(
         replace(point, depth_m=20), positive_displacement_ratios_one=(0.125, 1.0, 16.0),
         cyclic=True, tributary_length_m=2.0, tail_displacement_m=2.0, tail_factor_one=1.0,
     )
-    assert deep_curve[-2].force_n == pytest.approx(180000 * 2 * 0.5)
+    assert deep_curve[-2].force_n == pytest.approx(180000 * 2 * 0.72)
 
 
 def test_sand_spring_sampling_and_tributary_force():
@@ -66,7 +66,6 @@ def test_sand_spring_sampling_and_tributary_force():
     {"positive_displacement_ratios_one": (1.0, 0.5)},
     {"positive_displacement_ratios_one": (0.0, 1.0)},
     {"positive_displacement_ratios_one": (1.0, 9.0)},
-    {"positive_displacement_ratios_one": (4.0, 16.0), "cyclic": True},
     {"tributary_length_m": 0.0}, {"tail_displacement_m": 0.1},
     {"tail_factor_one": 0.0}, {"tail_factor_one": float("nan")}, {"cyclic": 1},
 ])
@@ -113,3 +112,31 @@ def test_spring_points_reject_boolean_and_nonfinite_quantities():
     for displacement, force in [(True, 2.0), (1.0, True), (float("inf"), 1.0)]:
         with pytest.raises(ValueError):
             SpringPoint(displacement, force)
+
+
+@pytest.mark.parametrize("ratios", [
+    (0.125, 1.0, 16.0), (0.1, 0.3, 1.0, 3.0, 16.0),
+    (0.125, 3.0, 16.0), (4.0, 16.0),
+])
+def test_cyclic_terminal_force_is_independent_of_interior_sampling(ratios):
+    point = ClayPoint(2.0, 1.0, 8000.0, 20000.0, 0.02, 0.4)
+    curve = clay_spring_curve(
+        point, positive_displacement_ratios_one=ratios, cyclic=True,
+        tributary_length_m=2.0, tail_displacement_m=2.0, tail_factor_one=1.0,
+    )
+    assert curve[-2].displacement_m == pytest.approx(0.8)
+    assert curve[-2].force_n == pytest.approx(0.72 * 92000 * 2 * 2 / 7.5)
+
+
+@pytest.mark.parametrize("depth, ratio, fraction", [
+    (1.5, 1.0, 0.5), (1.5, 3.0, 0.72), (1.5, 9.0, 0.576),
+    (1.5, 15.0, 0.432), (1.5, 16.0, 0.432),
+    (3.0, 9.0, 0.72), (3.0, 16.0, 0.72),
+])
+def test_low_strength_cyclic_backbone_uses_floored_transition(depth, ratio, fraction):
+    point = ClayPoint(depth, 1.0, 10000.0, 2000.0, 0.02, 0.5)
+    curve = clay_spring_curve(
+        point, positive_displacement_ratios_one=(0.1, ratio), cyclic=True,
+        tributary_length_m=2.0, tail_displacement_m=2.0, tail_factor_one=1.0,
+    )
+    assert curve[-2].force_n == pytest.approx(18000 * 2 * fraction)
