@@ -303,6 +303,7 @@ jobs:
             tests/docs/test_implementation_map.py \
             tests/docs/test_implementation_map_search.py \
             tests/scripts/test_ci_baseline.py \
+            tests/scripts/test_orphan_tests.py \
             tests/scripts/test_run_shard.py \
             tests/scripts/test_trust_report.py \
             tests/contracts/test_flaky_register_schema.py \
