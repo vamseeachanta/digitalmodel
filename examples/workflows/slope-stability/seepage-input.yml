@@ -1,0 +1,22 @@
+# Synthetic confined-flow inputs, not measured soil properties or design values.
+# Darcy-law hand calculation: docs/domains/geotechnical/slope-stability.md,
+# "Confined seepage worked example"; all dimensions are explicit inputs.
+profile:
+  units: SI
+  ground_surface_m: [[0, 10], [20, 10]]
+  bottom_elevation_m: 0
+  water_unit_weight_kn_m3: 9.81 # User input; unused by the discharge calculation.
+  layers:
+    - unit_weight_kn_m3: 20 # Synthetic input; unused by the discharge calculation.
+      c_kpa: 10 # Synthetic input; unused by the discharge calculation.
+      phi_deg: 25 # Synthetic input; unused by the discharge calculation.
+      permeability_m_s: 0.00001
+  circles: # Required by the shared profile schema; no stability solve is requested.
+    - {x_m: 10, y_m: 15, radius_m: 10}
+  seepage:
+    element_size_m: 1 # Numerical mesh setting, not an engineering acceptance limit.
+    heads_m:
+      - head_m: 12
+        boundary_m: [[0, 0], [0, 10]]
+      - head_m: 10
+        boundary_m: [[20, 0], [20, 10]]

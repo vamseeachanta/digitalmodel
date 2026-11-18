@@ -1,3 +1,6 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
+
 """
 Command-line interface for the OrcaFlex Modular Model Generator.
 
@@ -5,6 +8,9 @@ This module provides CLI commands for generating OrcaFlex modular models from
 YAML specification files and validating specifications without generating output.
 
 Usage:
+    # Generate offline using the installed console command
+    modular-generator spec.yml --output generated/
+
     # Generate model
     uv run python -m digitalmodel.solvers.orcaflex.modular_generator generate \
         --input spec.yml \
@@ -73,6 +79,10 @@ def validate_spec(input_path: Path) -> ProjectInputSpec | None:
 
     if data is None:
         print_error("Input file is empty")
+        return None
+
+    if not isinstance(data, dict):
+        print_error("Specification must be a YAML mapping")
         return None
 
     try:
@@ -428,18 +438,35 @@ For more information, see the documentation at:
     return parser
 
 
-def main() -> NoReturn:
+def main(argv: list[str] | None = None) -> NoReturn:
     """
     Main entry point for the CLI.
 
     Parses arguments and dispatches to the appropriate command handler.
     """
-    parser = create_parser()
-    args = parser.parse_args()
+    if argv is None:
+        argv = sys.argv[1:]
 
-    if args.command is None:
-        parser.print_help()
-        sys.exit(0)
+    if argv and argv[0] in {"generate", "validate", "campaign"}:
+        parser = create_parser()
+    else:
+        parser = argparse.ArgumentParser(
+            prog="modular-generator",
+            description="Generate modular model YAML offline with mandatory validation.",
+            epilog=(
+                "Example: modular-generator spec.yml --output generated/\n"
+                "Existing commands: generate --input SPEC --output DIR; "
+                "validate --input SPEC; campaign --help."
+            ),
+        )
+        parser.add_argument("input", metavar="spec", help="Input YAML specification file")
+        parser.add_argument(
+            "--output", "-o", required=True,
+            help="Directory for the validated model files",
+        )
+        parser.set_defaults(func=cmd_generate)
+
+    args = parser.parse_args(argv)
 
     exit_code = args.func(args)
     sys.exit(exit_code)

@@ -1,0 +1,119 @@
+{
+  "schema_version": 1,
+  "base_revision": "8c09f59a0530baa8a29177b6adaf4e7454cee675",
+  "digest_scope": "SHA-256 of CRLF-normalized-to-LF source bytes",
+  "sources": [
+    {
+      "path": "src/digitalmodel/solvers/smoke/model_manifest.py",
+      "source_role": "verify_manifest:164 validates the declared bundle; _closure:118 walks reachable includes.",
+      "required_inputs": "Manifest fields and file records are explicit; _relative:59 rejects missing/escaping files, _file_manifest:76 hashes every record, _closure rejects unlisted includes, source identity is bound at :173-176.",
+      "optional_outputs": "OUTPUTS declares future destinations; verify_manifest does not require output files to exist.",
+      "consumer": "The model probe consumes verify_manifest; the native harness also binds manifest bytes before and after each phase.",
+      "child_success": "Not applicable: an input validator, no child success flag.",
+      "cleanup_request": "Not applicable: no owned process or termination request.",
+      "cleanup_observation": "Not applicable: pure file validation does not observe process cleanup.",
+      "existing_tests": [
+        "tests/solvers/smoke/test_model_manifest.py::test_changed_file_is_rejected",
+        "tests/solvers/smoke/test_model_manifest.py::test_unlisted_include_rejected_even_when_hashes_match"
+      ],
+      "test_execution": "Inspected only; no model-manifest tests executed in this slice.",
+      "limitations": [
+        "Expected records originate in the supplied manifest; no independent census of all source files is inferred.",
+        "Resolved case-folded paths at :85 are identities, not inode comparisons; input/output hard links are outside this check.",
+        "Explicit hash seed at :150 is a reproducibility condition, not native settings readback."
+      ],
+      "status": "reviewed-with-evidence",
+      "sha256": "6c321f6f00ff56f0b436bcdfaf3a55739c28586b0f9a1b17bcec037cfdb16b28"
+    },
+    {
+      "path": "src/digitalmodel/solvers/smoke/model_proof.py",
+      "source_role": "validate_report:42 is a parent-side proof consumer; validate_results:16 checks retained arrays.",
+      "required_inputs": "Phase, completion, true verification flags, one-thread evidence, exact manifest digest, hash syntax, version, warnings and finite result arrays are required.",
+      "optional_outputs": "No output files are enumerated or opened by this module; the caller binds retained bytes.",
+      "consumer": "The native harness model_phase:242 invokes validate_report and separately hashes loaded exports and saved simulation.",
+      "child_success": "ok alone is insufficient: :43-60 requires completion and results; :61-67 compares exact solve/readback arrays.",
+      "cleanup_request": "Not applicable: the validator does not own or terminate a process.",
+      "cleanup_observation": "Not applicable: process cleanup must be observed by the caller before accepting the report.",
+      "existing_tests": [
+        "tests/solvers/smoke/test_model_proof.py::test_incomplete_proof_rejected",
+        "tests/solvers/smoke/test_model_proof.py::test_complete_proof_and_exact_readback"
+      ],
+      "test_execution": "Executed offline: nine missing-field cases and one complete/exact-readback case passed at the base.",
+      "limitations": [
+        "Flags and digest syntax are content checks, not authentication of native settings observations or artifact bytes.",
+        "Time grid :19-20 assumes the reviewed fixed sample count and seconds grid; :36 requires nonempty units/frames without validating their meaning."
+      ],
+      "status": "reviewed-with-evidence",
+      "sha256": "73163369aca115a6d640ba4327fa08c39472be374bc7c2dedb40ef2acbe73856"
+    },
+    {
+      "path": "docs/plans/evidence/issue-2082-native.ps1",
+      "source_role": "Native parent harness: run_model:273 and run_smoke:300 declare sources and bind retained proof.",
+      "required_inputs": "hashes:220-222 filters files, but run_model:274-276 and run_smoke:304-305 reject missing mandatory sources before hashing/launch. Read failures propagate. model_sources:233-240 includes six mandatory paths plus two present optional helpers.",
+      "optional_outputs": "main:343 enumerates scratch files for diagnostic hashes, not required-input coverage. Optional model_results.py/model_contract.py inclusion is presence-based; no broader required-file policy is established here.",
+      "consumer": "run_model rechecks source/manifest bytes around both phases; model_phase compares stdout/results, validates arrays and checks actual loaded-export/simulation hashes.",
+      "child_success": "main begins ok=False; sets true only after the parent path returns; exceptions retain error type/stage and a diagnostic log with exit failure.",
+      "cleanup_request": "drain_owned:143 requests job termination and, when needed, root termination; kill-on-close is a fallback request.",
+      "cleanup_observation": "drain_owned:143-162 queries active job members and observes successful root waits within a deadline. cleanup_owned:160-187 rethrows uncertainty and closes handles in nested finally blocks; return from run_owned includes cleanup completion.",
+      "existing_tests": [
+        "tests/solvers/smoke/test_native_harness.py::test_missing_proof_input_refuses_before_child_launch",
+        "tests/solvers/smoke/test_native_cleanup_contract.py::test_unconfirmed_cleanup_cannot_return_success",
+        "tests/solvers/smoke/test_native_model_harness.py::test_cleanup_observes_job_before_closing_even_after_root_exit"
+      ],
+      "test_execution": "Inspected only: Windows harness/cleanup tests were not executed; no PowerShell worker or native process was started.",
+      "limitations": [
+        "Optional-source policy remains a review question; a filtering helper alone does not establish a missing-input defect.",
+        "cleanup_owned:170-171 suppresses a fallback termination error while preserving the original cleanup failure; no success is returned on that path.",
+        "Smoke :209 converts numeric proof with float and uses kN labels; model-phase byte checks do not authenticate a physical measurement.",
+        "The 10-second drain deadline, millisecond conversion and sample/file-size thresholds are existing operational assumptions, not new acceptance criteria."
+      ],
+      "status": "reviewed-with-evidence",
+      "sha256": "98a1bb2ee2ec2106d27b1fae52af1987ac908ae556f9444a0fcbeeed999d33dc"
+    },
+    {
+      "path": "src/digitalmodel/solvers/ghs/_windows_job.py",
+      "source_role": "Checked Windows ABI primitives, including wait:142-145 and close:90-91.",
+      "required_inputs": "Process/job handles are supplied by the caller. No file-input declaration or hash manifest is emitted.",
+      "optional_outputs": "Not applicable: ABI helper emits no retained solver files.",
+      "consumer": "_owned_process.cleanup:100 checks false waits and API failures, aggregates uncertainty and attempts every handle release; this is caller context, not an additional assessed source row.",
+      "child_success": "Not applicable: wait returns observed signaled state, not a solver verdict.",
+      "cleanup_request": "JOB_KILL_ON_CLOSE:12 configures a termination request; close checks the API result.",
+      "cleanup_observation": "wait:142-145 returns true only for signaled status, false for timeout, raises for other results. A successful wait alone does not establish whole-job drain or handle release.",
+      "existing_tests": [
+        "tests/solvers/ghs/test_windows_job.py::test_cleanup_attempts_all_handle_releases",
+        "tests/solvers/ghs/test_windows_job.py::test_no_dll_loading_on_import"
+      ],
+      "test_execution": "Inspected only; this ABI module and its tests were not imported or executed.",
+      "limitations": [
+        "Default wait timeout :142 is zero milliseconds, a poll; callers must distinguish false from successful cleanup.",
+        "Platform sizing fallback :112 uses the expected sizing error on non-Windows mocks; native behavior remains NOT_EVALUATED."
+      ],
+      "status": "reviewed-with-evidence",
+      "sha256": "03351f97a44d81e78afa051e58d7ec00954e05a3683afb53420f94fcd0ef9f1c"
+    },
+    {
+      "path": "src/digitalmodel/solvers/orcaflex/modular_generator/input_manifest.py",
+      "source_role": "write_input_manifest:181 fingerprints explicit seeds plus YAML composition closure; verify_input_manifest:201 recomputes the bundle.",
+      "required_inputs": "_input_path:55 rejects missing/escaping dependencies; _capture:119 requires seeds, reads bytes or raises, discovers repeated includes and BaseFile references, detects cycles and records exact path/digest pairs.",
+      "optional_outputs": "The manifest is the output, excluded from its own inputs. Opaque dependency graphs and unresolved external references give NOT_EVALUATED rather than complete coverage.",
+      "consumer": "verify_input_manifest compares file-set union, aggregate and metadata fingerprints plus full recomputed evidence; callers inspect revision status separately.",
+      "child_success": "Not applicable: offline fingerprints do not execute a solver or accept child success.",
+      "cleanup_request": "Not applicable: no owned native process.",
+      "cleanup_observation": "Not applicable: local file hashing does not observe process lifecycle.",
+      "existing_tests": [
+        "tests/solvers/orcaflex/modular_generator/test_input_manifest.py::test_transitive_repeated_keys_and_nested_basefile",
+        "tests/solvers/orcaflex/modular_generator/test_input_manifest.py::test_opaque_base_is_hashed_but_coverage_is_not_evaluated",
+        "tests/solvers/orcaflex/modular_generator/test_input_manifest.py::test_missing_or_invalid_manifest_fails"
+      ],
+      "test_execution": "Inspected only; generator and manifest tests were not executed.",
+      "limitations": [
+        "Seed completeness is the caller's obligation (:184); recomputation cannot discover an omitted unreferenced seed independently.",
+        "Revisions remain NOT_EVALUATED (:171-176); integrity is not solver attestation.",
+        "Traversal continues at :88, :139, :144 and :152 skip empty/seen nodes, graph exits, already-hashed paths and opaque parsing respectively; unresolved coverage remains explicit.",
+        "verify_input_manifest:251-258 converts read/parse errors into FAIL findings, not an empty success record."
+      ],
+      "status": "reviewed-with-evidence",
+      "sha256": "7757c389a7375a777bc12cf59981e60cf31dc1b1769afc15afd0b81cd3572f0a"
+    }
+  ]
+}

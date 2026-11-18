@@ -1,0 +1,1490 @@
+{
+  "air_gap_assumption": {
+    "basis": "assumed, based on previous experience",
+    "elevated_base_m": 10,
+    "range_m": [
+      1,
+      20
+    ],
+    "sweep_step_m": 1
+  },
+  "basis": "assumed, based on previous experience",
+  "inputs": {
+    "ballast_capacity_kn": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        80000,
+        160000
+      ],
+      "unit": "kN",
+      "value": 120000
+    },
+    "brace_angle_deg": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        25,
+        60
+      ],
+      "unit": "degrees",
+      "value": 35
+    },
+    "brace_diameter_m": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        0.2,
+        0.4
+      ],
+      "unit": "m",
+      "value": 0.25
+    },
+    "brace_effective_length_m": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        5,
+        12
+      ],
+      "unit": "m",
+      "value": 7
+    },
+    "brace_thickness_m": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        0.012,
+        0.03
+      ],
+      "unit": "m",
+      "value": 0.018
+    },
+    "chord_diameter_m": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        0.5,
+        0.9
+      ],
+      "unit": "m",
+      "value": 0.6
+    },
+    "chord_effective_length_m": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        6,
+        18
+      ],
+      "unit": "m",
+      "value": 12
+    },
+    "chord_radius_m": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        5,
+        10
+      ],
+      "unit": "m",
+      "value": 8
+    },
+    "chord_thickness_m": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        0.02,
+        0.05
+      ],
+      "unit": "m",
+      "value": 0.025
+    },
+    "draft_m": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        0.5,
+        2
+      ],
+      "unit": "m",
+      "value": 1
+    },
+    "dry_weight_kn": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        30000,
+        60000
+      ],
+      "unit": "kN",
+      "value": 36000
+    },
+    "elastic_modulus_kpa": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        200000000.0,
+        215000000.0
+      ],
+      "unit": "kPa",
+      "value": 210000000.0
+    },
+    "holding_capacity_per_leg_kn": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        25000,
+        60000
+      ],
+      "unit": "kN",
+      "value": 35000
+    },
+    "hull_beam_m": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        40,
+        70
+      ],
+      "unit": "m",
+      "value": 50
+    },
+    "hull_depth_m": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        5,
+        10
+      ],
+      "unit": "m",
+      "value": 7
+    },
+    "hull_length_m": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        50,
+        80
+      ],
+      "unit": "m",
+      "value": 60
+    },
+    "hull_swell_capacity_kn": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        8000,
+        25000
+      ],
+      "unit": "kN",
+      "value": 15000
+    },
+    "hull_vertical_wave_area_m2": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        100,
+        400
+      ],
+      "unit": "m2",
+      "value": 150
+    },
+    "leg_plan_radius_m": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        15,
+        30
+      ],
+      "unit": "m",
+      "value": 20
+    },
+    "leg_water_area_m2": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        100,
+        350
+      ],
+      "unit": "m2",
+      "value": 200
+    },
+    "preload_current_m_s": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        0,
+        1
+      ],
+      "unit": "m/s",
+      "value": 0.5
+    },
+    "preload_hs_m": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        0,
+        3
+      ],
+      "unit": "m",
+      "value": 1
+    },
+    "preload_increment_per_leg_kn": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        10000,
+        24000
+      ],
+      "unit": "kN",
+      "value": 18000
+    },
+    "preload_tp_s": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        8,
+        16
+      ],
+      "unit": "s",
+      "value": 10
+    },
+    "preload_wind_m_s": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        0,
+        20
+      ],
+      "unit": "m/s",
+      "value": 10
+    },
+    "sliding_coefficient": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        0.15,
+        0.4
+      ],
+      "unit": "1",
+      "value": 0.25
+    },
+    "storm_current_m_s": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        0,
+        2
+      ],
+      "unit": "m/s",
+      "value": 1.2
+    },
+    "storm_hs_m": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        0,
+        9
+      ],
+      "unit": "m",
+      "value": 6
+    },
+    "storm_tp_s": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        8,
+        16
+      ],
+      "unit": "s",
+      "value": 12
+    },
+    "storm_wind_m_s": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        0,
+        50
+      ],
+      "unit": "m/s",
+      "value": 40
+    },
+    "tide_m": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        0,
+        2
+      ],
+      "unit": "m",
+      "value": 1
+    },
+    "water_depth_m": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        30,
+        90
+      ],
+      "unit": "m",
+      "value": 60
+    },
+    "water_drag_coefficient": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        0.8,
+        1.4
+      ],
+      "unit": "1",
+      "value": 1
+    },
+    "waterplane_area_m2": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        1800,
+        2800
+      ],
+      "unit": "m2",
+      "value": 2200
+    },
+    "wind_area_m2": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        1000,
+        2500
+      ],
+      "unit": "m2",
+      "value": 1800
+    },
+    "wind_drag_coefficient": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        1,
+        1.5
+      ],
+      "unit": "1",
+      "value": 1.2
+    },
+    "yield_strength_kpa": {
+      "basis": "assumed, based on previous experience",
+      "range": [
+        235000.0,
+        460000.0
+      ],
+      "unit": "kPa",
+      "value": 355000.0
+    }
+  },
+  "preload_patterns": [
+    "all_legs",
+    "single_leg"
+  ],
+  "soil_cases": [
+    {
+      "basis": "assumed, based on previous experience",
+      "layers": [
+        {
+          "bottom_m": 4.0,
+          "friction_deg": 28,
+          "kind": "sand",
+          "submerged_weight_kn_m3": 10.0,
+          "top_m": 0.0
+        },
+        {
+          "bottom_m": 24.0,
+          "kind": "clay",
+          "su_kpa": 10,
+          "submerged_weight_kn_m3": 6.0,
+          "top_m": 4.0
+        }
+      ],
+      "name": "sand_over_soft/low",
+      "parameter_ranges": {
+        "bearing_depth_grid_m.start": [
+          0,
+          0
+        ],
+        "bearing_depth_grid_m.step": [
+          0.1,
+          0.5
+        ],
+        "bearing_depth_grid_m.stop": [
+          22.5,
+          22.5
+        ],
+        "leg_count": [
+          3,
+          3
+        ],
+        "preload_kn": [
+          20000,
+          60000
+        ],
+        "profile.layers.0.bottom_m": [
+          3.0,
+          5.0
+        ],
+        "profile.layers.0.friction_deg": [
+          28,
+          36
+        ],
+        "profile.layers.0.submerged_weight_kn_m3": [
+          8.0,
+          12.0
+        ],
+        "profile.layers.0.top_m": [
+          0.0,
+          0.0
+        ],
+        "profile.layers.1.bottom_m": [
+          24.0,
+          24.0
+        ],
+        "profile.layers.1.su_kpa": [
+          10,
+          30
+        ],
+        "profile.layers.1.submerged_weight_kn_m3": [
+          4.0,
+          8.0
+        ],
+        "profile.layers.1.top_m": [
+          3.0,
+          5.0
+        ],
+        "profile.spread_ratio": [
+          3,
+          5
+        ],
+        "punching_comparison.coefficient": [
+          0.5,
+          3.0
+        ],
+        "spudcan.diameter_m": [
+          10,
+          16
+        ],
+        "spudcan.tip_to_bearing_m": [
+          0,
+          2.5
+        ]
+      },
+      "sand_method": "load_spread",
+      "sources": [
+        {
+          "equations": "1\u20133; 5 for the inherited circular clay reference",
+          "title": "Spudcan Penetration Analyses for Three Case Histories in Sand Overlying Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf",
+          "use": "Method equations and spread range only; no regional measurements adopted.",
+          "year": 2015
+        },
+        {
+          "equations": "2 and 6",
+          "title": "Theoretical Study on the Effect of a Weak Layer on the Vertical Bearing Capacity of Spudcans in Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-19.pdf",
+          "use": "Clay mechanisms only; no regional measurements adopted.",
+          "year": 2015
+        }
+      ],
+      "spread_ratio": 3.0,
+      "spudcan": {
+        "diameter_m": 12.0,
+        "tip_to_bearing_m": 1.5
+      },
+      "standards": [
+        {
+          "clause": "TO CONFIRM",
+          "document": "SNAME T&RB 5-5A",
+          "edition": "Rev 3 (2008)"
+        },
+        {
+          "clause": "TO CONFIRM",
+          "document": "ISO 19905-1",
+          "edition": "2012"
+        }
+      ],
+      "tip_interval_m": [
+        1.5,
+        24.0
+      ]
+    },
+    {
+      "basis": "assumed, based on previous experience",
+      "layers": [
+        {
+          "bottom_m": 4.0,
+          "friction_deg": 32.0,
+          "kind": "sand",
+          "submerged_weight_kn_m3": 10.0,
+          "top_m": 0.0
+        },
+        {
+          "bottom_m": 24.0,
+          "kind": "clay",
+          "su_kpa": 20.0,
+          "submerged_weight_kn_m3": 6.0,
+          "top_m": 4.0
+        }
+      ],
+      "name": "sand_over_soft/base",
+      "parameter_ranges": {
+        "bearing_depth_grid_m.start": [
+          0,
+          0
+        ],
+        "bearing_depth_grid_m.step": [
+          0.1,
+          0.5
+        ],
+        "bearing_depth_grid_m.stop": [
+          22.5,
+          22.5
+        ],
+        "leg_count": [
+          3,
+          3
+        ],
+        "preload_kn": [
+          20000,
+          60000
+        ],
+        "profile.layers.0.bottom_m": [
+          3.0,
+          5.0
+        ],
+        "profile.layers.0.friction_deg": [
+          28,
+          36
+        ],
+        "profile.layers.0.submerged_weight_kn_m3": [
+          8.0,
+          12.0
+        ],
+        "profile.layers.0.top_m": [
+          0.0,
+          0.0
+        ],
+        "profile.layers.1.bottom_m": [
+          24.0,
+          24.0
+        ],
+        "profile.layers.1.su_kpa": [
+          10,
+          30
+        ],
+        "profile.layers.1.submerged_weight_kn_m3": [
+          4.0,
+          8.0
+        ],
+        "profile.layers.1.top_m": [
+          3.0,
+          5.0
+        ],
+        "profile.spread_ratio": [
+          3,
+          5
+        ],
+        "punching_comparison.coefficient": [
+          0.5,
+          3.0
+        ],
+        "spudcan.diameter_m": [
+          10,
+          16
+        ],
+        "spudcan.tip_to_bearing_m": [
+          0,
+          2.5
+        ]
+      },
+      "sand_method": "load_spread",
+      "sources": [
+        {
+          "equations": "1\u20133; 5 for the inherited circular clay reference",
+          "title": "Spudcan Penetration Analyses for Three Case Histories in Sand Overlying Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf",
+          "use": "Method equations and spread range only; no regional measurements adopted.",
+          "year": 2015
+        },
+        {
+          "equations": "2 and 6",
+          "title": "Theoretical Study on the Effect of a Weak Layer on the Vertical Bearing Capacity of Spudcans in Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-19.pdf",
+          "use": "Clay mechanisms only; no regional measurements adopted.",
+          "year": 2015
+        }
+      ],
+      "spread_ratio": 3.0,
+      "spudcan": {
+        "diameter_m": 12.0,
+        "tip_to_bearing_m": 1.5
+      },
+      "standards": [
+        {
+          "clause": "TO CONFIRM",
+          "document": "SNAME T&RB 5-5A",
+          "edition": "Rev 3 (2008)"
+        },
+        {
+          "clause": "TO CONFIRM",
+          "document": "ISO 19905-1",
+          "edition": "2012"
+        }
+      ],
+      "tip_interval_m": [
+        1.5,
+        24.0
+      ]
+    },
+    {
+      "basis": "assumed, based on previous experience",
+      "layers": [
+        {
+          "bottom_m": 4.0,
+          "friction_deg": 36,
+          "kind": "sand",
+          "submerged_weight_kn_m3": 10.0,
+          "top_m": 0.0
+        },
+        {
+          "bottom_m": 24.0,
+          "kind": "clay",
+          "su_kpa": 30,
+          "submerged_weight_kn_m3": 6.0,
+          "top_m": 4.0
+        }
+      ],
+      "name": "sand_over_soft/high",
+      "parameter_ranges": {
+        "bearing_depth_grid_m.start": [
+          0,
+          0
+        ],
+        "bearing_depth_grid_m.step": [
+          0.1,
+          0.5
+        ],
+        "bearing_depth_grid_m.stop": [
+          22.5,
+          22.5
+        ],
+        "leg_count": [
+          3,
+          3
+        ],
+        "preload_kn": [
+          20000,
+          60000
+        ],
+        "profile.layers.0.bottom_m": [
+          3.0,
+          5.0
+        ],
+        "profile.layers.0.friction_deg": [
+          28,
+          36
+        ],
+        "profile.layers.0.submerged_weight_kn_m3": [
+          8.0,
+          12.0
+        ],
+        "profile.layers.0.top_m": [
+          0.0,
+          0.0
+        ],
+        "profile.layers.1.bottom_m": [
+          24.0,
+          24.0
+        ],
+        "profile.layers.1.su_kpa": [
+          10,
+          30
+        ],
+        "profile.layers.1.submerged_weight_kn_m3": [
+          4.0,
+          8.0
+        ],
+        "profile.layers.1.top_m": [
+          3.0,
+          5.0
+        ],
+        "profile.spread_ratio": [
+          3,
+          5
+        ],
+        "punching_comparison.coefficient": [
+          0.5,
+          3.0
+        ],
+        "spudcan.diameter_m": [
+          10,
+          16
+        ],
+        "spudcan.tip_to_bearing_m": [
+          0,
+          2.5
+        ]
+      },
+      "sand_method": "load_spread",
+      "sources": [
+        {
+          "equations": "1\u20133; 5 for the inherited circular clay reference",
+          "title": "Spudcan Penetration Analyses for Three Case Histories in Sand Overlying Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf",
+          "use": "Method equations and spread range only; no regional measurements adopted.",
+          "year": 2015
+        },
+        {
+          "equations": "2 and 6",
+          "title": "Theoretical Study on the Effect of a Weak Layer on the Vertical Bearing Capacity of Spudcans in Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-19.pdf",
+          "use": "Clay mechanisms only; no regional measurements adopted.",
+          "year": 2015
+        }
+      ],
+      "spread_ratio": 3.0,
+      "spudcan": {
+        "diameter_m": 12.0,
+        "tip_to_bearing_m": 1.5
+      },
+      "standards": [
+        {
+          "clause": "TO CONFIRM",
+          "document": "SNAME T&RB 5-5A",
+          "edition": "Rev 3 (2008)"
+        },
+        {
+          "clause": "TO CONFIRM",
+          "document": "ISO 19905-1",
+          "edition": "2012"
+        }
+      ],
+      "tip_interval_m": [
+        1.5,
+        24.0
+      ]
+    },
+    {
+      "basis": "assumed, based on previous experience",
+      "layers": [
+        {
+          "bottom_m": 3.0,
+          "kind": "clay",
+          "su_kpa": 60,
+          "submerged_weight_kn_m3": 7.0,
+          "top_m": 0.0
+        },
+        {
+          "bottom_m": 7.0,
+          "kind": "clay",
+          "su_kpa": 10,
+          "submerged_weight_kn_m3": 6.0,
+          "top_m": 3.0
+        },
+        {
+          "bottom_m": 24.0,
+          "kind": "clay",
+          "su_kpa": 60,
+          "submerged_weight_kn_m3": 8.0,
+          "top_m": 7.0
+        }
+      ],
+      "name": "stiff_over_soft/low",
+      "parameter_ranges": {
+        "bearing_depth_grid_m.start": [
+          0,
+          0
+        ],
+        "bearing_depth_grid_m.step": [
+          0.1,
+          0.5
+        ],
+        "bearing_depth_grid_m.stop": [
+          22.5,
+          22.5
+        ],
+        "leg_count": [
+          3,
+          3
+        ],
+        "preload_kn": [
+          20000,
+          60000
+        ],
+        "profile.layers.0.bottom_m": [
+          2.0,
+          4.0
+        ],
+        "profile.layers.0.su_kpa": [
+          60,
+          120
+        ],
+        "profile.layers.0.submerged_weight_kn_m3": [
+          5.0,
+          9.0
+        ],
+        "profile.layers.0.top_m": [
+          0.0,
+          0.0
+        ],
+        "profile.layers.1.bottom_m": [
+          6.0,
+          8.0
+        ],
+        "profile.layers.1.su_kpa": [
+          10,
+          30
+        ],
+        "profile.layers.1.submerged_weight_kn_m3": [
+          4.0,
+          8.0
+        ],
+        "profile.layers.1.top_m": [
+          2.0,
+          4.0
+        ],
+        "profile.layers.2.bottom_m": [
+          24.0,
+          24.0
+        ],
+        "profile.layers.2.su_kpa": [
+          60,
+          120
+        ],
+        "profile.layers.2.submerged_weight_kn_m3": [
+          6.0,
+          10.0
+        ],
+        "profile.layers.2.top_m": [
+          6.0,
+          8.0
+        ],
+        "profile.spread_ratio": [
+          3,
+          5
+        ],
+        "spudcan.diameter_m": [
+          10,
+          16
+        ],
+        "spudcan.tip_to_bearing_m": [
+          0,
+          2.5
+        ]
+      },
+      "sand_method": "load_spread",
+      "sources": [
+        {
+          "equations": "1\u20133; 5 for the inherited circular clay reference",
+          "title": "Spudcan Penetration Analyses for Three Case Histories in Sand Overlying Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf",
+          "use": "Method equations and spread range only; no regional measurements adopted.",
+          "year": 2015
+        },
+        {
+          "equations": "2 and 6",
+          "title": "Theoretical Study on the Effect of a Weak Layer on the Vertical Bearing Capacity of Spudcans in Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-19.pdf",
+          "use": "Clay mechanisms only; no regional measurements adopted.",
+          "year": 2015
+        }
+      ],
+      "spread_ratio": 3.0,
+      "spudcan": {
+        "diameter_m": 12.0,
+        "tip_to_bearing_m": 1.5
+      },
+      "standards": [
+        {
+          "clause": "TO CONFIRM",
+          "document": "SNAME T&RB 5-5A",
+          "edition": "Rev 3 (2008)"
+        },
+        {
+          "clause": "TO CONFIRM",
+          "document": "ISO 19905-1",
+          "edition": "2012"
+        }
+      ],
+      "tip_interval_m": [
+        1.5,
+        24.0
+      ]
+    },
+    {
+      "basis": "assumed, based on previous experience",
+      "layers": [
+        {
+          "bottom_m": 3.0,
+          "kind": "clay",
+          "su_kpa": 80.0,
+          "submerged_weight_kn_m3": 7.0,
+          "top_m": 0.0
+        },
+        {
+          "bottom_m": 7.0,
+          "kind": "clay",
+          "su_kpa": 15.0,
+          "submerged_weight_kn_m3": 6.0,
+          "top_m": 3.0
+        },
+        {
+          "bottom_m": 24.0,
+          "kind": "clay",
+          "su_kpa": 100.0,
+          "submerged_weight_kn_m3": 8.0,
+          "top_m": 7.0
+        }
+      ],
+      "name": "stiff_over_soft/base",
+      "parameter_ranges": {
+        "bearing_depth_grid_m.start": [
+          0,
+          0
+        ],
+        "bearing_depth_grid_m.step": [
+          0.1,
+          0.5
+        ],
+        "bearing_depth_grid_m.stop": [
+          22.5,
+          22.5
+        ],
+        "leg_count": [
+          3,
+          3
+        ],
+        "preload_kn": [
+          20000,
+          60000
+        ],
+        "profile.layers.0.bottom_m": [
+          2.0,
+          4.0
+        ],
+        "profile.layers.0.su_kpa": [
+          60,
+          120
+        ],
+        "profile.layers.0.submerged_weight_kn_m3": [
+          5.0,
+          9.0
+        ],
+        "profile.layers.0.top_m": [
+          0.0,
+          0.0
+        ],
+        "profile.layers.1.bottom_m": [
+          6.0,
+          8.0
+        ],
+        "profile.layers.1.su_kpa": [
+          10,
+          30
+        ],
+        "profile.layers.1.submerged_weight_kn_m3": [
+          4.0,
+          8.0
+        ],
+        "profile.layers.1.top_m": [
+          2.0,
+          4.0
+        ],
+        "profile.layers.2.bottom_m": [
+          24.0,
+          24.0
+        ],
+        "profile.layers.2.su_kpa": [
+          60,
+          120
+        ],
+        "profile.layers.2.submerged_weight_kn_m3": [
+          6.0,
+          10.0
+        ],
+        "profile.layers.2.top_m": [
+          6.0,
+          8.0
+        ],
+        "profile.spread_ratio": [
+          3,
+          5
+        ],
+        "spudcan.diameter_m": [
+          10,
+          16
+        ],
+        "spudcan.tip_to_bearing_m": [
+          0,
+          2.5
+        ]
+      },
+      "sand_method": "load_spread",
+      "sources": [
+        {
+          "equations": "1\u20133; 5 for the inherited circular clay reference",
+          "title": "Spudcan Penetration Analyses for Three Case Histories in Sand Overlying Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf",
+          "use": "Method equations and spread range only; no regional measurements adopted.",
+          "year": 2015
+        },
+        {
+          "equations": "2 and 6",
+          "title": "Theoretical Study on the Effect of a Weak Layer on the Vertical Bearing Capacity of Spudcans in Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-19.pdf",
+          "use": "Clay mechanisms only; no regional measurements adopted.",
+          "year": 2015
+        }
+      ],
+      "spread_ratio": 3.0,
+      "spudcan": {
+        "diameter_m": 12.0,
+        "tip_to_bearing_m": 1.5
+      },
+      "standards": [
+        {
+          "clause": "TO CONFIRM",
+          "document": "SNAME T&RB 5-5A",
+          "edition": "Rev 3 (2008)"
+        },
+        {
+          "clause": "TO CONFIRM",
+          "document": "ISO 19905-1",
+          "edition": "2012"
+        }
+      ],
+      "tip_interval_m": [
+        1.5,
+        24.0
+      ]
+    },
+    {
+      "basis": "assumed, based on previous experience",
+      "layers": [
+        {
+          "bottom_m": 3.0,
+          "kind": "clay",
+          "su_kpa": 120,
+          "submerged_weight_kn_m3": 7.0,
+          "top_m": 0.0
+        },
+        {
+          "bottom_m": 7.0,
+          "kind": "clay",
+          "su_kpa": 30,
+          "submerged_weight_kn_m3": 6.0,
+          "top_m": 3.0
+        },
+        {
+          "bottom_m": 24.0,
+          "kind": "clay",
+          "su_kpa": 120,
+          "submerged_weight_kn_m3": 8.0,
+          "top_m": 7.0
+        }
+      ],
+      "name": "stiff_over_soft/high",
+      "parameter_ranges": {
+        "bearing_depth_grid_m.start": [
+          0,
+          0
+        ],
+        "bearing_depth_grid_m.step": [
+          0.1,
+          0.5
+        ],
+        "bearing_depth_grid_m.stop": [
+          22.5,
+          22.5
+        ],
+        "leg_count": [
+          3,
+          3
+        ],
+        "preload_kn": [
+          20000,
+          60000
+        ],
+        "profile.layers.0.bottom_m": [
+          2.0,
+          4.0
+        ],
+        "profile.layers.0.su_kpa": [
+          60,
+          120
+        ],
+        "profile.layers.0.submerged_weight_kn_m3": [
+          5.0,
+          9.0
+        ],
+        "profile.layers.0.top_m": [
+          0.0,
+          0.0
+        ],
+        "profile.layers.1.bottom_m": [
+          6.0,
+          8.0
+        ],
+        "profile.layers.1.su_kpa": [
+          10,
+          30
+        ],
+        "profile.layers.1.submerged_weight_kn_m3": [
+          4.0,
+          8.0
+        ],
+        "profile.layers.1.top_m": [
+          2.0,
+          4.0
+        ],
+        "profile.layers.2.bottom_m": [
+          24.0,
+          24.0
+        ],
+        "profile.layers.2.su_kpa": [
+          60,
+          120
+        ],
+        "profile.layers.2.submerged_weight_kn_m3": [
+          6.0,
+          10.0
+        ],
+        "profile.layers.2.top_m": [
+          6.0,
+          8.0
+        ],
+        "profile.spread_ratio": [
+          3,
+          5
+        ],
+        "spudcan.diameter_m": [
+          10,
+          16
+        ],
+        "spudcan.tip_to_bearing_m": [
+          0,
+          2.5
+        ]
+      },
+      "sand_method": "load_spread",
+      "sources": [
+        {
+          "equations": "1\u20133; 5 for the inherited circular clay reference",
+          "title": "Spudcan Penetration Analyses for Three Case Histories in Sand Overlying Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf",
+          "use": "Method equations and spread range only; no regional measurements adopted.",
+          "year": 2015
+        },
+        {
+          "equations": "2 and 6",
+          "title": "Theoretical Study on the Effect of a Weak Layer on the Vertical Bearing Capacity of Spudcans in Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-19.pdf",
+          "use": "Clay mechanisms only; no regional measurements adopted.",
+          "year": 2015
+        }
+      ],
+      "spread_ratio": 3.0,
+      "spudcan": {
+        "diameter_m": 12.0,
+        "tip_to_bearing_m": 1.5
+      },
+      "standards": [
+        {
+          "clause": "TO CONFIRM",
+          "document": "SNAME T&RB 5-5A",
+          "edition": "Rev 3 (2008)"
+        },
+        {
+          "clause": "TO CONFIRM",
+          "document": "ISO 19905-1",
+          "edition": "2012"
+        }
+      ],
+      "tip_interval_m": [
+        1.5,
+        24.0
+      ]
+    },
+    {
+      "basis": "assumed, based on previous experience",
+      "layers": [
+        {
+          "bottom_m": 24.0,
+          "kind": "clay",
+          "su_kpa": 10,
+          "submerged_weight_kn_m3": 6.0,
+          "top_m": 0.0
+        }
+      ],
+      "name": "uniform_soft/low",
+      "parameter_ranges": {
+        "bearing_depth_grid_m.start": [
+          0,
+          0
+        ],
+        "bearing_depth_grid_m.step": [
+          0.1,
+          0.5
+        ],
+        "bearing_depth_grid_m.stop": [
+          22.5,
+          22.5
+        ],
+        "leg_count": [
+          3,
+          3
+        ],
+        "preload_kn": [
+          20000,
+          60000
+        ],
+        "profile.layers.0.bottom_m": [
+          24.0,
+          24.0
+        ],
+        "profile.layers.0.su_kpa": [
+          10,
+          30
+        ],
+        "profile.layers.0.submerged_weight_kn_m3": [
+          4.0,
+          8.0
+        ],
+        "profile.layers.0.top_m": [
+          0.0,
+          0.0
+        ],
+        "profile.spread_ratio": [
+          3,
+          5
+        ],
+        "spudcan.diameter_m": [
+          10,
+          16
+        ],
+        "spudcan.tip_to_bearing_m": [
+          0,
+          2.5
+        ]
+      },
+      "sand_method": "load_spread",
+      "sources": [
+        {
+          "equations": "1\u20133; 5 for the inherited circular clay reference",
+          "title": "Spudcan Penetration Analyses for Three Case Histories in Sand Overlying Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf",
+          "use": "Method equations and spread range only; no regional measurements adopted.",
+          "year": 2015
+        },
+        {
+          "equations": "2 and 6",
+          "title": "Theoretical Study on the Effect of a Weak Layer on the Vertical Bearing Capacity of Spudcans in Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-19.pdf",
+          "use": "Clay mechanisms only; no regional measurements adopted.",
+          "year": 2015
+        }
+      ],
+      "spread_ratio": 3.0,
+      "spudcan": {
+        "diameter_m": 12.0,
+        "tip_to_bearing_m": 1.5
+      },
+      "standards": [
+        {
+          "clause": "TO CONFIRM",
+          "document": "SNAME T&RB 5-5A",
+          "edition": "Rev 3 (2008)"
+        },
+        {
+          "clause": "TO CONFIRM",
+          "document": "ISO 19905-1",
+          "edition": "2012"
+        }
+      ],
+      "tip_interval_m": [
+        1.5,
+        24.0
+      ]
+    },
+    {
+      "basis": "assumed, based on previous experience",
+      "layers": [
+        {
+          "bottom_m": 24.0,
+          "kind": "clay",
+          "su_kpa": 15.0,
+          "submerged_weight_kn_m3": 6.0,
+          "top_m": 0.0
+        }
+      ],
+      "name": "uniform_soft/base",
+      "parameter_ranges": {
+        "bearing_depth_grid_m.start": [
+          0,
+          0
+        ],
+        "bearing_depth_grid_m.step": [
+          0.1,
+          0.5
+        ],
+        "bearing_depth_grid_m.stop": [
+          22.5,
+          22.5
+        ],
+        "leg_count": [
+          3,
+          3
+        ],
+        "preload_kn": [
+          20000,
+          60000
+        ],
+        "profile.layers.0.bottom_m": [
+          24.0,
+          24.0
+        ],
+        "profile.layers.0.su_kpa": [
+          10,
+          30
+        ],
+        "profile.layers.0.submerged_weight_kn_m3": [
+          4.0,
+          8.0
+        ],
+        "profile.layers.0.top_m": [
+          0.0,
+          0.0
+        ],
+        "profile.spread_ratio": [
+          3,
+          5
+        ],
+        "spudcan.diameter_m": [
+          10,
+          16
+        ],
+        "spudcan.tip_to_bearing_m": [
+          0,
+          2.5
+        ]
+      },
+      "sand_method": "load_spread",
+      "sources": [
+        {
+          "equations": "1\u20133; 5 for the inherited circular clay reference",
+          "title": "Spudcan Penetration Analyses for Three Case Histories in Sand Overlying Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf",
+          "use": "Method equations and spread range only; no regional measurements adopted.",
+          "year": 2015
+        },
+        {
+          "equations": "2 and 6",
+          "title": "Theoretical Study on the Effect of a Weak Layer on the Vertical Bearing Capacity of Spudcans in Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-19.pdf",
+          "use": "Clay mechanisms only; no regional measurements adopted.",
+          "year": 2015
+        }
+      ],
+      "spread_ratio": 3.0,
+      "spudcan": {
+        "diameter_m": 12.0,
+        "tip_to_bearing_m": 1.5
+      },
+      "standards": [
+        {
+          "clause": "TO CONFIRM",
+          "document": "SNAME T&RB 5-5A",
+          "edition": "Rev 3 (2008)"
+        },
+        {
+          "clause": "TO CONFIRM",
+          "document": "ISO 19905-1",
+          "edition": "2012"
+        }
+      ],
+      "tip_interval_m": [
+        1.5,
+        24.0
+      ]
+    },
+    {
+      "basis": "assumed, based on previous experience",
+      "layers": [
+        {
+          "bottom_m": 24.0,
+          "kind": "clay",
+          "su_kpa": 30,
+          "submerged_weight_kn_m3": 6.0,
+          "top_m": 0.0
+        }
+      ],
+      "name": "uniform_soft/high",
+      "parameter_ranges": {
+        "bearing_depth_grid_m.start": [
+          0,
+          0
+        ],
+        "bearing_depth_grid_m.step": [
+          0.1,
+          0.5
+        ],
+        "bearing_depth_grid_m.stop": [
+          22.5,
+          22.5
+        ],
+        "leg_count": [
+          3,
+          3
+        ],
+        "preload_kn": [
+          20000,
+          60000
+        ],
+        "profile.layers.0.bottom_m": [
+          24.0,
+          24.0
+        ],
+        "profile.layers.0.su_kpa": [
+          10,
+          30
+        ],
+        "profile.layers.0.submerged_weight_kn_m3": [
+          4.0,
+          8.0
+        ],
+        "profile.layers.0.top_m": [
+          0.0,
+          0.0
+        ],
+        "profile.spread_ratio": [
+          3,
+          5
+        ],
+        "spudcan.diameter_m": [
+          10,
+          16
+        ],
+        "spudcan.tip_to_bearing_m": [
+          0,
+          2.5
+        ]
+      },
+      "sand_method": "load_spread",
+      "sources": [
+        {
+          "equations": "1\u20133; 5 for the inherited circular clay reference",
+          "title": "Spudcan Penetration Analyses for Three Case Histories in Sand Overlying Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf",
+          "use": "Method equations and spread range only; no regional measurements adopted.",
+          "year": 2015
+        },
+        {
+          "equations": "2 and 6",
+          "title": "Theoretical Study on the Effect of a Weak Layer on the Vertical Bearing Capacity of Spudcans in Clay",
+          "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-19.pdf",
+          "use": "Clay mechanisms only; no regional measurements adopted.",
+          "year": 2015
+        }
+      ],
+      "spread_ratio": 3.0,
+      "spudcan": {
+        "diameter_m": 12.0,
+        "tip_to_bearing_m": 1.5
+      },
+      "standards": [
+        {
+          "clause": "TO CONFIRM",
+          "document": "SNAME T&RB 5-5A",
+          "edition": "Rev 3 (2008)"
+        },
+        {
+          "clause": "TO CONFIRM",
+          "document": "ISO 19905-1",
+          "edition": "2012"
+        }
+      ],
+      "tip_interval_m": [
+        1.5,
+        24.0
+      ]
+    }
+  ],
+  "unit_type": "generic three-leg independent-leg jack-up",
+  "unknown_inputs": [
+    "air gap",
+    "draft",
+    "sea state",
+    "tide",
+    "ballast",
+    "preload pattern"
+  ]
+}

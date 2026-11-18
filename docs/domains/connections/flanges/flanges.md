@@ -21,3 +21,11 @@ For example a 2 inch 150# flange will have 4 bolt holes and a 6 inch diameter.
 ![alt text](flange_class.png)
 
 Typical flange standards are: ASME16.5
+
+## Analytical integral-flange rating
+
+The [flange-analysis workflow](../../../../examples/workflows/flange-analysis/README.md)
+provides offline ASME VIII-1 Appendix 2 bolt-area, stress and rigidity screening
+for integral non-cast flanges, with a published validation case and clause-level
+citations. Its summary JSON, per-check CSV and self-contained HTML report include
+the governing utilization. Engineer sign-off is required before use.

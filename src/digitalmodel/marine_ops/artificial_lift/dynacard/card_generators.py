@@ -166,14 +166,57 @@ def _base_card(
     return pos, load
 
 
-def generate_normal_card(seed: int = 0, noise_pct: float = 0.03) -> CardData:
-    """Normal operation: clean rectangular card, moderate loads."""
+def _shared_stroke(rng: np.random.Generator, stroke_in: float | None = None) -> float:
+    """Draw a label-independent synthetic stroke, or use caller-supplied travel.
+
+    The legacy NORMAL draw is assumed, based on previous experience (original
+    synthetic implementation); its bounds are NOT_EVALUATED as a field envelope.
+    Sampling even with an override preserves the seed's subsequent load noise.
+    """
+    sampled = rng.uniform(80, 120)
+    if stroke_in is None:
+        return float(sampled)
+    if not np.isfinite(stroke_in) or stroke_in <= 0:
+        raise ValueError("stroke_in must be finite and positive")
+    return float(stroke_in)
+
+
+def _stroke_after_loss(
+    rng: np.random.Generator,
+    anchored_stroke_in: float | None,
+    lost_motion_in: float | None,
+) -> float:
+    """Subtract specified lost motion from an otherwise matched pump stroke.
+
+    Basis: SWPSC, "Over-travel Can Occur On Both The Upstroke And Down
+    Stroke" (2017), "Definition of Over Travel and Under Travel", Fig. 1.
+    This is a kinematic comparison, not a rod/tubing compliance calculation.
+    Both inputs are required together; omission leaves absolute loss unevaluated.
+    """
+    if anchored_stroke_in is None and lost_motion_in is None:
+        return _shared_stroke(rng)
+    if anchored_stroke_in is None or lost_motion_in is None:
+        raise ValueError("anchored_stroke_in and lost_motion_in are required together")
+    stroke = _shared_stroke(rng, anchored_stroke_in)
+    if not np.isfinite(lost_motion_in) or not 0 <= lost_motion_in < stroke:
+        raise ValueError("lost_motion_in must be finite, nonnegative and below anchored travel")
+    return stroke - lost_motion_in
+
+
+def generate_normal_card(
+    seed: int = 0, noise_pct: float = 0.03, *, stroke_in: float | None = None,
+) -> CardData:
+    """Normal operation; optional effective pump travel ``stroke_in`` in inches.
+
+    Omitted travel uses the shared, unqualified synthetic envelope, also used
+    by tubing movement and undertravel. Absolute travel cannot identify a fault.
+    """
     # Stroke, load and area bounds: not established.
     # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(12000, 18000)
     low = rng.uniform(4000, 7000)
-    stroke = rng.uniform(80, 120)
+    stroke = _shared_stroke(rng, stroke_in)
     pos, load = _base_card(rng, stroke=stroke, high_load=high, low_load=low, noise_pct=noise_pct)
     return CardData(position=pos.tolist(), load=load.tolist())
 
@@ -414,27 +457,32 @@ def generate_plunger_out_of_barrel_card(seed: int = 0) -> CardData:
     return CardData(position=pos.tolist(), load=load.tolist())
 
 
-def generate_tubing_movement_card(seed: int = 0) -> CardData:
-    """Legacy tubing-movement card: travel direction not established.
+def generate_tubing_movement_card(
+    seed: int = 0, *, anchored_stroke_in: float | None = None,
+    lost_motion_in: float | None = None,
+) -> CardData:
+    """Tubing movement: specified stretch reduces matched downhole travel.
 
     The public SWPSC paper, "Over-travel Can Occur On Both The Upstroke And
     Down Stroke" (2017), section "Definition of Over Travel and Under Travel",
     describes unanchored tubing as consuming part of the surface stroke:
     https://www.swpshortcourse.org/paper/17-over-travel-can-occur-both-upstroke-and-down-stroke
 
-    At otherwise matched inputs, eliminating tubing stretch recovers lost
-    plunger travel. This mechanism does not establish this generator's travel
-    relative to NORMAL: the two independent absolute draws have no matched
-    surface stroke or tubing-compliance inputs. The legacy interval is
-    retained as not established, rather than assigning a new interval from
-    one example well.
+    ``anchored_stroke_in`` is the otherwise matched anchored pump travel,
+    including rod stretch and dynamics; it is not the polished-rod stroke.
+    ``lost_motion_in`` is the specified additional tubing loss. Both are in
+    inches and are required together. No stretch coefficient is inferred.
+
+    Without these inputs, travel uses the same synthetic draw as NORMAL and
+    PLUNGER_UNDERTRAVEL; physical loss is NOT_EVALUATED. Absolute strokes may
+    overlap across installations even though tubing loss reduces matched travel.
     """
     # Stroke, load and area bounds: not established.
     # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(12000, 18000)
     low = rng.uniform(4000, 7000)
-    stroke = rng.uniform(130, 180)  # Retained assumption; pump travel not established.
+    stroke = _stroke_after_loss(rng, anchored_stroke_in, lost_motion_in)
     pos, load = _base_card(rng, stroke=stroke, high_load=high, low_load=low, noise_pct=0.03)
 
     # Add slope to load (tubing stretching effect)
@@ -647,15 +695,25 @@ def generate_excessive_friction_card(seed: int = 0) -> CardData:
     return CardData(position=pos.tolist(), load=load.tolist())
 
 
-def generate_plunger_undertravel_card(seed: int = 0) -> CardData:
-    """Plunger undertravel: short net stroke, truncated position range."""
+def generate_plunger_undertravel_card(
+    seed: int = 0, *, anchored_stroke_in: float | None = None,
+    lost_motion_in: float | None = None,
+) -> CardData:
+    """Undertravel relative to specified matched pump travel, both in inches.
+
+    The subtraction uses the SWPSC (2017) lost-motion basis cited in
+    ``_stroke_after_loss``. Without both inputs the shared synthetic envelope
+    applies and physical stroke loss is NOT_EVALUATED. The default rectangle
+    and noise match NORMAL: a pump card alone does not establish the cause.
+    """
     # Stroke, load and area bounds: not established.
     # Assumed, based on previous experience; see the envelope basis above.
     rng = np.random.default_rng(seed)
     high = rng.uniform(12000, 18000)
     low = rng.uniform(4000, 7000)
-    stroke = rng.uniform(30, 55)  # Short stroke
-    pos, load = _base_card(rng, stroke=stroke, high_load=high, low_load=low, noise_pct=0.02)
+    stroke = _stroke_after_loss(rng, anchored_stroke_in, lost_motion_in)
+    # Legacy NORMAL synthetic noise assumption; equal noise prevents a label cue.
+    pos, load = _base_card(rng, stroke=stroke, high_load=high, low_load=low, noise_pct=0.03)
 
     return CardData(position=pos.tolist(), load=load.tolist())
 
@@ -790,6 +848,20 @@ ALL_GENERATORS: dict[str, Callable] = {
     "BENT_BARREL": generate_bent_barrel_card,
     "SAND_ABRASION": generate_sand_abrasion_card,
     "EXCESSIVE_VIBRATION": generate_excessive_vibration_card,
+}
+
+# Direct generation and physical-label validation retain the full registry.
+# Seed-only labelled datasets cannot distinguish these defaults from NORMAL.
+SYNTHETIC_LABEL_EXCLUSIONS: dict[str, str] = {
+    "PLUNGER_UNDERTRAVEL": (
+        "Default cards duplicate NORMAL; a distinguishing matched-travel "
+        "basis is required before synthetic training or benchmark scoring."
+    ),
+    "TUBING_MOVEMENT": (
+        "Default load differences from NORMAL are below the configured noise "
+        "scale; a distinguishing basis is required before synthetic training "
+        "or benchmark scoring."
+    ),
 }
 
 
@@ -945,8 +1017,9 @@ def surface_card_from_pump_card(
         The surface card in oilfield units (inches, pounds).
 
     Raises:
-        ValueError: If the context has no rod sections, or the card is too
-            short to march.
+        ValueError: If inputs are invalid, the march produces nonfinite
+            values, or the surface turnaround does not converge. A returned
+            card always uses the damping switch selected by its own position.
     """
     # Imported lazily: this pulls in scipy, and most callers of this module
     # only ever want the generators.
@@ -957,7 +1030,33 @@ def surface_card_from_pump_card(
         survey_from_context,
     )
     from .everitt_jennings.damping import estimate_damping_profile
-    from .everitt_jennings.solver import build_coefficients, build_simulation
+    from .everitt_jennings.solver import (
+        MIN_CARD_SAMPLES,
+        build_coefficients,
+        build_simulation,
+    )
+
+    pump_position_m = np.asarray(pump_card.position, dtype=np.float64) * U.IN2M
+    pump_load_n = np.asarray(pump_card.load, dtype=np.float64) * U.LB2N
+    if len(pump_position_m) != len(pump_load_n):
+        raise ValueError("pump position and load must have the same number of samples")
+    # The periodic time stencil needs the duplicated endpoint and neighbours;
+    # this is the same minimum used by build_simulation, not a physical limit.
+    if len(pump_position_m) < MIN_CARD_SAMPLES:
+        raise ValueError(f"pump card needs at least {MIN_CARD_SAMPLES} samples to march")
+    if not (
+        np.all(np.isfinite(pump_position_m)) and np.all(np.isfinite(pump_load_n))
+    ):
+        raise ValueError("pump position and load must contain only finite values")
+    # Three rows supply the two boundaries and an interior recurrence row.
+    if (
+        isinstance(n_nodes, bool)
+        or not isinstance(n_nodes, (int, np.integer))
+        or n_nodes < 3
+    ):
+        raise ValueError("n_nodes must be an integer of at least 3")
+    if not np.isfinite(ctx.spm) or ctx.spm <= 0:
+        raise ValueError("spm must be finite and positive")
 
     if tubing_id_in is None:
         tubing_id_in = DEFAULT_TUBING_ID_IN
@@ -974,16 +1073,12 @@ def surface_card_from_pump_card(
         viscosity=viscosity_cp * 1.0e-3,
     )
 
-    pump_position_m = np.asarray(pump_card.position, dtype=np.float64) * U.IN2M
-    pump_load_n = np.asarray(pump_card.load, dtype=np.float64) * U.LB2N
-
     # The grid depends on the surface card only through the index at which the
     # stroke turns around, which selects upstroke from downstroke damping. Seed
     # that with the pump card and iterate to a fixed point: the card is
     # self-consistent once the turnaround read off the card we produced is the
     # one that was used to produce it.
     guess_position, guess_load = pump_position_m, pump_load_n
-    turnaround_used = None
     surface_position = surface_load = None
 
     for _ in range(_MAX_TURNAROUND_ITERATIONS):
@@ -997,48 +1092,70 @@ def surface_card_from_pump_card(
             friction_coefficient=ctx.calc_params.coulomb_friction_coefficient,
             n_nodes=n_nodes,
         )
-        # ``sim.up_dn`` is the turnaround of ``guess_position``, so on every
-        # pass but the first this is the turnaround of the card the previous
-        # pass produced.
-        if sim.up_dn == turnaround_used:
-            break
-        turnaround_used = sim.up_dn
-
         coeff = build_coefficients(sim, survey)
         last = sim.n_x - 1
 
         # Solver sign convention is positive-down, and the downward march reads
         # the pump load off the strain between the last two nodes.
-        u_pump = -pump_position_m
-        u_pump_above = u_pump - pump_load_n * sim.dx / (
-            coeff.moduli[last] * coeff.areas[last]
-        )
-        u = _march_up(u_pump, u_pump_above, sim, coeff)
+        try:
+            with np.errstate(over="raise", invalid="raise", divide="raise"):
+                u_pump = -pump_position_m
+                u_pump_above = u_pump - pump_load_n * sim.dx / (
+                    coeff.moduli[last] * coeff.areas[last]
+                )
+                u = _march_up(u_pump, u_pump_above, sim, coeff)
+                if not np.all(np.isfinite(u)):
+                    raise ValueError("forward march produced a nonfinite displacement field")
+                surface_position = -u[0]
+                # Mirror the downward boundary: the buoyant string weight
+                # lives at the surface boundary with kernel gravity muted.
+                surface_load = (coeff.moduli[0] * coeff.areas[0] / sim.dx) * (
+                    u[1] - u[0]
+                ) + sim.buoyant_weight
+        except FloatingPointError as exc:
+            raise ValueError("forward march produced a nonfinite surface card") from exc
 
-        surface_position = -u[0]
-        # Mirror of the downward solve's boundary row: with gravity muted in
-        # the kernel, the buoyant string weight lives at the surface boundary
-        # and nowhere else, so it goes back on here.
-        surface_load = (coeff.moduli[0] * coeff.areas[0] / sim.dx) * (
-            u[1] - u[0]
-        ) + sim.buoyant_weight
-
+        if not (
+            np.all(np.isfinite(surface_position)) and np.all(np.isfinite(surface_load))
+        ):
+            raise ValueError("forward march produced a nonfinite surface card")
+        # Match build_simulation's exact discrete turnaround convention,
+        # including a plateau maximum. No fitted tolerance is involved.
+        turnaround = int(np.mean(np.flatnonzero(
+            surface_position == np.max(surface_position)
+        )))
+        if turnaround == sim.up_dn:
+            break
         guess_position, guess_load = surface_position, surface_load
+    else:
+        raise ValueError(
+            "surface turnaround did not converge; no consistent synthetic "
+            "surface card was constructed"
+        )
 
-    position_in = surface_position * U.M2IN
-    if zero_position_datum:
-        position_in = position_in - np.min(position_in)
+    try:
+        with np.errstate(over="raise", invalid="raise", divide="raise"):
+            position_in = surface_position * U.M2IN
+            load_lbs = surface_load * U.N2LB
+            if zero_position_datum:
+                position_in = position_in - np.min(position_in)
+    except FloatingPointError as exc:
+        raise ValueError("forward march produced a nonfinite surface card") from exc
 
     return CardData(
         position=position_in.tolist(),
-        load=(surface_load * U.N2LB).tolist(),
+        load=load_lbs.tolist(),
     )
 
 
 def generate_training_dataset(
     samples_per_mode: int = 200,
 ) -> tuple[list[CardData], list[str]]:
-    """Generate a full training dataset with all 20 failure modes.
+    """Generate training cards for the 18 eligible synthetic labels.
+
+    PLUNGER_UNDERTRAVEL and TUBING_MOVEMENT defaults lack a distinguishing
+    signature above NORMAL's configured noise scale. See
+    SYNTHETIC_LABEL_EXCLUSIONS for the conditions for restoring these labels.
 
     Args:
         samples_per_mode: Number of synthetic cards per failure mode.
@@ -1050,6 +1167,8 @@ def generate_training_dataset(
     labels: List[str] = []
 
     for mode_name, gen_func in ALL_GENERATORS.items():
+        if mode_name in SYNTHETIC_LABEL_EXCLUSIONS:
+            continue
         for i in range(samples_per_mode):
             card = gen_func(seed=i)
             cards.append(card)

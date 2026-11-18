@@ -1,4 +1,177 @@
 {
+  "check_coverage": {
+    "API RP 1111": {
+      "burst": {
+        "edition": "strategy default metadata: 2015; publisher edition unqualified",
+        "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+        "module_sha256": "c7a4bb27f8795db98d5f71b8dc13fc6b4ac0c29126b572c7a62c077f6c4ef544",
+        "module_status": "IMPLEMENTED",
+        "reason": "Repository metadata not checked against standard text.",
+        "required_evidence": "Confirm applicability and edition; establish clause, equation and coefficient sources.",
+        "section": "Clause number and title not established",
+        "standard_status": "NOT_EVALUATED",
+        "title": "Design, Construction, Operation and Maintenance of Offshore Hydrocarbon Pipelines (Limit State Design)"
+      },
+      "collapse": {
+        "edition": "strategy default metadata: 2015; publisher edition unqualified",
+        "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+        "module_sha256": "c7a4bb27f8795db98d5f71b8dc13fc6b4ac0c29126b572c7a62c077f6c4ef544",
+        "module_status": "IMPLEMENTED",
+        "reason": "Repository metadata not checked against standard text.",
+        "required_evidence": "Confirm applicability and edition; establish clause, equation and coefficient sources.",
+        "section": "Clause number and title not established",
+        "standard_status": "NOT_EVALUATED",
+        "title": "Design, Construction, Operation and Maintenance of Offshore Hydrocarbon Pipelines (Limit State Design)"
+      },
+      "combined": {
+        "edition": "strategy default metadata: 2015; publisher edition unqualified",
+        "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+        "module_sha256": "c7a4bb27f8795db98d5f71b8dc13fc6b4ac0c29126b572c7a62c077f6c4ef544",
+        "module_status": "NOT_IMPLEMENTED",
+        "reason": "No check returned by this module; standard applicability unresolved.",
+        "required_evidence": "Establish standard applicability and a sourced implementation if required.",
+        "section": "Not established: no module check",
+        "standard_status": "NOT_EVALUATED",
+        "title": "Design, Construction, Operation and Maintenance of Offshore Hydrocarbon Pipelines (Limit State Design)"
+      },
+      "hoop": {
+        "edition": "strategy default metadata: 2015; publisher edition unqualified",
+        "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+        "module_sha256": "c7a4bb27f8795db98d5f71b8dc13fc6b4ac0c29126b572c7a62c077f6c4ef544",
+        "module_status": "NOT_IMPLEMENTED",
+        "reason": "No check returned by this module; standard applicability unresolved.",
+        "required_evidence": "Establish standard applicability and a sourced implementation if required.",
+        "section": "Not established: no module check",
+        "standard_status": "NOT_EVALUATED",
+        "title": "Design, Construction, Operation and Maintenance of Offshore Hydrocarbon Pipelines (Limit State Design)"
+      },
+      "propagation": {
+        "edition": "strategy default metadata: 2015; publisher edition unqualified",
+        "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_1111.py",
+        "module_sha256": "c7a4bb27f8795db98d5f71b8dc13fc6b4ac0c29126b572c7a62c077f6c4ef544",
+        "module_status": "IMPLEMENTED",
+        "reason": "Repository metadata not checked against standard text.",
+        "required_evidence": "Confirm applicability and edition; establish clause, equation and coefficient sources.",
+        "section": "Clause number and title not established",
+        "standard_status": "NOT_EVALUATED",
+        "title": "Design, Construction, Operation and Maintenance of Offshore Hydrocarbon Pipelines (Limit State Design)"
+      }
+    },
+    "API RP 2RD": {
+      "burst": {
+        "edition": "legacy; exact edition not established by the strategy",
+        "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+        "module_sha256": "a6fbddd502b5fdc04978e7bf1356f1079c2a37e15f37c87cd99cddba8ec668ef",
+        "module_status": "IMPLEMENTED",
+        "reason": "Repository metadata not checked against standard text.",
+        "required_evidence": "Confirm applicability and edition; establish clause, equation and coefficient sources.",
+        "section": "Clause number and title not established",
+        "standard_status": "NOT_EVALUATED",
+        "title": "Design of Risers for Floating Production Systems (FPSs) and Tension-Leg Platforms (TLPs)"
+      },
+      "collapse": {
+        "edition": "legacy; exact edition not established by the strategy",
+        "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+        "module_sha256": "a6fbddd502b5fdc04978e7bf1356f1079c2a37e15f37c87cd99cddba8ec668ef",
+        "module_status": "IMPLEMENTED",
+        "reason": "Repository metadata not checked against standard text.",
+        "required_evidence": "Confirm applicability and edition; establish clause, equation and coefficient sources.",
+        "section": "Clause number and title not established",
+        "standard_status": "NOT_EVALUATED",
+        "title": "Design of Risers for Floating Production Systems (FPSs) and Tension-Leg Platforms (TLPs)"
+      },
+      "combined": {
+        "edition": "legacy; exact edition not established by the strategy",
+        "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+        "module_sha256": "a6fbddd502b5fdc04978e7bf1356f1079c2a37e15f37c87cd99cddba8ec668ef",
+        "module_status": "NOT_IMPLEMENTED",
+        "reason": "No check returned by this module; standard applicability unresolved.",
+        "required_evidence": "Establish standard applicability and a sourced implementation if required.",
+        "section": "Not established: no module check",
+        "standard_status": "NOT_EVALUATED",
+        "title": "Design of Risers for Floating Production Systems (FPSs) and Tension-Leg Platforms (TLPs)"
+      },
+      "hoop": {
+        "edition": "legacy; exact edition not established by the strategy",
+        "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+        "module_sha256": "a6fbddd502b5fdc04978e7bf1356f1079c2a37e15f37c87cd99cddba8ec668ef",
+        "module_status": "IMPLEMENTED",
+        "reason": "Repository metadata not checked against standard text.",
+        "required_evidence": "Confirm applicability and edition; establish clause, equation and coefficient sources.",
+        "section": "Clause number and title not established",
+        "standard_status": "NOT_EVALUATED",
+        "title": "Design of Risers for Floating Production Systems (FPSs) and Tension-Leg Platforms (TLPs)"
+      },
+      "propagation": {
+        "edition": "legacy; exact edition not established by the strategy",
+        "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_rp_2rd.py",
+        "module_sha256": "a6fbddd502b5fdc04978e7bf1356f1079c2a37e15f37c87cd99cddba8ec668ef",
+        "module_status": "NOT_IMPLEMENTED",
+        "reason": "No check returned by this module; standard applicability unresolved.",
+        "required_evidence": "Establish standard applicability and a sourced implementation if required.",
+        "section": "Not established: no module check",
+        "standard_status": "NOT_EVALUATED",
+        "title": "Design of Risers for Floating Production Systems (FPSs) and Tension-Leg Platforms (TLPs)"
+      }
+    },
+    "API STD 2RD": {
+      "burst": {
+        "edition": "2e-2013",
+        "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py",
+        "module_sha256": "a9882b2be352da7cc873d5e4a9d0edfcec914205572842067696d8395325121f",
+        "module_status": "IMPLEMENTED",
+        "reason": "Repository metadata not checked against standard text.",
+        "required_evidence": "Confirm applicability and edition; establish clause, equation and coefficient sources.",
+        "section": "5.3.2 (burst)",
+        "standard_status": "NOT_EVALUATED",
+        "title": "Dynamic Risers for Floating Production Systems"
+      },
+      "collapse": {
+        "edition": "2e-2013",
+        "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py",
+        "module_sha256": "a9882b2be352da7cc873d5e4a9d0edfcec914205572842067696d8395325121f",
+        "module_status": "IMPLEMENTED",
+        "reason": "Repository metadata not checked against standard text.",
+        "required_evidence": "Confirm applicability and edition; establish clause, equation and coefficient sources.",
+        "section": "5.3.3 (collapse)",
+        "standard_status": "NOT_EVALUATED",
+        "title": "Dynamic Risers for Floating Production Systems"
+      },
+      "combined": {
+        "edition": "2e-2013",
+        "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py",
+        "module_sha256": "a9882b2be352da7cc873d5e4a9d0edfcec914205572842067696d8395325121f",
+        "module_status": "IMPLEMENTED",
+        "reason": "Repository metadata not checked against standard text.",
+        "required_evidence": "Confirm applicability and edition; establish clause, equation and coefficient sources.",
+        "section": "Section 5 (dynamic riser design criteria), Method 1",
+        "standard_status": "NOT_EVALUATED",
+        "title": "Dynamic Risers for Floating Production Systems"
+      },
+      "hoop": {
+        "edition": "2e-2013",
+        "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py",
+        "module_sha256": "a9882b2be352da7cc873d5e4a9d0edfcec914205572842067696d8395325121f",
+        "module_status": "NOT_IMPLEMENTED",
+        "reason": "No check returned by this module; standard applicability unresolved.",
+        "required_evidence": "Establish standard applicability and a sourced implementation if required.",
+        "section": "Not established: no module check",
+        "standard_status": "NOT_EVALUATED",
+        "title": "Dynamic Risers for Floating Production Systems"
+      },
+      "propagation": {
+        "edition": "2e-2013",
+        "module": "src/digitalmodel/structural/analysis/wall_thickness_codes/api_std_2rd.py",
+        "module_sha256": "a9882b2be352da7cc873d5e4a9d0edfcec914205572842067696d8395325121f",
+        "module_status": "NOT_IMPLEMENTED",
+        "reason": "No check returned by this module; standard applicability unresolved.",
+        "required_evidence": "Establish standard applicability and a sourced implementation if required.",
+        "section": "Not established: no module check",
+        "standard_status": "NOT_EVALUATED",
+        "title": "Dynamic Risers for Floating Production Systems"
+      }
+    }
+  },
   "citations": [
     {
       "code": "API RP 1111",

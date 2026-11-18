@@ -15,6 +15,7 @@ import hashlib
 import json
 import math
 
+from digitalmodel.reporting._metadata import package_code_edition
 from digitalmodel.reporting.figures import figure_from_columns
 from digitalmodel.reporting.provenance import Provenance
 from digitalmodel.reporting.spec import DocumentMeta, Section, TableBlock
@@ -131,12 +132,42 @@ def input_provenance(identifier: str, inputs: dict) -> Provenance:
         inputs, sort_keys=True, separators=(",", ":"), allow_nan=False
     ).encode()
     digest = "sha256:" + hashlib.sha256(canonical).hexdigest()
-    return Provenance().add(
+    return Provenance(
+        code_edition=package_code_edition(),
+        units_system="Per input echo and table labels",
+        validated_path="screening",
+    ).add(
         "calculation-inputs",
         identifier,
         digest=digest,
         description="Digest of canonical input echo; not source qualification",
     )
+
+
+def nominal_limit_hover(figure: dict, limits: dict[str, list[float]]) -> dict:
+    """Pair requirement points with nominal walls, including negative margins.
+
+    Nominal minus required is a geometric margin, not a code acceptance rule.
+    Repeated course-boundary heights retain their own selected plate values.
+    """
+    traces = {trace["name"]: trace for trace in figure["data"]}
+    for name, nominal in limits.items():
+        if name not in traces:
+            raise ValueError(f"Missing requirement series: {name}")
+        trace = traces[name]
+        if len(nominal) != len(trace["y"]):
+            raise ValueError("nominal limits must match requirement points")
+        for value in nominal:
+            validate_number("nominal limit", value)
+        trace["customdata"] = [
+            [wall, wall - required] for wall, required in zip(nominal, trace["y"])
+        ]
+        trace["hovertemplate"] = (
+            "%{fullData.name}<br>Coordinate: %{x}<br>Required: %{y:.3f} mm"
+            "<br>Nominal wall: %{customdata[0]:.3f} mm"
+            "<br>Margin: %{customdata[1]:.3f} mm<extra></extra>"
+        )
+    return figure
 
 
 def revision_section(document: DocumentMeta) -> Section:

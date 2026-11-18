@@ -8,7 +8,7 @@ import numpy as np
 from typing import Optional, List
 import logging
 
-from .models import LazyWaveConfiguration, LazyWaveResult, BuoyancyModule
+from .models import LazyWaveConfiguration, LazyWaveResult, BuoyancyModule, _range
 from .simple_catenary import SimpleCatenaryAnalyzer
 
 logger = logging.getLogger(__name__)
@@ -28,6 +28,7 @@ class LazyWaveAnalyzer:
 
     def __init__(self, gravity: float = 9.81):
         """Initialize analyzer"""
+        _range("gravity", gravity, positive=True)
         self.g = gravity
         self.catenary = SimpleCatenaryAnalyzer(gravity=gravity)
 
@@ -177,20 +178,21 @@ class LazyWaveAnalyzer:
         water_depth: float,
     ) -> float:
         """
-        Estimate required buoyancy force to achieve target arch height.
+        Refuse the former uncited arch-height estimate for every input.
 
-        Simplified formula based on force balance.
+        No governing equilibrium derivation supports its former multiplier.
+        This method returns no engineering result, including for zero depth.
 
         Args:
             riser_weight: Bare riser effective weight (N/m)
             target_arch_height: Desired arch height (m)
             water_depth: Water depth (m)
 
-        Returns:
-            Required buoyancy force per length (N/m)
+        Raises:
+            NotImplementedError: always; the method remains quarantined.
         """
-        # Simplified: buoyancy needed is proportional to arch height and weight
-        # F_buoy ≈ w_riser * (h_arch / depth)
-        buoy_force = riser_weight * (target_arch_height / water_depth) * 2.0
-
-        return buoy_force
+        raise NotImplementedError(
+            "Buoyancy arch estimate is quarantined: the uncited multiplier and "
+            "depth ratio do not establish lazy-wave equilibrium. Supply explicit "
+            "section weights and geometry to LazyWaveSolver instead."
+        )

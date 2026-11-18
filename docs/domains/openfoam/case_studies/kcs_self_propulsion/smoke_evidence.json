@@ -1,0 +1,51 @@
+{
+  "solver": "interFoam",
+  "ranks": 1,
+  "steps": 6,
+  "end_time_s": 0.003,
+  "mesh_cells": 41482,
+  "disk_cells": 106,
+  "mesh_check": "Mesh OK",
+  "rpm_by_segment": [
+    570.0,
+    900.0,
+    900.0
+  ],
+  "manifest_sha256": "cc9379509c814f7e97e850c3fec1fd737a203a0032056005dd92a91efe261c79",
+  "comparison": {
+    "quantities": {
+      "rpm": {
+        "computed": 790.0,
+        "reference": 570.0,
+        "difference_percent": 38.6
+      },
+      "thrust_n": {
+        "computed": 119.5,
+        "reference": 59.9,
+        "difference_percent": 99.5
+      },
+      "resistance_n": {
+        "computed": 17756.1,
+        "reference": 90.2,
+        "difference_percent": 19591.3
+      }
+    },
+    "samples": 3,
+    "force_imbalance_n": 17606.3,
+    "validation_status": "not_established",
+    "reason": "Published scatter is unavailable; constant KT is not an independent propeller prediction. Geometry vintage, fixed attitude and laminar startup also differ.",
+    "reference_sha256": "3e35f29d2fc7d56c3d6bee5e49fc1b0b9d341b4f7936939a0b3056843f88e335"
+  },
+  "logs": {
+    "blockMesh": "a0ddd786fe7601276faf64fcf55b5c9f095d2420d4962e3c4ec6b8cc5f49434e",
+    "snappyHexMesh": "a1bb6732fae66c09b40b2e420b3b6357fc7ef40d079410717e5b9bf1b122dc80",
+    "topoSet": "d455a6923a857dc24ac73debd198ad7d58f37805ce42dd25b431a971eac28003",
+    "setFields": "e0132b70d4ed4ca9c9323e1ec5b8fa0bc722568a5490c4a048bc7424e83e4e05",
+    "checkMesh": "77acdaa7bd52665cdbf461aa09d2c8be432912333be34614e77864d6e07bf78c",
+    "interFoam.1": "e7bbb3ff266c17752220627be3676f312325ef1b0832a4fd964bbd242e9c66db",
+    "interFoam.2": "3012653683057867472356dea46b9106028e4f8205bcab6177fad3b9fad0204f",
+    "interFoam.3": "697f524fae6ab0e66b25d06a585390158c8dd7f0d615ab61924a61cdb2ad009b"
+  },
+  "purpose": "startup and feedback wiring only",
+  "wall_time_s": 4.8
+}

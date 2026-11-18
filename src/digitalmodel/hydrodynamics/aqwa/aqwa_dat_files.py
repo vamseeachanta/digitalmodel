@@ -415,7 +415,7 @@ class AqwaDATFiles:
             dc_15_body_func = getattr(self, f"get_dc_15_{dc_cfg['function']}")
             body = dc_15_body_func(cfg, dc_cfg)
 
-            body = self.get_dc_15_wlng(cfg, dc_cfg)
+            body = self.get_dc_15_custom_structures(cfg, dc_cfg)
 
         return body
 
@@ -456,7 +456,7 @@ class AqwaDATFiles:
 
         return body
 
-    def get_dc_15_wlng(self, cfg, dc_cfg):
+    def get_dc_15_custom_structures(self, cfg, dc_cfg):
         custom_structures = ["d_4_cog", "d_7_cog"]
         raw_data = dc_cfg["data"]["raw"]
         analysis_root_folder = cfg["Analysis"]["analysis_root_folder"]

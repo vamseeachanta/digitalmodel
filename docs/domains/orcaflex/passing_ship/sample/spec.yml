@@ -84,7 +84,7 @@ environment:
   water_depth: 40.0     # metres
   water_density: 1025.0 # kg/m³
   wind_speed: 10.0      # m/s (~20 knots)
-  wind_direction_deg: 270.0  # from west
+  wind_direction_deg: 270.0  # body-relative, from port; clockwise from bow
 
 analysis_cases:
   - name: passing_only_5kn_120m

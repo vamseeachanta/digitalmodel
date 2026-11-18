@@ -234,3 +234,63 @@ __all__ = [
     "TuningReport",
     "CouplingStrengthReport",
 ]
+
+
+@dataclass(frozen=True, kw_only=True)
+class NormalizedRollCoefficients:
+    """Explicit normalized tank coefficients for one harmonic roll condition.
+
+    The caller attests to ``normalization='per_roll_angle_and_rate'``:
+    ``M_tank = -stiffness*theta - damping*theta_dot``, with ``stiffness_unit``
+    exactly ``N.m/rad`` and ``damping_unit`` exactly ``N.m/(rad/s)``. Raw
+    harmonic moment components must first be divided by the imposed angle
+    amplitude or angular-rate amplitude, respectively, with signs reconciled
+    to this convention. No raw-row conversion is provided by this contract.
+
+    ``omega_rad_s`` is the frequency at which these coefficients were evaluated,
+    possibly by an external interpolation within ``frequency_support_rad_s``.
+    The inclusive support intervals declare applicability, not an interpolation
+    law. ``reference_amplitude_rad`` records the imposed roll amplitude used to
+    derive the coefficients. ``amplitude_support_rad`` must be justified by the
+    caller; a single calibrated amplitude can be represented by equal bounds.
+    ``condition`` identifies the tank configuration, fill and coefficient source.
+    This contract is validated when passed to ``coupled_roll_response``.
+    """
+
+    stiffness: float
+    damping: float
+    omega_rad_s: float
+    reference_amplitude_rad: float
+    frequency_support_rad_s: tuple[float, float]
+    amplitude_support_rad: tuple[float, float]
+    condition: str
+    normalization: str
+    stiffness_unit: str
+    damping_unit: str
+
+
+@dataclass(frozen=True, kw_only=True)
+class CoupledRollResponse:
+    """Harmonic roll solution with retained inputs and coefficient provenance.
+
+    Complex responses and their magnitudes are in radians. A positive
+    ``reduction_percent`` denotes lower coupled amplitude; a negative value
+    denotes amplification. The immutable coefficient record retains condition,
+    normalization, units, reference amplitude and declared support. The support
+    status refers to the computed coupled amplitude and evaluated frequency.
+    The baseline amplitude does not need to lie in tank coefficient support.
+    """
+
+    baseline_response_rad: complex
+    coupled_response_rad: complex
+    baseline_amplitude_rad: float
+    coupled_amplitude_rad: float
+    reduction_percent: float
+    inertia_kg_m2: float
+    restoring_nm_per_rad: float
+    damping_nm_s_per_rad: float
+    omega_rad_s: float
+    excitation_moment_nm: complex
+    coefficients: NormalizedRollCoefficients
+    support_status: str = "within_declared_support"
+    amplitude_basis: str = "computed_with_fixed_coefficients"

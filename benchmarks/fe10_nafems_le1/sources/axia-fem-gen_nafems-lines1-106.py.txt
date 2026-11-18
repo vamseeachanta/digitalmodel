@@ -1,0 +1,16 @@
+# Public LE1 numerical source record
+
+Source: solver/scripts/gen_nafems.py, commit
+884ec6fe7b74f0a1a9b9ae55e57ccfba625a93c1, blob
+fcb641ab9a4e0f7c6afec0a722d50ec672791821, lines 8 and 44-106.
+The repository and additional public sources are cited in ../expected.md.
+
+The upstream implementation excerpt is omitted. No upstream code is
+redistributed in this record. The pinned numerical definition is retained:
+
+- Reference sigma_yy at D, inner point on the positive x axis: 92.7 MPa.
+- Quarter elliptic membrane, plane stress, with semi-axes (mm):
+  inner (2000, 1000), outer (3250, 2750).
+- Young's modulus: 210000 MPa; Poisson's ratio: 0.3; thickness: 100 mm.
+- Outward normal pressure on the outer edge: 10 MPa.
+- Symmetry: u_x = 0 on x = 0; u_y = 0 on y = 0.

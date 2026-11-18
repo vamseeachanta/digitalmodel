@@ -10,6 +10,10 @@ from __future__ import annotations
 
 import math
 
+from digitalmodel.cathodic_protection.reference_electrodes import (
+    ReferenceElectrode, convert_potential,
+)
+
 # ---------------------------------------------------------------------------
 # Protection criteria (API RP 1632 §4.2)
 # ---------------------------------------------------------------------------
@@ -196,7 +200,11 @@ def anode_life_years(
     return (W_anode_kg * capacity) / (I_per_anode_A * 8760.0)
 
 
-def check_protection_potential(measured_potential_V_CSE: float) -> dict:
+def check_protection_potential(
+    measured_potential_V_CSE: float, *,
+    reference_electrode: ReferenceElectrode | str = "CSE",
+    zinc_potential_she_V: float | None = None,
+) -> dict:
     """Evaluate measured potential against API RP 1632 §4.2 criteria.
 
     Protection is adequate when the measured (instant-off) potential is
@@ -205,16 +213,24 @@ def check_protection_potential(measured_potential_V_CSE: float) -> dict:
     Parameters
     ----------
     measured_potential_V_CSE : float
-        Measured structure-to-electrolyte potential [V vs CSE].
+        Measured structure-to-electrolyte potential [V]. The legacy parameter
+        name is retained; reference_electrode specifies its actual basis.
 
     Returns
     -------
     dict
         {"pass": bool, "potential": float, "criterion": float}
     """
-    is_protected = measured_potential_V_CSE <= PROTECTION_POTENTIAL_CSE
+    criterion = convert_potential(
+        PROTECTION_POTENTIAL_CSE, "CSE", reference_electrode,
+        zinc_potential_she_V=zinc_potential_she_V,
+    )
+    if not math.isfinite(measured_potential_V_CSE):
+        raise ValueError("measured potential must be finite volts")
+    is_protected = measured_potential_V_CSE <= criterion
     return {
         "pass": is_protected,
         "potential": measured_potential_V_CSE,
-        "criterion": PROTECTION_POTENTIAL_CSE,
+        "criterion": criterion,
+        "reference_electrode": ReferenceElectrode(reference_electrode).value,
     }

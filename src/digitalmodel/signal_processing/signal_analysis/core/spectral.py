@@ -124,6 +124,13 @@ class SpectralAnalyzer:
             'phase': phase[positive_freq_idx],
             'fft_complex': fft[positive_freq_idx]
         })
+
+        # Preserve reconstruction data without changing the displayed bins.
+        spectrum_df.attrs['fft_length'] = n
+        if n % 2 == 0:
+            # fftfreq labels the even-length Nyquist bin negative, excluding it.
+            spectrum_df.attrs['nyquist_coefficient'] = fft[n // 2]
+            spectrum_df.attrs['nyquist_frequency'] = fs / 2
         
         # Normalize power (one-sided spectrum)
         spectrum_df['power'] *= 2 / n
@@ -395,6 +402,11 @@ class SpectralAnalyzer:
         # Copy spectrum
         filtered_spectrum = spectrum.copy()
         freq = filtered_spectrum['frequency'].values
+
+        # Apply the same cutoff rules to the undisplayed Nyquist coefficient.
+        has_nyquist = 'nyquist_coefficient' in filtered_spectrum.attrs
+        if has_nyquist:
+            freq = np.append(freq, filtered_spectrum.attrs['nyquist_frequency'])
         
         # Create filter mask
         if filter_type == 'bandpass':
@@ -419,6 +431,11 @@ class SpectralAnalyzer:
             
         else:
             raise ValueError(f"Unknown filter type: {filter_type}")
+
+        if has_nyquist:
+            if not mask[-1]:
+                filtered_spectrum.attrs['nyquist_coefficient'] = 0j
+            mask = mask[:-1]
         
         # Apply filter
         filtered_spectrum.loc[~mask, ['power', 'magnitude']] = 0
@@ -478,7 +495,10 @@ class SpectralAnalyzer:
         Parameters
         ----------
         spectrum : pd.DataFrame
-            Spectrum DataFrame with 'fft_complex' column
+            Spectrum DataFrame with 'fft_complex' column. DataFrame attributes
+            from compute_spectrum preserve the original transform length and
+            omitted Nyquist coefficient. Without these attributes, the final
+            supplied bin is assumed to be Nyquist, as in the legacy convention.
             
         Returns
         -------
@@ -490,6 +510,18 @@ class SpectralAnalyzer:
         
         # Get complex FFT values
         fft_complex = spectrum['fft_complex'].values
+
+        n = spectrum.attrs.get('fft_length')
+        if n is not None:
+            if n % 2 == 0:
+                fft_complex = np.append(
+                    fft_complex, spectrum.attrs['nyquist_coefficient']
+                )
+            # NumPy irfft requires explicit n to distinguish odd/even lengths:
+            # https://numpy.org/doc/1.26/reference/generated/numpy.fft.irfft.html
+            signal = np.fft.irfft(fft_complex, n=n)
+            logger.info(f"Reconstructed signal with {len(signal)} samples")
+            return signal
         
         # Reconstruct full spectrum (negative frequencies)
         # Assuming we have positive frequencies only

@@ -17,6 +17,10 @@ from digitalmodel.cathodic_protection import _kernels as kernel
 from digitalmodel.cathodic_protection.b401_structures_phases_schema import (
     rule_citations,
 )
+from digitalmodel.cathodic_protection.b401_tables import (
+    citation_label,
+    protection_potential,
+)
 from digitalmodel.cathodic_protection.engine_adapter import run_cathodic_protection
 from digitalmodel.cathodic_protection.report_adapters import anode_design_report
 from digitalmodel.reporting import TextBlock
@@ -115,6 +119,8 @@ def test_recommendation_citations_exist_in_repository():
     routed = cfg()
     text = body(anode_design_report(routed))
     held = routed["results"]["citations"] + rule_citations("2021")
+    # Monitoring uses the cited potential table independently of sizing results.
+    held.append(citation_label(protection_potential("2021").citation))
     labels = re.findall(r"`(dnv-rp-b401[^`]+)`", text)
     assert labels
     assert set(labels) <= set(held)
@@ -219,7 +225,6 @@ def test_verified_options_use_edition_specific_retrofit_subject(edition):
 
 def test_verified_options_preserve_passing_count_and_selected_source(monkeypatch):
     from digitalmodel.cathodic_protection import report_recommendations as recommendations
-    from digitalmodel.reporting import TableBlock
 
     routed = with_count(200)
     held = rule_citations("2021")

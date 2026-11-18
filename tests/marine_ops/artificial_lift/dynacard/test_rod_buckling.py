@@ -673,10 +673,10 @@ class TestEstimateNeutralPoint:
             fluid_density=55.0,
             rod_length=5000.0,
         )
-        assert 0 <= neutral <= 5000
+        assert neutral is None
 
-    def test_high_fluid_load_gives_deeper_neutral(self):
-        """Test that higher fluid load gives deeper neutral point."""
+    def test_different_fluid_loads_cannot_determine_depth(self):
+        """Changing load extrema does not supply a depth-resolved profile."""
         neutral_low = estimate_neutral_point(
             surface_load_max=10000,
             surface_load_min=8000,
@@ -689,22 +689,22 @@ class TestEstimateNeutralPoint:
             rod_weight=4000,
             rod_length=5000.0,
         )
-        # Higher fluid load should give deeper neutral point
-        assert neutral_high >= neutral_low
+        # Surface extrema provide no depth profile, even at different loads.
+        assert neutral_high is neutral_low is None
 
-    def test_zero_rod_weight_returns_full_length(self):
-        """Test that zero rod weight returns full rod length."""
+    def test_zero_rod_weight_cannot_determine_depth(self):
+        """Zero rod weight does not imply a known neutral depth."""
         neutral = estimate_neutral_point(
             surface_load_max=10000,
             surface_load_min=5000,
             rod_weight=0,
             rod_length=5000.0,
         )
-        # With no rod weight, neutral point is at bottom
-        assert neutral == 5000.0
+        # Zero rod weight does not supply the missing depth profile.
+        assert neutral is None
 
-    def test_heavy_rod_gives_shallower_neutral(self):
-        """Test that heavier rod gives shallower neutral point."""
+    def test_different_rod_weights_cannot_determine_depth(self):
+        """Total weight does not define a depth-resolved load profile."""
         neutral_light = estimate_neutral_point(
             surface_load_max=12000,
             surface_load_min=5000,
@@ -717,11 +717,11 @@ class TestEstimateNeutralPoint:
             rod_weight=6000,
             rod_length=5000.0,
         )
-        # Heavier rod should have shallower neutral point
-        assert neutral_heavy <= neutral_light
+        # Total rod weight cannot recover the missing load-versus-depth profile.
+        assert neutral_heavy is neutral_light is None
 
-    def test_returns_within_bounds(self):
-        """Test neutral point is always within rod length."""
+    def test_varied_extrema_cannot_determine_depth(self):
+        """Unsupported depths stay unavailable for every input pair."""
         for load_max in [8000, 12000, 16000]:
             for load_min in [3000, 5000, 7000]:
                 neutral = estimate_neutral_point(
@@ -730,7 +730,7 @@ class TestEstimateNeutralPoint:
                     rod_weight=4000,
                     rod_length=5000.0,
                 )
-                assert 0 <= neutral <= 5000.0
+                assert neutral is None
 
 
 class TestCalculateCriticalBucklingLoad:
@@ -913,12 +913,12 @@ class TestRodBucklingWithRealData:
     """Tests using real well card data."""
 
     @pytest.fixture
-    def well_7699227(self):
-        """Load well 7699227 test data."""
-        filepath = TEST_DATA_DIR / "7699227.json"
+    def well_echo(self):
+        """Load well field well echo test data."""
+        filepath = TEST_DATA_DIR / "field_well_echo.json"
         if filepath.exists():
             return load_from_json_file(filepath)
-        pytest.skip("Test data file 7699227.json not found")
+        pytest.skip("Test data file field_well_echo.json not found")
 
     def test_real_card_verdict_changes_between_load_datums(self):
         """The cleansed well 005 card is safe only after datum correction."""
@@ -973,20 +973,20 @@ class TestRodBucklingWithRealData:
         assert corrected.neutral_point_depth is None
         assert corrected.compression_length is None
 
-    def test_buckling_calculation_7699227(self, well_7699227):
-        """Test buckling calculation with well 7699227 data."""
+    def test_buckling_calculation_echo(self, well_echo):
+        """Test buckling calculation with well field well echo data."""
         result = calculate_rod_buckling(
-            well_7699227,
+            well_echo,
             load_datum="net_pump_load",
         )
 
         # Should complete analysis
         assert result.analysis_method == "surface_card_estimate"
 
-    def test_critical_loads_positive_7699227(self, well_7699227):
+    def test_critical_loads_positive_echo(self, well_echo):
         """Test that critical loads are positive with real data."""
         result = calculate_rod_buckling(
-            well_7699227,
+            well_echo,
             inclination_deg=DEVIATED_INCLINATION_DEG,
             tubing_id=TUBING_ID_IN,
             load_datum="net_pump_load",
@@ -995,10 +995,10 @@ class TestRodBucklingWithRealData:
         assert result.sinusoidal_critical_load > 0
         assert result.helical_critical_load > 0
 
-    def test_no_neutral_point_depth_from_real_card_7699227(self, well_7699227):
+    def test_no_neutral_point_depth_from_real_card_echo(self, well_echo):
         """Real card data still cannot yield a neutral-point depth."""
         result = calculate_rod_buckling(
-            well_7699227,
+            well_echo,
             load_datum="net_pump_load",
         )
 
@@ -1007,10 +1007,10 @@ class TestRodBucklingWithRealData:
         assert result.compression_depth_start is None
         assert result.compression_length is None
 
-    def test_buckling_tendency_calculated_7699227(self, well_7699227):
+    def test_buckling_tendency_calculated_echo(self, well_echo):
         """Test buckling tendency is calculated."""
         result = calculate_rod_buckling(
-            well_7699227,
+            well_echo,
             load_datum="net_pump_load",
         )
 

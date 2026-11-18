@@ -1,0 +1,115 @@
+# Typed riser example: top-tensioned riser on four linear tensioners
+# (digitalmodel #3976). Related analysis issues: #3947 (TTR static screen),
+# #3944 (drilling riser). All values are illustrative input data, not a design.
+#
+# Riser: 10.75 in steel, OD 0.2731 m, ID 0.2223 m, 0.1552 te/m, EI 32,169
+# kN.m2, EA 4.151e6 kN, contents 1.0 te/m3; vertical from the seabed anchor
+# (z -500 m) to a free top at z +12 m; length 512 m. EI, EA and GJ use
+# E = 210 GPa and Poisson ratio 0.3 from SteelConstruction.info, "Steel
+# material properties", "Other properties" (accessed 2026-11-13):
+# https://steelconstruction.info/topics/design/steel-material-properties/
+# These are generic steel elastic constants, not certified pipe properties.
+# EI = E pi (OD^4 - ID^4) / 64, EA = E pi (OD^2 - ID^2) / 4,
+# GJ = E pi (OD^4 - ID^4) / (64 (1 + nu)) = 24,745 kN.m2.
+# Stiffnesses are rounded to the nearest integer in the stated units.
+# The tensioner stiffness and
+# target tension are illustrative inputs, not sourced equipment data.
+# Tensioners: 4 linear spring/damper links, 50 kN/m each, from vessel points
+# on a 3 m radius at z +20 m to End A; target total vertical link tension
+# in the generated geometry is 1000 kN; static equilibrium changes it.
+# Interior attachments are unsupported; arc_length must be zero.
+#
+# Hand checks (g 9.80665 m/s2, seawater 1.025 te/m3):
+#   Submerged weight w = (0.1552 + 1.0 x 0.03881 - 1.025 x 0.05858) g
+#     = 1.314 kN/m for 500 m below the waterline. The 12 m above it has
+#     dry weight (including contents) = 1.903 kN/m.
+#     Riser W = w_wet x 500 + w_dry x 12 = 679.7 kN.
+#   Generated links: L = sqrt(3^2 + 8^2) = 8.544 m, unit tension
+#     T = 250 x 8.544 / 8 = 267.0 kN, unstretched L0 = 8.544 - 267.0 / 50
+#     = 3.204 m.
+#   Static equilibrium (riser axial stiffness EA / L = 8107 kN/m, tensioner
+#     vertical stiffness 190.8 kN/m incl. geometric term): top rises about
+#     0.079 m; top effective tension about 984.9 kN, bottom about 305.2 kN.
+#     Identity: top - bottom effective tension = W = 679.7 kN.
+#   The estimate integrates effective tension separately over the dry and wet
+#     lengths for stretch, fixing those lengths at their initial values.
+#     Moving-waterline effects are omitted. Wall-tension
+#     pressure terms (external up to about 294 kN, internal up to about 195 kN
+#     at the bottom) and Poisson coupling are omitted; their effect on the
+#     rise and the top tension is not established offline.
+#
+# Generate:
+#   python -m digitalmodel.solvers.orcaflex.modular_generator generate \
+#       --input spec.yml --output modular/
+
+metadata:
+  name: "riser_top_tensioned"
+  description: "Top-tensioned riser supported by four linear tensioners"
+  structure: riser
+  operation: production
+  project: "OrcaFlex typed examples"
+  version: "1.0"
+
+environment:
+  water:
+    depth: 500
+    density: 1.025
+  seabed:
+    type: flat
+    stiffness:
+      normal: 100
+      shear: 100
+
+riser:
+  vessel:
+    name: "TLP"
+    type_name: "Vessel Type1"
+    position: [0, 0, 0]
+    orientation: [0, 0, 0]
+    primary_motion: "None"
+    superimposed_motion: "None"
+    included_in_statics: "None"
+
+  line_types:
+    - name: "ttr_10in"
+      description: "10.75 in steel riser, OD 0.2731 m, ID 0.2223 m"
+      outer_diameter: 0.2731
+      inner_diameter: 0.2223
+      mass_per_length: 0.1552
+      bending_stiffness: 32169
+      axial_stiffness: 4150772
+      torsional_stiffness: 24745
+      poisson_ratio: 0.3
+      drag_coefficient: 1.2
+      added_mass_coefficient: 1.0
+
+  lines:
+    - name: "TTR"
+      configuration: free_hanging
+      end_a:
+        type: free
+        position: [0, 0, 12]
+        declination: 180
+      end_b:
+        type: anchor
+        position: [0, 0, 0]
+        declination: 180
+      sections:
+        - {line_type: "ttr_10in", length: 50, segment_length: 1}
+        - {line_type: "ttr_10in", length: 412, segment_length: 5}
+        - {line_type: "ttr_10in", length: 50, segment_length: 1}
+      contents:
+        density: 1.0
+      statics_method: "Catenary"
+      statics_step2: "Full statics"
+
+  tensioners:
+    - name: "Tensioner"
+      line: "TTR"
+      count: 4
+      total_tension: 1000
+      stiffness: 50
+      damping: 0
+      radius: 3
+      vessel_z: 20
+      start_angle: 45

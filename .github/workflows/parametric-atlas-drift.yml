@@ -12,12 +12,29 @@ name: Parametric atlas drift
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+    # The atlas fingerprint covers the registry spec, the workflow input, the
+    # listed source files and the standards table, all under these paths. Pushes
+    # to main and develop stay unfiltered, so a missed path still shows on main.
+    paths:
+      - 'src/**'
+      - 'atlases/**'
+      - 'docs/registry/**'
+      - 'docs/plans/parametric-refresh/**'
+      - 'examples/workflows/**'
+      - 'config/**'
+      - 'tests/parametric/**'
+      - 'tests/conftest.py'
+      - 'pytest.ini'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/parametric-atlas-drift.yml'
   push:
     branches: [main, develop]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
+  # A title or description edit gets a group of its own, so its no-op run cancels nothing.
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}${{ (github.event.action == 'edited' && !github.event.changes.base) && format('-metadata-edit-{0}', github.run_id) || '' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -25,16 +42,22 @@ permissions:
 
 jobs:
   atlas-drift:
-    name: Atlas staleness check
-    runs-on: ubuntu-latest
+    name: "${{ (github.event.action == 'edited' && !github.event.changes.base) && 'Not run for a metadata edit - Atlas staleness check' || 'Atlas staleness check' }}"
+    # Draft pull requests wait: the gates start when the pull request is marked ready.
+    # A title or description edit ("edited" without a base change) runs no job. The job then
+    # takes another name, so its skipped check does not stand in for an earlier result.
+    if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.draft) && !(github.event.action == 'edited' && !github.event.changes.base) }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
-      - name: Checkout code
+      - &atlas-checkout
+        name: Checkout code
         uses: actions/checkout@v4
         with:
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
-      - name: Build and guard local pull request merge
+      - &atlas-build-merge
+        name: Build and guard local pull request merge
         id: build_merge
         if: github.event_name == 'pull_request'
         shell: bash
@@ -121,3 +144,38 @@ jobs:
 
       - name: Atlas drift check (computed atlases must be up to date)
         run: python -m digitalmodel.parametric.refresh
+
+  parametric-tests:
+    name: "${{ (github.event.action == 'edited' && !github.event.changes.base) && 'Not run for a metadata edit - Parametric package tests' || 'Parametric package tests' }}"
+    # A title or description edit ("edited" without a base change) runs no job. The job then
+    # takes another name, so its skipped check does not stand in for an earlier result.
+    if: ${{ !(github.event.action == 'edited' && !github.event.changes.base) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code with full history
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+      - *atlas-build-merge
+      - name: Retain canonical default-branch history
+        shell: bash
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          DEFAULT_REPOSITORY_URL: ${{ github.event.repository.clone_url }}
+        run: |
+          set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
+          git fetch --no-tags "$DEFAULT_REPOSITORY_URL" \
+            "+refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v5
+      - name: Test parametric package
+        run: >-
+          uv run --no-sources --with-editable '.[test]'
+          python -m pytest tests/parametric/ -q -rA -p no:cacheprovider
+          --basetemp="$RUNNER_TEMP/parametric-tests"

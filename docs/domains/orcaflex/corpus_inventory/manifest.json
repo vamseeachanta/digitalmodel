@@ -1,0 +1,7 @@
+{
+  "files": 3,
+  "generator": "src/digitalmodel/solvers/orcaflex/corpus_inventory.py",
+  "scope": "selected local files; dependencies unresolved; no solver loading",
+  "table": "inventory.jsonl",
+  "table_sha256": "367068c2e1cb3d241ceb831c092d7084cb233c7f735366427350f8f8b50bae77"
+}

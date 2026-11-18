@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """
 ABOUTME: Wave spectrum library for OrcaWave motion response analysis.
 Implements JONSWAP, Pierson-Moskowitz, Bretschneider, ISSC, Ochi-Hubble
@@ -8,11 +10,13 @@ Focused on OrcaWave workflows: spectrum discretisation for RAO-based
 response computation and short-term statistics.
 """
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 import warnings
+
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
 
 
 # ---------------------------------------------------------------------------
@@ -125,7 +129,7 @@ def compute_spectral_moments(
     validate_spectral_grid(omega, s_omega)
     moments = {}
     for n in range(max_order + 1):
-        moments[f"m{n}"] = float(np.trapz(omega**n * s_omega, omega))
+        moments[f"m{n}"] = float(_trapezoid(omega**n * s_omega, omega))
     return SpectralMoments(**moments)
 
 
@@ -360,7 +364,7 @@ def heuristic_two_peak(
     s_total = s_wind + s_swell
 
     # Renormalize to target Hs
-    m0 = np.trapz(s_total, omega)
+    m0 = _trapezoid(s_total, omega)
     target_m0 = hs**2 / 16.0
     if m0 > 1e-30:
         s_total *= target_m0 / m0
@@ -449,11 +453,18 @@ def generate_spectrum(
     )
 
 
-def torsethaugen(*args, **kwargs):
-    """Removed attribution: explicitly choose heuristic_two_peak instead."""
-    raise ValueError(
-        "Published Torsethaugen model unavailable; use heuristic_two_peak explicitly"
+def torsethaugen(omega: np.ndarray, hs: float, tp: float) -> np.ndarray:
+    """Deprecated alias for the unqualified heuristic_two_peak, not a published model.
+
+    Retained for callable compatibility only. The high-level named published
+    spectrum remains unavailable; select HeuristicTwoPeak explicitly there.
+    """
+    warnings.warn(
+        "Use heuristic_two_peak; this deprecated alias returns an unqualified heuristic",
+        DeprecationWarning,
+        stacklevel=2,
     )
+    return heuristic_two_peak(omega, hs, tp)
 
 
 def validate_spectral_grid(omega, density):

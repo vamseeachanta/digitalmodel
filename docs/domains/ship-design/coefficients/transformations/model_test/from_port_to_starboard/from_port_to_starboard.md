@@ -11,9 +11,9 @@ An example to transform coefficient data from port side to starboard side.
 - Current Coefficient data is Cx, Cy, Cz, Cnx, Cny, Cnz
 
   - Cz data is close to zero
-  - Cnx, Cny data is close to zero (for WLNG project)
+  - Cnx, Cny data is close to zero (for the Client W project)
 =======
-  - Cz, Cnx, Cny are close to zero and are equated to zero ? (untouched for WLNG project - check?)
+  - Cz, Cnx, Cny are close to zero and are equated to zero ? (untouched for the Client W project - check?)
   - Cx, Cy, Cnz are non-zero and asymmetric.
 
 ![schematic](image.png)

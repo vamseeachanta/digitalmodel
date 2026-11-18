@@ -5,6 +5,8 @@ and tubular members with natural frequency, vortex shedding, susceptibility
 screening, and fatigue assessment per DNV-RP-C205 and DNV-RP-F105.
 """
 
+from typing import TYPE_CHECKING
+
 __version__ = '1.0.0'
 
 # Data models
@@ -44,7 +46,24 @@ from .models import (
 from .frequency_calculator import FrequencyCalculator
 from .vortex_shedding import VortexSheddingAnalyzer
 from .screening import VIVScreening
-from .fatigue import VIVFatigueCalculator
+if TYPE_CHECKING:
+    from .fatigue import VIVFatigueCalculator
+
+
+def __getattr__(name: str) -> type["VIVFatigueCalculator"]:
+    """Load the fatigue backend only when its public calculator is requested."""
+    if name == "VIVFatigueCalculator":
+        from .fatigue import VIVFatigueCalculator
+
+        globals()[name] = VIVFatigueCalculator
+        return VIVFatigueCalculator
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__() -> list[str]:
+    """Keep the lazy calculator discoverable alongside the other public names."""
+    return sorted(set(globals()) | set(__all__))
+
 
 __all__ = [
     # Version

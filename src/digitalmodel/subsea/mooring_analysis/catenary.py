@@ -48,6 +48,10 @@ class CatenaryAnalyzer:
         distribution. The catenary equation relates the horizontal tension H,
         line weight w, and geometry.
 
+        Assumes a uniform, inextensible, positively weighted line starting at
+        a horizontal touchdown tangent, with sufficient length for the span.
+        This is not a general solution for two fully suspended endpoints.
+
         Args:
             line: Mooring line properties
             horizontal_tension: Horizontal tension component (kN)
@@ -65,6 +69,9 @@ class CatenaryAnalyzer:
         # Line weight per unit length in water (kN/m)
         w = line.weight_water * self.g / 1000.0
 
+        if w < 0:
+            raise ValueError("Touchdown catenary requires positive submerged weight")
+
         if abs(w) < 1e-6:
             raise ValueError("Line weight too close to zero for catenary analysis")
 
@@ -75,22 +82,12 @@ class CatenaryAnalyzer:
         # Vertical height (default to water depth)
         z = vertical_height if vertical_height is not None else self.water_depth
 
-        # Calculate suspended arc length using catenary equation
-        # For vertical span z: s = a * sinh(z/a)
-        # For large z/a, use exponential approximation to avoid overflow
-        if abs(z / a) < 20:
-            s = a * np.sinh(z / a)
-        else:
-            # Approximation for large arguments: sinh(x) ≈ exp(x)/2
-            s = a * np.exp(z / a) / 2
-
-        # Horizontal distance from touchdown to fairlead
-        # x = a * (cosh(z/a) - 1) = a * arccosh(1 + z/a)
-        if abs(z / a) < 20:
-            x = a * (np.cosh(z / a) - 1)
-        else:
-            # Approximation: cosh(x) - 1 ≈ exp(x)/2 for large x
-            x = a * np.exp(z / a) / 2
+        # General Physics I: Classical Mechanics, section 19.3, The Catenary
+        # (2024 web edition), https://phys.libretexts.org/@go/page/92208:
+        # z=a*(cosh(x/a)-1), s=a*sinh(x/a). Eliminating x gives
+        # s²=z²+2az; z is a vertical span, never the horizontal argument.
+        s = np.sqrt(z * (z + 2 * a))
+        x = a * np.arccosh(1 + z / a)
 
         # Tension at fairlead (top of catenary)
         # T = sqrt(H² + (w*s)²)
@@ -162,10 +159,9 @@ class CatenaryAnalyzer:
                 logger.debug(f"Converged in {iteration + 1} iterations")
                 return result
 
-            # Newton-Raphson update
-            # dT/dH ≈ H/T
-            dT_dH = H / T_current if T_current > 0 else 1.0
-            H -= error / dT_dH
+            # Section 19.3 cited in solve_catenary: s²=z²+2Hz/w gives
+            # T²=H²+(ws)²=(H+wz)². At fixed z and w, dT/dH=1.
+            H -= error
 
             # Ensure H stays positive
             H = max(0.1, H)

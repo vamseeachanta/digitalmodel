@@ -1,0 +1,2 @@
+expected.json: LE1 92.7 MPa; patch sigma_xx 300.000, sigma_yy 300.000, tau_xy 80.769 MPa
+Regenerated expected values and metadata match committed JSON.

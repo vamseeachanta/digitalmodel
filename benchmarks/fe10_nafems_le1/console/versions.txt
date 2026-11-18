@@ -1,0 +1,6 @@
+COMMAND: python3 --version
+Python 3.12.3
+exit 0
+COMMAND: uv --version
+uv 0.12.21 (7af826859 2026-09-29 x86_64-unknown-linux-gnu)
+exit 0

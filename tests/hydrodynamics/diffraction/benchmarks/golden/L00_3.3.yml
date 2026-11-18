@@ -61,7 +61,7 @@ Bodies:
   BodyMeshLengthUnits: m
   BodyMeshSymmetry: xz and yz planes
   BodyAddInteriorSurfacePanels: No
-  BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+  BodyOrcaFlexImportSymmetry: None
   BodyHydrostaticIntegralMethod: Standard
   BodyHydrostaticStiffnessMethod: Displacement
   BodyInertiaSpecifiedBy: Radii of gyration (for a free-floating body)
@@ -176,7 +176,7 @@ Bodies:
   BodyMeshLengthUnits: m
   BodyMeshSymmetry: xz and yz planes
   BodyAddInteriorSurfacePanels: No
-  BodyOrcaFlexImportSymmetry: Use global mesh symmetry
+  BodyOrcaFlexImportSymmetry: None
   BodyHydrostaticIntegralMethod: Standard
   BodyHydrostaticStiffnessMethod: Displacement
   BodyInertiaSpecifiedBy: Matrix (for a general body)

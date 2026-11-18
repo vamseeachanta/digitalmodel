@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for on-bottom stability — DNV-RP-F109 simplified method.
 # ABOUTME: Covers submerged weight, hydrodynamic loads, and lateral/vertical stability.
 """Tests for on-bottom stability — DNV-RP-F109 simplified method."""
@@ -45,7 +48,7 @@ class TestHydrodynamicLoads:
             water_acceleration_m_s2=0.5,
             rho_seawater=1025.0,
             cd=0.7,
-            cm=3.29,
+            cm=3.29, cl=0.9,
         )
         assert result.drag_n_per_m > 0
         assert result.inertia_n_per_m > 0

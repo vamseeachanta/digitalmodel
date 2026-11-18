@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Drilling riser hand-check method provenance</title>
+<style>
+body { max-width: 76rem; margin: 2rem auto; padding: 0 1rem;
+       font: 1rem/1.5 system-ui, sans-serif; color: #17212b; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+th, td { border: 1px solid #bdc8d2; padding: .5rem; text-align: left; vertical-align: top; }
+caption { caption-side: bottom; text-align: left; padding: .5rem 0; }
+pre { white-space: pre-wrap; padding: 1rem; background: #eef3f7; }
+code { overflow-wrap: anywhere; }
+.gap { border-left: .3rem solid #996600; padding-left: 1rem; }
+</style>
+</head>
+<body>
+<h1>Drilling riser hand-check method provenance</h1>
+<h2>Summary</h2>
+<p>The global hand checks implement vertical equilibrium, a tensioned beam
+eigenproblem and a string travel-time estimate. Their equations and independent
+reference calculations are mapped below. Numerical agreement checks these model
+identities under their stated assumptions; it does not establish API or ISO
+compliance. No solver result or design acceptance is established.</p>
+<h2>Revision history</h2>
+<table>
+<thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-10-22</td><td>Method inventory, standards gaps and
+independent worked checks are added to distinguish implementation provenance
+from standards qualification.</td></tr></tbody>
+<caption>Table 1. Initial issue of the method note.</caption>
+</table>
+
+<h2>Qualification boundary</h2>
+<p class="gap"><strong>Standards status: NOT_EVALUATED.</strong> A verified
+edition, clause title, method applicability and resolved <code>Citation</code>
+are not established for these hand checks. No standards-derived constant is
+introduced. The existing numeric interfaces remain unchanged.</p>
+<p><code>hand_checks.hand_check_provenance()</code> returns a JSON-compatible
+sidecar with equations, assumptions and reference locators. Its empty
+<code>citations</code> list means that no standard is qualified. A request with
+<code>require_standard=True</code> raises <code>CitationResolutionError</code>;
+it cannot promote missing evidence to compliance. Before a future
+standards-derived calculation is qualified, its edition and clause-title
+mapping shall be checked against an authorized source and its Citation shall
+resolve at calculation time using the existing citation validator. Resolving
+frontmatter alone does not establish the content or applicability of a clause.</p>
+
+<h2>Method inventory</h2>
+<table>
+<thead><tr><th>Public calculation</th><th>Equation or assembly</th><th>Basis and independent check</th></tr></thead>
+<tbody>
+<tr><td><code>submerged_length_m</code></td><td>Wet length is the intersection of
+the vertical interval with z &lt; 0.</td><td><a href="#geometry">Geometry identity</a>; dry, partial and wet limits.</td></tr>
+<tr><td><code>submerged_weight_n</code></td><td>W = g[(μ + ρc Ai)L − ρw V′ Lwet].</td><td><a href="#weight">Mass balance</a>; the worked partial-immersion check.</td></tr>
+<tr><td><code>effective_tension_chain</code></td><td>Te,b = Te,t − W per section.</td><td>Vertical force balance; cumulative weights in the chain regression.</td></tr>
+<tr><td><code>ring_weight_n</code></td><td>Wr = g[Mr − ρw Vr I(zr &lt; 0)].</td><td>Concentrated weight with binary immersion; no partially immersed ring geometry.</td></tr>
+<tr><td><code>tension_references</code></td><td>Te,top = Tv − Wr; continue chain through riser and stack.</td><td>Same equilibrium; stack contents must already be in its mass, with zero bore.</td></tr>
+<tr><td><code>tensioned_beam_periods</code></td><td>(Kb + Kg + Ks)q = ω²Mq; P = 2π/ω.</td><td><a href="#beam">Hermite weak-form derivation</a>; uniform pinned beam/string and fixed-fixed references.</td></tr>
+<tr><td><code>wkb_string_periods</code></td><td>Pn ≈ (2/n) Σ Le √(μe/Te,avg).</td><td><a href="#string">Travel-time approximation</a>; exact uniform-string limit only.</td></tr>
+<tr><td><code>tensioner_lateral_stiffness_n_m</code></td><td>kx = Σ (Fline/ℓ)(1 − ux²).</td><td><a href="#tensioner">Derivative of constant-magnitude line force</a>.</td></tr>
+<tr><td><code>beam_model</code></td><td>Geometry, mass and effective-tension fields are discretized.</td><td><a href="#assembly">Model assembly convention</a>; no independent engineering qualification of topology or added mass.</td></tr>
+<tr><td><code>reference_periods</code></td><td>Beam with ring mass and lateral spring, and flex-joint rotation springs.</td><td>Line-tensioner representation only; stack treated as rigid.</td></tr>
+<tr><td><code>wkb_reference_periods</code></td><td>Travel time over the riser below the ring.</td><td>Informational estimate; inner barrel is excluded.</td></tr>
+</tbody>
+<caption>Table 2. All public calculations in the hand-check module; every row has standards status NOT_EVALUATED.</caption>
+</table>
+
+<h2 id="geometry">Vertical geometry</h2>
+<p>For a positive length L with top elevation zt, the bottom is zb = zt − L.
+Intersecting [zb, zt] with the region below mean sea level gives
+Lwet = clip(L − max(zt, 0), 0, L). This is a coordinate identity, with no
+standard-derived coefficient.</p>
+
+<h2 id="weight">Weight and effective tension</h2>
+<p>The structure and bore contents have mass (μ + ρc Ai)L, where Ai = πdi²/4
+is the circle-area identity. Displaced water has mass ρw V′ Lwet. Subtracting
+buoyancy from gravitational weight gives the inventory equation. Integrating
+vertical force balance from the top of each section gives Te,b = Te,t − W.
+The supplied tension is already effective tension; pressure end loads shall
+not be added again. This derivation is a mechanics identity, not a mapped
+standard provision.</p>
+<p>The acceleration used by the implementation is the exact conventional
+standard gravity in <a href="#source-gravity">NIST 2022 CODATA</a>. It is not a
+measurement of local gravity. Fluid density, mass and displacement are inputs,
+not site measurements supplied by this method note.</p>
+
+<h2 id="beam">Beam and finite-element coefficients</h2>
+<p><a href="#source-beam">Euphonics §3.2.1, equations (7), (12) and (13)</a>
+supplies the untensioned Euler–Bernoulli equation and its harmonic general
+solution. The tension term follows by varying the transverse potential energy
+½∫[EI(w″)² + Te(w′)²] dz; inertia follows from ½∫μ(ẇ)² dz. The resulting
+equation is EI w'''' − (Te w′)′ + μ wtt = 0 for constant EI. Spatially varying
+properties are assembled element by element.</p>
+<p>Let ξ = z/Le, with element degrees of freedom [w1, θ1, w2, θ2]. Cubic
+interpolation of displacement and slope at both ends gives the four functions:</p>
+<pre>N = [1 − 3ξ² + 2ξ³, Le(ξ − 2ξ² + ξ³),
+     3ξ² − 2ξ³, Le(−ξ² + ξ³)].
+Kb = EI ∫ N″ᵀ N″ dz
+Kg = Te,avg ∫ N′ᵀ N′ dz
+M  = μ ∫ Nᵀ N dz</pre>
+<p>Integrating these polynomials over 0 ≤ ξ ≤ 1 reproduces the implemented
+bending, geometric and consistent-mass matrices, including their integer
+coefficients and denominators. For example Kb[0,0] = 12EI/Le³,
+Kg[0,0] = 6Te,avg/(5Le), and M[0,0] = 13μLe/35. These factors are derived
+integrals, not tabulated standard values. Using the end-average tension in an
+element is an approximation when tension varies; mesh refinement remains
+necessary for a case-specific result. Point masses and translational springs
+add directly to nodal translation entries; rotational springs add to rotation
+entries. Eliminating constrained coordinates imposes pins and clamps.</p>
+<p>The existing mass regularization is a numerical perturbation; it is not
+physical rotational inertia or a standards allowance. A massless region or
+an ill-conditioned mesh requires separate sensitivity evidence. Modes are
+returned in increasing frequency, hence decreasing period.</p>
+
+<h2 id="string">String approximation</h2>
+<p>For a uniform string, a sine mode with fixed endpoints has speed
+c = √(Te/μ) and period Pn = 2L/(nc), as in
+<a href="#source-string">OpenStax (2016), §16.6</a>. For slowly varying
+properties, integrating the local travel time gives Pn ≈ (2/n)∫ dz/c(z).
+The implementation approximates the integral using each element's average
+tension. No independent error bound for a variable-tension riser is established
+here. Positive tension is required and bending is neglected.</p>
+
+<h2 id="tensioner">Lateral tensioner stiffness</h2>
+<p>For a constant line force F along a vector r of length ℓ, differentiating
+F r/ℓ with respect to a horizontal endpoint displacement gives the restoring
+stiffness magnitude (F/ℓ)(1 − ux²). Each line's force is obtained from the
+total vertical force and vertical direction cosine; the contributions are
+summed at equally spaced azimuths. For vertical lines ux = 0, giving
+kx = Tv/h for vertical separation h. This limiting identity is an independent
+derivative check; it does not qualify an actual tensioner system.</p>
+
+<h2 id="assembly">Assembly assumptions and implementation conventions</h2>
+<p>The line mass used for vibration includes structure, bore contents and
+Ca ρw V′ times the wet fraction. Ca is supplied by the specification. The
+inner barrel carries its modelled hanging weight; the existing axial-stiffness
+threshold selects the slip section, rather than calculating physical slip
+engagement. The existing subdivision epsilon, element-size defaults,
+mode-count defaults and mass regularizer are computational settings, without
+standards provenance. Flex-joint boundary conditions, ring immersion and the
+rigid-stack approximation require case-specific qualification. None of these
+conventions is promoted to a design requirement by this inventory.</p>
+
+<h2 id="independent-checks">Independent checks and worked examples</h2>
+<p>All example inputs are synthetic choices. Test tolerances are chosen checks
+of floating-point error or numerical approximation; they are not design limits.</p>
+<table>
+<thead><tr><th>Case</th><th>Inputs and independent calculation</th><th>Answer</th></tr></thead>
+<tbody>
+<tr><td>Partial immersion and chain tension</td><td>L = 10 m; zt = 4 m;
+μ = 500 kg/m; V′ = 0.3 m³/m; zero bore contents; ρw = 1000 kg/m³;
+Te,t = 100000 N. Lwet = 6 m; net mass = 5000 − 1800 = 3200 kg.
+Multiply by conventional g, then subtract W from Te,t.</td><td>W = 31381.3 N;
+Te,b = 68618.7 N, rounded for display.</td></tr>
+<tr><td>Uniform string</td><td>L = 300 m; Te = 2000000 N; μ = 800 kg/m.
+c = √(Te/μ) = 50 m/s; Pn = 2L/(nc).</td><td>Pn = 12/n s.</td></tr>
+<tr><td>Uniform pinned beam</td><td>L = 50 m; EI = 200000000 N·m²;
+μ = 400 kg/m; Te = 0. Substitution of sin(nπz/L) into the beam equation
+gives ωn = (nπ/L)²√(EI/μ).</td><td>Pn = 2π/ωn.</td></tr>
+<tr><td>Uniform fixed-fixed beam</td><td>The same beam, with zero displacement
+and slope at both ends. The determinant below fixes β; ω1 = β²√(EI/μ)/L².</td>
+<td>First period = 1.0 s to one decimal place; the test uses the unrounded root and period.</td></tr>
+</tbody>
+<caption>Table 3. Synthetic worked checks; expected values are independent of the implementation.</caption>
+</table>
+<p>For the fixed-fixed case, the published general harmonic solution is
+restricted by the two conditions at z = 0 to
+u(ξ) = A[cosh(βξ) − cos(βξ)] + B[sinh(βξ) − sin(βξ)]. At ξ = 1,
+the remaining displacement and slope conditions give the determinant
+2[1 − cosh(β) cos(β)] = 0. This derivation establishes fixed-fixed
+applicability independently of the source's free-free example.</p>
+<p>Bisection between 3π/2 and 2π excludes the zero root. With
+B/A = −[cosh(β) − cos(β)]/[sinh(β) − sin(β)], the test evaluates both
+displacement and slope at both endpoints. It also compares the independently
+solved root against the previous six-decimal reference at its rounding
+precision. The finite-element period with stiff rotational end springs is
+then compared against this analytical period.</p>
+<pre>from digitalmodel.drilling_riser.global_model.hand_checks import (
+    hand_check_provenance, tensioned_beam_periods,
+)
+
+# segments contain the synthetic or independently qualified input properties.
+periods = tensioned_beam_periods(segments, n_modes=1)
+provenance = hand_check_provenance()
+# Keep both objects when reporting results. provenance["standards_status"]
+# remains "NOT_EVALUATED" even when a numerical comparison passes.</pre>
+
+<h2>Related standards references and evidence gaps</h2>
+<table>
+<thead><tr><th>Existing reference</th><th>Evidence gap and disposition</th></tr></thead>
+<tbody>
+<tr><td><code>hang_off.py</code>: API RP 16Q / ISO 13624-1</td><td>Edition,
+clause title and requirement applicability are not established. Hard/soft
+supports and spring settings remain model conventions; NOT_EVALUATED.</td></tr>
+<tr><td><code>events.py</code>: API RP 16Q / ISO 13624-1</td><td>Edition and
+clause mapping are absent. Wave-drift reduction, drag assumptions and
+anti-recoil schedules are not qualified standards provisions; NOT_EVALUATED.</td></tr>
+<tr><td><code>stackup.py</code>: ABS Guidance Notes on Drilling Riser Analysis
+(2017), Section 3, Subsection 3, item iii), equation (3.2); API RP 16Q second
+edition (2017)</td><td>These are existing recorded locators, not newly verified
+source evidence. Clause titles, held-edition checks and a resolved Citation
+are not established here; the existing factors receive no qualification.
+Their numerical values are not reproduced in this note; NOT_EVALUATED.</td></tr>
+</tbody>
+<caption>Table 4. Related source modules remain unchanged; recorded references are not evidence of compliance.</caption>
+</table>
+<p>No linked follow-on issue is specified in the originating issue. Completing
+standards qualification will require authorized edition-specific source
+access, clause titles, applicability and acceptance criteria. Licensed text
+and tables are excluded from this public note.</p>
+
+<h2>Sources and retained-source identities</h2>
+<p>These public sources were opened with HTTP 200 and retained with request
+addresses, UTC timestamps and SHA-256 digests in the external evidence folder.
+The digests identify the retrieved response bytes, not a licensed standard or
+a permanent edition. No source payload is redistributed by this change.</p>
+<ul>
+<li id="source-beam"><a href="https://euphonics.org/3-2-1-bending-beams-and-free-free-modes/">Euphonics,
+§3.2.1, Bending beams and free-free modes</a>, equations (7), (12), (13),
+(17); undated living text, accessed 2026-10-22 at 23:33:11 UTC.
+SHA-256: <code>49a4f241dd6cd93d714c64c4c7898d61d8a3772d2c29afba1fc10f5cde57612e</code>.</li>
+<li id="source-string"><a href="https://openstax.org/books/university-physics-volume-1/pages/16-6-standing-waves-and-resonance">OpenStax,
+University Physics Volume 1 (2016), §16.6, Standing Waves and Resonance</a>;
+accessed 2026-10-22 at 23:33:51 UTC.
+SHA-256: <code>92476a1ae9483de2524f770b7a03edd1e3a3533c06aa4bf02e460bdac2b22c81</code>.</li>
+<li id="source-gravity"><a href="https://physics.nist.gov/cgi-bin/cuu/Value?gn">NIST,
+2022 CODATA, standard acceleration of gravity</a>; accessed 2026-10-22
+at 23:33:51 UTC.
+SHA-256: <code>fa78c7fe6eabeec8caf373e434824c97968e36265a2a5398d8d4b7ef83c2b202</code>.</li>
+</ul>
+</body>
+</html>

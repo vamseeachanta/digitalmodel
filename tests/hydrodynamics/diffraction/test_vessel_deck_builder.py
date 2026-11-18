@@ -69,11 +69,14 @@ def test_build_deck_parametric(tmp_path):
     assert res.deck_path.exists()
     assert (res.deck_path.parent / MESH_FILE).exists()
     # the generated file is a valid OrcaWave deck referencing our mesh
-    deck = res.deck_path.read_text()
+    deck = res.deck_path.read_text(encoding="utf-8")
     assert "UnitsSystem: SI" in deck
     assert MESH_FILE in deck
+    assert res.mesh_path.read_text(encoding="utf-8").splitlines()[2].split() == ["0", "1"]
+    assert yaml.safe_load(deck)["Bodies"][0]["BodyMeshSymmetry"] == "xz plane"
     # manifest carries provenance + swap instructions
-    man = json.loads((res.deck_path.parent / "manifest.json").read_text())
+    man = json.loads((res.deck_path.parent / "manifest.json").read_text(encoding="utf-8"))
+    assert man["deck"] == res.deck_path.name
     assert man["mesh"]["kind"] == "parametric"
     assert "swap" in man["mesh"]
 
@@ -83,10 +86,45 @@ def test_build_deck_placeholder_for_semisub(tmp_path):
     assert res is not None
     assert res.mesh_kind == "placeholder"
     assert res.n_panels is None
-    # deck references the mesh-to-supply path; no gdf written
-    man = json.loads((res.deck_path.parent / "manifest.json").read_text())
+    # The canonical spec records the missing mesh; no native deck is valid.
+    assert res.spec_path.is_file()
+    assert not res.deck_path.exists()
+    assert any("native deck not generated" in note for note in res.notes)
+    man = json.loads((res.deck_path.parent / "manifest.json").read_text(encoding="utf-8"))
+    assert man["deck"] is None
+    assert man["preflight_reports"] == [{
+        "check": "DF2",
+        "body": DiffractionSpec.from_yaml(res.spec_path).vessel.name,
+        "status": "NOT_EVALUATED",
+        "reason": "placeholder mesh; no native deck generated",
+    }]
     assert man["mesh"]["file"] == PLACEHOLDER_MESH
     assert not (res.deck_path.parent / MESH_FILE).exists()
+
+
+def test_placeholder_manifest_does_not_advertise_stale_deck(tmp_path):
+    record = _rec("Synthetic semi", "Semi-submersible crane vessel")
+    deck_dir = tmp_path / record.vessel_id()
+    deck_dir.mkdir()
+    old_deck = deck_dir / f"{clean_vessel_name(record.name)}.yml"
+    old_deck.write_text("prior input\n", encoding="utf-8", newline="\n")
+
+    result = build_deck(record, tmp_path)
+
+    manifest = json.loads(
+        (result.spec_path.parent / "manifest.json").read_text(encoding="utf-8")
+    )
+    assert manifest["deck"] is None
+    assert manifest["preflight_reports"] == [{
+        "check": "DF2",
+        "body": DiffractionSpec.from_yaml(result.spec_path).vessel.name,
+        "status": "NOT_EVALUATED",
+        "reason": "placeholder mesh; no native deck generated",
+    }]
+    assert result.mesh_kind == "placeholder"
+    assert any("native deck not generated" in note for note in result.notes)
+    assert result.deck_path == old_deck
+    assert old_deck.read_text(encoding="utf-8") == "prior input\n"
 
 
 def test_build_deck_free_floating_without_displacement(tmp_path):
@@ -108,7 +146,7 @@ def test_build_deck_none_without_dimensions(tmp_path):
 
 def test_swappable_mesh_path_is_single_field(tmp_path):
     res = build_deck(_rec("Swap Test", "FPSO"), tmp_path)
-    text = res.deck_path.read_text()
+    text = res.deck_path.read_text(encoding="utf-8")
     assert MESH_FILE in text  # mesh referenced by the single swappable filename
 
 
@@ -121,7 +159,7 @@ def test_canonical_spec_written_and_loadable(tmp_path):
     assert res.spec_path != res.deck_path
     spec = DiffractionSpec.from_yaml(res.spec_path)
     assert spec.vessel.geometry.mesh_file == MESH_FILE
-    man = json.loads((res.deck_path.parent / "manifest.json").read_text())
+    man = json.loads((res.deck_path.parent / "manifest.json").read_text(encoding="utf-8"))
     assert man["spec"] == res.spec_path.name
 
 
@@ -144,7 +182,7 @@ def test_explicit_cog_converted_to_mesh_frame(tmp_path):
     assert spec.vessel.inertia.centre_of_gravity == pytest.approx(expected)
 
     # And the OrcaWave deck emits it verbatim (BodyMeshPosition frame).
-    deck = yaml.safe_load(res.deck_path.read_text())
+    deck = yaml.safe_load(res.deck_path.read_text(encoding="utf-8"))
     assert deck["Bodies"][0]["BodyCentreOfMass"] == pytest.approx(expected)
 
 
@@ -159,3 +197,28 @@ def test_explicit_cog_defaults_land_amidships_at_keel(tmp_path):
     )
     # the keel-datum VCG gap is still flagged for the user
     assert any("VCG unknown" in n for n in res.notes)
+
+
+@pytest.mark.parametrize("symmetry,flags", [("none", "0 0"), ("xz", "0 1"), ("yz", "1 0"), ("xz+yz", "1 1")])
+@pytest.mark.parametrize("vessel_type", ["barge", "drilling semi-submersible"])
+def test_exported_flags_determine_declaration(tmp_path, monkeypatch, symmetry, flags, vessel_type):
+    from digitalmodel.hydrodynamics.diffraction import vessel_deck_builder as builder
+    from tests.hydrodynamics.diffraction.test_mesh_preflight import box_spec
+
+    box_spec(tmp_path, symmetry, flags, partial=True)
+    contents = (tmp_path / "box.gdf").read_text(encoding="utf-8")
+
+    def export_with_flags(mesh, path):
+        path.write_text(contents, encoding="utf-8", newline="\n")
+        return path
+
+    monkeypatch.setattr(builder, "export_gdf", export_with_flags)
+    result = builder.build_deck(
+        _rec("synthetic", vessel_type, loa=80, beam=70, draft=20),
+        tmp_path, target_panels=20,
+    )
+    spec = DiffractionSpec.from_yaml(result.spec_path)
+    assert spec.vessel.geometry.symmetry == symmetry
+    assert result.deck_path.exists()
+    manifest = json.loads((result.deck_path.parent / "manifest.json").read_text(encoding="utf-8"))
+    assert manifest["preflight_reports"][0]["status"] == "NOT_EVALUATED"

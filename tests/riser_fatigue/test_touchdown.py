@@ -29,6 +29,9 @@ def test_single_bin_hand_verified():
     n = 1e5  ->  D = n/N = 0.257199...
     """
     inp = TouchdownFatigueInput(
+        scf_basis="Synthetic hot-spot stress includes concentration",
+        sn_basis="Synthetic F1 detail with specified protection",
+        histogram_basis={"period_years": 1.0, "evidence": "Synthetic annual cycle counts"},
         section=_section(25.0),
         stress_ranges_mpa=[80.0],
         cycles=[1.0e5],
@@ -55,6 +58,10 @@ def test_single_bin_hand_verified():
 def test_safe_case_damage_well_below_one():
     """Low stress ranges over the design life -> tiny damage, PASS."""
     inp = TouchdownFatigueInput(
+        histogram_period_years=1.0,
+        scf_basis="Synthetic hot-spot stress includes concentration",
+        sn_basis="Synthetic F1 detail with specified protection",
+        histogram_basis={"period_years": 1.0, "evidence": "Synthetic annual cycle counts"},
         section=_section(25.0),
         stress_ranges_mpa=[10.0, 15.0, 20.0],
         cycles=[5.0e5, 1.0e5, 1.0e4],
@@ -74,6 +81,10 @@ def test_safe_case_damage_well_below_one():
 def test_failing_case_damage_above_one_over_design_life():
     """High stress ranges -> design-life damage > 1, FAIL even without DFF."""
     inp = TouchdownFatigueInput(
+        histogram_period_years=1.0,
+        scf_basis="Synthetic hot-spot stress includes concentration",
+        sn_basis="Synthetic F1 detail with specified protection",
+        histogram_basis={"period_years": 1.0, "evidence": "Synthetic annual cycle counts"},
         section=_section(25.0),
         stress_ranges_mpa=[120.0, 150.0],
         cycles=[2.0e5, 5.0e4],
@@ -98,6 +109,9 @@ def test_dff_governs_verdict():
     then show DFF=1 flips it to PASS.
     """
     base = dict(
+        scf_basis="Synthetic hot-spot stress includes concentration",
+        sn_basis="Synthetic F1 detail with specified protection",
+        histogram_basis={"period_years": 1.0, "evidence": "Synthetic annual cycle counts"},
         section=_section(25.0),
         stress_ranges_mpa=[60.0],
         cycles=[1.1e4],
@@ -124,6 +138,10 @@ def test_dff_governs_verdict():
 def test_thickness_correction_increases_damage():
     """Thicker wall (> t_ref) raises corrected stress -> more damage."""
     common = dict(
+        scf=1.0, design_life_years=25.0, dff=10.0, histogram_period_years=1.0,
+        scf_basis="Synthetic hot-spot stress includes concentration",
+        sn_basis="Synthetic F1 detail with specified protection",
+        histogram_basis={"period_years": 1.0, "evidence": "Synthetic annual cycle counts"},
         stress_ranges_mpa=[90.0],
         cycles=[1.0e5],
         sn_class="F1",
@@ -145,6 +163,11 @@ def test_thickness_correction_increases_damage():
 
 def _e_class_40mm(**overrides):
     kwargs = dict(
+        scf=1.0, design_life_years=25.0, dff=10.0, histogram_period_years=1.0,
+        scf_basis="Synthetic hot-spot stress includes concentration",
+        sn_basis="Synthetic detail and environment selected for this test",
+        histogram_basis={"period_years": 1.0, "evidence": "Synthetic annual cycle counts"},
+        thickness_exponent_basis="Synthetic override increasing the class penalty",
         section=_section(40.0),
         stress_ranges_mpa=[100.0],
         cycles=[1.0e5],
@@ -221,6 +244,15 @@ def test_mismatched_lengths_raise():
     with pytest.raises(ValueError):
         assess_touchdown_fatigue(
             TouchdownFatigueInput(
+                sn_class="F1",
+                environment="seawater_cp",
+                scf=1.0,
+                design_life_years=25.0,
+                dff=10.0,
+                histogram_period_years=1.0,
+                scf_basis="Synthetic hot-spot stress includes concentration",
+                sn_basis="Synthetic F1 detail with specified protection",
+                histogram_basis={"period_years": 1.0, "evidence": "Synthetic annual cycle counts"},
                 section=_section(),
                 stress_ranges_mpa=[10.0, 20.0],
                 cycles=[1.0e5],
@@ -230,6 +262,12 @@ def test_mismatched_lengths_raise():
 
 def test_report_markdown_contains_key_fields():
     inp = TouchdownFatigueInput(
+        scf=1.0,
+        design_life_years=25.0,
+        histogram_period_years=1.0,
+        scf_basis="Synthetic hot-spot stress includes concentration",
+        sn_basis="Synthetic F1 detail with specified protection",
+        histogram_basis={"period_years": 1.0, "evidence": "Synthetic annual cycle counts"},
         section=_section(25.0),
         stress_ranges_mpa=[50.0, 80.0],
         cycles=[2.0e5, 5.0e4],

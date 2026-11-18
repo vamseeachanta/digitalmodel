@@ -1,0 +1,12 @@
+# Symbolic YAML/reference fixture, not a complete solver model.
+# Identical to coating.yml except for an intentionally undefined reference.
+General:
+  UnitsSystem: SI
+Environment:
+  SeabedModel: Flat
+VariableData:
+  Coatingsorlinings:
+    - Name: coating_defined
+LineTypes:
+  - Name: coated_line
+    CoatingThickness: coating_missing

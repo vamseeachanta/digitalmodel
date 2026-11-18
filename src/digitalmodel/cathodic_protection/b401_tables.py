@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """DNV-RP-B401 design tables as cited, edition-keyed lookups.
 
 Every public lookup returns a :class:`~digitalmodel.citations.CitedValue`
@@ -25,6 +28,11 @@ Editions and their sources (issue #2208):
     Table 8-4 adds paint coating category IV; Table 8-6 tabulates the anode
     design values by anode surface temperature (Al-Zn-In at <= 30, 60 and
     80 °C; Zn at <= 30 and > 30-50 °C) and gives Zn in seawater -1.030 V.
+    For sediment exposure, its Al-Zn-In rows give -1.000 V at all three
+    temperatures, compared with -0.95 V in the Al-based sediments row of
+    Table 10-6 (2005/2010) and Table A-6 (2017). Sediment capacity at
+    <= 30 °C remains 1500 Ah/kg; the 60 and 80 °C rows give 680 and
+    320 Ah/kg. These edition differences are already represented below.
 
 All four editions are verified against the text layer of the licensed PDFs
 (2026-09-26); ``edition_provenance`` returns ``verified-<edition>-tables``.
@@ -79,9 +87,7 @@ _SOURCE_BY_EDITION: Final[dict[Edition, EditionSource]] = {
         wiki_path=B401_WIKI_PATH,
         table_prefix="10",
         provenance="verified-2005-tables",
-        protection_potential_section=(
-            "Sec. 5 (structure-to-electrolyte potential criteria)"
-        ),
+        protection_potential_section="Sec. 5.4.1 (design protective potential)",
         buried_current_density_section="Sec. 6.3 (buried surfaces)",
     ),
     "2010": EditionSource(
@@ -89,9 +95,7 @@ _SOURCE_BY_EDITION: Final[dict[Edition, EditionSource]] = {
         wiki_path=B401_WIKI_PATH,
         table_prefix="10",
         provenance="verified-2010-tables",
-        protection_potential_section=(
-            "Sec. 5 (structure-to-electrolyte potential criteria)"
-        ),
+        protection_potential_section="Sec. 5.4.1 (design protective potential)",
         buried_current_density_section="Sec. 6.3 (buried surfaces)",
     ),
     "2017": EditionSource(
@@ -99,7 +103,7 @@ _SOURCE_BY_EDITION: Final[dict[Edition, EditionSource]] = {
         wiki_path=B401_WIKI_PATH_2017,
         table_prefix="A",
         provenance="verified-2017-tables",
-        protection_potential_section="[5.4] (design protective potential)",
+        protection_potential_section="[5.4.1] (design protective potential)",
         buried_current_density_section="[6.3.8] (buried surfaces)",
     ),
     "2021": EditionSource(
@@ -419,7 +423,7 @@ _UTILISATION_FACTOR: Final[dict[AnodeShape, float]] = {
 }
 
 # Design protective potential for carbon and low-alloy steel in seawater
-# (V vs Ag/AgCl/seawater): Sec. 5 (2005/2010), [5.4] (2017), [2.4.2] (2021).
+# (V vs Ag/AgCl/seawater): 5.4.1 (2005/2010/2017), [2.4.2] (2021).
 _PROTECTION_POTENTIAL_V: Final = -0.80
 
 # Design current density for bare metal surfaces buried in sediments (A/m2),
@@ -896,8 +900,9 @@ def protection_potential(edition: Edition | None = None) -> CitedValue:
     Returns
     -------
     CitedValue
-        -0.80 V vs Ag/AgCl/seawater, cited to the edition's clause (Sec. 5
-        in the 2005/2010 print, [5.4] in 2017, [2.4.2] in 2021).
+        -0.80 V vs Ag/AgCl/seawater, cited to the edition's design clause
+        (5.4.1 in 2005/2010/2017, [2.4.2] in 2021). The separate 2021
+        protection potential criterion in [2.4.1] is not the design clause.
     """
     ed = normalize_edition(edition, stacklevel=3)
     citation = _cite(

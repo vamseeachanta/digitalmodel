@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "criteria_id": "kcs-step1-v1",
+  "reference_row": "kcs_t2015_case_2_1_free_with_rudder",
+  "froude": 0.26,
+  "tolerance_basis": "assumed, based on previous experience; provisional engineering criteria, not workshop experimental uncertainty",
+  "tolerances": {
+    "ct": {"kind": "relative", "limit": 0.03, "units": "1"},
+    "sinkage_cm": {"kind": "absolute", "limit": 0.1, "units": "cm"},
+    "trim_deg": {"kind": "absolute", "limit": 0.02, "units": "deg"}
+  },
+  "force_history": {
+    "window_seconds": 10.0,
+    "minimum_samples_per_window": 20,
+    "maximum_relative_drift": 0.002,
+    "maximum_relative_std": 0.01,
+    "sampling_relative_tolerance": 0.000001
+  },
+  "motion_limits": {
+    "sinkage_cm": {"maximum_absolute_drift": 0.02, "maximum_absolute_std": 0.05},
+    "trim_deg": {"maximum_absolute_drift": 0.004, "maximum_absolute_std": 0.01}
+  },
+  "residual_limits": {"p_rgh": 0.0001, "U": 0.00001},
+  "mesh_limits": {"maximum_y_plus": 2.0, "maximum_dx_over_lpp": 0.01, "maximum_dz_over_lpp": 0.001},
+  "gci": {"required_meshes": 3, "maximum_fine_percent": 1.0, "minimum_order": 0.5, "maximum_order": 3.0, "maximum_asymptotic_deviation": 0.05},
+  "retention": "Native histories, measured diagnostics, inputs, meshes and fields go to the shared data store; the repository retains a digest manifest and fetch script, not heavy outputs."
+}

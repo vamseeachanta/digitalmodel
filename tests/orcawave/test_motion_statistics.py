@@ -16,6 +16,8 @@ from digitalmodel.orcawave.motion_statistics import (
 )
 from digitalmodel.orcawave.wave_spectrum import pierson_moskowitz
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 class TestResponseSpectrum:
     """Test response spectrum computation."""
@@ -34,7 +36,7 @@ class TestResponseSpectrum:
         s_wave = pierson_moskowitz(omega, hs=3.0, tp=10.0)
         resp = compute_response_spectrum(omega, rao, s_wave)
         # With unit RAO, response m0 should equal wave m0
-        wave_m0 = np.trapz(s_wave, omega)
+        wave_m0 = _trapezoid(s_wave, omega)
         np.testing.assert_allclose(resp.m0, wave_m0, rtol=0.01)
 
     def test_zero_rao_gives_zero_response(self):

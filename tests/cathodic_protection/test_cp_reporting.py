@@ -123,3 +123,24 @@ def test_remaining_life_summary_design_limiting():
         anode_remaining_life_years=20.0,
     )
     assert result.limiting_factor == "design_life"
+
+
+def test_explicit_criterion_keeps_free_text_electrode_label():
+    """With an explicit criterion no conversion is made, so a free-text label
+    (as used by examples/demos/demo_pipeline_cp.py) is accepted unchanged."""
+    result = compliance_check_potential(
+        measured_potential_V=-0.920,
+        criterion_V=-0.850,
+        reference_electrode="Ag/AgCl",
+    )
+    assert result.status == ComplianceStatus.COMPLIANT
+    assert result.criterion_value == -0.850
+    assert result.unit == "V vs Ag/AgCl"
+
+
+def test_default_criterion_is_rounded_after_conversion():
+    """-0.850 V CSE in SCE: CSE 0.316 V SHE, SCE 0.241 V SHE gives -0.775 V."""
+    result = compliance_check_potential(
+        measured_potential_V=-0.800, reference_electrode="SCE",
+    )
+    assert result.criterion_value == -0.775

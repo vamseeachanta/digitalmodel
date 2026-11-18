@@ -1,0 +1,381 @@
+{
+  "schema_version": 1,
+  "received_manifest_files_verified": 19,
+  "received_sha256": {
+    "inputs/le1_16x48.bdf": "4ce6633fcdefe95bd3afeeafd98c0ace88de0206ffa63ba8aec8e68b697d672c",
+    "inputs/le1_32x96.bdf": "a1783bf3cb6759ef5578b3d818069c50b9121b53d9b0152f406b72da32ce687b",
+    "inputs/le1_8x24.bdf": "321d6c054eff57cb204224544b38f03da790f8ecee0015d44857cfa5796e48fa",
+    "inputs/patch.bdf": "23bbc1cc8f5d32366038acc0d1d2bb38d291f98fb583133c85fff01c0b2d146d"
+  },
+  "omitted": [
+    {
+      "path": "sources/feenox-nafems-le1-excerpt.txt",
+      "reason": "Reuse rights not asserted; not required for offline replay."
+    },
+    {
+      "path": "sources/featool-ex_planestress5-excerpt.txt",
+      "reason": "Reuse rights not asserted; not required for offline replay."
+    }
+  ],
+  "files_over_1_MB": [],
+  "transformations": [
+    "Identifying path, contact and host header lines are replaced in retained output; numerical values are unchanged.",
+    "Internal preparation metadata is neutralized; original input decks and numerical comparison bands remain unchanged.",
+    "Native F06 retention keeps exact lexical centroid fibre and in-plane stress fields; other tables and columns are omitted.",
+    "The historical request filename is neutralized; unavailable execution paths are empty.",
+    "Standard source licence headers are added to package Python tools.",
+    "The native memory-matrix abbreviation is replaced by [matrix label removed] in console copies; no numerical field is changed.",
+    "Internal criterion attribution is neutralized; original numeric bands and comparator verdicts are verified against the received comparator.",
+    "The upstream implementation excerpt is replaced by a citation-only numerical source record; source revision, blob and numerical definitions are retained."
+  ],
+  "files": [
+    {
+      "path": "compare.py",
+      "bytes": 8149,
+      "sha256": "0ec03b526a24d1e81c4ef7e3d7253f2592bfaf4869fb27250810691f7e43152e"
+    },
+    {
+      "path": "console/commands.json",
+      "bytes": 2989,
+      "sha256": "2d43640e3624f89a8167c398f48d97e90851e0ae3adbc1b8cafced6c268df24a"
+    },
+    {
+      "path": "console/compare-le1_16x48.txt",
+      "bytes": 486,
+      "sha256": "23b54205f09fee1784b3a5c2900b6a7e1354e5e1816743dd1f037cc3772814bc"
+    },
+    {
+      "path": "console/compare-le1_32x96.txt",
+      "bytes": 485,
+      "sha256": "49059c30d91ac931fed35cab9993a79abd726177f04dc34150de7e6f6d1fb57d"
+    },
+    {
+      "path": "console/compare-le1_8x24.txt",
+      "bytes": 486,
+      "sha256": "dcd470b544f5d343ac6f852250f0a229a9959bd8b8db829b9470896888dbf181"
+    },
+    {
+      "path": "console/compare-parity.txt",
+      "bytes": 189,
+      "sha256": "2eb19e13c93d8e456c628d3d115d60a9a746ea63b44621077b32245b1e2e09e3"
+    },
+    {
+      "path": "console/compare-patch.txt",
+      "bytes": 1250,
+      "sha256": "3065328209025bf3c50692afe42e8c19dc8cfd91a9b050bc3f311fee7b8fe620"
+    },
+    {
+      "path": "console/compare-selftest.txt",
+      "bytes": 163,
+      "sha256": "ce34e6072bf5f8e86574733d3532c89ba932349860d2f8d5f4a6800fcebfab3f"
+    },
+    {
+      "path": "console/deck-le1_16x48.txt",
+      "bytes": 1219,
+      "sha256": "3039077ae7be7eb047d73f61c7f38dd73fe8e7bcfd69402ac8fdb268900a2055"
+    },
+    {
+      "path": "console/deck-le1_32x96.txt",
+      "bytes": 1221,
+      "sha256": "658db8b9a96ae302d8537e46980c1aa8893c8eef393fb37dd054d9f197762364"
+    },
+    {
+      "path": "console/deck-le1_8x24.txt",
+      "bytes": 1216,
+      "sha256": "cb8cf9b54cea68811eed1b4b183210116a38221653bac2ef10f19e29b8490190"
+    },
+    {
+      "path": "console/deck-patch.txt",
+      "bytes": 836,
+      "sha256": "eed23d930a7d997a5b40facce0f309f8403770d90dbe4cbbcde8112dbb3e2231"
+    },
+    {
+      "path": "console/expected-replay.txt",
+      "bytes": 152,
+      "sha256": "e9500397034721c0e92898b85be6567ae5a141097bea6b3bccfb4ee7b9c1c561"
+    },
+    {
+      "path": "console/extract-le1_16x48.txt",
+      "bytes": 193,
+      "sha256": "313a1791a57672aa81f6c6cf2ad8fc3583ebd381e5fb0a78b46985d0d572953c"
+    },
+    {
+      "path": "console/extract-le1_32x96.txt",
+      "bytes": 194,
+      "sha256": "8b03fb420143d2c897c1d40af6fe83bfc52460ed04968cb8b30bca9007492f2a"
+    },
+    {
+      "path": "console/extract-le1_8x24.txt",
+      "bytes": 190,
+      "sha256": "f835af1b6b69a6d06ef079f6ccd2f9f97ef805c6ecc4c64c2e9e99da519dee42"
+    },
+    {
+      "path": "console/extract-patch.txt",
+      "bytes": 179,
+      "sha256": "d02f3cb67bec8b606f5ff630d67a1582e575ad2afb65132ffbb27ae3720a8597"
+    },
+    {
+      "path": "console/extractor-green.txt",
+      "bytes": 1266,
+      "sha256": "803475c0d55f6eeabea957c56924b33e7e4848e102fd97961a5e086bbc55fa87"
+    },
+    {
+      "path": "console/extractor-red.txt",
+      "bytes": 3526,
+      "sha256": "f0f4fc3f8af871de450868a3bbcc097f2ee1caa329487bc9bb80862006116d2d"
+    },
+    {
+      "path": "console/fe0.txt",
+      "bytes": 481,
+      "sha256": "87fa8507df469b8f9763ba50315e3ace3870d997708455be00dc9fc68538ec2b"
+    },
+    {
+      "path": "console/file-checks-fixed.txt",
+      "bytes": 2070,
+      "sha256": "e6dedf6422003667c80b2d348b3f33c722ead9fdfbcfa286334674cb552f59eb"
+    },
+    {
+      "path": "console/file-checks-fixed2.txt",
+      "bytes": 977,
+      "sha256": "b0fe95135e84611c002d95e69fa5bca437e98e9d21f9b37dc232a053085c95ad"
+    },
+    {
+      "path": "console/file-checks-pass.txt",
+      "bytes": 626,
+      "sha256": "8185f794f37e80d38f2ca7d2af0dbd5a9e15c3b95448e8ff43f0206811c50709"
+    },
+    {
+      "path": "console/file-checks.txt",
+      "bytes": 12333,
+      "sha256": "451649f44938c01db49a1d2a1350ade577adbcd4486c7dfd146ae97f1991ce45"
+    },
+    {
+      "path": "console/generator-replay.txt",
+      "bytes": 296,
+      "sha256": "6e75feafb4408f90a2d8f021c1494b50adb172207398d7fcd2fcd4c02a378068"
+    },
+    {
+      "path": "console/manifest-red.txt",
+      "bytes": 1001,
+      "sha256": "d16998c4a117c2336efba44645ff86fea6583e4e9ea6a901fe073a944bf161bb"
+    },
+    {
+      "path": "console/mystran-le1_16x48.txt",
+      "bytes": 14801,
+      "sha256": "3e68aecb359c4d7450dec99748bb87e16621e4b421e9ae199e49296a7e41dd23"
+    },
+    {
+      "path": "console/mystran-le1_32x96.txt",
+      "bytes": 15004,
+      "sha256": "bf3ad4afe6812184781b28845cee8ec981def9248d42558c95ecc8b4555e1d56"
+    },
+    {
+      "path": "console/mystran-le1_8x24.txt",
+      "bytes": 14782,
+      "sha256": "4588f9557d5b2df229ebfee2370c29c37f6b7ae2eadd729202064bee70a8f268"
+    },
+    {
+      "path": "console/mystran-patch.txt",
+      "bytes": 15283,
+      "sha256": "d7f88267c0f690d6fa25b1f704bcfc92a61ab8ddf72d9309f2437f9922f9805d"
+    },
+    {
+      "path": "console/mystran-version.txt",
+      "bytes": 1065,
+      "sha256": "2a59ed8de4b49f1d571c36b5e4c98650c470409b1038d2c251e15c5bc7e41a00"
+    },
+    {
+      "path": "console/publish-scan.txt",
+      "bytes": 153,
+      "sha256": "1f33fb4079aa801e19c7933f5fa111d606a3a8ea39b3edd7503f85db7b4b7c03"
+    },
+    {
+      "path": "console/pytest-final.txt",
+      "bytes": 10396,
+      "sha256": "aac819f233706afb8ceed2d87a0d27e1c56b485243a46f353d849a51c77e3bfa"
+    },
+    {
+      "path": "console/pytest.txt",
+      "bytes": 3872,
+      "sha256": "a569c8128df06980453b6adc64b421b42a01bce334d6fdf618f0288899dab8d9"
+    },
+    {
+      "path": "console/red.txt",
+      "bytes": 11732,
+      "sha256": "17b16caf941f1c1d26d6ab90692f76456ad6a89934a91ab8ec9f32018d0da9a9"
+    },
+    {
+      "path": "console/register.txt",
+      "bytes": 30,
+      "sha256": "1ca6001391b64caf28fd05564d94ceaf7ae7913453b657b5cb19eae5d70065bd"
+    },
+    {
+      "path": "console/sanitizer-red.txt",
+      "bytes": 1159,
+      "sha256": "9e151332e0fff70b2111645543e557ef804801f1b0e55f133da72be31c01d276"
+    },
+    {
+      "path": "console/solver-runs.txt",
+      "bytes": 118,
+      "sha256": "67b4700299c0b439cb34e96a732f1a7387a5f8961a3a70eabac2bef96222ad31"
+    },
+    {
+      "path": "console/versions.txt",
+      "bytes": 136,
+      "sha256": "bcd238f94953d9a993d1aa4a6d20c4db778ee4c4ac01a29760cf6bba459a4e8a"
+    },
+    {
+      "path": "expected.json",
+      "bytes": 1535,
+      "sha256": "bf67f6b0a75d1234788916897569b87660768a47a482045a69e4ed90e6ea0547"
+    },
+    {
+      "path": "inputs/le1_16x48.bdf",
+      "bytes": 57458,
+      "sha256": "4ce6633fcdefe95bd3afeeafd98c0ace88de0206ffa63ba8aec8e68b697d672c"
+    },
+    {
+      "path": "inputs/le1_32x96.bdf",
+      "bytes": 236087,
+      "sha256": "a1783bf3cb6759ef5578b3d818069c50b9121b53d9b0152f406b72da32ce687b"
+    },
+    {
+      "path": "inputs/le1_8x24.bdf",
+      "bytes": 15380,
+      "sha256": "321d6c054eff57cb204224544b38f03da790f8ecee0015d44857cfa5796e48fa"
+    },
+    {
+      "path": "inputs/patch.bdf",
+      "bytes": 779,
+      "sha256": "23bbc1cc8f5d32366038acc0d1d2bb38d291f98fb583133c85fff01c0b2d146d"
+    },
+    {
+      "path": "native/le1_16x48.ERR",
+      "bytes": 57875,
+      "sha256": "333e9327e61bdfcda8d19d8d0a644ecfe12325b1fa504c70718ee9727e135f34"
+    },
+    {
+      "path": "native/le1_16x48.F06",
+      "bytes": 80009,
+      "sha256": "84e27d99da050ff9791a6c762d1c761b6ae31aec3f90540d0f735ad04acbe083"
+    },
+    {
+      "path": "native/le1_32x96.ERR",
+      "bytes": 156947,
+      "sha256": "27269ff0dc6841253aec57c404015a23d360d7b9aa17b52042992944d40ae6f0"
+    },
+    {
+      "path": "native/le1_32x96.F06",
+      "bytes": 322126,
+      "sha256": "2de610957c8acf04f56931cb1bd34fa94d9d178611d52f604a50a0035520f7e5"
+    },
+    {
+      "path": "native/le1_8x24.ERR",
+      "bytes": 33106,
+      "sha256": "b5398be048fbbf371a6d06020dac0ce0cc3ffac7bec4afe0f8c8f505bdb77f36"
+    },
+    {
+      "path": "native/le1_8x24.F06",
+      "bytes": 19995,
+      "sha256": "f763138c11f199301130228a4f58a3f51f938e0b5251d1080c8ee95385dce23b"
+    },
+    {
+      "path": "native/patch.ERR",
+      "bytes": 25062,
+      "sha256": "a78b164a6497202759f8efcb6def1796eddd086c2f9cf8b3a43c6831248ec2b8"
+    },
+    {
+      "path": "native/patch.F06",
+      "bytes": 639,
+      "sha256": "0bc001db695b8f1fbcb7a15f79b4e9b14832c6ed3ea8b872f2c372de676ae0fe"
+    },
+    {
+      "path": "preflight/preflight-log.txt",
+      "bytes": 6383,
+      "sha256": "5c99dfd5c9218bffbd9bd55fd4f0698b02f9a614ae4c032894d34f2762d8ee04"
+    },
+    {
+      "path": "preflight/steps.json",
+      "bytes": 792,
+      "sha256": "af64eae2cc0fdaa1a6366b7d7fbbd3389a1da171b3a4d61ed8879328c522be67"
+    },
+    {
+      "path": "record.json",
+      "bytes": 4790,
+      "sha256": "d67d2c43b26fcf40fb1cd16cf20b3d80c8d4bb6cda8b549b57a8d25ece2230bd"
+    },
+    {
+      "path": "results-le1_16x48.csv",
+      "bytes": 11523,
+      "sha256": "9eaa2932f630ae9e6b054a5ec42657c7adac2a094449fa1fee2a97b4f002736f"
+    },
+    {
+      "path": "results-le1_32x96.csv",
+      "bytes": 48091,
+      "sha256": "71b088f82363a39377e7800b6a392473957ddc4da39f92ee321669b8de102fab"
+    },
+    {
+      "path": "results-le1_8x24.csv",
+      "bytes": 2905,
+      "sha256": "67d458aec24f7eb4fe31cc412bde28e337c47b44c8dc08546c9f7cfb90814099"
+    },
+    {
+      "path": "results-patch.csv",
+      "bytes": 327,
+      "sha256": "fbe268f1f53ca1d7c97443fee7242b7ecfcd8e4b14675360246b0a909d617d86"
+    },
+    {
+      "path": "run-requests/010-le1-mystran.request.json",
+      "bytes": 246,
+      "sha256": "70267d686c159d7c7d87f27c375c2d418d44d102ed02bd00e360014878a81342"
+    },
+    {
+      "path": "sources/axia-fem-gen_nafems-lines1-106.py.txt",
+      "bytes": 763,
+      "sha256": "efaa9387c8593b286686e35e1eb88958cefba4e08d30a905e0ba2f2f0e225f68"
+    },
+    {
+      "path": "tools/build_decks.py",
+      "bytes": 7180,
+      "sha256": "590ce9bc63108387599d0d5ba3f34fef9a4cb4175940c58f06304b5f7fdf309a"
+    },
+    {
+      "path": "tools/build_expected.py",
+      "bytes": 2646,
+      "sha256": "763393996c157fa16193f61b8deb0ed86162ccf18720952acce9286b57ec9e74"
+    },
+    {
+      "path": "tools/check_bdf.py",
+      "bytes": 8971,
+      "sha256": "58e028237afca5f7a00ceb12bd18daebcc5516116ff0c268c7a4cce7e994908d"
+    },
+    {
+      "path": "tools/extract_stresses.py",
+      "bytes": 5507,
+      "sha256": "c05753ca0bed95d47f69329b6492316ab9cf5104930e3ee2741c3d2248d64f20"
+    },
+    {
+      "path": "tools/negative_probes.py",
+      "bytes": 2345,
+      "sha256": "97ea6b606a914ecbd2332c003dcbf9a6e10c4d8ce9febef5f68a4e8c7432f739"
+    },
+    {
+      "path": "tools/sanitize_output.py",
+      "bytes": 1534,
+      "sha256": "607a4158680d0f103beed91cf4255fa15146def0e141c687b95b81c0b3b61b43"
+    },
+    {
+      "path": "tools/validate_decks.py",
+      "bytes": 1348,
+      "sha256": "2231436e9bb7470dc0414ccf3dfc3c333667f19def843b6170b92e36bc878caa"
+    }
+  ],
+  "digest_scope": "Raw bytes of numerical inputs, source code, native result excerpts, CSVs, JSON and console evidence. Markdown documentation is inventoried separately for formatting-hook compatibility.",
+  "documentation": [
+    "MANIFEST.md",
+    "README.md",
+    "RESULT.md",
+    "expected.md",
+    "preflight/pending.md"
+  ]
+}

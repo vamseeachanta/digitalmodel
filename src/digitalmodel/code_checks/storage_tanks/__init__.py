@@ -11,6 +11,10 @@ from .one_foot import (
     TankDesign,
     design_shell,
 )
+from .defaults import (
+    api650_11th_basis,
+    api650_11th_material,
+)
 
 __all__ = [
     "CourseResult",
@@ -18,5 +22,7 @@ __all__ = [
     "OneFootBasis",
     "ShellResult",
     "TankDesign",
+    "api650_11th_basis",
+    "api650_11th_material",
     "design_shell",
 ]

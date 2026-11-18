@@ -10,7 +10,9 @@ The published Riser/riser/RISER example supplies the equivalent spellings.
 These are string-identity checks; no physical inputs or limits are used.
 """
 
+import runpy
 from copy import deepcopy
+from pathlib import Path
 
 import pytest
 import yaml
@@ -139,3 +141,38 @@ def test_case_insensitive_lookup_retains_required_section(tmp_path, route):
     if route == "line_type":
         files["definitions.yml"]["LineTypes"] = [{"Name": "OtherType"}]
     assert _both_entry_points(tmp_path, files) == [missing]
+
+
+def test_original_issue_reproduction(tmp_path):
+    """Issue #2652 supplies the segment row and its expected resolved name.
+
+    The row's numeric inputs are copied from that reproduction, not used as
+    engineering limits. Independent comparison: chaintype and ChainType differ
+    only in case, so the vendor name rule predicts no reference finding.
+    """
+    files = {"model.yml": {
+        "LineTypes": [{"Name": "ChainType"}],
+        "Lines": [{
+            "Name": "line_a",
+            "LineType, Length, TargetSegmentLength": [["chaintype", 100, 1]],
+        }],
+    }}
+    assert _both_entry_points(tmp_path, files) == []
+
+
+def test_worked_example_output_and_directory_parity(tmp_path, capsys):
+    """Hand comparison of the example names predicts an empty clean result.
+
+    After changing only the winch line reference to MissingLine, no definition
+    has that name. Exactly that missing-line diagnostic is expected; the other
+    case variants must still resolve. The example must preserve its clean data.
+    """
+    example = Path(__file__).resolve().parents[4] / (
+        "examples/domains/orcaflex/reference_lookup.py"
+    )
+    namespace = runpy.run_path(str(example), run_name="__main__")
+    assert capsys.readouterr().out == (
+        "Clean findings: []\n"
+        "Winch 'WinchObject' references line 'MissingLine' which is not defined\n"
+    )
+    assert _both_entry_points(tmp_path, namespace["FILES"]) == []

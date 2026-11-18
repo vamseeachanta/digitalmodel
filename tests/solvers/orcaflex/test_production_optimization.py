@@ -8,6 +8,8 @@ import sys
 import time
 import json
 from pathlib import Path
+
+import pytest
 from datetime import datetime
 
 # Add parent directory to path
@@ -20,8 +22,9 @@ from digitalmodel.solvers.orcaflex.performance_monitor import (
     BatchOptimizer
 )
 
-# Production directory - READ ONLY
-PRODUCTION_DIR = Path("D:/1522/ctr7/orcaflex/rev_a08/runtime_test")
+# Production directory - READ ONLY. Project data lives under
+# DIGITALMODEL_PRIVATE_DATA; the test skips when it is absent.
+PRODUCTION_DIR = Path(os.environ.get("DIGITALMODEL_PRIVATE_DATA", "<project_data>")) / "ctr7" / "orcaflex" / "rev_a08" / "runtime_test"
 OUTPUT_DIR = Path("D:/github/digitalmodel/test_output/production_test")
 
 def test_production_files():
@@ -32,6 +35,10 @@ def test_production_files():
     print("Using READ-ONLY access to production .sim files")
     print("="*60)
     
+    if not any(PRODUCTION_DIR.glob("*.sim")):
+        pytest.skip("production .sim files absent "
+                    "(set DIGITALMODEL_PRIVATE_DATA)")
+
     # Ensure output directory exists
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     

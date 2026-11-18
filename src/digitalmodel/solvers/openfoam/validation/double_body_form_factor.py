@@ -386,6 +386,8 @@ def evaluate_double_body_run(
     config: DoubleBodyRunConfig,
     *,
     mesh_cells: Optional[int] = None,
+    near_wall_measurements=None,
+    near_wall_criteria=None,
 ) -> Dict[str, Any]:
     """Score a converged double-body run and extract the form factor."""
     reduced = _reduce(force_dat, config)
@@ -398,8 +400,15 @@ def evaluate_double_body_run(
     )
     stability = force_stability(reduced["series"])
     reasons = _admissibility_reasons(reduced, stability, verdict)
+    from ..near_wall_acceptance import assess_near_wall
+
+    supplied = near_wall_measurements or {}
+    wall = assess_near_wall({"primary": supplied.get("primary")}, near_wall_criteria)
+    if not wall["passed"]:
+        reasons.append(f"near-wall qualification is {wall['status']}")
 
     return {
+        "near_wall": wall,
         "mode": "double_body_form_factor",
         "issue": "#2023",
         "provenance": {

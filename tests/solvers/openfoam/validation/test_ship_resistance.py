@@ -776,10 +776,21 @@ def test_evaluate_run_passes_on_a_result_matching_the_referent(tmp_path) -> None
         tmp_path / "force.dat",
         ct=referent.ct, cp=referent.cr, cv=referent.cf, config=config,
     )
-    manifest = evaluate_ship_resistance_run(f, config, mesh_cells=1_500_000)
+    from digitalmodel.solvers.openfoam.near_wall_acceptance import NearWallCriteria, WallMeasurement
+
+    # Force agreement alone no longer qualifies a result without wall evidence.
+    missing = evaluate_ship_resistance_run(f, config, mesh_cells=1_500_000)
+    assert not missing["all_passed"]
+    assert missing["criteria"]["near_wall"]["status"] == "NOT_EVALUATED"
+    # Synthetic caller criteria and observations, not engineering recommendations.
+    manifest = evaluate_ship_resistance_run(
+        f, config, mesh_cells=1_500_000,
+        near_wall_criteria=NearWallCriteria(50, 0.2, 0.9, 0.05, "synthetic test basis"),
+        near_wall_measurements={"primary": WallMeasurement(40, 60, 9, 10, "hull", "synthetic test evidence")},
+    )
 
     assert manifest["all_passed"]
-    assert manifest["summary"] == {"V1": True, "V2a": True, "V2b": True}
+    assert manifest["summary"] == {"V1": True, "V2a": True, "V2b": True, "near_wall": True}
     assert manifest["measurement"]["ct"] == pytest.approx(referent.ct, rel=1e-6)
     assert manifest["identity_check"]["holds"], "Ct = Cp + Cv must hold"
     # the limit of the method is reported whether or not the gates passed

@@ -1,0 +1,161 @@
+{
+  "assumption_ranges": {
+    "leg_count": [
+      3,
+      3
+    ],
+    "preload_kn": [
+      20000,
+      60000
+    ],
+    "profile.layers.0.bottom_m": [
+      3.0,
+      5.0
+    ],
+    "profile.layers.0.friction_deg": [
+      28,
+      36
+    ],
+    "profile.layers.0.submerged_weight_kn_m3": [
+      8.0,
+      12.0
+    ],
+    "profile.layers.0.top_m": [
+      0.0,
+      0.0
+    ],
+    "profile.layers.1.bottom_m": [
+      24.0,
+      24.0
+    ],
+    "profile.layers.1.su_kpa": [
+      10,
+      30
+    ],
+    "profile.layers.1.submerged_weight_kn_m3": [
+      4.0,
+      8.0
+    ],
+    "profile.layers.1.top_m": [
+      3.0,
+      5.0
+    ],
+    "profile.spread_ratio": [
+      3,
+      5
+    ],
+    "spudcan.diameter_m": [
+      10,
+      16
+    ],
+    "spudcan.tip_to_bearing_m": [
+      0,
+      2.5
+    ],
+    "tip_interval_m.0": [
+      1.5,
+      1.5
+    ],
+    "tip_interval_m.1": [
+      24.0,
+      24.0
+    ]
+  },
+  "basis": "assumed, based on previous experience",
+  "input": {
+    "preload_kn": 30000.0,
+    "profile": {
+      "layers": [
+        {
+          "bottom_m": 4.0,
+          "friction_deg": 32.0,
+          "kind": "sand",
+          "submerged_weight_kn_m3": 10.0,
+          "top_m": 0.0
+        },
+        {
+          "bottom_m": 24.0,
+          "kind": "clay",
+          "su_kpa": 20.0,
+          "submerged_weight_kn_m3": 6.0,
+          "top_m": 4.0
+        }
+      ],
+      "sand_method": "load_spread",
+      "spread_ratio": 3.0
+    },
+    "spudcan": {
+      "diameter_m": 12.0,
+      "tip_to_bearing_m": 1.5
+    },
+    "tip_interval_m": [
+      1.5,
+      24.0
+    ]
+  },
+  "leg_count": 3,
+  "limits": [
+    "All numerical scenario inputs and their ranges are assumptions, based on previous experience.",
+    "These scenarios are not a regional geotechnical investigation or a reconstruction of any event.",
+    "Each leg is evaluated independently under an assumed vertical preload reaction.",
+    "Circular clay factor 6.34 is retained; the weak-layer paper uses 6.05 for its surface reference.",
+    "Partial engagement, plug transport, remoulding, rate effects, buoyancy and dynamics are excluded.",
+    "Static resistance recovery does not predict a dynamic plunge or arrest depth.",
+    "A false punch-through flag does not establish installation acceptance.",
+    "Independent uniform distributions are assumptions, not measured population statistics.",
+    "The top interface moves on both adjacent layers; deeper boundaries remain fixed.",
+    "Uniform clay has no top-layer interface; investigation extent remains fixed.",
+    "Probability is per leg conditional on this model; no three-leg system probability is inferred."
+  ],
+  "name": "sand_over_soft",
+  "parameters": {
+    "layers.0.friction_deg": {
+      "basis": "assumed, based on previous experience",
+      "distribution": "uniform",
+      "high": 36,
+      "low": 28
+    },
+    "layers.1.su_kpa": {
+      "basis": "assumed, based on previous experience",
+      "distribution": "uniform",
+      "high": 30,
+      "low": 10
+    },
+    "top_thickness_m": {
+      "basis": "assumed, based on previous experience",
+      "distribution": "uniform",
+      "high": 5.0,
+      "low": 3.0
+    }
+  },
+  "schema_version": 1,
+  "sources": [
+    {
+      "equations": "1\u20133; 5 for the inherited circular clay reference",
+      "title": "Spudcan Penetration Analyses for Three Case Histories in Sand Overlying Clay",
+      "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-11.pdf",
+      "use": "Method equations and spread range only; no regional measurements adopted.",
+      "year": 2015
+    },
+    {
+      "equations": "2 and 6",
+      "title": "Theoretical Study on the Effect of a Weak Layer on the Vertical Bearing Capacity of Spudcans in Clay",
+      "url": "https://jack-up.citystgeorges.ac.uk/wp-content/uploads/2025/09/Jackup-2015-19.pdf",
+      "use": "Clay mechanisms only; no regional measurements adopted.",
+      "year": 2015
+    }
+  ],
+  "standards": [
+    {
+      "clause": "TO CONFIRM",
+      "document": "SNAME T&RB 5-5A",
+      "edition": "Rev 3 (2008)"
+    },
+    {
+      "clause": "TO CONFIRM",
+      "document": "ISO 19905-1",
+      "edition": "2012"
+    }
+  ],
+  "unit_type": "generic_three_leg_independent_leg_jackup"
+}

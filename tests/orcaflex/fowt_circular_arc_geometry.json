@@ -1,0 +1,54 @@
+{
+  "basis": "Independent hand construction: choose synthetic radius R and central angle alpha; arc length is R * alpha. Endpoints (R, 0) and (R*cos(alpha), R*sin(alpha)) give the chord by Euclidean distance. These choices represent geometry only, with no cable properties or qualification claim.",
+  "tolerance_basis": "For alpha away from zero, relative tolerance 1e-12 allows floating-point rounding after the helper's 200 bisections. Near straight, c/L = 1 - alpha^2/24 + O(alpha^4), so relative radius error is approximately 12 times ratio error divided by alpha^2. At 0.1 degree, binary64 epsilon gives approximately 9e-10; relative tolerance 1e-8 allows rounding in endpoint construction and inversion. Absolute tolerance is zero so the small-radius case cannot pass on an absolute floor.",
+  "cases": [
+    {
+      "id": "near-straight",
+      "radius_m": 125.0,
+      "angle_degrees": 0.1,
+      "relative_tolerance": 1e-08
+    },
+    {
+      "id": "minor-arc",
+      "radius_m": 125.0,
+      "angle_degrees": 30.0,
+      "relative_tolerance": 1e-12
+    },
+    {
+      "id": "quarter-circle",
+      "radius_m": 125.0,
+      "angle_degrees": 90.0,
+      "relative_tolerance": 1e-12
+    },
+    {
+      "id": "semicircle",
+      "radius_m": 125.0,
+      "angle_degrees": 180.0,
+      "relative_tolerance": 1e-12
+    },
+    {
+      "id": "major-arc",
+      "radius_m": 125.0,
+      "angle_degrees": 270.0,
+      "relative_tolerance": 1e-12
+    },
+    {
+      "id": "near-closed-circle",
+      "radius_m": 125.0,
+      "angle_degrees": 359.9,
+      "relative_tolerance": 1e-12
+    },
+    {
+      "id": "small-radius",
+      "radius_m": 0.000125,
+      "angle_degrees": 90.0,
+      "relative_tolerance": 1e-12
+    },
+    {
+      "id": "large-radius",
+      "radius_m": 125000.0,
+      "angle_degrees": 90.0,
+      "relative_tolerance": 1e-12
+    }
+  ]
+}

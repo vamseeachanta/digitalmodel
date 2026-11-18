@@ -6,7 +6,6 @@ boundary conditions, solver settings, turbulence models, and domain geometry.
 
 from __future__ import annotations
 
-import math
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -32,6 +31,7 @@ class BoundaryType(Enum):
 
     FIXED_VALUE = "fixedValue"
     ZERO_GRADIENT = "zeroGradient"
+    FIXED_FLUX_PRESSURE = "fixedFluxPressure"
     NO_SLIP = "noSlip"
     EMPTY = "empty"
     SYMMETRY = "symmetry"

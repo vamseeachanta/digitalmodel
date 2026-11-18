@@ -13,6 +13,17 @@ Three analysis functions are provided:
 - :func:`duration_stats_by_concept_type` — same, split by concept type
 - :func:`schedule_distributions`         — per-phase P10/P50/P90 distributions
 
+Empty phase populations have integer ``count=0`` and ``None`` statistics.
+A measured same-year transition instead contributes a duration of 0.0 years.
+
+Quantiles retain the default ``statistics.quantiles`` exclusive convention:
+the position for probability p is (n + 1) * p, with linear extrapolation
+outside the observed sample for small populations. For synthetic durations
+[1, 3] years, positions 0.3, 1.5 and 2.7 give P10=-0.4, P50=2 and P90=4.4
+by 1 + (position - 1) * (3 - 1); the mean is (1 + 3) / 2 = 2 years.
+The negative percentile is a software convention, not a physical negative
+duration. A single observation is returned unchanged for every percentile.
+
 Usage
 -----
 >>> from digitalmodel.field_development.timeline import (
@@ -28,6 +39,7 @@ Usage
 from __future__ import annotations
 
 from statistics import mean, quantiles
+from typing import TypedDict
 
 from .benchmarks import SubseaProject
 
@@ -36,6 +48,21 @@ __all__ = [
     "duration_stats_by_concept_type",
     "schedule_distributions",
 ]
+
+
+class SchedulePercentiles(TypedDict):
+    """Percentiles in years, or None when the phase has no observations."""
+
+    p10: float | None
+    p50: float | None
+    p90: float | None
+
+
+class DurationStats(SchedulePercentiles):
+    """Integer observation count and optional duration statistics in years."""
+
+    count: int
+    mean: float | None
 
 
 # Phase pairs: (label, from_attr, to_attr)
@@ -65,11 +92,11 @@ def _duration_values(
     return result
 
 
-def _stats(values: list[float]) -> dict[str, float]:
+def _stats(values: list[float]) -> DurationStats:
     """Return count, mean, P10, P50, P90 for a list of duration values."""
     n = len(values)
     if n == 0:
-        return {"count": 0, "mean": 0.0, "p10": 0.0, "p50": 0.0, "p90": 0.0}
+        return {"count": 0, "mean": None, "p10": None, "p50": None, "p90": None}
     if n == 1:
         v = values[0]
         return {"count": 1, "mean": v, "p10": v, "p50": v, "p90": v}
@@ -85,7 +112,7 @@ def _stats(values: list[float]) -> dict[str, float]:
 
 def timeline_duration_stats(
     projects: list[SubseaProject],
-) -> dict[str, dict[str, float]]:
+) -> dict[str, DurationStats]:
     """Compute P10/P50/P90 inter-phase duration stats across all projects.
 
     Parameters
@@ -94,9 +121,11 @@ def timeline_duration_stats(
 
     Returns
     -------
-    dict[str, dict[str, float]]
+    dict[str, DurationStats]
         Keys are phase-pair labels (e.g. ``"concept_to_feed"``).
         Values contain ``count``, ``mean``, ``p10``, ``p50``, ``p90`` (years).
+        Count is an integer; mean and percentiles are None for empty phases.
+        Nonempty percentiles follow the exclusive convention described above.
     """
     return {
         label: _stats(_duration_values(projects, from_attr, to_attr))
@@ -106,7 +135,7 @@ def timeline_duration_stats(
 
 def duration_stats_by_concept_type(
     projects: list[SubseaProject],
-) -> dict[str, dict[str, dict[str, float]]]:
+) -> dict[str, dict[str, DurationStats]]:
     """Compute inter-phase duration stats grouped by concept type.
 
     Projects missing ``concept_type`` are excluded.
@@ -117,7 +146,7 @@ def duration_stats_by_concept_type(
 
     Returns
     -------
-    dict[str, dict[str, dict[str, float]]]
+    dict[str, dict[str, DurationStats]]
         Outer key is concept type (e.g. ``"FPSO"``).
         Inner dict mirrors :func:`timeline_duration_stats` structure.
     """
@@ -138,7 +167,7 @@ def duration_stats_by_concept_type(
 
 def schedule_distributions(
     projects: list[SubseaProject],
-) -> dict[str, dict[str, float]]:
+) -> dict[str, SchedulePercentiles]:
     """P10/P50/P90 schedule distributions for each inter-phase pair.
 
     Equivalent to :func:`timeline_duration_stats` but returns only the
@@ -150,11 +179,13 @@ def schedule_distributions(
 
     Returns
     -------
-    dict[str, dict[str, float]]
+    dict[str, SchedulePercentiles]
         Keys are phase-pair labels.
         Values contain ``p10``, ``p50``, ``p90`` (years).
+        Empty phases retain these keys with None values. Nonempty percentiles
+        follow the exclusive convention described above.
     """
-    result = {}
+    result: dict[str, SchedulePercentiles] = {}
     for label, from_attr, to_attr in _PHASE_PAIRS:
         full = _stats(_duration_values(projects, from_attr, to_attr))
         result[label] = {"p10": full["p10"], "p50": full["p50"], "p90": full["p90"]}

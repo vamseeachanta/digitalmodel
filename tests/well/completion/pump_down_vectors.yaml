@@ -1,0 +1,39 @@
+# Synthetic arithmetic oracles, independently recomputed 2026-11-02.
+# Not measured data or vendor pumpability qualification.
+# Basis: continuity + K*rho*v^2/2; NIST SP 811 unit definitions.
+version: 1
+recomputed: '2026-11-02'
+case:
+  casing_id_in: 4.778
+  rate_bpm: 15.0
+  density_ppg: 8.34
+  k: 2.0
+restriction:
+  - od_in: 4.50
+    area_in2: 2.02576491648
+    beta: 0.11298137953
+    velocity_ft_s: 99.7771253494
+    dp_psi: 134.057642819
+    force_lbf: 2403.66395542
+  - od_in: 3.54
+    area_in2: 8.08778210085
+    beta: 0.451073454603
+    velocity_ft_s: 24.9914002973
+    dp_psi: 8.41028640468
+    force_lbf: 150.797088928
+resistance_lbf: 670.3536
+water:
+  viscosity_cp: 1.0
+  roughness_in: 0.0018
+  darcy_factor: 0.01715023142
+  gradient_psi_ft: 0.03685364219
+# Six small-casing products, not a claim about every API casing diameter.
+# Standard drift = ID - 1/8 in (API Spec 5CT allowance below 9-5/8 in OD);
+# each value matches the published standard drift for that size and weight.
+drift:
+  - [5.0, 11.5, 4.435]
+  - [5.5, 14.0, 4.887]
+  - [5.5, 15.5, 4.825]
+  - [5.5, 17.0, 4.767]
+  - [5.5, 20.0, 4.653]
+  - [5.5, 23.0, 4.545]

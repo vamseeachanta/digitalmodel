@@ -48,6 +48,8 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from decimal import Decimal
+from numbers import Real
 from typing import List
 
 # Standard gravity (m/s^2)
@@ -302,3 +304,299 @@ def router(cfg: dict) -> dict:
         "resonance": result.resonance,
         "resonant_periods": result.resonant_periods,
     }
+
+# ---------------------------------------------------------------------------
+# API 650 Annex E public-source seismic screen
+# ---------------------------------------------------------------------------
+
+_ANNEX_E_CITATIONS = (
+    {
+        "type": "Citation", "standard": "API STD 650", "revision": "11th edition, 2007",
+        "section": "E.4.5.2; E.4.6.1; E.6.1.1-E.6.1.5; E.6.2.1.1.1; Table E-6",
+        "source": "https://law.resource.org/pub/us/cfr/ibr/002/api.650.2007.pdf",
+    },
+    {
+        "type": "Citation", "standard": "API STD 650", "revision": "12th edition, Addendum 2, January 2016",
+        "section": "E.7.2, equations 1-5 and Table E.7",
+        "source": "https://www.api.org/~/media/files/publications/addenda-and-errata/650_e12%20addendum%202.pdf",
+    },
+    {
+        "type": "Citation", "standard": "NCREE, Seismic Assessment of Steel Liquid Storage Tanks",
+        "revision": "2014 research highlights (103E4)", "section": "pp. 85-87, Table 1",
+        "source": "https://www.ncree.niar.org.tw/assets/file/103E4.pdf",
+    },
+)
+
+
+@dataclass(frozen=True)
+class AnnexEResult:
+    """SI seismic demands, conditional dispositions and public-source sidecar.
+
+    Weights/shears are N, heights m, moments N m and stresses Pa. Acceleration
+    coefficients are fractions of g. There is no overall compliance verdict.
+    ``freeboard_ok=None`` means no numeric minimum applies to the selected case;
+    the advisory wave clearance remains reported. J is a self-anchorage screen,
+    not an anchor design or a completed self-anchorage qualification.
+    """
+
+    product_weight_n: float
+    impulsive_weight_n: float
+    convective_weight_n: float
+    xi_m: float
+    xc_m: float
+    xis_m: float
+    xcs_m: float
+    convective_period_s: float
+    ai_g: float
+    ac_g: float
+    af_g: float
+    impulsive_shear_n: float
+    convective_shear_n: float
+    base_shear_n: float
+    ringwall_moment_nm: float
+    slab_moment_nm: float
+    wave_height_m: float
+    required_freeboard_m: float
+    advisory_freeboard_m: float
+    freeboard_required: bool
+    freeboard_ok: bool | None
+    anchorage_ratio_j: float
+    anchorage_status: str
+    evaluation_depth_m: float
+    impulsive_hoop_force_n_per_m: float
+    convective_hoop_force_n_per_m: float
+    hydrostatic_hoop_stress_pa: float
+    hydrodynamic_hoop_stress_pa: float
+    combined_hoop_stress_pa: float
+    citations: tuple[dict[str, str], ...]
+    limitations: tuple[str, ...]
+
+
+def _annex_e_number(name: str, value: float, *, positive: bool = False) -> float:
+    """Validate a scalar SI input; no implicit unit or string conversions."""
+    # NumPy durations can satisfy Real; temporal ticks are not SI magnitudes.
+    dtype_kind = getattr(getattr(value, "dtype", None), "kind", None)
+    if (dtype_kind in ("m", "M") or isinstance(value, bool)
+            or not isinstance(value, (Real, Decimal))):
+        raise ValueError(f"{name} must be a finite numeric scalar")
+    try:
+        value = float(value)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise ValueError(f"{name} must be a finite numeric scalar") from exc
+    if not math.isfinite(value) or value < 0 or (positive and value == 0):
+        qualifier = "positive" if positive else "nonnegative"
+        raise ValueError(f"{name} must be finite and {qualifier}")
+    return value
+
+
+def api650_annex_e(
+    *,
+    diameter_m: float,
+    fill_height_m: float,
+    liquid_density_kg_m3: float,
+    shell_weight_n: float,
+    roof_weight_n: float,
+    bottom_weight_n: float,
+    shell_cg_m: float,
+    roof_cg_m: float,
+    roof_reaction_n: float,
+    shell_thickness_m: float,
+    sds_g: float,
+    sd1_g: float,
+    tl_s: float,
+    importance_factor: float,
+    rwi: float,
+    rwc: float,
+    k: float,
+    minimum_ai_g: float,
+    vertical_acceleration_g: float,
+    annular_resistance_n_per_m: float,
+    seismic_use_group: str,
+    available_freeboard_m: float,
+    purchaser_freeboard: bool,
+    evaluation_depth_m: float | None = None,
+) -> AnnexEResult:
+    """Calculate an Annex E public-source screen for a ground-supported tank.
+
+    Scope is welded, flat-bottom, circular tanks at zero internal gas pressure,
+    without isolation, baffles or soil-structure interaction. This is an explicitly
+    versioned screening basis, not certification to a complete current edition.
+    All arguments are SI, except dimensionless factors and accelerations in g.
+    Thickness is NET wall in m (not mm); density is kg/m3 (not specific gravity).
+    Shell/roof CGs are heights above the tank base; roof_reaction_n is only the
+    portion of roof weight supported by the shell, not automatically all roof
+    weight. Annular resistance is a separately qualified line load, including
+    applicable vertical effects, geometry and plate-strength limits.
+
+    Public method references (URLs are emitted in ``citations``):
+
+    * API STD 650, 11th ed. (2007), E.4.5.2(a,c): Tc=1.8*Ks*sqrt(D),
+      Ks=.578/sqrt(tanh(3.68H/D)); existing period helper is reused.
+    * E.4.6.1(1,2,4,5): Ai=max(SDS*I/Rwi, minimum_ai_g, .007);
+      Ac=min(Ai, K*SD1*I/Rwc * min(1/Tc, TL/Tc**2)). SDS and SD1 are
+      DESIGN spectrum parameters including site effects, not mapped Ss/S1.
+      The caller SHALL supply the governing minimum_ai_g (at least .007),
+      including any additional site/high-hazard minimum in the project edition.
+      This routine does not select that minimum from site-class or hazard tables.
+    * E.6.1.1(1-3): Wi/Wp=tanh(.866D/H)/(.866D/H) for D/H>=1.333,
+      otherwise 1-.218D/H; Wc/Wp=.230D/H*tanh(3.67H/D). Wp=rho*g*pi*D²H/4
+      is weight by volume; the two approximate effective weights need not sum Wp.
+    * E.6.1.2.1(1-3): Xi=.375H for D/H>=1.3333, otherwise (.5-.094D/H)H;
+      Xc=[1-(cosh(z)-1)/(z*sinh(z))]H, z=3.67H/D.
+      E.6.1.2.2(1-3): Xis=.375[1+1.333(u/tanh(u)-1)]H for D/H>=1.333,
+      otherwise (.5+.060D/H)H, u=.866D/H; Xcs=Xc+.937H/(z*sinh(z)).
+      Slab equivalent heights include bottom pressure and may exceed fill height.
+    * E.6.1(1-3), E.6.1.5(1,2): Vi=Ai*(Ws+Wr+Wf+Wi), Vc=Ac*Wc;
+      V=hypot(Vi,Vc); moments=hypot(Ai*(Wi*Xi+Ws*Xs+Wr*Xr),Ac*Wc*Xc),
+      with Xis/Xcs substituted for slab moment. Wf is the bottom weight; it
+      adds to Vi but not to Mrw/Ms (it acts at the base). No appurtenance
+      weights are added.
+    * E.6.1.4(1a-6): at Y below the surface, Ni [N/mm] is
+      8.48*Ai*G*D*H*(Y/H-.5*(Y/H)**2)*tanh(u) for D/H>=1.333;
+      otherwise 5.22*Ai*G*D²*(q-.5q²), q=Y/(.75D), for Y<.75D,
+      and 2.6*Ai*G*D² below that. Nc=1.85*Ac*G*D²*cosh(3.68(H-Y)/D)
+      /cosh(3.68H/D), G=rho/1000. N/mm is multiplied by 1000 to N/m.
+      Hydrostatic stress=rho*g*Y*D/(2t); dynamic=hypot(Ni,Nc)/t;
+      combined=hydrostatic+hypot(dynamic,Av*hydrostatic), using the 2007 SRSS
+      vertical combination. Material acceptance is not evaluated.
+    * E.6.2.1.1.1(1,2), Table E-6: J=Mrw/[D²*(wt*(1-.4Av)+wa)] at
+      zero gas pressure; wt=(Ws+roof_reaction)/(pi*D). Thresholds .785/1.54
+      distinguish no calculated uplift, conditional uplift and redesign/anchors.
+      E.6.2.1.1-1a caps the annular resistance at wa<=201.1*H*D*Ge N/m with
+      Ge=G*(1-.4Av); a larger entered wa is rejected.
+      Shell compression, annular plate, piping and anchor checks remain required.
+    * API STD 650, 12th ed., Addendum 2 (January 2016), E.7.2(1-5):
+      delta_s=.42D*Af. For SUG I/II, Af=K*SD1*I*min(1/Tc,4/Tc²);
+      for III, Af=K*SD1*min(1/Tc,TL/Tc²) (unit importance for wave only).
+      Table E.7 sets full-wave freeboard for III and .7-wave for II when
+      SDS>=.33; other cases have advisory .7-wave clearance. The purchaser
+      boolean adopts that .7-wave minimum in otherwise advisory cases. No credit
+      is taken for containment or a roof designed for sloshing impact.
+    * NCREE 2014 research highlights, "Seismic Assessment of Steel Liquid Storage
+      Tanks", pp. 85-87, Table 1 independently presents the two-mode load method.
+
+    All project factors are required: no material or factor table is embedded.
+    For a floating roof, include its inertial weight at its actual CG, but retain
+    a separate assessment of roof lift, rim/seal damage and jamming. This linear
+    screen does not calculate shell-roof impact pressure or floating-roof motion.
+    """
+    if len(_ANNEX_E_CITATIONS) != 3 or any(
+        not citation.get(key)
+        for citation in _ANNEX_E_CITATIONS
+        for key in ("type", "standard", "revision", "section", "source")
+    ):
+        raise ValueError("Annex E citation basis is missing or incomplete")
+    # Validate every numeric argument before evaluating engineering expressions.
+    values = locals().copy()
+    positive_names = {
+        "diameter_m", "fill_height_m", "liquid_density_kg_m3", "shell_thickness_m",
+        "tl_s", "importance_factor", "rwi", "rwc", "k",
+    }
+    numeric_names = positive_names | {
+        "shell_weight_n", "roof_weight_n", "bottom_weight_n", "shell_cg_m", "roof_cg_m", "roof_reaction_n",
+        "sds_g", "sd1_g", "minimum_ai_g", "vertical_acceleration_g",
+        "annular_resistance_n_per_m", "available_freeboard_m",
+    }
+    v = {name: _annex_e_number(name, values[name], positive=name in positive_names)
+         for name in numeric_names}
+    if seismic_use_group not in ("I", "II", "III"):
+        raise ValueError("seismic_use_group must be I, II or III")
+    if not isinstance(purchaser_freeboard, bool):
+        raise ValueError("purchaser_freeboard must be a boolean")
+    if v["minimum_ai_g"] < .007:
+        raise ValueError("minimum_ai_g must include the governing floor, at least .007")
+    if v["vertical_acceleration_g"] >= 1:
+        raise ValueError("vertical_acceleration_g must be less than 1 g")
+    if v["roof_reaction_n"] > v["roof_weight_n"]:
+        raise ValueError("roof_reaction_n cannot exceed roof_weight_n")
+    d, h, rho, t = (v[name] for name in (
+        "diameter_m", "fill_height_m", "liquid_density_kg_m3", "shell_thickness_m"))
+    y = h if evaluation_depth_m is None else _annex_e_number("evaluation_depth_m", evaluation_depth_m)
+    if y > h:
+        raise ValueError("evaluation_depth_m cannot exceed fill_height_m")
+    try:
+        ratio = d / h
+        u, z = .866 * ratio, 3.67 / ratio
+        wp = rho * G_STD * math.pi * d**2 * h / 4
+        wi = wp * (math.tanh(u) / u if ratio >= 1.333 else 1 - .218 * ratio)
+        wc = wp * .230 * ratio * math.tanh(z)
+        xi = h * (.375 if ratio >= 1.3333 else .5 - .094 * ratio)
+        xc = h * (1 - math.tanh(z / 2) / z)
+        xis = h * (.375 * (1 + 1.333 * (u / math.tanh(u) - 1))
+                   if ratio >= 1.333 else .5 + .060 * ratio)
+        # Reciprocal sinh in exponential form avoids overflow for deep tanks.
+        inv_sinh = 2 * math.exp(-z) / (-math.expm1(-2*z))
+        xcs = xc + .937 * h * inv_sinh / z
+        tc = api650_convective_period(d, h)
+        ai = max(v["sds_g"] * v["importance_factor"] / v["rwi"], v["minimum_ai_g"])
+        force_shape = min(1 / tc, v["tl_s"] / tc**2)
+        ac = min(ai, v["k"] * v["sd1_g"] * v["importance_factor"] / v["rwc"] * force_shape)
+        wave_tl = v["tl_s"] if seismic_use_group == "III" else 4.0
+        wave_i = 1.0 if seismic_use_group == "III" else v["importance_factor"]
+        af = v["k"] * v["sd1_g"] * wave_i * min(1 / tc, wave_tl / tc**2)
+        vi = ai * (v["shell_weight_n"] + v["roof_weight_n"] + v["bottom_weight_n"] + wi)
+        vc = ac * wc
+        dry_moment = v["shell_weight_n"] * v["shell_cg_m"] + v["roof_weight_n"] * v["roof_cg_m"]
+        mrw = math.hypot(ai * (wi * xi + dry_moment), ac * wc * xc)
+        ms = math.hypot(ai * (wi * xis + dry_moment), ac * wc * xcs)
+        wave = .42 * d * af
+        advisory = wave * (1.0 if seismic_use_group == "III" else .7)
+        freeboard_required = (seismic_use_group == "III" or purchaser_freeboard or
+                              seismic_use_group == "II" and v["sds_g"] >= .33)
+        required = advisory if freeboard_required else 0.0
+        wt = (v["shell_weight_n"] + v["roof_reaction_n"]) / (math.pi * d)
+        ge = rho / 1000 * (1 - .4 * v["vertical_acceleration_g"])
+        if v["annular_resistance_n_per_m"] > 201.1 * h * d * ge:
+            raise ValueError(
+                "annular_resistance_n_per_m exceeds the E.6.2.1.1-1a limit 201.1*H*D*Ge (N/m)")
+        resistance = wt * (1 - .4 * v["vertical_acceleration_g"]) + v["annular_resistance_n_per_m"]
+        if resistance <= 0:
+            raise ValueError("positive self-anchorage resistance is required")
+        j = mrw / (d**2 * resistance)
+        sg = rho / 1000
+        if ratio >= 1.333:
+            q = y / h
+            ni = 8480 * ai * sg * d * h * (q - .5*q*q) * math.tanh(u)
+        elif y < .75*d:
+            q = y / (.75*d)
+            ni = 5220 * ai * sg * d**2 * (q - .5*q*q)
+        else:
+            ni = 2600 * ai * sg * d**2
+        b = 3.68 * h / d
+        depth = 3.68 * y / d
+        cosh_ratio = (math.exp(-depth) + math.exp(-2*b+depth)) / (1 + math.exp(-2*b))
+        nc = 1850 * ac * sg * d**2 * cosh_ratio
+        hydro = rho * G_STD * y * d / (2*t)
+        dynamic = math.hypot(ni, nc) / t
+        combined = hydro + math.hypot(dynamic, v["vertical_acceleration_g"] * hydro)
+    except (OverflowError, ZeroDivisionError) as exc:
+        raise ValueError("Annex E inputs exceed the numerical calculation range") from exc
+    results = (wp, wi, wc, xi, xc, xis, xcs, tc, ai, ac, af, vi, vc,
+               math.hypot(vi, vc), mrw, ms, wave, required, advisory, j, y,
+               ni, nc, hydro, dynamic, combined)
+    if not all(math.isfinite(value) for value in results):
+        raise ValueError("Annex E results exceed the finite numerical range")
+    status = ("no_calculated_uplift" if j <= .785 else
+              "uplift_requires_further_checks" if j <= 1.54 else
+              "redesign_or_mechanical_anchorage_required")
+    return AnnexEResult(
+        product_weight_n=wp, impulsive_weight_n=wi, convective_weight_n=wc,
+        xi_m=xi, xc_m=xc, xis_m=xis, xcs_m=xcs, convective_period_s=tc,
+        ai_g=ai, ac_g=ac, af_g=af, impulsive_shear_n=vi, convective_shear_n=vc,
+        base_shear_n=math.hypot(vi, vc), ringwall_moment_nm=mrw, slab_moment_nm=ms,
+        wave_height_m=wave, required_freeboard_m=required, advisory_freeboard_m=advisory,
+        freeboard_required=freeboard_required,
+        freeboard_ok=(v["available_freeboard_m"] >= required) if freeboard_required else None,
+        anchorage_ratio_j=j, anchorage_status=status, evaluation_depth_m=y,
+        impulsive_hoop_force_n_per_m=ni, convective_hoop_force_n_per_m=nc,
+        hydrostatic_hoop_stress_pa=hydro, hydrodynamic_hoop_stress_pa=dynamic,
+        combined_hoop_stress_pa=combined,
+        citations=tuple(dict(citation) for citation in _ANNEX_E_CITATIONS),
+        limitations=(
+            "Public-source screening basis: 2007 load equations and 2016 freeboard; current-edition compliance is not established.",
+            "Site minima, factors and annular resistance require project qualification.",
+            "Shell compression, annular plate, piping, sliding, anchor and foundation capacities are not evaluated.",
+            "No hoop allowable is supplied; material acceptance is not evaluated.",
+            "Floating-roof lift, jamming, seal damage and shell-roof impact pressure require separate analysis.",
+        ),
+    )

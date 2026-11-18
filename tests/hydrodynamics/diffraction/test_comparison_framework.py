@@ -74,13 +74,13 @@ class TestComparatorInit:
         aqwa = _clone_results(mock_diffraction_results)
         ow = _clone_results(mock_diffraction_results)
         comp = DiffractionComparator(aqwa, ow)
-        assert comp.tolerance == pytest.approx(0.05)
+        assert comp.tolerance is None
 
     def test_custom_tolerance(self, mock_diffraction_results):
         aqwa = _clone_results(mock_diffraction_results)
         ow = _clone_results(mock_diffraction_results)
-        comp = DiffractionComparator(aqwa, ow, tolerance=0.10)
-        assert comp.tolerance == pytest.approx(0.10)
+        with pytest.raises(ValueError, match="policy"):
+            DiffractionComparator(aqwa, ow, tolerance=0.10)
 
 
 # ---------------------------------------------------------------------------
@@ -288,8 +288,8 @@ class TestCompareAddedMass:
         ow.added_mass.matrices = ow.added_mass.matrices[:-1]
         comp = DiffractionComparator(aqwa, ow)
 
-        with pytest.raises(ValueError, match="Frequency count mismatch"):
-            comp.compare_added_mass()
+        result = comp.compare_added_mass()
+        assert all(s.quality == "INVALID_ABSCISSA" for s in result.element_statistics.values())
 
 
 # ---------------------------------------------------------------------------
@@ -345,8 +345,9 @@ class TestGenerateReport:
         comp = DiffractionComparator(aqwa, ow)
         report = comp.generate_report()
 
-        # Identical data → perfect correlation → EXCELLENT
-        assert report.overall_agreement == "EXCELLENT"
+        # Equality without a declared acceptance policy remains diagnostic.
+        assert report.overall_agreement is None
+        assert report.comparison_status == "REFUSED"
 
 
 # ---------------------------------------------------------------------------
@@ -361,7 +362,7 @@ class TestAssessAgreement:
         ow = _clone_results(mock_diffraction_results)
         comp = DiffractionComparator(aqwa, ow)
         report = comp.generate_report()
-        assert comp._assess_agreement(report) == "EXCELLENT"
+        assert comp._assess_agreement(report) is None
 
     def test_poor_for_uncorrelated(self, mock_diffraction_results):
         aqwa = _clone_results(mock_diffraction_results)
@@ -381,7 +382,7 @@ class TestAssessAgreement:
 
         comp = DiffractionComparator(aqwa, ow)
         report = comp.generate_report()
-        assert report.overall_agreement in ("FAIR", "POOR")
+        assert report.overall_agreement is None
 
 
 # ---------------------------------------------------------------------------
@@ -414,19 +415,8 @@ class TestGenerateNotes:
 
 
 class TestExportReport:
-    """Test export_report JSON serialisation.
+    """Strict JSON serialization preserves nullable evidence and sampling."""
 
-    NOTE: comparison_framework.export_report has a known bug where
-    ``max_magnitude_diff_location`` and ``max_phase_diff_location``
-    (numpy int64 tuples) are not JSON-serialisable.  These tests mark
-    that as xfail to document the issue without blocking CI.
-    """
-
-    @pytest.mark.xfail(
-        reason="Source bug: numpy int64 in diff_location tuples is not JSON-serialisable",
-        raises=TypeError,
-        strict=True,
-    )
     def test_creates_json_file(self, mock_diffraction_results, tmp_path):
         aqwa = _clone_results(mock_diffraction_results)
         ow = _clone_results(mock_diffraction_results)
@@ -438,11 +428,6 @@ class TestExportReport:
         data = json.loads(output.read_text())
         assert "overall_agreement" in data
 
-    @pytest.mark.xfail(
-        reason="Source bug: numpy int64 in diff_location tuples is not JSON-serialisable",
-        raises=(TypeError, RecursionError),
-        strict=True,
-    )
     def test_json_has_correlation_values(self, mock_diffraction_results, tmp_path):
         aqwa = _clone_results(mock_diffraction_results)
         ow = _clone_results(mock_diffraction_results)

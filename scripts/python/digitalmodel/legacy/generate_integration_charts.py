@@ -36,6 +36,8 @@ import time
 from datetime import datetime
 import warnings
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 # Plotly for interactive charts
 try:
     import plotly.graph_objects as go
@@ -578,7 +580,7 @@ class IntegrationChartGenerator:
         ax3.set_ylabel('S_heave(ω) (m²·s/rad)', fontsize=10)
         ax3.set_title('C. Output: Heave Response Spectrum', fontsize=11, fontweight='bold')
         ax3.grid(True, alpha=0.3)
-        sigma_heave = np.sqrt(np.trapz(S_response, frequencies))
+        sigma_heave = np.sqrt(_trapezoid(S_response, frequencies))
         ax3.text(0.05, 0.95, f'σ_heave = {sigma_heave:.3f} m',
                 transform=ax3.transAxes, va='top', fontsize=9,
                 bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))

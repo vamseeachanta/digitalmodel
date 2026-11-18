@@ -1,0 +1,36 @@
+# Synthetic input demonstration, not a qualified hydrodynamic model.
+# All coefficients are chosen inputs; the hand calculation is in
+# docs/domains/diffraction/external-matrix-contract.html.
+version: '1.0'
+vessel:
+  name: synthetic
+  geometry:
+    mesh_file: synthetic.gdf
+  inertia:
+    mass: 1000
+    centre_of_gravity: [0, 0, -2]
+    radii_of_gyration: [1, 1, 1]
+  external_stiffness_units: SI
+  external_stiffness_reference_point: centre_of_mass
+  external_stiffness:
+    - [1000, 0, 0, 200, 0, 0]
+    - [0, 2000, 0, 0, 0, 0]
+    - [0, 0, 3000, 0, 0, 0]
+    - [200, 0, 0, 4000, 0, 0]
+    - [0, 0, 0, 0, 5000, 0]
+    - [0, 0, 0, 0, 0, 6000]
+  external_damping_units: SI
+  external_damping_reference_point: centre_of_mass
+  external_damping:
+    - [1000, 0, 0, 200, 0, 0]
+    - [0, 2000, 0, 0, 0, 0]
+    - [0, 0, 3000, 0, 0, 0]
+    - [200, 0, 0, 4000, 0, 0]
+    - [0, 0, 0, 0, 5000, 0]
+    - [0, 0, 0, 0, 0, 6000]
+environment:
+  water_depth: 100
+frequencies:
+  values: [1]
+wave_headings:
+  values: [0]

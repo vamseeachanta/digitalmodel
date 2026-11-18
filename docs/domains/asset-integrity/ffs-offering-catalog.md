@@ -26,8 +26,8 @@ Frameworks: ASME B31.8S (22 root causes in 9 threat categories), API RP 1160, AP
 | Dent-gouge / gouges | API 579 Pt 12, PDAM | dents | T1, T2 | engine (gouge-only PDAM path not implemented) |
 | Crack-like flaws (SCC, seam weld, girth weld, fatigue cracks, hook cracks) | API 579 Pt 9, BS 7910, API RP 1176 | crack-fad, part9-level2 (#2175), part9-level1 (#2176) | T1, T2, T3 | engine |
 | Fatigue crack growth / remaining life / leak-before-break | BS 7910, API 579 Pt 9 | crack-growth | T2 | engine (#2177) |
-| Laminations / inclusions | API 579 Pt 13 | parts-8-11-13-14 (#2203) | T1, T2 | planned |
-| Wrinkles, buckles, ovality, ripples | API 579 Pt 8 | parts-8-11-13-14 (#2203) | T2, T3 | planned |
+| Laminations / inclusions | API 579 Pt 13 | parts-8-11-13-14 (#2203) | T1, T2 | planned (#2203) |
+| Wrinkles, buckles, ovality, ripples | API 579 Pt 8 | parts-8-11-13-14 (#2203) | T2, T3 | planned (#2203) |
 | Manufacturing defects in pipe body | PDAM | — | T2 | none |
 | Geohazard / ground-movement strain demand | API RP 1133 | — | T2 | none |
 | Direct-assessment programme support (ECDA / ICDA region and indication ranking) | NACE SP0502, NACE SP0206 | — | T1 | none |
@@ -44,11 +44,11 @@ Inspection codes: API 510 (vessels), API 570 (piping), API 653 (tanks), API 660 
 | Pressure vessel (API 510 -> API 579) | Pitting | API 579 Pt 6 | pitting | T1, T2 | engine |
 | Pressure vessel (API 510 -> API 579) | Hydrogen blisters / HIC / SOHIC | API 579 Pt 7 | parts-3-7-10 (#1274) | T1, T2 | planned |
 | Pressure vessel (API 510 -> API 579) | Brittle fracture susceptibility (MAT) | API 579 Pt 3 | parts-3-7-10 (#1274) | T1, T2 | planned |
-| Pressure vessel (API 510 -> API 579) | Weld misalignment, out-of-roundness, bulges | API 579 Pt 8 | parts-8-11-13-14 (#2203) | T2, T3 | planned |
+| Pressure vessel (API 510 -> API 579) | Weld misalignment, out-of-roundness, bulges | API 579 Pt 8 | parts-8-11-13-14 (#2203) | T2, T3 | planned (#2203) |
 | Pressure vessel (API 510 -> API 579) | Crack-like flaws (weld cracks, SCC, fatigue) | API 579 Pt 9, BS 7910 | crack-fad, part9-level2 (#2175) | T2, T3 | engine |
 | Pressure vessel (API 510 -> API 579) | Creep / creep-fatigue | API 579 Pt 10 | parts-3-7-10 (#1274) | T2, T3 | planned |
-| Pressure vessel (API 510 -> API 579) | Fire damage | API 579 Pt 11 | parts-8-11-13-14 (#2203) | T1, T2 | planned |
-| Pressure vessel (API 510 -> API 579) | Fatigue (crack initiation, cyclic-service screen) | API 579 Pt 14 | parts-8-11-13-14 (#2203), sn-fatigue | T1, T2 | planned (S-N library exists; Part 14 screening not wired) |
+| Pressure vessel (API 510 -> API 579) | Fire damage | API 579 Pt 11 | parts-8-11-13-14 (#2203) | T1, T2 | planned (#2203) |
+| Pressure vessel (API 510 -> API 579) | Fatigue (crack initiation, cyclic-service screen) | API 579 Pt 14 | parts-8-11-13-14 (#2203), sn-fatigue | T1, T2 | planned (#2203; S-N library exists; Part 14 screening not wired) |
 | Pressure vessel (API 510 -> API 579) | Re-rate / MAWP reduction | API 579 Pt 4/5, API 510 | ffs-metal-loss | T2 | validated |
 | Process piping (API 570 -> API 579) | CUI, injection point, deadleg, soil-to-air, mixing point, erosion thinning | API 570, API 579 Pt 4/5 | ffs-metal-loss | T1, T2 | validated |
 | Process piping (API 570 -> API 579) | Pitting | API 579 Pt 6 | pitting | T1, T2 | engine |
@@ -60,7 +60,7 @@ Inspection codes: API 510 (vessels), API 570 (piping), API 653 (tanks), API 660 
 | Atmospheric storage tank (API 653 -> API 579) | Shell course thinning / fill-height re-rate | API 653, API 579 Pt 4/5 | ffs-metal-loss | T1, T2 | engine (API 650 one-foot method not wired) |
 | Atmospheric storage tank (API 653 -> API 579) | Settlement (planar tilt, out-of-plane differential, edge, bottom) | API 653 | tank-settlement-screen (#2172) | T1 | planned (#2172) |
 | Atmospheric storage tank (API 653 -> API 579) | Settlement beyond Annex B limits (strain limit, buckling, collapse) | API 579 | tank-level3 (#2174), calculix-nonlinear (#2173), annex-f-material (#2171) | T3 | planned (#2174; Annex B1 (2007) / Annex 2D (2016+)) |
-| Atmospheric storage tank (API 653 -> API 579) | Shell distortion (buckling, flat spots, peaking, out-of-roundness) | API 579 Pt 8, API 653 | parts-8-11-13-14 (#2203) | T2, T3 | planned |
+| Atmospheric storage tank (API 653 -> API 579) | Shell distortion (buckling, flat spots, peaking, out-of-roundness) | API 579 Pt 8, API 653 | parts-8-11-13-14 (#2203) | T2, T3 | planned (#2203) |
 | Atmospheric storage tank (API 653 -> API 579) | Floating roof / seal / appurtenance damage | API 653 | — | T1 | none |
 | Any fixed equipment | Damage-mechanism identification and routing to an API 579 part | API RP 571 | offering-catalog (#2197) | T1 | planned (571 -> API 579 part crosswalk data is #2197) |
 | Any fixed equipment | Risk ranking / inspection interval | API RP 580, API RP 581, API 510, API 570, API 653 | rbi, inspection-planning | T1 | engine |
@@ -136,7 +136,7 @@ Frameworks: IACS CSR Ch 13 renewal criteria (wastage allowance, substantial-corr
 |---|---|---|---|---|
 | Tube / header wall thinning (erosion, fireside corrosion) | API 579 Pt 4/5, NBIC | ffs-metal-loss | T1, T2 | engine (2026-06-27 record covers pipe/vessel t_min, not ASME I / NBIC tube rules) |
 | Creep damage / remaining life (Larson-Miller, Omega) | API 579 Pt 10 | parts-3-7-10 (#1274) | T2, T3 | planned |
-| Thermal fatigue / creep-fatigue | API 579 Pt 14/10 | parts-8-11-13-14 (#2203) | T2 | planned |
+| Thermal fatigue / creep-fatigue | API 579 Pt 14/10 | parts-8-11-13-14 (#2203) | T2 | planned (#2203) |
 | Crack-like flaws in headers / nozzles | API 579 Pt 9, BS 7910 | crack-fad | T2, T3 | engine |
 
 ## 9. Subsea pipeline / flowline design screens reusable in an integrity review

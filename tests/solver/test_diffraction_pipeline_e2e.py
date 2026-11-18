@@ -223,7 +223,7 @@ class TestRoundTrip:
         # OrcaWave only uses the basename
         assert "unit_box.gdf" in body["BodyMeshFileName"]
 
-    def test_symmetric_declaration_emits_full_mesh(self, l00_spec, backend, tmp_path):
+    def test_full_mesh_refuses_sector_declaration(self, l00_spec, backend, tmp_path):
         source = FULL_SPEC.parent / l00_spec.vessel.geometry.mesh_file
         lines = source.read_text(encoding="utf-8").splitlines()
         for index in range(4, len(lines)):
@@ -234,8 +234,6 @@ class TestRoundTrip:
         mesh.write_text("\n".join(lines) + "\n", encoding="utf-8")
         l00_spec.vessel.geometry.mesh_file = str(mesh)
         l00_spec.vessel.geometry.symmetry = "xz"
-        output = backend.generate_single(l00_spec, tmp_path)
-        with open(output) as f:
-            data = yaml.safe_load(f)
-        body = data["Bodies"][0]
-        assert body["BodyMeshSymmetry"] == "None"
+        with pytest.raises(ValueError, match="GDF symmetry.*spec symmetry"):
+            backend.generate_single(l00_spec, tmp_path)
+        assert not list(tmp_path.glob("*.yml"))

@@ -6,7 +6,7 @@ digitalmodel.field_development.architecture_patterns
 
 Analyses subsea architecture patterns from :class:`SubseaProject` records:
 - layout distribution by concept type
-- tieback distance statistics segmented by depth band and fluid type
+- tieback distance statistics segmented by depth band, fluid type and region
 - equipment counts (trees, manifolds) by concept type
 - flowline diameter and material trends by water-depth band
 
@@ -64,21 +64,24 @@ def layout_distribution(
 
 
 # ---------------------------------------------------------------------------
-# Tieback stats segmented by depth band and fluid type
+# Tieback stats segmented by depth band, fluid type and region
 # ---------------------------------------------------------------------------
 
 def tieback_stats_segmented(
     projects: list[SubseaProject],
 ) -> dict[str, dict]:
-    """Compute tieback distance statistics segmented two ways.
+    """Compute tieback distance statistics segmented three ways.
 
-    Returns a dict with two keys:
+    Returns a dict with three keys:
     - ``by_depth_band``: tieback distance stats per water-depth band
     - ``by_fluid_type``: tieback distance stats per fluid type
+    - ``by_region``: tieback distance stats per region, using labels verbatim
 
     Projects missing ``tieback_distance_km`` are excluded.
     For ``by_depth_band``, projects also missing ``water_depth_m`` are excluded.
     For ``by_fluid_type``, projects also missing ``fluid_type`` are excluded.
+    For ``by_region``, projects also missing ``region`` are excluded.
+    Each partition is independent; distances are in km and depths in metres.
 
     Returns
     -------
@@ -88,6 +91,7 @@ def tieback_stats_segmented(
     """
     by_depth: dict[str, list[float]] = {}
     by_fluid: dict[str, list[float]] = {}
+    by_region: dict[str, list[float]] = {}
 
     for p in projects:
         if p.tieback_distance_km is None:
@@ -103,9 +107,14 @@ def tieback_stats_segmented(
         if p.fluid_type is not None:
             by_fluid.setdefault(p.fluid_type, []).append(p.tieback_distance_km)
 
+        # Segment by region
+        if p.region is not None:
+            by_region.setdefault(p.region, []).append(p.tieback_distance_km)
+
     return {
         "by_depth_band": {k: _describe(v) for k, v in by_depth.items()},
         "by_fluid_type": {k: _describe(v) for k, v in by_fluid.items()},
+        "by_region": {k: _describe(v) for k, v in by_region.items()},
     }
 
 
