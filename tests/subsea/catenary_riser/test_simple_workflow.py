@@ -14,7 +14,9 @@ from click.testing import CliRunner
 
 from digitalmodel.subsea.catenary_riser.cli import cli
 
-CASES = json.loads((Path(__file__).parent / "fixtures/simple_cli.json").read_text())["cases"]
+CASES = json.loads(
+    (Path(__file__).parent / "fixtures/simple_cli.json").read_text(encoding="utf-8")
+)["cases"]
 
 
 @pytest.mark.parametrize("case", CASES, ids=lambda c: c["name"])
@@ -23,7 +25,7 @@ def test_cli_characterization(case, tmp_path):
     run = CliRunner().invoke(cli, case["args"] + ["--output", str(output)])
     assert run.exit_code == 0, run.output
     assert run.stdout == case["stdout"] + f"\nResults saved to: {output}\n"
-    assert json.loads(output.read_text()) == case["output"]
+    assert json.loads(output.read_text(encoding="utf-8")) == case["output"]
 
 
 @pytest.mark.parametrize("options,message", [
@@ -94,7 +96,7 @@ def test_service_defaults_match_cli(workflow, tmp_path):
     output = tmp_path / "default.json"
     run = CliRunner().invoke(cli, CASES[0]["args"][:-4] + ["--output", str(output)])
     assert run.exit_code == 0
-    assert json.loads(output.read_text()) == CASES[0]["output"]
+    assert json.loads(output.read_text(encoding="utf-8")) == CASES[0]["output"]
 
 
 def test_unconverged_refuses_output(workflow, monkeypatch, tmp_path):
