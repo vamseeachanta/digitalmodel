@@ -53,7 +53,7 @@ card and a comment header describing units and sampling. The required header is
 comma-separated; lines starting with `#` are comments.
 
 ```csv
-# One full stroke; uniformly timed samples; start anywhere.
+# One full stroke; uniformly timed samples; any start phase.
 # Position in inches, surface load in lbf.
 position_in,load_lbf
 ```
@@ -69,6 +69,23 @@ row before solving, as the pump-card study does. Keeping or omitting the
 closing row therefore gives the same pump card, and the loaded sample count
 includes the closing row. Cards passed directly to the core as JSON, such as
 the field fixtures below, are used as supplied, matching the Python workflow.
+
+The page then rotates an uploaded cycle to start at its minimum surface position
+(`startAtStrokeBottom`); ties at the minimum take the lexicographically smallest
+(position, load) rotation. Every start phase of the same closed cycle therefore
+gives the same card and results. The rotation count is shown with the results
+and exported as `page_inputs.card_start`. Bundled examples keep their stored
+origin so that they remain comparable with the Python records.
+
+The depth march is stable only when the sampling interval is no shorter than
+the time a stress wave takes to cross one depth cell, `dt >= dx / c` with
+`c = sqrt(E / rho)` in every taper (the Courant–Friedrichs–Lewy condition with
+depth as the marching axis; derived in `dynacard-core.js`, `checkSampling`). For
+the example well (4,750 ft of rods, 199 cells, 6.42 strokes/min) the limit is
+6,377 intervals per cycle. A finer card is rejected with that limit, because
+above it the shortest-period content grows at every depth step while every
+value stays finite: 6,400 intervals gave a peak pump load of 2.29e8 lbf against
+4,758 lbf at 6,377 intervals. The Python module has no such check (issue #4159).
 
 ## Calculation basis
 
@@ -116,6 +133,10 @@ supplies its fluid-density input, so that input sets both the wave equation and
 CPIP. A negative calculated intake pressure is retained with pressure status
 `negative_calculated_pressure`; it does not establish a physical intake pressure.
 The page assumes runtime of 24 h/day and reference pump efficiency of 100%.
+The reference labels any `input_params` runtime, including its 24 h default,
+as `card`; the displayed and exported `production.runtime_source` is therefore
+`assumed_24h`, and `page_inputs.runtime.reference_runtime_source` keeps the
+reference label.
 The API retains supplied well-test and runtime information where the default
 workflow uses it. These outputs are displacement, not measured production.
 
@@ -186,20 +207,20 @@ differences.
 
 | Example | Max pump-load difference (lbf) | Max pump-position difference (in) | Max scalar relative difference | Labels equal | Max probability difference | Polished-rod work difference (ft·lbf) | Pump-card work difference (ft·lbf) |
 | --- | ---: | ---: | ---: | :---: | ---: | ---: | ---: |
-| Normal operation | 2.260549081e-09 | 3.548272787e-13 | 9.538155943e-12 | yes | 2.220446049e-16 | 0.000000000e+00 | 6.488335202e-09 |
-| Insufficient supply | 2.220986062e-09 | 3.552713679e-14 | 1.854022280e-12 | yes | 2.220446049e-16 | 0.000000000e+00 | 2.862179826e-09 |
-| Gas interference | 2.279193723e-09 | 0.000000000e+00 | 4.039174726e-12 | yes | 1.734723476e-18 | 0.000000000e+00 | 4.239154805e-09 |
-| Rod parting | 2.266915544e-09 | 5.373479439e-14 | 1.710835035e-12 | yes | 2.220446049e-16 | 0.000000000e+00 | 5.624315236e-09 |
-| Tagging up | 2.205069904e-09 | 3.019806627e-14 | 4.176279887e-12 | yes | 6.776263578e-21 | 0.000000000e+00 | 5.502442946e-09 |
-| Tagging down | 2.284195944e-09 | 2.273736754e-13 | 3.211613001e-12 | yes | 8.271806126e-25 | 0.000000000e+00 | 4.996763892e-09 |
-| Traveling valve leakage | 2.280103217e-09 | 0.000000000e+00 | 3.699276041e-12 | yes | 3.231174268e-27 | 0.000000000e+00 | 6.510163075e-09 |
-| Standing valve leakage | 2.281012712e-09 | 2.620126338e-14 | 1.265829130e-11 | yes | 2.220446049e-16 | 0.000000000e+00 | 6.481059245e-09 |
-| Plunger out of barrel | 2.287833922e-09 | 1.127986593e-13 | 1.075935362e-12 | yes | 1.615587134e-27 | 0.000000000e+00 | 4.985849955e-09 |
-| Sand production | 2.244178177e-09 | 0.000000000e+00 | 2.734857892e-12 | yes | 4.135903063e-25 | 0.000000000e+00 | 5.058609531e-09 |
+| Normal operation | 1.720309228e-09 | 3.548272787e-13 | 7.239546290e-12 | yes | 2.220446049e-16 | 0.000000000e+00 | 4.918547347e-09 |
+| Insufficient supply | 1.684838935e-09 | 3.552713679e-14 | 1.407846071e-12 | yes | 2.220446049e-16 | 0.000000000e+00 | 2.168235369e-09 |
+| Gas interference | 1.730768417e-09 | 0.000000000e+00 | 3.063601726e-12 | yes | 1.734723476e-18 | 0.000000000e+00 | 3.217792255e-09 |
+| Rod parting | 1.719854481e-09 | 5.373479439e-14 | 1.491080483e-12 | yes | 2.220446049e-16 | 0.000000000e+00 | 4.260073183e-09 |
+| Tagging up | 1.673470251e-09 | 3.019806627e-14 | 3.170522489e-12 | yes | 6.776263578e-21 | 0.000000000e+00 | 4.174580681e-09 |
+| Tagging down | 1.734861144e-09 | 2.273736754e-13 | 2.444101612e-12 | yes | 8.271806126e-25 | 0.000000000e+00 | 3.799868864e-09 |
+| Traveling valve leakage | 1.732132660e-09 | 0.000000000e+00 | 2.806867151e-12 | yes | 3.231174268e-27 | 0.000000000e+00 | 4.929461284e-09 |
+| Standing valve leakage | 1.731223165e-09 | 2.620126338e-14 | 9.600129546e-12 | yes | 2.220446049e-16 | 0.000000000e+00 | 4.918547347e-09 |
+| Plunger out of barrel | 1.734861144e-09 | 1.127986593e-13 | 8.168384948e-13 | yes | 1.615587134e-27 | 0.000000000e+00 | 3.785316949e-09 |
+| Sand production | 1.703483576e-09 | 0.000000000e+00 | 2.075925024e-12 | yes | 4.135903063e-25 | 0.000000000e+00 | 3.834429663e-09 |
 
 Table 1. Measured Python/JavaScript reproduction differences for the ten examples.
 
-For the ten saved surface cards replayed through live Python and JavaScript, the tolerances are `1e-6` of reference range for pump samples, `1e-6` of `max(abs(reference), 1)` for scalars and `1e-6` absolute for probabilities, and the measured maxima are 2.287833922e-09 lbf, 3.548272787e-13 in, 1.265829130e-11 scalar relative, 2.220446049e-16 probability absolute, 0.000000000e+00 ft·lbf polished-rod work and 6.510163075e-09 ft·lbf pump-card work, with both classification labels identical in all ten cases.
+For the ten saved surface cards replayed through live Python and JavaScript, the tolerances are `1e-6` of reference range for pump samples, `1e-6` of `max(abs(reference), 1)` for scalars and `1e-6` absolute for probabilities, and the measured maxima are 1.734861144e-09 lbf, 3.548272787e-13 in, 9.600129546e-12 scalar relative, 2.220446049e-16 probability absolute, 0.000000000e+00 ft·lbf polished-rod work and 4.929461284e-09 ft·lbf pump-card work, with both classification labels identical in all ten cases.
 
 <!-- reproduction:end -->
 
@@ -221,11 +242,14 @@ survey reaches 39.98° inclination, outside the application's vertical-well
 basis. Explicit vertical surveys remain supported. Reproduction measurements
 and the rejection reason are retained in `reproduction.json`.
 
-The CSV can start anywhere in the cycle, as in the reference workflow. The
-shipped feature extractor nevertheless splits projections at the first maximum
-position, with its original endpoint fallback. Classification is therefore not
-established as invariant to the sample origin; the application preserves that
-algorithm instead of rephasing the input.
+The reference workflow has no defined start phase, and its outputs depend on
+the sample origin: the solver applies upstroke damping before the top-of-stroke
+index, the corner and fluid-load phases follow the stored order, and the shipped
+feature extractor splits projections at the first maximum position. For
+example 9, the calculated intake pressure is 781.9 psi from the stored origin,
+797.5 psi from the bottom of stroke and 45.4 psi from a start 77 samples later.
+Uploaded cards are therefore started at the bottom of the stroke, as described
+under CSV format; the algorithms themselves are unchanged.
 
 ## Privacy and runtime dependencies
 

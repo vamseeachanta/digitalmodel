@@ -225,7 +225,7 @@
         "fluid_density_lb_ft3": 63.237,
         "tubing_gradient": "fluid_density / 144 psi/ft"
       },
-      "reason": "CPIP uses the supplied context fluid density, the same density that scales the load; the scale assumes zero intake pressure, so computed CPIP restates that assumption.",
+      "reason": "CPIP uses the supplied context fluid density, the same density that scales the load. Zero intake pressure sets only the synthetic load scale Fo; the reconstructed pump card gives a separately calculated CPIP, which depends on that scale and does not establish a physical intake pressure.",
       "provenance": "assumed, based on previous experience"
     },
     "production": {

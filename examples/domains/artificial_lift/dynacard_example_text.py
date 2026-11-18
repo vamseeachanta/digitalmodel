@@ -228,10 +228,18 @@ def basis_section(document):
             "gradient are retained above; negative computed intake pressures are "
             "retained without clamping. The module's CPIP uses the supplied context "
             "fluid density of 63.237 lb/ft³ (density source `context`), the same "
-            "density that scales the load. The load scale assumes zero intake "
-            "pressure, so computed CPIP restates that assumption and does not "
-            "establish a physical intake pressure; CPIP for these examples is "
-            "therefore not established.\n")
+            "density that scales the load. Zero intake pressure sets only the "
+            "synthetic static load scale Fo. The calculated CPIP is a separate "
+            "result from the reconstructed pump card "
+            f"({_cpip_span(document['examples'])}); it depends on that assumed "
+            "scale and does not establish a physical intake pressure. CPIP for "
+            "these examples is therefore not established.\n")
+
+
+def _cpip_span(records):
+    values = [r["analysis"]["pump_intake_pressure_psi"] for r in records]
+    return (f"{values[0]:.1f} psi for example 1 and {min(values):.1f} to "
+            f"{max(values):.1f} psi across the {len(values)} examples")
 
 
 def limitations():

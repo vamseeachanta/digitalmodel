@@ -2263,7 +2263,7 @@ const data = {
   ],
   "provenance": {
     "results_path": "docs/domains/artificial_lift/dynacard-examples/results.json",
-    "results_sha256": "25bb776b84e461c76c76760b2f84cfaea9d61c2f37a9930285972e332b85f13d",
+    "results_sha256": "bfbd70d3cd31bd030b3a38a16c3953788fe962648f6d96eb565ebaba12ae6220",
     "source": {
       "dataset_url": "https://data.mendeley.com/datasets/hnfwm9mjs6/1",
       "file_url": "https://data.mendeley.com/public-files/datasets/hnfwm9mjs6/files/53140ff5-85c3-40d1-b900-364a892e692e/file_downloaded",
@@ -2489,7 +2489,7 @@ const data = {
           "fluid_density_lb_ft3": 63.237,
           "tubing_gradient": "fluid_density / 144 psi/ft"
         },
-        "reason": "CPIP uses the supplied context fluid density, the same density that scales the load; the scale assumes zero intake pressure, so computed CPIP restates that assumption.",
+        "reason": "CPIP uses the supplied context fluid density, the same density that scales the load. Zero intake pressure sets only the synthetic load scale Fo; the reconstructed pump card gives a separately calculated CPIP, which depends on that scale and does not establish a physical intake pressure.",
         "provenance": "assumed, based on previous experience"
       },
       "production": {

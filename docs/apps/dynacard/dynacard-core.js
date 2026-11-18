@@ -67,6 +67,35 @@
     }
     return {position: [...card.position, card.position[0]], load: [...card.load, card.load[0]]};
   }
+  // Repeatable start for uploaded cards. The reference solver applies upstroke
+  // damping to the samples before the top-of-stroke index and downstroke
+  // damping after it (everitt_jennings/solver.py, build_coefficients), which
+  // follows the motion only when the cycle begins at the bottom of the stroke;
+  // the corner and fluid-load phases also follow the stored order. The cycle
+  // is therefore rotated to its minimum surface position. Ties choose the
+  // lexicographically smallest (position, load) rotation, so every rotation of
+  // the same closed cycle gives the same card. Bundled examples keep their
+  // stored origin for parity with the Python records.
+  function startAtStrokeBottom(card) {
+    validateCard(card);
+    const closed = closeCycle(card), n = closed.position.length - 1;
+    const p = closed.position.slice(0, n), l = closed.load.slice(0, n), low = min(p);
+    const less = (a, b) => {
+      for (let k = 0; k < n; k++) {
+        const i = (a + k) % n, j = (b + k) % n;
+        if (p[i] !== p[j]) return p[i] < p[j];
+        if (l[i] !== l[j]) return l[i] < l[j];
+      }
+      return false;
+    };
+    let start = -1;
+    for (let i = 0; i < n; i++) {
+      if (p[i] === low && (start < 0 || less(i, start))) start = i;
+    }
+    const position = [...p.slice(start), ...p.slice(0, start)];
+    const load = [...l.slice(start), ...l.slice(0, start)];
+    return {card: {position: [...position, position[0]], load: [...load, load[0]]}, rotation: start};
+  }
   function validateUnsupported(well) {
     if (well.survey != null) {
       const angles = well.survey.inclination;
@@ -169,6 +198,30 @@
     return [(n1 + scale * (m2 ** 2 - 1) ** 2 * k1) / (rod.density * aRod),
       (n2 + scale * k2) / (rod.density * aRod)];
   }
+  // Stability of the depth march (derived here; the Python module codes no
+  // limit, issue #4159). Without damping, marchRow is
+  //   u[i+1,j] = 2u[i,j] - u[i-1,j] + r^2 (u[i,j+1] - 2u[i,j] + u[i,j-1]),
+  //   r^2 = (rho A / EA) (dx/dt)^2 = (dx / (c dt))^2,  c = sqrt(E / rho).
+  // A periodic mode exp(i theta j) grows by g per depth step, where
+  // g + 1/g = 2 - 4 r^2 sin^2(theta/2); |g| = 1 for every theta only when
+  // r <= 1. This is the Courant-Friedrichs-Lewy condition (Courant,
+  // Friedrichs and Lewy, Math. Ann. 100, 1928) with depth as the marching
+  // axis: the sampling interval must be no shorter than the time a stress
+  // wave takes to cross one depth cell, dt >= dx / c, in every taper. Above
+  // the limit the shortest-period content grows by about |g|^199 at the pump,
+  // which stays finite and so passes the finite-value check.
+  function checkSampling(rods, dx, dt, intervals, spm) {
+    const slowest = min(rods.map(r => Math.sqrt(r.modulus / r.density)));
+    const crossing = dx / slowest, courant = crossing / dt;
+    if (courant > 1) {
+      const limit = Math.floor((60 / spm) / crossing);
+      throw new Error(`Card sampling is too fine for this rod string: ${intervals} intervals per cycle at ` +
+        `${spm} strokes/min give a ${(dt * 1000).toPrecision(5)} ms time step, shorter than the ` +
+        `${(crossing * 1000).toPrecision(5)} ms a stress wave takes to cross one of the 199 depth cells ` +
+        `(Courant number ${courant.toFixed(4)} > 1). The depth march is unstable above this limit. ` +
+        `Resample the card to at most ${limit} intervals per cycle.`);
+    }
+  }
   function simulation(card, well) {
     const rods = well.rod_string.map(r => ({diameter: r.diameter * IN2M,
       length: r.length * FT2M, modulus: r.modulus_of_elasticity * PSI2PA,
@@ -178,6 +231,8 @@
       r.damping = damping(r, well.pump.diameter * IN2M);
     });
     const length = sum(rods.map(r => r.length)), dx = length / 199;
+    const dt = (60 / well.spm) / (card.position.length - 1);
+    checkSampling(rods, dx, dt, card.position.length - 1, well.spm);
     const volume = sum(rods.map(r => r.length * r.area));
     const weight = sum(rods.map(r => r.density * r.area * r.length));
     const buoyantWeight = (weight - volume * well.fluid_density * 16.0185) * 9.80665;
@@ -193,7 +248,7 @@
       if (!selected) { throw new Error("Rod grid could not be resolved."); }
       return selected;
     });
-    return {nodes, dx, dt: (60 / well.spm) / (position.length - 1), position,
+    return {nodes, dx, dt, position,
       upDn: Math.trunc(sum(turns) / turns.length),
       boundary: card.load.map(v => v / N2LB - buoyantWeight)};
   }
@@ -302,5 +357,5 @@
     validateFiniteResult(result);
     return result;
   }
-  return {parseCardCsv, analyse};
+  return {parseCardCsv, startAtStrokeBottom, analyse};
 }));

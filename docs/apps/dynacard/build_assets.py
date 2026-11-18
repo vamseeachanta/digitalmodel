@@ -118,7 +118,7 @@ def generated_assets():
     for key, filename in MODEL_FILES:
         models[key] = json.loads(read_model(PACKAGE / "data" / filename))
     first = examples["examples"][0]["card"]
-    template = ("# position_in (in), load_lbf (lbf); one full stroke; uniformly timed samples; start anywhere\n"
+    template = ("# position_in (in), load_lbf (lbf); one full stroke; uniformly timed samples; any start phase (the page starts the cycle at the bottom of the stroke)\n"
                 "position_in,load_lbf\n")
     template += "".join(f"{x!r},{y!r}\n" for x, y in
                         zip(first["position"], first["load"], strict=True))

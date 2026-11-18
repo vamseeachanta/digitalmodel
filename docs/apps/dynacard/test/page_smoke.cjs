@@ -108,7 +108,9 @@ function resultChecks(index) {
 
 async function downloadChecks(index) {
   const example = DynacardExamples.examples[index];
-  const expected = DynacardCore.analyse(example.card, DynacardExamples.well);
+  const expected = DynacardPresentation.exportRecord(
+    DynacardCore.analyse(example.card, DynacardExamples.well), {source:"example"});
+  if (expected.production.runtime_source !== "assumed_24h") throw Error("Runtime provenance lost");
   const blobs = [], names = [], revoked = [];
   const create = URL.createObjectURL, revoke = URL.revokeObjectURL;
   const click = HTMLAnchorElement.prototype.click;
@@ -151,6 +153,9 @@ async function fileChecks() {
   upload("position_in,load_lbf\n" + card.position.map((v,i) => `${v},${card.load[i]}`).join("\n"));
   await settled(); form.requestSubmit();
   if (document.getElementById("results").hidden) throw Error("Valid CSV analysis failed");
+  if (!document.getElementById("card-status").textContent.includes("rotated 92 samples")) throw Error("Upload start phase not reported");
+  const startRow = [...document.querySelectorAll("#analysis-values tr")].find(row => row.cells[0].textContent === "Card start");
+  if (!startRow?.cells[1].textContent.includes("Bottom of stroke")) throw Error("Upload start phase not displayed");
   if (!document.getElementById("example-source").hidden) throw Error("CSV retained example provenance");
   const originalText = File.prototype.text;
   File.prototype.text = () => new Promise(resolve => setTimeout(() => resolve("bad"), 40));

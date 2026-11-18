@@ -1,6 +1,6 @@
 "use strict";
 const assert = require("node:assert/strict");
-const {formatValue, pumpCsv} = require("../presentation.js");
+const {formatValue, pumpCsv, exportRecord} = require("../presentation.js");
 for (const [value, unit, expected] of [
   [12.3, "in", "12.30"], [12345.6, "lbf", "12,346"],
   [-1234.6, "lbf", "-1,235"], [83, "%", "83.0"],
@@ -19,4 +19,13 @@ assert.deepEqual(csv.trim().split("\n").slice(1).map(row => row.split(",").map(N
   card.position.map((value, i) => [value, card.load[i]]));
 formatValue(card.position[0], "in");
 assert.equal(JSON.stringify(card), before);
-console.log("PASS: unit formatting and full-precision pump CSV; inputs unchanged.");
+const result = {production:{runtime_hours:24, runtime_source:"card", net_displacement:1}, cpip:{}};
+const resultBefore = JSON.stringify(result);
+const upload = exportRecord(result, {source:"upload", rotation:7});
+assert.equal(upload.production.runtime_source, "assumed_24h");
+assert.equal(upload.page_inputs.runtime.reference_runtime_source, "card");
+assert.equal(upload.page_inputs.runtime.hours_per_day, 24);
+assert.deepEqual([upload.page_inputs.card_start.origin, upload.page_inputs.card_start.rotation_samples], ["stroke_bottom", 7]);
+assert.equal(exportRecord(result, {source:"example"}).page_inputs.card_start.origin, "stored");
+assert.equal(JSON.stringify(result), resultBefore);
+console.log("PASS: unit formatting, full-precision pump CSV and export provenance; inputs unchanged.");

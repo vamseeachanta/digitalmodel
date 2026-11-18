@@ -347,3 +347,140 @@ def test_finite_inputs_cannot_publish_overflowed_results(assets, tmp_path):
     request["well"]["well_test"] = {"oil_rate": 1e308, "water_rate": 1e308}
     result = run_node(request, tmp_path)
     assert re.search("non-finite|overflow", result.get("error", ""), re.I)
+
+
+def smooth_card(intervals):
+    """Smooth 40 in, 8,650-12,350 lbf closed cycle with the given intervals."""
+    phase = 2 * np.pi * np.arange(intervals + 1) / intervals
+    return {"position": (20 * (1 - np.cos(phase))).tolist(),
+            "load": (10500 + 1850 * np.sin(phase)).tolist()}
+
+
+def courant_limit(well):
+    """Largest stable intervals per cycle, dt >= dx / c in every taper.
+
+    Computed here from the well in oilfield units, independently of the
+    JavaScript: c = sqrt(E / rho), rho from the rod weight per foot.
+    """
+    rods = well["rod_string"]
+    length_m = sum(rod["length"] for rod in rods) * 0.3048
+    dx = length_m / 199
+    speeds = []
+    for rod in rods:
+        area_in2 = np.pi * rod["diameter"] ** 2 / 4
+        # A zero or missing weight per foot means plain steel, 490 lb/ft^3.
+        weight = rod.get("weight_per_foot") or area_in2 * 490 / 144
+        rho = weight * 144 / area_in2 * 16.0185  # kg/m^3
+        speeds.append(np.sqrt(rod["modulus_of_elasticity"] * 6894.7572931783 / rho))
+    return int(np.floor((60 / well["spm"]) * min(speeds) / dx))
+
+
+@NODE_REQUIRED
+def test_sampling_limit_rejects_unstable_march(assets, tmp_path):
+    """Both sides of the Courant limit; 6,400 intervals once gave 2.29e8 lbf."""
+    well = assets["well"]
+    limit = courant_limit(well)
+    assert limit == 6377
+    coarse, at_limit, above, review_case = run_node(
+        [{"card": smooth_card(n), "well": well} for n in (1000, limit, limit + 1, 6400)], tmp_path)
+    assert "error" not in at_limit, at_limit
+    assert at_limit["pump_card_max_load"] == pytest.approx(coarse["pump_card_max_load"], rel=1e-4)
+    assert at_limit["pump_card_min_load"] == pytest.approx(coarse["pump_card_min_load"], rel=1e-4)
+    assert at_limit["cpip"]["pump_intake_pressure"] == pytest.approx(
+        coarse["cpip"]["pump_intake_pressure"], abs=2.0)
+    for rejected in (above, review_case):
+        message = rejected.get("error", "")
+        assert "Courant number" in message and "unstable" in message, rejected
+        assert f"at most {limit} intervals per cycle" in message
+
+
+@NODE_REQUIRED
+def test_examples_and_fixtures_are_inside_the_sampling_limit(assets):
+    reference = module("reference")
+    for case in reference.field_requests():
+        well = case["request"]["well"]
+        intervals = len(case["request"]["card"]["position"]) - 1
+        if not case["rejection"]:
+            assert intervals <= courant_limit(well), case["name"]
+    for example in assets["examples"]:
+        assert len(example["card"]["position"]) - 1 <= courant_limit(assets["well"])
+
+
+def rotated_open_cycle(card, shift):
+    position, load = card["position"][:-1], card["load"][:-1]
+    shift %= len(position)
+    return position[shift:] + position[:shift], load[shift:] + load[:shift]
+
+
+@NODE_REQUIRED
+def test_uploaded_start_phase_is_repeatable(assets, tmp_path):
+    """Every start phase of one cycle gives the bottom-of-stroke card."""
+    card, well = assets["examples"][8]["card"], assets["well"]
+    shifts = (0, 3, 40, 77)
+    uploads = run_node([{"operation": "upload", "text": card_csv(*rotated_open_cycle(card, s))}
+                        for s in shifts], tmp_path)
+    started = uploads[0]["card"]
+    assert started["position"][0] == min(card["position"])
+    for shift, upload in zip(shifts, uploads, strict=True):
+        assert upload["card"] == started, shift
+        assert upload["rotation"] == (3 - shift) % (len(card["position"]) - 1)
+    raw77 = dict(zip(("position", "load"), rotated_open_cycle(card, 77), strict=True))
+    raw77 = {key: value + value[:1] for key, value in raw77.items()}
+    stored, bottom, unrotated = run_node(
+        [{"card": c, "well": well} for c in (card, started, raw77)], tmp_path)
+    # The sensitivity quoted on the page and in the README.
+    assert round(stored["cpip"]["pump_intake_pressure"], 1) == 781.9
+    assert round(bottom["cpip"]["pump_intake_pressure"], 1) == 797.5
+    assert round(unrotated["cpip"]["pump_intake_pressure"], 1) == 45.4
+
+
+@NODE_REQUIRED
+def test_start_phase_ties_choose_one_rotation(tmp_path):
+    """A flat bottom dwell starts at the dwell's first sample from any origin."""
+    position = [0, 0, 0, 1, 2, 3, 2, 1]
+    load = [5, 5.5, 6, 8, 9, 9.5, 7, 6.2]  # unique rows: no row reads as a closing row
+    uploads = run_node([{"operation": "upload", "text": card_csv(position[s:] + position[:s],
+                                                                 load[s:] + load[:s])}
+                        for s in range(len(position))], tmp_path)
+    for upload in uploads:
+        assert upload["card"] == {"position": position + [0], "load": load + [5]}
+
+
+@NODE_REQUIRED
+def test_export_keeps_assumed_runtime_provenance(assets, tmp_path):
+    request = {"card": assets["examples"][0]["card"], "well": assets["well"]}
+    analysed, upload, example = run_node([
+        request,
+        {"operation": "export", **request, "input": {"source": "upload", "rotation": 92}},
+        {"operation": "export", **request, "input": {"source": "example"}}], tmp_path)
+    # The reference labels the page's 24 h input_params runtime "card".
+    assert analysed["production"]["runtime_source"] == "card"
+    for record in (upload, example):
+        assert record["production"]["runtime_source"] == "assumed_24h"
+        assert record["page_inputs"]["runtime"] == {
+            "hours_per_day": 24, "source": "assumed_24h",
+            "basis": "Not read from the card or a well test; this page supplies 24 h/day.",
+            "reference_runtime_source": "card"}
+        assert record["downhole_card"] == analysed["downhole_card"]
+    assert upload["page_inputs"]["card_start"]["origin"] == "stroke_bottom"
+    assert upload["page_inputs"]["card_start"]["rotation_samples"] == 92
+    assert example["page_inputs"]["card_start"]["origin"] == "stored"
+
+
+@NODE_REQUIRED
+@pytest.mark.parametrize("well_test, source", [
+    (None, "assumed_50pct_mixture"),
+    ({"oil_rate": 40.0, "water_rate": 60.0, "water_cut": 60.0}, "well_test_mixture"),
+    ({"oil_rate": 40.0, "water_rate": 0.0}, "well_test_mixture"),
+], ids=["no-well-test", "well-test-water-cut", "well-test-no-water-cut"])
+def test_omitted_density_branches_match_python(well_test, source, assets, tmp_path):
+    """CPIP density basis without a supplied fluid density."""
+    well = copy.deepcopy(assets["well"])
+    del well["fluid_density"]
+    if well_test is not None:
+        well["well_test"] = well_test
+    request = {"card": assets["examples"][0]["card"], "well": well}
+    actual = run_node(request, tmp_path)
+    expected = module("reference").python_analysis(request)
+    assert expected["cpip"]["density_source"] == source
+    assert_parity(actual, expected)

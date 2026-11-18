@@ -5,7 +5,7 @@
   const fields = ["spm", "pump-diameter", "pump-depth", "fluid-density", "tubing-pressure"];
   const rodFields = ["diameter", "length", "weight_per_foot", "modulus_of_elasticity"];
   const rodLabels = ["diameter (in)", "length (ft)", "weight (lbf/ft)", "modulus (psi)"];
-  let card = null, cardName = "", loadVersion = 0, loadedExample = null;
+  let card = null, cardName = "", loadVersion = 0, loadedExample = null, cardRotation = 0;
   let currentResult = null;
   const format = DynacardPresentation.formatValue;
 
@@ -82,8 +82,10 @@
     try {
       const text = await file.text();
       if (version !== loadVersion) return;
-      card = DynacardCore.parseCardCsv(text); cardName = file.name;
-      byId("card-status").textContent = `Loaded ${cardName}: ${card.position.length} samples.`;
+      const started = DynacardCore.startAtStrokeBottom(DynacardCore.parseCardCsv(text));
+      card = started.card; cardRotation = started.rotation; cardName = file.name;
+      byId("card-status").textContent = `Loaded ${cardName}: ${card.position.length} samples, ` +
+        `started at the bottom of the stroke (rotated ${cardRotation} samples).`;
     } catch (error) {
       if (version !== loadVersion) return;
       card = null; byId("card-status").textContent = "CSV rejected; no card loaded.";
@@ -187,7 +189,10 @@
       ["Theoretical production (displacement)",result.production.theoretical_production,"bbl/day · not measured production"],
       ["Pump efficiency",result.production.pump_efficiency,"% · reference assumption"],
       ["Runtime",result.production.runtime_hours,"h/day · assumed in this page"],
-      ["Runtime source",result.production.runtime_source,"reference provenance"],
+      ["Runtime source",result.production.runtime_source,"page assumption; not read from the card"],
+      ["Card start",result.page_inputs.card_start.origin === "stroke_bottom"
+        ? `Bottom of stroke (rotated ${result.page_inputs.card_start.rotation_samples} samples)`
+        : "Stored example origin","CPIP and fluid load depend on the start phase"],
       ["Pump-card maximum load",result.pump_card_max_load,"lbf"],
       ["Pump-card minimum load",result.pump_card_min_load,"lbf"],
       ["Polished-rod work per stroke (ft·lbf)",result.polished_rod_work_per_stroke,"ft·lbf · surface card area"],
@@ -217,7 +222,9 @@
     details.append(full); block.append(details); return block;
   }
 
-  function render(result) {
+  function render(analysed) {
+    const result = DynacardPresentation.exportRecord(analysed,
+      loadedExample ? {source:"example"} : {source:"upload", rotation:cardRotation});
     plot("surface-plot", card); plot("pump-plot", result.downhole_card, result); resultRows(result);
     byId("result-basis").textContent = `${cardName} · ${card.position.length} samples · ${result.solver_method}`;
     const guards = [...result.solver_flags];

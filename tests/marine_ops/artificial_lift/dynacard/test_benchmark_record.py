@@ -205,7 +205,7 @@ def test_actual_round_trip_smoke():
 def test_plate_distance_identity_and_missing_exemplars():
     a = api()
     fixture = Path(__file__).parent / "testdata/plate_reference_cards.json"
-    plate = json.loads(fixture.read_text())["cards"]
+    plate = json.loads(fixture.read_text(encoding="utf-8"))["cards"]
     from digitalmodel.marine_ops.artificial_lift.dynacard.models import CardData
     normal = plate["normal"]
     cards = [a.LabelledCard(card=CardData(position=normal["position"], load=normal["load"]),

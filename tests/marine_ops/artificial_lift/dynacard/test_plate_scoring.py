@@ -158,7 +158,7 @@ def test_shape_inference_uses_exported_trees_without_magnitude(tmp_path, monkeyp
     artifact = tmp_path / "shape.json"
     training.train_and_export_shape(samples_per_mode=5, output_path=artifact)
     monkeypatch.setattr(diagnostics, "SHAPE_MODEL_PATH", artifact)
-    assert len(json.loads(artifact.read_text())["scaling"]["min"]) == 16
+    assert len(json.loads(artifact.read_text(encoding="utf-8"))["scaling"]["min"]) == 16
     for generator in ALL_GENERATORS.values():
         card = generator(seed=105)
         features = [FeatureExtractor.extract_shape_vector(card)]
