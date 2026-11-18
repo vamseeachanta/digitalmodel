@@ -161,10 +161,12 @@ def remove_scratch(scratch: Path) -> bool:
             shutil.rmtree(scratch)
             return True
         except FileNotFoundError:
-            return not scratch.exists()
+            if not scratch.exists():
+                return True
         except OSError:
-            if attempt < 2:
-                time.sleep(0.1 * (attempt + 1))
+            pass
+        if attempt < 2:
+            time.sleep(0.1 * (attempt + 1))
     return False
 
 

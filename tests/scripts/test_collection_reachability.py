@@ -347,7 +347,8 @@ def test_child_start_failure_is_reported(tree, monkeypatch):
     assert not list(tree.parent.glob("collection-*"))
 
 
-def test_cleanup_retries_without_losing_child_timeout(tree, monkeypatch):
+@pytest.mark.parametrize("error", [PermissionError, FileNotFoundError])
+def test_cleanup_retries_without_losing_child_timeout(tree, monkeypatch, error):
     tool = load_tool()
     remove = shutil.rmtree
     attempts = []
@@ -355,7 +356,7 @@ def test_cleanup_retries_without_losing_child_timeout(tree, monkeypatch):
     def transient_lock(path, *args, **kwargs):
         attempts.append(path)
         if len(attempts) == 1:
-            raise PermissionError("synthetic output handle still open")
+            raise error("synthetic transient removal failure")
         return remove(path, *args, **kwargs)
 
     def timeout(*args, **kwargs):
@@ -371,15 +372,16 @@ def test_cleanup_retries_without_losing_child_timeout(tree, monkeypatch):
     assert not list(tree.parent.glob("collection-*"))
 
 
+@pytest.mark.parametrize("error", [PermissionError, FileNotFoundError])
 @pytest.mark.parametrize("timed_out", [True, False])
 def test_persistent_cleanup_failure_is_explicit_and_fails_closed(tree, monkeypatch,
-                                                               timed_out):
+                                                               timed_out, error):
     tool = load_tool()
     attempts = []
 
     def locked(path, *args, **kwargs):
         attempts.append(path)
-        raise PermissionError("synthetic output handle still open")
+        raise error("synthetic persistent removal failure")
 
     def timeout(*args, **kwargs):
         raise subprocess.TimeoutExpired(args[0], kwargs["timeout"])
@@ -395,6 +397,16 @@ def test_persistent_cleanup_failure_is_explicit_and_fails_closed(tree, monkeypat
     assert len(list(tree.parent.glob("collection-*"))) == 1
     if not timed_out:
         assert report["nodes"]
+
+
+def test_cleanup_of_already_removed_folder_succeeds_without_retry(tree, monkeypatch):
+    tool = load_tool()
+
+    def unexpected_sleep(delay):
+        pytest.fail("cleanup retried an absent folder")
+
+    monkeypatch.setattr(tool.time, "sleep", unexpected_sleep)
+    assert tool.remove_scratch(tree.parent / "already_removed")
 
 
 def test_parameter_ids_with_absolute_paths_are_redacted(tree):
