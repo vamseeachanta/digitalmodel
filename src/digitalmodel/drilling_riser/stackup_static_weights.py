@@ -129,6 +129,7 @@ def section_weights(inputs: HydrostaticSectionInput) -> SectionWeights:
     wet = p.wet_joint_weight_n / p.joint_length_m + p.auxiliary_wet_weight_n_m
     water = (p.bore_area_m2 + p.auxiliary_bore_area_m2) * p.water_density_kg_m3
     displaced = (dry - wet) / p.gravity_m_s2 + water
+    _finite("displaced water mass", displaced, 0.0)
     fluid = p.bore_area_m2 * p.fluid_density_kg_m3 + p.auxiliary_fluid_mass_kg_m
     return SectionWeights(
         dry, wet, water, displaced, fluid,
@@ -276,7 +277,9 @@ def axial_wall_capacity_n(inputs: TubularCapacityInput) -> float:
     p = inputs
     area = cross_sectional_area(p.outer_diameter_m,
                               p.outer_diameter_m - 2.0 * p.wall_thickness_m)
-    return p.allowable_factor_1 * p.yield_stress_pa * area
+    capacity = p.allowable_factor_1 * p.yield_stress_pa * area
+    _finite("axial wall capacity", capacity)
+    return capacity
 
 
 def flooded_material_weight_n(
@@ -292,7 +295,9 @@ def flooded_material_weight_n(
     _finite("water_density_kg_m3", water_density_kg_m3, 0.0)
     if material_density_kg_m3 == 0.0:
         raise ValueError("material_density_kg_m3 must be > 0")
-    return dry_weight_n * (1.0 - water_density_kg_m3 / material_density_kg_m3)
+    weight = dry_weight_n * (1.0 - water_density_kg_m3 / material_density_kg_m3)
+    _finite("flooded material weight", weight)
+    return weight
 
 
 def governing_tension_n(minimum_top_tension_n: float, overpull_top_tension_n: float) -> float:

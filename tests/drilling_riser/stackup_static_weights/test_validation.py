@@ -66,6 +66,30 @@ def test_section_physical_domains(field, value):
         replace(section(), **{field:value})
 
 
+@pytest.mark.parametrize('wet_joint_weight_n,auxiliary_wet_weight_n_m', [
+    (40000.0, 0.0), (18000.0, 2200.0),
+])
+def test_section_rejects_negative_exterior_displacement(
+    wet_joint_weight_n, auxiliary_wet_weight_n_m,
+):
+    inputs = replace(
+        section(), installed_length_m=10.0, dry_joint_weight_n=18000.0,
+        wet_joint_weight_n=wet_joint_weight_n,
+        auxiliary_wet_weight_n_m=auxiliary_wet_weight_n_m,
+    )
+    with pytest.raises(ValueError, match='displaced water mass'):
+        section_weights(inputs)
+
+
+def test_section_allows_zero_exterior_displacement():
+    inputs = replace(
+        section(), dry_joint_weight_n=18000.0, wet_joint_weight_n=38000.0,
+    )
+    result = section_weights(inputs)
+    assert result.displaced_water_mass_kg_m == 0.0
+    assert result.filled_submerged_weight_n == result.filled_air_weight_n
+
+
 @pytest.mark.parametrize('field,value', [
     ('tensioner_count', 0), ('tensioner_count', 2.5),
     ('tensioner_count', True), ('failed_tensioner_count', -1),
