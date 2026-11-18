@@ -167,7 +167,15 @@ def test_workflow_refuses_unstable_card_before_marching():
 
 @pytest.mark.slow
 def test_workflow_extrema_at_limit_match_coarser_sampling():
-    """Sampling regression on the illustrative tapered well, to 0.1 lbf."""
+    """Sampling regression on the illustrative tapered well, to 0.1 lbf.
+
+    Comparing 1000 with 6377 intervals gave absolute minimum/maximum load
+    differences of 2.4/3.0 millipounds-force. The 0.1 lbf allowance is 33.8
+    times the larger observed difference, calculated before rounding.
+    The fixed 21-sample Savitzky-Golay window covers 2.1%/0.3% of the stroke,
+    respectively (rounded), so this comparison includes smoothing bandwidth
+    as well as time-step sensitivity; it is not an independent accuracy check.
+    """
     extrema = []
     for intervals in (1000, EXAMPLE_LIMIT):
         results = DynacardWorkflow(example_context(intervals)).run_full_analysis()
