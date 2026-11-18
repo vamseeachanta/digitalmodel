@@ -12,7 +12,8 @@ FULL = {domain.name for domain in DOMAINS}
 
 
 @pytest.mark.parametrize(("path", "closure"), [
-    pytest.param("src/digitalmodel/citations/schema.py", {"citations", "subsea"},
+    pytest.param("src/digitalmodel/citations/schema.py", {"citations"}, id="citations"),
+    pytest.param("src/digitalmodel/citations/schema.py", {"subsea"},
                  id="dependent", marks=pytest.mark.xfail(strict=True, raises=AssertionError,
                  reason="Subsea stability tests import the schema, but the citation route omits subsea")),
     pytest.param("src/digitalmodel/process_piping/line_sizing.py", {"asset-integrity"}, id="family"),

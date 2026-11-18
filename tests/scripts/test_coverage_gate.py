@@ -127,11 +127,11 @@ def test_collect(tmp_path):
     (tmp_path / "README.md").write_text("overlay\n")
     (tmp_path / "inputs").mkdir()
     extra = "inputs/extra config"
-    (tmp_path / extra).write_text("test input\n")
+    (tmp_path / extra).write_text("[run]\nsource = inputs\n", encoding="utf-8")
     (tmp_path / "inputs/test_pair.py").write_text("def test_one(): pass\ndef test_two(): pass\n")
     paths = ["README.md", extra, "inputs/test_pair.py"]
     assert run("collect", "--env", "py", "--out", "reports", "--overlay", *paths, "--", "inputs/test_pair.py", "-q",
-               cwd=tmp_path) == 0
+               cwd=tmp_path, env=dict(os.environ, COVERAGE_RCFILE=str(tmp_path / extra))) == 0
     evidence = tmp_path / "reports/py"
     record = json.loads((evidence / "env.json").read_text())
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=tmp_path, text=True).strip()
@@ -146,3 +146,24 @@ def test_collect(tmp_path):
     # coverage.py writes native separators; compare normalises them (windows-paths case).
     files = json.loads((evidence / "coverage.json").read_text())["files"]
     assert "inputs/test_pair.py" in {key.replace("\\", "/") for key in files}
+
+    # Exercise native Windows JUnit paths even when the collector runs on POSIX.
+    after = tmp_path / "windows"
+    shutil.copytree(evidence, after / "py")
+    xml = after / "py/junit.xml"
+    tree = ElementTree.parse(xml)
+    for case in tree.iter("testcase"):
+        case.set("file", case.attrib["file"].replace("/", "\\"))
+    tree.write(xml, encoding="utf-8")
+
+    selected = tmp_path / "selected.json"
+    selected.write_text(json.dumps(["inputs/test_pair.py::test_one", "inputs/test_pair.py::test_two"]),
+                        encoding="utf-8")
+    empty = tmp_path / "empty.json"
+    empty.write_text("[]", encoding="utf-8")
+    report = tmp_path / "comparison.md"
+    assert run("compare", "--kind", "consolidation", "--commit", head,
+               "--before", evidence.parent, "--after", after, "--report", report,
+               "--closure", selected, "--pr-path-nodes", selected, "--nightly-path-nodes", empty,
+               "--touched-modules", empty) == 0, report.read_text(encoding="utf-8")
+    assert "| py | 2 | 2 | 2 | 0 | 0 |" in report.read_text(encoding="utf-8")
