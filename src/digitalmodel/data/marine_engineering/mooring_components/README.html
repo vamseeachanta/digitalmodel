@@ -38,4 +38,5 @@
 </tbody></table><p class="caption">Table 3. Gaps are specific to the sources inspected in this run; no exhaustive source-search or industry-coverage claim is made.</p>
 <h2>Provenance sidecar validation</h2>
 <p>Legacy loading is selected only when <code>provenance.json</code> is absent. A present sidecar must decode to a JSON object. JSON null, arrays, strings, numbers and booleans are rejected with <code>ValueError</code> before any CSV is read, including when a required CSV is missing. An empty object is rejected by the existing completeness validation. This contract does not qualify the computed seed properties or close the engineering gaps in Table 3.</p>
+<p>On Linux, opening <code>provenance.json</code> as a file raises <code>IsADirectoryError</code> if the path names a directory. Reading bytes that cannot be decoded as text raises <code>UnicodeDecodeError</code>, a subclass of <code>ValueError</code>. Both errors occur before JSON validation.</p>
 </html>
