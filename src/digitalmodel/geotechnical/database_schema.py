@@ -63,6 +63,10 @@ class Dataset:
             raise ValueError("dataset entry must be a mapping")
         names = tuple(f.name for f in fields(cls)
                       if f.name not in ("source", "size_description"))
+        allowed_fields = (*names, "size_description")
+        for key in entry:
+            if key not in allowed_fields:
+                raise ValueError(f"unknown dataset field {key!r}")
         required(entry, names)
         if "size_description" in entry:
             required(entry, ("size_description",))

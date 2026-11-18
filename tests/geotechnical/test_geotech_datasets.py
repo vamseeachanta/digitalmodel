@@ -120,6 +120,13 @@ def test_reject_unknown_reference_or_readiness(data, field, value, message):
         load_database(data)
 
 
+@pytest.mark.parametrize("field", ["qualified", "source", "size_descripton", 42])
+def test_reject_unknown_dataset_field(data, field):
+    data["datasets"][0][field] = True
+    with pytest.raises(ValueError, match=f"unknown dataset field {field!r}"):
+        load_database(data)
+
+
 def test_reject_duplicate_dataset_ids(data):
     data["datasets"].append(dict(data["datasets"][0]))
     with pytest.raises(ValueError, match="duplicate id"):
