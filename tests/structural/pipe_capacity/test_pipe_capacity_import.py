@@ -20,6 +20,7 @@ def test_pipe_capacity_import_uses_packaged_helper(tmp_path):
         """\
         import importlib
         import importlib.abc
+        import socket
         import sys
 
         blocked_roots = {
@@ -35,7 +36,9 @@ def test_pipe_capacity_import_uses_packaged_helper(tmp_path):
                 return None
 
         def reject_network(event, args):
-            if event.startswith("socket.") or event in {
+            if (
+                event.startswith("socket.") and event != "socket.gethostname"
+            ) or event in {
                 "urllib.Request", "http.client.connect",
             }:
                 attempts.append(event)
@@ -43,6 +46,8 @@ def test_pipe_capacity_import_uses_packaged_helper(tmp_path):
 
         sys.meta_path.insert(0, RejectLegacyAndLicensedImports())
         sys.addaudithook(reject_network)
+        # Exercise the local lookup used by platform.uname() on Windows.
+        assert isinstance(socket.gethostname(), str)
         sys.path.insert(0, sys.argv[1])
         module = importlib.import_module(
             "digitalmodel.structural.pipe_capacity.common.PipeCapacity"
@@ -56,6 +61,20 @@ def test_pipe_capacity_import_uses_packaged_helper(tmp_path):
         assert module.update_deep_dictionary is helper.update_deep_dictionary
         assert not blocked_roots.intersection(sys.modules)
         assert not attempts, attempts
+
+        network_events = (
+            "socket.connect", "socket.bind", "socket.getaddrinfo",
+            "socket.gethostbyname", "socket.gethostbyaddr", "socket.sendto",
+            "urllib.Request", "http.client.connect",
+        )
+        for event in network_events:
+            try:
+                sys.audit(event)
+            except AssertionError as error:
+                assert str(error) == "Forbidden network operation: " + event
+            else:
+                raise AssertionError("Network audit event allowed: " + event)
+        assert attempts == list(network_events), attempts
         """
     )
     env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
