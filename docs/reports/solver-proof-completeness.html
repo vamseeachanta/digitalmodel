@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Solver proof completeness: bounded inventory and contract proposal</title>
+<style>
+body { font: 1rem/1.6 system-ui, sans-serif; margin: auto; padding: 2rem; max-width: 76rem; color: #182c38; background: #f6f8fa; }
+h1, h2 { line-height: 1.25; } table { border-collapse: collapse; width: 100%; background: white; }
+th, td { border: 1px solid #becbd2; padding: .6rem; text-align: left; vertical-align: top; }
+code { overflow-wrap: anywhere; } a { color: #145786; } .scroll { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+<h1>Solver proof completeness: bounded inventory and contract proposal</h1>
+<h2>Summary</h2>
+<p>Five explicitly selected sources were inspected at revision <code>8c09f59a0530baa8a29177b6adaf4e7454cee675</code> on 16 November 2026. Their input boundaries, consumers and cleanup observations are recorded in the <a href="solver-proof-inventory.json">digest-bound inventory</a>. The review proposes a reusable contract; it does not migrate an adapter or establish general solver qualification. Native cleanup and solver execution are <strong>NOT_EVALUATED</strong>.</p>
+<h2>Revision history</h2>
+<table><thead><tr><th>Revision</th><th>Date</th><th>What changed and why</th></tr></thead><tbody>
+<tr><td>0</td><td>2026-11-16</td><td>Initial bounded inventory and proposed completeness contract to distinguish required inputs, observed cleanup and claimed proof.</td></tr>
+</tbody></table>
+<h2>First slice: review boundary and reuse</h2>
+<p>This is a first slice, not a census of solver evidence writers. Exactly the five rows below are assessed. SHA-256 is computed over source bytes with CRLF normalized to LF, following <a href="../../scripts/maintenance/report_template_inventory.py">the existing report inventory convention</a>. These review digests identify inspected text across checkout line endings; production artifact digests retain their own byte contracts. A changed digest requires reinspection rather than automatic approval of changed source.</p>
+<p>Reuse candidates already exist: <code>model_manifest.verify_manifest</code> and <code>_closure</code> bind declared files and reachable includes; <code>model_proof.validate_report</code> checks completion and arrays; <code>input_manifest</code> recomputes complete declared bundle fingerprints; the native harness checks mandatory sources before its filtering hash helper. <a href="../../scripts/attestation_manifest.py">scripts/attestation_manifest.py</a> is an adjacent offline attestation owner outside this five-row assessment. No production hashing helper is added.</p>
+<div class="scroll"><table><thead><tr><th>Inspected source</th><th>Observed input and consumer boundary</th><th>Cleanup and limits</th></tr></thead><tbody>
+<tr><td><a href="../../src/digitalmodel/solvers/smoke/model_manifest.py"><code>src/digitalmodel/solvers/smoke/model_manifest.py</code></a></td><td>Declared records are hashed; missing files and unlisted reachable includes fail. Future output destinations are declared separately. The model probe consumes the verified manifest.</td><td>No process ownership. Supplied records do not independently establish a complete source census; path identity does not compare hard links.</td></tr>
+<tr><td><a href="../../src/digitalmodel/solvers/smoke/model_proof.py"><code>src/digitalmodel/solvers/smoke/model_proof.py</code></a></td><td>Parent validation requires completion, settings flags, manifest binding, finite static results and six complete histories; readback must match solve arrays exactly.</td><td>No process ownership. Child assertions are not authenticated observations; actual retained-file hashes are checked by the harness caller.</td></tr>
+<tr><td><a href="../plans/evidence/issue-2082-native.ps1"><code>docs/plans/evidence/issue-2082-native.ps1</code></a></td><td>Mandatory-source prechecks precede hashing and launch. Model mode rechecks source and manifest bytes around phases and independently binds exports and simulation bytes. Scratch output enumeration is diagnostic.</td><td>Termination requests are followed by job census and root waits; uncertainty raises and nested finalizers release handles. Optional source inclusion remains presence-based. Native execution was not tested.</td></tr>
+<tr><td><a href="../../src/digitalmodel/solvers/ghs/_windows_job.py"><code>src/digitalmodel/solvers/ghs/_windows_job.py</code></a></td><td>ABI primitives receive handles; no file manifest or solver verdict is emitted. Caller cleanup checks false waits and attempts releases.</td><td>Wait returns true for signaled, false for timeout, and raises on other status. A root wait alone is not whole-job drain evidence; default zero milliseconds is a poll.</td></tr>
+<tr><td><a href="../../src/digitalmodel/solvers/orcaflex/modular_generator/input_manifest.py"><code>src/digitalmodel/solvers/orcaflex/modular_generator/input_manifest.py</code></a></td><td>Explicit seeds and reachable YAML dependencies are fingerprinted and recomputed. Missing/unreadable dependencies fail. Opaque graphs and unresolved external references prevent complete coverage.</td><td>No process ownership. Seed completeness remains caller-owned; revision resolution remains NOT_EVALUATED. Fingerprints do not attest native settings.</td></tr>
+</tbody></table></div>
+<h2>Proposed reusable contract</h2>
+<p>The following requirements are proposals for separately reviewed production repairs, not claims that all five sources enforce them. Content integrity is testable offline; authentication of process observations and engineering acceptance require additional evidence.</p>
+<table><thead><tr><th>Requirement</th><th>Proposed adversarial acceptance case</th></tr></thead><tbody>
+<tr><td>Independently declare the exact required input set.</td><td>Remove a mandatory source while retaining another hash: fail before child launch. Empty or nonempty partial manifests never satisfy exact coverage. Optional-output absence cannot excuse a missing required input.</td></tr>
+<tr><td>Reject missing, unreadable, substituted and escaping inputs.</td><td>Exercise read denial, changed bytes, source locator substitution and path escape. Bind each path explicitly, even when distinct files have identical bytes.</td></tr>
+<tr><td>Keep input and output identities distinct, including hard links.</td><td>Reject one underlying file used for both roles; permit different files with identical contents. Define alias handling explicitly.</td></tr>
+<tr><td>Bind source and retained artifact bytes before and after work.</td><td>Mutate sources, manifest, native exports or saved simulation between phases: fail. Independently recompute retained-file hashes instead of trusting a child hash string.</td></tr>
+<tr><td>Validate completed child proof independently.</td><td>A fake child returning only ok=true, thread counts and a hash must fail. Omit completion, settings readback, manifest binding or result arrays; corrupt one retained readback sample: fail.</td></tr>
+<tr><td>Separate byte preservation from physical settings readback.</td><td>Unchanged input bytes cannot replace observed native settings, units and coordinate frames. Report content checks separately from physical acceptance.</td></tr>
+<tr><td>Observe cleanup after requesting termination.</td><td>Timeout, failed wait, active descendants or failed handle release deny success and further phases. Record successful waits and whole-job absence separately from a termination request.</td></tr>
+<tr><td>Retain diagnostics without a success verdict.</td><td>Failure leaves error stage/type and available diagnostic artifacts; diagnostic output enumeration cannot be promoted to required-input coverage.</td></tr>
+<tr><td>Exercise optional licensed API absence and enroll offline tests.</td><td>Offline inventory must work without importing the optional licensed API merely to prohibit construction; also guard already-loaded constructors where relevant. Keep tests under executed CI roots, not metadata alone.</td></tr>
+</tbody></table>
+<h2>Verification evidence</h2>
+<p>The <a href="../../tests/solvers/smoke/test_proof_inventory.py">new offline tests</a> independently declare the five expected paths and reject missing/duplicate rows, digest and locator substitution, missing limitations, unknown fields and blanket PASS status. Synthetic files exercise unreadable/missing/changed sources, escaping links, identical bytes with distinct paths, absent outputs and LF normalization. Network connections and native imports are forbidden during these tests.</p>
+<p>The <a href="../../tests/solvers/smoke/test_model_proof.py">existing pure proof tests</a> retain rejection of incomplete fields and one changed history sample. The <a href="../../tests/solvers/smoke/test_ci_registration.py">CI registration assertion</a> requires the solver-smoke directory in the executed command. Other inventory test references were inspected as source only; their presence is not a claim that they executed here. Exact commands, counts and check outcomes accompany the change description.</p>
+<h2>Known limits and way forward</h2>
+<p>No native harness, solver-smoke CLI or whole solver tree was run. Cleanup implementation was read without importing either process module. Inventory validation does not authenticate producer observations, qualify numerical results, validate engineering acceptance, or protect against hostile concurrent filesystem replacement. Production raw-byte identities differ from these normalized review digests.</p>
+<p>Further work requires a separately reviewed bounded repair based on a concrete consumer defect, then targeted fake-child tests, native cleanup qualification where needed and independently reviewed engineering criteria. Additional adapters and generic production validation remain outside this slice. The complete-bundle and native-harness owners should be reused before proposing another shared helper.</p>
+</main>
+</body>
+</html>
