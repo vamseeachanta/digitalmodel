@@ -1,7 +1,7 @@
 """Validated SI definitions for individual S-N power-law branches.
 
-The method in a legacy engineering workbook is N = A / S**m, with stress
-*range*, not amplitude. Each branch is evaluated independently, including
+The branch equation is N = A / S**m, with stress *range*, not amplitude.
+Each branch is evaluated independently, including
 extrapolated plotting endpoints. The existing PowerLawSNCurve supplies the
 evaluation; its default cycle cap is disabled. No standard parameters are
 selected or supplied here. Environment determines the caller's choice of A
@@ -55,7 +55,7 @@ def _positive_output(compute: Callable[[], float]) -> float:
     try:
         with np.errstate(all="ignore"):
             result = float(compute())
-    except (ArithmeticError, ValueError) as exc:
+    except ArithmeticError as exc:
         raise ValueError("result is outside the floating-point range") from exc
     _finite(result, "result", positive=True)
     return result
@@ -71,6 +71,7 @@ class SNDefinition:
     def __post_init__(self) -> None:
         _finite(self.log10_intercept_cycles_pa_m, "log10_intercept_cycles_pa_m")
         _finite(self.slope_dimensionless, "slope_dimensionless", positive=True)
+        object.__setattr__(self, "slope_dimensionless", float(self.slope_dimensionless))
         try:
             intercept = 10.0**self.log10_intercept_cycles_pa_m
         except OverflowError as exc:

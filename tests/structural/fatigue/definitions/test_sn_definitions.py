@@ -2,8 +2,10 @@
 import math
 from dataclasses import FrozenInstanceError
 
+import numpy as np
 import pytest
 
+from digitalmodel.structural.fatigue import sn_definitions
 from digitalmodel.structural.fatigue.sn_definitions import (
     SNDefinition,
     ThicknessDefinition,
@@ -119,3 +121,55 @@ def test_unrepresentable_results_fail_instead_of_returning_infinity_or_zero():
     with pytest.raises(ValueError):
         nominal_stress_range_pa(1e-300, ThicknessDefinition(0.080, 0.020, 0.5),
                                 scf_dimensionless=1e200)
+
+
+@pytest.mark.parametrize("slope_type", [np.uint8, np.uint16, np.uint32, np.uint64])
+@pytest.mark.parametrize("convert_units", [False, True])
+def test_unsigned_slope_preserves_cycles_and_inverse(slope_type, convert_units):
+    slope = slope_type(3)
+    if convert_units:
+        definition = SNDefinition.from_log10_intercept(
+            0.0, slope, stress_unit_pa=10.0,
+        )
+    else:
+        definition = SNDefinition(3.0, slope)
+    # A = 1000 cycles * Pa**3; N = 1000 / 2**3 = 125 cycles.
+    assert cycles_to_failure(definition, 2.0) == pytest.approx(125.0)
+    assert stress_range_pa(definition, 125.0) == pytest.approx(2.0)
+
+
+@pytest.mark.parametrize("operation", ["cycles", "stress", "thickness"])
+def test_delegated_validation_message_is_preserved(monkeypatch, operation):
+    error = ValueError("delegated input must be positive")
+
+    def reject(*args, **kwargs):
+        raise error
+
+    definition = SNDefinition(3.0, 3.0)
+    thickness = ThicknessDefinition(0.080, 0.020, 0.5)
+    if operation == "cycles":
+        monkeypatch.setattr(sn_definitions.PowerLawSNCurve, "get_allowable_cycles", reject)
+        evaluate, arguments = cycles_to_failure, (definition, 2.0)
+    elif operation == "stress":
+        monkeypatch.setattr(sn_definitions.PowerLawSNCurve, "get_stress_range", reject)
+        evaluate, arguments = stress_range_pa, (definition, 125.0)
+    else:
+        monkeypatch.setattr(sn_definitions, "thickness_correction", reject)
+        evaluate, arguments = thickness_stress_factor, (thickness,)
+    with pytest.raises(ValueError, match="delegated input must be positive") as caught:
+        evaluate(*arguments)
+    assert caught.value is error
+
+
+def test_delegated_arithmetic_error_is_translated(monkeypatch):
+    error = OverflowError("delegated arithmetic overflow")
+
+    def overflow(*args, **kwargs):
+        raise error
+
+    monkeypatch.setattr(sn_definitions.PowerLawSNCurve, "get_allowable_cycles", overflow)
+    with pytest.raises(
+        ValueError, match="result is outside the floating-point range",
+    ) as caught:
+        cycles_to_failure(SNDefinition(3.0, 3.0), 2.0)
+    assert caught.value.__cause__ is error
