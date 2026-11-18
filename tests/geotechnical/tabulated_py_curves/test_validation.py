@@ -110,6 +110,8 @@ def test_interpolation_avoids_overflow_in_a_finite_linear_result():
     (1, 0.25, 1.0),
     (Fraction(11, 10), 0.25, 1.25),
     (np.int64(1), 0.25, 1.0),
+    (np.int64(1024), 0.1, 1024.0),
+    (np.int32(1024), 0.1, 1024.0),
     (1.1, np.int64(1), 2.0),
     (np.float32(1.5), 0.25, 1.5),
     (1.1, np.float32(0.5), 1.5),

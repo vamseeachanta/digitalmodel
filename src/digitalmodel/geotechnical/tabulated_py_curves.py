@@ -37,15 +37,9 @@ line resistance (N/m), reject decreasing resistance, and hold end curves outside
 the tabulated depth range. This module retains softening, raises for out-of-range
 depths instead of holding end curves, and uses a pressure basis (Pa).
 
-Standards stated in the source
------------------------------
-Reference images identify API-RP-2A (2000), with the heading API Recommended
-Practice 2A-WSD: soft clay clauses 6.8.2 and 6.8.3; stiff clay clause 6.8.5;
-sand clauses 6.8.6 and 6.8.7. A source-labelled API-RP-2A (2007) amendment replaces
-clause 6.8.3. OTC 20158 (2009) is also named; clause not stated in source.
-Those references are dormant theory. No standard or clause is attributed to
-the active interpolation, area conversion, rounding or spring-table arithmetic.
-No standard-derived numeric constant is introduced by this module.
+Standards and provenance
+------------------------
+No standard-derived constant is introduced by this module.
 
 Input gaps
 ----------
@@ -119,8 +113,6 @@ def _linear(x: float, axis: tuple[float, ...], values: tuple[float, ...]) -> flo
 def interpolate_force(curve: ForceCurve, displacement_m: float) -> float:
     """F = F0 + (y-y0)*(F1-F0)/(y1-y0), within supplied displacements.
 
-    This is the tabulated interpolation of a legacy calculation;
-    no standard or clause is attributed to that interpolation in the source.
     Extrapolation raises ValueError; force reduction is retained.
     """
     return _linear(displacement_m, curve.displacement_m, curve.force_n)
@@ -142,10 +134,7 @@ class SpringGeometry:
 
 
 def force_from_pressure(pressure_pa: float, geometry: SpringGeometry) -> float:
-    """F = pressure * diameter * tributary length (N), source tabulated method.
-
-    No standard or clause is attributed to this area conversion in the source.
-    """
+    """F = pressure * diameter * tributary length (N)."""
     _finite(pressure_pa, "pressure_pa")
     result = pressure_pa * geometry.diameter_m * geometry.tributary_length_m
     _finite(result, "computed force_n")
@@ -157,8 +146,7 @@ def force_from_line_resistance(
 ) -> float:
     """F = line resistance * declared integration length (N).
 
-    The source offers integration along length or diameter; the caller supplies
-    the appropriate length. No standard or clause is stated for this conversion.
+    The caller supplies the appropriate integration length.
     """
     _finite(line_resistance_n_per_m, "line_resistance_n_per_m")
     _finite(integration_length_m, "integration_length_m")
@@ -170,10 +158,7 @@ def force_from_line_resistance(
 
 
 def pressure_from_force(force_n: float, geometry: SpringGeometry) -> float:
-    """p = F / diameter / tributary length (Pa), source tabulated method.
-
-    No standard or clause is attributed to this normalization in the source.
-    """
+    """p = F / diameter / tributary length (Pa)."""
     _finite(force_n, "force_n")
     result = force_n / geometry.diameter_m / geometry.tributary_length_m
     _finite(result, "computed pressure_pa")
@@ -183,10 +168,9 @@ def pressure_from_force(force_n: float, geometry: SpringGeometry) -> float:
 def round_force_up(force_n: float, quantum_n: float) -> float:
     """Fq = ceil(F / quantum) * quantum, for nonnegative force magnitudes.
 
-    This generalizes the source's round-up step. The caller declares quantum_n;
-    no source-specific precision or force conversion factor is assumed.
+    The caller declares quantum_n; no precision or force conversion factor
+    is assumed.
     Exact binary input ratios determine which side of a boundary applies.
-    No standard or clause is attributed to rounding in the source.
     """
     _finite(force_n, "force_n")
     _finite(quantum_n, "quantum_n")
@@ -194,8 +178,8 @@ def round_force_up(force_n: float, quantum_n: float) -> float:
         raise ValueError("quantum_n must be positive")
     f = Fraction(force_n) if isinstance(force_n, Rational) else Fraction(float(force_n))
     q = Fraction(quantum_n) if isinstance(quantum_n, Rational) else Fraction(float(quantum_n))
-    fn, fd = f.numerator, f.denominator
-    qn, qd = q.numerator, q.denominator
+    fn, fd = int(f.numerator), int(f.denominator)
+    qn, qd = int(q.numerator), int(q.denominator)
     numerator, denominator = fn * qd, fd * qn
     steps = -(-numerator // denominator)
     try:
@@ -233,8 +217,7 @@ def interpolate_depth(
 ) -> PressureCurve:
     """p(z) = p0 + (z-z0)*(p1-p0)/(z1-z0), on a common displacement grid.
 
-    Curves must be ordered by strictly increasing depth. Source tabulated method;
-    no standard or clause is attributed to depth interpolation in the source.
+    Curves must be ordered by strictly increasing depth.
     Missing grid points require displacement interpolation before this call.
     Out-of-range depths raise ValueError, including above/below a single curve.
     """
@@ -278,8 +261,7 @@ def symmetric_spring_points(
     """F(±y) = ±p(y)*diameter*length*(1+s), with one origin point.
 
     The caller declares dimensionless sensitivity_ratio s (a fraction, not %).
-    Source tabulated method; no standard or clause is attributed to symmetry
-    or sensitivity. Requires a supplied (0, 0); no extrapolation is appended.
+    Requires a supplied (0, 0); no extrapolation is appended.
     """
     _finite(sensitivity_ratio, "sensitivity_ratio", minimum=-1.0)
     if curve.displacement_m[0] != 0 or curve.pressure_pa[0] != 0:
