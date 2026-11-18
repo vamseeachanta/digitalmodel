@@ -9,6 +9,12 @@ The existing plastic_moment_capacity kernel is reused. SMYS for Mp and fy/fu
 for alpha are independent inputs: no material reduction is inferred. These
 are capacity components, not a combined-loading or code compliance assessment.
 
+Admissible beta (derived, not sourced): alpha = (1-beta) + beta*fu/fy is a
+weighted mean of 1 and fu/fy only for 0 <= beta <= 1, so 1 <= alpha <= fu/fy.
+beta > 1 would give a flow stress above the tensile strength and is rejected.
+The source range of D/t and of the coefficients is not established here; a
+narrower range from the governing clause remains the caller's to apply.
+
 Roundness is parameterized: below the first diameter threshold it is included
 in diameter tolerance; in the next interval it is fraction_small*D; in the
 next interval it is min(fraction_large*D, cap); at/above the final threshold
@@ -57,7 +63,15 @@ def _nonnegative(name: str, value: float) -> float:
 
 @dataclass(frozen=True)
 class BendingInputs:
-    """SI geometry/strength inputs and dimensionless resistance factors."""
+    """SI geometry/strength inputs and dimensionless resistance factors.
+
+    Strength basis: ``specified_yield_strength_pa`` enters Mp directly and
+    must already carry any derating (for example temperature or
+    material-strength factors) that the caller's design basis requires; this
+    module applies none. ``yield_strength_pa`` and ``tensile_strength_pa``
+    enter only the ratio fu/fy in alpha and must be on one basis (both
+    derated or both not), as the governing clause specifies.
+    """
 
     outer_diameter_m: float
     wall_thickness_m: float
@@ -99,7 +113,8 @@ def diameter_thickness_ratio(outer_diameter_m: float, wall_thickness_m: float) -
 def hardening_beta(diameter_thickness_ratio: float, rule: BendingRule) -> float:
     """Return max((threshold - D/t)/divisor, 0); clause not stated in source.
 
-    The result is not capped; the caller shall qualify the D/t range.
+    The result is not capped here; ``strength_alpha`` rejects beta > 1, and
+    the caller shall qualify the D/t range.
     """
     _positive("diameter_thickness_ratio", diameter_thickness_ratio)
     for field in fields(rule):
@@ -111,13 +126,19 @@ def hardening_beta(diameter_thickness_ratio: float, rule: BendingRule) -> float:
 
 def strength_alpha(beta_fraction: float, yield_strength_pa: float,
                    tensile_strength_pa: float) -> float:
-    """Return (1-beta)+beta*fu/fy; clause not stated in source."""
+    """Return (1-beta)+beta*fu/fy for 0 <= beta <= 1; clause not stated in source.
+
+    Evaluated as 1 + beta*(fu-fy)/fy, which equals 1 exactly when fu = fy.
+    """
     _nonnegative("beta_fraction", beta_fraction)
+    if beta_fraction > 1:
+        raise ValueError("beta must not exceed 1: alpha would exceed fu/fy")
     _positive("yield_strength_pa", yield_strength_pa)
     _positive("tensile_strength_pa", tensile_strength_pa)
     if tensile_strength_pa < yield_strength_pa:
         raise ValueError("tensile strength must be at least yield strength")
-    alpha = (1 - beta_fraction) + beta_fraction * (tensile_strength_pa / yield_strength_pa)
+    alpha = 1 + beta_fraction * ((tensile_strength_pa - yield_strength_pa)
+                                 / yield_strength_pa)
     return _positive("alpha", alpha)
 
 
@@ -142,7 +163,14 @@ def bending_capacity(inputs: BendingInputs, rule: BendingRule) -> BendingCapacit
 
 @dataclass(frozen=True)
 class RoundnessRule:
-    """Three diameter intervals (m), fractional tolerances and absolute cap (m)."""
+    """Three diameter intervals (m), fractional tolerances and absolute cap (m).
+
+    Interval convention (this module's, not confirmed against a source table):
+    each interval is closed below and open above, [lower, upper). A diameter
+    equal to ``included_below_m`` or ``large_diameter_start_m`` takes the next
+    interval's tolerance; one equal to ``agreement_start_m`` returns
+    ``agreement_required``.
+    """
 
     included_below_m: float
     large_diameter_start_m: float
