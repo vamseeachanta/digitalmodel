@@ -195,6 +195,8 @@ def run_swab_surge(cfg: dict[str, Any]) -> dict[str, Any]:
         "trip": dict(trip),
         "result": result,
     }
+    # Validate echoed inputs too, before the writer creates the output directory.
+    json.dumps(summary, allow_nan=False)
     summary["summary_json"] = str(
         _write_summary(
             cfg,

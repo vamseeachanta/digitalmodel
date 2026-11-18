@@ -115,6 +115,40 @@ def test_nonfinite_section_input_is_rejected(tmp_path, field, value, with_window
     assert not (tmp_path / "results").exists()
 
 
+@pytest.mark.parametrize(
+    "block, field", [("section", "bit_depth"), ("trip", "pull_speed_ft_min")]
+)
+@pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
+@pytest.mark.parametrize("with_window", [True, False])
+def test_nonfinite_extra_summary_input_is_rejected(
+    tmp_path, block, field, value, with_window
+):
+    cfg = _example_config(tmp_path)
+    cfg["swab_surge"][block][field] = value
+    if not with_window:
+        del cfg["swab_surge"]["window"]
+
+    with pytest.raises(ValueError, match="JSON compliant"):
+        run_swab_surge(cfg)
+    assert not (tmp_path / "results").exists()
+
+
+def test_finite_extra_summary_inputs_are_preserved(tmp_path):
+    cfg = _example_config(tmp_path)
+    cfg["swab_surge"]["section"]["bit_depth"] = 12000.0
+    cfg["swab_surge"]["trip"]["pull_speed_ft_min"] = 90.0
+
+    output = run_swab_surge(cfg)
+    saved = json.loads(
+        (tmp_path / SUMMARY).read_text("utf-8"),
+        parse_constant=lambda value: pytest.fail(f"Non-finite JSON number: {value}"),
+    )
+    assert saved["screening_status"] == "pass"
+    for block in ("section", "trip"):
+        assert saved[block] == cfg["swab_surge"][block]
+        assert output["swab_surge"]["summary"][block] == saved[block]
+
+
 @pytest.mark.parametrize("field", ["pore_pressure_emw_ppg", "fracture_emw_ppg"])
 @pytest.mark.parametrize("value", [float("nan"), float("inf"), float("-inf")])
 def test_partial_window_ignores_supplied_nonfinite_limit(tmp_path, field, value):
