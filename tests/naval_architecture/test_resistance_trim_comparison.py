@@ -4,6 +4,7 @@ from dataclasses import FrozenInstanceError
 from decimal import Decimal
 import math
 
+import numpy as np
 import pytest
 
 from digitalmodel.naval_architecture.resistance_trim_comparison import (
@@ -15,10 +16,11 @@ from digitalmodel.naval_architecture.resistance_trim_comparison import (
     relative_change,
     tabulate_trim,
 )
+from digitalmodel.naval_architecture.trim_hydrostatics import end_drafts
 
 
 def example_condition(trim_m=-0.4, speed_m_s=8.0):
-    """Illustrative example: forces are kN, trim is aft minus forward draft."""
+    """Illustrative example: forces are kN, trim is forward minus aft draft."""
     return TrimCondition(trim_m, speed_m_s, ResistanceComponents(420, 260, 160))
 
 
@@ -87,6 +89,41 @@ def test_table_negative_trim_and_selected_reference():
     assert row.power_change_fraction == pytest.approx((420 - 525) / 525)
     assert reference.power_delta_kw == 0
     assert reference.power_change_fraction == 0
+
+
+def test_by_stern_trim_matches_hydrostatics_end_drafts():
+    draft_fwd, draft_aft = end_drafts(draft_m=5.0, trim_m=-0.4)
+    assert draft_aft > draft_fwd
+    condition = example_condition(trim_m=draft_fwd - draft_aft)
+    (row,) = tabulate_trim([condition], absolute_tolerance_kn=0)
+    assert row.condition.trim_m == pytest.approx(-0.4)
+    assert end_drafts(5.0, row.condition.trim_m) == pytest.approx(
+        (draft_fwd, draft_aft)
+    )
+
+
+@pytest.mark.parametrize("scalar", [np.int64, np.float32, np.float64])
+def test_numpy_real_scalars_in_comparison(scalar):
+    condition = TrimCondition(
+        scalar(-1), scalar(8),
+        ResistanceComponents(scalar(420), scalar(260), scalar(160)),
+    )
+    table = tabulate_trim([example_reference(), condition],
+                          absolute_tolerance_kn=scalar(0))
+    assert table[1].condition.trim_m == -1
+    assert table[1].effective_power_kw == pytest.approx(3360)
+    assert table[1].total_delta_kn == pytest.approx(-105)
+    assert table[1].total_change_fraction == pytest.approx(-0.2)
+    assert relative_change(RelativeChangeInput(scalar(420), scalar(525), "kN")) == (
+        pytest.approx(-0.2)
+    )
+
+
+@pytest.mark.parametrize("component", [np.int64(2**62), np.float32(2e38)])
+def test_numpy_component_sum_uses_finite_float_arithmetic(component):
+    total = 2 * float(component)
+    forces = ResistanceComponents(total, component, component)
+    assert component_split_consistent(forces, absolute_tolerance_kn=0)
 
 
 def test_single_row_is_its_own_reference():

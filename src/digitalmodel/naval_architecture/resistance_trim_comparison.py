@@ -1,7 +1,8 @@
 """Resistance-over-trim comparison arithmetic for fixed-speed trim studies.
 
 Inputs: nonnegative resistance magnitudes in kN, speed in m/s, signed trim in
-metres (aft draft minus forward draft). All compared rows require the same speed
+metres (forward draft minus aft draft; negative by the stern, matching
+trim_hydrostatics.end_drafts). All compared rows require the same speed
 and hull/force basis. Draft/loading and method must also match; those metadata
 are caller responsibilities. Negative trim is valid; angles require conversion.
 
@@ -25,6 +26,7 @@ No empirical constants are introduced here.
 
 from dataclasses import dataclass
 from math import isfinite
+from numbers import Real
 from typing import Iterable
 
 from digitalmodel.naval_architecture.holtrop_mennen import effective_power
@@ -32,7 +34,7 @@ from digitalmodel.naval_architecture.holtrop_mennen import effective_power
 
 def _finite(value: float) -> float:
     """Require a finite real scalar; booleans and numeric strings are rejected."""
-    if isinstance(value, bool) or not isinstance(value, (int, float)):
+    if isinstance(value, bool) or not isinstance(value, Real):
         raise ValueError("A finite numeric scalar is required")
     try:
         result = float(value)
@@ -80,7 +82,10 @@ class ResistanceComponents:
 
 @dataclass(frozen=True)
 class TrimCondition:
-    """Signed trim_m = aft minus forward draft; speed_m_s is a magnitude."""
+    """Signed trim_m = draft_fwd - draft_aft; negative is by the stern.
+
+    This matches trim_hydrostatics.end_drafts; speed_m_s is a magnitude.
+    """
 
     trim_m: float
     speed_m_s: float
@@ -130,7 +135,8 @@ def component_split_consistent(
     A finite nonnegative tolerance is required, and a nonfinite sum is rejected.
     """
     tolerance = _nonnegative(absolute_tolerance_kn)
-    component_sum = _finite(components.viscous_kn + components.pressure_kn)
+    component_sum = _finite(_finite(components.viscous_kn)
+                            + _finite(components.pressure_kn))
     residual = _finite(components.total_kn - component_sum)
     return abs(residual) <= tolerance
 
