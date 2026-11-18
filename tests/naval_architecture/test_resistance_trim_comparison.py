@@ -126,6 +126,30 @@ def test_numpy_component_sum_uses_finite_float_arithmetic(component):
     assert component_split_consistent(forces, absolute_tolerance_kn=0)
 
 
+def test_decreasing_unsigned_forces_have_negative_deltas():
+    reference = TrimCondition(
+        0.2, 8, ResistanceComponents(*map(np.uint16, (525, 325, 200))),
+    )
+    condition = TrimCondition(
+        -0.4, 8, ResistanceComponents(*map(np.uint16, (420, 260, 160))),
+    )
+    _, row = tabulate_trim([reference, condition], absolute_tolerance_kn=0)
+    assert (row.total_delta_kn, row.viscous_delta_kn, row.pressure_delta_kn) == (
+        -105, -65, -40,
+    )
+    assert row.total_change_fraction == pytest.approx(-0.2)
+    assert row.effective_power_kw == 3360
+    assert row.power_delta_kw == -840
+
+
+def test_float32_total_does_not_erase_split_residual():
+    forces = ResistanceComponents(np.float32(420), 260, 160.000001)
+    assert not component_split_consistent(forces, absolute_tolerance_kn=0)
+    condition = TrimCondition(-0.4, 8, forces)
+    with pytest.raises(ValueError, match="split"):
+        tabulate_trim([condition], absolute_tolerance_kn=0)
+
+
 def test_single_row_is_its_own_reference():
     condition = example_condition()
     (row,) = tabulate_trim([condition], absolute_tolerance_kn=0)
@@ -162,6 +186,7 @@ def test_common_scaling_preserves_fraction_and_scales_power():
                            ResistanceComponents(840, 520, 320))
     table = tabulate_trim([original, scaled], absolute_tolerance_kn=0)
     assert table[1].effective_power_kw == 2 * table[0].effective_power_kw
+    assert table[1].effective_power_kw == 6720  # 840 kN * 8 m/s = 6720 kW.
     assert table[1].total_change_fraction == 1
     assert relative_change(RelativeChangeInput(840, 1050, "kN")) == pytest.approx(
         float((Decimal(420) - Decimal(525)) / Decimal(525))
@@ -188,8 +213,9 @@ def test_table_rejects_empty_inconsistent_and_different_speed():
             tabulate_trim(rows, absolute_tolerance_kn=0)
 
 
-def test_table_rejects_nearly_equal_speeds():
-    conditions = [example_condition(speed_m_s=8.0),
+@pytest.mark.parametrize("reference_speed", [8.0, np.float32(8)])
+def test_table_rejects_nearly_equal_speeds(reference_speed):
+    conditions = [example_condition(speed_m_s=reference_speed),
                   example_condition(speed_m_s=8.000000001)]
     with pytest.raises(ValueError, match="same speed_m_s"):
         tabulate_trim(conditions, absolute_tolerance_kn=0)

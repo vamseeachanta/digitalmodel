@@ -12,6 +12,7 @@ split residual = total - viscous - pressure; effective power = resistance*speed
 No hull multiplier, propulsive efficiency, interpolation or resistance prediction
 is applied. Effective power inherits the supplied force basis, not shaft power.
 The split check uses only the caller's absolute tolerance, including its boundary.
+Validated real inputs are stored as Python floats before arithmetic.
 
 Limits: arithmetic agreement does not establish CFD convergence, uncertainty,
 scale effects or design suitability. Reference quantities must be nonzero for
@@ -61,8 +62,8 @@ class RelativeChangeInput:
     quantity_unit: str
 
     def __post_init__(self) -> None:
-        _finite(self.value)
-        _finite(self.reference)
+        object.__setattr__(self, "value", _finite(self.value))
+        object.__setattr__(self, "reference", _finite(self.reference))
         if not isinstance(self.quantity_unit, str) or not self.quantity_unit:
             raise ValueError("Comparison unit must be a non-empty string for both values")
 
@@ -76,8 +77,8 @@ class ResistanceComponents:
     pressure_kn: float
 
     def __post_init__(self) -> None:
-        for value in (self.total_kn, self.viscous_kn, self.pressure_kn):
-            _nonnegative(value)
+        for field in ("total_kn", "viscous_kn", "pressure_kn"):
+            object.__setattr__(self, field, _nonnegative(getattr(self, field)))
 
 
 @dataclass(frozen=True)
@@ -92,8 +93,8 @@ class TrimCondition:
     resistance: ResistanceComponents
 
     def __post_init__(self) -> None:
-        _finite(self.trim_m)
-        _nonnegative(self.speed_m_s)
+        object.__setattr__(self, "trim_m", _finite(self.trim_m))
+        object.__setattr__(self, "speed_m_s", _nonnegative(self.speed_m_s))
         if not isinstance(self.resistance, ResistanceComponents):
             raise ValueError("resistance must contain ResistanceComponents")
 
@@ -145,6 +146,9 @@ def effective_power_kw(resistance_kn: float, speed_m_s: float) -> float:
     """Return P_E = resistance_kn*speed_m_s in kW; zero magnitudes are valid.
 
     Reuse the existing SI power product with kN-to-N and W-to-kW conversions.
+    The exact kilo factor is 1000: BIPM, SI Brochure, 9th ed., section 3,
+    Table 7 (SI prefixes):
+    https://www.bipm.org/documents/20126/41483022/SI-Brochure-9.pdf
     Negative/nonfinite inputs and nonfinite intermediate/results are rejected.
     This is effective power on the supplied hull basis; no efficiency is assumed.
     """
