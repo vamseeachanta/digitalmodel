@@ -53,6 +53,11 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
         "src/digitalmodel/infrastructure/utils/pipe_friction.py",
         ("asset-integrity", "field-development"),
     ),
+    # The workflows gate collects tests/scripts/ and tests/workflows/, including
+    # readers of these CI files outside the dedicated harness.
+    (".github/workflows/quality-gates-by-domain.yml", ("workflows",)),
+    ("scripts/ci/detect_touched_domains.py", ("workflows",)),
+    ("scripts/ci/replay_shard_selection.py", ("workflows",)),
     ("scripts/enforcement/", ("workflows",)),
     ("data/bha_database/", ("subsea",)),
     ("data/bha_standards/", ("subsea",)),
@@ -132,10 +137,7 @@ NO_DOMAIN_PATHS = (
     # These paths are covered by CI harness tests or repo-wide
     # quality gates instead of the domain matrix.
     ".github/workflows/quality-gates.yml",
-    ".github/workflows/quality-gates-by-domain.yml",
-    "scripts/ci/detect_touched_domains.py",
     "src/digitalmodel/workflows/automation/quality_gates.py",
-    "tests/scripts/test_detect_touched_domains.py",
     "tests/workflows/automation/test_quality_gates.py",
     "tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py",
 )

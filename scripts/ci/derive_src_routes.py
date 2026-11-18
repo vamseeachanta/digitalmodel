@@ -26,7 +26,7 @@ Units without a route, which keep the full matrix:
 * read by no shard: nothing shows who tests it;
 * not in the table: added after the trace (a new subfolder takes its package's row).
 
-A shard that did not run to the end of its tests is counted as reading every unit.
+Only a passing shard with nonempty read evidence can narrow a route.
 
 Use::
 
@@ -52,11 +52,14 @@ ROOT = Path(__file__).resolve().parents[2]
 SRC = "src/digitalmodel"
 EVERY = "shared core: every shard reads it"
 NOBODY = "no shard opened it during the trace"
-TRUSTED = ("pass", "fail")  # the tests ran to the end, so the record is complete
 DOTTED = re.compile(r"\bdigitalmodel\.([A-Za-z_]\w*)(?:\.([A-Za-z_]\w*))?")
 PATHED = re.compile(r"src[/\\]+digitalmodel[/\\]+([A-Za-z_]\w*)(\.py)?(?:[/\\]+([A-Za-z_]\w*))?")
 FROM = re.compile(r"^[ \t]*from[ \t]+digitalmodel(?:\.([A-Za-z_]\w*))?[ \t]+import[ \t]+(\([^)]*\)|[^\n]*)",
                   re.MULTILINE)
+
+
+class StaleTestRootError(ValueError):
+    """A declared test root no longer matches the repository tree."""
 
 
 def keys_for(record: str) -> list[str]:
@@ -113,7 +116,10 @@ def named_units(root: Path, domains: list) -> dict[str, set[str]]:
         for item in domain.roots:
             matches = list(root.glob(item))
             if not matches:
-                raise ValueError(f"{domain.name}: test root {item!r} matched nothing")
+                raise StaleTestRootError(
+                    f"Shard {domain.name} has a stale test root {item!r}. "
+                    "Please remove or update the entry in tests/DOMAINS.md."
+                )
             for path in matches:
                 if path.is_dir():
                     files.update(path.rglob("*.py"))
@@ -175,7 +181,7 @@ def build(root: Path, reads: dict[str, set[str]], commit: str, shards: dict[str,
         for key in found:
             readers[key].add(shard)
     untraced = {name for name in names
-                if not reads.get(name) or shards.get(name) not in TRUSTED}
+                if not reads.get(name) or shards.get(name) != "pass"}
     for shards_of_unit in readers.values():
         if shards_of_unit:
             shards_of_unit |= untraced
@@ -285,4 +291,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        raise SystemExit(main())
+    except StaleTestRootError as exc:
+        raise SystemExit(str(exc)) from None

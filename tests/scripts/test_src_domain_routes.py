@@ -243,7 +243,7 @@ READS = {
 }
 
 
-COMPLETED = {"alpha": "pass", "beta": "fail", "gamma": "pass"}
+COMPLETED = {"alpha": "pass", "beta": "pass", "gamma": "pass"}
 
 
 def test_globbed_roots_read_every_matching_test(derive, tmp_path) -> None:
@@ -262,6 +262,7 @@ def test_unmatched_root_is_an_error(derive, tmp_path, pattern) -> None:
     with pytest.raises(ValueError) as exc:
         derive.named_units(tmp_path, [domain])
     assert pattern in str(exc.value) and "alpha" in str(exc.value)
+    assert "remove or update the entry in tests/DOMAINS.md" in str(exc.value)
 
 
 def test_trace_without_a_result_reads_everything(derive, tmp_path) -> None:
@@ -295,7 +296,7 @@ def test_a_shard_that_did_not_finish_reads_everything(derive, tmp_path) -> None:
     reads = {name: set(paths) for name, paths in READS.items()}
     reads["gamma"] = set()
     table = derive.build(tmp_path, reads, commit="c" * 40,
-                         shards={"alpha": "pass", "beta": "fail", "gamma": "timeout"})
+                         shards={**COMPLETED, "gamma": "timeout"})
     assert table["routes"]["src/digitalmodel/solvers/orcaflex/"] == ["alpha", "gamma"]
     assert table["routes"]["src/digitalmodel/engine.py"] == ["beta", "gamma"]
     assert table["unrouted"]["src/digitalmodel/lonely/"] == derive.NOBODY
@@ -361,7 +362,11 @@ def test_committed_table_names_real_shards_and_real_paths(detector) -> None:
 
 def test_committed_table_covers_every_unit_the_tests_name(derive) -> None:
     payload = json.loads(TABLE.read_text(encoding="utf-8"))
-    assert derive.drift(ROOT, payload) == []
+    try:
+        gaps = derive.drift(ROOT, payload)
+    except derive.StaleTestRootError as exc:
+        pytest.fail(str(exc), pytrace=False)
+    assert gaps == []
 
 
 def test_group_rows_contain_their_subfolder_rows() -> None:
@@ -401,3 +406,78 @@ def test_hook_records_opens_and_listings_under_the_source_root(trace, tmp_path) 
     records = trace.read_records(tmp_path / "out")
     assert records == {"shard": {"pkg/sub/data.txt", "pkg/", "/"}}
     assert len(list(out.glob("*.txt"))) == 2, "the child process writes its own record"
+
+
+@pytest.fixture
+def replay(monkeypatch):
+    monkeypatch.syspath_prepend(str(CI))
+    return load("replay_shard_selection")
+
+
+@pytest.fixture
+def selection_merges():
+    path = Path(__file__).with_name("fixtures") / "selection_merges.json"
+    return json.loads(path.read_text())
+
+
+def test_workflow_merge_selects_gate_owner(detector, replay, selection_merges):
+    merge = selection_merges["workflow"]
+    domains = detector.parse_domains(ROOT / "tests/DOMAINS.md")
+
+    def select(paths):
+        return {d.name for d in detector.touched_domains(paths, domains)}
+
+    for path in merge["paths"]:
+        assert set(merge["owners"]) <= select([path]), path
+    result = replay.assess(merge["sha"], merge["parent"], selected=select(merge["paths"]),
+                           owners=merge["owners"], unowned=[], problems=merge["issues"],
+                           failures=[], reports={}, reviewed={})
+    assert result["missing"] == [] and not result["verified"]
+
+
+def test_capabilities_merge_keeps_subsea_baseline_failures(detector, replay, selection_merges):
+    merge = selection_merges["capabilities"]
+    current, parent, later = selection_merges["subsea"]
+    reports = {(r["sha"], r["run"], r["shard"]): dict.fromkeys(r["failed"], "failed")
+               for r in (current, parent, later)}
+    domains = detector.parse_domains(ROOT / "tests/DOMAINS.md")
+    selected = {d.name for d in detector.touched_domains(merge["paths"], domains)}
+    assert selected == set(merge["owners"])
+    assert current["run"] in merge["runs"]
+    pair = (current["run"], "subsea")
+    reviewed = {pair: parent["run"]}
+
+    def assess():
+        return replay.assess(merge["sha"], merge["parent"], selected=selected,
+                             owners=merge["owners"], unowned=[], problems=merge["issues"],
+                             failures=[pair], reports=reports, reviewed=reviewed)
+
+    result = assess()
+    assert result["verified"] and result["failed"] == ["subsea"]
+    assert result["baseline"] == [dict(shard="subsea", run=current["run"],
+                                       parent_run=parent["run"], nodes=sorted(current["failed"]))]
+    # A new failure, an absent report or a report from the next SHA cannot excuse the shard.
+    assert set(later["confirmed_passes"]) == set(current["failed"])
+    reports[merge["sha"], *pair]["tests/new.py::test_new"] = "failed"
+    assert assess()["missing"] == ["subsea"]
+    reports.pop((merge["sha"], *pair))
+    assert not assess()["verified"]
+    reports[merge["sha"], *pair] = dict.fromkeys(current["failed"], "failed")
+    reviewed[pair] = later["run"]
+    assert assess()["missing"] == ["subsea"]
+
+
+def test_failed_trace_keeps_shard_in_every_route(derive, tmp_path):
+    make_tree(tmp_path)
+    table = derive.build(tmp_path, READS, "c" * 40, {**COMPLETED, "beta": "fail"})
+    assert table["routes"]
+    assert all("beta" in row for row in table["routes"].values())
+
+
+def test_replay_distinguishes_declared_roots_from_gate_operands(replay, monkeypatch):
+    shard = "solver-smoke"
+    declared = {shard: {"tests/parametric/", "tests/solver/"}}
+    commands = {shard: ({"tests/solver/"}, set())}
+    monkeypatch.setattr(replay, "ownership", lambda ref: (declared, commands))
+    paths = ["tests/parametric/test_refresh.py", "tests/solver/test_smoke.py", "tests/test_loose.py"]
+    assert replay.changed_owners(paths, "parent", "merge") == ([shard], [paths[2]], [paths[0]])
