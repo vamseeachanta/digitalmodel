@@ -27,6 +27,40 @@ def test_report_matched_timings(tmp_path):
     assert data["summary"]["sweep/two"]["checkout"]["unknown"] == 1
 
 
+def test_carried_over_job_counts_once_and_genuine_rerun_counts_again(tmp_path):
+    snapshot = FIXTURE["snapshot"]
+    first = dict(snapshot["1.json"]["jobs"][0], run_attempt=1)
+    copy = dict(first, id=12, run_attempt=2)
+    rerun = dict(copy, id=13, started_at="2026-11-17T00:01:00Z",
+                 completed_at="2026-11-17T00:01:50Z", steps=[])
+    # Later attempts can appear first. Other runs and shards can have identical clocks.
+    for name, payload in snapshot.items():
+        if name == "1.json":
+            payload = {"jobs": [copy, rerun, first]}
+        (tmp_path / name).write_text(json.dumps(payload))
+
+    data = timing.report(tmp_path)
+    assert {j["job"] for j in data["jobs"]} == {11, 13, 21, 22}
+    assert data["copies_removed"] == 1
+    assert data["summary"]["sweep/*"]["wall_s"]["n"] == 4
+    assert data["summary"]["sweep/*"]["domain_gate"]["n"] == 3
+
+
+@pytest.mark.parametrize("missing", ["started_at", "completed_at"])
+def test_missing_execution_timestamp_never_merges_jobs(tmp_path, missing):
+    first = dict(FIXTURE["snapshot"]["1.json"]["jobs"][0], run_attempt=1)
+    first.pop(missing)
+    second = dict(first, id=12, run_attempt=2)
+    second[missing] = None
+    (tmp_path / "index.json").write_text(json.dumps({"runs": [{"id": 1, "workflow": "pr"}]}))
+    (tmp_path / "1.json").write_text(json.dumps({"jobs": [first, second]}))
+
+    data = timing.report(tmp_path)
+    assert [j["job"] for j in data["jobs"]] == [11, 12]
+    assert data["summary"]["pr/one"]["wall_s"] == dict(n=0, unknown=2, median=None, p90=None)
+    assert data["copies_removed"] == 0
+
+
 def test_missing_run_and_test_step_fail_closed(tmp_path):
     (tmp_path / "index.json").write_text(json.dumps({"runs": [{"id": 1, "workflow": "pr"}]}))
     with pytest.raises(FileNotFoundError):

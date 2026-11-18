@@ -186,11 +186,25 @@ def stats(values):
                 p90=known[math.ceil(0.9 * len(known)) - 1] if known else None)
 
 
+def executed_jobs(rows):
+    """Retain the earliest attempt for each fully timestamped execution in one run."""
+    seen = set()
+    for row in sorted(rows, key=lambda job: job.get("run_attempt", 1)):
+        start, end = row.get("started_at"), row.get("completed_at")
+        if start and end:
+            key = (row["name"], start, end)
+            if key in seen:
+                continue
+            seen.add(key)
+        yield row
+
+
 def report(folder):
     index = json.loads((folder / "index.json").read_text())
     groups = defaultdict(lambda: defaultdict(list))
     jobs = []
     pending = []
+    copies_removed = 0
     for run in index["runs"]:
         snap = json.loads((folder / f"{run['id']}.json").read_text())
         if snap.get("status", run.get("status", "completed")) != "completed":
@@ -198,7 +212,9 @@ def report(folder):
             continue
         phase_file = folder / f"{run['id']}-phases.json"
         phases = json.loads(phase_file.read_text()) if phase_file.exists() else {}
-        for row in snap["jobs"]:
+        rows = list(executed_jobs(snap["jobs"]))
+        copies_removed += len(snap["jobs"]) - len(rows)
+        for row in rows:
             job = measure(row, run, folder, phases.get(str(row["id"])))
             jobs.append(job)
             fields = dict(job["classes"], **{k: job.get(k) for k in
@@ -208,7 +224,8 @@ def report(folder):
                 for metric, value in fields.items():
                     groups[f"{run['workflow']}/{key}"][metric].append(value)
     summary = {group: {k: stats(v) for k, v in fields.items()} for group, fields in groups.items()}
-    return dict(window=index.get("window"), runs=index["runs"], pending_runs=pending, jobs=jobs, summary=summary)
+    return dict(window=index.get("window"), runs=index["runs"], pending_runs=pending,
+                copies_removed=copies_removed, jobs=jobs, summary=summary)
 
 
 def main():

@@ -4,14 +4,14 @@
 
 ## Seven-day measurements
 
-**Measured · run sets S and P.** The creation window is 2026-11-11T14:00:00Z through 2026-11-18T14:00:00Z. S includes every Full Matrix Sweep event. P includes pull requests in Quality Gates by Domain. The index records every run ID and head SHA. Each job record carries the run ID, attempt and job ID. Jobs from reruns count once per job ID. All indexed runs reached a terminal state by snapshot completion.
+**Measured · run sets S and P.** The creation window is 2026-11-11T14:00:00Z through 2026-11-18T14:00:00Z. S includes every Full Matrix Sweep event. P includes pull requests in Quality Gates by Domain. The index records every run ID and head SHA. Each job record carries the run ID, attempt and job ID. Within each run, records with the same shard name, start time and completion time count as one execution. The earliest attempt supplies the record. A missing start or completion time keeps the record separate. This removed 147 carried-over job records. All indexed runs reached a terminal state by snapshot completion.
 
 Sweep 43998853169 used `68a90cad09e1fe9c07935aaf421b79bcf9ad9526`. The W9 static history audit and the local collection use the later revision identified below. S comprises 99 push, 7 schedule runs. Runs with no named shard jobs remain in the window denominator. Their individual causes were outside the timing capture.
 
 | Run set | Runs in window | Runs with shard jobs | Shard jobs | Full depth / shallow / unknown | Known install / pytest readings |
 | --- | --- | --- | --- | --- | --- |
 | S | 106 | 101 | 2222 | 2222 / 0 / 0 | 2220 / 2220 |
-| P | 611 | 371 | 7322 | 6826 / 0 / 496 | 6736 / 6643 |
+| P | 611 | 371 | 7175 | 6826 / 0 / 349 | 6736 / 6643 |
 
 Each timing cell gives median / nearest-rank p90. Parentheses in the shard tables give the known sample size for that cell. Step durations come from Actions. The install interval runs from command launch through the last observed install completion before pytest. Pytest supplies its own elapsed time. The domain and solver steps contain these intervals. Upload and teardown consume part of job time. Setup includes runner initialization, checkout, PR merge, Python, uv, conditional Node, formatter and system installs, report directory creation, reading the gate command, register selection and observed package installs. All pytest includes domain and solver pytest. Each percentage uses that job’s elapsed time before aggregation.
 
@@ -48,35 +48,35 @@ Skipped steps have no observation. A missing timestamp, archive, install boundar
 
 | Shard | Jobs | Job (s) | Checkout (s) | Domain install (s) | Domain pytest (s) | Setup incl. install (%) | All pytest (%) |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| asset-integrity | 332 | 182/212 (309) | 65/82 (314) | 21/28 (303) | 54.1/68.3 (301) | 62.6/66.9 (300) | 28.9/37.3 (300) |
-| capabilities | 334 | 156/192 (313) | 66/90 (315) | 20.5/27.5 (308) | 30.8/39.6 (307) | 72.7/76.3 (307) | 19.3/26.2 (307) |
-| cathodic-protection | 332 | 186/218 (313) | 66/85 (316) | 20.7/28.2 (306) | 59/74.3 (305) | 61.5/66.7 (305) | 30.6/39.4 (305) |
-| citations | 329 | 130/159 (313) | 64/88 (315) | 21.4/26.6 (307) | 6.7/8.3 (307) | 85.3/88.2 (305) | 4.9/6.4 (305) |
-| contracts | 359 | 888/1010 (329) | 65/87 (340) | 21/28.2 (333) | 744.9/871 (322) | 13.7/17.1 (322) | 84.7/88.1 (322) |
-| field-development | 329 | 148/184 (310) | 66/98 (312) | 20.7/28 (303) | 23.4/29.3 (302) | 76.3/79.5 (301) | 14.9/19.7 (301) |
-| hydrodynamics-diffraction | 329 | 823/1143 (299) | 66/86 (309) | 20.8/28.5 (300) | 662.7/1014.5 (291) | 14.4/17.8 (290) | 83/89.7 (290) |
-| hydrodynamics-other | 329 | 589/764 (303) | 66/90 (315) | 20.1/27.6 (306) | 429.5/628.4 (295) | 20.6/24.9 (295) | 75.2/83.7 (295) |
-| hydrodynamics-passing-ship | 329 | 150/183 (312) | 66/93 (314) | 20.8/27.6 (306) | 26/31.6 (305) | 74.8/78.8 (304) | 16.3/21.9 (304) |
-| infrastructure-core | 329 | 219/251 (310) | 66/89 (311) | 20.4/28.2 (302) | 89.2/105.2 (301) | 52.4/56.2 (301) | 39.9/47.6 (301) |
-| infrastructure-other | 330 | 307/365 (306) | 66/94 (317) | 20.6/28.4 (308) | 177.1/209.6 (300) | 36.8/42.6 (299) | 58.2/62.5 (299) |
-| marine-engineering | 329 | 221/261 (308) | 65/91 (310) | 20.6/27.8 (303) | 87.9/112.1 (301) | 53.1/58.5 (301) | 40/49.6 (301) |
-| marine-ops-other | 329 | 274/319 (305) | 66/91 (312) | 20.6/28.4 (301) | 133.1/170.7 (298) | 44.5/50.3 (297) | 49.3/59.9 (297) |
-| misc | 329 | 137/175 (308) | 66/96 (310) | 20.6/28.9 (303) | 14.4/16.6 (303) | 80.9/84.5 (301) | 9.6/12.6 (301) |
-| naval-architecture | 331 | 180/212 (305) | 66/89 (310) | 20.3/28.3 (301) | 53.3/65.9 (300) | 63.5/68.4 (298) | 28.7/36.8 (298) |
-| orcaflex | 329 | 199/227 (306) | 66/81 (312) | 20.8/26.9 (298) | 70.2/88.4 (296) | 57.9/63.8 (295) | 34.7/44 (295) |
-| orcaflex-solver | 329 | 946/1155 (299) | 65.5/84 (314) | 20.2/26.7 (304) | 808.3/1032.8 (292) | 12.5/14.8 (291) | 85.9/89.8 (291) |
-| solver-smoke | 333 | 425/467 (305) | 66/90 (312) | 21/31.1 (304) | 269.6/313.3 (298) | 31.3/37 (298) | 64.9/71.5 (298) |
-| specialized | 331 | 1023/1468 (297) | 66/89 (311) | 16.3/22.6 (302) | 43.3/55.4 (300) | 13.6/17.5 (289) | 84.2/90.8 (289) |
-| structural | 331 | 341/391 (306) | 65/91 (311) | 21.3/29.4 (301) | 202.7/244.9 (298) | 35.2/41.4 (298) | 60/66.9 (298) |
-| subsea | 339 | 501.5/614 (312) | 66/90 (319) | 20.4/28.3 (311) | 357.1/476.4 (305) | 23.9/27.8 (305) | 72.7/80.2 (305) |
-| workflows | 351 | 616/694 (323) | 66/88 (333) | 20.1/27.8 (326) | 486.5/566.6 (316) | 18.7/21.7 (316) | 78.3/82.4 (316) |
+| asset-integrity | 325 | 182/210 (302) | 65/81 (307) | 21/28 (303) | 54.1/68.3 (301) | 62.6/66.9 (300) | 28.9/37.3 (300) |
+| capabilities | 329 | 156/192 (308) | 66/88 (310) | 20.5/27.5 (308) | 30.8/39.6 (307) | 72.7/76.3 (307) | 19.3/26.2 (307) |
+| cathodic-protection | 325 | 186/218 (306) | 66/85 (309) | 20.7/28.2 (306) | 59/74.3 (305) | 61.5/66.7 (305) | 30.6/39.4 (305) |
+| citations | 322 | 130.5/158 (306) | 63.5/87 (308) | 21.4/26.6 (307) | 6.7/8.3 (307) | 85.3/88.2 (305) | 4.9/6.4 (305) |
+| contracts | 352 | 890/1010 (322) | 65/88 (333) | 21/28.2 (333) | 744.9/871 (322) | 13.7/17.1 (322) | 84.7/88.1 (322) |
+| field-development | 322 | 148/185 (303) | 66/99 (305) | 20.7/28 (303) | 23.4/29.3 (302) | 76.3/79.5 (301) | 14.9/19.7 (301) |
+| hydrodynamics-diffraction | 322 | 820.5/1143 (292) | 66/86 (302) | 20.8/28.5 (300) | 662.7/1014.5 (291) | 14.4/17.8 (290) | 83/89.7 (290) |
+| hydrodynamics-other | 322 | 588.5/764 (296) | 66/90 (308) | 20.1/27.6 (306) | 429.5/628.4 (295) | 20.6/24.9 (295) | 75.2/83.7 (295) |
+| hydrodynamics-passing-ship | 322 | 150/183 (305) | 66/93 (307) | 20.8/27.6 (306) | 26/31.6 (305) | 74.8/78.8 (304) | 16.3/21.9 (304) |
+| infrastructure-core | 322 | 220/251 (303) | 66/89 (304) | 20.4/28.2 (302) | 89.2/105.2 (301) | 52.4/56.2 (301) | 39.9/47.6 (301) |
+| infrastructure-other | 324 | 307/359 (300) | 66/92 (311) | 20.6/28.4 (308) | 177.1/209.6 (300) | 36.8/42.6 (299) | 58.2/62.5 (299) |
+| marine-engineering | 323 | 221/260 (302) | 65/91 (304) | 20.6/27.8 (303) | 87.9/112.1 (301) | 53.1/58.5 (301) | 40/49.6 (301) |
+| marine-ops-other | 322 | 273/319 (298) | 66/90 (305) | 20.6/28.4 (301) | 133.1/170.7 (298) | 44.5/50.3 (297) | 49.3/59.9 (297) |
+| misc | 322 | 137/175 (301) | 66/96 (303) | 20.6/28.9 (303) | 14.4/16.6 (303) | 80.9/84.5 (301) | 9.6/12.6 (301) |
+| naval-architecture | 324 | 180/212 (298) | 66/89 (303) | 20.3/28.3 (301) | 53.3/65.9 (300) | 63.5/68.4 (298) | 28.7/36.8 (298) |
+| orcaflex | 322 | 199/227 (299) | 66/81 (305) | 20.8/26.9 (298) | 70.2/88.4 (296) | 57.9/63.8 (295) | 34.7/44 (295) |
+| orcaflex-solver | 322 | 946/1153 (292) | 65/85 (307) | 20.2/26.7 (304) | 808.3/1032.8 (292) | 12.5/14.8 (291) | 85.9/89.8 (291) |
+| solver-smoke | 327 | 425/467 (299) | 66/90 (306) | 21/31.1 (304) | 269.6/313.3 (298) | 31.3/37 (298) | 64.9/71.5 (298) |
+| specialized | 324 | 1025/1468 (290) | 66/89 (304) | 16.3/22.6 (302) | 43.3/55.4 (300) | 13.6/17.5 (289) | 84.2/90.8 (289) |
+| structural | 324 | 341/391 (299) | 65/91 (304) | 21.3/29.4 (301) | 202.7/244.9 (298) | 35.2/41.4 (298) | 60/66.9 (298) |
+| subsea | 333 | 501.5/616 (306) | 66/90 (313) | 20.4/28.3 (311) | 357.1/476.4 (305) | 23.9/27.8 (305) | 72.7/80.2 (305) |
+| workflows | 345 | 616/694 (317) | 66/88 (327) | 20.1/27.8 (326) | 486.5/566.6 (316) | 18.7/21.7 (316) | 78.3/82.4 (316) |
 
 **Measured · per step class, run sets S and P.** Values are seconds. Conditional classes use jobs where the step executed. The full shard-by-step cross-tabulation is in `summary`.
 
 | Step class | S median/p90 | P median/p90 |
 | --- | --- | --- |
 | Checkout | 65/90 | 66/89 |
-| Domain gate (includes install and pytest) | 116/692 | 118/692 |
+| Domain gate (includes install and pytest) | 116/692 | 119/692 |
 | Formatter dependency install | 3/4 | 3/4 |
 | Merge | n/a | 1/2 |
 | Set up Node | 1/3 | 1/4 |
@@ -105,10 +105,10 @@ Skipped steps have no observation. A missing timestamp, archive, install boundar
 
 | Reading | Known / executed steps | Median/p90 |
 | --- | --- | --- |
-| Install (s) | 306/307 | 14.2/18.1 |
-| Pytest (s) | 296/307 | 801.5/1269.3 |
-| Collected (nodes) | 306/307 | 1318/1408 |
-| Passed (nodes) | 296/307 | 1318/1408 |
+| Install (s) | 299/300 | 14.3/18.1 |
+| Pytest (s) | 289/300 | 802.1/1269.8 |
+| Collected (nodes) | 299/300 | 1318/1408 |
+| Passed (nodes) | 289/300 | 1318/1408 |
 
 **Measured · local collection at `c90ef11aa6bc77047215e753f5c3290c73e57635`, Python 3.11.18.** Base package versions matched. The solver environment added xslope 1.0.3 and gmsh 4.15.2. The five sorted lists and their digests are in the job folder.
 
@@ -124,7 +124,7 @@ Skipped steps have no observation. A missing timestamp, archive, install boundar
 
 The additional nodes come from `test_slope_stability.py`. The controlled local comparison used the editable test extra in both environments. The ordinary specialized CI gate overrides a dependency at its upstream main revision. The separate solver step installs the editable test extra. The sweep runs the ordinary gate alone.
 
-**Measured · P, successful specialized jobs with a successful solver step.** The ordinary gate's contiguous geotechnical progress interval had median/p90 12.6/18.7 s across 289 of 296 paired jobs. The interval runs from the last progress row before the geotechnical cases through their final progress row.
+**Measured · P, successful specialized jobs with a successful solver step.** The ordinary gate's contiguous geotechnical progress interval had median/p90 12.6/18.7 s across 289 of 289 paired jobs. The interval runs from the last progress row before the geotechnical cases through their final progress row.
 
 **W6b recommendation and Estimate.** Retain both PR executions. If a future coverage-gated comparison establishes equivalence for both environments, removing the duplicate base execution could save about 13 runner-seconds per comparable PR job across the sampled revisions. The corresponding interval in sweep 43998853169, job 133761278029, was 12.025 s. The estimate excludes collection and the solver execution that would still run.
 
@@ -165,22 +165,23 @@ Static inspection at `c90ef11aa6bc77047215e753f5c3290c73e57635` covered the 22 c
 
 All PR shards also run `merge-base` in the local merge guard before tests. An initially shallow PR checkout needs the existing fetch, deepen and unshallow fallback to produce the same merged tree. Scheduled sweeps have no PR merge guard. Before changing depth, make the literal zero-depth assertions in `tests/materials/test_database.py` and `tests/solvers/orcawave/diffraction/test_pack_lint.py` check effective depth for each protected shard. Verify the same test outcomes, skip reasons and line coverage on the affected paths.
 
-From the audited checkout, `python3 "$JOB/history_audit.py"` regenerates `history-audit.json` in the evidence folder. The file records selected paths, ignores, file-list hashes, matching lines and references to scripts and modules containing Git reads. Dynamic calls can escape a static scan.
+The history audit records selected paths, ignores, file-list hashes, matching lines and references to scripts and modules containing Git reads. Dynamic calls can escape a static scan.
 
 ## Reproduction
 
-Run from the measured checkout. Set `JOB` to the retained job folder. Fetch into a new directory to repeat acquisition, or run only the report commands for the archived observation.
+Run these commands from the repository root with `JOB` set to the retained evidence folder. The inputs are the timing snapshots (including attempt archives and solver logs), reference JUnit archives and index, and geotechnical node lists and outcomes. The static audit reads Git objects at the pinned local-collection revision. The commands run offline.
 
 ```sh
-python3 scripts/ci/step_timings.py fetch "$JOB/new-snapshots" --end 2026-11-18T14:00:00+00:00
+set -e
 python3 scripts/ci/step_timings.py report "$JOB/snapshots" > "$JOB/report.json"
-python3 "$JOB/reference-junit.py" report > "$JOB/reference-junit.json"
-python3 "$JOB/anchor_commands.py" > "$JOB/gate-commands.json"
-python3 "$JOB/render.py" "$JOB"
-wc -l "$JOB"/geotechnical/*.nodes
+python3 scripts/ci/step_timings_junit.py "$JOB" > "$JOB/reference-junit.json"
+python3 scripts/ci/step_timings_commands.py "$JOB" > "$JOB/gate-commands.json"
+python3 scripts/ci/step_timings_history.py "$JOB" > "$JOB/history-audit.json"
+python3 scripts/ci/step_timings_render.py "$JOB" > "$JOB/step-timings-20261118.md"
+cmp "$JOB/step-timings-20261118.md" docs/ci/step-timings-20261118.md
 ```
 
-The renderer prints this document from the report and retained evidence. For the exact run IDs behind a shard figure, select its workflow, shard and non-null metric. For example:
+For the exact run IDs behind a shard figure, select its workflow, shard and non-null metric. For example:
 
 ```sh
 jq '[.jobs[] | select(.workflow=="pr" and .shard=="specialized" and .pytest_s!=null) | .run] | unique' "$JOB/report.json"
