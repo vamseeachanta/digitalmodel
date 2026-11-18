@@ -1,6 +1,9 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Rectangular drag areas and element centres with caller-supplied masks.
 
-Method extracted from a legacy engineering workbook. For column i and row j,
+Method extracted from a legacy engineering workbook. For zero-based column and row indices,
 centres are L*((i+1/2)/nx-1/2), W*((j+1/2)/ny-1/2), z=0; areas are
 mask_x*Ax/ny, mask_y*Ay/nx, and Az_gross*(1-p)/(nx*ny). SI units only.
 The x direction follows length and y follows width. The origin is the plate
@@ -15,14 +18,21 @@ Input gaps: grid count selection, lateral masks and their physical basis are
 caller responsibilities; no empirical thresholds or lookup tables are supplied.
 Lateral totals are Ax*sum(mask_x)/ny and Ay*sum(mask_y)/nx. Opposite face
 masks can duplicate projected area, so masks are never normalized implicitly.
-Only the vertical total is constrained to Az_gross*(1-p). No convergence,
+The vertical total is Az_gross*(1-p). Each stored positive area must be within
+1e-12 of its target in relative terms. Since all areas are nonnegative, this
+also bounds the relative allocation error in their total. No convergence,
 shielding, tilt, sea-state response, mass distribution or model export is
 established. Hydrodynamic coefficients remain in the existing rectangular
 hydrodynamics solver; its physical applicability requires separate assessment.
 """
 from dataclasses import dataclass
+from fractions import Fraction
 import math
-from numbers import Real
+from numbers import Integral, Real
+from sys import float_info
+
+
+_AREA_REL_TOL = Fraction(1, 10**12)
 
 
 def _nonnegative_number(name: str, value: float) -> float:
@@ -41,8 +51,9 @@ def _nonnegative_number(name: str, value: float) -> float:
 class RectangularDragGrid:
     """Required SI geometry/areas, dimensionless counts, fraction and masks.
 
-    x/y areas are already effective areas; perforation is applied only to the
-    gross z area. Each mask is a dimensionless weight in [0,1] per element.
+    The x/y areas are already effective. Perforation applies only to the gross
+    z area. Supply each mask as a tuple or list of dimensionless weights in
+    [0,1], one per element in row-major order. A tuple copy is stored.
     """
 
     length_m: float
@@ -57,10 +68,12 @@ class RectangularDragGrid:
     mask_y: tuple[float, ...]
 
     def __post_init__(self) -> None:
+        """Validate grid inputs and store immutable masks and native integer counts."""
         for name in ("count_x", "count_y"):
             count = getattr(self, name)
-            if isinstance(count, bool) or not isinstance(count, int) or count <= 0:
+            if isinstance(count, bool) or not isinstance(count, Integral) or count <= 0:
                 raise ValueError(f"{name} must be a positive integer")
+            object.__setattr__(self, name, int(count))
         for name in ("length_m", "width_m", "drag_area_x_m2", "drag_area_y_m2",
                      "gross_drag_area_z_m2", "perforation_fraction"):
             object.__setattr__(self, name, _nonnegative_number(name, getattr(self, name)))
@@ -90,10 +103,15 @@ class DragElement:
     drag_area_z_m2: float
 
 
-def _scaled_area(area_m2: float, weight: float, count: int) -> float:
-    value = area_m2 * weight / count
-    if not math.isfinite(value) or (area_m2 > 0 and weight > 0 and value == 0):
-        raise ValueError("positive allocated area is not representable")
+def _scaled_area(area_m2: float, weight: float | Fraction, count: int) -> float:
+    value = area_m2 * float(weight) / count
+    if value < float_info.min and area_m2 > 0 and weight > 0:
+        # Subnormal rounding has an absolute step. Compute the target exactly
+        # so rounding the product or the tolerance cannot conceal a large loss.
+        target = Fraction(area_m2) * Fraction(weight) / count
+        value = float(target)
+        if abs(Fraction(value) - target) > _AREA_REL_TOL * target:
+            raise ValueError("allocated area exceeds the relative rounding tolerance of 1e-12")
     return value
 
 
@@ -119,7 +137,9 @@ def rectangular_drag_elements(grid: RectangularDragGrid) -> tuple[DragElement, .
     count = grid.count_x * grid.count_y
     xs = _axis_centres(grid.count_x, grid.length_m)
     ys = _axis_centres(grid.count_y, grid.width_m)
-    area_z = _scaled_area(grid.gross_drag_area_z_m2, 1-grid.perforation_fraction, count)
+    # Keep the exact complement for the rounding check at the subnormal limit.
+    solid_fraction = 1 - Fraction(grid.perforation_fraction)
+    area_z = _scaled_area(grid.gross_drag_area_z_m2, solid_fraction, count)
     elements = []
     for j in range(grid.count_y):
         for i in range(grid.count_x):
