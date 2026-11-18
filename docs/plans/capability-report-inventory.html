@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Capability report inventory plan</title>
+<style>
+body { font: 16px system-ui; line-height: 1.5; max-width: 850px; margin: 2rem auto; padding: 0 1rem; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #bbb; padding: .5rem; text-align: left; }
+a { overflow-wrap: anywhere; }
+</style>
+</head>
+<body>
+<h1>Capability report inventory plan</h1>
+<h2>Summary</h2>
+<p>The capability inventory will distinguish reviewed evidence from engineering qualification using explicit observations and source digests.</p>
+<h2>Revision history</h2>
+<table>
+<thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>0</td><td>2026-10-25</td><td>The inventory scope, reviewed inputs and acceptance checks will be recorded so that the implementation can be assessed against an explicit plan.</td></tr></tbody>
+</table>
+<h2>Plan-lite</h2>
+<ol>
+<li><strong>Scope:</strong> Work will remain inventory-only. Tracked HTML pages under the declared roots will be enumerated, and the reviewed subset will be summarized. Report production, engineering calculations and website integration will remain outside this scope.</li>
+<li><strong>Inputs:</strong> Explicit reviewed observations will supply evidence status, qualification, criteria, limitations, observation time and source digests through the <a href="../audits/capability-report-inventory.json">saved JSON observations</a>.</li>
+<li><strong>Validation:</strong> The <a href="../../scripts/reporting/capability_report_inventory.py">inventory builder</a> will validate tracked public source paths and digest coverage, reject stale source digests, and preserve the reviewed judgments.</li>
+<li><strong>Outputs:</strong> The JSON inventory and <a href="../audits/capability-report-inventory.html">HTML inventory</a> will be deterministic for unchanged observations and sources. Discovery counts and gaps will be derived separately from observations; observation time will be preserved without a new generation timestamp.</li>
+<li><strong>Verification:</strong> The <a href="../../tests/reporting/test_capability_report_inventory.py">focused tests</a> will exercise evidence boundaries, invalid inputs, stable ordering and output safety. Saved observations will be used to rebuild both artifacts byte for byte; source digests, local links and record counts will be checked independently.</li>
+</ol>
+<h2>Acceptance and limits</h2>
+<p>Acceptance will require the focused tests to pass, both reviewed artifacts to rebuild byte for byte, every recorded source digest to match its source bytes, and every local link to resolve. RETAINED will describe accessible records against a named criterion; it will not establish engineering qualification. Unreviewed pages and unresolved evidence gaps will remain explicit.</p>
+</body>
+</html>

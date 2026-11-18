@@ -1,0 +1,3838 @@
+{
+  "preparation": {
+    "input_sha256": "b8a256644fa34cbb5a4c4b88ef3589396a4a93cb70b414ac2da0153cff7b6508",
+    "sources": {
+      "docs/domains/orcaflex/templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml": "dddc8ac4b7847c1907fd308310a72a17165c6d5714a0ff6d5f42fae9c43a114c",
+      "docs/domains/orcaflex/library/line_types/chain_84mm_r4.yml": "39e4080d2c804f9f8ea4b9896e377cb32a5602a204c4e2986a1d00bc9d2fa58a",
+      "docs/domains/orcaflex/library/line_types/hawser_hmpe_80mm.yml": "56947369756d8847cf19a1c0b2bbef299280d233653b8682a7a6c18f122308bd",
+      "docs/domains/orcaflex/library/buoy_types/calm_12m_100m.yml": "c25bb19c1e2a1f73e6c794fc6b4a807d4ceda9132f400886e5bcfd73c817ff71",
+      "docs/domains/orcaflex/templates/mooring_systems/calm_buoy/includes/04_vessel_types.yml": "9cc597fe3c9271be18b74b6277e03820da6afdf24af14cb42eacefa20318bcfe",
+      "docs/domains/orcaflex/templates/mooring_systems/calm_buoy/includes/06_vessels.yml": "7cbd3ee256431e99f8741c61eb952aa3f753095958e47ce4c7bc8d78ad29e6ef"
+    },
+    "cases": [
+      {
+        "case_id": "case-001",
+        "condition": "still-water",
+        "wave_direction_deg": 0.0,
+        "wind_direction_deg": 0.0,
+        "current_direction_deg": 0.0,
+        "wave_height_m": 0,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 0,
+        "current_speed_m_s": 0,
+        "source": "Constructed zero-load reference; period retained from templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, General and Environment",
+        "model_sha256": "ad20c47f279b28ce37fce8600167faf8f72a24ed43f9eec7e87d25b7e560ebdb",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-002",
+        "condition": "still-water",
+        "wave_direction_deg": 45.0,
+        "wind_direction_deg": 45.0,
+        "current_direction_deg": 45.0,
+        "wave_height_m": 0,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 0,
+        "current_speed_m_s": 0,
+        "source": "Constructed zero-load reference; period retained from templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, General and Environment",
+        "model_sha256": "4fb21318c3963bb76307135aafc1a5bd0d01623f878bbb7ad6469d85840e4e11",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-003",
+        "condition": "still-water",
+        "wave_direction_deg": 90.0,
+        "wind_direction_deg": 90.0,
+        "current_direction_deg": 90.0,
+        "wave_height_m": 0,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 0,
+        "current_speed_m_s": 0,
+        "source": "Constructed zero-load reference; period retained from templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, General and Environment",
+        "model_sha256": "0d6cfe77be6a6f8e0e2abc66ee994cc9cb1941d215ef76561d1167f4dd25a366",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-004",
+        "condition": "still-water",
+        "wave_direction_deg": 135.0,
+        "wind_direction_deg": 135.0,
+        "current_direction_deg": 135.0,
+        "wave_height_m": 0,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 0,
+        "current_speed_m_s": 0,
+        "source": "Constructed zero-load reference; period retained from templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, General and Environment",
+        "model_sha256": "904603309b959877db12173c29096e9bfab4e627c2f00d7bf2cd0f9613e05712",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-005",
+        "condition": "still-water",
+        "wave_direction_deg": 180.0,
+        "wind_direction_deg": 180.0,
+        "current_direction_deg": 180.0,
+        "wave_height_m": 0,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 0,
+        "current_speed_m_s": 0,
+        "source": "Constructed zero-load reference; period retained from templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, General and Environment",
+        "model_sha256": "c6725a42e3a6f30a6f921144232fe77c853e3f92be76230ac32c2064a71ad0c2",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-006",
+        "condition": "still-water",
+        "wave_direction_deg": 225.0,
+        "wind_direction_deg": 225.0,
+        "current_direction_deg": 225.0,
+        "wave_height_m": 0,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 0,
+        "current_speed_m_s": 0,
+        "source": "Constructed zero-load reference; period retained from templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, General and Environment",
+        "model_sha256": "9c3b047d635580181b3af7e1b8a584a43aa8a99ca9baa0dffa83255b4b1ed742",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-007",
+        "condition": "still-water",
+        "wave_direction_deg": 270.0,
+        "wind_direction_deg": 270.0,
+        "current_direction_deg": 270.0,
+        "wave_height_m": 0,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 0,
+        "current_speed_m_s": 0,
+        "source": "Constructed zero-load reference; period retained from templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, General and Environment",
+        "model_sha256": "4596ced37f660f68b4d0f233d4e6e39969475a242f440833f7ca1f050743f3c3",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-008",
+        "condition": "still-water",
+        "wave_direction_deg": 315.0,
+        "wind_direction_deg": 315.0,
+        "current_direction_deg": 315.0,
+        "wave_height_m": 0,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 0,
+        "current_speed_m_s": 0,
+        "source": "Constructed zero-load reference; period retained from templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, General and Environment",
+        "model_sha256": "f8a8fd267eb97600f48461bf584e7d2952ba4903a05155776967580094faa4e6",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-009",
+        "condition": "aligned",
+        "wave_direction_deg": 0.0,
+        "wind_direction_deg": 0.0,
+        "current_direction_deg": 0.0,
+        "wave_height_m": 3.5,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 12,
+        "current_speed_m_s": 1,
+        "source": "templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, Environment: regular height 3.5 m, period 12 s, current 1 m/s, wind 12 m/s; common heading constructed",
+        "model_sha256": "462b19bad3936f2cbe91238921935fa885421c23e65473eefb8b33010071335b",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-010",
+        "condition": "aligned",
+        "wave_direction_deg": 45.0,
+        "wind_direction_deg": 45.0,
+        "current_direction_deg": 45.0,
+        "wave_height_m": 3.5,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 12,
+        "current_speed_m_s": 1,
+        "source": "templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, Environment: regular height 3.5 m, period 12 s, current 1 m/s, wind 12 m/s; common heading constructed",
+        "model_sha256": "7c5ffe1c7e4d99703b6e07384c25ac3b8324d70326be366861d299da748f196f",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-011",
+        "condition": "aligned",
+        "wave_direction_deg": 90.0,
+        "wind_direction_deg": 90.0,
+        "current_direction_deg": 90.0,
+        "wave_height_m": 3.5,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 12,
+        "current_speed_m_s": 1,
+        "source": "templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, Environment: regular height 3.5 m, period 12 s, current 1 m/s, wind 12 m/s; common heading constructed",
+        "model_sha256": "2bf7918740f4afcec7b7fdf41d43a14fdff7b1c6be3da6803db77d820e413050",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-012",
+        "condition": "aligned",
+        "wave_direction_deg": 135.0,
+        "wind_direction_deg": 135.0,
+        "current_direction_deg": 135.0,
+        "wave_height_m": 3.5,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 12,
+        "current_speed_m_s": 1,
+        "source": "templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, Environment: regular height 3.5 m, period 12 s, current 1 m/s, wind 12 m/s; common heading constructed",
+        "model_sha256": "c3139547a10455152263bc75203a675a5da58872244f02460261e9d57b49a6ac",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-013",
+        "condition": "aligned",
+        "wave_direction_deg": 180.0,
+        "wind_direction_deg": 180.0,
+        "current_direction_deg": 180.0,
+        "wave_height_m": 3.5,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 12,
+        "current_speed_m_s": 1,
+        "source": "templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, Environment: regular height 3.5 m, period 12 s, current 1 m/s, wind 12 m/s; common heading constructed",
+        "model_sha256": "9918c72ef07ec598d7c87414653e99949eb5bbad03061a2a8923a5ec6d8f2caf",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-014",
+        "condition": "aligned",
+        "wave_direction_deg": 225.0,
+        "wind_direction_deg": 225.0,
+        "current_direction_deg": 225.0,
+        "wave_height_m": 3.5,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 12,
+        "current_speed_m_s": 1,
+        "source": "templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, Environment: regular height 3.5 m, period 12 s, current 1 m/s, wind 12 m/s; common heading constructed",
+        "model_sha256": "ce9a2f6b1c69c4693198231fc2de6ad0bdd471c37a34e52ff02fc3b79ebfa24c",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-015",
+        "condition": "aligned",
+        "wave_direction_deg": 270.0,
+        "wind_direction_deg": 270.0,
+        "current_direction_deg": 270.0,
+        "wave_height_m": 3.5,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 12,
+        "current_speed_m_s": 1,
+        "source": "templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, Environment: regular height 3.5 m, period 12 s, current 1 m/s, wind 12 m/s; common heading constructed",
+        "model_sha256": "d7dae16e700242b808544ca8832c8ae53385e53bdbfbcedd88a619d1ebebacdf",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-016",
+        "condition": "aligned",
+        "wave_direction_deg": 315.0,
+        "wind_direction_deg": 315.0,
+        "current_direction_deg": 315.0,
+        "wave_height_m": 3.5,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 12,
+        "current_speed_m_s": 1,
+        "source": "templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, Environment: regular height 3.5 m, period 12 s, current 1 m/s, wind 12 m/s; common heading constructed",
+        "model_sha256": "ba273dbd185c69683b259fbe08a3b5d2625588a6d179c9cd0e65352c85a5ea98",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-017",
+        "condition": "crossed",
+        "wave_direction_deg": 0.0,
+        "wind_direction_deg": 30.0,
+        "current_direction_deg": 330.0,
+        "wave_height_m": 3.5,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 12,
+        "current_speed_m_s": 1,
+        "source": "Same generic Environment magnitudes as aligned; offsets of plus/minus 30 degrees are constructed sensitivity inputs, with no return-period significance",
+        "model_sha256": "3cf4d13cb31eb682acf5e40f85460443a0b91e3a1b0c9b2712d4ace1f7b2c568",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-018",
+        "condition": "crossed",
+        "wave_direction_deg": 45.0,
+        "wind_direction_deg": 75.0,
+        "current_direction_deg": 15.0,
+        "wave_height_m": 3.5,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 12,
+        "current_speed_m_s": 1,
+        "source": "Same generic Environment magnitudes as aligned; offsets of plus/minus 30 degrees are constructed sensitivity inputs, with no return-period significance",
+        "model_sha256": "a977c751ef0054bac72cdb6a13a4b36c01cea0fe9434f87256ed169eb8508723",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-019",
+        "condition": "crossed",
+        "wave_direction_deg": 90.0,
+        "wind_direction_deg": 120.0,
+        "current_direction_deg": 60.0,
+        "wave_height_m": 3.5,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 12,
+        "current_speed_m_s": 1,
+        "source": "Same generic Environment magnitudes as aligned; offsets of plus/minus 30 degrees are constructed sensitivity inputs, with no return-period significance",
+        "model_sha256": "046b4b8dcb77774c7a83f608581cb259f33838e8233eb6d6a669c8711fe64d80",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-020",
+        "condition": "crossed",
+        "wave_direction_deg": 135.0,
+        "wind_direction_deg": 165.0,
+        "current_direction_deg": 105.0,
+        "wave_height_m": 3.5,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 12,
+        "current_speed_m_s": 1,
+        "source": "Same generic Environment magnitudes as aligned; offsets of plus/minus 30 degrees are constructed sensitivity inputs, with no return-period significance",
+        "model_sha256": "bfe7e0cb46653e589dd3135c0f14b4e6bcc4ba50a5220a2f19e0b787987ffd9b",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-021",
+        "condition": "crossed",
+        "wave_direction_deg": 180.0,
+        "wind_direction_deg": 210.0,
+        "current_direction_deg": 150.0,
+        "wave_height_m": 3.5,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 12,
+        "current_speed_m_s": 1,
+        "source": "Same generic Environment magnitudes as aligned; offsets of plus/minus 30 degrees are constructed sensitivity inputs, with no return-period significance",
+        "model_sha256": "6f9161bc6c1d8c56184051195b341fe80fe45d49723c5b0c1b57a530e67fce1e",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-022",
+        "condition": "crossed",
+        "wave_direction_deg": 225.0,
+        "wind_direction_deg": 255.0,
+        "current_direction_deg": 195.0,
+        "wave_height_m": 3.5,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 12,
+        "current_speed_m_s": 1,
+        "source": "Same generic Environment magnitudes as aligned; offsets of plus/minus 30 degrees are constructed sensitivity inputs, with no return-period significance",
+        "model_sha256": "7b78195cd404ce3df3f55f8da8d161c86b025c20cf8a372fe5f770cc5931a603",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-023",
+        "condition": "crossed",
+        "wave_direction_deg": 270.0,
+        "wind_direction_deg": 300.0,
+        "current_direction_deg": 240.0,
+        "wave_height_m": 3.5,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 12,
+        "current_speed_m_s": 1,
+        "source": "Same generic Environment magnitudes as aligned; offsets of plus/minus 30 degrees are constructed sensitivity inputs, with no return-period significance",
+        "model_sha256": "904c80691c3631206ef61c73e8ad8683dac8b3d8a667c01c49b6fdcabcd02424",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      },
+      {
+        "case_id": "case-024",
+        "condition": "crossed",
+        "wave_direction_deg": 315.0,
+        "wind_direction_deg": 345.0,
+        "current_direction_deg": 285.0,
+        "wave_height_m": 3.5,
+        "wave_period_s": 12,
+        "wind_speed_m_s": 12,
+        "current_speed_m_s": 1,
+        "source": "Same generic Environment magnitudes as aligned; offsets of plus/minus 30 degrees are constructed sensitivity inputs, with no return-period significance",
+        "model_sha256": "63593e3316d866ef39776644453abde13a6b17df2263dc61e8eca03b3c1b9a19",
+        "yaml_valid": true,
+        "yaml_warnings": []
+      }
+    ],
+    "required_outputs": {
+      "Mooring_1": "effective_tension",
+      "Mooring_2": "effective_tension",
+      "Mooring_3": "effective_tension",
+      "Mooring_4": "effective_tension",
+      "Mooring_5": "effective_tension",
+      "Mooring_6": "effective_tension",
+      "Hawser": "effective_tension",
+      "TransferHose": "curvature"
+    },
+    "period_s": [
+      0,
+      100
+    ],
+    "input": {
+      "report_date": "2026-10-20",
+      "headings_source": "Independent case construction: eight equal sectors of a full turn; no directional probability is assumed",
+      "headings_deg": [
+        0,
+        45,
+        90,
+        135,
+        180,
+        225,
+        270,
+        315
+      ],
+      "conditions": [
+        {
+          "name": "still-water",
+          "source": "Constructed zero-load reference; period retained from templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, General and Environment",
+          "wave_height_m": 0,
+          "wave_period_s": 12,
+          "current_speed_m_s": 0,
+          "wind_speed_m_s": 0,
+          "current_offset_deg": 0,
+          "wind_offset_deg": 0
+        },
+        {
+          "name": "aligned",
+          "source": "templates/mooring_systems/calm_buoy_hybrid/base/calm_buoy_base.yml, Environment: regular height 3.5 m, period 12 s, current 1 m/s, wind 12 m/s; common heading constructed",
+          "wave_height_m": 3.5,
+          "wave_period_s": 12,
+          "current_speed_m_s": 1,
+          "wind_speed_m_s": 12,
+          "current_offset_deg": 0,
+          "wind_offset_deg": 0
+        },
+        {
+          "name": "crossed",
+          "source": "Same generic Environment magnitudes as aligned; offsets of plus/minus 30 degrees are constructed sensitivity inputs, with no return-period significance",
+          "wave_height_m": 3.5,
+          "wave_period_s": 12,
+          "current_speed_m_s": 1,
+          "wind_speed_m_s": 12,
+          "current_offset_deg": -30,
+          "wind_offset_deg": 30
+        }
+      ],
+      "coupling": {
+        "source": "Independent illustrative geometry: tanker centre at 150 m, connection at minus 50 m gives 100 m horizontal separation; unstretched hawser 120 m and hose 160 m. Hose properties below are constructed unit-scale numerical inputs, not manufacturer data or a physical hose design. Tanker type and response data come from templates/mooring_systems/calm_buoy/includes/04_vessel_types.yml and 06_vessels.yml",
+        "InitialPosition": [
+          150,
+          0,
+          0
+        ],
+        "Orientation": [
+          0,
+          0,
+          0
+        ],
+        "hawser": {
+          "Name": "Hawser",
+          "EndAConnection": "CALM_Buoy",
+          "EndAX": 0,
+          "EndAY": 0,
+          "EndAZ": 0,
+          "EndBConnection": "Vessel",
+          "EndBX": -50,
+          "EndBY": 0,
+          "EndBZ": 0,
+          "IncludedInStatics": true,
+          "LineType, Length, TargetSegmentLength": [
+            [
+              "Hawser",
+              120,
+              4
+            ]
+          ]
+        },
+        "hose_line_type": {
+          "Name": "IllustrativeHose",
+          "Category": "General",
+          "OD": 0.3,
+          "ID": 0.2,
+          "MassPerUnitLength": 0.1,
+          "EA": 1000,
+          "EI": [
+            1,
+            1
+          ],
+          "GJ": 1,
+          "PoissonRatio": 0.3,
+          "Cd": [
+            1,
+            0,
+            0
+          ],
+          "Ca": [
+            1,
+            0,
+            0
+          ]
+        },
+        "hose_property_sources": {
+          "OD": "Synthetic arithmetic fixture only; no physical or manufacturer basis",
+          "ID": "Synthetic arithmetic fixture only; no physical or manufacturer basis",
+          "MassPerUnitLength": "Synthetic arithmetic fixture only; no physical or manufacturer basis",
+          "EA": "Synthetic arithmetic fixture only; no physical or manufacturer basis",
+          "EI": "Synthetic arithmetic fixture only; no physical or manufacturer basis",
+          "GJ": "Synthetic arithmetic fixture only; no physical or manufacturer basis",
+          "PoissonRatio": "Synthetic arithmetic fixture only; no physical or manufacturer basis",
+          "Cd": "Synthetic arithmetic fixture only; no physical or manufacturer basis",
+          "Ca": "Synthetic arithmetic fixture only; no physical or manufacturer basis"
+        },
+        "hose": {
+          "Name": "TransferHose",
+          "EndAConnection": "CALM_Buoy",
+          "EndAX": 0,
+          "EndAY": 0,
+          "EndAZ": -2,
+          "EndBConnection": "Vessel",
+          "EndBX": -50,
+          "EndBY": 0,
+          "EndBZ": -5,
+          "IncludedInStatics": true,
+          "LineType, Length, TargetSegmentLength": [
+            [
+              "IllustrativeHose",
+              160,
+              4
+            ]
+          ]
+        }
+      },
+      "criteria": {
+        "Mooring_1": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "Mooring_2": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "Mooring_3": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "Mooring_4": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "Mooring_5": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "Mooring_6": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "Hawser": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "TransferHose": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        }
+      }
+    },
+    "known_limits": "Native solver loadability, coupled equilibrium and dynamic response are NOT_EVALUATED. Generic tanker RAOs lack qualified wind/current/drift coefficients. The inherited tanker is excluded from statics and requires equilibrium configuration. Supplied transfer-hose properties require qualification; synthetic arithmetic fixtures have no physical or manufacturer basis. Whole-line extrema must cover the analysis stage; time and mesh sensitivity, pretension, offsets, anchor capacity, fatigue and tension-dependent hose limits require separate assessment. No environmental force or hawser load is inferred.",
+    "native_solver_status": "NOT_EVALUATED"
+  },
+  "assessment": {
+    "status": "NOT_EVALUATED",
+    "responses_sha256": "ca93c177acbd6a2f9de38cd53a5fcd7b55be1c31184a66deb451411de66e5695",
+    "checks": [
+      {
+        "case_id": "case-001",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": 60,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": 0.6,
+        "bend_radius_m": null,
+        "status": "ILLUSTRATIVE",
+        "reason": "hand calculation; no solver evidence",
+        "evidence_kind": "hand_calculation",
+        "result_source": "Independent answer in README.md: constructed 60 kN effective tensions and 0.2 per metre curvature; not a physical response or solver output"
+      },
+      {
+        "case_id": "case-001",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": 60,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": 0.6,
+        "bend_radius_m": null,
+        "status": "ILLUSTRATIVE",
+        "reason": "hand calculation; no solver evidence",
+        "evidence_kind": "hand_calculation",
+        "result_source": "Independent answer in README.md: constructed 60 kN effective tensions and 0.2 per metre curvature; not a physical response or solver output"
+      },
+      {
+        "case_id": "case-001",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": 60,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": 0.6,
+        "bend_radius_m": null,
+        "status": "ILLUSTRATIVE",
+        "reason": "hand calculation; no solver evidence",
+        "evidence_kind": "hand_calculation",
+        "result_source": "Independent answer in README.md: constructed 60 kN effective tensions and 0.2 per metre curvature; not a physical response or solver output"
+      },
+      {
+        "case_id": "case-001",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": 60,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": 0.6,
+        "bend_radius_m": null,
+        "status": "ILLUSTRATIVE",
+        "reason": "hand calculation; no solver evidence",
+        "evidence_kind": "hand_calculation",
+        "result_source": "Independent answer in README.md: constructed 60 kN effective tensions and 0.2 per metre curvature; not a physical response or solver output"
+      },
+      {
+        "case_id": "case-001",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": 60,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": 0.6,
+        "bend_radius_m": null,
+        "status": "ILLUSTRATIVE",
+        "reason": "hand calculation; no solver evidence",
+        "evidence_kind": "hand_calculation",
+        "result_source": "Independent answer in README.md: constructed 60 kN effective tensions and 0.2 per metre curvature; not a physical response or solver output"
+      },
+      {
+        "case_id": "case-001",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": 60,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": 0.6,
+        "bend_radius_m": null,
+        "status": "ILLUSTRATIVE",
+        "reason": "hand calculation; no solver evidence",
+        "evidence_kind": "hand_calculation",
+        "result_source": "Independent answer in README.md: constructed 60 kN effective tensions and 0.2 per metre curvature; not a physical response or solver output"
+      },
+      {
+        "case_id": "case-001",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": 60,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": 0.6,
+        "bend_radius_m": null,
+        "status": "ILLUSTRATIVE",
+        "reason": "hand calculation; no solver evidence",
+        "evidence_kind": "hand_calculation",
+        "result_source": "Independent answer in README.md: constructed 60 kN effective tensions and 0.2 per metre curvature; not a physical response or solver output"
+      },
+      {
+        "case_id": "case-001",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": 0.2,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": 0.8,
+        "bend_radius_m": 5.0,
+        "status": "ILLUSTRATIVE",
+        "reason": "hand calculation; no solver evidence",
+        "evidence_kind": "hand_calculation",
+        "result_source": "Independent answer in README.md: constructed 60 kN effective tensions and 0.2 per metre curvature; not a physical response or solver output"
+      },
+      {
+        "case_id": "case-002",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-002",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-002",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-002",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-002",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-002",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-002",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-002",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-003",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-003",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-003",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-003",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-003",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-003",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-003",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-003",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-004",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-004",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-004",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-004",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-004",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-004",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-004",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-004",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-005",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-005",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-005",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-005",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-005",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-005",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-005",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-005",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-006",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-006",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-006",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-006",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-006",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-006",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-006",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-006",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-007",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-007",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-007",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-007",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-007",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-007",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-007",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-007",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-008",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-008",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-008",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-008",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-008",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-008",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-008",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-008",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-009",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-009",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-009",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-009",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-009",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-009",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-009",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-009",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-010",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-010",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-010",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-010",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-010",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-010",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-010",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-010",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-011",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-011",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-011",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-011",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-011",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-011",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-011",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-011",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-012",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-012",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-012",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-012",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-012",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-012",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-012",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-012",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-013",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-013",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-013",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-013",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-013",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-013",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-013",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-013",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-014",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-014",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-014",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-014",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-014",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-014",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-014",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-014",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-015",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-015",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-015",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-015",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-015",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-015",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-015",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-015",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-016",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-016",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-016",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-016",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-016",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-016",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-016",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-016",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-017",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-017",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-017",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-017",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-017",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-017",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-017",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-017",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-018",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-018",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-018",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-018",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-018",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-018",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-018",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-018",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-019",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-019",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-019",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-019",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-019",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-019",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-019",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-019",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-020",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-020",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-020",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-020",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-020",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-020",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-020",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-020",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-021",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-021",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-021",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-021",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-021",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-021",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-021",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-021",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-022",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-022",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-022",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-022",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-022",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-022",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-022",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-022",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-023",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-023",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-023",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-023",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-023",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-023",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-023",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-023",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-024",
+        "object": "Mooring_1",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-024",
+        "object": "Mooring_2",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-024",
+        "object": "Mooring_3",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-024",
+        "object": "Mooring_4",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-024",
+        "object": "Mooring_5",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-024",
+        "object": "Mooring_6",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-024",
+        "object": "Hawser",
+        "quantity": "effective_tension",
+        "maximum": null,
+        "criterion": {
+          "value": 100,
+          "unit": "kN",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      },
+      {
+        "case_id": "case-024",
+        "object": "TransferHose",
+        "quantity": "curvature",
+        "maximum": null,
+        "criterion": {
+          "value": 4,
+          "unit": "m",
+          "source": "Independent answer in README.md; constructed arithmetic limit only"
+        },
+        "utilisation": null,
+        "bend_radius_m": null,
+        "status": "NOT_EVALUATED",
+        "reason": "missing result or sourced criterion",
+        "evidence_kind": null,
+        "result_source": null
+      }
+    ],
+    "solver_version": null,
+    "native_solver_status": "NOT_EVALUATED",
+    "known_limits": "Native solver loadability, coupled equilibrium and dynamic response are NOT_EVALUATED. Generic tanker RAOs lack qualified wind/current/drift coefficients. The inherited tanker is excluded from statics and requires equilibrium configuration. Supplied transfer-hose properties require qualification; synthetic arithmetic fixtures have no physical or manufacturer basis. Whole-line extrema must cover the analysis stage; time and mesh sensitivity, pretension, offsets, anchor capacity, fatigue and tension-dependent hose limits require separate assessment. No environmental force or hawser load is inferred."
+  }
+}

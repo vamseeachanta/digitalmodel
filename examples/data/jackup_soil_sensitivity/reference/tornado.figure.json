@@ -1,0 +1,118 @@
+{
+  "data": [
+    {
+      "hovertemplate": "%{y}<br>%{x:.1f} MN<extra>%{fullData.name}</extra>",
+      "name": "Low bound",
+      "orientation": "h",
+      "type": "bar",
+      "x": [
+        -3.585185536276671,
+        -9.651867427745897,
+        -7.170371072553346,
+        -1.6964600329384885,
+        -2.2619467105846507,
+        -1.9032466427147738,
+        null,
+        -0.1043297413258042,
+        0.0,
+        0.0,
+        null
+      ],
+      "y": [
+        "stiff_over_soft: layers.1.su_kpa",
+        "sand_over_soft: layers.1.su_kpa",
+        "sand_over_soft_punching: layers.1.su_kpa",
+        "stiff_over_soft: layers.0.su_kpa",
+        "stiff_over_soft: top_thickness_m",
+        "sand_over_soft: top_thickness_m",
+        "sand_over_soft_punching: top_thickness_m",
+        "sand_over_soft_punching: layers.0.friction_deg",
+        "sand_over_soft: layers.0.friction_deg",
+        "stiff_over_soft: layers.2.su_kpa",
+        "uniform_soft: layers.0.su_kpa"
+      ]
+    },
+    {
+      "hovertemplate": "%{y}<br>%{x:.1f} MN<extra>%{fullData.name}</extra>",
+      "name": "High bound",
+      "orientation": "h",
+      "type": "bar",
+      "x": [
+        10.755556608830014,
+        10.711295058999443,
+        7.170371072553342,
+        3.392920065876977,
+        2.906601523101279,
+        1.9917697423759237,
+        1.5900988219835235,
+        0.20667417930948795,
+        0.0,
+        0.0,
+        null
+      ],
+      "y": [
+        "stiff_over_soft: layers.1.su_kpa",
+        "sand_over_soft: layers.1.su_kpa",
+        "sand_over_soft_punching: layers.1.su_kpa",
+        "stiff_over_soft: layers.0.su_kpa",
+        "stiff_over_soft: top_thickness_m",
+        "sand_over_soft: top_thickness_m",
+        "sand_over_soft_punching: top_thickness_m",
+        "sand_over_soft_punching: layers.0.friction_deg",
+        "sand_over_soft: layers.0.friction_deg",
+        "stiff_over_soft: layers.2.su_kpa",
+        "uniform_soft: layers.0.su_kpa"
+      ]
+    }
+  ],
+  "layout": {
+    "annotations": [
+      {
+        "showarrow": false,
+        "text": "No descending branch: sand_over_soft_punching: top_thickness_m; uniform_soft: layers.0.su_kpa",
+        "x": 0,
+        "xref": "paper",
+        "y": -0.15,
+        "yref": "paper"
+      }
+    ],
+    "barmode": "overlay",
+    "margin": {
+      "l": 340
+    },
+    "meta": {
+      "basis": "assumed, based on previous experience",
+      "positive_margin": "Descending capacity threshold minus preload; no loss is null.",
+      "undefined_margin_inputs": [
+        "sand_over_soft_punching: top_thickness_m",
+        "uniform_soft: layers.0.su_kpa"
+      ]
+    },
+    "title": {
+      "text": "One-at-a-time punch-through margin changes"
+    },
+    "xaxis": {
+      "title": {
+        "text": "Change in margin from nominal (MN)"
+      },
+      "zeroline": true
+    },
+    "yaxis": {
+      "autorange": "reversed",
+      "categoryarray": [
+        "stiff_over_soft: layers.1.su_kpa",
+        "sand_over_soft: layers.1.su_kpa",
+        "sand_over_soft_punching: layers.1.su_kpa",
+        "stiff_over_soft: layers.0.su_kpa",
+        "stiff_over_soft: top_thickness_m",
+        "sand_over_soft: top_thickness_m",
+        "sand_over_soft_punching: top_thickness_m",
+        "sand_over_soft_punching: layers.0.friction_deg",
+        "sand_over_soft: layers.0.friction_deg",
+        "stiff_over_soft: layers.2.su_kpa",
+        "uniform_soft: layers.0.su_kpa"
+      ],
+      "categoryorder": "array"
+    }
+  }
+}

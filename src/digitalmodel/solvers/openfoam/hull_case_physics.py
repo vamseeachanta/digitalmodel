@@ -25,6 +25,8 @@ from pathlib import Path
 from typing import Dict, Mapping, Optional, Sequence, Tuple
 
 from .hull_domain import Box, HullDomain
+from .hull_case_regions import SurfaceRegion
+from .region_refinement import finest_in_plane_cell
 from .hull_turbulence import (
     C_MU,
     DEFAULT_LENGTH_SCALE_FACTOR,
@@ -48,6 +50,7 @@ __all__ = [
     "DecompositionError",
     "ForceReference",
     "InletTurbulence",
+    "SurfaceCellTarget",
     "TurbulenceMethod",
     "decomposition_vector",
     "derive_cell_budget",
@@ -80,8 +83,30 @@ class DecompositionError(ValueError):
 # --------------------------------------------------------------------------- #
 
 @dataclass(frozen=True)
+class SurfaceCellTarget:
+    """Nominal in-plane targets, assuming the surface meets the finest box."""
+
+    name: str
+    refinement_level: Tuple[int, int]
+    coarsest_in_plane_cell_size: float
+    finest_in_plane_cell_size: float
+
+    def to_provenance(self) -> Dict[str, object]:
+        return {
+            "refinement_level": list(self.refinement_level),
+            "coarsest_in_plane_cell_size_m": self.coarsest_in_plane_cell_size,
+            "finest_in_plane_cell_size_m": self.finest_in_plane_cell_size,
+        }
+
+
+@dataclass(frozen=True)
 class CellBudget:
-    """What the mesh will cost, and the cap the mesher is given."""
+    """Box-refinement cost estimate and the cap the mesher is given.
+
+    ``finest_cell_size`` is retained for compatibility. It is the requested
+    in-plane size inside the finest box, before surface refinement, snapping
+    or layer insertion. It is neither a mesh measurement nor a wall cell.
+    """
 
     background_cells: int
     estimated_cells: int
@@ -91,17 +116,96 @@ class CellBudget:
     refinement_stages: int
     ranks: int
     safety_factor: float
+    surface_cell_targets: Tuple[SurfaceCellTarget, ...] = ()
+
+    @property
+    def finest_box_cell_size(self) -> float:
+        """Unambiguous alias for the legacy requested box-cell scale."""
+        return self.finest_cell_size
 
     def to_provenance(self) -> Dict[str, object]:
         return {
             "background_cells": self.background_cells,
             "estimated_cells": self.estimated_cells,
+            "estimated_cells_basis": "box_refinement_only",
+            "surface_refinement_cell_count": None,
+            "surface_refinement_cell_count_status": "NOT_EVALUATED",
+            "estimated_cells_note": (
+                "excludes surface refinement, buffer cells, snapping and layers. "
+                "Surface levels alone do not specify intersected cell counts; "
+                "the cap and its headroom do not certify total mesh capacity."
+            ),
             "max_global_cells": self.max_global_cells,
             "max_local_cells": self.max_local_cells,
-            "finest_cell_size_m": self.finest_cell_size,
             "refinement_stages": self.refinement_stages,
             "safety_factor": self.safety_factor,
+            **self._cell_size_provenance(),
         }
+
+    def _cell_size_provenance(self) -> Dict[str, object]:
+        return {
+            "finest_cell_size_m": self.finest_cell_size,
+            "finest_box_cell_size_m": self.finest_box_cell_size,
+            "finest_cell_size_note": (
+                "legacy alias of finest_box_cell_size_m: requested base cell "
+                "halved per box stage in-plane only; excludes integer block "
+                "rounding, surface refinement, snapping and layer insertion. "
+                "This is not the cell size at the wall."
+            ),
+            "surface_cell_targets": {
+                target.name: target.to_provenance()
+                for target in self.surface_cell_targets
+            },
+            "surface_cell_targets_note": (
+                "nominal pre-snap in-plane targets from emitted block divisions "
+                "and each region's min/max surface levels, assuming the entire "
+                "surface lies in the innermost box. Box cuts act in x and y; "
+                "surface cuts act in all directions. These targets do not "
+                "establish wall-normal spacing, achieved mesh resolution or "
+                "layer thickness."
+            ),
+            "near_wall_cell_size_m": None,
+            "near_wall_cell_size_status": "NOT_EVALUATED",
+            "near_wall_cell_size_note": (
+                "no wall-cell readback: vertical grading, local box coverage, "
+                "snapping and layer insertion are not resolved by this estimate. "
+                "A wall-normal sizing check requires local mesh measurements."
+            ),
+        }
+
+
+def _surface_cell_targets(
+    box_cell: float, regions: Sequence[SurfaceRegion]
+) -> Tuple[SurfaceCellTarget, ...]:
+    """Apply surface levels to the nominal finest-box in-plane scale.
+
+    Source: OpenCFD, OpenFOAM v2312 (2023), snappyHexMesh Castellation,
+    introduction and refinementSurfaces: cells halve in each direction per
+    level; the pair specifies minimum and maximum surface refinement.
+    https://doc.openfoam.com/2312/tools/pre-processing/mesh/generation/
+    snappyhexmesh/castellation/
+    The repository's refineMeshDict uses directional cuts without hexRef8
+    level tracking; these surface levels start from the staged background.
+    OpenCFD v2312 refineMesh.C, main, multiDirRefinement and mesh.write:
+    https://api.openfoam.com/2312/refineMesh_8C_source.html
+    """
+    targets = []
+    names = set()
+    for region in regions:
+        lo, hi = region.refinement_level
+        if any(type(level) is not int for level in (lo, hi)) or not 0 <= lo <= hi:
+            raise CellBudgetError(
+                "surface refinement levels must be nonnegative integers"
+            )
+        if region.name in names:
+            raise CellBudgetError(f"duplicate surface region {region.name!r}")
+        names.add(region.name)
+        targets.append(
+            SurfaceCellTarget(
+                region.name, (lo, hi), box_cell / 2**lo, box_cell / 2**hi
+            )
+        )
+    return tuple(targets)
 
 
 #: Headroom over the estimate. The estimate models refinement by volume
@@ -143,6 +247,7 @@ def derive_cell_budget(
     safety_factor: float = DEFAULT_CELL_SAFETY_FACTOR,
     cap: Optional[int] = None,
     blocks: Optional[Sequence[Block]] = None,
+    surface_regions: Sequence[SurfaceRegion] = (),
 ) -> CellBudget:
     """Size ``maxGlobalCells`` from the domain and the target cell size.
 
@@ -155,6 +260,9 @@ def derive_cell_budget(
     this raises, because the alternative is what the frozen template does:
     snappyHexMesh stops refining at the cap, reports success, and hands back a
     mesh missing levels nobody chose. The solve then runs for days on it.
+
+    ``surface_regions`` records nominal in-plane targets only; no surface
+    refinement, snapping or layer cells are included in the count estimate.
     """
     if ranks < 1:
         raise DecompositionError(f"ranks must be >= 1, got {ranks}")
@@ -190,6 +298,9 @@ def derive_cell_budget(
         refinement_stages=len(boxes),
         ranks=ranks,
         safety_factor=safety_factor,
+        surface_cell_targets=_surface_cell_targets(
+            finest_in_plane_cell(domain, divisions, len(boxes)), surface_regions
+        ),
     )
 
 

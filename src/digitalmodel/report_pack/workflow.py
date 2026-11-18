@@ -105,6 +105,7 @@ from pathlib import Path
 from typing import Any, Optional, cast
 
 from digitalmodel.citations.schema import Citation, CitationValidationError
+from digitalmodel.reporting._metadata import package_code_edition
 from digitalmodel.reporting.engine import render_html
 from digitalmodel.reporting.pdf import PDF_MODES, PdfMode, render_pdf
 from digitalmodel.reporting.provenance import Provenance
@@ -743,7 +744,11 @@ def _standards_from_citations(citations: list[Citation]) -> list[StandardLabel]:
 
 
 def _provenance(pack: ReportPack) -> Provenance:
-    provenance = Provenance()
+    provenance = Provenance(
+        code_edition=package_code_edition(),
+        units_system="Per source table and figure labels",
+        validated_path="screening",
+    )
     for source_id in pack.manifest_inputs["input_source_ids"]:
         provenance.add(
             "input_source", source_id, description="report_pack.manifest.input_source_ids"

@@ -4,7 +4,7 @@
 # ABOUTME: Pydantic data models for dynacard analysis.
 # ABOUTME: Includes surface card, rod string, pump, and analysis result structures.
 
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal
 from pydantic import BaseModel, Field
 import numpy as np
 from .constants import (
@@ -14,7 +14,6 @@ from .constants import (
     DEFAULT_FLUID_DENSITY_LB_PER_FT3,
     DEFAULT_MINIMUM_TENSILE_STRENGTH_PSI,
     GRAVITATIONAL_ACCELERATION_SI,
-    GRAVITATIONAL_ACCELERATION_FT_PER_S2,
     DENSITY_OF_WATER_SI_KG_PER_M3,
     DENSITY_OF_STEEL_SI_KG_PER_M3,
     DEFAULT_PRIME_MOVER_EFFICIENCY,
@@ -37,7 +36,20 @@ class CardData(BaseModel):
 
 
 class RodSection(BaseModel):
-    """Properties for a single section of the sucker rod string."""
+    """Properties for a single section of the sucker rod string.
+
+    Wave speed is independently prescribed; consistency with modulus and mass
+    density is not enforced. The default bare-material density and wave speed
+    do not imply the same dynamic mass. Both solver adapters use supplied
+    weight_per_foot to derive coupling-inclusive density for static weight;
+    the coupled transfer still uses the prescribed speed for dynamic response.
+
+    Weight is derived only during construction when weight_per_foot is zero.
+    Assignment and model_copy(update=...) retain the stored dry line weight;
+    changing diameter or density does not recalculate it. To request bare-body
+    derivation again, pass updated values with weight_per_foot=0 to RodSection
+    or model_validate. Supply a new measured weight to retain coupling mass.
+    """
     diameter: float  # inches
     length: float  # feet
     count: int = 1
@@ -51,11 +63,31 @@ class RodSection(BaseModel):
     manufacturer: str = "Generic"
 
     def model_post_init(self, __context: Any) -> None:
-        """Calculate weight per foot if not provided."""
+        """Derive bare-body dry line weight once, when zero is supplied."""
         if self.weight_per_foot == 0.0:
             # Steel weight: pi * r^2 * density / 144 (convert sq in to sq ft)
             r_in = self.diameter / 2.0
             self.weight_per_foot = np.pi * (r_in ** 2) * self.density / SQUARE_FEET_TO_SQUARE_INCHES
+
+
+def effective_density_lb_ft3(section: RodSection) -> float:
+    """Return dry line weight divided by nominal rod-body area, in lb/ft³.
+
+    With A=pi*d²/4 in², density=weight_per_foot*144/A. Supplied coupling
+    weight is included in this effective density; coupling displaced volume
+    is not represented. See gibbs-transfer.md, Equations and source.
+    Non-finite or nonpositive weight and diameter are rejected.
+    """
+    values = [section.weight_per_foot, section.diameter]
+    if not np.all(np.isfinite(values)) or min(values) <= 0:
+        raise ValueError("density conversion requires finite positive weight and diameter")
+    try:
+        density = section.weight_per_foot * 576.0 / (np.pi * section.diameter ** 2)
+    except (OverflowError, ZeroDivisionError) as exc:
+        raise ValueError("density conversion requires finite positive effective density") from exc
+    if not np.isfinite(density) or density <= 0:
+        raise ValueError("density conversion requires finite positive effective density")
+    return density
 
 
 class PumpProperties(BaseModel):
@@ -196,11 +228,23 @@ class FluidLoadAnalysis(BaseModel):
 
 
 class CPIPAnalysis(BaseModel):
-    """Results from CPIP (Calculated Pump Intake Pressure) analysis."""
+    """Calculated pressures; status does not establish field qualification.
+
+    Negative intake values are retained for diagnosis, without asserting an
+    absolute-pressure basis. Density source records the selected calculation
+    input, not whether it was measured. Older/manual results are unestablished.
+    """
     pump_intake_pressure: float = 0.0  # psi
     pump_discharge_pressure: float = 0.0  # psi
     fluid_density: float = 0.0  # lbs/ft^3
     tubing_gradient: float = 0.0  # psi/ft
+    density_source: Literal[
+        "unestablished", "context", "well_test_mixture", "assumed_50pct_mixture"
+    ] = "unestablished"
+    pressure_status: Literal[
+        "unestablished", "calculated", "negative_calculated_pressure"
+    ] = "unestablished"
+    warnings: List[str] = Field(default_factory=list)
 
 
 class PumpFillageAnalysis(BaseModel):
@@ -256,12 +300,12 @@ class GearBoxLoadingAnalysis(BaseModel):
 
 
 class PowerConsumptionAnalysis(BaseModel):
-    """Results from power consumption analysis."""
-    card_area: float = 0.0  # ft-lbs (work per stroke)
-    polished_rod_horsepower: float = 0.0  # HP
-    prime_mover_horsepower: float = 0.0  # HP
-    power_consumption_kw: float = 0.0  # kW
-    daily_energy_consumption: float = 0.0  # kWh
+    """Power results; None means no calculation completed, not zero power."""
+    card_area: Optional[float] = None  # ft-lbs (work per stroke)
+    polished_rod_horsepower: Optional[float] = None  # HP
+    prime_mover_horsepower: Optional[float] = None  # HP
+    power_consumption_kw: Optional[float] = None  # kW
+    daily_energy_consumption: Optional[float] = None  # kWh
     motor_design: str = "Others"  # "Mark II" or "Others" (pumping unit class)
     # Prime mover provenance. "electric" | "gas_engine" | "unspecified" | ...
     prime_mover_type: str = "unspecified"
@@ -301,16 +345,21 @@ class LoadRatioAnalysis(BaseModel):
 class CardGeometryAnalysis(BaseModel):
     """Results from card geometry analysis."""
     area: float = 0.0  # in-lbs (position*load units)
-    # DEPRECATED: mixes inches and pounds under one sqrt, so it is not a
+    # Null compatibility field: mixing inches and pounds cannot define a
     # physical length and must not be interpreted as one. Use
     # position_path_length / load_path_length (dimensionally meaningful) or
     # normalized_perimeter (dimensionless shape complexity) instead.
-    perimeter: float = Field(
-        default=0.0,
+    perimeter: None = Field(
+        default=None,
         deprecated=(
             "perimeter mixes inches and pounds and is not a physical length; "
             "use position_path_length, load_path_length or normalized_perimeter"
         ),
+    )
+    # Frozen arbitrary feature for the existing classifier; never a length.
+    # Excluded from serialized engineering results. See issue #1864.
+    legacy_perimeter_feature: Optional[float] = Field(
+        default=None, exclude=True, repr=False
     )
     # Dimensionally meaningful replacements for `perimeter`
     position_path_length: float = 0.0  # inches - total polished-rod travel per cycle
@@ -410,7 +459,11 @@ class IdealCardAnalysis(BaseModel):
     # Deviation from measured card (surface domain). None = not computable.
     load_deviation_rms: Optional[float] = None  # lbs (branch-wise RMS difference)
     stroke_length_difference: Optional[float] = None  # inches (|measured - ideal| stroke)
-    shape_similarity: Optional[float] = None  # (0, 1] (1 = identical shape)
+    shape_similarity: Optional[float] = None  # [-1, 1], signed centered cosine
+    # Frozen distance score for the existing classifier, excluded from reports.
+    legacy_shape_feature: Optional[float] = Field(
+        default=None, exclude=True, repr=False
+    )
     # Simulation parameters
     fillage_assumed: float = 1.0  # 0-1 (pump fillage)
     num_time_points: int = 0  # number of simulation points
@@ -428,10 +481,44 @@ class DiagnosticResult(BaseModel):
     model_version: str = "1.0"
 
 
+class DownholeLoadBasis(BaseModel):
+    """Executed Gibbs load basis; provenance does not establish field accuracy."""
+
+    method: Literal["affine_surface_load", "coupled_frequency_domain"] = (
+        "affine_surface_load"  # Preserve omitted defaults in older saved bases.
+    )
+    validation_status: Literal["NOT_EVALUATED"] = "NOT_EVALUATED"
+    buoyant_rod_weight_lbf: float
+    attenuation_factor: Optional[float] = None
+    harmonic_count: Optional[int] = None
+    closing_sample_dropped: bool = False
+    limitations: str = (
+        "Comparison only: load and displacement are propagated through the damped "
+        "wave equation for a vertical rod string; deviation, Coulomb friction and "
+        "damping calibration are not modelled; field diagnostic accuracy is not "
+        "established."
+    )
+
+    def model_post_init(self, __context: Any) -> None:
+        """Keep omitted legacy limitations from claiming coupled propagation."""
+        if self.method == "affine_surface_load" and "limitations" not in self.model_fields_set:
+            self.limitations = (
+                "Comparison only: load is not propagated through the wave equation. "
+                "Legacy buoyancy, attenuation, damping and stroke factors are unqualified; "
+                "absolute load and load morphology are not validated. Derived fillage, "
+                "pressure, production, buckling and diagnoses inherit this limitation."
+            )
+
+
 class AnalysisResults(BaseModel):
     """Output results from the dynacard analysis."""
     ctx: Optional[DynacardAnalysisContext] = None
     downhole_card: Optional[CardData] = None
+    # Unsmoothed solver strain card for the raw-card-trained classifier.
+    # downhole_card remains the existing smoothed calculation input.
+    diagnostic_card: Optional[CardData] = None
+    # None means provenance was not recorded, including older saved results.
+    downhole_load_basis: Optional[DownholeLoadBasis] = None
     peak_polished_rod_load: float = 0.0
     minimum_polished_rod_load: float = 0.0
 

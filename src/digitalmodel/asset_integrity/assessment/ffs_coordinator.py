@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Canonical FFS coordinator — one data model + one orchestration call
 # ABOUTME: chaining the validated Phase-1 assessment modules end to end.
 """Canonical Fitness-For-Service coordinator (Phase-1 path).
@@ -25,13 +28,14 @@ Units: inches and psi (consistent with the Phase-1 modules).
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import math
 from pathlib import Path
 from typing import Any, Mapping, Optional, Union
 
 import numpy as np
 import pandas as pd
 
-from digitalmodel.asset_integrity.applicability import Applicability, merge
+from digitalmodel.asset_integrity.applicability import Applicability, flagged, merge
 from digitalmodel.asset_integrity.composite_repair import (
     CompositeRepairParameters,
     recommend_from_ffs_result,
@@ -48,6 +52,7 @@ from .pitting import (
     characterize_pit_field,
     screen_pitting_level1,
 )
+from .screening_report import finite_number
 
 GridLike = Union[pd.DataFrame, np.ndarray, str, Path]
 
@@ -62,7 +67,8 @@ class FFSComponent:
     nominal_wt_in: float
     design_pressure_psi: float
     smys_psi: Optional[float] = None
-    corrosion_rate_in_per_yr: float = 0.0
+    # Omission is absent evidence; supply zero explicitly to assume no corrosion.
+    corrosion_rate_in_per_yr: Optional[float] = None
     fca_in: float = 0.0  # future corrosion allowance
     rsf_a: float = 0.90  # allowable remaining strength factor
     component_type: str = "pipe"
@@ -74,7 +80,7 @@ class FFSAssessmentResult:
 
     component_id: str
     assessment_type: str  # "GML" | "LML" | "PITTING"
-    level_reached: int  # 1 (screening sufficed) or 2 (RSF needed)
+    level_reached: int  # 0 (pitting not evaluated), 1 (screening), 2 (RSF needed)
     t_nominal_in: float
     t_min_in: float
     t_measured_min_in: float
@@ -131,6 +137,9 @@ class FFSAssessmentResult:
             # Added only when raised so the indexed 16-key surface (#1066)
             # is unchanged for every in-range assessment.
             payload["applicability"] = self.applicability.to_dict()
+        for key, value in payload.items():
+            if isinstance(value, float) and math.isnan(value):
+                payload[key] = None
         return payload
 
 
@@ -140,6 +149,7 @@ def assess_component(
     *,
     input_units: str = "in",
     force_type: Optional[str] = None,
+    row_spacing_in: Optional[float] = None,
     repair_context: Optional[Mapping[str, Any]] = None,
 ) -> FFSAssessmentResult:
     """Run the full Phase-1 FFS chain and return one unified result.
@@ -151,10 +161,16 @@ def assess_component(
         input_units: ``"in"`` (default) or ``"mm"`` — passed to GridParser.
         force_type: override the auto-classification
             ("GML"/"LML"/"PITTING").
+        row_spacing_in: Explicit axial pitch for grid-based characterization;
+            required to establish physical pitch from a single-row grid.
         repair_context: optional composite-repair screening context. Used only
             for REPAIR verdicts.
     """
     df = _to_grid_df(grid, input_units)
+    if row_spacing_in is not None:
+        row_spacing_in = finite_number({"row_spacing_in": row_spacing_in}, "row_spacing_in")
+        df = df.copy()
+        df.index = np.arange(len(df), dtype=float) * row_spacing_in
 
     route = FFSRouter.classify(
         df, component.nominal_od_in, component.nominal_wt_in, force_type=force_type
@@ -178,16 +194,15 @@ def assess_component(
         # conservative closed-form Level 1 screen on top of the code t_min
         # check, and bound Level 2 by an equivalent LTA run through the
         # validated Part 5 engine (see assessment/pitting.py for the basis).
-        pit_char = characterize_pit_field(df, component.nominal_wt_in)
+        pit_char = characterize_pit_field(
+            df, component.nominal_wt_in, row_spacing_in=row_spacing_in,
+        )
         pit_l1 = screen_pitting_level1(
             pit_char, t_min_in=t_min, fca_in=component.fca_in
         )
-        combined_verdict = (
-            "ACCEPT"
-            if l1["verdict"] == "ACCEPT" and pit_l1["verdict"] == "ACCEPT"
-            else "FAIL_LEVEL_1"
-        )
-        l1 = {**l1, "verdict": combined_verdict, "pitting_screen": pit_l1}
+        combined_verdict = pit_l1["verdict"] if l1["verdict"] == "ACCEPT" else "FAIL_LEVEL_1"
+        l1 = {**l1, "wall_screen_verdict": l1["verdict"],
+              "verdict": combined_verdict, "pitting_screen": pit_l1}
         l2 = assess_pitting_level2_equivalent_lta(
             pit_char,
             nominal_od_in=component.nominal_od_in,
@@ -202,11 +217,17 @@ def assess_component(
             nominal_wt_in=component.nominal_wt_in,
             t_min_in=t_min,
             rsf_a=component.rsf_a,
+            row_spacing_in=row_spacing_in,
         ).evaluate(df)
 
     # Applicability flags raised by the Level 2 engine (Folias lambda cap);
     # any flag makes the decision ESCALATE instead of a numeric verdict.
     applicability = merge(l1.get("applicability"), l2.get("applicability"))
+    if atype == "LML" and len(df) == 1 and row_spacing_in is None:
+        applicability = merge(applicability, flagged(
+            "ffs.row_spacing_assumed",
+            "A single axial index does not establish physical pitch; supply row_spacing_in.",
+        ))
 
     decision = FFSDecision.decide(
         level1_verdict=l1["verdict"],
@@ -219,6 +240,10 @@ def assess_component(
         design_pressure_psi=component.design_pressure_psi,
         applicability=applicability,
     )
+    applicability = Applicability(**decision["applicability"])
+    # GML's 1.0 placeholder is unused by that method, not a calculated factor.
+    folias = l2.get("folias_factor", float("nan")) if atype != "GML" else float("nan")
+    decision["folias_factor"] = folias if math.isfinite(folias) else None
 
     sufficiency = MeasurementSufficiency().evaluate(
         df,
@@ -232,7 +257,8 @@ def assess_component(
     # single source: the decision layer's MAWP_r (API 579-1 §2.4.2.2, #1273)
     _rr = decision.get("rerated_mawp_psi")
     rerated = float(_rr) if _rr is not None else float("nan")
-    level_reached = 1 if l1["verdict"] == "ACCEPT" else 2
+    level_reached = (0 if l2["verdict"] == "NOT_EVALUATED"
+                     else 1 if l1["verdict"] == "ACCEPT" else 2)
 
     result = FFSAssessmentResult(
         component_id=component.component_id,
@@ -245,7 +271,7 @@ def assess_component(
         fca_in=component.fca_in,
         rsf=rsf,
         rsf_a=component.rsf_a,
-        folias_factor=float(l2.get("folias_factor", 1.0)),
+        folias_factor=float(folias),
         remaining_life_yr=float(decision.get("remaining_life_yr", float("nan"))),
         verdict=str(decision.get("verdict", "UNKNOWN")),
         rerated_pressure_psi=float(rerated),

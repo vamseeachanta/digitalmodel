@@ -1,0 +1,293 @@
+{
+  "schema_version": 1,
+  "status": "PASS",
+  "readiness": "ASSUMED_ANALYTICAL_ONLY",
+  "source_revision": "0ed7d8b8e2989db31514f2e871d43d4ae28b189f",
+  "utility_sha256": "1c864adbf8fd32284c8f3d96dd09dcc32d438018a99c39605a290d4947b8b4d8",
+  "counts": {
+    "assumed_attempted": 4,
+    "assumed_completed": 4,
+    "assumed_passed": 4,
+    "comparisons_attempted": 2,
+    "comparisons_completed": 2,
+    "comparisons_passed": 2,
+    "native_runs": 0,
+    "qualified_results": 0
+  },
+  "criteria": {
+    "depth": {
+      "limit": 1e-06,
+      "units": "m",
+      "form": "absolute",
+      "citation": "REPORT"
+    },
+    "angle": {
+      "limit": 1e-09,
+      "units": "deg",
+      "form": "absolute",
+      "citation": "REPORT"
+    },
+    "global_force": {
+      "limit": 1e-12,
+      "units": "1",
+      "form": "relative",
+      "citation": "REPORT"
+    },
+    "force_consistency": {
+      "limit": 1e-12,
+      "units": "1",
+      "form": "relative",
+      "citation": "REPORT"
+    },
+    "segment_arc": {
+      "limit": 1e-09,
+      "units": "1",
+      "form": "relative",
+      "citation": "REPORT: numerical geometry band; OpenStax, Calculus Volume 1, 2016 edition, section 6.9",
+      "basis": "Each vertex-to-interface arc is R*sinh(X/R)",
+      "source": "https://openstax.org/books/calculus-volume-1/pages/6-9-calculus-of-the-hyperbolic-functions"
+    },
+    "wave_elevation": {
+      "limit": 1e-06,
+      "units": "m",
+      "form": "absolute",
+      "citation": "REPORT: depth closure band; OpenStax, Calculus Volume 1, 2016 edition, section 6.9",
+      "basis": "Sag and hog are elevations above seabed from signed segment drops"
+    },
+    "interface_continuity": {
+      "limit": 1e-12,
+      "units": "1",
+      "form": "relative",
+      "citation": "REPORT: force equilibrium band; OpenStax, University Physics Volume 1, 2016 edition, section 12.1, equation 12.2",
+      "basis": "Continuous vertical tension at each bare/buoyed interface: abs(w_left)*S_left = abs(w_right)*S_right",
+      "source": "https://openstax.org/books/university-physics-volume-1/pages/12-1-conditions-for-static-equilibrium"
+    },
+    "closed_tension": {
+      "limit": 5.0,
+      "units": "%",
+      "form": "relative",
+      "citation": "CLOSED/BASIS"
+    },
+    "closed_angle": {
+      "limit": 1.0,
+      "units": "deg",
+      "form": "absolute",
+      "citation": "CLOSED/BASIS"
+    },
+    "closed_touchdown": {
+      "limit": 5.0,
+      "units": "%",
+      "form": "relative",
+      "citation": "CLOSED/BASIS"
+    }
+  },
+  "blockers": [
+    {
+      "id": "catenary_manifest",
+      "status": "BLOCKED-IF-MISSING",
+      "next_input": "Accepted maintainer manifest for the first qualified catenary result, with source/run identities, solver version, input/output digests, units, criteria and accepted review."
+    },
+    {
+      "id": "lazy_wave_manifest",
+      "status": "BLOCKED-IF-MISSING",
+      "next_input": "Accepted maintainer manifest establishing lazy-wave provenance, governing criteria, accepted review and installation applicability."
+    },
+    {
+      "id": "public_reuse",
+      "status": "BLOCKED-IF-MISSING",
+      "next_input": "Source-specific public reuse decisions for third-party inputs and result payloads; reusable results remain with the existing private result maintainer."
+    }
+  ],
+  "revision_history": [
+    {
+      "revision": 0,
+      "date": "2026-10-25",
+      "change": "Initial source-bound analytical replay to separate regression evidence from native qualification."
+    },
+    {
+      "revision": 1,
+      "date": "2026-10-25",
+      "change": "Check every local arc, requested sag/hog elevation and interface continuity to reject compensating errors and stale geometry; use maintainer terminology."
+    }
+  ],
+  "sources": {
+    "REPORT": {
+      "path": "docs/domains/risers/scr-slwr-coverage-2026-10.md",
+      "sha256": "e62d49cbaa8a35ab77a90378548da6ee7291fd1f6a2222e479c77734a5febae9",
+      "bytes": 30230,
+      "freshness": "Pinned bytes verified at replay; upstream freshness unverified"
+    },
+    "FIXTURE": {
+      "path": "tests/fixtures/test_vectors/mooring_risers/scr_slwr_generic_cases.json",
+      "sha256": "0bec18e98cafd840a898b7e23da15e0eb2bbf96b7a4fd1518e16b79e0a231459",
+      "bytes": 12266,
+      "freshness": "Pinned bytes verified at replay; upstream freshness unverified"
+    },
+    "CLOSED": {
+      "path": "docs/benchmarks/catenary_closed_form/benchmark.json",
+      "sha256": "33d652a450b54f1a955a2e284dd3258b64b96fc70a908161b7d67bf2762f9765",
+      "bytes": 3970,
+      "freshness": "Pinned bytes verified at replay; upstream freshness unverified"
+    },
+    "BASIS": {
+      "path": "docs/benchmarks/catenary_closed_form/README.md",
+      "sha256": "c91d4224550021e315f779223b1138008a50548667838212d0f366b999ac476a",
+      "bytes": 12073,
+      "freshness": "Pinned bytes verified at replay; upstream freshness unverified"
+    },
+    "MANIFEST": {
+      "path": "docs/benchmarks/catenary_closed_form/inputs/MANIFEST.json",
+      "sha256": "b8fa51937f9eb97ffafa32d236b2d709e82d9afd2dbd0586e3c7ecac935fba61",
+      "bytes": 656,
+      "freshness": "Pinned bytes verified at replay; upstream freshness unverified"
+    },
+    "PLAIN": {
+      "path": "docs/benchmarks/catenary_closed_form/inputs/catenary_c1_plain.yml",
+      "sha256": "4ce6ad1d6ff54202a002e11cea15fd09125d27fe5bcef655032e2bac77425ffe",
+      "bytes": 2891,
+      "freshness": "Pinned bytes verified at replay; upstream freshness unverified"
+    },
+    "ELASTIC": {
+      "path": "docs/benchmarks/catenary_closed_form/inputs/catenary_c2_elastic.yml",
+      "sha256": "5588487fb36e425acebb521ac5b925446b3207d87a52d50d6d5eb837e6cfd560",
+      "bytes": 2890,
+      "freshness": "Pinned bytes verified at replay; upstream freshness unverified"
+    },
+    "LICENSE": {
+      "path": "LICENSE",
+      "sha256": "abe9282066701ba45ec516e77329e14f5e27e5ae462fd1fd23fe9f62e27d4d91",
+      "bytes": 1071,
+      "freshness": "Pinned bytes verified at replay; upstream freshness unverified"
+    },
+    "SCR_INTERFACE": {
+      "path": "src/digitalmodel/marine_ops/marine_analysis/catenary/simplified.py",
+      "sha256": "5a0e89d7f4b07f70bb78fd90ed9dc621fae49c7e079c6b43ed81045ab4b5c969",
+      "bytes": 13763,
+      "freshness": "Pinned bytes verified at replay; upstream freshness unverified"
+    },
+    "SLWR_INTERFACE": {
+      "path": "src/digitalmodel/marine_ops/marine_analysis/catenary/lazy_wave.py",
+      "sha256": "a22950e6640006721649df7db82e686bfce4037c7895469d5b23d01c4a37a17b",
+      "bytes": 29277,
+      "freshness": "Pinned bytes verified at replay; upstream freshness unverified"
+    },
+    "INTEGRATION_INTERFACE": {
+      "path": "docs/benchmarks/catenary_closed_form/catenary_hand_values.py",
+      "sha256": "ec0a7c5262873566d28c77fa0271086f3f22d83d0a7f5c4b09e65ecfe14a1197",
+      "bytes": 10319,
+      "freshness": "Pinned bytes verified at replay; upstream freshness unverified"
+    },
+    "WEIGHT_MAPPING": {
+      "path": "src/digitalmodel/orcaflex/riser_config.py",
+      "sha256": "4fa1bf445420b62a1a19d2081bbcc13f7f1fb5c0f60189e4e46bb9a47dfd6acd",
+      "bytes": 18020,
+      "freshness": "Pinned bytes verified at replay; upstream freshness unverified"
+    }
+  },
+  "method": "SCR angle geometry and complementary-angle forces; five-segment SLWR; independent RK4 shooting against stored closed forms, C1 inextensible and C2 elastic. N internally, m and degrees; kN comparison boundary. Source revision identifies the last commit affecting pinned analytical sources; digests identify the replayed bytes.",
+  "limits": [
+    "Assumed source cases; no measured or qualified installation result.",
+    "Four distinct assumed cases and two separate integration comparisons; no native solver was executed.",
+    "Segment arcs, signed depth, requested sag/hog elevations, interface continuity and global force are recomputed without solver pass flags or prepared geometry.",
+    "Pipe mass uses the nominal section and the inspected weight mapping; steel density and gravity are assumed mapping defaults.",
+    "Historical aggregate statics flags do not establish governing mesh criteria, accepted review or installation applicability.",
+    "Third-party rights and source-specific payload publication approval remain UNVERIFIED; numerical readbacks stay in scratch.",
+    "No dynamics, bending, fatigue, costing, buoyancy ranking or production optimisation is established."
+  ],
+  "assumed": [
+    {
+      "id": "scr-shallow",
+      "status": "PASS",
+      "family": "SCR",
+      "criteria_status": {
+        "depth": "PASS",
+        "angle": "PASS",
+        "global_force": "PASS",
+        "tension": "PASS",
+        "segment_weights": "PASS",
+        "horizontal_balance": "PASS",
+        "segment_1_arc": "PASS"
+      }
+    },
+    {
+      "id": "scr-deep",
+      "status": "PASS",
+      "family": "SCR",
+      "criteria_status": {
+        "depth": "PASS",
+        "angle": "PASS",
+        "global_force": "PASS",
+        "tension": "PASS",
+        "segment_weights": "PASS",
+        "horizontal_balance": "PASS",
+        "segment_1_arc": "PASS"
+      }
+    },
+    {
+      "id": "slwr-shallow",
+      "status": "PASS",
+      "family": "SLWR",
+      "criteria_status": {
+        "depth": "PASS",
+        "angle": "PASS",
+        "global_force": "PASS",
+        "tension": "PASS",
+        "segment_weights": "PASS",
+        "horizontal_balance": "PASS",
+        "segment_1_arc": "PASS",
+        "segment_2_arc": "PASS",
+        "segment_3_arc": "PASS",
+        "segment_4_arc": "PASS",
+        "segment_5_arc": "PASS",
+        "sag_elevation": "PASS",
+        "hog_elevation": "PASS",
+        "rising_interface": "PASS",
+        "falling_interface": "PASS"
+      }
+    },
+    {
+      "id": "slwr-deep",
+      "status": "PASS",
+      "family": "SLWR",
+      "criteria_status": {
+        "depth": "PASS",
+        "angle": "PASS",
+        "global_force": "PASS",
+        "tension": "PASS",
+        "segment_weights": "PASS",
+        "horizontal_balance": "PASS",
+        "segment_1_arc": "PASS",
+        "segment_2_arc": "PASS",
+        "segment_3_arc": "PASS",
+        "segment_4_arc": "PASS",
+        "segment_5_arc": "PASS",
+        "sag_elevation": "PASS",
+        "hog_elevation": "PASS",
+        "rising_interface": "PASS",
+        "falling_interface": "PASS"
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "id": "C1",
+      "status": "PASS",
+      "form": "plain",
+      "criteria_status": {
+        "top_tension_kN": "PASS",
+        "top_angle_deg_from_vertical": "PASS",
+        "touchdown_horizontal_distance_from_top_m": "PASS"
+      }
+    },
+    {
+      "id": "C2",
+      "status": "PASS",
+      "form": "elastic",
+      "criteria_status": {
+        "top_tension_kN": "PASS",
+        "top_angle_deg_from_vertical": "PASS",
+        "touchdown_horizontal_distance_from_top_m": "PASS"
+      }
+    }
+  ]
+}

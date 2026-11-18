@@ -5,8 +5,12 @@ Checks that all configurations are properly updated
 
 import yaml
 import json
+import os
 from pathlib import Path
 from datetime import datetime
+
+# Project data lives under DIGITALMODEL_PRIVATE_DATA; the default is a placeholder.
+RUNTIME_DIR = Path(os.environ.get("DIGITALMODEL_PRIVATE_DATA", "<project_data>")) / "ctr7" / "orcaflex" / "rev_a08" / "runtime_test"
 
 def verify_deployment():
     """Verify the optimization deployment is complete"""
@@ -24,8 +28,8 @@ def verify_deployment():
     # Check 1: Verify configuration files have been updated
     print("\n1. Checking configuration files...")
     config_files = [
-        Path("D:/1522/ctr7/orcaflex/rev_a08/runtime_test/dm_fsts.yml"),
-        Path("D:/1522/ctr7/orcaflex/rev_a08/runtime_test/dm_fsts_lngc.yml")
+        RUNTIME_DIR / "dm_fsts.yml",
+        RUNTIME_DIR / "dm_fsts_lngc.yml"
     ]
     
     for config_file in config_files:
@@ -55,8 +59,8 @@ def verify_deployment():
     # Check 2: Verify backup files exist
     print("\n2. Checking backup files...")
     backup_files = [
-        Path("D:/1522/ctr7/orcaflex/rev_a08/runtime_test/dm_fsts_backup_20250825.yml"),
-        Path("D:/1522/ctr7/orcaflex/rev_a08/runtime_test/dm_fsts_lngc_backup_20250825.yml")
+        RUNTIME_DIR / "dm_fsts_backup_20250825.yml",
+        RUNTIME_DIR / "dm_fsts_lngc_backup_20250825.yml"
     ]
     
     for backup_file in backup_files:

@@ -5,11 +5,13 @@
 | Module | `marine_ops/installation` [src/digitalmodel/marine_ops/installation/manifest.yaml:L1-L7] |
 | Repository | `digitalmodel` |
 | Path | `src/digitalmodel/marine_ops/installation/docs/agent-pack.md` |
-| Pack revision | 2 |
+| Pack revision | 3 |
 | Code revision | `a1be651234e5541809cf1f33d57fce04d1a2ae5b` |
 | Analysis family | Installation; AQG r0, family mapping, section 10 |
 | Quality manager role | Installation quality manager; assignment pending in section 10 |
 | Status | DRAFT |
+
+Weather-window dependency source citations are refreshed to `ff5124706aed26ec8b64629b9a31686d2c9c05ed`; the other source citations retain the code revision above.
 
 ## 1. Purpose and scope
 
@@ -1037,7 +1039,7 @@ Each row gives the map's method classification, relation to this module, agreeme
 | `analyze_excel_file` [src/digitalmodel/marine_ops/marine_analysis/analysis/excel_analyzer.py:L13-L345] | wave-spectrum discovery candidate; calls `print`, `openpyxl.load_workbook`, `enumerate`, `defaultdict` | copy (byte-identical file file-001) | not checked | none established at pin |
 | `PerformanceProfiler.profile_wave_spectrum` [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L119-L186] | wave-spectrum discovery candidate; calls `print`, `WaveSpectra`, `time.perf_counter`, `range` | independent | not checked | none established at pin |
 | `PerformanceProfiler.profile_wave_spectrum.run_spectrum` [src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py:L139-L143] | wave-spectrum discovery candidate; calls `ws.jonswap`, `ws.spectrum_statistics` | independent | not checked | none established at pin |
-| `FPSOMooringFullWorkflow._wave_spectrum` [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L54-L75] | wave-spectrum discovery candidate; calls `WaveSpectra`, `generator.jonswap`, `generator.spectral_moment`, `generator.peak_frequency_from_spectrum` | independent | not checked | none established at pin |
+| `FPSOMooringFullWorkflow._wave_spectrum` [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L55-L76] | wave-spectrum discovery candidate; calls `WaveSpectra`, `generator.jonswap`, `generator.spectral_moment`, `generator.peak_frequency_from_spectrum` | independent | not checked | none established at pin |
 | `operation_envelope` [src/digitalmodel/marine_ops/operation_envelope.py:L168-L217] | Sibling Hs/Tp limit from spectral response criteria | wrapper/caller | not checked | none established at pin |
 | `_significant_response` [src/digitalmodel/marine_ops/operation_envelope.py:L283-L288] | wave-spectrum discovery candidate; calls `compute_response_spectrum`, `significant_amplitude`, `spectral_moments` | independent | not checked | none established at pin |
 | `synthesize_directional_forecast` [src/digitalmodel/motion_forecast/wave_forecast.py:L111-L156] | wave-spectrum discovery candidate; calls `np.linspace`, `np.diff`, `jonswap_spectrum`, `np.random.default_rng` | wrapper/caller | not checked | none established at pin |
@@ -1143,8 +1145,8 @@ Each row gives the map's method classification, relation to this module, agreeme
 | `compute_envelopes` [src/digitalmodel/installation/installation_pamphlet/calculations.py:L365-L394] | RAO limiting sea-state envelopes | independent | not checked | none established at pin |
 | `compute_splashzone_envelope` [src/digitalmodel/installation/installation_pamphlet/calculations.py:L456-L556] | Map family `wind-and-current-force-routes`; Per-structure Hs/Tp splash limit, unlike motion-only compute_operability (#2131) | independent | no | none established at pin |
 | `compute_operability` [src/digitalmodel/installation/installation_pamphlet/calculations.py:L598-L603] | Scatter-based operability summary | independent | not checked | none established at pin |
-| `OperabilityInput.calculate_operability` [src/digitalmodel/orcaflex/weather_window.py:L119-L132] | Occurrence-weighted operability | independent | not checked | none established at pin |
-| `analyse_persistence` [src/digitalmodel/orcaflex/weather_window.py:L177-L234] | Contiguous weather-window persistence | independent | not checked | none established at pin |
+| `OperabilityInput.calculate_operability` [src/digitalmodel/orcaflex/weather_window.py:L143-L161] | Occurrence-weighted Hs/Tp operability; active wind/current limits are rejected | independent | not checked | none established at pin |
+| `analyse_persistence` [src/digitalmodel/orcaflex/weather_window.py:L206-L263] | Contiguous weather-window persistence | independent | not checked | none established at pin |
 | `assess_weather_window` [src/digitalmodel/weather_window/workflow.py:L48-L99] | Weather-window workflow wrapper | independent | not checked | none established at pin |
 | `seastate_operability` [src/digitalmodel/subsea/rov/seastate_limits.py:L88-L133] | Single-sea-state Hs check; alpha restricted to (0, 1], unlike installation criteria | independent | no | none established at pin |
 | `scatter_operability` [src/digitalmodel/subsea/rov/seastate_limits.py:L158-L222] | Scatter occurrence operability | independent | not checked | none established at pin |
@@ -1192,8 +1194,8 @@ The following 40 reviewed methods have no implementation entry in any map family
 | `src/digitalmodel/installation/installation_pamphlet/calculations.py::assess_lifts` | [src/digitalmodel/installation/installation_pamphlet/calculations.py:L253-L287] |
 | `src/digitalmodel/installation/installation_pamphlet/calculations.py::compute_envelopes` | [src/digitalmodel/installation/installation_pamphlet/calculations.py:L365-L394] |
 | `src/digitalmodel/installation/installation_pamphlet/calculations.py::compute_operability` | [src/digitalmodel/installation/installation_pamphlet/calculations.py:L598-L603] |
-| `src/digitalmodel/orcaflex/weather_window.py::OperabilityInput.calculate_operability` | [src/digitalmodel/orcaflex/weather_window.py:L119-L132] |
-| `src/digitalmodel/orcaflex/weather_window.py::analyse_persistence` | [src/digitalmodel/orcaflex/weather_window.py:L177-L234] |
+| `src/digitalmodel/orcaflex/weather_window.py::OperabilityInput.calculate_operability` | [src/digitalmodel/orcaflex/weather_window.py:L143-L161] |
+| `src/digitalmodel/orcaflex/weather_window.py::analyse_persistence` | [src/digitalmodel/orcaflex/weather_window.py:L206-L263] |
 | `src/digitalmodel/weather_window/workflow.py::assess_weather_window` | [src/digitalmodel/weather_window/workflow.py:L48-L99] |
 | `src/digitalmodel/subsea/rov/seastate_limits.py::seastate_operability` | [src/digitalmodel/subsea/rov/seastate_limits.py:L88-L133] |
 | `src/digitalmodel/subsea/rov/seastate_limits.py::scatter_operability` | [src/digitalmodel/subsea/rov/seastate_limits.py:L158-L222] |

@@ -5,13 +5,14 @@ from hashlib import sha256
 from html import escape
 import json
 import os
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 import re
 
 from digitalmodel.workflows.installation_envelope_dashboard import render_dashboard, _criteria_html
 from digitalmodel.workflows.installation_partial_report import (
     _grid, _envelope_table, _case_details, _sling_rows, _table,
 )
+from digitalmodel.workflows.installation_report_paths import display_cases as _display_cases
 from digitalmodel.workflows.installation_workflow_schematic import workflow_schematic
 from digitalmodel.workflows.vessel_capability_layout import reject_wave_preview
 
@@ -201,34 +202,9 @@ def _appendix_case_details(cases, base):
     return result
 
 
-def _display_cases(summary, config, base):
-    """Resolve explicit portable link mappings without changing pinned source rows."""
-    if 'case_run_dirs' not in config:
-        return summary['cases']
-    mapping = config['case_run_dirs']
-    expected = {str(row['index']) for row in summary['cases']}
-    if not isinstance(mapping, dict) or set(mapping) != expected:
-        raise ValueError('Complete case_run_dirs mapping required')
-    locator = config.get('dataset_root')
-    if not isinstance(locator, str) or not locator or locator.startswith(('/', '\\')) or ':' in locator:
-        raise ValueError('dataset_root must be an explicit relative locator')
-    root = (Path(base) / locator).resolve()
-    rows = []
-    for row in summary['cases']:
-        entry = mapping[str(row['index'])]
-        if (not isinstance(entry, str) or not entry or '\\' in entry or ':' in entry
-                or entry.startswith('/') or '..' in PurePosixPath(entry).parts):
-            raise ValueError('Case mapping entries must be relative without traversal')
-        resolved = (root / entry).resolve()
-        if not resolved.is_relative_to(root):
-            raise ValueError('Case mapping resolves outside dataset root')
-        rows.append(dict(row, run_dir=str(resolved)))
-    return rows
-
-
 def _references_appendices(summary, payload, config, evidence, base, created):
     rows = [[escape(name), escape(value['path']), escape(value['sha256'])] for name, value in evidence.items()]
-    references = _table(['Source', 'Owner-relative / report-relative locator', 'SHA-256'], rows)
+    references = _table(['Source', 'Maintainer-relative / report-relative locator', 'SHA-256'], rows)
     for row in config.get('references', []):
         locator = str(row['path'])
         if ':' in locator.split('/')[0] or locator.startswith(('/', '\\')):

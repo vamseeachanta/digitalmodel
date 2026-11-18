@@ -965,6 +965,105 @@ class TestScheduleDeclineIntegration:
 class TestEURDeclineParameterization:
     """Test that reservoir_size_mmbbl auto-derives decline rate from EUR."""
 
+    @pytest.fixture
+    def synthetic_eur_inputs(self) -> dict:
+        """Supply synthetic screening inputs, with no external field data.
+
+        Chosen inputs are a TLP in 1,000 m water, 30,000 bbl/day capacity,
+        70 USD/bbl oil, a 10% discount rate, and a 20-year life. A synthetic
+        1,000 MMbbl reservoir at the EUR model's assumed 15% recovery gives
+        150 MMbbl EUR. Using 365 days/year and 1,000,000 bbl/MMbbl gives
+        10.95 MMbbl/year. The model's 60% plateau convention gives 12 full
+        years (131.4 MMbbl), leaving 18.6 MMbbl for eight decline years.
+        These are hand calculations, not measured reservoir properties.
+        """
+        return dict(
+            field_name="Synthetic EUR",
+            water_depth_m=1000.0,
+            host_type="TLP",
+            production_capacity_bopd=30_000.0,
+            oil_price_usd_per_bbl=70.0,
+            discount_rate=0.10,
+            fiscal_regime=FiscalRegime.US,
+            field_life_years=20,
+            reservoir_size_mmbbl=1000.0,
+        )
+
+    @pytest.mark.parametrize(
+        "decline_type", ["linear", DeclineType.LINEAR], ids=["string", "enum"]
+    )
+    def test_string_decline_type_eur_auto_derives(
+        self, synthetic_eur_inputs: dict, decline_type: str | DeclineType
+    ) -> None:
+        """Both selectors normalize and satisfy the synthetic EUR balance.
+
+        Independently sum 10.95 * (12 + sum(exp(-D*t), t=1..8)) MMbbl
+        using scalar math, and compare with the hand-calculated 150 MMbbl
+        EUR from synthetic_eur_inputs. No production helper supplies the
+        expectation. A relative tolerance of 1e-10 allows floating-point
+        rounding while resolving the EUR balance well below one barrel.
+        """
+        inp = EconomicsInput(**synthetic_eur_inputs, decline_type=decline_type)
+
+        assert inp.decline_type is DeclineType.EXPONENTIAL
+        assert math.isfinite(inp.decline_rate)
+        assert inp.decline_rate > 0.0
+
+        annual_prod = 30_000.0 * 365.0 / 1_000_000.0
+        eur = 1000.0 * 0.15
+        independent_factors = [0.0] + [1.0] * 12 + [
+            math.exp(-inp.decline_rate * t) for t in range(1, 9)
+        ]
+        independent_cumulative = annual_prod * math.fsum(independent_factors)
+        assert independent_cumulative == pytest.approx(eur, rel=1e-10)
+
+        factors = _production_factors(inp, inp.field_life_years)
+        assert factors == pytest.approx(independent_factors, rel=1e-10)
+        assert annual_prod * math.fsum(factors) == pytest.approx(eur, rel=1e-10)
+
+    @pytest.mark.parametrize(
+        "decline_type", ["linear", DeclineType.LINEAR], ids=["string", "enum"]
+    )
+    def test_explicit_linear_rate_prevents_eur_auto_derivation(
+        self, synthetic_eur_inputs: dict, decline_type: str | DeclineType
+    ) -> None:
+        """An explicit synthetic rate of 0.2 preserves the linear profile.
+
+        LINEAR ignores the rate and falls to 20% over eight years, per the
+        DeclineType.LINEAR contract. Tail factors form the arithmetic series
+        0.9, 0.8, ..., 0.2, whose hand sum is (0.9 + 0.2) * 8 / 2 = 4.4.
+        Together with the 12-year plateau from synthetic_eur_inputs this
+        gives 10.95 * (12 + 4.4) = 179.58 MMbbl, independent of EUR.
+        """
+        inp = EconomicsInput(
+            **synthetic_eur_inputs, decline_type=decline_type, decline_rate=0.2
+        )
+
+        assert inp.decline_type is DeclineType.LINEAR
+        assert inp.decline_rate == 0.2
+        expected_cumulative = 30_000.0 * 365.0 / 1_000_000.0 * (
+            12 + (0.9 + 0.2) * 8 / 2
+        )
+        factors = _production_factors(inp, inp.field_life_years)
+        annual_prod = 30_000.0 * 365.0 / 1_000_000.0
+        assert annual_prod * math.fsum(factors) == pytest.approx(expected_cumulative)
+
+    @pytest.mark.parametrize("decline_rate", [None, 0.2], ids=["omitted", "explicit"])
+    def test_invalid_decline_selector_with_eur_raises(
+        self, synthetic_eur_inputs: dict, decline_rate: float | None
+    ) -> None:
+        """The same synthetic EUR inputs reject an unknown selector.
+
+        Check both an omitted rate and the explicit 0.2 control used above;
+        neither permits an invalid selector to fall back to auto-derivation.
+        """
+        with pytest.raises(ValueError, match="not a valid DeclineType"):
+            EconomicsInput(
+                **synthetic_eur_inputs,
+                decline_type="invalid",
+                decline_rate=decline_rate,
+            )
+
     def test_eur_auto_derives_decline_rate(self) -> None:
         """When reservoir_size given without decline_rate, rate is auto-derived."""
         inp = EconomicsInput(

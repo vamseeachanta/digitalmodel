@@ -27,7 +27,7 @@ Gap analysis vs the issue body's requirements:
 - Standards traceability via manifest: ✅
 - Result export (xarray, plots, summary tables): ✅
 - Hierarchical Toeplitz matrices for large meshes: NOT YET — issue notes this as "consider"
-- OpenMP + GPU parallelism on dev-secondary: NOT YET configured
+- OpenMP + GPU parallelism on the 32-core workstation: NOT YET configured
 
 Practical scope for this PR: **close the loop on #464** by (1) confirming all listed deliverables present, (2) adding the missing performance hooks (Hierarchical Toeplitz), (3) adding the spec.yml→Capytaine driver, and (4) referring benchmark expansion to #465 to scope-protect.
 
@@ -39,7 +39,7 @@ Practical scope for this PR: **close the loop on #464** by (1) confirming all li
 
 3. **GPU/OpenMP env note.** New section in `src/digitalmodel/hydrodynamics/capytaine/__init__.py` docstring (or sidecar `README.md`):
    - On Linux with OpenMP: set `CAPYTAINE_USE_OPENMP=1` before run
-   - dev-secondary GPU (NVIDIA T400): Capytaine 2.x doesn't expose direct CUDA — OpenMP path is the realistic option
+   - Workstation GPU (NVIDIA T400): Capytaine 2.x doesn't expose direct CUDA — OpenMP path is the realistic option
    - Document benchmark numbers from the executor's local run (panels-per-second)
 
 4. **spec.yml → Capytaine driver.** New file `src/digitalmodel/hydrodynamics/capytaine/runner.py`:

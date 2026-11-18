@@ -74,7 +74,22 @@ def build_diagnostic_report_html(
     ctx = results.ctx
     lines = _report_header()
     lines.extend(["    <h1>Dynacard Diagnostic Report</h1>"])
+    basis = results.downhole_load_basis
+    if basis is not None:
+        lines.extend([
+            '    <section aria-label="Downhole load basis">',
+            "      <h2>Downhole load basis</h2>",
+            f"      <p>{_esc(basis.method)}: {_esc(basis.validation_status)}</p>",
+            f"      <p>{_esc(basis.limitations)}</p>",
+            "    </section>",
+        ])
     lines.extend(_verdict_section(verdict))
+    if results.diagnostic_card is not None:
+        lines.append(
+            "<p>Classification and diagnostic plot use the unsmoothed solver "
+            "strain card. Calculation metrics use the smoothed downhole card. "
+            "Classifier field accuracy: NOT_EVALUATED.</p>"
+        )
     if ctx is not None:
         lines.extend(_input_section(cfg, ctx, results.solver_method))
         lines.extend(_input_checks_section(cfg, ctx))

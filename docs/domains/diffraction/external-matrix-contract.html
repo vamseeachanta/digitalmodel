@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Diffraction external matrix input contract</title>
+<style>
+body {max-width: 64rem; margin: 2rem auto; padding: 0 1rem; font: 1rem/1.5 system-ui; color: #172b3a;}
+table {border-collapse: collapse; width: 100%;} th, td {border: 1px solid #bbc; padding: .5rem; text-align: left;}
+caption {caption-side: bottom; text-align: left;} code, pre {background: #eef2f5;} pre {padding: 1rem; overflow: auto;}
+</style>
+<h1>Diffraction external matrix input contract</h1>
+<h2>Summary</h2>
+<p>External stiffness and damping inputs require explicit canonical SI units
+and a reference point. Both adapters convert the declared input to native
+units and save applied matrix evidence. Missing metadata, unknown units,
+nonfinite entries, non-square matrices and asymmetric matrices are rejected.</p>
+<h2>Revision history</h2>
+<table><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>1</td><td>2026-10-20</td><td>Declare units and origins to prevent different applied matrices from one input.</td></tr>
+<caption>Table 1. Document revisions.</caption></table>
+<h2>Inputs and method</h2>
+<p>The optional <code>external_stiffness</code> and <code>external_damping</code>
+fields remain six-by-six lists. Each supplied matrix requires its own
+<code>external_stiffness_units: SI</code> or <code>external_damping_units: SI</code>
+and corresponding <code>external_*_reference_point</code> declaration.
+Only <code>body_origin</code> and <code>centre_of_mass</code> are supported.
+An absent matrix needs neither field; metadata without a matrix is rejected.</p>
+<p>Here SI means N, m, s and rad, regardless of a backend's name for its unit
+system. Rows and columns follow surge, sway, heave, roll, pitch, yaw.
+Axes are parallel to body axes through the declared point. A positive
+coefficient produces a load opposing displacement or velocity:
+<code>F_ext = -K q - B dq/dt</code>. No hydrostatic replacement or target-restoring
+semantics are introduced.</p>
+<table><tr><th>Block (row / column)</th><th>Stiffness</th><th>Damping</th></tr>
+<tr><td>Translation / translation</td><td>N/m</td><td>N.s/m</td></tr>
+<tr><td>Translation / rotation</td><td>N/rad</td><td>N.s/rad</td></tr>
+<tr><td>Rotation / translation</td><td>N.m/m</td><td>N.m.s/m</td></tr>
+<tr><td>Rotation / rotation</td><td>N.m/rad</td><td>N.m.s/rad</td></tr>
+<caption>Table 2. Canonical block units, derived from generalized load divided by motion or velocity.</caption></table>
+<p>OrcaWave SI uses kN, m and s, so <code>K_native = K_SI / 1000</code>
+and <code>B_native = B_SI / 1000</code> for every entry. Angular columns
+remain in radians. AQWA's generated kg, m, N deck uses an explicit identity
+conversion, followed by the existing four-significant-figure card formatting.</p>
+<p>AQWA damping is written on FIDP cards; additional structural stiffness is
+written on documented SSTF cards. The former FISK spelling is replaced.
+Each body has its own WFS data block. AQWA accepts centre-of-mass matrices
+with zero body attitude, and body-origin matrices only when that origin
+coincides with the centre of mass. Other origins, free-floating mass mode
+and rotated body axes are rejected because no matrix shift or rotation is
+established. OrcaWave preserves either supported named origin.</p>
+<h2>Worked synthetic example</h2>
+<p>The complete input is
+<a href="../../../examples/hydrodynamics/diffraction/external_matrices.yml">external_matrices.yml</a>.
+Every coefficient is a chosen synthetic input. The mesh name is a placeholder;
+panel geometry and hydrodynamic qualification are outside this example.</p>
+<pre>K_SI = B_SI =
+[1000,    0,    0,  200,    0,    0]
+[   0, 2000,    0,    0,    0,    0]
+[   0,    0, 3000,    0,    0,    0]
+[ 200,    0,    0, 4000,    0,    0]
+[   0,    0,    0,    0, 5000,    0]
+[   0,    0,    0,    0,    0, 6000]
+units: SI
+reference_point: centre_of_mass
+centre_of_gravity: [0, 0, -2] m</pre>
+<p>Hand calculation: diagonal coefficients 1000 through 6000 divided by 1000
+give native OrcaWave coefficients 1.0 through 6.0. Each coupling coefficient
+200 divided by 1000 gives 0.2, in both transpose positions. AQWA retains
+the input coefficients. At a prescribed surge displacement of 1 m and zero
+other motions, the external surge restoring force is -1000 N in either
+deck, and the roll moment from the coupling is -200 N.m. At a prescribed
+surge velocity of 1 m/s, the same selected damping coefficients give -1000 N
+and -200 N.m. These are dimensional hand calculations, not solver results.</p>
+<pre>from pathlib import Path
+from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
+from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
+from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
+
+spec = DiffractionSpec.from_yaml("examples/hydrodynamics/diffraction/external_matrices.yml")
+cards = AQWABackend().build_deck7(spec)
+path = OrcaWaveBackend().generate_single(spec, Path("output"))</pre>
+<h2>Evidence and migration</h2>
+<p>Single and modular generation write <code>external_matrices.aqwa.json</code>
+or <code>external_matrices.orcawave.json</code> beside the deck when a matrix
+is supplied. The sidecar records input values, applied native and normalized
+values, per-entry units, DOF order, sign, reference coordinates and conversion
+revision. An empty matrix list replaces earlier evidence when matrices are
+removed. AQWA rounding is visible in the applied values. This is generated
+input provenance; it does not claim licensed execution or solver readback.</p>
+<p>Legacy matrices require review of their original units and reference point
+before metadata is added. Native kN-based inputs are multiplied by 1000 for
+canonical storage. Values already in N are retained. The existing benchmark
+specification is migrated from its retained native input while preserving
+its generated native damping.</p>
+<p>Restoring composition and target GM remain outside this input contract.
+Result-side matrix normalization also remains separate. User-specified origins,
+matrix frame transformations and licensed solver confirmation are not evaluated.</p>
+<h2>Sources</h2>
+<ul>
+<li><a href="https://www.bipm.org/documents/20126/41483022/SI-Brochure-9.pdf">BIPM, The International System of Units, 9th edition (2019), Table 7</a>, SI kilo prefix.</li>
+<li><a href="https://www.orcina.com/webhelp/OrcaWave/Content/html/Data,Constraints.htm">OrcaWave WebHelp, Data: Constraints</a>, external stiffness and damping block-unit equations and origin definition, accessed 2026-10-20.</li>
+<li><a href="https://www.orcina.com/webhelp/OrcaWave/Content/html/Data,Model.htm">OrcaWave WebHelp, Data: Model</a>, Units, accessed 2026-10-20.</li>
+<li>AQWA Reference Manual, 2025 R1: <a href="https://ansyshelp.ansys.com/public/Views/Secured/corp/v251/en/aqwa_ref/aqwaref_intro_axes.html">1.2.1, Axes Systems</a>;
+<a href="https://ansyshelp.ansys.com/public/Views/Secured/corp/v251/en/aqwa_ref/aqwaref_deck7_fiam_fidp.html">11.6.1, FIAM/FIDP</a>;
+<a href="https://ansyshelp.ansys.com/public/Views/Secured/corp/v251/en/aqwa_ref/aqwaref_deck7_sstf.html">11.7.1, SSTF</a>;
+<a href="https://ansyshelp.ansys.com/public/Views/Secured/corp/v251/en/aqwa_ref/aqwaref_chap_deck_7.html">Chapter 11, WFS structure selection</a>.</li>
+</ul>
+</html>

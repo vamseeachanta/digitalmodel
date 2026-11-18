@@ -164,3 +164,10 @@ engine designation.
 - API 11E — Specification for Pumping Units
 - Everitt, T.A. and Jennings, J.W., SPE 18189 — the downhole-card transform
   (implemented in the `everitt_jennings` package)
+
+## Calibrated screenshots and bounded timing
+
+The [surface-card undulation analysis](surface-card-undulations.md) extends
+this package with reusable image digitization, explicit segmentation inputs,
+exact harmonic timing bounds and a worked example. It preserves unresolved
+fillage, gearbox and downhole-diagnosis checks as `NOT_EVALUATED`.

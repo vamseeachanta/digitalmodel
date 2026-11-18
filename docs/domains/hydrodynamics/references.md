@@ -1,5 +1,10 @@
 # Hydrodynamics References
 
+## Squat and under-keel clearance
+
+- [Empirical squat and UKC screening](squat-screening.md): source ranges,
+  explicit allowances, speed screening and a synthetic dredged-channel example.
+
 ## Flow & Pressure
 - http://hassanelbanhawi.com/flow-pressure-drop-k-cv-kv-converters/
 

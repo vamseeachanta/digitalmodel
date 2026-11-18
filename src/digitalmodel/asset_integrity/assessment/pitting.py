@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: API 579-1 Part 6 pitting assessment — pit-field characterization,
 # ABOUTME: conservative Level 1 screening, Level 2 via equivalent-LTA bounding.
 """Pitting assessment per the METHODOLOGY of API 579-1/ASME FFS-1 Part 6.
@@ -62,12 +65,14 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from numbers import Real
 from typing import Optional
 
 import numpy as np
 import pandas as pd
 from scipy import ndimage
 
+from ..applicability import flagged, merge
 from .level2_engine import Level2Engine
 
 # --- Characterization defaults --------------------------------------------
@@ -98,17 +103,18 @@ class PitFieldCharacterization:
     max_pit_depth_ratio: float     # w_max / t_nom
     avg_pit_depth_in: float        # mean (t_nom - reading) over pitted cells
     avg_pit_depth_ratio: float
-    t_min_pit_in: float            # deepest remaining ligament (min reading)
-    t_avg_pit_in: float            # mean reading over pitted cells
-    background_median_in: float    # median reading of non-pitted cells
+    t_min_pit_in: float            # pit minimum; grid minimum when no pits
+    t_avg_pit_in: float            # pit mean; grid mean when no pits
+    background_median_in: float    # non-pitted median; NaN when absent
     largest_pit_cells: int         # size (cells) of the largest component
     pit_spacing_mean_in: Optional[float]   # nearest-neighbour centre spacing
     pit_spacing_min_in: Optional[float]
     pitted_region_row_count: int   # axial rows spanned by the pit field
     pitted_region_length_in: float # axial extent (rows x row spacing)
     pitted_region_col_count: int   # circumferential columns spanned
-    row_spacing_in: float          # inferred from the grid index
+    row_spacing_in: float          # explicit, index-inferred, or assumed pitch
     pit_sizes_cells: list = field(default_factory=list)
+    row_spacing_source: str = "assumed_unit_spacing"
 
     def to_dict(self) -> dict:
         """JSON-serialisable summary."""
@@ -120,9 +126,27 @@ class PitFieldCharacterization:
             "background_median_in", "largest_pit_cells",
             "pit_spacing_mean_in", "pit_spacing_min_in",
             "pitted_region_row_count", "pitted_region_length_in",
-            "pitted_region_col_count", "row_spacing_in",
+            "pitted_region_col_count", "row_spacing_in", "row_spacing_source",
         )}
         return d
+
+
+def _row_spacing(index: pd.Index, explicit: Optional[float]) -> tuple[float, str]:
+    """Resolve pitch without presenting a fallback as measured geometry."""
+    if explicit is not None:
+        if (isinstance(explicit, (bool, np.bool_)) or not isinstance(explicit, Real)
+                or not math.isfinite(explicit) or explicit <= 0):
+            raise ValueError("row_spacing_in must be a positive finite number")
+        return float(explicit), "explicit"
+    try:
+        coordinates = np.asarray(index, dtype=float)
+    except (TypeError, ValueError):
+        return 1.0, "assumed_unit_spacing"
+    gaps = np.diff(coordinates)
+    if (len(coordinates) > 1 and np.isfinite(coordinates).all()
+            and (gaps > 0).all() and np.allclose(gaps, gaps[0])):
+        return Level2Engine._infer_spacing(index), "index"
+    return 1.0, "assumed_unit_spacing"
 
 
 def characterize_pit_field(
@@ -130,6 +154,7 @@ def characterize_pit_field(
     nominal_wt_in: float,
     *,
     pit_threshold_fraction: float = DEFAULT_PIT_THRESHOLD_FRACTION,
+    row_spacing_in: Optional[float] = None,
 ) -> PitFieldCharacterization:
     """Characterize the pit field in a normalised wall-thickness grid.
 
@@ -144,6 +169,8 @@ def characterize_pit_field(
         nominal_wt_in: Nominal wall thickness (inches).
         pit_threshold_fraction: Fraction of nominal WT below which a reading
             is a pit candidate (default 0.90).
+        row_spacing_in: Explicit axial pitch (inches), overriding index labels.
+            Without usable index gaps, unit pitch is recorded as an assumption.
 
     Returns:
         :class:`PitFieldCharacterization` (all lengths in inches; spacing in
@@ -153,7 +180,7 @@ def characterize_pit_field(
     valid = np.isfinite(values)
     n_valid = int(valid.sum())
     threshold = pit_threshold_fraction * nominal_wt_in
-    row_spacing = Level2Engine._infer_spacing(grid_df.index)
+    row_spacing, spacing_source = _row_spacing(grid_df.index, row_spacing_in)
 
     pit_mask = valid & (values < threshold)
     labels, n_pits = ndimage.label(pit_mask)  # 4-connectivity default
@@ -170,10 +197,10 @@ def characterize_pit_field(
             max_pit_depth_ratio=0.0,
             avg_pit_depth_in=0.0,
             avg_pit_depth_ratio=0.0,
-            t_min_pit_in=float(nominal_wt_in),
-            t_avg_pit_in=float(nominal_wt_in),
+            t_min_pit_in=float(values[valid].min()) if n_valid else float("nan"),
+            t_avg_pit_in=float(values[valid].mean()) if n_valid else float("nan"),
             background_median_in=(
-                float(np.median(values[valid])) if n_valid else float(nominal_wt_in)
+                float(np.median(values[valid])) if n_valid else float("nan")
             ),
             largest_pit_cells=0,
             pit_spacing_mean_in=None,
@@ -183,6 +210,7 @@ def characterize_pit_field(
             pitted_region_col_count=0,
             row_spacing_in=row_spacing,
             pit_sizes_cells=[],
+            row_spacing_source=spacing_source,
         )
 
     pitted_values = values[pit_mask]
@@ -228,7 +256,7 @@ def characterize_pit_field(
         t_min_pit_in=t_min_pit,
         t_avg_pit_in=t_avg_pit,
         background_median_in=(
-            float(np.median(background)) if background.size else t_avg_pit
+            float(np.median(background)) if background.size else float("nan")
         ),
         largest_pit_cells=int(sizes.max()),
         pit_spacing_mean_in=spacing_mean,
@@ -238,6 +266,7 @@ def characterize_pit_field(
         pitted_region_col_count=col_count,
         row_spacing_in=row_spacing,
         pit_sizes_cells=[int(s) for s in sizes],
+        row_spacing_source=spacing_source,
     )
 
 
@@ -280,15 +309,15 @@ def screen_pitting_level1(
     c = characterization
     if c.pit_count == 0:
         return {
-            "verdict": "ACCEPT",
-            "average_criterion_pass": True,
-            "deep_pit_criterion_pass": True,
+            "verdict": "NOT_EVALUATED",
+            "average_criterion_pass": None,
+            "deep_pit_criterion_pass": None,
             "t_avg_pit_in": c.t_avg_pit_in,
             "t_min_in": t_min_in,
             "fca_in": fca_in,
-            "rt_deepest_pit": 1.0,
+            "rt_deepest_pit": float("nan"),
             "rt_min": rt_min,
-            "basis": "No readings below the pit threshold — no pitting to screen.",
+            "basis": "No pit population; use measured-wall metal-loss assessment.",
         }
 
     avg_ok = (c.t_avg_pit_in - fca_in) >= t_min_in
@@ -339,26 +368,27 @@ def assess_pitting_level2_equivalent_lta(
     c = characterization
     if c.pit_count == 0:
         return {
-            "verdict": "ACCEPT",
-            "rsf": 1.0,
+            "verdict": "NOT_EVALUATED",
+            "rsf": float("nan"),
             "rsf_a": rsf_a,
             "t_am_in": c.t_avg_pit_in,
             "t_mm_in": c.t_min_pit_in,
             "assessment_type": "PITTING",
-            "folias_factor": 1.0,
+            "folias_factor": float("nan"),
             "flaw_length_in": 0.0,
-            "rt": 1.0,
+            "rt": float("nan"),
             "assessment_basis": (
-                "No readings below the pit threshold — no equivalent LTA "
-                "required; RSF = 1.0."
+                "No pit population; pitting strength is not evaluated. "
+                "Use measured-wall metal-loss assessment."
             ),
             "equivalent_lta": None,
+            "applicability": flagged("pitting.no_pits", "No pit population to assess."),
         }
 
     n_rows = max(int(c.pitted_region_row_count), 1)
     # Equivalent LTA grid: uniform effective thickness over the pitted-region
-    # axial extent; index carries the physical row spacing so the LML engine
-    # recovers the correct flaw length.
+    # axial extent. Explicit pitch preserves even a single physical row's
+    # extent without inferring geometry from a one-index grid.
     eq_grid = pd.DataFrame(
         np.full((n_rows, 1), c.t_avg_pit_in),
         index=np.arange(n_rows, dtype=float) * c.row_spacing_in,
@@ -370,8 +400,14 @@ def assess_pitting_level2_equivalent_lta(
         nominal_wt_in=nominal_wt_in,
         t_min_in=t_min_in,
         rsf_a=rsf_a,
+        row_spacing_in=c.row_spacing_in,
     )
     result = engine.evaluate(eq_grid)
+    if c.row_spacing_source == "assumed_unit_spacing":
+        result["applicability"] = merge(result.get("applicability"), flagged(
+            "pitting.row_spacing_assumed",
+            "Axial pitch is assumed; supply row_spacing_in or physical index spacing.",
+        ))
 
     result["assessment_type"] = "PITTING"
     result["assessment_basis"] = _ASSESSMENT_BASIS
@@ -381,6 +417,7 @@ def assess_pitting_level2_equivalent_lta(
         "axial_extent_in": c.pitted_region_length_in,
         "axial_rows": n_rows,
         "row_spacing_in": c.row_spacing_in,
+        "row_spacing_source": c.row_spacing_source,
         "source_pit_count": c.pit_count,
     }
     return result
@@ -398,6 +435,7 @@ def assess_pitting(
     fca_in: float = 0.0,
     pit_threshold_fraction: float = DEFAULT_PIT_THRESHOLD_FRACTION,
     rt_min: float = DEFAULT_RT_MIN,
+    row_spacing_in: Optional[float] = None,
 ) -> dict:
     """Characterize + Level 1 screen + Level 2 equivalent-LTA in one call.
 
@@ -406,7 +444,8 @@ def assess_pitting(
         ``level1`` (dict), ``level2`` (dict incl. ``assessment_basis``).
     """
     char = characterize_pit_field(
-        grid_df, nominal_wt_in, pit_threshold_fraction=pit_threshold_fraction
+        grid_df, nominal_wt_in, pit_threshold_fraction=pit_threshold_fraction,
+        row_spacing_in=row_spacing_in,
     )
     l1 = screen_pitting_level1(char, t_min_in=t_min_in, fca_in=fca_in, rt_min=rt_min)
     l2 = assess_pitting_level2_equivalent_lta(

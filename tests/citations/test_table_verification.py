@@ -11,6 +11,7 @@ or acceptance limits. Source identity is synthetic fixture metadata.
 
 from dataclasses import replace
 import os
+from pathlib import Path
 import subprocess
 import sys
 
@@ -205,3 +206,26 @@ sys.exit(0 if mutation == 'match' else 1)
         check=False,
     )
     assert completed.returncode == 0, completed.stderr
+
+
+@pytest.mark.parametrize("field", ["code_id", "publisher", "revision"])
+@pytest.mark.parametrize("optimized", [False, True], ids=["normal", "optimized"])
+def test_matching_pair_rejects_stale_source(tmp_path, field, optimized):
+    """Reuse the same pair after a successful comparison and a source edit."""
+    env = dict(os.environ)
+    env["PYTHONPATH"] = os.pathsep.join(sys.path)
+    probe = Path(__file__).with_name("table_stale_source_probe.py")
+    completed = subprocess.run(
+        [
+            sys.executable,
+            *(["-O"] if optimized else []),
+            str(probe),
+            str(tmp_path),
+            field,
+        ],
+        env=env,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert completed.returncode == 0, completed.stdout + completed.stderr

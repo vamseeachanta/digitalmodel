@@ -8,25 +8,36 @@ default:
       output: true
 
 scour:
+  # Synthetic arithmetic case, not recommended material or design properties.
+  # FHWA-RD-03-052 (2005), ch. 5 eq. 3: Ucrit = 1.2432 m/s.
   case:
     id: registry_scour_assessment
-    description: DNV-RP-F107 pipeline, monopile, and rock armour scour screen
+    description: Sediment motion and supplied armour criterion; scour depth not evaluated
   pipeline:
     pipe_od_m: 0.5
     current_velocity_ms: 0.8
-    wave_orbital_velocity_ms: 0.3
-    sediment_d50_mm: 0.3
+    wave_orbital_velocity_ms: 0.2
+    sediment_d50_mm: 1.0
     burial_ratio: 0.25
-    wave_period_s: 8.0
+    wave_period_s: 10.0
+    water_depth_m: 64.0
+    critical_shields_parameter: 0.04
   monopile:
     pile_diameter_m: 6.0
     current_velocity_ms: 1.0
-    water_depth_m: 30.0
+    water_depth_m: 64.0
+    sediment_d50_mm: 1.0
+    critical_shields_parameter: 0.04
   rock_armour:
-    current_velocity_ms: 1.0
-    rock_density_kg_m3: 2650.0
-    water_density_kg_m3: 1025.0
-    rock_d50_m: 0.3
+    # Hand Ns = 3/sqrt(10*0.4*(2000/1000-1)) = 1.5 > supplied 1.0.
+    # Nominal layer geometry = 3*0.4 = 1.2 m; no full design qualification.
+    current_velocity_ms: 3.0
+    rock_density_kg_m3: 2000.0
+    water_density_kg_m3: 1000.0
+    rock_d50_m: 0.4
+    gravity_ms2: 10.0
+    stability_limit: 1.0
+    layer_count: 3.0
   outputs:
     directory: results/scour
     summary_json: scour_summary.json

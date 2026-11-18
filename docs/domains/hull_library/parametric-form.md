@@ -124,6 +124,8 @@ explicitly; the generator does not silently refine the requested discretization.
 
 ## Reports and consumers
 
+The [parametric RAO pilot](parametric-rao-pilot.md) records its discrete ranges, analysis assumptions and limits of use.
+
 `generate_profile(params, name="parametric_monohull")` returns a ship profile
 with source `parametric_form` and its achieved block coefficient.
 `form_report(params)` returns a frozen `FormReport`: Cb, Cp, Cm, Cwp,

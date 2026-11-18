@@ -1,0 +1,28 @@
+{
+  "sources": [
+    {
+      "title": "Map Projections—A Working Manual",
+      "locator": "1987 edition, Chapter 7, pages 41–43",
+      "url": "https://pubs.usgs.gov/pp/1395/report.pdf",
+      "accessed_utc": "2026-10-22T05:12:23Z",
+      "http_status": 200,
+      "use": "Equations and definition"
+    },
+    {
+      "title": "PROJ manual: Web Mercator / Pseudo Mercator",
+      "locator": "9.5, Usage; Parameters; Mathematical definition",
+      "url": "https://proj.org/en/9.5/operations/projections/webmerc.html",
+      "accessed_utc": "2026-10-22T05:12:12Z",
+      "http_status": 200,
+      "use": "Published input and printed reference coordinates"
+    },
+    {
+      "title": "PROJ manual: Ellipsoids",
+      "locator": "9.5, Built-in ellipsoids, WGS84 row",
+      "url": "https://proj.org/en/9.5/usage/ellipsoids.html",
+      "accessed_utc": "2026-10-22T05:14:46Z",
+      "http_status": 200,
+      "use": "Equations and definition"
+    }
+  ]
+}

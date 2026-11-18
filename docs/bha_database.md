@@ -5,6 +5,12 @@ components and assemblies in this PR are `SYNTHETIC-EXAMPLE`, with assumed
 quantities; none establishes an equipment rating or qualified drilling design.
 The three examples are rotary pendulum, rotary building and motor assemblies.
 
+## Revision history
+
+| Revision | Date | Change and reason |
+| --- | --- | --- |
+| 1 | 2026-10-21 | Document the separate nominal table and comparison audit so missing source evidence is visible. |
+
 ```python
 from digitalmodel.bha_database import load_database
 
@@ -73,9 +79,65 @@ other labels and aliases are refused. This subset is not a connection standard
 or a catalogue of all available connections. The examples use equal nominal
 12-inch bit and hole diameters; wear and undergauge operation are not modelled.
 
-Held outside this PR: ISO 10424-1:2004 Table 14 rows and their PDF comparison
-record, held privately pending a publication decision. The former public
-standard-table branch has been removed; this slice has no dependency on it.
-No licensed PDF is retained in Git. API RP 7G weight-table
-comparison and a verified R7 margin clause remain OPEN. The public tests replace
-the held table-specific checks with synthetic schema and assembly checks.
+## Table 14 source comparison
+
+The separate `data/bha_standards/drill_collars_std.yml` transcription cites
+ISO 10424-1:2004, Table 14. `load_table14()` validates its structure, units and
+source identities; it does not authenticate the source or qualify equipment.
+The source digest, checked date and page locator are inherited metadata.
+No licensed PDF is retained in Git. The synthetic assembly catalogue remains
+independent of these nominal reference rows.
+
+Issue #2629 requires comparison of every row with an authorized licensed copy,
+recording the printed page before correcting any value. The disputed
+`6 5/8 REG` bevel cell remains pending. An inch conversion cannot determine what
+the standard printed. No new licensed-source comparison is established here,
+and every stored table quantity remains unchanged.
+
+`audit_table14(path)` enumerates every published field in every row. It excludes
+computed weight, which is an assumption outside Table 14. A pending or unmarked
+cell reports `NOT_EVALUATED`. A cell explicitly marked `verified` with its own
+`verification_locator` reports `COMPARISON_RECORDED`. This status records the
+presence of comparison metadata; the source evidence still needs review.
+An inherited source locator cannot fill missing cell records. The overall
+status remains `NOT_EVALUATED` until all cells have individual records.
+Coverage is recomputed from validated cell metadata on every call, without
+writing files or changing values.
+
+### Worked example: missing source evidence
+
+Input: the repository transcription, with its existing pending-cell marker.
+Method: enumerate the six published fields in each of the 23 supplied rows
+(ISO 10424-1:2004, Table 14 transcription); count by comparison status.
+The independent count is 23 × 6 = 138 cells, of which one is pending,
+138 − 1 = 137 are unspecified, and none has a comparison record.
+These counts describe the repository file, not verified standard values.
+
+```pycon
+>>> from digitalmodel.bha_database.iso_table14 import audit_table14
+>>> report = audit_table14()
+>>> report['status']
+'NOT_EVALUATED'
+>>> report['counts']
+{'total': 138, 'recorded': 0, 'pending': 1, 'unspecified': 137}
+>>> pending = [cell for cell in report['cells'] if cell['verification'] == 'pending']
+>>> [(cell['field'], cell['issue'], cell['locator']) for cell in pending]
+[('bevel_diameter', '#2629', None)]
+
+```
+
+Answer: source comparison is `NOT_EVALUATED`; keep all values unchanged.
+The way forward is to obtain authorized source access, compare every row,
+and attach each field's actual printed-page locator before reviewing corrections.
+Record neither a conversion nor the inherited locator as fresh source evidence.
+
+Run `PYTHONPATH=src python -m digitalmodel.bha_database.iso_table14` to print
+the JSON report, or append an explicit YAML path for an installed package.
+Command success means that a report was generated; callers inspect `status`
+for coverage. Invalid data or a missing file produces an error.
+Run `PYTHONPATH=src python -m doctest docs/bha_database.md` to check the example.
+
+Changes anywhere under `data/bha_standards/` select the subsea CI domain;
+its gate runs `tests/bha_database/`. Routing and execution configuration are
+covered by `tests/scripts/test_detect_touched_domains.py`.
+API RP 7G weight-table comparison and a verified R7 margin clause remain OPEN.

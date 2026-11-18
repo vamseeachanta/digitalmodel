@@ -7761,7 +7761,7 @@ _____________________________________________________________
                   opt (trans (list (cadr (assoc 11 ent))
                                    (caddr (assoc 11 ent))
                                    (cadddr (assoc 11 ent))) 
-                             (cdr (assoc -1 ent)) ;; from ECS
+                             (cdr (assoc -1 ent)) ;; from entity coordinate system
                              1)               ;; to current UCS
             )
             (setq ent (subst (cons 73 justq) (assoc 73 ent) ent))

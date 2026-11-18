@@ -42,16 +42,7 @@ from digitalmodel.hydrodynamics.diffraction.benchmark_abscissa import (
 )
 
 
-REFUSAL_QUALITIES = {
-    "INSUFFICIENT_DATA",
-    "INSUFFICIENT_SAMPLING",
-    "UNTRUSTED_SOURCE",
-    "INVALID_ABSCISSA",
-    # A zero diagonal has no established physical interpretation without
-    # geometry/frame and extraction evidence. Retain refusal; this code
-    # neither proves extraction failure nor excludes physical rotational zeros.
-    "ABSENT_DIAGONAL",
-}
+from digitalmodel.hydrodynamics.diffraction.benchmark_evidence import REFUSAL_QUALITIES
 
 
 @dataclass(frozen=True)
@@ -174,13 +165,26 @@ class HydrostaticComparison:
 
     solver_a: str
     solver_b: str
-    displacement_volume_diff: float
-    mass_diff: float
-    cog_diff: List[float]             # [dx, dy, dz]
-    cob_diff: List[float]             # [dx, dy, dz]
-    waterplane_area_diff: float
-    stiffness_matrix_diff: np.ndarray  # 6x6 matrix of absolute differences
+    displacement_volume_diff: Optional[float]
+    mass_diff: Optional[float]
+    cog_diff: Optional[List[float]]             # [dx, dy, dz]
+    cob_diff: Optional[List[float]]             # [dx, dy, dz]
+    waterplane_area_diff: Optional[float]
+    stiffness_matrix_diff: Optional[np.ndarray]  # 6x6 matrix of absolute differences
     stiffness_matrix_correlation: Optional[float]
+
+    comparison_status: str = "DIAGNOSTIC"
+    refusal_reason: Optional[str] = None
+
+    def to_dict(self) -> dict:
+        """Preserve unavailable measurements as null, never as zero."""
+        return {
+            "displacement_volume_diff": self.displacement_volume_diff,
+            "mass_diff": self.mass_diff, "cog_diff": self.cog_diff,
+            "cob_diff": self.cob_diff, "waterplane_area_diff": self.waterplane_area_diff,
+            "stiffness_matrix_correlation": self.stiffness_matrix_correlation,
+            "comparison_status": self.comparison_status, "refusal_reason": self.refusal_reason,
+        }
 
 
 @dataclass
@@ -198,6 +202,8 @@ class PairwiseResult:
     damping_quality: Dict[Tuple[int, int], str] = field(default_factory=dict)
     comparison_status: str = "DECIDED"
     refusal_reason: Optional[str] = None
+    added_mass_sample_counts: Dict[Tuple[int, int], Optional[int]] = field(default_factory=dict)
+    damping_sample_counts: Dict[Tuple[int, int], Optional[int]] = field(default_factory=dict)
 
 
 @dataclass
@@ -355,11 +361,17 @@ class MultiSolverComparator:
                 quality="INSUFFICIENT_DATA",
             )
 
-        errors = values2 - values1
-        mean_error = float(np.mean(errors))
+        with np.errstate(over="ignore", invalid="ignore"):
+            errors = values2 - values1
+        if not np.all(np.isfinite(errors)):
+            return MultiSolverComparator._insufficient_data_stats(values1.shape)
+        # Scale before squaring/summing: the RMS definition is unchanged,
+        # while finite large coefficients do not overflow the intermediates.
         max_error = float(np.max(np.abs(errors)))
-        rms_error = float(np.sqrt(np.mean(errors ** 2)))
-        mean_abs_error = float(np.mean(np.abs(errors)))
+        scaled = errors / max_error if max_error else errors
+        mean_error = float(np.mean(scaled) * max_error)
+        rms_error = float(np.sqrt(np.mean(scaled ** 2)) * max_error)
+        mean_abs_error = float(np.mean(np.abs(scaled)) * max_error)
 
         flat1 = values1.flatten()
         flat2 = values2.flatten()
@@ -382,8 +394,16 @@ class MultiSolverComparator:
             correlation = 1.0
             quality = "IDENTICAL"
         else:
-            correlation = float(np.corrcoef(flat1, flat2)[0, 1])
-            quality = "COMPARED"
+            # Pearson r is invariant to positive scale on either vector;
+            # NumPy corrcoef reference, accessed 2026, defines the statistic:
+            # https://numpy.org/doc/stable/reference/generated/numpy.corrcoef.html
+            scaled1 = flat1 / np.max(np.abs(flat1))
+            scaled2 = flat2 / np.max(np.abs(flat2))
+            with np.errstate(over="ignore", invalid="ignore", divide="ignore"):
+                correlation = float(np.corrcoef(scaled1, scaled2)[0, 1])
+            quality = "COMPARED" if np.isfinite(correlation) else "INSUFFICIENT_DATA"
+            if quality == "INSUFFICIENT_DATA":
+                correlation = None
 
         return DeviationStatistics(
             mean_error=mean_error,
@@ -830,48 +850,43 @@ class MultiSolverComparator:
             h_a = getattr(res_a, "hydrostatics", None)
             h_b = getattr(res_b, "hydrostatics", None)
 
-            if not h_a or not h_b:
+            if h_a is None and h_b is None:
                 continue
-
-            vol_diff = h_b.displacement_volume - h_a.displacement_volume
-            mass_diff = h_b.mass - h_a.mass
-            cog_diff = [b - a for a, b in zip(h_a.centre_of_gravity, h_b.centre_of_gravity)]
-            cob_diff = [b - a for a, b in zip(h_a.centre_of_buoyancy, h_b.centre_of_buoyancy)]
-            awp_diff = h_b.waterplane_area - h_a.waterplane_area
-
-            stiff_diff = h_b.stiffness_matrix - h_a.stiffness_matrix
-
-            # Correlation for stiffness matrix (flat)
-            flat_a = h_a.stiffness_matrix.flatten()
-            flat_b = h_b.stiffness_matrix.flatten()
-            # Undefined-correlation cases first, equality second — a constant
-            # stiffness matrix has no correlation to report even when both
-            # solvers produce the same constant (#1633).
-            if (
-                not np.all(np.isfinite(flat_a))
-                or not np.all(np.isfinite(flat_b))
-                or np.ptp(flat_a) == 0.0
-                or np.ptp(flat_b) == 0.0
-            ):
-                corr = None
-            elif np.array_equal(flat_a, flat_b):
-                corr = 1.0
-            else:
-                with np.errstate(invalid='ignore'):
-                    c = np.corrcoef(flat_a, flat_b)[0, 1]
-                    corr = float(c) if not np.isnan(c) else None
-
-            result[key] = HydrostaticComparison(
-                solver_a=solver_a,
-                solver_b=solver_b,
-                displacement_volume_diff=vol_diff,
-                mass_diff=mass_diff,
-                cog_diff=cog_diff,
-                cob_diff=cob_diff,
-                waterplane_area_diff=awp_diff,
-                stiffness_matrix_diff=stiff_diff,
-                stiffness_matrix_correlation=corr,
-            )
+            try:
+                values = []
+                for hydro in (h_a, h_b):
+                    scalars = np.asarray([
+                        hydro.displacement_volume, hydro.mass, hydro.waterplane_area,
+                    ], dtype=float)
+                    cog = np.asarray(hydro.centre_of_gravity, dtype=float)
+                    cob = np.asarray(hydro.centre_of_buoyancy, dtype=float)
+                    stiffness = np.asarray(hydro.stiffness_matrix, dtype=float)
+                    # Shapes follow output_schemas.HydrostaticResults: three
+                    # coordinate components and the six rigid-body DOFs.
+                    if scalars.shape != (3,) or cog.shape != (3,) or cob.shape != (3,) or stiffness.shape != (6, 6):
+                        raise ValueError("hydrostatic dimensions do not match the schema")
+                    if not all(np.all(np.isfinite(v)) for v in (scalars, cog, cob, stiffness)):
+                        raise ValueError("hydrostatic values must be finite")
+                    values.append((scalars, cog, cob, stiffness))
+                with np.errstate(over="ignore", invalid="ignore"):
+                    differences = [b - a for a, b in zip(*values)]
+                if not all(np.all(np.isfinite(v)) for v in differences):
+                    raise ValueError("hydrostatic differences must be finite")
+                scalar_diff, cog_diff, cob_diff, stiff_diff = differences
+                stats = self._calculate_deviation_stats(
+                    values[0][3].ravel(), values[1][3].ravel(), np.array([]),
+                )
+                result[key] = HydrostaticComparison(
+                    solver_a, solver_b, float(scalar_diff[0]), float(scalar_diff[1]),
+                    cog_diff.tolist(), cob_diff.tolist(), float(scalar_diff[2]),
+                    stiff_diff, stats.correlation,
+                )
+            except (AttributeError, TypeError, ValueError, OverflowError) as exc:
+                result[key] = HydrostaticComparison(
+                    solver_a, solver_b, None, None, None, None, None, None, None,
+                    comparison_status="REFUSED",
+                    refusal_reason=f"INVALID_HYDROSTATICS: {type(exc).__name__}",
+                )
 
         return result
 
@@ -1083,6 +1098,9 @@ class MultiSolverComparator:
                 )
                 if quality in REFUSAL_QUALITIES
             )
+            hydro = hydro_comparisons.get(pk)
+            if hydro is not None and hydro.refusal_reason:
+                refusal_reasons.add(hydro.refusal_reason)
             if self.policy is None:
                 refusal_reasons.add("UNCONFIGURED_POLICY")
 
@@ -1102,6 +1120,8 @@ class MultiSolverComparator:
                 hydrostatic_comparison=hydro_comparisons.get(pk),
                 added_mass_quality=am_quality,
                 damping_quality=damp_quality,
+                added_mass_sample_counts={k: v.sample_count for k, v in am_comparisons[pk].items()},
+                damping_sample_counts={k: v.sample_count for k, v in damp_comparisons[pk].items()},
                 comparison_status=(
                     "REFUSED" if refusal_reasons else "DECIDED"
                 ),
@@ -1249,6 +1269,7 @@ class MultiSolverComparator:
                         else None
                     ),
                     "magnitude_quality": comp.magnitude_stats.quality,
+                    "sample_count": comp.magnitude_stats.sample_count,
                     "magnitude_rms_error": float(
                         comp.magnitude_stats.rms_error,
                     ),
@@ -1278,21 +1299,7 @@ class MultiSolverComparator:
                 f"{k[0]},{k[1]}": v
                 for k, v in pr.damping_quality.items()
             }
-            hc_dict = None
-            if pr.hydrostatic_comparison:
-                hc = pr.hydrostatic_comparison
-                hc_dict = {
-                    "displacement_volume_diff": float(hc.displacement_volume_diff),
-                    "mass_diff": float(hc.mass_diff),
-                    "cog_diff": [float(v) for v in hc.cog_diff],
-                    "cob_diff": [float(v) for v in hc.cob_diff],
-                    "waterplane_area_diff": float(hc.waterplane_area_diff),
-                    "stiffness_matrix_correlation": (
-                        float(hc.stiffness_matrix_correlation)
-                        if hc.stiffness_matrix_correlation is not None
-                        else None
-                    ),
-                }
+            hc_dict = pr.hydrostatic_comparison.to_dict() if pr.hydrostatic_comparison else None
 
             out[pk] = {
                 "solver_a": pr.solver_a,
@@ -1306,6 +1313,8 @@ class MultiSolverComparator:
                 "added_mass_quality": am_quality,
                 "damping_quality": damp_quality,
                 "hydrostatic_comparison": hc_dict,
+                "added_mass_sample_counts": {f"{i},{j}": n for (i, j), n in pr.added_mass_sample_counts.items()},
+                "damping_sample_counts": {f"{i},{j}": n for (i, j), n in pr.damping_sample_counts.items()},
             }
         return out
 

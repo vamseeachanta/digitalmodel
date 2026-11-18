@@ -307,7 +307,7 @@ class Database():
 
     def get_db_version(self):
         import os
-        filename = os.path.join('data_manager\data', self.server_type, 'definitions\\functions', 'sql_version.sql')
+        filename = os.path.join(r'data_manager\data', self.server_type, 'definitions\\functions', 'sql_version.sql')
         if os.path.isfile(filename):
             df = self.executeScriptsFromFile(filename)
             self.analysis.update({'version': df})
@@ -317,7 +317,7 @@ class Database():
 
     def get_db_tables(self):
         import os
-        filename = os.path.join('data_manager\data', self.server_type, 'definitions\\functions',
+        filename = os.path.join(r'data_manager\data', self.server_type, 'definitions\\functions',
                                 'tables_in_database.sql')
         if os.path.isfile(filename):
             df = self.executeScriptsFromFile(filename)
@@ -328,7 +328,7 @@ class Database():
 
     def get_db_functions(self):
         import os
-        filename = os.path.join('data_manager\data', self.server_type, 'definitions\\functions',
+        filename = os.path.join(r'data_manager\data', self.server_type, 'definitions\\functions',
                                 'functions_in_database.sql')
         if os.path.isfile(filename):
             df = self.executeScriptsFromFile(filename)
@@ -378,7 +378,7 @@ class Database():
         import os
         schema_table = self.schema + '.' + 'StatisticsClass'
         query_argument_array = [schema_table]
-        filename = os.path.join('data_manager\data', self.server_type, 'definitions\\functions',
+        filename = os.path.join(r'data_manager\data', self.server_type, 'definitions\\functions',
                                 'get_all_records_from_table.sql')
         if os.path.isfile(filename):
             df = self.executeScriptsFromFile(filename, query_argument_array)
@@ -503,7 +503,7 @@ class Database():
         import os
         schema_table = self.schema + '.' + 'TableStatistics'
         query_argument_array = [schema_table, table_name]
-        filename = os.path.join('data_manager\data', self.server_type, 'definitions\\functions',
+        filename = os.path.join(r'data_manager\data', self.server_type, 'definitions\\functions',
                                 'get_table_statistics_by_table_name.sql')
         if os.path.isfile(filename):
             df = self.executeScriptsFromFile(filename, query_argument_array)
@@ -555,7 +555,7 @@ class Database():
         import os
         schema_table = self.schema + '.' + table_name
         query_argument_array = [schema_table]
-        filename = os.path.join('data_manager\data', self.server_type, 'definitions\\functions',
+        filename = os.path.join(r'data_manager\data', self.server_type, 'definitions\\functions',
                                 'table_columns_info.sql')
         if os.path.isfile(filename):
             df = self.executeScriptsFromFile(filename, query_argument_array)
@@ -567,7 +567,7 @@ class Database():
         import os
         schema_table = self.schema + '.' + table_name
         query_argument_array = [column_name, schema_table]
-        filename = os.path.join('data_manager\data', self.server_type, 'definitions\\functions',
+        filename = os.path.join(r'data_manager\data', self.server_type, 'definitions\\functions',
                                 'table_statistics.sql')
         if os.path.isfile(filename):
             print("          ............................ Column : {0}".format(column_name))
@@ -584,7 +584,7 @@ class Database():
         if start_time is not None and end_time is not None:
             print("          .....getting timetrace for Column : {0} from {1} to {2}".format(
                 column_name, start_time, end_time))
-            filename = os.path.join('data_manager\data', self.server_type, 'definitions\\functions',
+            filename = os.path.join(r'data_manager\data', self.server_type, 'definitions\\functions',
                                     'get_column_timetraces.sql')
             if os.path.isfile(filename):
                 print("          ............................ Column : {0}".format(column_name))
@@ -685,7 +685,7 @@ class Database():
             else:
                 import os
                 if set_info['query'].__contains__('filename'):
-                    filename = os.path.join('data_manager\data', self.server_type, 'definitions\\functions',
+                    filename = os.path.join(r'data_manager\data', self.server_type, 'definitions\\functions',
                                             set_info['query']['filename'])
                     query_argument_array = set_info['query']['arguments']
                     df = self.executeScriptsFromFile(filename, query_argument_array)
@@ -706,7 +706,7 @@ class Database():
         import os
         schema_table = self.schema + '.' + table_name
         query_argument_array = [schema_table]
-        filename = os.path.join('data_manager\data', self.server_type, 'definitions\\functions',
+        filename = os.path.join(r'data_manager\data', self.server_type, 'definitions\\functions',
                                 'get_all_records_from_table.sql')
         if os.path.isfile(filename):
             df = self.executeScriptsFromFile(filename, query_argument_array)

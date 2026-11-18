@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 ABOUTME: Effective weight calculations for riser analysis including steel,
 coating, contents, and buoyancy per DNV-OS-F201.
 """
 
-from .models import RiserConfiguration, BuoyancyModule, EffectiveWeightResult
+from dataclasses import replace
+
+from .models import RiserConfiguration, BuoyancyModule, EffectiveWeightResult, _range
 
 
 class EffectiveWeightCalculator:
@@ -16,8 +21,10 @@ class EffectiveWeightCalculator:
     Positive = sink, Negative = float
     """
 
-    def __init__(self, gravity: float = 9.81):
-        """Initialize calculator"""
+    def __init__(self, gravity: float | None = None):
+        """Use configuration gravity unless an explicit override is supplied."""
+        if gravity is not None:
+            _range("gravity", gravity, positive=True)
         self.g = gravity
 
     def calculate(self, riser: RiserConfiguration) -> EffectiveWeightResult:
@@ -30,6 +37,8 @@ class EffectiveWeightCalculator:
         Returns:
             EffectiveWeightResult with all components
         """
+        if self.g is not None:
+            riser = replace(riser, gravity=self.g)
         # Component weights
         w_steel = riser.steel_weight_per_length
         w_coating = riser.coating_weight_per_length
@@ -77,6 +86,7 @@ class EffectiveWeightCalculator:
         buoy_force = buoyancy_module.buoyancy_force_per_length(
             riser.external_fluid,
             riser.outer_diameter + 2 * (riser.coating_thickness or 0.0),
+            gravity=riser.gravity if self.g is None else self.g,
         )
 
         # Net effective weight in buoyancy section

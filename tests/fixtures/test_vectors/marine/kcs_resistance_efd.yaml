@@ -206,19 +206,30 @@ reference_rows:
     appendages: rudder
     wetted_surface: 9.5531          # m^2, S0/Lpp^2 = 0.1803, WITH rudder
     reynolds: 1.26e7
+    reynolds_applies_at_froude: 0.260
 
     values:
+      lpp:
+        value: 7.2786
+        units: m
+        provenance: stated
+        source: T2015_case_2_1
+        page: "Conditions, length"
+      velocity_model:
+        value: 2.196
+        units: m/s
+        provenance: stated
+        source: T2015_case_2_1
+        page: "Conditions, Six speeds, No. 5 (Fr 0.260)"
       wetted_surface:
         value: 9.5531
         units: m^2
         provenance: stated
         source: T2015_case_2_1
         note: >-
-          "Resistance coefficients are based on wetted surface area
-          ( S0/Lpp^2 = 0.1803 ) with rudder for static orientation in calm
-          water", verbatim. Confirmed arithmetically: the measured 85.44 N at
-          Fr 0.26 divided by 0.5*999.5*9.5531*2.196^2 reproduces the published
-          3.7111e-3 exactly, whereas the bare-hull area gives 3.7564e-3.
+          Normalization uses the static wetted area including the rudder.
+          This is an inherited transcription; the workbook has not been
+          independently reopened for the step 1 gate.
       rho:
         value: 999.5
         units: kg/m^3
@@ -234,7 +245,34 @@ reference_rows:
     series:
       provenance: stated
       source: T2015_case_2_1
-      note: "Decoded from the workshop's own vary_Fr_2-1.xls data file."
+      source_document: "Tokyo 2015 workshop, Case 2.1 instructions"
+      source_url: "https://t2015.nmri.go.jp/Instructions_KCS/Case_2.1/Case_2-1.html"
+      published_data_file: vary_Fr_2-1.xls
+      page_locators:
+        ct: "Requested computations, 2.1-2, resistance coefficient"
+        sinkage_cm: "Requested computations, 2.1-3, sinkage"
+        trim_deg: "Requested computations, 2.1-4, trim angle"
+      units: {froude: "1", ct: "1", sinkage_cm: cm, trim_deg: deg}
+      units_status: inherited_unverified
+      sign_convention: {sinkage_cm: positive_up, trim_deg: positive_bow_up}
+      readback:
+        status: pending
+        sheet_name: null
+        source_sha256: null
+        table_sha256: null
+        cells: null
+      licence_note: >-
+        No licence statement was found on the inspected workshop instructions.
+        The data is cited and read back, not redistributed: no workbook or table
+        text is included here. Existing numeric transcriptions are retained.
+        Independent source readback remains pending; citation is not a licence.
+      note: >-
+        The six numeric rows are inherited, not independently verified in this
+        no-download slice. The page locators identify the linked quantities,
+        not worksheet cells. The sinkage_cm interpretation needs confirmation
+        against the workbook: the page displays scaled sigma without an
+        unambiguous dimensional definition. Until source units, worksheet cells
+        and source digest are verified, medium and fine admission is refused.
       points:
         - {froude: 0.108, ct: 3.796e-3, sinkage_cm: -0.09,  trim_deg: -0.017}
         - {froude: 0.152, ct: 3.641e-3, sinkage_cm: -0.275, trim_deg: -0.053}

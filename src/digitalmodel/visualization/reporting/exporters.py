@@ -7,7 +7,8 @@ from pathlib import Path
 from typing import Optional, List, Dict
 import json
 import csv
-from datetime import datetime
+
+from digitalmodel._output_paths import validate_output_paths
 
 from .models import StandardReport, ParametricStudy
 
@@ -659,6 +660,9 @@ def export_all_formats(
         formats = ['html', 'json', 'csv']
 
     base_filepath = Path(base_filepath)
+    destinations = [base_filepath.with_suffix(f'.{fmt}')
+                    for fmt in ('html', 'json', 'csv') if fmt in formats]
+    validate_output_paths(*destinations)
     base_filepath.parent.mkdir(parents=True, exist_ok=True)
 
     output_files = {}

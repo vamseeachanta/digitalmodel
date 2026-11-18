@@ -1,0 +1,39 @@
+6DBuoys:
+- Name: SupportBuoy
+  BuoyType: Lumped buoy
+  Connection: Free
+  InitialPosition:
+  - -200.0
+  - 0.0
+  - -100.0
+  InitialAttitude:
+  - 0
+  - 0
+  - 0
+  Mass: 150.0
+  MomentsOfInertia:
+  - 1245.2
+  - 1245.2
+  - 1590.5
+  CentreOfMass:
+  - 0
+  - 0
+  - 0
+  Volume: 400.0
+  Height: 6.0
+  CentreOfVolume:
+  - 0
+  - 0
+  - 0
+  DragArea:
+  - 55.3
+  - 55.3
+  - 66.6
+  DragForceCoefficient:
+  - 1.0
+  - 1.0
+  - 1.0
+  AddedMassCoefficient:
+  - 1.0
+  - 1.0
+  - 1.0

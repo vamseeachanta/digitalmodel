@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Tests for marine structure cathodic protection design.
 
 Expected values are hand-derived from DNV-RP-B401 Table 10-1 (initial,
@@ -165,7 +168,7 @@ def test_review_appendix_a2_full_b401_design_loop():
 
     assert result.number_of_anodes == max(487, 506, n_final) == 506
     assert result.governing_case == "initial"
-    assert "dnv-rp-b401 2011 Table 10-6 with Sec. 5 (structure-to-electrolyte potential criteria)" in result.citations
+    assert "dnv-rp-b401 2011 Table 10-6 with Sec. 5.4.1 (design protective potential)" in result.citations
 
     # The standalone loop reproduces the same per-case counts.
     loop = standoff_anode_design_loop(

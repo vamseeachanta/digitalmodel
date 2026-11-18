@@ -268,7 +268,10 @@ class AQWAInputParser:
         freq_rad_s = [hz_to_rad_per_s(f) for f in freq_hz_list]
 
         if not freq_rad_s:
-            freq_rad_s = [0.1]  # fallback
+            raise ValueError(
+                "AQWA input requires at least one positive frequency "
+                "on an HRTZ card in deck 6."
+            )
 
         return FrequencySpec(
             input_type=FrequencyInputType.FREQUENCY,
@@ -441,6 +444,13 @@ class OrcaWaveInputParser:
         with open(yml_path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
+        matrix_bodies = data.get("Bodies", [])
+        has_external = any(
+            key.startswith("BodyExternal") and isinstance(value, list)
+            for body in matrix_bodies for key, value in body.items()
+        )
+        if has_external and data.get("UnitsSystem") != "SI":
+            raise ValueError("External matrix parsing requires explicit OrcaWave SI units")
         environment = self._parse_environment(data)
         frequencies = self._parse_frequencies(data)
         headings = self._parse_headings(data)
@@ -643,6 +653,18 @@ class OrcaWaveInputParser:
         # External stiffness
         external_stiffness = self._parse_6x6_matrix(body_data, "Stiffness")
         external_damping = self._parse_6x6_matrix(body_data, "Damping")
+        matrix_metadata = {}
+        for kind, matrix in (("stiffness", external_stiffness),
+                             ("damping", external_damping)):
+            if matrix is not None:
+                from .external_matrix_contract import ORCAWAVE_ORIGINS
+
+                origin = body_data.get(f"BodyExternal{kind.title()}MatrixOriginType")
+                reverse_origins = {value: key for key, value in ORCAWAVE_ORIGINS.items()}
+                if origin not in reverse_origins:
+                    raise ValueError(f"Missing or unsupported external {kind} reference point")
+                matrix_metadata[f"external_{kind}_units"] = "SI"
+                matrix_metadata[f"external_{kind}_reference_point"] = reverse_origins[origin]
 
         # Fixed DOFs
         fixed_dofs = self._parse_fixed_dofs(body_data)
@@ -653,6 +675,7 @@ class OrcaWaveInputParser:
             inertia=inertia,
             external_stiffness=external_stiffness,
             external_damping=external_damping,
+            **matrix_metadata,
             fixed_dofs=fixed_dofs if fixed_dofs else None,
         )
 
@@ -748,7 +771,7 @@ class OrcaWaveInputParser:
         """Extract a 6x6 matrix (stiffness or damping) from body data."""
         # Search for the composite key
         for key in body_data:
-            if matrix_type in key and isinstance(body_data[key], list):
+            if key.startswith(f"BodyExternal{matrix_type}Matrix") and isinstance(body_data[key], list):
                 matrix = body_data[key]
                 if len(matrix) == 6 and all(
                     isinstance(row, list) and len(row) == 6
@@ -760,7 +783,10 @@ class OrcaWaveInputParser:
                     )
                     if all_zero:
                         return None
-                    return [[float(v) for v in row] for row in matrix]
+                    from .external_matrix_contract import ORCAWAVE_PER_CANONICAL
+
+                    return [[float(v) / ORCAWAVE_PER_CANONICAL for v in row] for row in matrix]
+                raise ValueError(f"External {matrix_type} matrix must be 6x6")
         return None
 
     def _parse_fixed_dofs(

@@ -348,7 +348,7 @@ class AqwaEFServer:
 
         return ramp_factor
 
-    def uf_wlng_fst(self, Analysis, Mode, Stage, Time, TimeStep, Pos, Vel):
+    def uf_multibody_fst(self, Analysis, Mode, Stage, Time, TimeStep, Pos, Vel):
         AddMass = BlankAddedMass(Analysis.NOfStruct)
         Force = BlankForce(Analysis.NOfStruct)
         Error = 0

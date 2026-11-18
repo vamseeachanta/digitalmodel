@@ -157,7 +157,8 @@ def router(cfg: dict) -> dict:
 def _set_run_verdict(settings: dict, rows: list[dict], summary: dict, output_dir: Path) -> None:
     """Expose completed-case evidence to the existing engine exit contract."""
     issues = [
-        f"{row['model']}: {row.get('error') or 'Missing or failed solver result'}"
+        f"{row['model']} (case {row['index']}): "
+        f"{row.get('error') or 'Missing or failed solver result'}"
         for row in rows if row["status"] != "completed"
     ]
     if not rows:
@@ -267,23 +268,32 @@ def _render_cases(
 def _manifest_rows(
     rendered: list[dict[str, Any]], pool_summary: dict
 ) -> list[dict[str, Any]]:
-    by_path = {
-        result["file_path"]: result for result in pool_summary.get("results", [])
-    }
+    # Issue #2051: completion needs unambiguous per-case evidence. Do not let
+    # the executor's arrival order hide a failure behind a later success.
+    by_path: dict[str, list[dict[str, Any]]] = {}
+    for result in pool_summary.get("results", []):
+        by_path.setdefault(result["file_path"], []).append(result)
     rows = []
     for item in rendered:
-        result = by_path.get(str(item["input_file"]), {})
+        matches = by_path.get(str(item["input_file"]), [])
+        if len(matches) > 1:
+            result = {"error": "Ambiguous solver results for input file"}
+        else:
+            result = matches[0] if matches else {}
+        status = _STATUS_LABELS.get(result.get("status"), "failed")
+        if result.get("error"):
+            status = "failed"
         sim_path = next(
             (f for f in result.get("output_files") or [] if f.endswith(".sim")),
             None,
         )
         rows.append(
             {
+                **item["case"],
                 "index": item["index"],
                 "model": item["model"],
-                **item["case"],
                 "input_file": str(item["input_file"]),
-                "status": _STATUS_LABELS.get(result.get("status"), "failed"),
+                "status": status,
                 "error": result.get("error"),
                 "wall_seconds": round(result.get("duration") or 0.0, 3),
                 "sim_path": sim_path,

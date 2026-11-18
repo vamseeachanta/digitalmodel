@@ -1,7 +1,6 @@
 """Owned supervisor sequencing without starting any native process."""
 import io
 import ctypes
-import subprocess
 from unittest.mock import Mock
 from types import SimpleNamespace
 
@@ -114,6 +113,38 @@ def test_start_and_cleanup_errors_are_both_retained():
     supervisor = WindowsSupervisor(job_factory=lambda: job, popen=Mock(return_value=proc))
     with pytest.raises(OSError, match="assignment denied.*termination denied"):
         supervisor.start(["synthetic"], ".", io.BytesIO(), io.BytesIO())
+
+
+@pytest.mark.parametrize("interruption", [KeyboardInterrupt, SystemExit])
+def test_windows_start_cancellation_survives_cleanup_failure(tmp_path, monkeypatch, interruption):
+    """The real startup/runner chain preserves cancellation and cleanup context."""
+    from digitalmodel.ansys import runner_process as module
+
+    original = interruption("synthetic cancellation")
+    cleanup = OSError("synthetic termination failure")
+    job = Mock()
+    job.terminate.side_effect = cleanup
+    proc = Mock(pid=42, _handle=99)
+    supervisor = WindowsSupervisor(job_factory=lambda: job, popen=Mock(return_value=proc),
+                                   resume=Mock(side_effect=original))
+    retained = {}
+    monkeypatch.setattr(module, "_UNSETTLED", retained)
+    monkeypatch.setattr(module, "supervisor_factory", lambda: supervisor)
+    with pytest.raises(interruption) as caught:
+        module.run_process(["synthetic"], cwd=tmp_path, timeout=1)
+    assert caught.value is original
+    assert caught.value.__cause__ is cleanup
+    assert "synthetic termination failure" in " ".join(caught.value.__notes__)
+    token = caught.value.retained_supervisor_token
+    assert retained[token] is supervisor
+    assert job.terminate.call_count == 2
+    job.close.assert_not_called()
+    proc.kill.assert_not_called()
+    job.terminate.side_effect = None
+    job.active.return_value = 0
+    assert module.settle_retained(token) == {"error": None, "retained_supervisor_token": None}
+    assert not retained
+    job.close.assert_called_once()
 
 
 def test_posix_leader_is_not_reaped_before_group_termination(monkeypatch):

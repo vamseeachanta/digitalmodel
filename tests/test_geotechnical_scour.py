@@ -1,12 +1,12 @@
-# ABOUTME: Tests for scour depth prediction per DNV-RP-F107.
+# ABOUTME: Tests for guarded scour screening and explicit missing design basis.
 # ABOUTME: Pipeline scour, monopile scour, and rock armour protection.
-"""Tests for scour depth prediction — DNV-RP-F107."""
+"""Legacy calls preserve geometry but no longer assert unsourced depths."""
 import pytest
 
 
 class TestPipelineScour:
-    def test_equilibrium_scour_depth_sand(self):
-        """Equilibrium scour depth for pipeline on sandy seabed."""
+    def test_missing_pipeline_depth_model(self):
+        """An unqualified model cannot establish a nonzero scour depth."""
         from digitalmodel.geotechnical.scour import pipeline_scour_depth
 
         result = pipeline_scour_depth(
@@ -16,12 +16,12 @@ class TestPipelineScour:
             sediment_d50_mm=0.3,
             burial_ratio=0.0,
         )
-        assert result.scour_depth_m > 0
-        assert result.scour_depth_m < 5 * result.pipe_od_m
-        assert result.standard == "DNV-RP-F107"
+        assert result.scour_depth_m is None
+        assert result.status == "NOT_EVALUATED"
+        assert result.standard == "NOT_ESTABLISHED"
 
-    def test_buried_pipe_less_scour(self):
-        """Partially buried pipe has less scour than fully exposed."""
+    def test_burial_does_not_qualify_depth(self):
+        """A burial ratio cannot substitute for a qualified scour model."""
         from digitalmodel.geotechnical.scour import pipeline_scour_depth
 
         exposed = pipeline_scour_depth(
@@ -38,7 +38,8 @@ class TestPipelineScour:
             sediment_d50_mm=0.3,
             burial_ratio=0.5,
         )
-        assert buried.scour_depth_m < exposed.scour_depth_m
+        assert buried.scour_depth_m is exposed.scour_depth_m is None
+        assert buried.status == exposed.status == "NOT_EVALUATED"
 
     def test_zero_velocity_no_scour(self):
         """No flow means no scour."""
@@ -55,8 +56,8 @@ class TestPipelineScour:
 
 
 class TestMonopileScour:
-    def test_equilibrium_scour_depth(self):
-        """Monopile scour depth per Breusers/Sumer empirical formula."""
+    def test_missing_monopile_depth_model(self):
+        """No nonzero depth is returned without a qualified model."""
         from digitalmodel.geotechnical.scour import monopile_scour_depth
 
         result = monopile_scour_depth(
@@ -64,11 +65,12 @@ class TestMonopileScour:
             current_velocity_ms=1.0,
             water_depth_m=30.0,
         )
-        assert result.scour_depth_m > 0
-        assert result.scour_depth_m / 6.0 < 2.5
+        assert result.scour_depth_m is None
+        assert result.scour_to_diameter_ratio is None
+        assert result.status == "NOT_EVALUATED"
 
-    def test_larger_pile_more_scour(self):
-        """Larger pile diameter produces deeper scour hole."""
+    def test_diameter_does_not_qualify_depth(self):
+        """Changing diameter alone cannot qualify a scour-depth result."""
         from digitalmodel.geotechnical.scour import monopile_scour_depth
 
         small = monopile_scour_depth(
@@ -81,7 +83,9 @@ class TestMonopileScour:
             current_velocity_ms=1.0,
             water_depth_m=30.0,
         )
-        assert large.scour_depth_m > small.scour_depth_m
+        assert large.scour_depth_m is small.scour_depth_m is None
+        assert large.pile_diameter_m == 8.0
+        assert small.pile_diameter_m == 3.0
 
     def test_zero_velocity_no_scour(self):
         """No current means no scour."""
@@ -108,7 +112,7 @@ class TestMonopileScour:
 
 class TestScourProtection:
     def test_rock_armour_thickness(self):
-        """Minimum rock armour layer thickness for scour protection."""
+        """Missing criteria cannot establish armour thickness or stability."""
         from digitalmodel.geotechnical.scour import rock_armour_thickness
 
         result = rock_armour_thickness(
@@ -117,5 +121,6 @@ class TestScourProtection:
             water_density_kg_m3=1025.0,
             rock_d50_m=0.3,
         )
-        assert result.thickness_m > 0
-        assert result.stability_number > 0
+        assert result.thickness_m is None
+        assert result.stability_number is None
+        assert result.stability_status == "NOT_EVALUATED"

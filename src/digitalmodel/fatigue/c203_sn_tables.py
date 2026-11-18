@@ -38,7 +38,8 @@ N_FATIGUE_LIMIT: Final[float] = 1e7
 #: Slope of the free-corrosion curves (all classes).
 M_FREE_CORROSION: Final[float] = 3.0
 
-#: Reference thickness for welded connections other than tubular joints (mm).
+#: DNV-RP-C203 (October 2011), section 2.4.1, "General": reference thickness
+#: for welded connections other than tubular joints (mm).
 T_REF_WELDED_MM: Final[float] = 25.0
 
 

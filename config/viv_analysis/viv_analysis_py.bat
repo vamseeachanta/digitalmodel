@@ -40,16 +40,16 @@ REM CALL PYTHON %program%.py "%working_directory%\%file_name%"
 REM SET file_name=viv_analysis_py_hm_long_term_A10_Low.yml
 REM CALL PYTHON %program%.py "%working_directory%\%file_name%"
 
-REM SET file_name=viv_analysis_py_ecs_dr_ffs_currents.yml
+REM SET file_name=viv_analysis_py_riser-sys-a_dr_ffs_currents.yml
 REM CALL PYTHON %program%.py "%working_directory%\%file_name%"
 
 
 REM External files
-SET file_name=viv_analysis_py_ecs_mds_water_depth.yml
+SET file_name=viv_analysis_py_riser-sys-a_mds_water_depth.yml
 CALL PYTHON %program%.py "%working_directory%\%file_name%"
-SET file_name=viv_analysis_py_ecs_mds_internal_fluid.yml
+SET file_name=viv_analysis_py_riser-sys-a_mds_internal_fluid.yml
 CALL PYTHON %program%.py "%working_directory%\%file_name%"
-SET file_name=viv_analysis_py_ecs_mds_WT.yml
+SET file_name=viv_analysis_py_riser-sys-a_mds_WT.yml
 CALL PYTHON %program%.py "%working_directory%\%file_name%"
 
 

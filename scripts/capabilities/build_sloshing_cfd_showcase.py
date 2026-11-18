@@ -701,6 +701,7 @@ def _tld_section(tld):
     bz = summ.get("best_fill_zeta")
     return f"""
 <h2>Coupled anti-roll response — the two-peak split &amp; the optimum</h2>
+<p>See the <a href="dual-tank-sloshing-cfd-study.html">connected-tank sloshing analysis</a>.</p>
 <p>All the sweeps above characterise the tank alone. Its <b>purpose</b> is to damp a <b>vessel's</b> roll: a
 partially filled tank tuned near the roll frequency is a <b>tuned-liquid damper</b>. Coupling it to the vessel
 roll (the Den Hartog tuned-absorber equations; Moaleji&nbsp;&amp;&nbsp;Greig&nbsp;2007) shows the design
@@ -810,7 +811,7 @@ def _compute_section(compute):
     head = f'<p>{_esc(an["headline"])}</p>' if an.get("headline") else ""
     return f"""
 <h2>6 &middot; Compute &amp; runtime — machine effectiveness</h2>
-<p>What a 2D interFoam sloshing case costs on this box (<b>{_esc(m.get("host"))}</b>, {m.get("cores")} cores,
+<p>What a 2D interFoam sloshing case costs on a {m.get("cores")}-core workstation (
 {_esc(m.get("solver"))}), so future compute can be predicted. The mesh-normalised cost (&micro;s of wall per
 cell&middot;timestep) is the machine invariant. Its <b>intrinsic</b> value is ~12&ndash;17&micro;s across classes;
 the higher per-class figures in the table below are the <b>same work inflated ~1.5&ndash;2.3&times; by
@@ -1122,7 +1123,7 @@ manifests. Part of the digitalmodel OpenFOAM verification suite — computed on 
            "\n<link rel=\"stylesheet\" href=\"../_assets/brand.css\">"
            f"<style>{_CSS}</style></head><body><div class=\"wrap\">{body}</div></body></html>")
     _OUT.parent.mkdir(parents=True, exist_ok=True)
-    _OUT.write_text(doc, encoding="utf-8")
+    _OUT.write_text(doc, encoding="utf-8", newline="\n")
     print(f"wrote {_OUT.relative_to(_REPO)} ({n_cases} cases; "
           f"research={'yes' if research else 'no'})")
 
