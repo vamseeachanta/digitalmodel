@@ -4,7 +4,7 @@ Run the old and proposed CI commands against the same base SHA, once per Python 
 
 For an intentional overlay, pass `collect --overlay PATH [PATH ...]` before the pytest separator. Give each path relative to the repository root. Collection records Git's changed paths, including staged changes and individual untracked, non-ignored files. It also records the blob ID from `git hash-object` for each declared regular file. A deletion has no file to hash and fails the dirty-worktree check. Preserve the overlay files with the PR for reproduction.
 
-Compare accepts dirty evidence only when the record contains a nonempty changed-path inventory and every changed path has a declared blob ID. Compare can check the inventory and the presence and format of those IDs in the record. It cannot re-read the original tree or independently verify the recorded contents.
+A clean record must carry an empty `changed_paths` list; a record without the inventory fails with `dirty worktree`. Compare accepts dirty evidence only when the record contains a nonempty changed-path inventory and every changed path has a declared blob ID. Compare can check the inventory and the presence and format of those IDs in the record. It cannot re-read the original tree or independently verify the recorded contents.
 
 For example, from the base checkout with the gate available, run this comparison of a harness expansion in the active test environment.
 
@@ -29,6 +29,10 @@ python "$gate" compare --kind consolidation --commit "$base" \
 ```
 
 Substitute the actual pytest commands and coverage file keys for the fix. List every required environment and module even if both commands could omit it. Each environment directory contains `junit.xml`, `coverage.json` and `env.json` with the base commit, clean-worktree flag, pytest command, Python version, obligation, pytest exit code and completion flag. Collection uses pytest-cov when installed. For coverage.py alone, set the source in the coverage configuration and omit pytest-cov options. Collect preserves the pytest exit code for a completed run. An interrupted run, absent artifact or unavailable collector fails.
+
+A run stopped early or narrowed to a replayed subset still exits 1 and writes both reports, but omits every node it did not reach. Collect therefore refuses `-x` (also inside combined short flags such as `-qx`), `--exitfirst`, `--maxfail`, `--sw`, `--stepwise`, `--sw-skip`, `--stepwise-skip`, `--sw-reset`, `--stepwise-reset`, `--lf` and `--last-failed`, in the pytest arguments and in `PYTEST_ADDOPTS`. Compare reports `incomplete run` when a recorded command contains any of them. Neither step reads `addopts` from a pytest configuration file, so a configuration that adds one of these options remains a review item.
+
+When a test fails and its fixture teardown also fails, pytest writes a second `<testcase>` for the same node with a `failed on teardown` error. Compare merges that record into one failed node. Any other repeated node is invalid input. Coverage keys are compared with `/` separators, so evidence collected on Windows matches POSIX module names. Two keys that become identical after this normalisation are invalid input.
 
 Compare the pre-merge and daily obligations separately. Use fresh before/after roots with `--obligation daily` for the full nightly suite. In the example, set `closure`, `pr_path_nodes` and `nightly_path_nodes` to the paths of three JSON string lists. `--closure` contains required pytest node IDs, `--pr-path-nodes` contains nodes selected on the proposed PR path, and `--nightly-path-nodes` contains nodes selected nightly. Include dependents, family, engine and the structure check when building the closure. Pre-merge consolidation without these manifests fails with `pre-merge closure not checked`.
 

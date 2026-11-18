@@ -9,6 +9,7 @@ import os
 from pathlib import Path
 import platform
 import re
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -18,6 +19,28 @@ if __package__:
     from .ci_baseline import junit_id, write_json
 else:
     from ci_baseline import junit_id, write_json
+
+
+# Options that stop a run early or replay a subset; the reports then omit unexecuted nodes.
+EARLY_STOP = {"-x", "--exitfirst", "--maxfail", "--sw", "--stepwise", "--sw-skip", "--stepwise-skip",
+              "--sw-reset", "--stepwise-reset", "--lf", "--last-failed"}
+# Short options whose value may follow without a space (-rx, -kx): later letters are not flags.
+SHORT_WITH_VALUE = set("ckmnoprW")
+
+
+def early_stop_options(args):
+    found = []
+    for arg in args:
+        if arg.startswith("--"):
+            if arg.split("=", 1)[0] in EARLY_STOP:
+                found.append(arg)
+        elif arg.startswith("-") and len(arg) > 1:
+            for letter in arg[1:]:
+                if letter == "x":
+                    found.append(arg)
+                if letter == "x" or letter in SHORT_WITH_VALUE:
+                    break
+    return found
 
 
 def tree_record(overlay_paths):
@@ -42,6 +65,9 @@ def collect(args):
         raise ValueError("expected a single environment name")
     if args.pytest[:1] != ["--"]:
         raise ValueError("supply pytest arguments after --")
+    stops = early_stop_options(args.pytest[1:]) + early_stop_options(shlex.split(os.environ.get("PYTEST_ADDOPTS", "")))
+    if stops:
+        raise ValueError(f"refusing early-stop or replay option: {' '.join(stops)}")
     cov_plugin = find_spec("pytest_cov") is not None
     if not cov_plugin and find_spec("coverage") is None:
         raise ValueError("install pytest-cov or coverage")
@@ -82,7 +108,7 @@ def string_list(value):
 
 
 def tree_matches_record(meta):
-    changed = meta.get("changed_paths", [])
+    changed = meta.get("changed_paths")
     if meta.get("clean") is True:
         return changed == []
     overlay = meta.get("overlay")
@@ -115,7 +141,7 @@ def sample(values):
 
 
 def read_nodes(path, issues, side):
-    nodes = {}
+    nodes, teardown = {}, set()
     if path.stat().st_size == 0:
         issues["empty baseline" if side == "before" else "empty after run"].add(str(path))
         return nodes
@@ -145,14 +171,20 @@ def read_nodes(path, issues, side):
                 node = junit_id(case)
                 reason = (skip.get("message") or (skip.text or "").strip()) if skip is not None else ""
             if node in nodes:
-                raise ValueError(f"{path}: duplicate node {node}")
+                # pytest adds a second testcase for a teardown error after a reported call.
+                if (node in teardown or tags != ["error"]
+                        or not (error.get("message") or "").startswith("failed on teardown")):
+                    raise ValueError(f"{path}: duplicate node {node}")
+                nodes[node] = ("failed", "")
+                teardown.add(node)
+                continue
             if error is not None and error.get("message") == "collection failure":
                 issues["collection error"].add(node)
             if skip is not None and (not isinstance(reason, str) or not reason):
                 raise ValueError(f"{path}: missing skip reason for {node}")
             state = "skipped" if skip is not None else "failed" if tags else "passed"
             nodes[node] = (state, reason)
-    if len(nodes) != sum(1 for _ in root.iter("testcase")):
+    if len(nodes) + len(teardown) != sum(1 for _ in root.iter("testcase")):
         raise ValueError(f"{path}: testcase outside a suite")
     if not nodes:
         issues["empty baseline" if side == "before" else "empty after run"].add(str(path))
@@ -183,6 +215,8 @@ def evidence(folder, side, args, required, issues):
             or not isinstance(meta.get("python_version"), str) or not meta["python_version"]
             or not string_list(meta.get("command")) or not meta["command"]):
         raise ValueError(f"{record}: invalid environment record")
+    if early_stop_options(meta["command"]):
+        issues["incomplete run"].add(str(record))
     nodes = read_nodes(xml, issues, side)
     if code in (0, 1) and bool(code) != any(state == "failed" for state, _ in nodes.values()):
         issues["pytest exit disagrees with XML"].add(str(xml))
@@ -190,6 +224,11 @@ def evidence(folder, side, args, required, issues):
     files = coverage.get("files") if isinstance(coverage, dict) else None
     if not isinstance(files, dict):
         raise ValueError(f"{cov}: expected coverage files")
+    # coverage.py writes native separators; compare repository paths in POSIX form.
+    posix = {module.replace("\\", "/"): data for module, data in files.items()}
+    if len(posix) != len(files):
+        raise ValueError(f"{cov}: coverage keys collide after separator normalisation")
+    files = posix
     if not files:
         issues["empty coverage"].add(str(cov))
     for module, data in files.items():

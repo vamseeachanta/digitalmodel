@@ -1,6 +1,7 @@
 """Exercise the public command line with small, independent evidence changes."""
 
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -36,6 +37,11 @@ CASES = [
     ("partial-overlay", "dirty worktree"), ("missing-blob", "dirty worktree"),
     ("missing-touched-modules", "invalid input"), ("removal-missing-touched-modules", "invalid input"),
     ("unchecked-closure", "pre-merge closure not checked"), ("daily", None),
+    ("early-stop", "incomplete run"), ("early-stop-combined", "incomplete run"),
+    ("early-stop-maxfail", "incomplete run"), ("replay", "incomplete run"), ("report-chars", None),
+    ("missing-changed-paths", "dirty worktree"),
+    ("teardown", None), ("duplicate", "invalid input"),
+    ("windows-paths", None), ("separator-collision", "invalid input"),
 ]
 
 
@@ -79,6 +85,12 @@ def test_compare(case, reason, tmp_path):
         assert "--touched-modules" in content
     if case in ("unchecked-closure", "mapped"):
         assert "pre-merge closure: not checked (no closure supplied)" in content
+    if case == "teardown":
+        assert "| py | 2 | 2 | 0 | 1 | 1 |" in content
+    if case == "windows-paths":
+        assert "lib/core.py: 0" in content
+    if case == "duplicate":
+        assert "duplicate node" in content
 
 
 def test_usage_error(tmp_path):
@@ -86,6 +98,25 @@ def test_usage_error(tmp_path):
     report.write_text(f"Coverage gate at {SHA[:8]}: PASS\n")
     assert run("compare", "--kind", "typo", "--report", report, "--commit", SHA) == 2
     assert report.read_text().splitlines()[0] == f"Coverage gate at {SHA[:8]}: FAIL (invalid usage)"
+
+
+EARLY_STOP = [["-x"], ["-qx"], ["--exitfirst"], ["--maxfail=2"], ["--maxfail", "2"], ["--sw"],
+              ["--stepwise-skip"], ["--lf"], ["--last-failed"]]
+
+
+@pytest.mark.parametrize("addopts", [False, True], ids=["argument", "PYTEST_ADDOPTS"])
+@pytest.mark.parametrize("option", EARLY_STOP, ids=[" ".join(o) for o in EARLY_STOP])
+def test_collect_refuses_early_stop(option, addopts, tmp_path):
+    env = dict(os.environ)
+    env.pop("PYTEST_ADDOPTS", None)
+    if addopts:
+        env["PYTEST_ADDOPTS"] = " ".join(option)
+        option = []
+    result = subprocess.run([sys.executable, GATE, "collect", "--env", "py", "--out", "reports", "--",
+                             "inputs", *option], cwd=tmp_path, env=env, capture_output=True, text=True)
+    assert result.returncode == 2
+    assert "early-stop or replay option" in result.stderr
+    assert not (tmp_path / "reports").exists()
 
 
 def test_collect(tmp_path):
@@ -112,4 +143,6 @@ def test_collect(tmp_path):
     assert record["obligation"] == "pre-merge" and record["python_version"]
     assert "inputs/test_pair.py" in record["command"]
     assert len(ElementTree.parse(evidence / "junit.xml").findall(".//testcase")) == 2
-    assert "inputs/test_pair.py" in json.loads((evidence / "coverage.json").read_text())["files"]
+    # coverage.py writes native separators; compare normalises them (windows-paths case).
+    files = json.loads((evidence / "coverage.json").read_text())["files"]
+    assert "inputs/test_pair.py" in {key.replace("\\", "/") for key in files}
