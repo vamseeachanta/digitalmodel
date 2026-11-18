@@ -9,6 +9,19 @@
 schema_version: 2
 invocation: "uv run python -m digitalmodel {input}"
 workflows:
+  - id: jacket-damaged-member-screen
+    basename: damaged_member_screen
+    title: Damaged jacket member diagnostics with unresolved engineering acceptance
+    version: 1
+    status: experimental
+    latest: false
+    input: examples/workflows/jacket-damaged-member-screen/input.yml
+    invocation: "uv run python -m digitalmodel.structural.jacket_topside.damaged_member_screen {input} --output examples/workflows/jacket-damaged-member-screen/results/screen.json"
+    outputs:
+      - examples/workflows/jacket-damaged-member-screen/results/screen.json
+      - examples/workflows/jacket-damaged-member-screen/results/screen.html
+    test: tests/workflows/test_jacket_damaged_member_registry.py::test_workflow_cli_and_registry
+    runtime: standalone
   - id: mooring-chain-degradation-screen
     basename: mooring_chain_degradation
     title: Mooring-chain dimensional analysis with unresolved strength and fatigue

@@ -2,6 +2,7 @@ name: Repository Structure
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
   workflow_dispatch:
@@ -19,6 +20,9 @@ permissions:
 jobs:
   repo-structure:
     name: Repository structure contract
+    # No paths filter: a file added anywhere can break the structure contract.
+    # Draft pull requests wait: the gates start when the pull request is marked ready.
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
     runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - uses: actions/checkout@v4
