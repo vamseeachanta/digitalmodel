@@ -28,6 +28,10 @@ supplied (NIST SP 811 Appendix B footnote 22: 1 lb = 0.45359237 kg; footnote
 23: 1 lbf = 4.4482216152605 N for g_n = 9.80665 m/s2), or historical rounding
 can be reproduced explicitly without silently changing the engineering data.
 No source-specific coefficient is a default.
+The citations returned by the imperial constructors identify the built-in
+length and SI prefix factors. The caller supplies the basis for mass and force
+coefficients. Joint properties carry the input citations, and each tension
+balance cites the kilo prefix at the kN boundary.
 
 Joint dry and apparent submerged masses are on one load basis: the same
 contents, coatings and attachments. On that basis the apparent submerged mass
@@ -59,32 +63,64 @@ components, current profiles and raw empirical tables are outside this module.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from math import isfinite, pi, sqrt
 from numbers import Integral, Real
+from pathlib import Path
 
+from digitalmodel.citations import Citation, validate_citation
 from digitalmodel.drilling_riser.section import INCH_TO_METER, section_properties
 from digitalmodel.drilling_riser.stackup import effective_tension
 
 FOOT_TO_METER = 0.3048  # NIST SP 811 (2008) Appendix B.8, boldface (exact).
 KILO = 1000.0  # NIST SP 811 (2008) Sec. 4.3 Table 5: kilo = 10**3.
 
+_CITATION_ROOT = Path(__file__).parent
+_LENGTH_SECTION = 'Appendix B.8 (international foot and inch)'
+_KILO_SECTION = 'Section 4.3, Table 5 (kilo)'
 
-def _finite(value: float, name: str) -> None:
-    if isinstance(value, bool) or not isinstance(value, Real) or not isfinite(value):
+
+def _nist_reference(section: str) -> Citation:
+    citation = Citation(
+        code_id='NIST-SP-811', publisher='NIST', revision='2008', section=section,
+        wiki_path='wikis/engineering-standards/wiki/standards/nist-sp-811.md',
+        source_sibling='generic',
+    )
+    validate_citation(citation, repo_root=_CITATION_ROOT)
+    return citation
+
+
+def _finite(value: float, name: str) -> float:
+    if isinstance(value, bool) or not isinstance(value, Real):
         raise ValueError(f'{name} must be a finite real number')
+    try:
+        value = float(value)
+    except OverflowError as exc:
+        raise ValueError(f'{name} must be a finite real number') from exc
+    if not isfinite(value):
+        raise ValueError(f'{name} must be a finite real number')
+    return value
 
 
-def _positive(value: float, name: str) -> None:
-    _finite(value, name)
+def _positive(value: float, name: str) -> float:
+    value = _finite(value, name)
     if value <= 0:
         raise ValueError(f'{name} must be positive')
+    return value
 
 
-def _nonnegative(value: float, name: str) -> None:
-    _finite(value, name)
+def _nonnegative(value: float, name: str) -> float:
+    value = _finite(value, name)
     if value < 0:
         raise ValueError(f'{name} must be nonnegative')
+    return value
+
+
+def _set_floats(inputs: object, validate: Callable[[float, str], float], *names: str) -> None:
+    """Store Python floats before any arithmetic on fixed-width input scalars."""
+    for name in names:
+        object.__setattr__(inputs, name, validate(getattr(inputs, name), name))
 
 
 @dataclass(frozen=True)
@@ -104,18 +140,18 @@ class RiserJointInput:
     submerged_mass_per_joint_kg: float
     youngs_modulus_pa: float
     poisson_ratio_dimensionless: float
+    citations: tuple[Citation, ...] = field(default=(), kw_only=True, compare=False, repr=False)
 
     def __post_init__(self) -> None:
+        """Normalize joint dimensions and check the geometry, material and mass basis."""
         count = self.joint_count_dimensionless
         if isinstance(count, bool) or not isinstance(count, Integral) or count < 1:
             raise ValueError('joint_count_dimensionless must be a positive integer')
         object.__setattr__(self, 'joint_count_dimensionless', int(count))
-        for name in ('joint_length_m', 'outer_diameter_m', 'wall_thickness_m',
-                     'youngs_modulus_pa'):
-            _positive(getattr(self, name), name)
-        _nonnegative(self.dry_mass_per_joint_kg, 'dry_mass_per_joint_kg')
-        _finite(self.submerged_mass_per_joint_kg, 'submerged_mass_per_joint_kg')
-        _finite(self.poisson_ratio_dimensionless, 'poisson_ratio_dimensionless')
+        _set_floats(self, _positive, 'joint_length_m', 'outer_diameter_m',
+                    'wall_thickness_m', 'youngs_modulus_pa')
+        _set_floats(self, _nonnegative, 'dry_mass_per_joint_kg')
+        _set_floats(self, _finite, 'submerged_mass_per_joint_kg', 'poisson_ratio_dimensionless')
         if 2 * self.wall_thickness_m > self.outer_diameter_m:
             raise ValueError('wall thickness exceeds the outer radius')
         if not -1 < self.poisson_ratio_dimensionless < 0.5:
@@ -138,22 +174,16 @@ class RiserJointInput:
         Labels in lb are interpreted as mass or apparent mass, not force.
         The modulus is supplied in kPa, independent of the imperial lengths.
         """
-        _positive(mass_conversion_kg_per_lb, 'mass_conversion_kg_per_lb')
-        for name, value in (
-            ('joint_length_ft', joint_length_ft),
-            ('outer_diameter_in', outer_diameter_in),
-            ('wall_thickness_in', wall_thickness_in),
-            ('dry_mass_per_joint_lb', dry_mass_per_joint_lb),
-            ('submerged_mass_per_joint_lb', submerged_mass_per_joint_lb),
-            ('youngs_modulus_kpa', youngs_modulus_kpa),
-        ):
-            _finite(value, name)
+        kg_per_lb = _positive(mass_conversion_kg_per_lb, 'mass_conversion_kg_per_lb')
         return cls(
-            joint_count_dimensionless, joint_length_ft * FOOT_TO_METER,
-            outer_diameter_in * INCH_TO_METER, wall_thickness_in * INCH_TO_METER,
-            dry_mass_per_joint_lb * mass_conversion_kg_per_lb,
-            submerged_mass_per_joint_lb * mass_conversion_kg_per_lb,
-            youngs_modulus_kpa * KILO, poisson_ratio_dimensionless,
+            joint_count_dimensionless,
+            _finite(joint_length_ft, 'joint_length_ft') * FOOT_TO_METER,
+            _finite(outer_diameter_in, 'outer_diameter_in') * INCH_TO_METER,
+            _finite(wall_thickness_in, 'wall_thickness_in') * INCH_TO_METER,
+            _finite(dry_mass_per_joint_lb, 'dry_mass_per_joint_lb') * kg_per_lb,
+            _finite(submerged_mass_per_joint_lb, 'submerged_mass_per_joint_lb') * kg_per_lb,
+            _finite(youngs_modulus_kpa, 'youngs_modulus_kpa') * KILO, poisson_ratio_dimensionless,
+            citations=(_nist_reference(_LENGTH_SECTION), _nist_reference(_KILO_SECTION)),
         )
 
 
@@ -173,6 +203,7 @@ class JointProperties:
     total_submerged_mass_kg: float
     dry_mass_kg_per_m: float
     submerged_mass_kg_per_m: float
+    citations: tuple[Citation, ...] = field(default=(), kw_only=True, compare=False, repr=False)
 
 
 def compute_joint_properties(inputs: RiserJointInput) -> JointProperties:
@@ -194,6 +225,7 @@ def compute_joint_properties(inputs: RiserJointInput) -> JointProperties:
         inputs.joint_count_dimensionless * inputs.submerged_mass_per_joint_kg,
         inputs.dry_mass_per_joint_kg / inputs.joint_length_m,
         inputs.submerged_mass_per_joint_kg / inputs.joint_length_m,
+        citations=inputs.citations,
     )
 
 
@@ -207,10 +239,10 @@ class BuoyancyInput:
     water_density_kg_per_m3: float
 
     def __post_init__(self) -> None:
-        _nonnegative(self.dry_mass_kg_per_m, 'dry_mass_kg_per_m')
-        _finite(self.submerged_mass_kg_per_m, 'submerged_mass_kg_per_m')
-        _nonnegative(self.bore_diameter_m, 'bore_diameter_m')
-        _positive(self.water_density_kg_per_m3, 'water_density_kg_per_m3')
+        """Normalize buoyancy inputs and require nonnegative displaced mass."""
+        _set_floats(self, _nonnegative, 'dry_mass_kg_per_m', 'bore_diameter_m')
+        _set_floats(self, _finite, 'submerged_mass_kg_per_m')
+        _set_floats(self, _positive, 'water_density_kg_per_m3')
         if self.submerged_mass_kg_per_m > self.dry_mass_kg_per_m:
             raise ValueError('submerged mass exceeds dry mass: negative displacement')
 
@@ -230,17 +262,17 @@ def apparent_mass_from_ratio(
     Negative r represents net uplift. The ratio is an input gap until its
     engineering basis is supplied; it is not a material constant.
     """
-    _nonnegative(dry_mass_kg, 'dry_mass_kg')
-    _finite(submerged_to_dry_ratio_dimensionless, 'submerged_to_dry_ratio_dimensionless')
-    if submerged_to_dry_ratio_dimensionless > 1:
+    dry_mass_kg = _nonnegative(dry_mass_kg, 'dry_mass_kg')
+    ratio = _finite(submerged_to_dry_ratio_dimensionless, 'submerged_to_dry_ratio_dimensionless')
+    if ratio > 1:
         raise ValueError('apparent mass ratio cannot exceed one')
-    return dry_mass_kg * submerged_to_dry_ratio_dimensionless
+    return dry_mass_kg * ratio
 
 
 def mass_from_linear_density(linear_mass_kg_per_m: float, length_m: float) -> float:
     """Return m=mu*L with an explicit, nonnegative linear mass coefficient."""
-    _nonnegative(linear_mass_kg_per_m, 'linear_mass_kg_per_m')
-    _positive(length_m, 'length_m')
+    linear_mass_kg_per_m = _nonnegative(linear_mass_kg_per_m, 'linear_mass_kg_per_m')
+    length_m = _positive(length_m, 'length_m')
     return linear_mass_kg_per_m * length_m
 
 
@@ -253,9 +285,9 @@ class TensionInput:
     gravity_m_per_s2: float
 
     def __post_init__(self) -> None:
-        _finite(self.top_tension_n, 'top_tension_n')
-        _finite(self.inservice_mass_kg, 'inservice_mass_kg')
-        _positive(self.gravity_m_per_s2, 'gravity_m_per_s2')
+        """Normalize signed load inputs and require positive gravity."""
+        _set_floats(self, _finite, 'top_tension_n', 'inservice_mass_kg')
+        _set_floats(self, _positive, 'gravity_m_per_s2')
 
 
 @dataclass(frozen=True)
@@ -264,6 +296,7 @@ class TensionBalance:
 
     inservice_weight_n: float
     bottom_tension_n: float
+    citations: tuple[Citation, ...] = field(default=(), kw_only=True, compare=False, repr=False)
 
 
 def compute_tension_balance(inputs: TensionInput) -> TensionBalance:
@@ -275,7 +308,7 @@ def compute_tension_balance(inputs: TensionInput) -> TensionBalance:
     """
     weight = inputs.inservice_mass_kg * inputs.gravity_m_per_s2
     bottom_kn = effective_tension(inputs.top_tension_n / KILO, weight / KILO, 1.0)
-    return TensionBalance(weight, bottom_kn * KILO)
+    return TensionBalance(weight, bottom_kn * KILO, citations=(_nist_reference(_KILO_SECTION),))
 
 
 @dataclass(frozen=True)
@@ -285,11 +318,13 @@ class SoilResistanceInput:
     deflection_m: float
     line_load_n_per_m: float
     reference_diameter_m: float
+    citations: tuple[Citation, ...] = field(default=(), kw_only=True, compare=False, repr=False)
 
     def __post_init__(self) -> None:
-        _nonnegative(self.deflection_m, 'deflection_m')
-        _finite(self.line_load_n_per_m, 'line_load_n_per_m')
-        _positive(self.reference_diameter_m, 'reference_diameter_m')
+        """Normalize the signed line load, deflection magnitude and diameter."""
+        _set_floats(self, _nonnegative, 'deflection_m')
+        _set_floats(self, _finite, 'line_load_n_per_m')
+        _set_floats(self, _positive, 'reference_diameter_m')
 
     @classmethod
     def from_imperial(
@@ -297,16 +332,13 @@ class SoilResistanceInput:
         reference_diameter_in: float, force_conversion_n_per_lbf: float,
     ) -> SoilResistanceInput:
         """Convert y and D using exact inches; force uses an explicit N/lbf factor."""
-        _positive(force_conversion_n_per_lbf, 'force_conversion_n_per_lbf')
-        for name, value in (
-            ('deflection_in', deflection_in),
-            ('line_load_lbf_per_in', line_load_lbf_per_in),
-            ('reference_diameter_in', reference_diameter_in),
-        ):
-            _finite(value, name)
-        return cls(deflection_in * INCH_TO_METER,
-                   line_load_lbf_per_in * force_conversion_n_per_lbf / INCH_TO_METER,
-                   reference_diameter_in * INCH_TO_METER)
+        n_per_lbf = _positive(force_conversion_n_per_lbf, 'force_conversion_n_per_lbf')
+        return cls(
+            _finite(deflection_in, 'deflection_in') * INCH_TO_METER,
+            _finite(line_load_lbf_per_in, 'line_load_lbf_per_in') * n_per_lbf / INCH_TO_METER,
+            _finite(reference_diameter_in, 'reference_diameter_in') * INCH_TO_METER,
+            citations=(_nist_reference(_LENGTH_SECTION),),
+        )
 
 
 def compute_soil_pressure_pa(inputs: SoilResistanceInput) -> float:

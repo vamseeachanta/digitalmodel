@@ -107,12 +107,23 @@ UNIT_SUFFIX_RE = re.compile(
     re.IGNORECASE,
 )
 
+# These quantities share a noun with forces or torques, but have different dimensions.
+_AREA_MOMENT_OR_LINE_LOAD = re.compile(
+    r"(?:second|polar)_moment_m4|line_load_(?:n_per_m|lbf_per_in)", re.IGNORECASE
+)
+
+
+def _has_unit(name: str) -> bool:
+    return bool(UNIT_SUFFIX_RE.search(name) or _AREA_MOMENT_OR_LINE_LOAD.fullmatch(name))
+
+
 #: Human-readable form of the accepted vocabulary, used in the failure message so
 #: the fix a developer is told to make matches what the scanner actually accepts.
 _ACCEPTED_SUFFIXES_MSG = (
     "SI: " + "/".join("_" + s for s in SI_SUFFIXES) + " | "
     "imperial: " + "/".join("_" + s for s in IMPERIAL_SUFFIXES) + " | "
-    "dimensionless: " + "/".join("_" + s for s in DIMENSIONLESS_SUFFIXES)
+    "dimensionless: " + "/".join("_" + s for s in DIMENSIONLESS_SUFFIXES) +
+    " | second/polar moments of area: _m4 | line loads: _n_per_m/_lbf_per_in"
 )
 
 #: Annotations that count as a bare-float context.
@@ -171,7 +182,7 @@ def _scan_tree(tree: ast.AST, relpath: str) -> set[tuple[str, str]]:
                 if not float_ctx and a.annotation is None:
                     # bare numeric default with no annotation
                     float_ctx = _is_numeric_const(default_map.get(name))
-                if float_ctx and not UNIT_SUFFIX_RE.search(name):
+                if float_ctx and not _has_unit(name):
                     offenders.add((relpath, name))
 
         elif isinstance(node, ast.ClassDef):
@@ -180,7 +191,7 @@ def _scan_tree(tree: ast.AST, relpath: str) -> set[tuple[str, str]]:
                     name = stmt.target.id
                     if not FORCE_NAME_RE.search(name):
                         continue
-                    if _is_float_annotation(stmt.annotation) and not UNIT_SUFFIX_RE.search(name):
+                    if _is_float_annotation(stmt.annotation) and not _has_unit(name):
                         offenders.add((relpath, name))
 
     return offenders
@@ -345,6 +356,23 @@ def test_scanner_accepts_imperial_and_dimensionless_names(name: str):
     less faithful to what it parses (#1638)."""
     src = f"from dataclasses import dataclass\n@dataclass\nclass C:\n    {name}: float\n"
     assert _scan_tree(ast.parse(src), "<self-test>") == set()
+
+
+@pytest.mark.parametrize("name,expected_valid", [
+    ("second_moment_m4", True),
+    ("polar_moment_m4", True),
+    ("line_load_n_per_m", True),
+    ("line_load_lbf_per_in", True),
+    ("top_tension_m4", False),
+    ("top_tension_n_per_m", False),
+    ("top_tension_lbf_per_in", False),
+    ("line_load_m4", False),
+    ("polar_moment_n_per_m", False),
+])
+def test_area_moment_and_line_load_units_match_the_quantity(name, expected_valid):
+    for source in (f"class Section:\n    {name}: float", f"def read(*, {name}: float): pass"):
+        offenders = _scan_tree(ast.parse(source), "<self-test>")
+        assert offenders == (set() if expected_valid else {("<self-test>", name)})
 
 
 @pytest.mark.parametrize(

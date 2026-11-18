@@ -14,6 +14,7 @@ from math import pi, sqrt
 import numpy as np
 import pytest
 
+from digitalmodel.citations import Citation, CitationResolutionError
 from digitalmodel.drilling_riser import riser_properties
 from digitalmodel.drilling_riser.riser_properties import (
     BuoyancyInput,
@@ -96,7 +97,7 @@ def test_buoyancy_inverse_and_signed_submerged_mass():
     # Illustrative example: displaced annulus per metre recovers the mass loss.
     params = BuoyancyInput(80.0, 20.0, 0.4, 1000.0)
     diameter = compute_buoyancy_diameter_m(params)
-    assert diameter == pytest.approx(0.486203, rel=1e-5)
+    assert diameter == pytest.approx(0.486204, abs=0.0000005)
     assert diameter == pytest.approx(sqrt(4 * 60 / (pi * 1000) + 0.4**2))
     assert 1000 * pi / 4 * (diameter**2 - 0.4**2) == pytest.approx(60.0)
     neutral = replace(params, submerged_mass_kg_per_m=80.0)
@@ -291,3 +292,69 @@ def test_mass_from_required_linear_density():
     for density, length in [(-1, 8), (25, 0), (float('nan'), 8), (25, True)]:
         with pytest.raises(ValueError):
             mass_from_linear_density(density, length)
+
+
+def test_fixed_width_mass_and_gravity_give_compression():
+    balance = compute_tension_balance(TensionInput(100_000, np.int16(12_000), np.int16(10)))
+    assert balance.inservice_weight_n == 120_000
+    assert balance.bottom_tension_n == -20_000
+
+
+def test_three_fixed_width_joint_masses_sum_in_kg():
+    joint = replace(illustrative_joint(), dry_mass_per_joint_kg=np.int16(12_000))
+    assert compute_joint_properties(joint).total_dry_mass_kg == 36_000
+
+
+def test_fixed_width_buoyancy_and_mass_helpers():
+    buoyancy = BuoyancyInput(np.int16(24_000), np.int16(-16_000), 0, 1000)
+    assert compute_buoyancy_diameter_m(buoyancy) == pytest.approx(sqrt(160 / pi))
+    assert mass_from_linear_density(np.int16(12_000), np.int16(3)) == 36_000
+    assert apparent_mass_from_ratio(np.int16(12_000), np.int16(-3)) == -36_000
+
+
+def test_fixed_width_inputs_are_promoted_before_imperial_scaling():
+    joint = RiserJointInput.from_imperial(**{
+        **imperial_joint_arguments(), 'dry_mass_per_joint_lb': np.int16(20_000),
+        'mass_conversion_kg_per_lb': np.int16(2),
+    })
+    assert joint.dry_mass_per_joint_kg == 40_000
+    soil = SoilResistanceInput.from_imperial(
+        deflection_in=1, line_load_lbf_per_in=np.int16(-20_000),
+        reference_diameter_in=2, force_conversion_n_per_lbf=np.int16(2),
+    )
+    assert soil.line_load_n_per_m == pytest.approx(-40_000 / 0.0254)
+
+
+def test_exact_conversions_carry_their_nist_source():
+    joint = RiserJointInput.from_imperial(**imperial_joint_arguments())
+    length, prefix = joint.citations
+    for reference in joint.citations:
+        assert isinstance(reference, Citation)
+        assert (reference.code_id, reference.publisher, reference.revision) == (
+            'NIST-SP-811', 'NIST', '2008',
+        )
+    assert length.section == 'Appendix B.8 (international foot and inch)'
+    assert prefix.section == 'Section 4.3, Table 5 (kilo)'
+    assert compute_joint_properties(joint).citations == joint.citations
+    assert compute_joint_properties(illustrative_joint()).citations == ()
+    assert compute_tension_balance(TensionInput(8000, 100, 10)).citations == (prefix,)
+    soil = SoilResistanceInput.from_imperial(
+        deflection_in=1, line_load_lbf_per_in=2, reference_diameter_in=3,
+        force_conversion_n_per_lbf=4.4,
+    )
+    assert soil.citations == (length,)
+    assert SoilResistanceInput(1, 2, 3).citations == ()
+
+
+@pytest.mark.parametrize('revision', [None, '1995'])
+def test_conversion_requires_matching_source_metadata(tmp_path, monkeypatch, revision):
+    monkeypatch.setattr(riser_properties, '_CITATION_ROOT', tmp_path)
+    if revision is not None:
+        page = tmp_path / 'wikis/engineering-standards/wiki/standards/nist-sp-811.md'
+        page.parent.mkdir(parents=True)
+        page.write_text(
+            f'---\ncode_id: NIST-SP-811\npublisher: NIST\nrevision: {revision}\n---\n',
+            encoding='utf-8',
+        )
+    with pytest.raises(CitationResolutionError, match='NIST-SP-811'):
+        compute_tension_balance(TensionInput(8000, 100, 10))
