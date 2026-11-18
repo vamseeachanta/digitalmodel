@@ -63,7 +63,7 @@ CARDS_COMMIT = "242f931efefa8facbe337502a2cdb4cebe08fd78"
 PLATE_DOI = "https://doi.org/10.17632/hnfwm9mjs6.1"
 # Commit that holds the detail pages as published; the test checks they have not changed
 # since. None until the pages are first committed (links then follow the branch).
-DETAIL_COMMIT = "f41219d99c28ae2e12e883a176603b932df7dd38"
+DETAIL_COMMIT = "6766dfca9e1cd2854e651dce1ab97442eac14a53"
 DETAIL_BRANCH = "feat/dynacard-article-r3"
 # The example selected when the page opens: not Example 1, so the reader sees at once
 # that selecting a row changes the row colour and the chart (maintainer review of revision 3, note 4).
