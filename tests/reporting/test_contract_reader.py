@@ -11,6 +11,11 @@ from types import SimpleNamespace
 
 import pytest
 
+from digitalmodel.common.assumption_ledger import (
+    AssumptionLedger,
+    AssumptionSource,
+    Confidence,
+)
 from digitalmodel.reporting import (
     ContractError,
     DataSource,
@@ -76,7 +81,9 @@ def test_valid_source_is_read_once_relative_to_root(declared, monkeypatch, tmp_p
     monkeypatch.chdir(tmp_path)
     monkeypatch.setattr(Path, "open", recording_open)
     # A value-equal declaration is accepted; object identity is not required.
-    result = read(root, section, source.model_copy(), provenance, assumptions=[])
+    result = read(
+        Path("store"), section, source.model_copy(), provenance, assumptions=[]
+    )
     assert result == {"force": 12.5, "label": "synthetic"}
     assert opened == [root / source.identifier]
     module = import_module("digitalmodel.reporting.contract_reader")
@@ -148,11 +155,42 @@ def test_assumptions_are_a_sequence_of_nonblank_strings(declared, assumptions):
         read(*declared, assumptions=assumptions)
 
 
-def test_explicit_assumptions_are_accepted(declared):
-    assert (
-        read(*declared, assumptions=("Synthetic source uses SI units",))["force"]
-        == 12.5
+@pytest.fixture
+def ledger():
+    ledger = AssumptionLedger()
+    ledger.record(
+        "force.units",
+        "N",
+        AssumptionSource.ASSUMED_DEFAULT,
+        "Assumed units for the synthetic force",
+        Confidence.LOW,
     )
+    return ledger
+
+
+def test_named_assumption_is_in_the_rendered_ledger(declared, ledger):
+    _, section, _, provenance = declared
+    data = read(*declared, assumptions=("force.units",), ledger=ledger)
+    html = assemble_report(
+        "Results", sections=[section], provenance=provenance, data=data, ledger=ledger
+    )
+    assert "<p>12.5</p>" in html
+    assert "<td>force.units</td><td>N</td>" in html
+    assert "<td>Assumed units for the synthetic force</td>" in html
+
+
+def test_named_assumption_requires_a_ledger_before_open(declared, monkeypatch):
+    def forbidden_open(*args, **kwargs):
+        pytest.fail("Source opened before its assumptions were checked")
+
+    monkeypatch.setattr(Path, "open", forbidden_open)
+    with pytest.raises(ContractError, match="ledger"):
+        read(*declared, assumptions=["force.units"])
+
+
+def test_every_named_assumption_requires_an_exact_ledger_field(declared, ledger):
+    with pytest.raises(ContractError, match="ledger"):
+        read(*declared, assumptions=["force.units", "Force.units"], ledger=ledger)
 
 
 @pytest.mark.parametrize(
@@ -201,7 +239,7 @@ def test_unsafe_identifiers_fail_before_open(declared, monkeypatch, identifier):
         pytest.fail("An unsafe identifier was opened")
 
     monkeypatch.setattr(Path, "open", forbidden_open)
-    with pytest.raises(ContractError, match="identifier"):
+    with pytest.raises(ContractError, match="portable relative path"):
         read(root, section, source, provenance, assumptions=[])
 
 
@@ -213,9 +251,14 @@ def test_symlink_escape_is_rejected(declared, tmp_path, directory_link):
     target = outside / "values.json"
     target.write_bytes((root / source.identifier).read_bytes())
     link = root / "link"
-    link.symlink_to(
-        outside if directory_link else target, target_is_directory=directory_link
-    )
+    try:
+        link.symlink_to(
+            outside if directory_link else target, target_is_directory=directory_link
+        )
+    except OSError as error:
+        if getattr(error, "winerror", None) == 1314:  # ERROR_PRIVILEGE_NOT_HELD
+            pytest.skip("Windows symlink creation requires additional privileges")
+        raise
     source.identifier = "link/values.json" if directory_link else "link"
     section.reads = [source.identifier]
     before = target.read_bytes()
@@ -236,29 +279,37 @@ def test_missing_file_raises_named_error(declared, missing_root):
         read(root, section, source, provenance, assumptions=[])
 
 
+def test_changed_digest_preserves_source(declared):
+    root, section, source, provenance = declared
+    path = root / source.identifier
+    raw = b'{"force": 13}'
+    path.write_bytes(raw)
+    with pytest.raises(ContractError, match="digest"):
+        read(root, section, source, provenance, assumptions=[])
+    assert path.read_bytes() == raw
+
+
 @pytest.mark.parametrize(
-    "raw",
+    "raw,expected",
     [
-        b'{"force": 13}',
-        b"not JSON",
-        b'{"force": 1, "force": 2}',
-        b'{"nested": {"x": 1, "x": 2}}',
-        b'{"x": NaN}',
-        b'{"x": Infinity}',
-        b'{"x": -Infinity}',
-        b'{"x": 1e999}',
-        b'{"x": -1e999}',
-        b'"\xff"',
+        (b"not JSON", "UTF-8 JSON"),
+        (b'{"force": 1, "force": 2}', "duplicate"),
+        (b'{"nested": {"x": 1, "x": 2}}', "duplicate"),
+        (b'{"x": NaN}', "non-finite"),
+        (b'{"x": Infinity}', "non-finite"),
+        (b'{"x": -Infinity}', "non-finite"),
+        (b'{"x": 1e999}', "finite float range"),
+        (b'{"x": -1e999}', "finite float range"),
+        (b'"\xff"', "UTF-8 JSON"),
+        pytest.param(b"[" * 10000 + b"]" * 10000, "UTF-8 JSON", id="deep-arrays"),
     ],
 )
-def test_changed_digest_and_invalid_json_preserve_source(declared, raw):
+def test_invalid_json_preserves_verified_source(declared, raw, expected):
     root, section, source, provenance = declared
     path = root / source.identifier
     path.write_bytes(raw)
-    # First case deliberately retains the original digest.
-    if raw != b'{"force": 13}':
-        source.digest = "sha256:" + hashlib.sha256(raw).hexdigest()
-    with pytest.raises(ContractError):
+    source.digest = "sha256:" + hashlib.sha256(raw).hexdigest()
+    with pytest.raises(ContractError, match=expected):
         read(root, section, source, provenance, assumptions=[])
     assert path.read_bytes() == raw
 

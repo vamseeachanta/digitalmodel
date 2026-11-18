@@ -4,18 +4,19 @@
 
 Authoring example (``root`` is the trusted analysis store directory)::
 
-    data = read_declared_json(root, section, source, provenance, assumptions=[])
+    data = read_declared_json(root, section, source, provenance,
+                              assumptions=["force.units"], ledger=ledger)
     html = assemble_report("Results", provenance=provenance,
-                           sections=[section], data=data)
+                           sections=[section], data=data, ledger=ledger)
 
 Import this helper from ``digitalmodel.reporting.contract_reader``. Declare the
 source's full metadata in ``provenance.sources`` and its exact portable relative
 identifier in ``section.reads``. Kinds and wildcard patterns do not grant access.
 The source digest must be ``sha256:`` followed by 64 lowercase hexadecimal digits.
-Units must be nonblank; assumptions must be an explicit sequence of nonblank
-strings (an empty sequence explicitly means none). The caller remains responsible
-for including those assumptions in the report's ledger; this reader mutates no
-metadata. Existing provenance and bare-backbone behavior is unchanged.
+Supply nonblank units and list the exact ledger field names this read relies on.
+For example, record the assumed force units under ``force.units`` before the
+read and pass the same ledger to the assembler to render its value and basis.
+Use ``assumptions=[]`` when the read relies on no assumed fields.
 
 Only UTF-8 JSON up to 1 MiB is accepted. Duplicate object keys, non-finite
 numbers and malformed JSON fail closed. A bounded binary read supplies both the
@@ -37,6 +38,7 @@ from collections.abc import Sequence
 from pathlib import Path, PureWindowsPath
 from typing import Any
 
+from digitalmodel.common.assumption_ledger import AssumptionLedger
 from digitalmodel.reporting._backbone import ReportSection
 from digitalmodel.reporting.provenance import ContractError, DataSource, Provenance
 
@@ -74,6 +76,7 @@ def read_declared_json(
     provenance: Provenance,
     *,
     assumptions: Sequence[str],
+    ledger: AssumptionLedger | None = None,
 ) -> Any:
     """Return verified JSON data, raising a provenance or contract error.
 
@@ -92,6 +95,11 @@ def read_declared_json(
         raise ContractError(
             "Explicit assumptions must be a sequence of nonblank strings."
         )
+    if assumptions and (
+        ledger is None
+        or not set(assumptions).issubset(record.field for record in ledger)
+    ):
+        raise ContractError("Every named assumption must match a field in the ledger.")
     if source not in provenance.sources:
         raise ContractError("Source must be an exact member of provenance.sources.")
     identifier = source.identifier
