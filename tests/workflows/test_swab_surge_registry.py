@@ -69,15 +69,38 @@ def test_pressure_window_summary(tmp_path, window, status, flags, reason_words):
 
 
 @pytest.mark.parametrize(
-    "section, field, value",
-    [("window", "pore_pressure_emw_ppg", float("nan")),
-     ("window", "fracture_emw_ppg", float("inf")),
-     ("trip", "trip_speed_ft_min", float("nan"))],
+    "section, field, value, with_window",
+    [("window", "pore_pressure_emw_ppg", float("nan"), True),
+     ("window", "fracture_emw_ppg", float("inf"), True),
+     ("trip", "trip_speed_ft_min", float("nan"), True),
+     ("trip", "trip_speed_ft_min", float("nan"), False),
+     ("trip", "trip_speed_ft_min", float("inf"), False),
+     ("trip", "trip_speed_ft_min", float("-inf"), False),
+     ("section", "mud_weight", float("nan"), True),
+     ("section", "mud_weight", float("inf"), True),
+     ("section", "mud_weight", float("nan"), False),
+     ("section", "mud_weight", float("inf"), False)],
 )
-def test_nonfinite_pressure_comparison_is_rejected(tmp_path, section, field, value):
+def test_nonfinite_pressure_comparison_is_rejected(
+    tmp_path, section, field, value, with_window
+):
     cfg = _example_config(tmp_path)
+    if not with_window:
+        del cfg["swab_surge"]["window"]
     cfg["swab_surge"][section][field] = value
     with pytest.raises(ValueError, match="finite"):
+        run_swab_surge(cfg)
+    assert not (tmp_path / SUMMARY).exists()
+
+
+@pytest.mark.parametrize("pore, fracture", [(12.0, 12.0), (13.0, 11.5)])
+def test_unordered_pressure_window_is_rejected(tmp_path, pore, fracture):
+    cfg = _example_config(tmp_path)
+    cfg["swab_surge"]["window"] = {
+        "pore_pressure_emw_ppg": pore,
+        "fracture_emw_ppg": fracture,
+    }
+    with pytest.raises(ValueError, match="pore-pressure limit.*below.*fracture limit"):
         run_swab_surge(cfg)
     assert not (tmp_path / SUMMARY).exists()
 

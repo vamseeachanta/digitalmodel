@@ -16,6 +16,25 @@ means both mud weights are within the supplied limits, including equality.
 A value of `fail` identifies a kick risk, a loss risk, or both. A missing pore
 or fracture limit gives `warning` because the pressure window was not evaluated.
 
-The result applies to the specified trip speed and the empirical steady-flow
-model. Successful execution and an in-window result do not qualify the method
-for field use.
+The method uses Burkhardt (1961) clinging-constant effective velocity with
+Bingham-plastic annular friction, a screening class of API RP 13D,
+*Rheology and Hydraulics of Oil-well Drilling Fluids*.
+
+Input units in `input.yml` are:
+
+- Pipe outside and inside diameters and hole diameter: inches.
+- True vertical depth (TVD): feet.
+- Mud weight and pore-pressure and fracture limits: ppg (lb/gal).
+- Plastic viscosity (PV): cP.
+- Yield point (YP): lbf/100 ft².
+- Trip speed: ft/min.
+- Clinging constant: dimensionless; pipe configuration: `closed` or `open`.
+
+The result applies to the specified trip speed with these limits:
+
+- Steady flow only; no pressure transient or gel breaking is represented.
+- Friction length is taken as TVD, so deviated wells are not represented.
+- Mud properties are fixed throughout the calculation.
+
+Successful execution and an in-window result do not qualify the method for
+field use.

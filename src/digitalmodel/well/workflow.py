@@ -149,6 +149,10 @@ def run_swab_surge(cfg: dict[str, Any]) -> dict[str, Any]:
 
     trip_speed = float(trip.get("trip_speed_ft_min", 60.0))
     evaluated = calc.evaluate(trip_speed).as_dict()
+    swab = evaluated["swab_emw_ppg"]
+    surge = evaluated["surge_emw_ppg"]
+    if not all(math.isfinite(value) for value in (trip_speed, swab, surge)):
+        raise ValueError("Swab/surge evaluation requires finite trip speed and mud weights.")
 
     result: dict[str, Any] = {"at_trip_speed": evaluated}
     window = params.get("window")
@@ -162,10 +166,10 @@ def run_swab_surge(cfg: dict[str, Any]) -> dict[str, Any]:
     else:
         pore = float(window["pore_pressure_emw_ppg"])
         fracture = float(window["fracture_emw_ppg"])
-        swab = evaluated["swab_emw_ppg"]
-        surge = evaluated["surge_emw_ppg"]
-        if not all(math.isfinite(value) for value in (pore, fracture, swab, surge)):
+        if not all(math.isfinite(value) for value in (pore, fracture)):
             raise ValueError("Pressure-window comparisons require finite mud weights.")
+        if pore >= fracture:
+            raise ValueError("The pore-pressure limit must be below the fracture limit.")
 
         limit = calc.max_safe_trip_speed(pore, fracture)
         result["safe_trip_speed"] = limit.as_dict()
