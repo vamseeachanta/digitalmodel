@@ -5,7 +5,7 @@
   const fields = ["spm", "pump-diameter", "pump-depth", "fluid-density", "tubing-pressure"];
   const rodFields = ["diameter", "length", "weight_per_foot", "modulus_of_elasticity"];
   const rodLabels = ["diameter (in)", "length (ft)", "weight (lbf/ft)", "modulus (psi)"];
-  let card = null, cardName = "", loadVersion = 0, loadedExample = null, cardRotation = 0;
+  let card = null, cardName = "", loadVersion = 0, loadedExample = null, cardRotation = 0, cardClosingRow = false;
   let currentResult = null;
   const format = DynacardPresentation.formatValue;
 
@@ -82,9 +82,11 @@
     try {
       const text = await file.text();
       if (version !== loadVersion) return;
-      const started = DynacardCore.startAtStrokeBottom(DynacardCore.parseCardCsv(text));
-      card = started.card; cardRotation = started.rotation; cardName = file.name;
-      byId("card-status").textContent = `Loaded ${cardName}: ${card.position.length} samples, ` +
+      const closingRow = byId("closing-row").checked;
+      const started = DynacardCore.startAtStrokeBottom(DynacardCore.parseCardCsv(text, {closingRow}));
+      card = started.card; cardRotation = started.rotation; cardClosingRow = closingRow; cardName = file.name;
+      byId("card-status").textContent = `Loaded ${cardName}: ${card.position.length - 1} timed samples ` +
+        `(${closingRow ? "closing row read from the file" : "first row appended as the closing row"}), ` +
         `started at the bottom of the stroke (rotated ${cardRotation} samples).`;
     } catch (error) {
       if (version !== loadVersion) return;
@@ -224,7 +226,7 @@
 
   function render(analysed) {
     const result = DynacardPresentation.exportRecord(analysed,
-      loadedExample ? {source:"example"} : {source:"upload", rotation:cardRotation});
+      loadedExample ? {source:"example"} : {source:"upload", rotation:cardRotation, closingRow:cardClosingRow});
     plot("surface-plot", card); plot("pump-plot", result.downhole_card, result); resultRows(result);
     byId("result-basis").textContent = `${cardName} · ${card.position.length} samples · ${result.solver_method}`;
     const guards = [...result.solver_flags];
@@ -278,6 +280,7 @@
     });
     byId("load-example").addEventListener("click", loadExample);
     byId("card-file").addEventListener("change", loadFile);
+    byId("closing-row").addEventListener("change", () => {if (byId("card-file").files[0]) loadFile();});
     byId("well-form").addEventListener("input", invalidate);
     byId("well-form").addEventListener("submit", runAnalysis);
     byId("add-rod").addEventListener("click", () => {

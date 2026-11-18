@@ -29,6 +29,7 @@
           reference_runtime_source: result.production.runtime_source},
         card_start: upload
           ? {source: "uploaded CSV", origin: "stroke_bottom", rotation_samples: input.rotation,
+            closing_row: input.closingRow ? "read_from_file" : "first_row_appended",
             basis: "Rotated to the minimum surface position before analysis; every start phase of the same cycle gives the same result."}
           : {source: "bundled example", origin: "stored", rotation_samples: 0,
             basis: "Stored sample origin retained for parity with the Python records; CPIP and fluid load depend on the start phase."}}};

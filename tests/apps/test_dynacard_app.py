@@ -156,15 +156,21 @@ def card_csv(position, load):
 @NODE_REQUIRED
 @pytest.mark.parametrize("index", [0, 1, 3])
 def test_open_csv_cycle_matches_its_closed_form(index, assets, tmp_path):
-    """Removing only the exact closing row must not change the pump card."""
+    """An open file and the same cycle with a declared closing row agree."""
     card, well = assets["examples"][index]["card"], assets["well"]
     assert card["position"][0] == card["position"][-1] and card["load"][0] == card["load"][-1]
     closed_text = card_csv(card["position"], card["load"])
     open_text = card_csv(card["position"][:-1], card["load"][:-1])
-    closed, opened = run_node([{"operation": "parse", "text": closed_text},
-                               {"operation": "parse", "text": open_text}], tmp_path)
+    closed, opened, undeclared = run_node([
+        {"operation": "parse", "text": closed_text, "options": {"closingRow": True}},
+        {"operation": "parse", "text": open_text},
+        {"operation": "parse", "text": closed_text}], tmp_path)
     assert closed == card
     assert opened == card
+    # Undeclared, the repeated last row is a timed sample and the first row
+    # is appended again; nothing is dropped.
+    assert undeclared == {"position": card["position"] + card["position"][:1],
+                          "load": card["load"] + card["load"][:1]}
     results = run_node([{"card": closed, "well": well}, {"card": opened, "well": well}], tmp_path)
     assert results[0]["downhole_card"] == results[1]["downhole_card"]
     assert results[0]["fillage"]["fillage"] == results[1]["fillage"]["fillage"]
@@ -484,3 +490,88 @@ def test_omitted_density_branches_match_python(well_test, source, assets, tmp_pa
     expected = module("reference").python_analysis(request)
     assert expected["cpip"]["density_source"] == source
     assert_parity(actual, expected)
+
+
+def dwell_pair_rows(card):
+    """Example cycle with its bottom-of-stroke reading repeated once (a dwell)."""
+    position, load = card["position"][:-1], card["load"][:-1]
+    bottom = position.index(min(position))
+    position = position[:bottom + 1] + position[bottom:]
+    load = load[:bottom + 1] + load[bottom:]
+    return position, load, bottom
+
+
+@NODE_REQUIRED
+def test_dwell_pair_across_file_boundary_keeps_both_samples(assets, tmp_path):
+    """Identical readings straddling the file boundary are not a closing row."""
+    card, well = assets["examples"][8]["card"], assets["well"]
+    position, load, bottom = dwell_pair_rows(card)
+    assert len(position) == 100 and position[bottom] == position[bottom + 1]
+    inside = card_csv(position, load)
+    # Start at the second reading of the pair: the first reading is now the
+    # file's last row and equals its first row.
+    split = bottom + 1
+    straddle = card_csv(position[split:] + position[:split], load[split:] + load[:split])
+    assert straddle.splitlines()[1] == straddle.splitlines()[-1]
+    a, b, declared = run_node([
+        {"operation": "upload", "text": inside},
+        {"operation": "upload", "text": straddle},
+        {"operation": "upload", "text": straddle, "options": {"closingRow": True}}], tmp_path)
+    assert a["card"] == b["card"]
+    assert len(a["card"]["position"]) == 101  # 100 timed samples plus the closing row
+    assert len(declared["card"]["position"]) == 100  # the declared reading: 99 samples
+    results = run_node([{"card": c["card"], "well": well} for c in (a, b, declared)], tmp_path)
+    assert results[0]["downhole_card"] == results[1]["downhole_card"]
+    assert round(results[0]["cpip"]["pump_intake_pressure"], 1) == 790.1
+    assert round(results[2]["cpip"]["pump_intake_pressure"], 1) == 797.5
+
+
+@NODE_REQUIRED
+def test_declared_closing_row_must_repeat_the_first_row(assets, tmp_path):
+    card = assets["examples"][0]["card"]
+    result = run_node({"operation": "parse", "options": {"closingRow": True},
+                       "text": card_csv(card["position"][:-1], card["load"][:-1])}, tmp_path)
+    assert "closing row was declared" in result.get("error", "")
+    bad = run_node({"operation": "parse", "options": {"closingRow": "yes"},
+                    "text": card_csv(card["position"], card["load"])}, tmp_path)
+    assert bad.get("error")
+
+
+NULL_FIELDS = {
+    "fluid_density": lambda w: w.update(fluid_density=None),
+    "rod_density": lambda w: w["rod_string"][0].update(density=None),
+    "rod_modulus": lambda w: w["rod_string"][0].update(modulus_of_elasticity=None),
+    "rod_weight": lambda w: w["rod_string"][0].update(weight_per_foot=None),
+    "pump_efficiency": lambda w: w["pump"].update(efficiency=None),
+    "water_cut": lambda w: w.update(well_test={"oil_rate": 40.0, "water_cut": None}),
+    "oil_rate": lambda w: w.update(well_test={"oil_rate": None}),
+    "water_rate": lambda w: w.update(well_test={"water_rate": None}),
+    "runtime": lambda w: w["input_params"].update(runtime=None),
+}
+
+
+@NODE_REQUIRED
+@pytest.mark.parametrize("field", sorted(NULL_FIELDS))
+def test_explicit_null_is_rejected_like_python(field, assets, tmp_path):
+    """Presence is checked apart from validity: null is not an omission."""
+    from pydantic import ValidationError
+    well = copy.deepcopy(assets["well"])
+    NULL_FIELDS[field](well)
+    request = {"card": assets["examples"][0]["card"], "well": well}
+    with pytest.raises(ValidationError):
+        module("reference").python_analysis(request)
+    assert run_node(request, tmp_path).get("error"), field
+
+
+@NODE_REQUIRED
+def test_null_fluid_density_is_not_an_omission(assets, tmp_path):
+    """Beside the omission fixtures: null is rejected, omission uses the mixture."""
+    well = copy.deepcopy(assets["well"])
+    omitted = copy.deepcopy(well)
+    del omitted["fluid_density"]
+    well["fluid_density"] = None
+    card = assets["examples"][0]["card"]
+    rejected, accepted = run_node([{"card": card, "well": well},
+                                   {"card": card, "well": omitted}], tmp_path)
+    assert "Fluid density must be a finite number when supplied" in rejected.get("error", "")
+    assert accepted["cpip"]["density_source"] == "assumed_50pct_mixture"

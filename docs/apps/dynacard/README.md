@@ -47,28 +47,40 @@ specified example basis; the application does not reconcile that mismatch.
 ## CSV format
 
 The downloadable [template.csv](template.csv) contains the first example surface
-card and a comment header describing units and sampling. The required header is
-`position_in,load_lbf`. The worked-example column names
-`surface_position_in,surface_load_lbf` are also accepted. Columns are
-comma-separated; lines starting with `#` are comments.
+card without its closing row and a comment header describing units, sampling and
+closure. The required header is `position_in,load_lbf`. The worked-example
+column names `surface_position_in,surface_load_lbf` are also accepted. Columns
+are comma-separated; lines starting with `#` are comments.
 
 ```csv
 # One full stroke; uniformly timed samples; any start phase.
+# Every row is one timed sample; do not repeat the first row.
 # Position in inches, surface load in lbf.
 position_in,load_lbf
 ```
 
-Supply at least four paired finite numerical samples and nonzero surface
-stroke. Empty or nonnumeric cells, nonfinite values, inconsistent row lengths,
-missing required columns and zero stroke are rejected. Sampling timestamps are
-not inferred from position spacing: uniform time intervals remain an input
-assumption. The periodic solver reads the last sample as phase zero repeated.
-A CSV whose last row repeats the first row exactly is used as supplied; any
-other CSV is read as unique phases and its first row is appended as the closing
-row before solving, as the pump-card study does. Keeping or omitting the
-closing row therefore gives the same pump card, and the loaded sample count
-includes the closing row. Cards passed directly to the core as JSON, such as
-the field fixtures below, are used as supplied, matching the Python workflow.
+Supply at least three timed samples (four with the closing row) and nonzero
+surface stroke. Empty or nonnumeric cells, nonfinite values, inconsistent row
+lengths, missing required columns and zero stroke are rejected. Sampling
+timestamps are not inferred from position spacing: uniform time intervals remain
+an input assumption. The periodic solver reads the last sample as phase zero
+repeated, so the closure of an uploaded CSV is declared, not inferred
+(`parseCardCsv(text, {closingRow})`; on the page, the closing-row check box):
+
+- Default (`closingRow: false`): every data row is one timed sample, and the
+  first row is appended as the closing row, as the pump-card study does. This
+  holds even when the last reading equals the first, so two identical readings
+  that straddle the file boundary remain two samples of a dwell.
+- Declared (`closingRow: true`): the last row is the closing row and must repeat
+  the first row exactly; a file whose last row differs is rejected. The
+  worked-example surface-card CSVs include their closing row and are loaded
+  this way.
+
+An open file read by default and the same cycle with its closing row read as
+declared give the same card and pump card. The status line reports the number
+of timed samples, excluding the closing row. Cards passed directly to the core
+as JSON, such as the field fixtures below, are used as supplied, matching the
+Python workflow.
 
 The page then rotates an uploaded cycle to start at its minimum surface position
 (`startAtStrokeBottom`); ties at the minimum take the lexicographically smallest
@@ -126,8 +138,8 @@ and crosswalk status: `literal` or `ASSUMED`, as recorded by the plate mapping.
 Uploaded CSV cards do not inherit example provenance.
 
 CPIP follows the reference's density basis: a supplied fluid density sets the
-tubing gradient (density/144 psi/ft; density source `context`). Without one, the
-reference uses a mixture of oil 35° API and water specific gravity 1.03 at the
+tubing gradient (density/144 psi/ft; density source `context`). When an API
+call omits the `fluid_density` field, the reference uses a mixture of oil 35° API and water specific gravity 1.03 at the
 well-test water cut, or 50% when no well test is supplied. The page always
 supplies its fluid-density input, so that input sets both the wave equation and
 CPIP. A negative calculated intake pressure is retained with pressure status
@@ -169,8 +181,10 @@ References:
 - Timing: uniform samples are assumed; the timing source and sampling rate are unverified.
 - Damping and friction calibration: 10 cP viscosity, 2.441 in tubing ID and the
   default damping calculation are used; field calibration is missing.
-- Fluid properties: the entered density and the separate CPIP mixture are not
-  validated against fluid samples.
+- Fluid properties: the page uses the entered density for both the wave
+  equation and the CPIP gradient; it is not validated against fluid samples.
+  The oil and water mixture applies only to API calls that omit
+  `fluid_density`, and its 35° API and water specific gravity are not validated.
 - Rod materials other than steel: these are outside the port's supported basis.
 - Pump depth versus rod length mismatch: the wave equation uses rod length;
   the pressure calculation uses pump depth. Their agreement is not established.

@@ -6,8 +6,10 @@ const presentation = require('../presentation.js');
 
 function execute(request) {
   try {
-    if (request.operation === 'parse') return core.parseCardCsv(request.text);
-    if (request.operation === 'upload') return core.startAtStrokeBottom(core.parseCardCsv(request.text));
+    if (request.operation === 'parse') return core.parseCardCsv(request.text, request.options);
+    if (request.operation === 'upload') {
+      return core.startAtStrokeBottom(core.parseCardCsv(request.text, request.options));
+    }
     if (request.operation === 'export') {
       return presentation.exportRecord(core.analyse(request.card, request.well), request.input);
     }

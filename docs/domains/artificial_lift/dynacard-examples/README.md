@@ -121,7 +121,7 @@ Buckling criterion: Computed minimum pump load < -500 lbf; compression flag only
 
 Source: [DOI 10.17632/hnfwm9mjs6.1](https://data.mendeley.com/datasets/hnfwm9mjs6/1); [original workbook](https://data.mendeley.com/public-files/datasets/hnfwm9mjs6/files/53140ff5-85c3-40d1-b900-364a892e692e/file_downloaded); sheet `工况正常`; CC0 1.0; retrieved 2026-10-11.
 
-[Paired card CSV](example-01-normal-operation.csv) · [Browser surface-card CSV](example-01-normal-operation-surface-card.csv) · [Vector figure](example-01-normal-operation.svg).
+[Paired card CSV](example-01-normal-operation.csv) · [Browser surface-card CSV](example-01-normal-operation-surface-card.csv), closing row included · [Vector figure](example-01-normal-operation.svg).
 
 ## Example 2: Insufficient supply
 
@@ -170,7 +170,7 @@ Buckling criterion: Computed minimum pump load < -500 lbf; compression flag only
 
 Source: [DOI 10.17632/hnfwm9mjs6.1](https://data.mendeley.com/datasets/hnfwm9mjs6/1); [original workbook](https://data.mendeley.com/public-files/datasets/hnfwm9mjs6/files/53140ff5-85c3-40d1-b900-364a892e692e/file_downloaded); sheet `供液不足`; CC0 1.0; retrieved 2026-10-11.
 
-[Paired card CSV](example-02-insufficient-supply.csv) · [Browser surface-card CSV](example-02-insufficient-supply-surface-card.csv) · [Vector figure](example-02-insufficient-supply.svg).
+[Paired card CSV](example-02-insufficient-supply.csv) · [Browser surface-card CSV](example-02-insufficient-supply-surface-card.csv), closing row included · [Vector figure](example-02-insufficient-supply.svg).
 
 ## Example 3: Gas interference
 
@@ -219,7 +219,7 @@ Buckling criterion: Computed minimum pump load < -500 lbf; compression flag only
 
 Source: [DOI 10.17632/hnfwm9mjs6.1](https://data.mendeley.com/datasets/hnfwm9mjs6/1); [original workbook](https://data.mendeley.com/public-files/datasets/hnfwm9mjs6/files/53140ff5-85c3-40d1-b900-364a892e692e/file_downloaded); sheet `气体影响`; CC0 1.0; retrieved 2026-10-11.
 
-[Paired card CSV](example-03-gas-interference.csv) · [Browser surface-card CSV](example-03-gas-interference-surface-card.csv) · [Vector figure](example-03-gas-interference.svg).
+[Paired card CSV](example-03-gas-interference.csv) · [Browser surface-card CSV](example-03-gas-interference-surface-card.csv), closing row included · [Vector figure](example-03-gas-interference.svg).
 
 ## Example 4: Rod parting
 
@@ -268,7 +268,7 @@ Buckling criterion: Computed minimum pump load < -500 lbf; compression flag only
 
 Source: [DOI 10.17632/hnfwm9mjs6.1](https://data.mendeley.com/datasets/hnfwm9mjs6/1); [original workbook](https://data.mendeley.com/public-files/datasets/hnfwm9mjs6/files/53140ff5-85c3-40d1-b900-364a892e692e/file_downloaded); sheet `抽油杆断脱`; CC0 1.0; retrieved 2026-10-11.
 
-[Paired card CSV](example-04-rod-parting.csv) · [Browser surface-card CSV](example-04-rod-parting-surface-card.csv) · [Vector figure](example-04-rod-parting.svg).
+[Paired card CSV](example-04-rod-parting.csv) · [Browser surface-card CSV](example-04-rod-parting-surface-card.csv), closing row included · [Vector figure](example-04-rod-parting.svg).
 
 ## Example 5: Tagging up
 
@@ -317,7 +317,7 @@ Buckling criterion: Computed minimum pump load < -500 lbf; compression flag only
 
 Source: [DOI 10.17632/hnfwm9mjs6.1](https://data.mendeley.com/datasets/hnfwm9mjs6/1); [original workbook](https://data.mendeley.com/public-files/datasets/hnfwm9mjs6/files/53140ff5-85c3-40d1-b900-364a892e692e/file_downloaded); sheet `上碰泵`; CC0 1.0; retrieved 2026-10-11.
 
-[Paired card CSV](example-05-tagging-up.csv) · [Browser surface-card CSV](example-05-tagging-up-surface-card.csv) · [Vector figure](example-05-tagging-up.svg).
+[Paired card CSV](example-05-tagging-up.csv) · [Browser surface-card CSV](example-05-tagging-up-surface-card.csv), closing row included · [Vector figure](example-05-tagging-up.svg).
 
 ## Example 6: Tagging down
 
@@ -366,7 +366,7 @@ Buckling criterion: Computed minimum pump load < -500 lbf; compression flag only
 
 Source: [DOI 10.17632/hnfwm9mjs6.1](https://data.mendeley.com/datasets/hnfwm9mjs6/1); [original workbook](https://data.mendeley.com/public-files/datasets/hnfwm9mjs6/files/53140ff5-85c3-40d1-b900-364a892e692e/file_downloaded); sheet `下碰泵`; CC0 1.0; retrieved 2026-10-11.
 
-[Paired card CSV](example-06-tagging-down.csv) · [Browser surface-card CSV](example-06-tagging-down-surface-card.csv) · [Vector figure](example-06-tagging-down.svg).
+[Paired card CSV](example-06-tagging-down.csv) · [Browser surface-card CSV](example-06-tagging-down-surface-card.csv), closing row included · [Vector figure](example-06-tagging-down.svg).
 
 ## Example 7: Traveling valve leakage
 
@@ -415,7 +415,7 @@ Buckling criterion: Computed minimum pump load < -500 lbf; compression flag only
 
 Source: [DOI 10.17632/hnfwm9mjs6.1](https://data.mendeley.com/datasets/hnfwm9mjs6/1); [original workbook](https://data.mendeley.com/public-files/datasets/hnfwm9mjs6/files/53140ff5-85c3-40d1-b900-364a892e692e/file_downloaded); sheet `游动阀漏失`; CC0 1.0; retrieved 2026-10-11.
 
-[Paired card CSV](example-07-traveling-valve-leakage.csv) · [Browser surface-card CSV](example-07-traveling-valve-leakage-surface-card.csv) · [Vector figure](example-07-traveling-valve-leakage.svg).
+[Paired card CSV](example-07-traveling-valve-leakage.csv) · [Browser surface-card CSV](example-07-traveling-valve-leakage-surface-card.csv), closing row included · [Vector figure](example-07-traveling-valve-leakage.svg).
 
 ## Example 8: Standing valve leakage
 
@@ -464,7 +464,7 @@ Buckling criterion: Computed minimum pump load < -500 lbf; compression flag only
 
 Source: [DOI 10.17632/hnfwm9mjs6.1](https://data.mendeley.com/datasets/hnfwm9mjs6/1); [original workbook](https://data.mendeley.com/public-files/datasets/hnfwm9mjs6/files/53140ff5-85c3-40d1-b900-364a892e692e/file_downloaded); sheet `固定阀漏失`; CC0 1.0; retrieved 2026-10-11.
 
-[Paired card CSV](example-08-standing-valve-leakage.csv) · [Browser surface-card CSV](example-08-standing-valve-leakage-surface-card.csv) · [Vector figure](example-08-standing-valve-leakage.svg).
+[Paired card CSV](example-08-standing-valve-leakage.csv) · [Browser surface-card CSV](example-08-standing-valve-leakage-surface-card.csv), closing row included · [Vector figure](example-08-standing-valve-leakage.svg).
 
 ## Example 9: Plunger out of barrel
 
@@ -513,7 +513,7 @@ Buckling criterion: Computed minimum pump load < -500 lbf; compression flag only
 
 Source: [DOI 10.17632/hnfwm9mjs6.1](https://data.mendeley.com/datasets/hnfwm9mjs6/1); [original workbook](https://data.mendeley.com/public-files/datasets/hnfwm9mjs6/files/53140ff5-85c3-40d1-b900-364a892e692e/file_downloaded); sheet `活塞脱出工作筒`; CC0 1.0; retrieved 2026-10-11.
 
-[Paired card CSV](example-09-plunger-out-of-barrel.csv) · [Browser surface-card CSV](example-09-plunger-out-of-barrel-surface-card.csv) · [Vector figure](example-09-plunger-out-of-barrel.svg).
+[Paired card CSV](example-09-plunger-out-of-barrel.csv) · [Browser surface-card CSV](example-09-plunger-out-of-barrel-surface-card.csv), closing row included · [Vector figure](example-09-plunger-out-of-barrel.svg).
 
 ## Example 10: Sand production
 
@@ -562,7 +562,7 @@ Buckling criterion: Computed minimum pump load < -500 lbf; compression flag only
 
 Source: [DOI 10.17632/hnfwm9mjs6.1](https://data.mendeley.com/datasets/hnfwm9mjs6/1); [original workbook](https://data.mendeley.com/public-files/datasets/hnfwm9mjs6/files/53140ff5-85c3-40d1-b900-364a892e692e/file_downloaded); sheet `出砂`; CC0 1.0; retrieved 2026-10-11.
 
-[Paired card CSV](example-10-sand-production.csv) · [Browser surface-card CSV](example-10-sand-production-surface-card.csv) · [Vector figure](example-10-sand-production.svg).
+[Paired card CSV](example-10-sand-production.csv) · [Browser surface-card CSV](example-10-sand-production-surface-card.csv), closing row included · [Vector figure](example-10-sand-production.svg).
 
 ## Basis and assumptions
 

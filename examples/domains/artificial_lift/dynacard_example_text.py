@@ -193,7 +193,7 @@ def example_section(record):
             f"{r['analysis']['buckling_limitation']} Detailed stability is NOT_EVALUATED.\n\n"
             f"Source: {source}\n\n"
             f"[Paired card CSV]({stem(r)}.csv) · "
-            f"[Browser surface-card CSV]({stem(r)}-surface-card.csv) · "
+            f"[Browser surface-card CSV]({stem(r)}-surface-card.csv), closing row included · "
             f"[Vector figure]({stem(r)}.svg).\n")
 
 

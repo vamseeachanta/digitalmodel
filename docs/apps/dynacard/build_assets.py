@@ -119,9 +119,14 @@ def generated_assets():
         models[key] = json.loads(read_model(PACKAGE / "data" / filename))
     first = examples["examples"][0]["card"]
     template = ("# position_in (in), load_lbf (lbf); one full stroke; uniformly timed samples; any start phase (the page starts the cycle at the bottom of the stroke)\n"
+                "# Every row is one timed sample; do not repeat the first row (the page appends it as the closing row).\n"
                 "position_in,load_lbf\n")
+    # The closing row is left out: the page appends the first row unless the
+    # reader declares that the file's last row is a closing row.
+    if first["position"][0] != first["position"][-1] or first["load"][0] != first["load"][-1]:
+        raise ValueError("example 1 card must be a closed cycle")
     template += "".join(f"{x!r},{y!r}\n" for x, y in
-                        zip(first["position"], first["load"], strict=True))
+                        zip(first["position"][:-1], first["load"][:-1], strict=True))
     return {**model_assets(models),
             "examples.js": script("DynacardExamples", json.dumps(examples, ensure_ascii=False,
                                                                  indent=2, allow_nan=False)),

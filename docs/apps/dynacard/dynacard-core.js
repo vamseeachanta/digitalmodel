@@ -17,6 +17,20 @@
     }
     return value;
   }
+  // Field presence is checked apart from value validity. The Python models
+  // give these fields float defaults, so an omitted field takes the default
+  // while an explicit null fails validation there; it is rejected here too.
+  function present(block, key) {
+    return Object.prototype.hasOwnProperty.call(block, key) && block[key] !== undefined;
+  }
+  function supplied(block, key, fallback, name) {
+    if (!present(block, key)) { return fallback; }
+    const value = block[key];
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+      throw new Error(name + " must be a finite number when supplied; null is not accepted.");
+    }
+    return value;
+  }
   function validateCard(card) {
     if (!card || !Array.isArray(card.position) || !Array.isArray(card.load)) {
       throw new Error("Card position and load must be arrays.");
@@ -32,8 +46,16 @@
     }
     if (span(card.position) <= 0) { throw new Error("Card has zero stroke."); }
   }
-  function parseCardCsv(text) {
+  // Closure convention for uploaded CSVs, declared rather than inferred.
+  // closingRow false (default): every data row is one timed sample, and the
+  // first row is appended as the closing row, even when the last reading
+  // equals the first (a dwell pair across the file boundary stays two
+  // samples). closingRow true: the file's last row is its closing row and
+  // must repeat the first row exactly; nothing is appended.
+  function parseCardCsv(text, options = {}) {
     if (typeof text !== "string") { throw new Error("CSV input must be text."); }
+    const closingRow = options.closingRow ?? false;
+    if (typeof closingRow !== "boolean") { throw new Error("closingRow must be true or false."); }
     const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/)
       .map(v => v.trim()).filter(v => v && !v.startsWith("#"));
     const header = (lines.shift() || "").split(",").map(v => v.trim());
@@ -54,18 +76,21 @@
       }
       card.position.push(Number(cells[pi])); card.load.push(Number(cells[li]));
     });
-    validateCard(card);
-    return closeCycle(card);
-  }
-  // The periodic stencil reads the last sample as phase zero repeated. A CSV
-  // without an exact closing row holds unique phases; repeat its first row so
-  // dropping or keeping the closing row gives the same pump card.
-  function closeCycle(card) {
-    const last = card.position.length - 1;
-    if (card.position[last] === card.position[0] && card.load[last] === card.load[0]) {
+    if (closingRow) {
+      validateCard(card);
+      if (!isClosed(card)) {
+        throw new Error("A closing row was declared, but the last row does not repeat the first row exactly.");
+      }
       return card;
     }
-    return {position: [...card.position, card.position[0]], load: [...card.load, card.load[0]]};
+    const closed = {position: [...card.position, card.position[0]], load: [...card.load, card.load[0]]};
+    validateCard(closed);
+    return closed;
+  }
+  // The periodic stencil reads the last sample as phase zero repeated.
+  function isClosed(card) {
+    const last = card.position.length - 1;
+    return card.position[last] === card.position[0] && card.load[last] === card.load[0];
   }
   // Repeatable start for uploaded cards. The reference solver applies upstroke
   // damping to the samples before the top-of-stroke index and downstroke
@@ -78,8 +103,9 @@
   // stored origin for parity with the Python records.
   function startAtStrokeBottom(card) {
     validateCard(card);
-    const closed = closeCycle(card), n = closed.position.length - 1;
-    const p = closed.position.slice(0, n), l = closed.load.slice(0, n), low = min(p);
+    if (!isClosed(card)) { throw new Error("Rotation needs a closed cycle whose last sample repeats the first."); }
+    const n = card.position.length - 1;
+    const p = card.position.slice(0, n), l = card.load.slice(0, n), low = min(p);
     const less = (a, b) => {
       for (let k = 0; k < n; k++) {
         const i = (a + k) % n, j = (b + k) % n;
@@ -134,15 +160,15 @@
   }
   function normalizeRod(rod, i) {
     const name = "Rod taper " + (i + 1);
-    const density = rod.density ?? 490;
+    const density = supplied(rod, "density", 490, name + " density");
     if ((rod.material && rod.material.toLowerCase() !== "steel") || density !== 490 ||
         /fiberglass|composite|carbon|alumin/i.test(rod.grade || "")) {
       throw new Error(name + ": non-steel rod material is not supported.");
     }
     const diameter = positive(rod.diameter, name + " diameter");
     const length = positive(rod.length, name + " length");
-    const modulus = positive(rod.modulus_of_elasticity ?? 30.5e6, name + " modulus");
-    const weight = rod.weight_per_foot ?? 0;
+    const modulus = positive(supplied(rod, "modulus_of_elasticity", 30.5e6, name + " modulus"), name + " modulus");
+    const weight = supplied(rod, "weight_per_foot", 0, name + " weight per foot");
     const weightPerFoot = weight === 0 ? Math.PI * (diameter / 2) ** 2 * density / 144 : weight;
     positive(weightPerFoot, name + " weight per foot");
     if (diameter >= 2.441 || 1.5 * diameter / 2.441 <= 0.381) {
@@ -156,7 +182,7 @@
     validateUnsupported(well);
     positive(well.spm, "SPM"); positive(well.pump?.diameter, "Pump diameter");
     positive(well.pump?.depth, "Pump depth");
-    const density = positive(well.fluid_density ?? 62.4, "Fluid density");
+    const density = positive(supplied(well, "fluid_density", 62.4, "Fluid density"), "Fluid density");
     if (!Array.isArray(well.rod_string) || !well.rod_string.length) {
       throw new Error("Rod string needs at least one taper.");
     }
@@ -168,14 +194,14 @@
       }
     }
     if (well.well_test) {
-      const wc = well.well_test.water_cut ?? 0;
+      const wc = supplied(well.well_test, "water_cut", 0, "Water cut");
       if (!Number.isFinite(wc) || wc < 0 || wc > 100) { throw new Error("Water cut must be between 0 and 100 percent."); }
       for (const key of ["oil_rate", "water_rate"]) {
-        const rate = well.well_test[key] ?? 0;
+        const rate = supplied(well.well_test, key, 0, key);
         if (!Number.isFinite(rate) || rate < 0) { throw new Error(key + " must be finite and nonnegative."); }
       }
     }
-    const efficiency = well.pump.efficiency ?? 1;
+    const efficiency = supplied(well.pump, "efficiency", 1, "Pump efficiency");
     if (!Number.isFinite(efficiency) || efficiency < 0 || efficiency > 1) {
       throw new Error("Pump efficiency must be between 0 and 1.");
     }
@@ -338,7 +364,7 @@
     validateCard(card);
     // Mirrors "fluid_density" in model_fields_set: the CPIP density basis
     // depends on whether the caller supplied a density, not on its value.
-    const densitySupplied = well != null && well.fluid_density != null;
+    const densitySupplied = well != null && present(well, "fluid_density");
     well = normalizeWell(well);
     if (!analysis || !models?.context || !models?.shape) {
       throw new Error("Shipped analysis/model assets are missing; no fallback is supported.");

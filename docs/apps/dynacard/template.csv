@@ -1,4 +1,5 @@
 # position_in (in), load_lbf (lbf); one full stroke; uniformly timed samples; any start phase (the page starts the cycle at the bottom of the stroke)
+# Every row is one timed sample; do not repeat the first row (the page appends it as the closing row).
 position_in,load_lbf
 2.4219,9692.03
 3.2142,9763.48
@@ -99,4 +100,3 @@ position_in,load_lbf
 0.8152,9266.75
 1.2268,9477.85
 1.763,9528.67
-2.4219,9692.03
