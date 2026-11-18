@@ -109,6 +109,8 @@ def test_interpolation_avoids_overflow_in_a_finite_linear_result():
 @pytest.mark.parametrize("force_n,quantum_n,expected_n", [
     (1, 0.25, 1.0),
     (Fraction(11, 10), 0.25, 1.25),
+    (Fraction(2**53 + 1, 2**53), 1, 2.0),
+    (np.int64(2**53 + 1), np.int64(2**53), float(2**54)),
     (np.int64(1), 0.25, 1.0),
     (np.int64(1024), 0.1, 1024.0),
     (np.int32(1024), 0.1, 1024.0),
@@ -124,3 +126,47 @@ def test_quantization_handles_small_quanta_and_rejects_output_overflow():
     assert round_force_up(1.0, 5e-324) == 1.0
     with pytest.raises(ValueError):
         round_force_up(1.7e308, 1e308)
+
+
+@pytest.mark.parametrize("scalar", [np.uint64, np.int64, np.float32])
+def test_numpy_force_softening_uses_signed_arithmetic(scalar):
+    curve = ForceCurve(2.0, (0.0, 0.02, 0.06), tuple(map(scalar, (0, 800, 400))))
+    # Halfway from 800 N down to 400 N is 600 N.
+    assert interpolate_force(curve, 0.04) == pytest.approx(600.0)
+
+
+def test_numpy_depth_softening_and_unsigned_spring_coordinates():
+    shallow = PressureCurve(np.uint64(1), (0, 2), (np.uint64(0), np.uint64(800)))
+    deep = PressureCurve(np.uint64(5), (0, 2), (np.uint64(0), np.uint64(400)))
+    result = interpolate_depth((shallow, deep), np.uint64(3))
+    assert result.pressure_pa == pytest.approx((0.0, 600.0))
+    points = symmetric_spring_points(shallow, SpringGeometry(1, 1))
+    assert [point.displacement_m for point in points] == [-2, 0, 2]
+    assert [point.force_n for point in points] == [-800, 0, 800]
+
+
+@pytest.mark.parametrize("scalar", [np.int32, np.int64, np.uint64, np.float32])
+def test_numpy_unit_conversions_do_not_use_fixed_width_products(scalar):
+    # 3,000,000 N/m times 2,000 m = 6,000,000,000 N.
+    assert force_from_line_resistance(scalar(3000000), scalar(2000)) == 6000000000.0
+
+
+@pytest.mark.parametrize("scalar", [np.int32, np.int64, np.uint64, np.float32])
+def test_numpy_pressure_conversions_do_not_use_fixed_width_products(scalar):
+    # 3,000,000 Pa times 2,000 m times 2 m = 12,000,000,000 N.
+    geometry = SpringGeometry(scalar(2000), scalar(2))
+    assert force_from_pressure(scalar(3000000), geometry) == 12000000000.0
+    assert pressure_from_force(scalar(12000000), geometry) == 3000.0
+
+
+def test_numpy_unsigned_displacements_are_mirrored_after_normalization():
+    curve = PressureCurve(1, (np.uint64(0), np.uint64(2)), (0, 10))
+    points = symmetric_spring_points(curve, SpringGeometry(1, 1))
+    assert [point.displacement_m for point in points] == [-2, 0, 2]
+
+
+def test_numpy_sensitivity_multiplier_does_not_wrap():
+    curve = PressureCurve(1, (0, 2), (0, 1))
+    ratio = np.int64(np.iinfo(np.int64).max)
+    points = symmetric_spring_points(curve, SpringGeometry(1, 1), sensitivity_ratio=ratio)
+    assert points[-1].force_n == 2**63

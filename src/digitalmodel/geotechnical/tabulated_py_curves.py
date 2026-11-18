@@ -55,15 +55,17 @@ from bisect import bisect_left
 from dataclasses import dataclass
 from fractions import Fraction
 from math import isfinite
-from numbers import Rational, Real
+from numbers import Integral, Rational, Real
 
 
-def _finite(value: float, name: str, *, minimum: float = 0.0) -> None:
+def _finite(value: float, name: str, *, minimum: float = 0.0) -> int | float:
+    """Validate a scalar and normalize it before fixed-width arithmetic can occur."""
     if (
         isinstance(value, bool) or not isinstance(value, Real)
         or not isfinite(value) or value < minimum
     ):
         raise ValueError(f"{name} must be finite and >= {minimum}")
+    return int(value) if isinstance(value, Integral) else float(value)
 
 
 def _axis(values: tuple[float, ...]) -> None:
@@ -88,18 +90,20 @@ class ForceCurve:
     force_n: tuple[float, ...]
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "displacement_m", tuple(self.displacement_m))
-        object.__setattr__(self, "force_n", tuple(self.force_n))
-        _finite(self.depth_m, "depth_m")
+        object.__setattr__(self, "displacement_m", tuple(
+            _finite(value, "displacement_m") for value in self.displacement_m
+        ))
+        object.__setattr__(self, "force_n", tuple(
+            _finite(value, "force_n") for value in self.force_n
+        ))
+        object.__setattr__(self, "depth_m", _finite(self.depth_m, "depth_m"))
         _axis(self.displacement_m)
         if len(self.displacement_m) != len(self.force_n):
             raise ValueError("force_n and displacement_m lengths must agree")
-        for force in self.force_n:
-            _finite(force, "force_n")
 
 
 def _linear(x: float, axis: tuple[float, ...], values: tuple[float, ...]) -> float:
-    _finite(x, "interpolation coordinate")
+    x = _finite(x, "interpolation coordinate")
     if x < axis[0] or x > axis[-1]:
         raise ValueError("interpolation coordinate is outside the supplied range")
     high = bisect_left(axis, x)
@@ -128,14 +132,15 @@ class SpringGeometry:
     def __post_init__(self) -> None:
         for name in ("diameter_m", "tributary_length_m"):
             value = getattr(self, name)
-            _finite(value, name)
+            value = _finite(value, name)
             if value == 0:
                 raise ValueError(f"{name} must be positive")
+            object.__setattr__(self, name, value)
 
 
 def force_from_pressure(pressure_pa: float, geometry: SpringGeometry) -> float:
     """F = pressure * diameter * tributary length (N)."""
-    _finite(pressure_pa, "pressure_pa")
+    pressure_pa = _finite(pressure_pa, "pressure_pa")
     result = pressure_pa * geometry.diameter_m * geometry.tributary_length_m
     _finite(result, "computed force_n")
     return result
@@ -148,8 +153,8 @@ def force_from_line_resistance(
 
     The caller supplies the appropriate integration length.
     """
-    _finite(line_resistance_n_per_m, "line_resistance_n_per_m")
-    _finite(integration_length_m, "integration_length_m")
+    line_resistance_n_per_m = _finite(line_resistance_n_per_m, "line_resistance_n_per_m")
+    integration_length_m = _finite(integration_length_m, "integration_length_m")
     if integration_length_m == 0:
         raise ValueError("integration_length_m must be positive")
     result = line_resistance_n_per_m * integration_length_m
@@ -159,7 +164,7 @@ def force_from_line_resistance(
 
 def pressure_from_force(force_n: float, geometry: SpringGeometry) -> float:
     """p = F / diameter / tributary length (Pa)."""
-    _finite(force_n, "force_n")
+    force_n = _finite(force_n, "force_n")
     result = force_n / geometry.diameter_m / geometry.tributary_length_m
     _finite(result, "computed pressure_pa")
     return result
@@ -202,14 +207,16 @@ class PressureCurve:
     pressure_pa: tuple[float, ...]
 
     def __post_init__(self) -> None:
-        object.__setattr__(self, "displacement_m", tuple(self.displacement_m))
-        object.__setattr__(self, "pressure_pa", tuple(self.pressure_pa))
-        _finite(self.depth_m, "depth_m")
+        object.__setattr__(self, "displacement_m", tuple(
+            _finite(value, "displacement_m") for value in self.displacement_m
+        ))
+        object.__setattr__(self, "pressure_pa", tuple(
+            _finite(value, "pressure_pa") for value in self.pressure_pa
+        ))
+        object.__setattr__(self, "depth_m", _finite(self.depth_m, "depth_m"))
         _axis(self.displacement_m)
         if len(self.displacement_m) != len(self.pressure_pa):
             raise ValueError("pressure_pa and displacement_m lengths must agree")
-        for pressure in self.pressure_pa:
-            _finite(pressure, "pressure_pa")
 
 
 def interpolate_depth(
@@ -247,9 +254,11 @@ class SpringPoint:
     force_n: float
 
     def __post_init__(self) -> None:
-        for value in (self.displacement_m, self.force_n):
+        for name in ("displacement_m", "force_n"):
+            value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, Real) or not isfinite(value):
                 raise ValueError("spring coordinates must be finite real numbers")
+            object.__setattr__(self, name, int(value) if isinstance(value, Integral) else float(value))
 
 
 def symmetric_spring_points(
@@ -263,7 +272,7 @@ def symmetric_spring_points(
     The caller declares dimensionless sensitivity_ratio s (a fraction, not %).
     Requires a supplied (0, 0); no extrapolation is appended.
     """
-    _finite(sensitivity_ratio, "sensitivity_ratio", minimum=-1.0)
+    sensitivity_ratio = _finite(sensitivity_ratio, "sensitivity_ratio", minimum=-1.0)
     if curve.displacement_m[0] != 0 or curve.pressure_pa[0] != 0:
         raise ValueError("a symmetric spring requires an explicit (0, 0) origin")
     positive = tuple(
