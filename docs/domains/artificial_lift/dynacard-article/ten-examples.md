@@ -1,6 +1,6 @@
 # Ten pump conditions: how the examples are built, and their values
 
-Dynacard article ("Dynamometer card analysis: from the surface card to the pump card and a diagnosis"), revision 4 of 18 Nov 2026. This page holds in full what Appendix C of the article summarises. `examples/domains/artificial_lift/build_dynacard_article.py` writes it from the saved results.
+Dynacard article ("Dynamometer card analysis: from the surface card to the pump card and a diagnosis"), revision 4.1 of 18 Nov 2026. This page holds in full what Appendix C of the article summarises. `examples/domains/artificial_lift/build_dynacard_article.py` writes it from the saved results.
 
 Purpose:
 
@@ -9,11 +9,13 @@ Purpose:
 
 ## How the examples are built
 
-- Each of the ten shapes of the public diagnostic plate ([doi:10.17632/hnfwm9mjs6.1](https://doi.org/10.17632/hnfwm9mjs6.1), CC0 1.0, retrieved 11 Oct 2026) is scaled to an assumed 40 in pump stroke and to the static fluid load of a 1.5 in plunger at 4,844 ft with 100 psi tubing pressure and zero pump intake pressure (3,936 lbf). These are shape illustrations, not field pump cards. The plate gives shapes only, with no stroke or load, and does not say whether they are surface or pump cards; they are taken as pump cards by assumption.
+- Each of the ten shapes of the public diagnostic plate (Zhang, 2020, Mendeley Data, [doi:10.17632/hnfwm9mjs6.1](https://doi.org/10.17632/hnfwm9mjs6.1), CC0 1.0, retrieved 11 Oct 2026) is scaled to an assumed 40 in pump stroke and to the static fluid load of a 1.5 in plunger at 4,844 ft with 100 psi tubing pressure and zero pump intake pressure (3,936 lbf). These are shape illustrations, not field pump cards. The plate gives shapes only, with no stroke or load, and does not say whether they are surface or pump cards; they are taken as pump cards by assumption.
 - Each scaled shape is lifted to a surface card through the rod string of the example well and then analysed like a measured card. The surface cards are therefore synthesised, not measured.
 - The plate labels insufficient supply and sand production have no model class of the same name; they are matched to fluid pound and sand wear by assumption.
-- The shape model names 6 of the 10 conditions; the second, shipped model names 4. Model scores are the models' own outputs, not the chance that a fault is present.
-- The web page reproduces the library on all ten examples: pump loads within 3 × 10⁻⁹ lbf and the same model labels.
+- The shape model names 6 of the 10 conditions (5 firm, 1 by name mapping); the second, shipped model names 4. Model scores are the models' own outputs, not the chance that a fault is present.
+- The round trip column is the root-mean-square difference between the computed pump card and the scaled shape, through the same rod model both ways: a self-consistency check, not a validation.
+- Fillage and fluid load come from shapes scaled to an assumed stroke and load, so they show the method, not a well; for rod parting they have no physical meaning.
+- The web page gives the same results as the library on all ten examples: the same model labels, and pump loads that differ by at most 3 × 10⁻⁹ lbf, a rounding-level difference.
 
 ## Values
 

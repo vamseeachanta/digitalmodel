@@ -1,6 +1,6 @@
 # Reusable prompts: surface card to pump card
 
-Dynacard article ("Dynamometer card analysis: from the surface card to the pump card and a diagnosis"), revision 4 of 18 Nov 2026. This page holds in full what Appendix D of the article summarises. `examples/domains/artificial_lift/build_dynacard_article.py` writes it from the saved results.
+Dynacard article ("Dynamometer card analysis: from the surface card to the pump card and a diagnosis"), revision 4.1 of 18 Nov 2026. This page holds in full what Appendix D of the article summarises. `examples/domains/artificial_lift/build_dynacard_article.py` writes it from the saved results.
 
 These prompts let your team, or your assistant, rebuild the article's analysis from public code and then run it on a card of your own. To have a study of your own rod pump done for you instead, see below.
 
@@ -33,6 +33,6 @@ Give this prompt to your assistant:
 ## Data set
 
 - Public example well: [cleansed_well_001.json](https://github.com/vamseeachanta/digitalmodel/blob/f5c0009c6dd9e009cdac636d3dfbd7ae0ec1f79c/tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json) of the digitalmodel library, MIT licence, version of 14 Nov 2026.
-- Public diagnostic plate of ten pump working conditions: Mendeley Data, version 1, [doi:10.17632/hnfwm9mjs6.1](https://doi.org/10.17632/hnfwm9mjs6.1), CC0 1.0, retrieved 11 Oct 2026.
+- Public diagnostic plate of ten pump working conditions: Zhang, R. (2020), Data for: Real time and intelligent diagnosis method of working condition in rod pumping well based on multi-dimensional data coupling of reservoir-wellbore-surface, Mendeley Data, version 1, [doi:10.17632/hnfwm9mjs6.1](https://doi.org/10.17632/hnfwm9mjs6.1), CC0 1.0, retrieved 11 Oct 2026.
 
 To have a study of your own rod pump done for you, write to support@aceengineer.com.

@@ -68,9 +68,11 @@ DETAIL_BRANCH = "feat/dynacard-article-r3"
 # The example selected when the page opens: not Example 1, so the reader sees at once
 # that selecting a row changes the row colour and the chart (maintainer review of revision 3, note 4).
 DEFAULT_EXAMPLE = 3
+# Two highest class probabilities closer than this are reported as an uncertain reading.
+CLOSE_SPLIT = 0.10
 
-REVISION = "Revision 4, 18 Nov 2026"
-REVISION_SHORT = "revision 4 of 18 Nov 2026"
+REVISION = "Revision 4.1, 18 Nov 2026"
+REVISION_SHORT = "revision 4.1 of 18 Nov 2026"
 CLOSING = ("If you have run your own analysis, see a way to improve this one, or have an idea "
            "for a future issue, write to support@aceengineer.com. We read every reply and "
            "credit the ideas we use and provide results we obtained.")
@@ -296,8 +298,18 @@ def facts(src: dict) -> dict:
     nrmse = [r["round_trip"]["load_nrmse_pct"] for r in records]
     repro = src["reproduction"]["examples"]
     rods = inputs["well"]["rod_string"]
+    literal = [r for r in matches if r["crosswalk_kind"] != "assumed"]
+    # The headline shape reading is reported against the model's own result on the same plate condition.
+    top_label = inputs["shape_top_three"][0]["label"].lower()
+    same = [r for r in records if r["english_gloss"].lower() == top_label]
+    if len(same) != 1 or same[0] not in misses:
+        raise ValueError("the headline reading's caveat assumes the model missed that condition; reword the caveat")
+    top_example = same[0]["index"]
     return {
         "report": report, "records": records, "matches": len(matches), "shipped": len(shipped),
+        "literal_matches": len(literal),
+        "class_count": len(records[0]["diagnosis"]["shape_only"]["probabilities"]),
+        "top_example": top_example,
         "misses": misses, "nrmse_min": min(nrmse), "nrmse_max": max(nrmse),
         "repro_load": max(e["max_pump_load_difference_lbf"] for e in repro),
         "repro_labels": all(e["labels_equal"] for e in repro),
@@ -330,7 +342,9 @@ def figure_one(f) -> str:
                         'each card is drawn from the bottom of its stroke.', False),
                        (f'Data: <a href="{blob(CARDS_COMMIT, CARDS_CSV.as_posix())}">figure-1-cards.csv</a>, '
                         'version of 13 Nov 2026.', False)],
-                      "Figure 1. Surface card and computed pump card, public example well.")
+                      f"Figure 1. The pump moves {100 * r['stroke_ratio']:.0f} % of the surface stroke, fills to "
+                      f"{r['fillage_pct']:.0f} % and lifts {r['fluid_load_lbf']:,.0f} lbf: surface and pump cards of the "
+                      "public example well.")
             + '</figure>')
 
 
@@ -353,6 +367,10 @@ def example_panel(rec) -> str:
                if agrees else
                f"The shape model reads {name} ({pct_score(shape['confidence'])}); the plate label is "
                f"{rec['english_gloss'].lower()}.")
+    ranked = sorted(shape["probabilities"].values(), reverse=True)
+    if ranked[0] - ranked[1] < CLOSE_SPLIT:
+        reading += (f" The two highest classes are close ({pct_score(ranked[0])} and {pct_score(ranked[1])}), "
+                    "so this reading is uncertain.")
     bars = "".join(
         f'<div class="prob-row"><span class="prob-name">{esc(PLAIN[k])}</span>'
         f'<span class="prob-track"><span class="prob-bar" style="width:{100 * v:.1f}%"></span></span>'
@@ -364,7 +382,7 @@ def example_panel(rec) -> str:
             '<div class="legend small"><span class="key k-surface"></span>Surface card'
             '<span class="key k-plate"></span>Plate shape<span class="key k-pump"></span>Pump card, computed</div>'
             f'<div class="probs" aria-label="Shape model, three highest classes">{bars}</div><ul>'
-            f'<li>Pump card recovered within {rec["round_trip"]["load_nrmse_pct"]:.1f} % of its load range.</li>'
+            f'<li>Round trip through the same rod model: {rec["round_trip"]["load_nrmse_pct"]:.1f} % (root mean square) of the load range.</li>'
             f'<li>Fillage reads {a["fillage_pct"]:.1f} % and fluid load {a["fluid_load_lbf"]:,.0f} lbf.</li>'
             f'<li>{esc(reading)}</li></ul></section>')
 
@@ -393,9 +411,12 @@ def examples_view(f) -> str:
         ('Each panel shows the surface card (blue), the plate shape (grey) and the computed pump card '
          "(orange), with the shape model's three highest classes.", False),
         ('Match "yes, assumed": the plate label is matched by assumption to a model class of another name.', False),
+        ('Fillage and fluid load come from reference shapes scaled to an assumed stroke and load, so they show the '
+         'method, not a well; for rod parting they have no physical meaning.', False),
         (f'Data: one CSV per example in the <a href="{readme}">worked examples</a>, version of {APP_VERSION_DATE}.', False),
     ]
-    title = ('Figure 2. Ten pump conditions: model reading and cards'
+    title = (f'Figure 2. Ten reference card shapes, scaled and run through the analysis: the shape model names '
+             f'{f["matches"]} of 10'
              '<span class="js-only">. Select a row in the table to show that example</span>.')
     return (f'<figure id="figure-2" data-default="{DEFAULT_EXAMPLE}">'
             f'<div class="examples-view"><div class="examples-table">{table}</div>'
@@ -425,9 +446,9 @@ def body(f) -> str:
 <blockquote class="takeaway">A surface card, measured at the top of a rod-pumped well, carries enough to see the pump at the bottom of the well and to screen that pump from the office.</blockquote>
 <div class="opening">
 <p>A rod pump works at the bottom of the well, out of sight. What the operator measures is the surface card: the load on the polished rod against its position, over one stroke. The card data contains all of this information at once: the pump's work, and the weight, stretch and vibration of the rod string, so a pump problem can hide inside it.</p>
-<p>To keep the problem simple, the capability shown here takes the rod string out of the picture. From the surface card and the well's rod and pump data, it computes the pump card, reads how far the plunger travels, how full the pump fills and what load it lifts, and gives a first reading of the pump's condition. It runs in a web page, so a well can be screened from the office and the well visit planned around a specific check. The rod string itself is the subject of later articles in this rod pump series.</p>
+<p>To keep the problem simple, the capability shown here models the rod string only to remove its effect from the card. From the surface card and the well's rod and pump data, it computes the pump card, reads how far the plunger travels, how full the pump fills and what load it lifts, and gives a first reading of the pump's condition. It runs in a web page, so a well can be screened from the office and the well visit planned around a specific check. The rod string itself is the subject of later articles in this rod pump series.</p>
 </div>
-<p>Based on public data, two of the cards are shown in Figure 1.</p>
+<p>Based on public data, the surface card of an example well and the pump card computed from it are shown in Figure 1.</p>
 <ul>
 <li>The blue loop is the surface card of a public example well, measured at the top of the rod string.</li>
 <li>The orange loop is the pump card computed from it, at the bottom of the {f['rod_length']:,.0f} ft rod string.</li>
@@ -437,26 +458,27 @@ def body(f) -> str:
 <h2 id="key-conclusions">Key conclusions</h2>
 <p>The key conclusions for the example well are as follows:</p>
 <ul>
-<li>On this card, which the well record marks as a shutdown card, the pump fills to {r['fillage_pct']:.0f} % of its stroke. At 24 hours a day and no slip, it displaces {r['pump_displacement_bbl_day']:.1f} bbl/day, against {r['gross_displacement_bbl_day']:.1f} bbl/day for a full pump, so about {f['unused_capacity']:.0f} bbl/day of pump capacity is not used. The cause, whether inflow, gas, valve leakage or a corner-detection error, is a check for the well.</li>
+<li>On this card the pump fills to {r['fillage_pct']:.0f} % of its stroke (fillage: effective plunger travel as a share of the pump stroke). At this card's fillage, 24 hours a day and no slip, it displaces {r['pump_displacement_bbl_day']:.1f} bbl/day, against {r['gross_displacement_bbl_day']:.1f} bbl/day for a full pump, so about {f['unused_capacity']:.0f} bbl/day of pump capacity is not used.</li>
+<li>Fillage in normal operation is not established. The only card is a shutdown card, the card the pump controller stores when it stops the pump, and the source system's own corner detection, which finds where the valves open and close, failed on it. Its cause, whether inflow, gas, valve leakage or a corner-detection error, is a check for the well.</li>
 <li>The plunger lifts a fluid load of {r['fluid_load_lbf']:,.0f} lbf on each upstroke.</li>
-<li>The pump stroke is {r['pump_stroke_in']:.1f} in, {100 * r['stroke_ratio']:.0f} % of the surface stroke. Rod stretch and rod dynamics take the rest, which the surface card alone does not separate.</li>
-<li>The card shape reads as {top['label'].lower()}{GLOSS.get(top['label'].lower(), '')}. This reading is a hypothesis to check at the well; the pump card, the fillage and the fluid load are the result.</li>
+<li>The pump stroke is {r['pump_stroke_in']:.1f} in, {100 * r['stroke_ratio']:.0f} % of the surface stroke. Rod stretch and rod dynamics take the rest.</li>
+<li>The shape model, a classifier that gives each of {f['class_count']} pump conditions a class probability from the card's shape, reads this card as {top['label'].lower()}{GLOSS.get(top['label'].lower(), '')}. The same model missed {top['label'].lower()} in its own ten-example test (Example {f['top_example']}, Figure 2), so this is a weak hypothesis to check at the well. It is independent of the fillage, which comes from the valve points on the pump card, not from the card's shape.</li>
 </ul>
-<p>Two numerical methods are available for the pump card: a finite-difference method and a frequency-domain method. On this well their pump cards agree within {r['gibbs_default_load_nrmse_pct']:.2f} % of the load range, so for this problem the two methods are equivalent. Appendices A and B give the example well and the comparison.</p>
+<p>Two numerical methods are available for the pump card: a finite-difference method [2] and a frequency-domain method [1]. On this well their pump cards differ by {r['gibbs_default_load_nrmse_pct']:.2f} % (root mean square) of the load range, the span from the smallest to the largest load on the card, so for this problem the two methods are equivalent. Appendices A and B give the example well and the comparison.</p>
 <h2 id="ten-conditions">Ten pump conditions read from their surface cards</h2>
-<p>Based on public data, ten common pump conditions are run through the same analysis, from surface card to pump card to a reading of the pump's condition. Each surface card is built from a published card shape, taken as a pump card by assumption, at an assumed stroke and load, so the cards illustrate shapes rather than field wells. They are shown in Figure 2.</p>
+<p>Based on public data, ten common pump conditions are run through the same analysis. Each surface card is built from one of the ten labelled card shapes of a public diagnostic plate [3], taken as a pump card by assumption, at an assumed stroke and load, so the cards illustrate shapes rather than field wells. They are shown in Figure 2.</p>
 <ul>
-<li>Every pump card is recovered within {f['nrmse_min']:.1f} to {f['nrmse_max']:.1f} % of its load range.</li>
-<li>The shape model names {f['matches']} of the 10 conditions correctly.</li>
+<li>A round trip through the same rod model recovers every pump card within {f['nrmse_min']:.1f} to {f['nrmse_max']:.1f} % (root mean square) of its load range: a self-consistency check, not a validation.</li>
+<li>The shape model names {f['matches']} of the 10 conditions correctly ({f['literal_matches']} firm, {f['matches'] - f['literal_matches']} by name mapping).</li>
 <li>Where it misses, {miss_lines}.</li>
 </ul>
 {examples_view(f)}
 <p>How the ten examples are built, and the full values, are given in Appendix C.</p>
 <h2 id="own-card">Run the analysis on your own card</h2>
-<p>The same analysis runs in a web page in the <a href="{app}">digitalmodel library</a> (version of {APP_VERSION_DATE}); it needs no installation and no network once its files are on disk. Load a surface card with the well's rod and pump data, and the page draws the pump card and reads fillage, fluid load and the model readings.</p>
+<p>The same analysis runs in a web page in the <a href="{app}">digitalmodel library</a> (version of {APP_VERSION_DATE}); it needs no installation and no network once its files are on disk. Load a surface card with the well's rod and pump data, and the page draws the pump card and reads fillage, fluid load and the model readings. Its guide gives the file format.</p>
 <p><a href="{report_md}">Read the full study</a> (version of 12 Nov 2026)</p>
 <p>To try it out or adapt the analysis, see <a href="#appendix-d">reusable prompt</a>.</p>
-<p>The work leaves open the accuracy of the model readings on field cards: both models are trained on generated cards, and no labelled field cards were available to test them.</p>
+<p>The work leaves open the accuracy of the shape model's readings on field cards: it is trained on generated cards, and no labelled field cards were available to test it.</p>
 <aside class="offer">AceEngineer runs analyses of this kind as fixed-scope engineering projects.</aside>
 <p class="closing">{CLOSING}</p>
 <p class="signoff">Prepared: Analyst Deckhand. Checked: Editor Deckhand. Approved: Vamsee Achanta. {REVISION}.</p>
@@ -464,7 +486,7 @@ def body(f) -> str:
 <ol class="refs">
 <li>Gibbs, S. G. (1963). Predicting the Behavior of Sucker-Rod Pumping Systems. SPE-588-PA. <a href="https://doi.org/10.2118/588-PA">doi:10.2118/588-PA</a>.</li>
 <li>Everitt, T. A. and Jennings, J. W. (1992). An Improved Finite-Difference Calculation of Downhole Dynamometer Cards for Sucker-Rod Pumps. SPE-18189-PA. <a href="https://doi.org/10.2118/18189-PA">doi:10.2118/18189-PA</a>.</li>
-<li>Diagnostic plate of ten pump working conditions. Mendeley Data, version 1, CC0 1.0. <a href="{PLATE_DOI}">doi:10.17632/hnfwm9mjs6.1</a>, retrieved 11 Oct 2026.</li>
+<li>Zhang, R. (2020). Data for: Real time and intelligent diagnosis method of working condition in rod pumping well based on multi-dimensional data coupling of reservoir-wellbore-surface. Mendeley Data, version 1, CC0 1.0. Diagnostic plate of ten pump working conditions. <a href="{PLATE_DOI}">doi:10.17632/hnfwm9mjs6.1</a>, retrieved 11 Oct 2026.</li>
 <li>digitalmodel library, MIT licence, version of {APP_VERSION_DATE}. <a href="{tree(APP_COMMIT, "")}">github.com/vamseeachanta/digitalmodel</a>.</li>
 </ol>
 """
@@ -517,16 +539,16 @@ def appendices(f) -> str:
 <h2 id="appendix-a">Appendix A Example well: inputs, results and limits</h2>
 <p>The example well behind Figure 1 and the key conclusions is summarised in this appendix.</p>
 <ul>
-<li>The well is one anonymised field well in the digitalmodel library: a {w['plunger_diameter_in']:.3f} in plunger at {w['pump_depth_ft']:,.0f} ft on a two-taper steel rod string, pumped at {w['strokes_per_minute']:.2f} strokes a minute. Its record marks this card as a shutdown card that the source system could not analyse, so the fillage and the fluid load rest on this calculation alone.</li>
+<li>The well is one anonymised field well in the digitalmodel library: a {w['plunger_diameter_in']:.3f} in plunger at {w['pump_depth_ft']:,.0f} ft on a two-taper steel rod string, pumped at {w['strokes_per_minute']:.2f} strokes a minute.</li>
 <li>The inputs that matter most: a 1 % larger rod diameter lowers the maximum pump load by about {abs(r['factor_1pct_rod_diameter_maximum_pump_load_lbf']):.1f} %, and a 1 % load-cell gain error raises it by about {r['factor_1pct_surface_load_scale_maximum_pump_load_lbf']:.1f} %.</li>
-<li>Unanchored tubing is not modelled and only steel rods are accepted; the frequency-domain method and the web page treat the well as vertical.</li>
+<li>Unanchored tubing is not modelled and only steel rods are accepted. Both methods and the web page treat the well as vertical; a deviation survey is flagged, not modelled.</li>
 </ul>
 <p>Inputs, results, sensitivity and limits in full: {repo_link("example_well")}.</p>"""
     b = f"""
 <h2 id="appendix-b">Appendix B The two numerical methods compared</h2>
 <p>The key conclusion of the comparison of the two methods is given in this appendix.</p>
 <ul>
-<li>A finite-difference method, the default, and a frequency-domain method compute the pump card. On the example well their pump cards differ by {pair:.2f} % of the load range, and each is within {spread:.2f} % of the card stored in the well record.</li>
+<li>A finite-difference method [2], the default, and a frequency-domain method [1] compute the pump card. On the example well their pump cards differ by {pair:.2f} % (root mean square) of the load range, and each differs from the card stored in the well record by at most {spread:.2f} %.</li>
 <li>For this problem, at this accuracy, the methods are equivalent. All results in this article use the default method.</li>
 <li>As more types of card come in, the two methods are kept side by side: some physical behaviour may be captured better by one method than by the other.</li>
 </ul>
@@ -536,7 +558,7 @@ def appendices(f) -> str:
 <p>How the ten examples of Figure 2 are built is summarised in this appendix.</p>
 <ul>
 <li>Each surface card starts from one of the ten shapes of the public diagnostic plate [3], taken as a pump card by assumption and scaled to an assumed stroke and load. It is lifted to the surface through the rod string of the example well and then analysed like a measured card.</li>
-<li>The web page reproduces the library on all ten examples: pump loads within {upper_bound(f['repro_load'])} lbf and {"the same" if f['repro_labels'] else "different"} model labels.</li>
+<li>The web page gives the same results as the library on all ten examples: {"the same" if f['repro_labels'] else "different"} model labels, and pump loads that differ by at most {upper_bound(f['repro_load'])} lbf, a rounding-level difference.</li>
 </ul>
 <p>Basis, assumptions and the full values of each example: {repo_link("examples")}.</p>"""
     fixture = blob(APP_COMMIT, f["inputs"]["fixture"])
@@ -607,14 +629,19 @@ def page_example_well(f) -> str:
             + md_table(["Result", "Value", "Unit"], result_rows,
                        "Table 2. Example well results, finite-difference method; displacement at 24 h/day and no slip.")
             + "\n## Notes and limits\n\n"
-            + f"- The well record labels this card a shutdown card. The source system reports that its own corner "
-              "detection, which finds the points where the valves open and close, failed on it, so the fillage and "
-              "the fluid load rest on the corner detection of the digitalmodel library alone.\n"
+            + f"- The well record labels this card a shutdown card, the card the pump controller stores when it stops "
+              "the pump. The source system reports that its own corner detection, which finds the points where the "
+              "valves open and close, failed on it, so the fillage and the fluid load rest on the corner detection of "
+              "the digitalmodel library alone. Fillage in normal operation is not established: this is the only card.\n"
             + f"- The rod string in the record ends at {f['rod_length']:,.0f} ft and the pump is at "
-              f"{w['pump_depth_ft']:,.0f} ft. The end of the rod string is taken as the pump; the "
-              f"{w['pump_depth_ft'] - f['rod_length']:,.0f} ft between them is not represented.\n"
+              f"{w['pump_depth_ft']:,.0f} ft; the record's rod list does not cover the "
+              f"{w['pump_depth_ft'] - f['rod_length']:,.0f} ft between them. The end of the listed rods is taken as the "
+              "pump (an assumption); confirming it needs the as-run rod and completion tally.\n"
             + f"- The shape model gives {top[0]['label'].lower()} a model score of {100 * top[0]['probability']:.2f} %. "
-              "The score is the model's own output, not the chance that the fault is present. The model is trained on "
+              "The score is the model's own class probability over its "
+              f"{f['class_count']} classes, not the chance that the fault is present. The same model missed "
+              f"{top[0]['label'].lower()} in its ten-example test (Example {f['top_example']}), so the "
+              "reading is a weak hypothesis. The model is trained on "
               f"generated cards; on the ten plate shapes it is correct on {plate['including_assumed']['correct']} of "
               f"{plate['including_assumed']['count']} ({plate['literal']['correct']} of the {plate['literal']['count']} "
               "whose plate label has the same name as a model class). The plate shapes also shape the generated "
@@ -626,9 +653,10 @@ def page_example_well(f) -> str:
               f"position scale error moves the pump stroke by about "
               f"{r['factor_1pct_surface_position_scale_pump_stroke_in']:.1f} %. The full sensitivity table is in "
               f"Appendix A of the [full study]({report_md}).\n"
-            + "- Limits: unanchored tubing is not modelled and only steel rods are accepted. The frequency-domain "
-              "method treats the well as vertical. A card alone does not give production; run time and slip are needed. The web page "
-              "assumes a vertical well, anchored tubing and samples evenly spaced in time. Fluid load and fillage step "
+            + "- Limits: unanchored tubing is not modelled and only steel rods are accepted. Both methods and the web "
+              "page treat the well as vertical; a deviation survey is flagged, not modelled. A card alone does not give "
+              "production; run time and slip are needed. The web page also assumes anchored tubing and samples evenly "
+              "spaced in time. Fluid load and fillage step "
               "with the detected corner samples, so rounding the last digit of a card can move the fluid load by tens "
               f"of lbf: {f['precision_load']:.0f} lbf at most in the ten examples.\n")
 
@@ -644,8 +672,9 @@ def page_methods(f) -> str:
                 "Describe the two methods that compute the pump card from the surface card.",
                 "Compare their pump cards on the public example well, and state what the comparison means."])
             + "\n## Key conclusion\n\n"
-            + f"- On the public example well the pump cards of the two methods differ by {pair:.2f} % of the load "
-              f"range, and each is within {spread:.2f} % of the card stored in the well record (Table 1).\n"
+            + f"- On the public example well the pump cards of the two methods differ by {pair:.2f} % (root mean "
+              f"square) of the load range, and each differs from the card stored in the well record by at most "
+              f"{spread:.2f} % (Table 1).\n"
             + "- For this problem, at this accuracy, the methods are equivalent. All results in the article use the "
               "default method.\n"
             + "- As more types of card come in, the two methods are kept side by side: some physical behaviour may be "
@@ -655,8 +684,9 @@ def page_methods(f) -> str:
               "the tapered rod string, after Everitt and Jennings (1992), "
               "[SPE-18189-PA](https://doi.org/10.2118/18189-PA).\n"
             + "- Frequency-domain method: it solves the rod model of Gibbs (1963), "
-              "[SPE-588-PA](https://doi.org/10.2118/588-PA), harmonic by harmonic, with 15 harmonics, and treats the "
-              "well as vertical.\n"
+              "[SPE-588-PA](https://doi.org/10.2118/588-PA), harmonic by harmonic, with 15 harmonics.\n"
+            + "- Both methods and the web page treat the well as vertical; a deviation survey is flagged, not "
+              "modelled.\n"
             + "- The well record also stores a pump card from the source system's own finite-difference calculation.\n"
             + "\n## Comparison on the example well\n\n"
             + md_table(["Pump card", "Compared with", "Load difference (% of load range)"], rows,
@@ -683,7 +713,8 @@ def page_examples(f) -> str:
                 "Give the full values of each example and the model readings."])
             + "\n## How the examples are built\n\n"
             + f"- Each of the ten shapes of the public diagnostic plate "
-              f"([doi:10.17632/hnfwm9mjs6.1]({PLATE_DOI}), CC0 1.0, retrieved 11 Oct 2026) is scaled to an assumed "
+              f"(Zhang, 2020, Mendeley Data, [doi:10.17632/hnfwm9mjs6.1]({PLATE_DOI}), CC0 1.0, retrieved 11 Oct 2026) "
+              "is scaled to an assumed "
               f"{basis['stroke_in']['value']:.0f} in pump stroke and to the static fluid load of a "
               f"{w['plunger_diameter_in']:.1f} in plunger at {w['pump_depth_ft']:,.0f} ft with "
               f"{w['tubing_pressure_psi']:.0f} psi tubing pressure and zero pump intake pressure "
@@ -694,10 +725,16 @@ def page_examples(f) -> str:
               "analysed like a measured card. The surface cards are therefore synthesised, not measured.\n"
             + "- The plate labels insufficient supply and sand production have no model class of the same name; they "
               "are matched to fluid pound and sand wear by assumption.\n"
-            + f"- The shape model names {f['matches']} of the 10 conditions; the second, shipped model names "
+            + f"- The shape model names {f['matches']} of the 10 conditions ({f['literal_matches']} firm, "
+              f"{f['matches'] - f['literal_matches']} by name mapping); the second, shipped model names "
               f"{f['shipped']}. Model scores are the models' own outputs, not the chance that a fault is present.\n"
-            + f"- The web page reproduces the library on all ten examples: pump loads within "
-              f"{upper_bound(f['repro_load'])} lbf and {'the same' if f['repro_labels'] else 'different'} model labels.\n"
+            + f"- The round trip column is the root-mean-square difference between the computed pump card and the "
+              "scaled shape, through the same rod model both ways: a self-consistency check, not a validation.\n"
+            + f"- Fillage and fluid load come from shapes scaled to an assumed stroke and load, so they show the "
+              "method, not a well; for rod parting they have no physical meaning.\n"
+            + f"- The web page gives the same results as the library on all ten examples: "
+              f"{'the same' if f['repro_labels'] else 'different'} model labels, and pump loads that differ by at most "
+              f"{upper_bound(f['repro_load'])} lbf, a rounding-level difference.\n"
             + "\n## Values\n\n"
             + md_table(["No.", "Condition", "Surface stroke (in)", "Pump stroke (in)", "Fillage (%)",
                         "Fluid load (lbf)", "Round trip (% of load range)", "Shape model", "Shipped model"], rows,
@@ -754,7 +791,9 @@ def page_prompts(f) -> str:
             "## Data set\n\n"
             f"- Public example well: [cleansed_well_001.json]({fixture}) of the digitalmodel library, MIT licence, "
             f"version of {APP_VERSION_DATE}.\n"
-            f"- Public diagnostic plate of ten pump working conditions: Mendeley Data, version 1, "
+            f"- Public diagnostic plate of ten pump working conditions: Zhang, R. (2020), Data for: Real time and "
+            "intelligent diagnosis method of working condition in rod pumping well based on multi-dimensional data "
+            "coupling of reservoir-wellbore-surface, Mendeley Data, version 1, "
             f"[doi:10.17632/hnfwm9mjs6.1]({PLATE_DOI}), CC0 1.0, retrieved 11 Oct 2026.\n\n"
             "To have a study of your own rod pump done for you, write to support@aceengineer.com.\n")
 
@@ -789,7 +828,7 @@ figure{margin:18px 0}figcaption,.caption{font:13px/1.45 system-ui,sans-serif;col
 .chart .direct{font:12px system-ui,sans-serif;fill:var(--ink)}
 .chart polygon{fill:none;stroke-linejoin:round}
 .card-surface{stroke:var(--blue);stroke-width:2}.card-pump{stroke:var(--orange);stroke-width:2.2}
-.card-plate{stroke:var(--grey);stroke-width:6;stroke-opacity:.45}
+.card-plate{stroke:var(--grey);stroke-width:11;stroke-opacity:.55}
 .legend{font:13px system-ui,sans-serif;color:var(--ink2);margin-top:4px}.legend.small{font-size:12px}
 .key{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin:0 6px 0 12px}
 .key:first-child{margin-left:0}.k-surface{border-color:var(--blue)}.k-pump{border-color:var(--orange)}.k-plate{border-color:var(--grey);border-top-width:6px;opacity:.6}

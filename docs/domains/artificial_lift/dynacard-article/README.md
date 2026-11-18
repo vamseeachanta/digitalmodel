@@ -1,6 +1,6 @@
 # Dynacard article: detail pages
 
-Article: "Dynamometer card analysis: from the surface card to the pump card and a diagnosis", revision 4 of 18 Nov 2026. The article gives a short summary in each appendix; this folder holds the detail in full, one page per appendix.
+Article: "Dynamometer card analysis: from the surface card to the pump card and a diagnosis", revision 4.1 of 18 Nov 2026. The article gives a short summary in each appendix; this folder holds the detail in full, one page per appendix.
 
 | Page | What it holds | Article part |
 | --- | --- | --- |

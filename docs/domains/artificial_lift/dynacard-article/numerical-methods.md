@@ -1,6 +1,6 @@
 # Two numerical methods for the pump card
 
-Dynacard article ("Dynamometer card analysis: from the surface card to the pump card and a diagnosis"), revision 4 of 18 Nov 2026. This page holds in full what Appendix B of the article summarises. `examples/domains/artificial_lift/build_dynacard_article.py` writes it from the saved results.
+Dynacard article ("Dynamometer card analysis: from the surface card to the pump card and a diagnosis"), revision 4.1 of 18 Nov 2026. This page holds in full what Appendix B of the article summarises. `examples/domains/artificial_lift/build_dynacard_article.py` writes it from the saved results.
 
 Purpose:
 
@@ -9,14 +9,15 @@ Purpose:
 
 ## Key conclusion
 
-- On the public example well the pump cards of the two methods differ by 0.26 % of the load range, and each is within 0.78 % of the card stored in the well record (Table 1).
+- On the public example well the pump cards of the two methods differ by 0.26 % (root mean square) of the load range, and each differs from the card stored in the well record by at most 0.78 % (Table 1).
 - For this problem, at this accuracy, the methods are equivalent. All results in the article use the default method.
 - As more types of card come in, the two methods are kept side by side: some physical behaviour may be captured better by one method than by the other.
 
 ## Methods
 
 - Finite-difference method, the default: it marches the damped wave equation for axial motion through the tapered rod string, after Everitt and Jennings (1992), [SPE-18189-PA](https://doi.org/10.2118/18189-PA).
-- Frequency-domain method: it solves the rod model of Gibbs (1963), [SPE-588-PA](https://doi.org/10.2118/588-PA), harmonic by harmonic, with 15 harmonics, and treats the well as vertical.
+- Frequency-domain method: it solves the rod model of Gibbs (1963), [SPE-588-PA](https://doi.org/10.2118/588-PA), harmonic by harmonic, with 15 harmonics.
+- Both methods and the web page treat the well as vertical; a deviation survey is flagged, not modelled.
 - The well record also stores a pump card from the source system's own finite-difference calculation.
 
 ## Comparison on the example well
