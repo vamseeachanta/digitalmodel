@@ -13,7 +13,6 @@ ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = "scripts/riser_capability/build_database_register.py"
 OUTPUTS = [f"docs/domains/risers/riser-input-database-register.{ext}" for ext in ("md", "json")]
 DEFERRED = {"config/pipe/*.yml", "data/vessels/ (remaining members)",
-            "docs/domains/orcaflex/library/line_types/", "docs/domains/orcaflex/library/buoy_types/",
             "src/digitalmodel/fatigue/ (including __init__.py)", "src/digitalmodel/materials/line_pipe.py"}
 
 
@@ -37,6 +36,8 @@ def inputs(builder, tmp_path):
         target = tmp_path / path
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(ROOT / path, target)
+    for path in LIBRARIES:
+        shutil.copytree(ROOT / path, tmp_path / path)
     return tmp_path
 
 
@@ -54,7 +55,8 @@ def test_counts_and_provenance_match_independent_sources(builder):
     path = "data/vessels/processed/drillship_basis.json"
     basis = json.loads((ROOT / path).read_text())
     assert by_path[path]["count"] == len(basis["dimensions_m"]) == basis["row_count"] == 50
-    assert all(r["provenance"] != "none" for r in rows if r["path"])
+    original_paths = {entry[1] for entry in builder.INPUTS}
+    assert all(r["provenance"] != "none" for r in rows if r["path"] in original_paths)
     assert by_path["data/fatigue/sn_curves.yaml"]["count"] == 23
     assert by_path["data/geotechnical/geotech_database.yaml"]["count"] == 60
 
@@ -76,7 +78,7 @@ def test_paths_inventory_absences_and_deferred_scope(builder):
     assert set(register["not_yet_counted"]) == DEFERRED
     text = builder.render(register)[OUTPUTS[0]].decode()
     assert {line[3:-1] for line in text.splitlines() if line.startswith("- `")} == DEFERRED
-    assert text.index("Table 1.") > text.rindex("| absent |")
+    assert text.index("Table 2.") > text.rindex("| absent |")
     assert "## Reproduce" in text and "## Run-it-yourself prompt" in text
 
 
@@ -148,7 +150,7 @@ def test_array_layout_cannot_silently_become_a_mapping(builder, inputs, path, ke
 
 def test_output_path_cannot_escape_repository(builder, inputs):
     folder = inputs / Path(OUTPUTS[0]).parent
-    folder.parent.mkdir(parents=True)
+    folder.parent.mkdir(parents=True, exist_ok=True)
     outside = inputs.parent / "outside-register-output"
     outside.mkdir()
     folder.symlink_to(outside, target_is_directory=True)
@@ -183,8 +185,87 @@ def test_all_register_dependencies_select_subsea(builder, monkeypatch):
     paths = {entry[1] for entry in builder.INPUTS} | set(OUTPUTS) | {SCRIPT,
         "tests/riser_capability/test_database_register.py", "data/riser_capability/riser_types.yml",
         "data/rao_database.manifest.json", "scripts/riser_capability/build_riser_inventory.py"}
+    paths.update(LIBRARIES)
+    paths.update(str(p.relative_to(ROOT)) for root in LIBRARIES for p in (ROOT / root).iterdir())
     for path in list(paths):
         if path.endswith("/data.json"):
             paths.update(str(Path(path).with_name(n)) for n in ("schema.json", "sources.yml"))
     for path in paths:
         assert "subsea" in {d.name for d in detector.touched_domains([path], domains)}, path
+
+
+LIBRARIES = ("docs/domains/orcaflex/library/line_types/", "docs/domains/orcaflex/library/buoy_types/")
+
+
+def test_real_libraries_match_independent_enumeration(builder):
+    rows = builder.build_register()["rows"]
+    for folder in LIBRARIES:
+        expected = sorted(str(p.relative_to(ROOT)) for p in (ROOT / folder).iterdir())
+        actual = [r for r in rows if r["path"] and r["path"].startswith(folder)]
+        assert [r["path"] for r in actual] == expected
+        assert sum(r["count"] for r in actual) == len(expected) > 0
+        assert all(r["format"] == "yml" and r["unit"] == "type-definition files"
+                   and r["status"] == "populated" and r["provenance"] == "none" for r in actual)
+        assert all(sum(r["path"] == path for r in rows) == 1 for path in expected)
+
+
+@pytest.fixture
+def tiny_libraries(inputs):
+    for folder in LIBRARIES:
+        # Remove only copied fixture members, never repository inputs.
+        for path in (inputs / folder).iterdir():
+            path.unlink()
+        for name in ("z.yml", "a.yml"):
+            (inputs / folder / name).write_text("# Category: generic\n# Description: example\nOD: 1\n")
+    return inputs
+
+
+@pytest.mark.parametrize("label,expected", [
+    ("# Source: generic reference", "source"), ("citation_id: example", "citation_id"),
+    ("  provenance: example", "provenance"), ("'sources': [example]", "sources"),
+    ("# CITATIONS: generic reference", "citations"), ("# Category: source", "none"),
+    ("# Generated: today", "none"), ("Description: source: example", "none"),
+])
+def test_tiny_libraries_are_sorted_and_detect_only_named_provenance(builder, tiny_libraries, label, expected):
+    for folder in LIBRARIES:
+        (tiny_libraries / folder / "z.yml").write_text(label + "\nOD: 1\n")
+    register = builder.build_register(tiny_libraries)
+    for folder in LIBRARIES:
+        rows = [r for r in register["rows"] if r["path"] and r["path"].startswith(folder)]
+        assert [r["path"] for r in rows] == [folder + "a.yml", folder + "z.yml"]
+        assert [r["provenance"] for r in rows] == ["none", expected]
+        assert all(r["count"] == 1 and r["unit"] == "type-definition files"
+                   and r["format"] == "yml" and r["status"] == "populated" for r in rows)
+    encoded = builder.render(register)
+    assert encoded == builder.render(builder.build_register(tiny_libraries))
+    assert "OD: 1" not in encoded[OUTPUTS[0]].decode()
+
+
+@pytest.mark.parametrize("folder", LIBRARIES)
+@pytest.mark.parametrize("defect", ["missing", "empty", "extension", "nested", "member_escape", "root_escape"])
+def test_bad_libraries_fail_before_replacing_outputs(builder, tiny_libraries, tmp_path, folder, defect):
+    assert builder.main([], tiny_libraries) == 0
+    before = {p: (tiny_libraries / p).read_bytes() for p in OUTPUTS}
+    library = tiny_libraries / folder
+    expected_path = folder.rstrip("/")
+    if defect in {"missing", "empty", "root_escape"}:
+        for path in library.iterdir():
+            path.unlink()
+        if defect != "empty":
+            library.rmdir()
+        if defect == "root_escape":
+            library.symlink_to(tmp_path.parent, target_is_directory=True)
+    elif defect == "extension":
+        (library / "unexpected.txt").write_text("unexpected\n")
+        expected_path += "/unexpected.txt"
+    elif defect == "nested":
+        nested = library / "nested"
+        nested.mkdir()
+        (nested / "hidden.yml").write_text("OD: 1\n")
+        expected_path += "/nested"
+    else:
+        (library / "escaped.yml").symlink_to(tmp_path.parent / "external.yml")
+        expected_path += "/escaped.yml"
+    with pytest.raises(ValueError, match=expected_path):
+        builder.main([], tiny_libraries)
+    assert before == {p: (tiny_libraries / p).read_bytes() for p in OUTPUTS}
