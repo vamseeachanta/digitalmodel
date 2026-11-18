@@ -54,18 +54,22 @@ from __future__ import annotations
 from bisect import bisect_left
 from dataclasses import dataclass
 from fractions import Fraction
-from math import isfinite
+from math import inf, isfinite, nextafter
 from numbers import Integral, Rational, Real
 
 
 def _finite(value: float, name: str, *, minimum: float = 0.0) -> int | float:
     """Validate a scalar and normalize it before fixed-width arithmetic can occur."""
-    if (
-        isinstance(value, bool) or not isinstance(value, Real)
-        or not isfinite(value) or value < minimum
-    ):
-        raise ValueError(f"{name} must be finite and >= {minimum}")
-    return int(value) if isinstance(value, Integral) else float(value)
+    message = f"{name} must be finite and >= {minimum}"
+    if isinstance(value, bool) or not isinstance(value, Real) or value < minimum:
+        raise ValueError(message)
+    try:
+        normalized = int(value) if isinstance(value, Integral) else float(value)
+        if not isfinite(normalized):
+            raise ValueError(message)
+    except OverflowError as error:
+        raise ValueError(message) from error
+    return normalized
 
 
 def _axis(values: tuple[float, ...]) -> None:
@@ -176,6 +180,8 @@ def round_force_up(force_n: float, quantum_n: float) -> float:
     The caller declares quantum_n; no precision or force conversion factor
     is assumed.
     Exact binary input ratios determine which side of a boundary applies.
+    The returned float is at least the exact selected multiple; if no finite
+    float can represent that upper bound, ValueError is raised.
     """
     _finite(force_n, "force_n")
     _finite(quantum_n, "quantum_n")
@@ -189,6 +195,8 @@ def round_force_up(force_n: float, quantum_n: float) -> float:
     steps = -(-numerator // denominator)
     try:
         result = (steps * qn) / qd
+        if Fraction(result) < Fraction(steps * qn, qd):
+            result = nextafter(result, inf)
     except OverflowError as error:
         raise ValueError("computed rounded force_n is not finite") from error
     _finite(result, "computed rounded force_n")
@@ -256,9 +264,7 @@ class SpringPoint:
     def __post_init__(self) -> None:
         for name in ("displacement_m", "force_n"):
             value = getattr(self, name)
-            if isinstance(value, bool) or not isinstance(value, Real) or not isfinite(value):
-                raise ValueError("spring coordinates must be finite real numbers")
-            object.__setattr__(self, name, int(value) if isinstance(value, Integral) else float(value))
+            object.__setattr__(self, name, _finite(value, "spring coordinates", minimum=-inf))
 
 
 def symmetric_spring_points(

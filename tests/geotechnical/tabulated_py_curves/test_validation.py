@@ -2,7 +2,7 @@
 
 from dataclasses import FrozenInstanceError
 from fractions import Fraction
-from math import inf, nan
+from math import inf, nan, nextafter
 
 import numpy as np
 import pytest
@@ -112,8 +112,8 @@ def test_interpolation_avoids_overflow_in_a_finite_linear_result():
     (Fraction(2**53 + 1, 2**53), 1, 2.0),
     (np.int64(2**53 + 1), np.int64(2**53), float(2**54)),
     (np.int64(1), 0.25, 1.0),
-    (np.int64(1024), 0.1, 1024.0),
-    (np.int32(1024), 0.1, 1024.0),
+    (np.int64(1024), 0.1, nextafter(1024.0, inf)),
+    (np.int32(1024), 0.1, nextafter(1024.0, inf)),
     (1.1, np.int64(1), 2.0),
     (np.float32(1.5), 0.25, 1.5),
     (1.1, np.float32(0.5), 1.5),
@@ -170,3 +170,55 @@ def test_numpy_sensitivity_multiplier_does_not_wrap():
     ratio = np.int64(np.iinfo(np.int64).max)
     points = symmetric_spring_points(curve, SpringGeometry(1, 1), sensitivity_ratio=ratio)
     assert points[-1].force_n == 2**63
+
+
+@pytest.mark.parametrize("scalar", [int, np.int64, np.uint64, Fraction])
+def test_quantization_never_rounds_below_large_exact_integer(scalar):
+    force_n = scalar(2**53 + 1)
+    result = round_force_up(force_n, 1)
+    # The exact input lies halfway between adjacent representable doubles.
+    assert result == float(2**53 + 2)
+    assert Fraction(result) >= 2**53 + 1
+
+
+def test_quantization_never_rounds_below_exact_decimal_quantum_multiple():
+    result = round_force_up(1024, 0.1)
+    # The selected multiple is 10240 * the exact binary value of 0.1 N.
+    assert Fraction(result) >= 10240 * Fraction(0.1)
+
+
+def test_integer_force_product_beyond_double_range_raises_value_error():
+    with pytest.raises(ValueError, match="computed force_n"):
+        force_from_line_resistance(10**200, 10**200)
+
+
+@pytest.mark.parametrize("operation", [
+    lambda value: ForceCurve(value, (0, 1), (0, 1)),
+    lambda value: round_force_up(value, 1),
+    lambda value: SpringGeometry(value, 1),
+    lambda value: SpringPoint(value, 1),
+    lambda value: SpringPoint(1, -value),
+])
+def test_integer_input_beyond_double_range_raises_value_error(operation):
+    with pytest.raises(ValueError):
+        operation(10**400)
+
+
+@pytest.mark.parametrize("operation,coordinate", [
+    (lambda value: ForceCurve(value, (0, 1), (0, 1)), "depth_m"),
+    (lambda value: SpringPoint(value, 1), "displacement_m"),
+    (lambda value: SpringPoint(1, -value), "force_n"),
+])
+def test_extended_precision_storage_remains_finite_after_conversion(operation, coordinate):
+    stored = getattr(operation(np.longdouble(1.5)), coordinate)
+    assert type(stored) is float
+    assert abs(stored) == 1.5
+    value = np.finfo(np.longdouble).max
+    if value > np.finfo(float).max:
+        with pytest.raises(ValueError):
+            operation(value)
+    else:
+        point = operation(value)
+        stored = getattr(point, coordinate)
+        assert type(stored) is float
+        assert np.isfinite(stored)
