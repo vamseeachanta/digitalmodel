@@ -31,6 +31,12 @@
     }
     return value;
   }
+  // These schema fields do not enter the default calculation, but Python
+  // still validates them. Check supplied values without inserting defaults.
+  function validateSuppliedFloats(block, keys, name) {
+    if (block == null) return;
+    keys.forEach(key => supplied(block, key, undefined, name + "." + key));
+  }
   function validateCard(card) {
     if (!card || !Array.isArray(card.position) || !Array.isArray(card.load)) {
       throw new Error("Card position and load must be arrays.");
@@ -38,7 +44,9 @@
     if (card.position.length !== card.load.length) {
       throw new Error("Position and load must have equal lengths.");
     }
-    if (card.position.length < 4) { throw new Error("Card needs at least 4 samples."); }
+    if (card.position.length < 4) {
+      throw new Error("Card needs at least 3 timed samples plus one closing row (4 rows total).");
+    }
     for (const axis of [card.position, card.load]) {
       if (!axis.every(v => typeof v === "number" && Number.isFinite(v))) {
         throw new Error("Card cells must be numeric finite values.");
@@ -54,7 +62,7 @@
   // must repeat the first row exactly; nothing is appended.
   function parseCardCsv(text, options = {}) {
     if (typeof text !== "string") { throw new Error("CSV input must be text."); }
-    const closingRow = options.closingRow ?? false;
+    const closingRow = Object.prototype.hasOwnProperty.call(options, "closingRow") ? options.closingRow : false;
     if (typeof closingRow !== "boolean") { throw new Error("closingRow must be true or false."); }
     const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/)
       .map(v => v.trim()).filter(v => v && !v.startsWith("#"));
@@ -160,6 +168,7 @@
   }
   function normalizeRod(rod, i) {
     const name = "Rod taper " + (i + 1);
+    validateSuppliedFloats(rod, ["speed_of_sound", "damping_factor", "minimum_tensile"], name);
     const density = supplied(rod, "density", 490, name + " density");
     if ((rod.material && rod.material.toLowerCase() !== "steel") || density !== 490 ||
         /fiberglass|composite|carbon|alumin/i.test(rod.grade || "")) {
@@ -179,6 +188,15 @@
   }
   function normalizeWell(well) {
     if (!well || typeof well !== "object") { throw new Error("Well inputs are required."); }
+    validateSuppliedFloats(well, ["runtime"], "Well");
+    validateSuppliedFloats(well.well_test, ["gas_rate"], "Well test");
+    validateSuppliedFloats(well.input_params, ["assumed_pump_efficiency"], "Input parameters");
+    validateSuppliedFloats(well.surface_unit, ["stroke_length", "gear_box_rating", "structural_imbalance",
+      "counterbalance_moment", "dimensional_a", "dimensional_c", "dimensional_i", "dimensional_k",
+      "dimensional_p", "radius", "phase_angle", "beam_rating", "max_stroke_length"], "Surface unit");
+    validateSuppliedFloats(well.motor, ["horsepower", "voltage"], "Motor");
+    validateSuppliedFloats(well.calc_params, ["acceleration_due_to_gravity", "density_of_water",
+      "density_of_steel", "efficiency_prime_mover", "efficiency_pumping_unit"], "Calculation parameters");
     validateUnsupported(well);
     positive(well.spm, "SPM"); positive(well.pump?.diameter, "Pump diameter");
     positive(well.pump?.depth, "Pump depth");

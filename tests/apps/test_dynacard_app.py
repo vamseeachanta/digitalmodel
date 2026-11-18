@@ -575,3 +575,81 @@ def test_null_fluid_density_is_not_an_omission(assets, tmp_path):
                                    {"card": card, "well": omitted}], tmp_path)
     assert "Fluid density must be a finite number when supplied" in rejected.get("error", "")
     assert accepted["cpip"]["density_source"] == "assumed_50pct_mixture"
+
+
+def float_default_fields():
+    """Exercise every non-nullable float default in the Python input schema."""
+    from digitalmodel.marine_ops.artificial_lift.dynacard import models
+    blocks = {
+        "well": models.DynacardAnalysisContext,
+        "rod_string": models.RodSection,
+        "pump": models.PumpProperties,
+        "surface_unit": models.SurfaceUnit,
+        "motor": models.MotorProperties,
+        "well_test": models.WellTestData,
+        "input_params": models.InputParameters,
+        "calc_params": models.CalculationParameters,
+    }
+    return [(block, key) for block, schema in blocks.items()
+            for key, field in schema.model_fields.items()
+            if field.annotation is float and not field.is_required()]
+
+
+@NODE_REQUIRED
+@pytest.mark.parametrize("block, field", float_default_fields(),
+                         ids=lambda value: value)
+def test_all_float_defaults_reject_explicit_null(block, field, assets, tmp_path):
+    from pydantic import ValidationError
+    well = copy.deepcopy(assets["well"])
+    target = (well if block == "well" else well["rod_string"][0]
+              if block == "rod_string" else well.setdefault(block, {}))
+    target[field] = None
+    request = {"card": assets["examples"][0]["card"], "well": well}
+    with pytest.raises(ValidationError):
+        module("reference").python_analysis(request)
+    assert run_node(request, tmp_path).get("error"), f"{block}.{field}"
+
+
+@NODE_REQUIRED
+def test_omitted_float_defaults_match_python(assets, tmp_path):
+    well = copy.deepcopy(assets["well"])
+    for block, field in float_default_fields():
+        # This browser workflow explicitly requires measured tubing pressure;
+        # the Python fallback for an omitted pressure is outside its scope.
+        if (block, field) == ("input_params", "tubing_pressure"):
+            continue
+        targets = ([well] if block == "well" else well["rod_string"]
+                   if block == "rod_string" else [well.get(block, {})])
+        for target in targets:
+            target.pop(field, None)
+    request = {"card": assets["examples"][0]["card"], "well": well}
+    assert_parity(run_node(request, tmp_path), module("reference").python_analysis(request))
+
+
+@NODE_REQUIRED
+@pytest.mark.parametrize("value", [None, "yes", 0, 1, [], {}])
+def test_closing_row_requires_a_boolean_when_supplied(value, assets, tmp_path):
+    card = assets["examples"][8]["card"]
+    result = run_node({"operation": "parse", "options": {"closingRow": value},
+                       "text": card_csv(card["position"], card["load"])}, tmp_path)
+    assert "closingRow must be true or false" in result.get("error", "")
+
+
+@NODE_REQUIRED
+@pytest.mark.parametrize("closing_row, timed_samples", [(False, 100), (True, 99)])
+def test_minimum_csv_timed_sample_count(closing_row, timed_samples, assets, tmp_path):
+    card = assets["examples"][8]["card"]
+    text = card_csv(card["position"], card["load"])
+    parsed = run_node({"operation": "parse", "options": {"closingRow": closing_row},
+                       "text": text}, tmp_path)
+    assert len(parsed["position"]) - 1 == timed_samples
+    minimum = {"position": [0, 1, 2], "load": [10, 20, 10]}
+    if closing_row:
+        minimum = {key: values + values[:1] for key, values in minimum.items()}
+    assert len(run_node({"operation": "parse", "options": {"closingRow": closing_row},
+                         "text": card_csv(**minimum)}, tmp_path)["position"]) == 4
+    rejected = run_node({"operation": "parse", "options": {"closingRow": closing_row},
+                         "text": card_csv([0, 1, 0] if closing_row else [0, 1],
+                                          [10, 20, 10] if closing_row else [10, 20])}, tmp_path)
+    assert "at least 3 timed samples" in rejected.get("error", "")
+    assert "closing row" in rejected["error"]

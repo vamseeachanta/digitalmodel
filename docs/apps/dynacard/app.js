@@ -70,7 +70,7 @@
     card = {position: example.card.position.slice(), load: example.card.load.slice()};
     cardName = example.name;
     byId("card-file").value = "";
-    byId("card-status").textContent = `Loaded ${cardName}: ${card.position.length} samples. Example well restored.`;
+    byId("card-status").textContent = `Loaded ${cardName}: ${card.position.length - 1} timed samples + 1 closing row. Example well restored.`;
   }
 
   async function loadFile() {
@@ -228,7 +228,7 @@
     const result = DynacardPresentation.exportRecord(analysed,
       loadedExample ? {source:"example"} : {source:"upload", rotation:cardRotation, closingRow:cardClosingRow});
     plot("surface-plot", card); plot("pump-plot", result.downhole_card, result); resultRows(result);
-    byId("result-basis").textContent = `${cardName} · ${card.position.length} samples · ${result.solver_method}`;
+    byId("result-basis").textContent = `${cardName} · ${card.position.length - 1} timed samples + 1 closing row · ${result.solver_method}`;
     const guards = [...result.solver_flags];
     if (!guards.length) guards.push("No reference solver guard annotations. This does not establish physical validity.");
     guards.push(`Recorded maximum inclination: ${result.max_inclination_deg === null ? "not supplied; vertical assumed" : format(result.max_inclination_deg) + "°"}.`);
