@@ -19,6 +19,7 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
     surface_card_from_pump_card,
 )
 from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings import (
+    EverittJenningsSolver,
     RodString,
     build_simulation,
     rod_string_from_context,
@@ -165,12 +166,47 @@ def test_workflow_refuses_unstable_card_before_marching():
 
 
 @pytest.mark.slow
-def test_workflow_at_limit_returns_bounded_card():
-    """At the limit the march is unchanged: the issue's 4,758.4 lbf peak."""
-    results = DynacardWorkflow(example_context(EXAMPLE_LIMIT)).run_full_analysis()
-    load = np.asarray(results.downhole_card.load)
-    assert np.max(load) == pytest.approx(4758.4, abs=0.1)
-    assert np.min(load) == pytest.approx(1113.6, abs=0.1)
+def test_workflow_extrema_at_limit_match_coarser_sampling():
+    """Sampling regression on the illustrative tapered well, to 0.1 lbf."""
+    extrema = []
+    for intervals in (1000, EXAMPLE_LIMIT):
+        results = DynacardWorkflow(example_context(intervals)).run_full_analysis()
+        load = np.asarray(results.downhole_card.load)
+        assert np.isfinite(load).all()
+        extrema.append([load.min(), load.max()])
+    np.testing.assert_allclose(extrema[1], extrema[0], rtol=0, atol=0.1)
+
+
+def test_uniform_rod_at_limit_reverses_the_harmonic_load():
+    """Half-wave solution from the bar equation in Applied Mechanics of Solids
+    (online edition, §4.3.3, 1-D Bar subjected to end loading).
+
+    With a fixed surface, harmonic axial displacement is proportional to
+    sin(kx) sin(phase). Axial force EA du/dx therefore varies as cos(kx).
+    Here c = sqrt(E/rho) = 5000 m/s and T = 1 s. At L = cT/2 the harmonic
+    force changes sign. Neutral buoyancy preserves the 1000 N mean tension.
+    """
+    rods = RodString(
+        diameters=np.array([0.0254]), lengths=np.array([2500.0]),
+        densities=np.array([8000.0]), moduli=np.array([2.0e11]),
+    )
+    # Four 625 m cells, each crossed in 1/8 s, give Courant 1 at eight intervals.
+    phase = np.linspace(0.0, 2.0 * np.pi, 9)
+    card = EverittJenningsSolver(n_nodes=5, smooth_window=0).solve(
+        position=np.zeros_like(phase), load=1000.0 + 200.0 * np.sin(phase),
+        rods=rods, strokes_per_minute=60.0, pump_diameter=0.04, tubing_id=0.06,
+        fluid_density=8000.0, damping=np.zeros(2),
+    )
+
+    # F_p = 1000 - 200 sin(phase) N gives mean 1000, trough 800 and crest 1200.
+    diagonal = 100.0 * math.sqrt(2.0)
+    expected = [1000, 1000 - diagonal, 800, 1000 - diagonal, 1000,
+                1000 + diagonal, 1200, 1000 + diagonal, 1000]
+    # At Courant 1 the sampled wave travels exactly one cell per time step.
+    # The harmonic strain increments at the two ends of a half wavelength
+    # are equal and opposite. At the closing phase the harmonic vanishes.
+    # Allow 1e-10 N for roundoff across four cells on a 1200 N load scale.
+    np.testing.assert_allclose(card.load, expected, rtol=0, atol=1e-10)
 
 
 def test_forward_model_refuses_unstable_pump_card():
