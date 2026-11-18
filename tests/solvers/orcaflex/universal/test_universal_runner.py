@@ -198,8 +198,6 @@ class TestRealOrcaFlexFiles(unittest.TestCase):
         if cls.source_dir.exists():
             dat_files = [
                 "orcaflex_test2.dat",
-                "moorings/pretension/fsts_lngc/01_qa/6dof/fsts_l095_mwl_125km3_l000_pb.dat",
-                "moorings/pretension/fsts_lngc/01_qa/dof_none/fsts_l095_mwl_125km3_l000_pb.dat"
             ]
             
             for dat_file in dat_files:

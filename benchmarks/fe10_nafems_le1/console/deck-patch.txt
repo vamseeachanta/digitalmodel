@@ -1,0 +1,12 @@
+ASCII; SOL 101, CEND, BEGIN BULK, ENDDATA PASS  40 lines
+case control                         PASS  []
+unique ids                           PASS  8 GRID, 5 CQUAD4; duplicates none
+references resolve                   PASS  0 elements with a bad reference
+G0.5 material and thickness          PASS  MAT1 (210000.0, 0.3); PSHELL t 100.0 mm (units N, mm, MPa)
+element signed area > 0 (normal +z)  PASS  0 elements with area <= 0; total area 2 mm^2
+FE2 quality (information, patch)     INFO  largest aspect 5.55; interior angles 26.6 to 159.1 deg (distortion intended)
+edges shared by > 2 elements: 0      PASS  0
+3456 constrained at every grid       PASS
+patch: boundary displacements = linear field PASS  corners 1-4 prescribed; interior grids 5-8 free in-plane
+patch: area 2.0 mm^2                 PASS  2
+RESULT PASS: 10 checks, 0 fail

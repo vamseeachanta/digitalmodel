@@ -31,8 +31,8 @@ def test_benchmark_deferral_is_generated_from_record(tmp_path):
     assert manifest["inputs"][name] == hashlib.sha256((ROOT / name).read_bytes()).hexdigest()
     assert STATEMENT in (tmp_path / "report.html").read_text()
     revisions = json.loads((DATA / "revisions.json").read_text())
-    assert revisions["revision"] == revisions["history"][-1]["revision"] == "3"
-    assert len(revisions["history"]) == 3
+    assert revisions["revision"] == revisions["history"][-1]["revision"] == "4"
+    assert len(revisions["history"]) == 4
 
 
 def test_unrun_benchmarks_claim_no_pass_count_or_agreement(tmp_path):

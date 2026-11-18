@@ -363,10 +363,10 @@ All 264 implementation rows follow in map-file order, including wrappers, tests 
 | 132 | `src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py` | `VIVFatigueAnalysisComponents.add_fatigue_damage_results_to_df` (line 866) | [docs/registry/implementation-map.yaml:L3543-L3555] |
 | 133 | `src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py` | `VIVFatigueAnalysisComponents.get_shear7_x_by_L_from_elevation_above_mudline` (line 942) | [docs/registry/implementation-map.yaml:L3556-L3565] |
 | 134 | `src/digitalmodel/infrastructure/base_solvers/viv/viv_fatigue_analysis_components.py` | `VIVFatigueAnalysisComponents.get_elevation_from_end_A_from_elevation_above_mudline` (line 953) | [docs/registry/implementation-map.yaml:L3566-L3575] |
-| 135 | `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_output.py` | `_write_tensions_csv` (line 90) | [docs/registry/implementation-map.yaml:L3576-L3585] |
-| 136 | `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py` | `FPSOMooringFullWorkflow._line_state` (line 291) | [docs/registry/implementation-map.yaml:L3586-L3597] |
-| 137 | `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py` | `FPSOMooringFullWorkflow._solve_line` (line 323) | [docs/registry/implementation-map.yaml:L3598-L3607] |
-| 138 | `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py` | `FPSOMooringFullWorkflow._result` (line 369) | [docs/registry/implementation-map.yaml:L3608-L3617] |
+| 135 | `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_output.py` | `_write_tensions_csv` (line 95) | [docs/registry/implementation-map.yaml:L3576-L3585] |
+| 136 | `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py` | `FPSOMooringFullWorkflow._line_state` (line 298) | [docs/registry/implementation-map.yaml:L3586-L3597] |
+| 137 | `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py` | `FPSOMooringFullWorkflow._solve_line` (line 330) | [docs/registry/implementation-map.yaml:L3598-L3607] |
+| 138 | `src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py` | `FPSOMooringFullWorkflow._result` (line 376) | [docs/registry/implementation-map.yaml:L3608-L3617] |
 | 139 | `src/digitalmodel/orcaflex/mooring_design.py` | `solve_catenary` (line 256) | [docs/registry/implementation-map.yaml:L3618-L3627] |
 | 140 | `src/digitalmodel/orcaflex/pipelay_analysis.py` | `JLayConfig.calculate_sagbend` (line 222) | [docs/registry/implementation-map.yaml:L3628-L3637] |
 | 141 | `src/digitalmodel/orcaflex/riser_config.py` | `SCRDesignInput.calculate_geometry` (line 170) | [docs/registry/implementation-map.yaml:L3638-L3647] |

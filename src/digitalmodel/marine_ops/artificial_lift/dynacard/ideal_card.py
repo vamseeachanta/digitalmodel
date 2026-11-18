@@ -8,11 +8,10 @@ from .models import (
     DynacardAnalysisContext,
     CardData,
     IdealCardAnalysis,
-    FluidLoadAnalysis,
 )
 from .base import BaseCalculator
 from .constants import STEEL_DENSITY_LB_PER_FT3
-from .exceptions import DynacardException, ValidationError, invalid_value_error
+from .exceptions import DynacardException, invalid_value_error
 
 
 # Number of samples used when resampling a card branch onto a common
@@ -169,35 +168,17 @@ def _branch_profiles(
     return up_profile, down_profile
 
 
-def _closed_loop_shape_similarity(
+def _legacy_closed_loop_shape_similarity(
     measured_position,
     measured_load,
     ideal_position,
     ideal_load,
 ) -> Optional[float]:
-    """
-    Position-aware, sign-preserving shape similarity between two closed cards.
+    """Frozen normalized-distance feature used by the existing classifier.
 
-    Each card is split into its upstroke and downstroke branches, both branches
-    are resampled onto a common normalised-position grid, and the loads are
-    normalised (centred on the card mean, scaled by the card load range) so
-    that shape rather than magnitude is compared. The score is derived from the
-    RMS normalised distance ``d`` between the two cards as ``1 / (1 + d)``.
-
-    Properties (none of which the previous index-wise correlation had):
-      * 1.0 only for geometrically identical normalised loops, regardless of
-        sample count, sample spacing or starting index.
-      * Strictly monotonic in distance, so it never saturates: an inverted card
-        (loads reflected about the mean, distance ~2x the card amplitude)
-        always scores strictly LOWER than an unrelated card (distance ~1.4x),
-        which in turn scores lower than a matching card.
-      * Uses position, so a card whose branches are swapped is not scored as
-        identical.
-
-    Returns:
-        Similarity in (0, 1], or None when either card is degenerate (fewer
-        than four samples, zero position range or zero load range). None means
-        "not computable" - it is never reported as a number.
+    This nonnegative score is an arbitrary model input, not the signed
+    engineering similarity. The original sampling and distance are preserved
+    until the classifier is retrained; see issue #1864.
     """
     measured = _branch_profiles(measured_position, measured_load)
     ideal = _branch_profiles(ideal_position, ideal_load)
@@ -217,6 +198,89 @@ def _closed_loop_shape_similarity(
     distance = float(np.sqrt(np.mean(diff ** 2)))
 
     return float(1.0 / (1.0 + distance))
+
+
+def _comparison_branch_profiles(position, load):
+    """Interpolate directed stroke edges, excluding vertical transitions.
+
+    Upstroke means increasing position in the supplied time order. Each
+    branch must be monotone; multiple reversals cannot identify two strokes.
+    Exactly two direction changes are required around the closed cycle, with
+    no position tolerance or hysteresis. Extra reversals in downhole or noisy
+    cards therefore make the comparison unavailable.
+    The computational grid uses BRANCH_RESAMPLE_POINTS, as the legacy metric
+    does. Vertical load transfers have no position interval and contribute no
+    branch samples. Each nonvertical edge retains its own endpoint loads,
+    including at interior jumps. At a jump on the grid, use the edge on the
+    higher-position side; the maximum position uses the final edge endpoint.
+    """
+    pos = np.asarray(position, dtype=float)
+    ld = np.asarray(load, dtype=float)
+    if pos.ndim != 1 or ld.ndim != 1 or pos.size != ld.size or pos.size < 4:
+        return None
+    if not np.all(np.isfinite(pos)) or not np.all(np.isfinite(ld)):
+        return None
+    dx = np.roll(pos, -1) - pos
+    moving = np.sign(dx[dx != 0.0])
+    # A closed two-stroke cycle has exactly two changes of direction.
+    if moving.size == 0 or np.count_nonzero(moving != np.roll(moving, 1)) != 2:
+        return None
+    p_min = float(np.min(pos))
+    p_span = float(np.max(pos) - p_min)
+    grid = np.linspace(0.0, 1.0, BRANCH_RESAMPLE_POINTS)
+    profiles = []
+    for direction in (1, -1):
+        starts = np.flatnonzero(dx * direction > 0.0)
+        ends = (starts + 1) % pos.size
+        x0 = (pos[starts] - p_min) / p_span
+        x1 = (pos[ends] - p_min) / p_span
+        lower = np.minimum(x0, x1)
+        order = np.argsort(lower)
+        # Select by interval, never combine loads across a vertical transfer.
+        edge = order[np.clip(np.searchsorted(lower[order], grid, side="right") - 1,
+                             0, starts.size - 1)]
+        fraction = (grid - x0[edge]) / (x1[edge] - x0[edge])
+        profile = ld[starts[edge]] + fraction * (ld[ends[edge]] - ld[starts[edge]])
+        profiles.append(profile)
+    return tuple(profiles)
+
+
+def _closed_loop_shape_similarity(
+    measured_position,
+    measured_load,
+    ideal_position,
+    ideal_load,
+) -> Optional[float]:
+    """Signed cosine of centered, position-resampled branch loads.
+
+    Source: NIST Dataplot, Cosine Similarity definition (2018 update),
+    https://www.itl.nist.gov/div898/software/dataplot/refman2/auxillar/cosdist.htm
+    s = dot(a, b) / (norm(a) * norm(b)), with each profile centered first.
+    A dot product of unit vectors is bounded by -1 and 1;
+    clipping only corrects floating-point roundoff at those bounds.
+    """
+    profiles = [
+        _comparison_branch_profiles(measured_position, measured_load),
+        _comparison_branch_profiles(ideal_position, ideal_load),
+    ]
+    centered = []
+    for profile in profiles:
+        if profile is None:
+            return None
+        values = np.concatenate(profile)
+        if not np.all(np.isfinite(values)):
+            return None
+        # Scale before centering to avoid overflow without changing cosine.
+        magnitude = float(np.max(np.abs(values)))
+        if magnitude == 0.0:
+            return None
+        values = values / magnitude
+        values = values - np.mean(values)
+        norm = float(np.linalg.norm(values))
+        if norm == 0.0:
+            return None
+        centered.append(values / norm)
+    return float(np.clip(np.dot(centered[0], centered[1]), -1.0, 1.0))
 
 
 class IdealCardCalculator(BaseCalculator[IdealCardAnalysis]):
@@ -527,6 +591,7 @@ class IdealCardCalculator(BaseCalculator[IdealCardAnalysis]):
         self.result.load_deviation_rms = None
         self.result.stroke_length_difference = None
         self.result.shape_similarity = None
+        self.result.legacy_shape_feature = None
 
         if not self.ctx.surface_card or len(self.ctx.surface_card.position) == 0:
             self.result.warning_message = "No measured card available for comparison"
@@ -544,8 +609,14 @@ class IdealCardCalculator(BaseCalculator[IdealCardAnalysis]):
             abs(measured_stroke - self.result.ideal_stroke_length)
         )
 
-        measured_profiles = _branch_profiles(measured_pos, measured_load)
-        ideal_profiles = _branch_profiles(ideal_pos, ideal_load)
+        # Preserve the trained feature even when the stricter engineering
+        # comparison cannot identify two monotone stroke branches.
+        self.result.legacy_shape_feature = _legacy_closed_loop_shape_similarity(
+            measured_pos, measured_load, ideal_pos, ideal_load
+        )
+
+        measured_profiles = _comparison_branch_profiles(measured_pos, measured_load)
+        ideal_profiles = _comparison_branch_profiles(ideal_pos, ideal_load)
 
         if measured_profiles is None or ideal_profiles is None:
             self.result.warning_message = (
@@ -621,7 +692,13 @@ def calculate_shape_similarity(
     Both cards are compared as closed loops using position as well as load:
     each is split into upstroke and downstroke branches, resampled onto a
     common normalised-position grid, and compared after load normalisation.
-    See :func:`_closed_loop_shape_similarity` for the metric definition.
+    See :func:`_closed_loop_shape_similarity` for the signed cosine definition.
+
+    Branches must be monotone, with exactly two direction changes around each
+    closed cycle. No position tolerance or hysteresis is applied. Downhole and
+    noisy cards with additional reversals are unavailable; this includes four
+    of the five cleansed downhole fixtures, while all five surface cards are
+    accepted (see test_similarity_availability_on_recorded_cards).
 
     This deliberately does NOT use an index-wise correlation coefficient. That
     metric ignored position entirely (so it depended on where the trace happened
@@ -633,9 +710,11 @@ def calculate_shape_similarity(
         ideal_card: Ideal/reference dynacard data.
 
     Returns:
-        Similarity score in (0, 1] where 1.0 means geometrically identical
-        after normalisation, or None when either card is degenerate (fewer
-        than four samples, zero position range or zero load range).
+        Signed similarity in [-1, 1]: positive affine load transforms score 1,
+        a load reflection scores -1, and orthogonal centered profiles score 0.
+        None for fewer than four samples, a flat load/position profile,
+        nonfinite samples or multiple stroke reversals. Input order defines
+        stroke direction; reversing time exchanges upstroke and downstroke.
     """
     if not measured_card.load or not ideal_card.load:
         return None

@@ -27,6 +27,28 @@ SPEC = ROOT / "docs/domains/cathodic_protection/benchmarks/S12.json"
 # Source identity pinned by S12.json; the public source bytes matched this
 # digest during source retrieval. Offline reporting does not recheck those bytes.
 SOURCE_SHA256 = "6e3b0008e41dc030f1a353d3d8d3c18bbb894712ed6992442809e762d2e9f13a"
+SOURCE_METADATA = {
+    "document": "DNV RP B401, Cathodic Protection Design",
+    "edition": "1993",
+    "url": "https://rules.dnv.com/docs/pdf/dnvpm/codes/docs/1993-00/RP-B401.pdf",
+    "sha256": SOURCE_SHA256,
+    "pdf_pages": 46,
+}
+# Pin only the references emitted by this checklist. These are bibliographic
+# locators from S12.json, not qualified cells, equations or applicability rules.
+CITATION_METADATA = {
+    "tsa": {"locator": "6.3.16-6.3.17", "printed_page": 16, "pdf_page": 17},
+    "mass_output": {
+        "locator": "7.7-7.8",
+        "printed_page": 28,
+        "pdf_page": 29,
+        "printed_page_end": 29,
+        "pdf_page_end": 30,
+    },
+    "resistance": {"locator": "Table 6.7.1", "printed_page": 22, "pdf_page": 23},
+    "depletion": {"locator": "6.7.2-6.7.7", "printed_page": 23, "pdf_page": 24},
+    "utilisation": {"locator": "Table 6.9.1", "printed_page": 25, "pdf_page": 26},
+}
 
 # Each record describes an unresolved applicability decision, not an engineering
 # acceptance criterion. Citations resolve against the existing S12 specification.
@@ -82,8 +104,10 @@ CHECKS = (
 def build_report(spec: Mapping[str, Any]) -> dict[str, Any]:
     """Return unresolved, cited decisions from the planning-only specification.
 
-    Reject numerical or differently sourced specifications. Supplied approval
-    claims cannot upgrade these checks; qualification requires a later change.
+    Reject numerical or differently sourced specifications, including altered
+    bibliography and citation records. This checks pinned metadata only; source
+    bytes and engineering qualification require separate evidence. Supplied
+    approval claims cannot upgrade these checks.
     """
     expected = {
         "case_id": "S12",
@@ -95,20 +119,36 @@ def build_report(spec: Mapping[str, Any]) -> dict[str, Any]:
     for key, value in expected.items():
         if key not in spec or type(spec[key]) is not type(value) or spec[key] != value:
             raise ValueError(f"S12 planning boundary violated: {key}")
-    source = spec.get("source_document", {})
-    route = spec.get("proposed_route", {})
+    for section in ("source_document", "proposed_route", "citations"):
+        if not isinstance(spec.get(section), Mapping):
+            raise ValueError(f"S12 reference section must be a mapping: {section}")
+    source = spec["source_document"]
+    route = spec["proposed_route"]
     if source.get("edition") != "1993" or route.get("edition") != "1993":
         raise ValueError("S12 requires the specified 1993 source and route")
     if source.get("sha256") != SOURCE_SHA256:
         raise ValueError("S12 source digest differs from the pinned specification")
+    for key, value in SOURCE_METADATA.items():
+        if type(source.get(key)) is not type(value) or source[key] != value:
+            raise ValueError(
+                f"S12 source metadata differs from the pinned specification: {key}"
+            )
 
     rows = []
     for check in CHECKS:
         citations = {}
         for key in check["references"]:
-            citation = spec.get("citations", {}).get(key)
+            citation = spec["citations"].get(key)
             if not isinstance(citation, Mapping) or not citation.get("locator"):
                 raise ValueError(f"Missing S12 citation or locator: {key}")
+            expected_citation = CITATION_METADATA[key]
+            if set(citation) != set(expected_citation) or any(
+                type(citation[field]) is not type(value) or citation[field] != value
+                for field, value in expected_citation.items()
+            ):
+                raise ValueError(
+                    f"S12 citation metadata differs from the pinned specification: {key}"
+                )
             citations[key] = deepcopy(citation)
         rows.append(
             {

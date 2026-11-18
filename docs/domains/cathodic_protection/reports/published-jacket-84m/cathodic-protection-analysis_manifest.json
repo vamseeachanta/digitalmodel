@@ -1,0 +1,31 @@
+{
+  "artifacts": {
+    "citations": "cathodic-protection-analysis_citations.json",
+    "html": "cathodic-protection-analysis.html",
+    "manifest": "cathodic-protection-analysis_manifest.json",
+    "pdf": null
+  },
+  "citations_count": 1,
+  "document": {
+    "client": "Not applicable",
+    "number": "B0000-RPT-001-00",
+    "project": "Published jacket example",
+    "revision": "00",
+    "title": "Cathodic protection analysis: published jacket at 84.1 m"
+  },
+  "execution_tool": "digitalmodel.reporting.engine",
+  "pdf": {
+    "engine": null,
+    "message": "pdf rendering disabled (pdf: off)",
+    "rendered": false
+  },
+  "report_layer": null,
+  "standards": [
+    {
+      "code_id": "DNV-RP-B401",
+      "edition": "May 2021",
+      "provenance": "verified-2021-tables"
+    }
+  ],
+  "tool_version": "2.1.0"
+}

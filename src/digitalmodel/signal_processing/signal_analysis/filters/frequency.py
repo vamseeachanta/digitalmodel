@@ -123,6 +123,98 @@ class FrequencyFilter:
             filtered = scipy.signal.lfilter(b, a, signal)
         
         return filtered
+
+    def fft_filter(self, signal: Union[list, np.ndarray],
+                   sampling_rate: float,
+                   low_cutoff: Optional[float] = None,
+                   high_cutoff: Optional[float] = None) -> np.ndarray:
+        """Retain an inclusive band of real FFT bins and reconstruct the trace.
+
+        Parameters
+        ----------
+        signal : array-like
+            Finite, nonempty, real numeric one-dimensional record. Unmodified.
+        sampling_rate : float
+            Positive finite sampling rate in Hz.
+        low_cutoff, high_cutoff : float, optional
+            Finite bounds in Hz with low_cutoff <= high_cutoff, both within
+            the closed Nyquist interval [0, sampling_rate / 2]. An omitted
+            lower bound is zero; an omitted upper bound is Nyquist. Thus an
+            upper bound alone gives low pass, a lower bound alone gives high
+            pass, and both give band pass. Equal bounds select a single bin
+            if present; a band containing no bins returns a zero trace.
+
+        Returns
+        -------
+        np.ndarray
+            New real array of the original length, including for odd records.
+            With both bounds omitted, the result is identity up to roundoff.
+
+        Raises
+        ------
+        ValueError
+            If the record, sampling rate or bounds violate these requirements.
+
+        Notes
+        -----
+        The DFT basis exp(-2*pi*i*k*n/N) gives bin frequencies k*fs/N;
+        real samples have unique frequencies from zero through fs/2. No
+        endpoint amplitude scaling is needed for a real FFT/inverse pair.
+        Bounds allow relative rounding slack of twice machine epsilon, with
+        zero absolute slack. For normal values, the two grid operations and
+        a rounded cutoff each contribute at most one unit roundoff; this
+        slack allows their accumulated error. The rounding model is given in
+        Accuracy and Stability of Numerical Algorithms, 2nd ed. (2002),
+        chapter 2, Floating Point Arithmetic.
+        This operation treats the record as periodic. Nonperiodic endpoints
+        can cause spectral leakage, and the sharp mask can cause ringing and
+        circular edge effects. No padding, windowing or detrending is applied.
+        Coefficient-filter designs and their stored state are unaffected.
+        """
+        signal = np.asarray(signal)
+        if (signal.ndim != 1 or signal.size == 0
+                or signal.dtype.kind not in "iuf"
+                or not np.all(np.isfinite(signal))):
+            raise ValueError("signal must be a finite nonempty real 1D record")
+
+        def finite_scalar(value: float, name: str) -> float:
+            scalar = np.asarray(value)
+            if scalar.ndim != 0 or scalar.dtype.kind not in "iuf":
+                raise ValueError(f"{name} must be a finite real scalar")
+            result = float(scalar)
+            if not np.isfinite(result):
+                raise ValueError(f"{name} must be a finite real scalar")
+            return result
+
+        sampling_rate = finite_scalar(sampling_rate, "sampling_rate")
+        if sampling_rate <= 0:
+            raise ValueError("sampling_rate must be positive")
+        nyquist = sampling_rate / 2
+        low = 0.0 if low_cutoff is None else finite_scalar(low_cutoff, "low_cutoff")
+        high = (nyquist if high_cutoff is None
+                else finite_scalar(high_cutoff, "high_cutoff"))
+        for name, cutoff in (("low_cutoff", low), ("high_cutoff", high)):
+            if not 0 <= cutoff <= nyquist:
+                raise ValueError(f"{name} must lie in [0, sampling_rate / 2]")
+        if low > high:
+            raise ValueError("low_cutoff must not exceed high_cutoff")
+
+        # Form k * (fs / N) directly so integer-Hz bins stay exact when
+        # fs == N, without taking the reciprocal of a very small rate.
+        frequencies = np.arange(signal.size // 2 + 1) * (sampling_rate / signal.size)
+        if signal.size % 2 == 0:
+            # Anchor the even-record endpoint at the same fs/2 as validation.
+            frequencies[-1] = nyquist
+        roundoff_rtol = 2 * np.finfo(float).eps
+        below_band = (frequencies < low) & ~np.isclose(
+            frequencies, low, rtol=roundoff_rtol, atol=0
+        )
+        above_band = (frequencies > high) & ~np.isclose(
+            frequencies, high, rtol=roundoff_rtol, atol=0
+        )
+        spectrum = np.fft.rfft(signal)
+        spectrum[below_band | above_band] = 0
+        return np.fft.irfft(spectrum, n=signal.size)
     
     def bandpass_filter(self, signal: Union[list, np.ndarray],
                        low_freq: float, high_freq: float,

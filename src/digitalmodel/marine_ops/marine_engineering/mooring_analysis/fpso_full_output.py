@@ -13,13 +13,18 @@ import numpy as np
 REPO_ROOT = Path(__file__).resolve().parents[5]
 
 
-def result_folder(cfg: dict) -> Path:
+def configured_result_folder(cfg: dict) -> Path | None:
+    """Return the explicit output folder, or None when none is configured."""
     analysis = cfg.get("Analysis", {})
     if analysis.get("result_folder"):
         return Path(analysis["result_folder"])
     if cfg.get("_config_dir_path"):
         return Path(cfg["_config_dir_path"]) / "results"
-    return Path("results")
+    return None
+
+
+def result_folder(cfg: dict) -> Path:
+    return configured_result_folder(cfg) or Path("results")
 
 
 def write_outputs(cfg: dict, result: dict, result_folder: Path) -> None:

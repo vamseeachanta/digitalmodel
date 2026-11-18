@@ -23,6 +23,7 @@ from digitalmodel.reporting._backbone import ReportBackbone, ReportSection, Sect
 from digitalmodel.reporting._base import ReportBlock, ReportBlockFn, ReportDataModel
 from digitalmodel.reporting._renderer import ReportRenderer
 from digitalmodel.reporting.provenance import (
+    ContractError,
     DataSource,
     Provenance,
     ProvenanceError,
@@ -52,6 +53,7 @@ from digitalmodel.reporting.spec import (
     MANIFEST_REQUIRED_FIELDS,
     DocumentMeta,
     FigureBlock,
+    PublicWebCitation,
     ReportSpec,
     RevisionRow,
     Section,
@@ -96,6 +98,7 @@ __all__ = [
     "ReportRenderer",
     # provenance / SSOT-view (#1019)
     "ProvenanceError",
+    "ContractError",
     "DataSource",
     "Provenance",
     "provenance_block",
@@ -130,6 +133,7 @@ __all__ = [
     "MANIFEST_REQUIRED_FIELDS",
     "DocumentMeta",
     "FigureBlock",
+    "PublicWebCitation",
     "ReportSpec",
     "RevisionRow",
     "Section",

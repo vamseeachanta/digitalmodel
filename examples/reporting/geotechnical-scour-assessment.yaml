@@ -1,3 +1,4 @@
+# SUPERSEDED: Historical depth outputs are withdrawn and shall not be used for design. Current screening leaves scour depth NOT_EVALUATED; supplied-limit armour comparison does not establish a protection design.
 metadata:
   title: "Scour Assessment — DNV-RP-F107"
   doc_id: "CALC-GEO-003"
@@ -34,7 +35,7 @@ inputs:
     value: 8.0
     unit: "s"
 methodology:
-  description: "Pipeline scour depth prediction per DNV-RP-F107 Section 5"
+  description: "SUPERSEDED: Historical depth outputs are withdrawn and shall not be used for design. Current screening leaves scour depth NOT_EVALUATED; supplied-limit armour comparison does not establish a protection design."
   standard: "DNV-RP-F107"
   equations:
     - id: eq1

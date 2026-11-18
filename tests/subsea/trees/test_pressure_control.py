@@ -5,6 +5,7 @@
 
 import importlib
 import math
+from itertools import permutations
 
 import pytest
 
@@ -27,6 +28,55 @@ def test_liquid_valve_losses_add_in_series():
     assert core().valve_pressure_drop(0, 0, 1) == 0
     with pytest.raises(ValueError, match="closed"):
         core().valve_pressure_drop(1, 0, 1)
+
+
+# Synthetic hydraulic similarity fixtures for issue #2003; no equipment data.
+# Independent hand calculation using SG*(Q/Cv)^2, in US gpm and psi:
+# SG=0.75, Q=24, Cv=(6, 12, 24) gives losses (12, 3, 0.75) psi,
+# hence 12+3+0.75=15.75 psi in any series order. At Q=0 all losses
+# are zero, including the closed Cv=0 valve (the existing shutoff convention).
+@pytest.mark.parametrize("flow_gpm, valve_cvs, expected_losses", [
+    (24, (6, 12, 24), (12, 3, 0.75)),
+    (0, (0, 6, 12), (0, 0, 0)),
+])
+def test_series_valve_loss_is_permutation_invariant(
+    flow_gpm, valve_cvs, expected_losses,
+):
+    """Unequal valve coefficients retain the hand-calculated series loss."""
+    specific_gravity = 0.75  # Synthetic specific gravity worked above.
+    for cv, expected in zip(valve_cvs, expected_losses):
+        assert core().valve_pressure_drop(flow_gpm, cv, specific_gravity) == expected
+    expected_total = sum(expected_losses)  # Sum independent hand calculations.
+    for ordered_cvs in permutations(valve_cvs):
+        assert core().series_pressure_drop(
+            flow_gpm, ordered_cvs, specific_gravity,
+        ) == expected_total
+
+
+# Positive synthetic scale factors probe reduction and enlargement:
+# k=0.25, 2, 8; SG*((k*Q)/(k*Cv))^2 = SG*(Q/Cv)^2 for Cv>0.
+# The zero-flow, closed-valve case retains zero loss under every scale.
+@pytest.mark.parametrize("scale", [0.25, 2, 8])
+@pytest.mark.parametrize("flow_gpm, valve_cvs, expected_losses", [
+    (24, (6, 12, 24), (12, 3, 0.75)),
+    (0, (0, 6, 12), (0, 0, 0)),
+])
+def test_parallel_scaling_of_flow_and_cv_preserves_drop(
+    flow_gpm, valve_cvs, expected_losses, scale,
+):
+    """Scaling the flow and every Cv together preserves each loss and its sum."""
+    specific_gravity = 0.75  # Synthetic specific gravity worked above.
+    scaled_flow = scale * flow_gpm
+    scaled_cvs = tuple(scale * cv for cv in valve_cvs)
+    for cv, expected in zip(scaled_cvs, expected_losses):
+        assert core().valve_pressure_drop(scaled_flow, cv, specific_gravity) == expected
+    expected_total = sum(expected_losses)  # Sum independent hand calculations.
+    assert core().series_pressure_drop(
+        flow_gpm, valve_cvs, specific_gravity,
+    ) == expected_total
+    assert core().series_pressure_drop(
+        scaled_flow, scaled_cvs, specific_gravity,
+    ) == expected_total
 
 
 def test_liquid_choke_distinguishes_subcritical_and_choked_flow():
@@ -56,3 +106,116 @@ def test_invalid_choke_inputs(args):
 def test_invalid_trim_inputs(args):
     with pytest.raises(ValueError):
         core().trim_cv(*args)
+
+
+# New slice-1 fixtures below are synthetic hand calculations, not equipment data.
+# Source: Fisher, Control Valve Sourcebook — Oil & Gas (2013), ch. 3,
+# p. 3-5 (critical differential), p. 3-3 and Table 3-2 (US gpm/psi Cv).
+
+
+def test_critical_drop_from_supplied_fluid_and_recovery_factors():
+    """Hand calculation: FL²(P1-FF*Pv)=0.8²*(100-0.9*10)=58.24 psi.
+
+    All four inputs are chosen arithmetic fixtures, not standard coefficients.
+    """
+    assert core().liquid_critical_drop(100, 10, 0.8, 0.9) == pytest.approx(58.24)
+
+
+@pytest.mark.parametrize("downstream_psi", [20, 30])
+def test_derived_critical_drop_caps_flow_at_both_outlet_pressures(downstream_psi):
+    """Hand calculation: dpcrit=58.24; drops 80/70 exceed it.
+
+    Fisher (2013), ch. 3 pp. 3-3, 3-5: with supplied Cv=10 and SG=0.91,
+    Q=10*sqrt(58.24/0.91)=10*sqrt(64)=80 US gpm at either outlet.
+    """
+    critical = core().liquid_critical_drop(100, 10, 0.8, 0.9)
+    result = core().liquid_choke_flow(100, downstream_psi, 10, 0.91, critical)
+    assert result.flow_gpm == pytest.approx(80)
+    assert result.effective_drop_psi == pytest.approx(58.24)
+    assert result.regime == "critical"
+
+
+def test_derived_limit_preserves_subcritical_flow():
+    """Hand calculation: 100-85.44=14.56 < 58.24 psi.
+
+    Fisher (2013), ch. 3 pp. 3-3, 3-5: Q=10*sqrt(14.56/0.91)=40 US gpm.
+    Inputs are synthetic; no fluid-property or valve data are inferred.
+    """
+    critical = core().liquid_critical_drop(100, 10, 0.8, 0.9)
+    result = core().liquid_choke_flow(100, 85.44, 10, 0.91, critical)
+    assert result.flow_gpm == pytest.approx(40)
+    assert result.effective_drop_psi == pytest.approx(14.56)
+    assert result.regime == "subcritical"
+
+
+def test_zero_vapor_pressure_and_critical_onset():
+    """Hand calculation: 0.5²*(100-0.9*0)=25 psi; 100-75=25 psi.
+
+    Fisher (2013), ch. 3 pp. 3-3, 3-5: Q=10*sqrt(25/1)=50 US gpm.
+    Equality is critical onset under the existing regime convention.
+    """
+    critical = core().liquid_critical_drop(100, 0, 0.5, 0.9)
+    result = core().liquid_choke_flow(100, 75, 10, 1, critical)
+    assert critical == 25
+    assert result.flow_gpm == 50
+    assert result.regime == "critical"
+
+
+def test_unity_factor_boundaries_and_public_export():
+    """Hand calculation: 1²*(100-1*10)=90 psi; unity is a ratio boundary.
+
+    Equation: Fisher (2013), ch. 3 p. 3-5; inputs are synthetic.
+    """
+    trees = importlib.import_module("digitalmodel.subsea.trees")
+    assert trees.liquid_critical_drop(100, 10, 1, 1) == 90
+
+
+@pytest.mark.parametrize("index", range(4))  # Four required physical inputs.
+@pytest.mark.parametrize("value", [math.nan, math.inf, -math.inf])
+def test_critical_drop_rejects_nonfinite_inputs(index, value):
+    """The numerical domain excludes nonfinite values for every input."""
+    args = [100, 10, 0.8, 0.9]  # Synthetic case worked above.
+    args[index] = value
+    with pytest.raises(ValueError, match="finite"):
+        core().liquid_critical_drop(*args)
+
+
+@pytest.mark.parametrize("args", [
+    (0, 0, 0.8, 0.9), (-100, 10, 0.8, 0.9), (100, -10, 0.8, 0.9),
+    (100, 100, 0.8, 0.9), (100, 110, 0.8, 0.9),
+    (100, 10, 0, 0.9), (100, 10, -0.8, 0.9), (100, 10, 1.1, 0.9),
+    (100, 10, 0.8, 0), (100, 10, 0.8, -0.9), (100, 10, 0.8, 1.1),
+    (100, 10, 1e-300, 0.9),
+])
+def test_critical_drop_rejects_invalid_physical_or_underflow_inputs(args):
+    """Fisher (2013), ch. 3 pp. 3-2, 3-5: absolute liquid-inlet domain.
+
+    Synthetic probes cross zero/unity ratio boundaries or Pv=P1. The tiny
+    recovery factor probes floating-point underflow, not a design threshold.
+    """
+    with pytest.raises(ValueError):
+        core().liquid_critical_drop(*args)
+
+
+def test_critical_drop_has_no_default_coefficients():
+    """Missing fluid/recovery evidence is an input error, never a guessed value."""
+    with pytest.raises(TypeError):
+        core().liquid_critical_drop(100, 10)
+
+
+@pytest.mark.parametrize("upstream, recovery, expected", [
+    (1e300, 1e-200, 1e-100), (1e300, 1e-300, 1e-300),
+])
+def test_critical_drop_preserves_representable_extreme_products(
+    upstream, recovery, expected,
+):
+    """Independent exponent arithmetic at Pv=0, FF=1 (synthetic stress cases).
+
+    Fisher (2013), ch. 3 p. 3-5: (10^-200)^2*10^300=10^-100;
+    (10^-300)^2*10^300=10^-300. Both final values are representable even
+    though squaring FL first underflows. These are numerical probes only.
+    """
+    actual = core().liquid_critical_drop(upstream, 0, recovery, 1)
+    # Binary64 arithmetic tolerance, not an engineering acceptance limit;
+    # zero absolute tolerance prevents a zero result passing a tiny-value test.
+    assert actual == pytest.approx(expected, rel=1e-12, abs=0)

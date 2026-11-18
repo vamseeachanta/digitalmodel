@@ -43,7 +43,7 @@ class TestTemplateCodeSource:
 
     def test_has_auth_handler(self):
         src = _read_source("template_code/TemplateCode.py")
-        assert "get_password" in src
+        assert "@auth.verify_password" in src
 
 
 class TestDigitaltwinfeedTemplateCode:

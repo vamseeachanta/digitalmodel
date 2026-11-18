@@ -54,7 +54,7 @@ def _make_base_spec_data(s_lay: bool = False) -> dict:
         data["metadata"]["operation"] = "installation/s-lay"
         data["equipment"] = {
             "vessel": {
-                "name": "Eclipse",
+                "name": "VesselA",
                 "properties": {
                     "loa": 130, "beam": 28, "draft": 4.0, "gmt": 2.5,
                     "cog": [0, 0, 3], "gyration_radii": [10, 30, 30],
@@ -634,3 +634,71 @@ class TestGenerateRunSpecs:
         )
         name, _ = next(spec.generate_run_specs())
         assert name == "test_campaign_wd15.0m"
+
+
+@pytest.fixture
+def spec_only_campaign(tmp_path):
+    import yaml
+    from digitalmodel.solvers.orcaflex.modular_generator.schema.campaign import (
+        CampaignGenerator,
+    )
+
+    # Synthetic depths reuse TestGenerateRunSpecs.test_deep_copy_independence.
+    # Hand count: two depths with no other axes give two combinations.
+    campaign_file = tmp_path / "campaign.yml"
+    campaign_file.write_text(yaml.safe_dump({
+        "base": _make_base_spec_data(),
+        "campaign": {"water_depths": [10, 20]},
+        "output_naming": "{base_name}_wd{water_depth}m",
+    }))
+    return CampaignGenerator(campaign_file)
+
+
+def test_spec_only_fresh_generation_writes_manifest(spec_only_campaign, tmp_path):
+    import yaml
+
+    output_dir = tmp_path / "out"
+    result = spec_only_campaign.generate(output_dir, spec_only=True)
+
+    # Independent count from the fixture: two depths give two runs, none skipped.
+    assert result.run_count == 2
+    assert result.skipped_count == 0
+    assert result.errors == []
+    assert result.manifest_path == output_dir / "manifest.yml"
+    manifest = yaml.safe_load(result.manifest_path.read_bytes())
+    assert manifest["campaign"] == "test_campaign"
+    assert manifest["total_runs"] == 2
+    assert manifest["runs"] == [
+        {"name": "test_campaign_wd10.0m", "combo": {"water_depth": 10}},
+        {"name": "test_campaign_wd20.0m", "combo": {"water_depth": 20}},
+    ]
+    assert len(result.run_dirs) == 2
+    assert all((run_dir / "spec.yml").is_file() for run_dir in result.run_dirs)
+    assert not list(output_dir.glob("*/master.yml"))
+    assert not list(output_dir.glob("*/includes"))
+
+
+def test_spec_only_resume_all_skipped_manifest_is_none(spec_only_campaign, tmp_path):
+    output_dir = tmp_path / "out"
+    fresh = spec_only_campaign.generate(output_dir, spec_only=True)
+
+    # Independent count from the fixture: two depths give two sentinel files.
+    assert fresh.run_count == 2
+    assert fresh.errors == []
+    assert fresh.manifest_path == output_dir / "manifest.yml"
+    assert len(fresh.run_dirs) == 2
+    assert all((run_dir / "spec.yml").is_file() for run_dir in fresh.run_dirs)
+    manifest_bytes = fresh.manifest_path.read_bytes()
+
+    # Allow regeneration otherwise, so the resume sentinel causes the skip.
+    resumed = spec_only_campaign.generate(
+        output_dir, resume=True, force=True, spec_only=True,
+    )
+
+    # Hand count: both requested combinations skipped, so no new runs exist.
+    assert resumed.run_count == 0
+    assert resumed.skipped_count == 2
+    assert resumed.run_dirs == []
+    assert resumed.errors == []
+    assert resumed.manifest_path is None
+    assert fresh.manifest_path.read_bytes() == manifest_bytes

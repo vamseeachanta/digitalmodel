@@ -342,22 +342,26 @@ class TestQuickQA:
         includes = list((qa_output_dir / "includes").glob("*.yml"))
         assert len(includes) >= 5
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_qa_loads_in_orcaflex(self, qa_model):
         """QA model loads in OrcFxAPI without error."""
         assert qa_model is not None
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_qa_statics_converge(self, qa_model):
         """QA model statics converge."""
         assert qa_model.state == OrcFxAPI.ModelState.InStaticState
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_qa_pipeline_exists(self, qa_model):
         """QA model has pipeline object."""
         line = qa_model[LINE_NAME_24IN]
         assert line is not None
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_qa_results_are_finite(self, qa_model):
         """QA static results are finite values."""
@@ -371,6 +375,7 @@ class TestQuickQA:
             f"End B tension={results.end_b_tension:.2f} kN"
         )
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_qa_pipeline_length(self, qa_model):
         """QA pipeline length is approximately 4900 m."""
@@ -414,16 +419,19 @@ class TestInstantRiser:
         """A01 Catenary Riser example file exists."""
         assert A01_RISER.exists(), f"A01 riser not found: {A01_RISER}"
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_a01_riser_loads(self, a01_riser_model):
         """A01 riser loads in OrcFxAPI."""
         assert a01_riser_model is not None
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_a01_riser_statics_converge(self, a01_riser_model):
         """A01 riser statics converge."""
         assert a01_riser_model.state == OrcFxAPI.ModelState.InStaticState
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_a01_riser_has_line(self, a01_riser_model):
         """A01 riser model has a line object."""
@@ -434,6 +442,7 @@ class TestInstantRiser:
         ]
         assert len(lines) > 0, "No Line objects found in A01 riser model"
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_a01_riser_tension_is_finite(self, a01_riser_model):
         """A01 riser end tensions are finite values."""
@@ -518,16 +527,19 @@ class TestLazyWaveRiser:
         """A01 Lazy Wave Riser file exists."""
         assert A01_LAZY_WAVE.exists(), f"Not found: {A01_LAZY_WAVE}"
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_lazy_wave_loads(self, lazy_wave_model):
         """A01 Lazy Wave loads in OrcFxAPI."""
         assert lazy_wave_model is not None
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_lazy_wave_statics_converge(self, lazy_wave_model):
         """A01 Lazy Wave statics converge."""
         assert lazy_wave_model.state == OrcFxAPI.ModelState.InStaticState
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_lazy_wave_has_line(self, lazy_wave_model):
         """A01 Lazy Wave has at least one line object."""
@@ -537,6 +549,7 @@ class TestLazyWaveRiser:
         ]
         assert len(lines) > 0, "No Line objects found"
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_lazy_wave_tension_is_finite(self, lazy_wave_model):
         """A01 Lazy Wave end tensions are finite."""
@@ -565,16 +578,19 @@ class TestFenderModel:
         """C09 Fenders file exists."""
         assert C09_FENDERS.exists(), f"Not found: {C09_FENDERS}"
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_fender_loads(self, fender_model):
         """C09 Fenders loads in OrcFxAPI."""
         assert fender_model is not None
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_fender_statics_converge(self, fender_model):
         """C09 Fenders statics converge."""
         assert fender_model.state == OrcFxAPI.ModelState.InStaticState
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_fender_has_constraints(self, fender_model):
         """C09 Fenders has constraint objects (fenders)."""
@@ -596,16 +612,19 @@ class TestPullInAnalysis:
         """D02 Pull-in file exists."""
         assert D02_PULL_IN.exists(), f"Not found: {D02_PULL_IN}"
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_pull_in_loads(self, pull_in_model):
         """D02 Pull-in loads in OrcFxAPI."""
         assert pull_in_model is not None
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_pull_in_statics_converge(self, pull_in_model):
         """D02 Pull-in statics converge."""
         assert pull_in_model.state == OrcFxAPI.ModelState.InStaticState
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_pull_in_has_line(self, pull_in_model):
         """D02 Pull-in has at least one line object."""
@@ -615,6 +634,7 @@ class TestPullInAnalysis:
         ]
         assert len(lines) > 0, "No Line objects found"
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_pull_in_tension_is_finite(self, pull_in_model):
         """D02 Pull-in end tensions are finite."""
@@ -777,6 +797,7 @@ class TestSmokeGeneration:
             f"Expected >=5 include files, got {len(includes)}"
         )
 
+    @pytest.mark.solver
     @requires_orcaflex
     def test_monolithic_yml_loads_in_orcaflex(self):
         """Monolithic YAML loads in OrcFxAPI (no statics, just parsing)."""
@@ -786,6 +807,7 @@ class TestSmokeGeneration:
         assert len(objects) > 0, "Monolithic model has no objects"
 
 
+@pytest.mark.solver
 @slow_statics
 class TestModularStatics:
     """Verify modular model loads and converges statics."""
@@ -806,6 +828,7 @@ class TestModularStatics:
 # ===================================================================
 
 
+@pytest.mark.solver
 @slow_statics
 class TestStaticResultExtraction:
     """Extract engineering results from both models after statics."""
@@ -846,6 +869,7 @@ class TestStaticResultExtraction:
 # ===================================================================
 
 
+@pytest.mark.solver
 @slow_statics
 class TestModularVsMonolithicComparison:
     """Compare modular results against monolithic within tolerances.
@@ -972,6 +996,7 @@ class TestModularVsMonolithicComparison:
 # ===================================================================
 
 
+@pytest.mark.solver
 class TestCrossValidation30in:
     """Load 30in monolithic.sim and modular/master.sim, compare results."""
 
@@ -1067,6 +1092,7 @@ RANGE_BENDING_REL_TOL = 0.20  # 20% — bending is mesh-sensitive
 RANGE_BENDING_ABS_TOL = 10.0  # kN·m
 
 
+@pytest.mark.solver
 @slow_statics
 class TestAlongLengthNoLoadComparison:
     """Compare tension and bending moment along pipeline under no-load statics.

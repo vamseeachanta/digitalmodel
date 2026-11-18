@@ -432,6 +432,7 @@ class AuthoredSpec:
         """
         from html import escape
 
+        from digitalmodel.reporting._metadata import package_code_edition
         from digitalmodel.reporting import (
             Provenance,
             ReportSection,
@@ -461,7 +462,11 @@ class AuthoredSpec:
                 f"<table><tbody>{body}</tbody></table></div>"
             )
 
-        provenance = Provenance().add(
+        provenance = Provenance(
+            code_edition=package_code_edition(),
+            units_system="SI",
+            validated_path="screening",
+        ).add(
             "spec",
             source_id,
             digest=digest,
@@ -471,7 +476,7 @@ class AuthoredSpec:
             title=f"Diffraction analysis - {vessel_name}",
             provenance=provenance,
             sections=[
-                ReportSection("summary", "Summary", SectionMode.ALWAYS, _summary)
+                ReportSection("summary", "Summary", SectionMode.ALWAYS, _summary, reads=["spec"])
             ],
             data=spec_data,
             ledger=self.ledger,

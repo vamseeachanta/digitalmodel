@@ -1,8 +1,12 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Solver-free diagnostics specified by agent-pack section 5 (G0/G4/G5)."""
 
 import ast
 import importlib.util
 import logging
+import multiprocessing
 import subprocess
 import sys
 from collections import Counter
@@ -117,12 +121,11 @@ def test_g0_geometry_present_input_keeps_dispatch_contract(
 ):
     """Dispatch identity is checked by a sentinel, without qualifying mesh parsing.
 
-    A requested regular file is present. Partial input keeps the legacy warning
-    behavior; a failed process-pool start must still retry sequentially.
+    Every requested regular file is present. A failed process-pool start must
+    still retry sequentially without changing dispatch order or format.
     """
-    filename = next(name for name, kind in requested_geometry.items() if kind == "obj")
-    filepath = tmp_path / filename
-    filepath.touch()
+    for filename in requested_geometry:
+        (tmp_path / filename).touch()
     expected = object()
     calls = []
     validator = GeometryValidator(str(tmp_path))
@@ -136,8 +139,11 @@ def test_g0_geometry_present_input_keeps_dispatch_contract(
 
     monkeypatch.setattr(validator, "validate_file", validate)
     monkeypatch.setattr(geometry, "ProcessPoolExecutor", unavailable_pool)
-    assert validator.validate_all(parallel=fallback) == {filename: expected}
-    assert calls == [(filepath, "obj")]
+    assert validator.validate_all(parallel=fallback) == {
+        name: expected for name in requested_geometry
+    }
+    assert calls == [(tmp_path / name, kind)
+                     for name, kind in requested_geometry.items()]
 
 
 @pytest.mark.parametrize("excel_present", [False, True])
@@ -278,7 +284,6 @@ def test_g4_open_triangle_preconditions(open_triangle, open_triangle_stats):
     assert open_triangle_stats.volume == pytest.approx(1 / 6)
 
 
-@pytest.mark.xfail(strict=True, raises=AssertionError, reason="#2738: G4-CLOSURE")
 def test_g4_closure_rejects_open_triangle(open_triangle_stats):
     assert not open_triangle_stats.is_watertight
 
@@ -287,10 +292,358 @@ def test_g5_incomplete_results_precondition(workflow):
     assert workflow._check_data_completeness() is False
 
 
-@pytest.mark.xfail(
-    strict=True, raises=AssertionError,
-    reason="#2738: G5-STATE",
-)
 def test_g5_state_refuses_incomplete_results(workflow):
     success = workflow._phase4_quality_assurance()
     assert (success, workflow.workflow_state["quality_checked"]) == (False, False)
+
+
+# Synthetic topology expands the open-triangle fixture above, from issue 2738.
+# Counts here describe connectivity, not engineering tolerances.
+@pytest.fixture
+def tetrahedron():
+    vertices = np.vstack((np.zeros(3), np.eye(3)))
+    faces = np.array([[0, 2, 1], [0, 1, 3], [0, 3, 2], [1, 2, 3]])
+    return vertices, faces
+
+
+@pytest.mark.parametrize("separate_vertices", [False, True])
+def test_closed_tetrahedron_topology(tmp_path, tetrahedron, separate_vertices):
+    vertices, faces = tetrahedron
+    if separate_vertices:
+        # STL represents each triangle with its own coordinate records.
+        vertices = vertices[faces].reshape(-1, 3)
+        faces = np.arange(len(vertices)).reshape(-1, 3)
+    stats = GeometryValidator(str(tmp_path))._compute_mesh_statistics(
+        "synthetic", "obj", vertices, faces
+    )
+    assert stats.is_watertight
+    assert stats.num_edges == 6  # Six distinct edges of the fixture tetrahedron.
+
+
+@pytest.mark.parametrize("defect", ["hole", "duplicate", "nonmanifold"])
+def test_topology_defects_are_not_closed(tmp_path, tetrahedron, defect):
+    vertices, faces = tetrahedron
+    if defect == "hole":
+        faces = faces[:-1]
+    elif defect == "duplicate":
+        faces = np.array([faces[0], faces[0][::-1]])
+    else:
+        # A second tetrahedron shares the base face, with a mirrored apex.
+        # Distinct triangles give excessive incidence without duplicate faces.
+        vertices = np.vstack((vertices, -vertices[-1]))
+        faces = np.vstack((faces, [[0, 1, 4], [1, 2, 4], [2, 0, 4]]))
+        edges = Counter(tuple(sorted((face[i], face[(i + 1) % 3])))
+                        for face in faces for i in range(3))
+        assert set(edges.values()) == {2, 3}
+        assert len({tuple(sorted(face)) for face in faces}) == len(faces)
+    stats = GeometryValidator(str(tmp_path))._compute_mesh_statistics(
+        "synthetic", "obj", vertices, faces
+    )
+    assert not stats.is_watertight
+
+
+@pytest.mark.parametrize("bad_faces", [[], [[0, 1]], [[0, 1, 2, 3]],
+                                       [[-1, 1, 2]], [[0, 1, 4]]])
+def test_unsupported_connectivity_rejected(tmp_path, tetrahedron, bad_faces):
+    vertices, _ = tetrahedron
+    with pytest.raises(ValueError):
+        GeometryValidator(str(tmp_path))._compute_mesh_statistics(
+            "synthetic", "obj", vertices, np.array(bad_faces)
+        )
+
+
+@pytest.mark.parametrize("parallel", [False, True])
+def test_geometry_discovery_clears_stale_results(tmp_path, parallel):
+    validator = GeometryValidator(str(tmp_path))
+    validator.results["stale"] = object()
+    with pytest.raises(FileNotFoundError):
+        validator.validate_all(parallel=parallel)
+    assert validator.results == {}
+
+
+@pytest.mark.parametrize("prior", [False, True])
+@pytest.mark.parametrize("passed", [False, True])
+def test_quality_state_matches_checks(workflow, monkeypatch, prior, passed):
+    workflow.workflow_state["quality_checked"] = prior
+    monkeypatch.setattr(workflow, "_run_quality_checks", lambda: passed)
+    assert workflow._phase4_quality_assurance() is passed
+    assert workflow.workflow_state["quality_checked"] is passed
+
+
+def test_quality_exception_clears_stale_success(workflow, monkeypatch):
+    workflow.workflow_state["quality_checked"] = True
+
+    def fail():
+        raise ValueError("synthetic invalid results")
+
+    monkeypatch.setattr(workflow, "_run_quality_checks", fail)
+    with pytest.raises(ValueError, match="synthetic invalid results"):
+        workflow._phase4_quality_assurance()
+    assert workflow.workflow_state["quality_checked"] is False
+
+
+@pytest.mark.parametrize("method", ["_check_reciprocity", "_check_energy_conservation",
+                                   "_check_asymptotes", "_generate_visualizations"])
+def test_uncomputed_checks_never_pass(workflow, method, caplog):
+    with caplog.at_level(logging.WARNING):
+        assert getattr(workflow, method)() is False
+    assert "NOT_EVALUATED" in caplog.text
+
+
+@pytest.mark.parametrize("value", [np.nan, np.inf, -np.inf])
+def test_nonfinite_geometry_rejected(tmp_path, tetrahedron, value):
+    vertices, faces = tetrahedron
+    vertices[0, 0] = value
+    with pytest.raises(ValueError, match="finite"):
+        GeometryValidator(str(tmp_path))._compute_mesh_statistics(
+            "synthetic", "obj", vertices, faces
+        )
+
+
+def test_ascii_stl_partial_triangle_rejected(tmp_path):
+    source = tmp_path / "synthetic.stl"
+    source.write_text("vertex 1 0 0\n", encoding="utf-8")
+    with pytest.raises(ValueError, match="Incomplete"):
+        GeometryValidator(str(tmp_path)).validate_file(source, "stl_ascii")
+
+
+def test_binary_stl_missing_attribute_rejected(tmp_path):
+    import struct
+
+    # Record sizes/encoding come from _validate_stl_binary's existing reader.
+    source = tmp_path / "synthetic.stl"
+    source.write_bytes(bytes(80) + struct.pack("<I", 1) + bytes(48))
+    with pytest.raises(ValueError, match="Truncated"):
+        GeometryValidator(str(tmp_path)).validate_file(source, "stl_binary")
+
+
+@pytest.mark.parametrize("parallel", [False, True])
+@pytest.mark.parametrize("fail", [False, True])
+def test_geometry_results_are_transactional(tmp_path, monkeypatch, parallel, fail):
+    module = sys.modules[GeometryValidator.__module__]
+    validator = GeometryValidator(str(tmp_path))
+    validator.results["stale"] = object()
+    calls = []
+
+    # Exercise the legacy request set without duplicating identifying filenames.
+    monkeypatch.setattr(Path, "is_file", lambda path: True)
+
+    def parse(path, kind):
+        calls.append(kind)
+        if fail and kind == "obj":
+            raise ValueError("synthetic parse failure")
+        return kind
+
+    class Future:
+        def __init__(self, function, args):
+            self.function, self.args = function, args
+
+        def result(self):
+            return self.function(*self.args)
+
+    class Pool:
+        def __init__(self, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def submit(self, function, *args):
+            return Future(function, args)
+
+    monkeypatch.setattr(validator, "validate_file", parse)
+    monkeypatch.setattr(module, "ProcessPoolExecutor", Pool)
+    monkeypatch.setattr(module, "as_completed", lambda futures: iter(futures))
+    if fail:
+        with pytest.raises(ValueError, match="synthetic parse failure"):
+            validator.validate_all(parallel=parallel)
+        assert validator.results == {}
+        assert calls == ["stl_ascii", "stl_binary", "obj"]
+    else:
+        results = validator.validate_all(parallel=parallel)
+        assert set(results.values()) == {"stl_ascii", "stl_binary", "obj"}
+        assert "stale" not in results
+
+
+@pytest.mark.parametrize("parallel", [False, True])
+def test_partial_geometry_request_refused_before_parsing(tmp_path, monkeypatch, parallel):
+    validator = GeometryValidator(str(tmp_path))
+    monkeypatch.setattr(Path, "is_file", lambda path: path.suffix == ".obj")
+    monkeypatch.setattr(validator, "validate_file",
+                        lambda *args: pytest.fail("partial request was parsed"))
+    with pytest.raises(FileNotFoundError, match="Missing requested geometry"):
+        validator.validate_all(parallel=parallel)
+    assert validator.results == {}
+
+
+def test_collinear_face_rejects_closed_connectivity(tmp_path, tetrahedron):
+    vertices, faces = tetrahedron
+    # Synthetic midpoint of the fixture's basis vectors; no physical tolerance.
+    vertices[-1] = vertices[1:3].mean(axis=0)
+    edges = Counter(tuple(sorted((face[i], face[(i + 1) % 3])))
+                    for face in faces for i in range(3))
+    assert set(edges.values()) == {2}
+    assert len(np.unique(vertices, axis=0)) == len(vertices)
+    stats = GeometryValidator(str(tmp_path))._compute_mesh_statistics(
+        "synthetic", "obj", vertices, faces
+    )
+    assert stats.min_panel_area == 0
+    assert not stats.is_watertight
+
+
+@pytest.mark.parametrize("separate_vertices", [False, True])
+def test_column_inverse_indices_preserve_topology(
+    tmp_path, tetrahedron, monkeypatch, separate_vertices
+):
+    vertices, faces = tetrahedron
+    if separate_vertices:
+        vertices = vertices[faces].reshape(-1, 3)
+        faces = np.arange(len(vertices)).reshape(-1, 3)
+    original_unique = np.unique
+
+    def column_inverse(*args, **kwargs):
+        result = original_unique(*args, **kwargs)
+        if kwargs.get("return_inverse"):
+            coordinates, inverse = result
+            return coordinates, inverse.reshape(-1, 1)
+        return result
+
+    # Reproduce the inverse-index shape returned by NumPy 2.0.0.
+    monkeypatch.setattr(np, "unique", column_inverse)
+    stats = GeometryValidator(str(tmp_path))._compute_mesh_statistics(
+        "synthetic", "obj", vertices, faces
+    )
+    assert stats.is_watertight
+    assert stats.num_edges == 6
+
+
+@pytest.mark.parametrize("parse_failure", [False, True])
+def test_pool_construction_failure_retries_sequentially(
+    tmp_path, monkeypatch, parse_failure
+):
+    module = sys.modules[GeometryValidator.__module__]
+    validator = GeometryValidator(str(tmp_path))
+    validator.results["stale"] = object()
+    monkeypatch.setattr(Path, "is_file", lambda path: True)
+
+    def unavailable_pool(**kwargs):
+        raise OSError("synthetic pool construction failure")
+
+    def parse(path, kind):
+        if parse_failure and kind == "obj":
+            raise OSError("synthetic parser failure")
+        return kind
+
+    monkeypatch.setattr(module, "ProcessPoolExecutor", unavailable_pool)
+    monkeypatch.setattr(validator, "validate_file", parse)
+    if parse_failure:
+        with pytest.raises(OSError, match="synthetic parser failure"):
+            validator.validate_all()
+        assert validator.results == {}
+    else:
+        results = validator.validate_all()
+        assert set(results.values()) == {"stl_ascii", "stl_binary", "obj"}
+        assert "stale" not in results
+
+
+@pytest.mark.parametrize("failed_submission", [1, 2, 3])
+@pytest.mark.parametrize("parse_failure", [False, True])
+def test_pool_submission_failure_retries_sequentially(
+    tmp_path, monkeypatch, failed_submission, parse_failure
+):
+    module = sys.modules[GeometryValidator.__module__]
+    validator = GeometryValidator(str(tmp_path))
+    validator.results["stale"] = object()
+    monkeypatch.setattr(Path, "is_file", lambda path: True)
+    parsed = []
+
+    def parse(path, kind):
+        parsed.append(kind)
+        if parse_failure and kind == "obj":
+            raise OSError("synthetic parser failure")
+        return kind
+
+    class Pool:
+        def __init__(self, **kwargs):
+            self.submissions = 0
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def submit(self, *args):
+            self.submissions += 1
+            if self.submissions == failed_submission:
+                raise OSError("synthetic pool startup failure")
+            return object()
+
+    monkeypatch.setattr(module, "ProcessPoolExecutor", Pool)
+    monkeypatch.setattr(validator, "validate_file", parse)
+    if parse_failure:
+        with pytest.raises(OSError, match="synthetic parser failure"):
+            validator.validate_all()
+        assert validator.results == {}
+    else:
+        results = validator.validate_all()
+        assert set(results.values()) == {"stl_ascii", "stl_binary", "obj"}
+        assert "stale" not in results
+    assert parsed == ["stl_ascii", "stl_binary", "obj"]
+
+
+def test_started_pool_worker_errors_remain_fatal(tmp_path, monkeypatch):
+    module = sys.modules[GeometryValidator.__module__]
+    validator = GeometryValidator(str(tmp_path))
+    validator.results["stale"] = object()
+    monkeypatch.setattr(Path, "is_file", lambda path: True)
+    monkeypatch.setattr(validator, "validate_file",
+                        lambda *args: pytest.fail("unexpected sequential retry"))
+
+    class Future:
+        def result(self):
+            raise OSError("synthetic worker failure")
+
+    class Pool:
+        def __init__(self, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            return False
+
+        def submit(self, *args):
+            return Future()
+
+    monkeypatch.setattr(module, "ProcessPoolExecutor", Pool)
+    monkeypatch.setattr(module, "as_completed", lambda futures: iter(futures))
+    with pytest.raises(OSError, match="synthetic .* failure"):
+        validator.validate_all()
+    assert validator.results == {}
+
+
+@pytest.mark.parametrize("start_method", multiprocessing.get_all_start_methods())
+@pytest.mark.parametrize("failed_start", [0, 2, 3])
+def test_real_pool_startup_cleanup(
+    tmp_path, requested_geometry, start_method, failed_start
+):
+    """Real worker starts must finish or be joined before sequential fallback.
+
+    The probe owns and cleans its workers even when the regression fails, and
+    runs separately so fork and spawn do not inherit the pytest process state.
+    Zero selects normal parallel completion; other cases fail a later start.
+    """
+    for name in requested_geometry:
+        (tmp_path / name).touch()
+    probe = Path(__file__).with_name("pool_startup_probe.py")
+    result = subprocess.run(
+        [sys.executable, str(probe), geometry.__file__, str(tmp_path),
+         start_method, str(failed_start)],
+        capture_output=True, text=True, timeout=30,
+    )
+    assert result.returncode == 0, result.stdout + result.stderr

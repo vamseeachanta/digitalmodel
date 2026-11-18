@@ -1,0 +1,10 @@
+{
+  "revision": 1,
+  "document": "report.html",
+  "changes": [
+    {"section": "4", "change": "Explicit caller-selected criteria and coverage definition."},
+    {"section": "6", "change": "Synthetic worked comparison with a failing coverage spread."},
+    {"section": "7", "change": "Verification checklist and outstanding native evidence."},
+    {"section": "8", "change": "Caller-attested evidence and single-patch limitations."}
+  ]
+}

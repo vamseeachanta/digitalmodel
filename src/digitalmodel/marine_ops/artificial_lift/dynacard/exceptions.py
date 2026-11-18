@@ -310,7 +310,7 @@ class DataLoadError(DynacardException):
         - Network errors when fetching remote data
 
     Example:
-        >>> raise DataLoadError("Invalid JSON in well data", source="7699227.json")
+        >>> raise DataLoadError("Invalid JSON in well data", source="field_well_echo.json")
         >>> raise DataLoadError("Missing 'surface_card' field", source="api_response")
     """
 

@@ -1,0 +1,30 @@
+CHECK trailing_whitespace_fixer exit 0
+CHECK end_of_file_fixer exit 0
+CHECK check_json exit 0
+CHECK check_yaml exit 0
+CHECK check_merge_conflict exit 0
+CHECK check_case_conflict exit 0
+CHECK check_symlinks exit 0
+CHECK check_executables_have_shebangs exit 0
+CHECK check_shebang_scripts_are_executable exit 0
+CHECK detect_private_key exit 0
+CHECK check_added_large_files exit 0
+CHECK fix_byte_order_marker exit 0
+CHECK mixed_line_ending exit 0
+CHECK mypy exit 1
+benchmarks/fe10_nafems_le1/tools/check_bdf.py:49: error: Need type annotation for "spc1" (hint: "spc1: Dict[<type>, <type>] = ...")  [var-annotated]
+benchmarks/fe10_nafems_le1/tools/check_bdf.py:71: error: Incompatible types in assignment (expression has type "str", variable has type "int")  [assignment]
+benchmarks/fe10_nafems_le1/tools/check_bdf.py:85: error: Need type annotation for "edges" (hint: "edges: Dict[<type>, <type>] = ...")  [var-annotated]
+benchmarks/fe10_nafems_le1/tools/check_bdf.py:86: error: Incompatible types in assignment (expression has type "list[int]", variable has type "int")  [assignment]
+benchmarks/fe10_nafems_le1/tools/check_bdf.py:87: error: "int" has no attribute "__iter__"; maybe "__int__"? (not iterable)  [attr-defined]
+benchmarks/fe10_nafems_le1/tools/check_bdf.py:99: error: Value of type "int" is not indexable  [index]
+benchmarks/fe10_nafems_le1/tools/check_bdf.py:134: error: Incompatible types in assignment (expression has type "float", variable has type "list[float]")  [assignment]
+benchmarks/fe10_nafems_le1/tools/check_bdf.py:137: error: Unsupported operand types for - ("float" and "list[float]")  [operator]
+benchmarks/fe10_nafems_le1/tools/build_decks.py:97: error: Need type annotation for "fx" (hint: "fx: Dict[<type>, <type>] = ...")  [var-annotated]
+benchmarks/fe10_nafems_le1/compare.py:44: error: Returning Any from function declared to return "float"  [no-any-return]
+Found 10 errors in 3 files (checked 8 source files)
+CHECK pydocstyle exit 0
+CHECK structure exit 0
+repository structure OK: 18281 paths
+CHECK windows-paths exit 0
+FAILED: ['mypy']

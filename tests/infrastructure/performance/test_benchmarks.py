@@ -9,19 +9,9 @@ import numpy as np
 import pandas as pd
 import time
 from pathlib import Path
-import sys
-import os
+import json
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
-
-try:
-    from digitalmodel.infrastructure.common.basic_statistics import *
-    from digitalmodel.infrastructure.common.fatigue_analysis import *
-    from digitalmodel.infrastructure.common.FEAComponents import *
-except ImportError:
-    # Skip if modules not available
-    pytest.skip("DigitalModel modules not available", allow_module_level=True)
+from digitalmodel.infrastructure.utils.parallel_benchmark import describe_parallel_run
 
 
 def _cpu_intensive_task(n):
@@ -221,6 +211,22 @@ class TestMemoryBenchmarks:
 class TestConcurrencyBenchmarks:
     """Benchmark concurrent operations."""
 
+    def test_parallel_processing_results(self):
+        """Independent hand sums check values and ordering, without timing.
+
+        For n=0,1,2,5,10, sum(i*i for i in range(n)) expands to:
+        empty sum=0; 0=0; 0+1=1; 0+1+4+9+16=30;
+        0+1+4+9+16+25+36+49+64+81=285.
+        The worker count matches the existing speedup benchmark configuration.
+        """
+        from concurrent.futures import ProcessPoolExecutor
+
+        tasks = [0, 1, 2, 5, 10]
+        expected = [0, 0, 1, 30, 285]
+        assert [_cpu_intensive_task(task) for task in tasks] == expected
+        with ProcessPoolExecutor(max_workers=2) as executor:
+            assert list(executor.map(_cpu_intensive_task, tasks)) == expected
+
     @pytest.mark.performance
     def test_parallel_processing_speedup(self, benchmark_runner):
         """Test that parallel processing provides expected speedup."""
@@ -244,18 +250,25 @@ class TestConcurrencyBenchmarks:
             seq_stats = benchmark_runner.run_benchmark(
                 sequential_processing, iterations=5, tasks=tasks
             )
+            seq_samples = benchmark_runner.results[-1]['times']
 
             # Benchmark parallel
             par_stats = benchmark_runner.run_benchmark(
                 parallel_processing, iterations=5, tasks=tasks
             )
+            par_samples = benchmark_runner.results[-1]['times']
 
         # Parallel should be faster (allowing for overhead)
         speedup = seq_stats['mean'] / par_stats['mean']
-        print(f"Speedup: {speedup:.2f}x")
+        observations = describe_parallel_run(seq_samples, par_samples, workers=2)
+        diagnostics = json.dumps(observations, sort_keys=True, allow_nan=False)
+        print(f"Parallel benchmark observations: {diagnostics}")
 
-        # Should see some speedup, even with overhead
-        assert speedup > 1.2, f"Insufficient parallel speedup: {speedup:.2f}x"
+        # Source: issue #2103 (2026), existing >1.2 gate. Retain this limit;
+        # this investigation does not attribute failures to CPU quota.
+        assert speedup > 1.2, (
+            f"Insufficient parallel speedup: {speedup:.2f}x; {diagnostics}"
+        )
 
 
 @pytest.mark.performance

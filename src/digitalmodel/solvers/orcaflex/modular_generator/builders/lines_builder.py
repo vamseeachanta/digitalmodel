@@ -138,6 +138,12 @@ class LinesBuilder(BaseBuilder):
             "LineType, Length, TargetSegmentLength": segment_data,
         }
 
+        if self.spec.equipment.jlay is not None:
+            # The J-lay End B seed takes the pipe empty (jlay_seed); state it
+            # rather than rely on the solver's default contents (#3978).
+            line_def["ContentsMethod"] = "Uniform"
+            line_def["ContentsDensity"] = 0
+
         # Add attachments if present
         if attachments:
             line_def["Attachments"] = attachments
@@ -183,7 +189,9 @@ class LinesBuilder(BaseBuilder):
         seabed_slope = self.spec.environment.seabed.slope
         is_s_lay = self.spec.is_s_lay()
 
-        if is_s_lay:
+        if self.spec.equipment.jlay is not None:
+            end_a, end_b = self._jlay_endpoints()
+        elif is_s_lay:
             end_a, end_b = self._slay_endpoints()
         else:
             # Floating installation (existing logic)
@@ -214,7 +222,9 @@ class LinesBuilder(BaseBuilder):
             ["Infinity", None, "Infinity"],  # End A: rigid
             ["Infinity", None, "Infinity"],  # End B: rigid
         ]
-        if is_s_lay:
+        if self.spec.equipment.jlay is not None:
+            stiffness = [[0, None], [0, None]]  # pinned hang-off and seabed end
+        elif is_s_lay:
             stiffness = [[], [0, None]]
 
         # Arclength settings (End A, End B)
@@ -269,6 +279,133 @@ class LinesBuilder(BaseBuilder):
                 ["Anchored", x - span * c, y - span * s, coated_radius, 180,
                  90 + self.spec.environment.seabed.slope, 0, None]]
 
+    def jlay_seed(self) -> dict[str, float]:
+        """Inextensible-catenary seed for a J-lay hang-off (#3978).
+
+        Pipe taken empty with its coatings; wet and dry weights apply below
+        and above the waterline. For hang-off angle phi from horizontal,
+        H = (w_wet*h_wet + w_dry*h_dry)/(sec(phi) - 1). Each uniform arc
+        obeys dT = w*dh, ds = dV/w, dx = (H/w)*d(asinh(V/H)), V**2 = T**2-H**2;
+        H and V are continuous at the waterline. End B span = x + (L - s).
+        Basis: Classical Mechanics (online edition accessed 2026-11-13),
+        section 18.3, equations 18.3.2-18.3.9; source linked in the example.
+        Returned a = H/w_wet is the submerged arc's catenary parameter.
+        Requires uniform segment coatings and a flat seabed; unused coating
+        alternatives do not contribute to weight or diameter. Heights are
+        measured from the emitted WaterSurfaceZ: the seabed lies the water
+        depth below it (OrcaFlex seabed data), so translating the sea surface
+        and the vessel together leaves the seed unchanged.
+        """
+        from digitalmodel.installation.pipelay.integrity import G_STANDARD
+        from .context import BuilderContext
+        from .environment_builder import EnvironmentBuilder
+        from .linetype_builder import LineTypeBuilder
+        from .vardata_builder import VarDataBuilder
+
+        pipe = self.spec.pipeline
+        jlay = self.spec.equipment.jlay
+        vessel = self.spec.equipment.vessel
+        if not all(math.isfinite(value) for value in (*vessel.position, *vessel.orientation)):
+            raise ValueError("J-lay seed requires finite vessel position and orientation")
+        if self.spec.environment.seabed.slope != 0:
+            raise ValueError("J-lay seed requires a flat seabed")
+
+        # Resolve the same environment, coating references and layers that are
+        # emitted by the other builders, without changing the shared context.
+        context = BuilderContext()
+        environment = EnvironmentBuilder(self.spec, context).build()["Environment"]
+        if environment.get("SeabedType", "Flat") != "Flat":
+            raise ValueError("J-lay seed requires a flat seabed (SeabedType Flat)")
+        surface = environment.get("WaterSurfaceZ", 0)
+        if (isinstance(surface, bool) or not isinstance(surface, (int, float))
+                or not math.isfinite(surface)):
+            raise ValueError(f"J-lay seed requires a finite numeric WaterSurfaceZ, got {surface!r}")
+        coating_data = VarDataBuilder(self.spec, context).build()
+        coatings = {entry["Name"]: entry["LayerThickness, LayerMaterialDensity"]
+                    for entry in coating_data["VariableData"]["Coatingsorlinings"]}
+        line_types = {entry["Name"]: entry
+                      for entry in LineTypeBuilder(self.spec, context).build()["LineTypes"]}
+        segment_layers = []
+        for segment in pipe.segments:
+            reference = line_types[segment.type]["CoatingThickness"]
+            if reference not in coatings:
+                raise ValueError(f"J-lay seed has an unresolved coating: {reference}")
+            segment_layers.append(coatings[reference])
+        layers = segment_layers[0]
+        if any(other != layers for other in segment_layers[1:]):
+            raise ValueError("J-lay seed requires uniform segment coatings")
+
+        od = pipe.dimensions.outer_diameter
+        wall = pipe.dimensions.wall_thickness
+        density = line_types[pipe.segments[0].type]["MaterialDensity"]
+        mass = density * math.pi / 4 * (od**2 - (od - 2 * wall) ** 2)
+        for thickness, coating_density in layers:
+            outer = od + 2 * thickness
+            mass += coating_density * math.pi / 4 * (outer**2 - od**2)
+            od = outer
+        weight = (mass - self.spec.environment.water.density * math.pi / 4 * od**2) * G_STANDARD
+        dry_weight = mass * G_STANDARD
+        depth = self.spec.environment.water.depth
+        # Tower top above the seabed, which lies at WaterSurfaceZ - depth.
+        height = depth + vessel.position[2] + jlay.tower_top[2] - surface
+        if (not all(math.isfinite(value) for value in (weight, dry_weight, height))
+                or min(weight, dry_weight, height) <= 0):
+            raise ValueError("J-lay seed requires finite positive weights and hang-off height")
+        phi = math.radians(90.0 - jlay.tower_angle)
+        wet_height = min(height, depth)
+        dry_height = height - wet_height
+        wet_load = weight * wet_height
+        load = wet_load + dry_weight * dry_height
+        horizontal = load / (1.0 / math.cos(phi) - 1.0)
+        if not math.isfinite(horizontal) or horizontal <= 0:
+            raise ValueError("J-lay seed requires finite positive horizontal tension")
+        a = horizontal / weight
+        wet_vertical = math.sqrt(wet_load * (2 * horizontal + wet_load))
+        top_vertical = horizontal * math.tan(phi)
+        suspended = wet_vertical / weight
+        suspended_span = a * math.asinh(wet_vertical / horizontal)
+        if dry_height > 0:
+            suspended += (top_vertical - wet_vertical) / dry_weight
+            suspended_span += horizontal / dry_weight * (
+                math.asinh(math.tan(phi)) - math.asinh(wet_vertical / horizontal)
+            )
+        length = sum(segment.length for segment in pipe.segments)
+        top_tension = horizontal + load
+        if not all(math.isfinite(value) for value in
+                   (suspended, suspended_span, length, top_tension)):
+            raise ValueError("J-lay seed requires finite catenary geometry and tensions")
+        if suspended >= length:
+            raise ValueError(
+                f"J-lay seed requires a grounded remainder: suspended length "
+                f"{suspended:.1f} m is not below the pipe length {length:.1f} m"
+            )
+        return {
+            "weight": weight, "height": height, "a": a, "suspended": suspended,
+            "suspended_span": suspended_span, "span": suspended_span + length - suspended,
+            "top_tension": top_tension, "horizontal_tension": horizontal,
+            "outer_diameter": od, "dry_weight": dry_weight,
+        }
+
+    def _jlay_endpoints(self) -> list[list]:
+        """End A pinned to the vessel at the tower top; End B on the seabed aft."""
+        vessel = self.spec.equipment.vessel
+        jlay = self.spec.equipment.jlay
+        seed = self.jlay_seed()
+        if any(vessel.orientation[:2]):
+            raise ValueError("J-lay endpoint seed requires level hull")
+        heading = math.radians(vessel.orientation[2])
+        c, s = math.cos(heading), math.sin(heading)
+        top = jlay.tower_top
+        x = vessel.position[0] + c * top[0] - s * top[1]
+        y = vessel.position[1] + s * top[0] + c * top[1]
+        span = seed["span"]
+        end_b_x, end_b_y = x - span * c, y - span * s
+        if not all(math.isfinite(value) for value in (x, y, end_b_x, end_b_y)):
+            raise ValueError("J-lay endpoint coordinates must be finite")
+        return [[vessel.name, top[0], top[1], top[2], 180, 180 - jlay.tower_angle, 0, None],
+                ["Anchored", end_b_x, end_b_y, seed["outer_diameter"] / 2, 180,
+                 90 + self.spec.environment.seabed.slope, 0, None]]
+
     def _slay_taut_span(self, height: float) -> float:
         """Close the supported arc plus weight-only suspended/grounded lengths.
 
@@ -276,13 +413,13 @@ class LinesBuilder(BaseBuilder):
         static_equilibrium_screen. The seed uses an empty uniform coated pipe.
         """
         from digitalmodel.installation.pipelay.integrity import G_STANDARD
-        from .linetype_builder import MATERIAL_PROPERTIES
+        from .linetype_builder import material_properties
 
         pipe = self.spec.pipeline
         stinger = self.spec.equipment.stinger
         od = pipe.dimensions.outer_diameter
         wall = pipe.dimensions.wall_thickness
-        density = MATERIAL_PROPERTIES.get(pipe.material, MATERIAL_PROPERTIES["X65"])["MaterialDensity"]
+        density = material_properties(pipe.material)["MaterialDensity"]
         mass = density * math.pi / 4 * (od**2 - (od - 2 * wall)**2)
         for coating in [pipe.coatings.corrosion, *pipe.coatings.weight]:
             outer = od + 2 * coating.thickness

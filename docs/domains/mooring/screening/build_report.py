@@ -259,14 +259,15 @@ def build(output_dir: Path, source: Path | None = None, website_out: Path | None
     content = sections(result, basis, revisions)
     page = report_page(content, result["revision"])
     bindings = validate_page(page, result, basis, revisions)
-    (output_dir / "report.html").write_text(page, encoding="utf-8")
+    (output_dir / "report.html").write_text(page, encoding="utf-8", newline="\n")
     readme = (RECORD / "README.template.md").read_text(encoding="utf-8")
     history = "## Revision history\n\n| Revision | Date | What changed and why |\n| --- | --- | --- |\n"
     history += "".join(f"| {r['revision']} | {r['date']} | {r['change']} |\n" for r in revisions["history"])
     readme = readme.replace("{revision_history}", history.rstrip()).replace("{revision}", result["revision"])
-    (output_dir / "README.md").write_text(readme, encoding="utf-8")
+    (output_dir / "README.md").write_text(readme, encoding="utf-8", newline="\n")
     comparison = (RECORD / "comparison.template.md").read_text(encoding="utf-8")
-    (output_dir / "comparison.md").write_text(comparison.replace("{revision_history}", history.rstrip()), encoding="utf-8")
+    (output_dir / "comparison.md").write_text(
+        comparison.replace("{revision_history}", history.rstrip()), encoding="utf-8", newline="\n")
     files = {name: {"sha256": digest(output_dir / name), "bytes": (output_dir / name).stat().st_size}
              for name in ["results.json", "report.html", "README.md", "comparison.md"]}
     manifest = {"revision": result["revision"], "criteria_revision": result["criteria_revision"],
@@ -289,18 +290,19 @@ def build(output_dir: Path, source: Path | None = None, website_out: Path | None
         validate_page(prepared, result, website_basis, revisions)
         destination = website_out / "content/demos"
         destination.mkdir(parents=True, exist_ok=True)
-        (destination / "mooring.html").write_text(prepared, encoding="utf-8")
+        (destination / "mooring.html").write_text(prepared, encoding="utf-8", newline="\n")
         bundle = destination / "mooring-screening"
         bundle.mkdir(exist_ok=True)
         for name in [*files, "manifest.json"]:
             (bundle / name).write_bytes((output_dir / name).read_bytes())
         for name in manifest["record_inputs"]:
             (bundle / name).write_bytes((RECORD / name).read_bytes())
-        (website_out / "SOURCE.txt").write_text(basis["website_commit"] + "\n", encoding="utf-8")
-        (website_out / "CHANGES.md").write_text((output_dir / "comparison.md").read_text(encoding="utf-8"), encoding="utf-8")
+        (website_out / "SOURCE.txt").write_text(basis["website_commit"] + "\n", encoding="utf-8", newline="\n")
+        (website_out / "CHANGES.md").write_text(
+            (output_dir / "comparison.md").read_text(encoding="utf-8"), encoding="utf-8", newline="\n")
         write_json(website_out / "manifest.json", {"source_commit": basis["website_commit"],
                    "source_sha256": basis["website_source_sha256"], "numeric_bindings": bindings,
-                   "files": {str(p.relative_to(website_out)): {"sha256": digest(p), "bytes": p.stat().st_size}
+                   "files": {p.relative_to(website_out).as_posix(): {"sha256": digest(p), "bytes": p.stat().st_size}
                              for p in [destination / "mooring.html", website_out / "SOURCE.txt",
                                        website_out / "CHANGES.md", *sorted(bundle.iterdir())]}})
     return manifest

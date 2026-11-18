@@ -1,0 +1,172 @@
+# Golden: clump_types and lines from MooringRouter().route() for the mooring
+# section of docs/domains/orcaflex/examples/modular/typed/mooring_with_attachments/spec.yml (#3975)
+clump_types:
+- name: Clump20te
+  properties:
+    Mass: 20.0
+    Volume: 2.548
+    Height: 1.5
+    AlignWith: Line axes
+    DragArea:
+    - 2.2
+    - null
+    - 1.7
+    Cd:
+    - 0.6444
+    - null
+    - 1.027879287
+    Ca:
+    - 1.0
+    - null
+    - 0.5
+- name: SubBuoy
+  properties:
+    Mass: 5.0
+    Volume: 25.0
+    Height: 3.6
+    AlignWith: Line axes
+    DragArea:
+    - 10.7
+    - null
+    - 6.9
+    Cd:
+    - 0.6444
+    - null
+    - 1.027879287
+    Ca:
+    - 1.0
+    - null
+    - 0.5
+lines:
+- name: Leg1
+  properties:
+    EndAConnection: Fixed
+    EndBConnection: FPSO
+    EndAX: 848.0
+    EndAY: 212.0
+    EndAZ: -200.0
+    EndBX: 40.0
+    EndBY: 10.0
+    EndBZ: -10.0
+    NumberOfSections: 3
+    LineType, Length, NumberOfSegments:
+    - - chain_76mm_R3
+      - 300.0
+      - 30
+    - - polyester_160mm
+      - 500.0
+      - 50
+    - - chain_76mm_R3
+      - 100.0
+      - 20
+    StaticsStep1: Catenary
+    AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo:
+    - - Clump20te
+      - 0
+      - 0
+      - 250.0
+      - End A
+    - - SubBuoy
+      - 0
+      - 0
+      - 300.0
+      - End A
+- name: Leg2
+  properties:
+    EndAConnection: Fixed
+    EndBConnection: FPSO
+    EndAX: -848.0
+    EndAY: 212.0
+    EndAZ: -200.0
+    EndBX: -40.0
+    EndBY: 10.0
+    EndBZ: -10.0
+    NumberOfSections: 3
+    LineType, Length, NumberOfSegments:
+    - - chain_76mm_R3
+      - 300.0
+      - 30
+    - - polyester_160mm
+      - 500.0
+      - 50
+    - - chain_76mm_R3
+      - 100.0
+      - 20
+    StaticsStep1: Catenary
+    AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo:
+    - - Clump20te
+      - 0
+      - 0
+      - 250.0
+      - End A
+    - - SubBuoy
+      - 0
+      - 0
+      - 300.0
+      - End A
+- name: Leg3
+  properties:
+    EndAConnection: Fixed
+    EndBConnection: FPSO
+    EndAX: -848.0
+    EndAY: -212.0
+    EndAZ: -200.0
+    EndBX: -40.0
+    EndBY: -10.0
+    EndBZ: -10.0
+    NumberOfSections: 3
+    LineType, Length, NumberOfSegments:
+    - - chain_76mm_R3
+      - 300.0
+      - 30
+    - - polyester_160mm
+      - 500.0
+      - 50
+    - - chain_76mm_R3
+      - 100.0
+      - 20
+    StaticsStep1: Catenary
+    AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo:
+    - - Clump20te
+      - 0
+      - 0
+      - 250.0
+      - End A
+    - - SubBuoy
+      - 0
+      - 0
+      - 300.0
+      - End A
+- name: Leg4
+  properties:
+    EndAConnection: Fixed
+    EndBConnection: FPSO
+    EndAX: 848.0
+    EndAY: -212.0
+    EndAZ: -200.0
+    EndBX: 40.0
+    EndBY: -10.0
+    EndBZ: -10.0
+    NumberOfSections: 3
+    LineType, Length, NumberOfSegments:
+    - - chain_76mm_R3
+      - 300.0
+      - 30
+    - - polyester_160mm
+      - 500.0
+      - 50
+    - - chain_76mm_R3
+      - 100.0
+      - 20
+    StaticsStep1: Catenary
+    AttachmentType, Attachmentx, Attachmenty, Attachmentz, AttachmentzRelativeTo:
+    - - Clump20te
+      - 0
+      - 0
+      - 250.0
+      - End A
+    - - SubBuoy
+      - 0
+      - 0
+      - 300.0
+      - End A

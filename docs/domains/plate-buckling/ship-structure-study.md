@@ -1,3 +1,156 @@
+# Ship structure reference and elastic buckling study
+
+The current extension supplies explicit synthetic material and corrosion inputs,
+an independently checked elastic plate reference, and saved-result lookup.
+Finite rectangular plates use integer buckling modes rather than the earlier
+constant-coefficient approximation. Every engineering minimum remaining thickness
+stays **NOT_EVALUATED**: elastic buckling alone supplies no renewal or asset FFS
+acceptance. Manufacturer data and existing numerical evidence remain unchanged.
+
+## Revision history
+
+| Revision | Date | What changed and why |
+| --- | --- | --- |
+| 1 | 2026-10-22 | Add sourced elastic references and exact saved lookup to distinguish mathematical crossings from engineering thickness requirements. Preserve earlier study evidence below. |
+
+## Current extension: three bounded slices
+
+1. **Reference inputs.**
+   `data/ship_structure_reference/elastic_reference.schema.json` requires metric
+   units, geometry basis, axes, explicit material constants and condition,
+   source relationships, editions, retrieval dates, rights and catalog identities.
+   Unknown catalog identities carry reasons. No central catalog was available
+   for this extension, so no existing source ID is inferred or replaced.
+   `elastic_reference_inputs.json` contains authored synthetic geometry and
+   material values, with equation source pointers only. These values describe
+   neither a marine steel grade nor a manufacturer supply or stock combination.
+   `data/aisc_shapes.yaml` remains the existing section database; it is not copied.
+2. **Elastic references.**
+   Full-field uniform plate thinning is computed at fixed longitudinal stress.
+   All four edges must be simply supported, with free transverse in-plane
+   expansion. Web and flange losses are separate inputs; stiffened-panel,
+   embedded local-loss, clamped, fixed-force, transverse-load and shear cases
+   return INAPPLICABLE. No local-patch support or conservatism claim is adopted.
+3. **Saved minimum-thickness view.**
+   Controls cover structure, profile, span, breadth, material, stresses, support,
+   loss model, load basis and each loss component. They retrieve only saved
+   combinations; missing combinations return UNCOMPUTED. Engineering minima
+   remain null, while a supported analytical case exposes an explicitly named
+   `elastic_reference_crossing_mm`. Its validity is limited to the ideal elastic
+   equations, without safety factors, yielding, imperfections or rule compliance.
+   No interpolation or calculation occurs in either lookup interface.
+
+## Equations and sources
+
+Sources were opened on 2026-10-22. Only authored metadata and synthetic input
+fixtures are published; source originals and extracted tables are not included.
+Class-rule editions and clause qualification remain metadata-only.
+
+- [MIT OpenCourseWare, 2.080J Structural Mechanics, Fall 2013, Lecture 4](https://ocw.mit.edu/courses/2-080j-structural-mechanics-fall-2013/resources/mit2_080jf13_lecture4/),
+  Eq. 4.60: plate rigidity `D = E t^3 / [12 (1 - nu^2)]`.
+  Eqs. 4.14 and 4.16 give positive bulk and shear moduli for `-1 < nu < 0.5`.
+- [MIT OpenCourseWare, 2.080J Structural Mechanics, Fall 2013, Lecture 11](https://ocw.mit.edu/courses/2-080j-structural-mechanics-fall-2013/resources/mit2_080jf13_lecture11/),
+  Section 11.1: free transverse expansion and uniform longitudinal compression.
+  Eqs. 11.15–11.17: `Ncr = k pi^2 D / b^2`,
+  `k = (m b/a + a/(m b))^2`, with transverse mode `n=1`.
+  The continuous minimum occurs at `m=a/b`; the exact positive integer minimum
+  is among the floor and ceiling of that ratio, bounded below by one half-wave.
+  For a square, `m=1` and `k=4`.
+- Combining these gives `sigma_cr = k pi^2 E (t/b)^2 / [12 (1 - nu^2)]`.
+  Consequently, uniform thinning retains `(t_remaining/t_initial)^2` of the
+  elastic stress capacity. At fixed imposed stress, algebraic inversion gives
+  `t_crossing = t_initial sqrt(sigma_x / sigma_cr_initial)`.
+  This is an eigenvalue crossing, with no engineering acceptance criterion.
+
+The existing square-plate kernel is reused. The earlier structural-analysis
+plate route uses `k=4` for every aspect ratio at least one; that is not the exact
+finite-rectangle expression. Its ignored boundary-condition and transverse-stress
+inputs are not used in the new reference route. Panel validation establishes
+selected intermediate quantities, not arbitrary corrosion thresholds. Existing
+panel and local-loss algorithms are read-only in this extension.
+
+## Worked synthetic example
+
+All geometry, stress and material numbers in this example are authored inputs,
+not extracted material properties or acceptance limits. Consider a square plate
+with span and breadth 100.0 mm, initial thickness 2.0 mm, fixed compression
+10.0 MPa, `E=120000.0 MPa` and `nu=0.0`. Supports and loading are as specified
+above, with zero web/flange loss, shear and transverse stress.
+
+From the cited equations, `D=10000 t^3` and `sigma_cr=4 pi^2 t^2` in MPa
+when thickness is in mm. These hand calculations supply the test expectations.
+Display values below are rounded; calculations use unrounded values.
+
+| Plate loss (mm) | Remaining thickness (mm) | Elastic critical stress (MPa) | Retained elastic capacity (%) |
+| --- | --- | --- | --- |
+| 0.0 | 2.0 | 157.9 | 100.0 |
+| 1.0 | 1.0 | 39.5 | 25.0 |
+| 1.5 | 0.5 | 9.9 | 6.2 |
+
+The algebraic elastic crossing is `sqrt(10/(4 pi^2))`, shown as 0.5 mm at
+one decimal place. Engineering minimum thickness remains NOT_EVALUATED even
+when a reference eigenvalue exceeds the imposed stress.
+For a rectangle with span 150.0 mm, breadth 100.0 mm and remaining thickness
+1.0 mm, compare `m=1` (`k=169/36`) and `m=2` (`k=625/144`). The second mode
+governs and gives 42.8 MPa. This independently checks finite-mode selection.
+Changing only the synthetic Poisson ratio to 0.3 in the square case divides the
+critical stress by 0.91, giving 43.4 MPa at remaining thickness 1.0 mm.
+
+## Reproduce and inspect saved results
+
+Set `STUDY_OUTPUT` to a new, external scratch directory. The command refuses to
+replace a nonempty output directory. It computes only the nine explicit fixture
+cases; no automatic parameter grid or solver is started.
+
+```sh
+PYTHONPATH=src uv run --no-project --with numpy --with jsonschema python \
+  scripts/studies/ship_plate_buckling.py \
+  --reference-input data/ship_structure_reference/elastic_reference_inputs.json \
+  --output "$STUDY_OUTPUT"
+```
+
+The bundle contains `reference.json`, a standalone `lookup.html`, and a manifest
+with input, result, view and algorithm digests, execution time, revision and dirty
+state. The manifest labels the bundle an execution replica; private
+`digitalmodel-data` remains the numerical evidence authority. No archival or
+publication of numerical outputs is claimed by this extension. The input fixture
+is authored synthetic data, distinct from reusable solver results.
+
+The saved view needs no service or calculation. To query JSON instead, save one
+exact `case` object from `reference.json` to `SELECTION_FILE`, then run:
+
+```sh
+PYTHONPATH=src uv run --no-project --with numpy python \
+  scripts/studies/ship_plate_buckling.py \
+  --reference-lookup "$STUDY_OUTPUT/reference.json" --selection "$SELECTION_FILE"
+```
+
+The CLI checks the saved result digest before retrieval. Numeric controls may
+use integer or floating representations; booleans and incomplete or extra
+controls never match. An unsupported saved row retains its INAPPLICABLE status.
+The standalone view displays numbers to one decimal place and clears a previous
+row when a selection has no saved match.
+
+## Qualification limits and later slices
+
+Engineering thickness requirements, renewal margins, yield/plastic corrections,
+material-temperature properties, thin-plate applicability, stiffener and girder
+interaction, imperfections, lateral pressure and current rule clauses remain
+NOT_EVALUATED. No values for these checks are inferred. A qualified panel method
+must quantify plate, web and flange thinning separately. Local loss needs an
+independently validated embedded-damage model before damage length or breadth
+can affect any engineering minimum. Manufacturer rights, discrete stock,
+delivery conditions and physical material-property evidence remain prerequisites
+for an engineering database. These later slices are outside the analytical
+reference qualification delivered here.
+
+Independent second-provider plan and artifact review could not run: no approved
+provider interface is available under the execution constraints. The analytical
+hand checks and regressions are test evidence, not second-provider approval.
+The earlier evidence below is retained as historical context.
+
+---
+
 Build on the existing structural-ffs source/domain catalogs, AISC shapes data, marine materials and plate/panel algorithms. Related #2202 and #1057; coordinated with pipe study #2287 and CP owner. User authorizes public-source research, structured database curation, ordinary calculations, independent review/tests and draft PRs; no heavy/licensed solver jobs, security/trust changes or certification.
 
 Database first: retain source URL, issuer, edition/date (explicit unknown where unpublished), retrieved date, units, material/condition, shape/dimension constraints, section-property axes/basis, existing-source IDs and readiness/rights status. Preserve existing data/aisc_shapes.yaml instead of copying it. Distinguish manufacturer supply ranges from discrete stock availability and project geometry. Class standards remain metadata-only, no licensed originals or tables copied.

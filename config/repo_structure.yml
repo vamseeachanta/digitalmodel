@@ -39,6 +39,7 @@ root_allowlist:
     - .planning
     - assets
     - atlases
+    - benchmarks
     - config
     - data
     - docs

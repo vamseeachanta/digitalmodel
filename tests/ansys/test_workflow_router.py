@@ -75,3 +75,65 @@ def test_silent_dry_run_fallback_raises(tmp_path: Path):
     ):
         with pytest.raises(RuntimeError, match="fell back to dry-run"):
             AnsysWorkflow().router(_cfg(tmp_path, dry_run=False))
+
+
+def test_workflow_forwards_explicit_distributed_mode(tmp_path):
+    """Distributed execution is opt-in through the workflow as well as Python."""
+    cfg = _cfg(tmp_path, dry_run=False)
+    cfg["ansys"]["extra_args"] = ["-dis"]
+    with patch(
+        "digitalmodel.ansys.runner.run_ansys",
+        return_value=_fake_result(ANSYSRunStatus.COMPLETED, tmp_path),
+    ) as launch:
+        AnsysWorkflow().router(cfg)
+    assert launch.call_args.kwargs["extra_args"] == ["-dis"]
+
+
+@pytest.mark.parametrize("unreadable", [None, "stdout", "stderr"])
+def test_workflow_cleanup_token_allows_settlement_retry(tmp_path, monkeypatch, unreadable):
+    """The real workflow exposes the retained handle before reporting failure."""
+    import subprocess
+
+    from digitalmodel.ansys import runner_process as module
+    from digitalmodel.ansys.runner import ANSYSRunner
+
+    cfg = _cfg(tmp_path, dry_run=False)
+    broken, retained, closed, streams = [True], {}, [], {}
+    read = module._read
+
+    class Supervisor:
+        def start(self, argv, cwd, stdout, stderr):
+            streams.update(stdout=stdout, stderr=stderr)
+
+        def wait(self, timeout):
+            raise subprocess.TimeoutExpired("synthetic", timeout)
+
+        def terminate(self):
+            if broken[0]:
+                raise OSError("synthetic cleanup failure")
+
+        def active(self):
+            return 0
+
+        def close(self):
+            closed.append(True)
+
+    def read_capture(stream):
+        if unreadable and stream is streams[unreadable]:
+            raise OSError("synthetic read failure")
+        return read(stream)
+
+    monkeypatch.setattr(ANSYSRunner, "_detect_executable", lambda self: Path("synthetic"))
+    monkeypatch.setattr(module, "_read", read_capture)
+    monkeypatch.setattr(module, "supervisor_factory", Supervisor)
+    monkeypatch.setattr(module, "_UNSETTLED", retained)
+    with pytest.raises(RuntimeError, match="timeout.*synthetic cleanup failure"):
+        AnsysWorkflow().router(cfg)
+    assert cfg["ansys"]["run_status"] == "failed"
+    token = cfg["ansys"]["outputs"]["retained_supervisor_token"]
+    assert token in retained
+    assert module.settle_retained(token)["retained_supervisor_token"] == token
+    broken[0] = False
+    assert module.settle_retained(token) == {"error": None, "retained_supervisor_token": None}
+    assert not retained
+    assert closed == [True]

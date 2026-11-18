@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- ansys: scalar PRNSOL parsing now requires the requested component in the
+  NODE header instead of falling back to the last column. The default `SEQV`
+  raises `ValueError` for `PRNSOL,S,COMP` listings without that column; callers
+  must request a listed component, for example `component="SX"`. Recognized
+  page banners require a fresh NODE header; integral NumPy node IDs are accepted
+  in independently supplied coverage manifests.
+  Complete MAPDL and older ANSYS page headers, including numeric VERSION lines,
+  are accepted. Element nodal listing banners and element markers are rejected.
+  Captured result identity is exposed in DataFrame attributes; missing fields
+  remain unverified. Non-row page preambles are accepted, while differing
+  explicit load steps, substeps or times are rejected. Native full-precision
+  E24.16 stress fields are supported even when adjacent negative values have
+  no separating space.
+
 - Correct PIANC depth bands to 3.0/1.5/1.2; h/T=1.8 is medium-deep and
   h/T=1.4 is shallow. Document exact boundaries and uncited x1.2/x1.5 bank
   multipliers. Turning estimates and IMO turning checks refuse supplied h/T
@@ -32,6 +46,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - cathodic_protection: terminal `DNV_RP_F103_anode_bank` route calculates pipeline-plus-structure demand, grouped stand-off-anode resistance, conservative F103 terminal attenuation, protected length, far-end potential and governing PASS/FAIL status.
 
 ### Changed
+
+- dynacard: the deprecated `calculate_card_perimeter` and
+  `estimate_neutral_point` helpers now return `None` instead of a `float`.
+  Callers must handle unavailable results before arithmetic. For perimeter,
+  use `calculate_card_geometry` result fields `position_path_length` (inches),
+  `load_path_length` (pounds), or `normalized_perimeter` (dimensionless).
+  For compression screening, use `calculate_rod_buckling` result fields
+  `max_compressive_load`, `neutral_point_depth`, and `neutral_point_fraction`;
+  the depth fields remain `None` for card-based analysis. Determining depth
+  requires a separate depth-resolved axial load profile; there is no numeric
+  depth replacement derived from surface extrema.
 
 - catenary: five shadow solver files and two broken-path test files that never ran were deleted (2,423 lines removed across `095ac032` and `cec18733`); both `marine_ops.marine_engineering` re-export sites now import from canonical `marine_ops.marine_analysis.catenary`. The divergent variants that returned different tensions for the same inputs are no longer importable from the package. `orcaflex/mooring_design.py::solve_catenary` remains a separate one-dimensional design helper per the audit decision recorded on [#1811](https://github.com/vamseeachanta/digitalmodel/issues/1811).
 - cathodic_protection: `DNV_RP_B401_offshore` now accepts a mutually exclusive `inputs.components[]` extension for hybrid and free-standing risers, with component-local zones, coatings, environment and life; explicit electrical continuity and family allocations; stand-off, flush and bracelet anodes; and component, family and overall demand/mass/count/output checks and reports ([#2261](https://github.com/vamseeachanta/digitalmodel/issues/2261)).

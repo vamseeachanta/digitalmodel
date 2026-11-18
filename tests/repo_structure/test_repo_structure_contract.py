@@ -5,6 +5,7 @@
 
 import copy
 import importlib.util
+import os
 import shlex
 import subprocess
 import sys
@@ -15,6 +16,11 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
 SCRIPT = ROOT / "scripts/maintenance/verify_repo_structure.py"
+
+
+def git_environment():
+    return {key: value for key, value in os.environ.items()
+            if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}}
 
 
 def checker():
@@ -35,7 +41,8 @@ def test_repo_structure_config_loads():
 
 def test_current_control_files_and_checker_artifacts_pass():
     paths = subprocess.check_output(
-        ["git", "ls-tree", "-r", "--name-only", "HEAD"], cwd=ROOT, text=True
+        ["git", "ls-tree", "-r", "--name-only", "HEAD"],
+        cwd=ROOT, env=git_environment(), text=True,
     ).splitlines()
     paths += [
         "docs/standards/repo-structure.md", "config/repo_structure.yml",
@@ -107,14 +114,15 @@ def test_current_inventory_has_no_generated_exception_to_grandfather():
 
 
 def test_cli_clean_and_violation(tmp_path):
-    subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
+    env = git_environment()
+    subprocess.run(["git", "init", "-q", str(tmp_path)], env=env, check=True)
     (tmp_path / "README.md").write_text("fixture\n")
     command = [sys.executable, str(SCRIPT), "--repo", str(tmp_path),
                "--config", str(ROOT / "config/repo_structure.yml")]
-    clean = subprocess.run(command, capture_output=True, text=True)
+    clean = subprocess.run(command, env=env, capture_output=True, text=True)
     assert clean.returncode == 0, clean.stdout + clean.stderr
     (tmp_path / "unexpected.py").write_text("pass\n")
-    bad = subprocess.run(command, capture_output=True, text=True)
+    bad = subprocess.run(command, env=env, capture_output=True, text=True)
     assert bad.returncode == 1
     assert "unexpected.py: root-allowlist" in bad.stdout
 
@@ -133,3 +141,128 @@ def test_structure_tests_run_in_contracts_domain():
                      if root in row.get("test_roots", [])
                      or root in shlex.split(row.get("command", ""))]
     assert registrations == ["tests-contracts"]
+
+
+@pytest.mark.parametrize("version", [True, 1.0, "1", None])
+def test_schema_version_requires_an_integer(version):
+    rules = config()
+    rules["version"] = version
+    assert checker().validate_config(rules) == ["config: schema-version"]
+
+
+@pytest.mark.parametrize("value", [[{}], [[]], [None], ["maintainer", "maintainer"]])
+def test_required_metadata_is_a_unique_list_of_field_names(value):
+    rules = config()
+    rules["required_metadata_for_exceptions"] = value
+    assert checker().validate_config(rules) == ["config: exception-required-fields"]
+
+
+def test_required_metadata_cannot_repeat_an_otherwise_complete_field():
+    rules = config()
+    rules["required_metadata_for_exceptions"].append("maintainer")
+    assert checker().validate_config(rules) == ["config: exception-required-fields"]
+
+
+@pytest.mark.parametrize("value", ["none", "N/A", "not applicable", "-", "?"])
+@pytest.mark.parametrize("field", ["maintainer", "reason"])
+def test_exception_metadata_rejects_empty_meaning(field, value):
+    rules = config()
+    row = exception()
+    row[field] = value
+    rules["durable_exceptions"] = [row]
+    assert f"exception[1]: {field}" in checker().validate_config(rules)
+
+
+def test_permanent_justification_length_excludes_padding():
+    rules = config()
+    row = exception()
+    row["category"] = "permanent_durable_generated_evidence"
+    row["follow_up_issue_or_permanent_justification"] = "permanent: fixture" + " " * 80
+    rules["durable_exceptions"] = [row]
+    assert "exception[1]: permanent-justification" in checker().validate_config(rules)
+
+
+@pytest.mark.parametrize("path", ["C:/escape", "src/", "src/file\nname.py", "src/file\x00.py"])
+def test_paths_are_normalized_and_portable(path):
+    assert checker().check_paths([path], config()) == ["<invalid-path>: relative-path"]
+
+
+@pytest.mark.parametrize("case", ["top-level", "nested", "merged", "unhashable"])
+def test_cli_rejects_duplicate_yaml_keys(tmp_path, case):
+    """A second key must not replace either a rule list or a nested allowlist."""
+    env = git_environment()
+    subprocess.run(["git", "init", "-q", str(tmp_path)], env=env, check=True)
+    contract = tmp_path / "contract.yml"
+    text = yaml.safe_dump(config())
+    if case == "top-level":
+        text += "\ngenerated_patterns: []\n"
+    elif case == "nested":
+        text = text.replace("root_allowlist:\n", "root_allowlist:\n  files: []\n")
+    elif case == "merged":
+        text = text.replace("root_allowlist:\n", "root_allowlist:\n  <<: {files: []}\n")
+    else:
+        text += "\n? [invalid]\n: value\n"
+    contract.write_text(text)
+    result = subprocess.run(
+        [sys.executable, str(SCRIPT), "--repo", str(tmp_path), "--config", str(contract)],
+        env=env, capture_output=True, text=True,
+    )
+    assert result.returncode == 2
+    assert result.stderr == "structure: cannot read repository paths or contract\n"
+    assert "Traceback" not in result.stderr
+
+
+@pytest.mark.parametrize("case", [
+    "top-level", "nested", "merged", "unhashable", "clean-and-violation",
+])
+def test_cli_fixtures_preserve_caller_repository(tmp_path, monkeypatch, case):
+    """Inherited Git bindings must not redirect fixture commands to a caller."""
+    env = {key: value for key, value in os.environ.items()
+           if key not in {"GIT_DIR", "GIT_WORK_TREE", "GIT_COMMON_DIR", "GIT_INDEX_FILE"}}
+    caller = tmp_path / "caller"
+    subprocess.run(["git", "init", "-q", str(caller)], env=env, check=True)
+    subprocess.run(["git", "config", "core.filemode", "false"],
+                   cwd=caller, env=env, check=True)
+    (caller / "README.md").write_text("caller file must remain unchanged\n")
+    subprocess.run(["git", "read-tree", "--empty"], cwd=caller, env=env, check=True)
+
+    def snapshot():
+        return {path.relative_to(caller): path.read_bytes() if path.is_file() else None
+                for path in caller.rglob("*")}
+
+    before = snapshot()
+    for key, path in {
+        "GIT_DIR": caller / ".git",
+        "GIT_WORK_TREE": caller,
+        "GIT_COMMON_DIR": caller / ".git",
+        "GIT_INDEX_FILE": caller / ".git/index",
+    }.items():
+        monkeypatch.setenv(key, str(path))
+    fixture = tmp_path / "fixture"
+    fixture.mkdir()
+    try:
+        if case == "clean-and-violation":
+            test_cli_clean_and_violation(fixture)
+        else:
+            test_cli_rejects_duplicate_yaml_keys(fixture, case)
+    finally:
+        assert snapshot() == before, "fixture commands changed the caller repository"
+    assert (fixture / ".git").is_dir()
+
+
+def test_worked_path_classification_example():
+    """Hand evaluation of the approved plan's Classification Rules (2026-05-07).
+
+    README.md is root-allowlisted; the maintenance script is under scripts/.
+    coverage.xml is generated and absent from the root allowlist: two rules.
+    src/tests/example.py matches src/**/tests/**, including zero intervening
+    directories: one rule. Thus four inputs produce exactly three violations.
+    The expected list is derived here by rule membership, without the checker.
+    """
+    paths = ["README.md", "scripts/maintenance/example.py", "coverage.xml",
+             "src/tests/example.py"]
+    assert checker().check_paths(paths, config()) == [
+        "coverage.xml: generated-tracked-path",
+        "coverage.xml: root-allowlist",
+        "src/tests/example.py: forbidden-path",
+    ]

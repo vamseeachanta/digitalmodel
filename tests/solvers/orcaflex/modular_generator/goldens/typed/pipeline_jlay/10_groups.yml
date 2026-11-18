@@ -1,0 +1,6 @@
+Groups:
+  Structure:
+    Pipeline: Model
+    LayVessel: Model
+  State:
+    Collapsed: []

@@ -9,6 +9,7 @@ Heuristics:
 from __future__ import annotations
 
 import re
+from copy import deepcopy
 from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
@@ -423,12 +424,28 @@ def detect_model_type(spec: dict) -> DetectionResult:
 def upgrade_spec(spec: dict, target_type: DetectedModelType) -> dict:
     """Rewrite a generic spec to use domain-specific sections.
 
-    Not implemented in v1 -- detection only.
+    Riser conversion supports one line and one vessel with scalar line-type
+    properties. Native table layouts and unmapped values remain in ``generic``
+    for lossless offline generation. The input and all its nested values are
+    left unchanged. Other model types remain unsupported.
     """
-    raise NotImplementedError(
-        "upgrade_spec is planned for v2. "
-        "Use detect_model_type() for detection only."
-    )
+    if target_type != DetectedModelType.RISER:
+        raise NotImplementedError(
+            "upgrade_spec for this model type is planned for v2. "
+            "Use detect_model_type() for detection only."
+        )
+    if any(spec.get(key) is not None for key in ("riser", "mooring", "pipeline")):
+        raise ValueError("Expected a generic input without a typed domain section")
+
+    from .modular_generator.riser_conversion import extract_riser
+
+    upgraded = deepcopy(spec)
+    generic = upgraded.get("generic")
+    if not isinstance(generic, dict):
+        raise ValueError("Riser conversion requires a generic section")
+    riser = extract_riser(generic)
+    upgraded["riser"] = riser.model_dump(mode="json", exclude_unset=True)
+    return upgraded
 
 
 # ---------------------------------------------------------------------------

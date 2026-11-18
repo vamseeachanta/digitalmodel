@@ -26,6 +26,7 @@ from typing import Any, Iterator, Mapping
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from markupsafe import Markup
 
+from digitalmodel._output_paths import validate_output_paths
 from digitalmodel.reporting.calc_report import _DEFAULT_TEMPLATE, _template_parts
 from digitalmodel.reporting.figures import inline_plotlyjs, plotly_div
 from digitalmodel.reporting.pdf import PdfMode, PdfStatus, render_pdf
@@ -205,7 +206,8 @@ def _environment() -> Environment:
 
 
 def render_html(spec: ReportSpec, *, pdf_status: str = PDF_STATUS_PLACEHOLDER,
-                assessment_presentation: bool = False) -> str:
+                assessment_presentation: bool = False,
+                public_presentation: bool = False) -> str:
     """Render the spec to a self-contained HTML document.
 
     Raises :class:`~digitalmodel.reporting.provenance.ProvenanceError` when the
@@ -215,6 +217,8 @@ def render_html(spec: ReportSpec, *, pdf_status: str = PDF_STATUS_PLACEHOLDER,
     spec.provenance.require()
     house_css, _script = _template_parts(_DEFAULT_TEMPLATE)
     template_name = "verification_report.html.j2" if spec.verification_presentation else TEMPLATE_NAME
+    if public_presentation:
+        template_name = "public_report.html.j2"
     if assessment_presentation:
         template_name = "assessment_report.html.j2"
     template = _environment().get_template(template_name)
@@ -251,6 +255,8 @@ def write_report(
     out_dir: Path | str,
     stem: str,
     pdf: PdfMode = "auto",
+    *,
+    public_presentation: bool = False,
 ) -> ReportArtifacts:
     """Write report artifacts and their manifest under the output directory.
 
@@ -259,15 +265,25 @@ def write_report(
     The manifest lists artifact names (pack-relative, portable), the
     standards, the citation count and the PDF status; keys are sorted and no
     timestamp is generated.
+
+    Aliased output destinations raise ``ValueError`` before rendering or writing.
+    A disabled PDF is excluded from destination validation.
     """
     out_dir = Path(out_dir)
-    out_dir.mkdir(parents=True, exist_ok=True)
     html_path = out_dir / f"{stem}.html"
     pdf_path = out_dir / f"{stem}.pdf"
     citations_path = out_dir / f"{stem}_citations.json"
     manifest_path = out_dir / f"{stem}_manifest.json"
+    destinations = [html_path, citations_path, manifest_path]
+    if pdf != "off":
+        destinations.append(pdf_path)
+    validate_output_paths(*destinations)
+    out_dir.mkdir(parents=True, exist_ok=True)
 
-    html_path.write_text(render_html(spec), encoding="utf-8", newline="\n")
+    html_path.write_text(
+        render_html(spec, public_presentation=public_presentation),
+        encoding="utf-8", newline="\n",
+    )
     status = render_pdf(html_path, pdf_path, pdf)
     _write_json(citations_path, {"citations": spec.citations})
 

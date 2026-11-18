@@ -4,6 +4,7 @@
 import hashlib
 import importlib.util
 import os
+import stat
 from pathlib import Path
 import subprocess
 import sys
@@ -235,3 +236,100 @@ def test_bare_store_marker_skip_reason(tmp_path, monkeypatch):
     )
     assert result.returncode == 0, result.stdout + result.stderr
     assert "store_data: <id> not available (store not reachable); run scripts/data/fetch.py <id>" in result.stdout
+
+
+@pytest.mark.parametrize("path", [
+    ".git", ".git/config", ".git/hooks/pre-commit", "nested/.git/objects/blob",
+    ".GIT/HEAD", "nested/.Git/config", ".git./config", ".git /config",
+])
+def test_git_metadata_destinations_rejected(fetch_module, store_case, path):
+    """Git repository-layout: .git is metadata, including a worktree gitfile.
+
+    Each literal path contains a metadata component; rejection is expected
+    before retrieval, with sentinel bytes preserved and no added paths.
+    Source: https://git-scm.com/docs/gitrepository-layout (Git 2.51.1).
+    Case and trailing-dot/space variants are rejected for portable manifests.
+    """
+    root, _, _, _ = store_case
+    (root / ".git").write_bytes(b"gitdir: preserved metadata")
+    manifest = root / "data/MANIFEST.tsv"
+    manifest.write_text(manifest.read_text().replace("data/sample.dat", path))
+    before = {p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()}
+    with pytest.raises(ValueError, match="Git metadata"):
+        fetch_module.read_manifest(root)
+    row = dict(path=path)
+    with pytest.raises(ValueError, match="Git metadata"):
+        fetch_module.fetch_row(root, row)
+    after = {p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()}
+    assert after == before
+
+
+@pytest.mark.parametrize("path", ["../escape.dat", "/escape.dat", "data/../escape.dat"])
+def test_direct_fetch_rejects_invalid_paths(fetch_module, store_case, path):
+    """Relative path containment is required even when bypassing the TSV reader."""
+    root, _, _, _ = store_case
+    with pytest.raises(ValueError, match="manifest path"):
+        fetch_module.destination(root, {"path": path})
+
+
+@pytest.mark.skipif(os.name != "posix", reason="POSIX umask and permission semantics")
+@pytest.mark.parametrize("mask", [
+    stat.S_IRWXG | stat.S_IRWXO,
+    stat.S_IRUSR | stat.S_IRWXG | stat.S_IRWXO,
+])
+def test_restrictive_creation_mask(fetch_module, store_case, mask):
+    """Python 3.11 stat/os docs define permission flags and umask bit removal.
+
+    Hand calculation: the first mask removes all group/other access; the
+    second also removes creator read access. Restoration must ensure creator
+    read/write, while preserving the group/other restrictions and no execution.
+    Source: https://docs.python.org/3.11/library/stat.html#stat.S_IRUSR
+    Source: https://docs.python.org/3.11/library/os.html#os.umask
+    """
+    root, _, store_id, payload = store_case
+    old_mask = os.umask(mask)
+    try:
+        assert fetch_module.main([store_id], repo_root=root) == 0
+    finally:
+        os.umask(old_mask)
+    target = root / "data/sample.dat"
+    assert target.read_bytes() == payload
+    assert stat.S_IMODE(target.stat().st_mode) == stat.S_IRUSR | stat.S_IWUSR
+
+
+@pytest.mark.parametrize("path", [".gitignore", ".github/workflows/job.yml", "data/git.dat"])
+def test_ordinary_payload_names_remain_allowed(fetch_module, store_case, path):
+    """Only metadata components are reserved; unrelated Git-like names restore."""
+    root, _, store_id, payload = store_case
+    manifest = root / "data/MANIFEST.tsv"
+    manifest.write_text(manifest.read_text().replace("data/sample.dat", path))
+    assert fetch_module.main([store_id], repo_root=root) == 0
+    assert (root / path).read_bytes() == payload
+
+@pytest.mark.parametrize("path", [
+    "GIT~1/config", "git~1./hooks/pre-commit", "nested/Git~1 /HEAD",
+] + [
+    f"nested/.g{chr(codepoint)}it/config"
+    for codepoint in (*range(0x200C, 0x2010), *range(0x202A, 0x202F),
+                      *range(0x206A, 0x2070), 0xFEFF)
+])
+def test_git_metadata_aliases_rejected_before_io(fetch_module, monkeypatch, path):
+    """Portable aliases must fail at both entry points before any filesystem IO."""
+    def unexpected_io(*args, **kwargs):
+        pytest.fail("Metadata alias reached filesystem or blob retrieval")
+
+    monkeypatch.setattr(fetch_module, "stage_blob", unexpected_io)
+    monkeypatch.setattr(Path, "is_symlink", unexpected_io)
+    with pytest.raises(ValueError, match="Git metadata"):
+        fetch_module.manifest_path(path)
+    with pytest.raises(ValueError, match="Git metadata"):
+        fetch_module.fetch_row(Path("repo"), {"path": path})
+
+
+@pytest.mark.parametrize("path", [
+    ".gitignore", ".github/workflows/job.yml", "data/git.dat",
+    "data/git~10.dat", "data/.git-backup/config", "data/caf\u00e9.dat",
+])
+def test_nonmetadata_names_remain_unchanged(fetch_module, path):
+    """Alias comparison must not rewrite or broadly reject payload names."""
+    assert str(fetch_module.manifest_path(path)) == path

@@ -21,9 +21,14 @@ The load-bearing tests in this file are:
 from __future__ import annotations
 
 import math
+from dataclasses import replace
 
 import pytest
 
+from digitalmodel.solvers.openfoam.near_wall_acceptance import (
+    NearWallCriteria,
+    WallMeasurement,
+)
 from digitalmodel.solvers.openfoam.validation.referent_free_resistance import (
     AVERAGING_WINDOW_MIN_SAMPLES,
     FORM_FACTOR_BAND,
@@ -48,6 +53,11 @@ from digitalmodel.solvers.openfoam.validation.referent_free_resistance import (
 #  (a real Reynolds number and a real speed are needed for ITTC-57 to mean
 #  anything) but NO published coefficient is used anywhere in this file.
 # --------------------------------------------------------------------------- #
+
+# Synthetic acceptance inputs, not recommended engineering limits.
+WALL_CRITERIA = NearWallCriteria(50, 0.2, 0.9, 0.05, "synthetic test basis")
+WALL_MEASUREMENT = WallMeasurement(40, 60, 9, 10, "hull", "synthetic measurement")
+
 
 MESH_DERIVED_AREA = NormalisationArea(
     value_m2=9.5609,
@@ -492,8 +502,12 @@ def test_the_module_does_not_import_holtrop_mennen() -> None:
     assert "from digitalmodel.naval_architecture.holtrop_mennen" not in src
 
 
-def test_reported_result_carries_a_band_that_names_itself_numerical_only(
-    tmp_path,
+@pytest.mark.parametrize("wall_state", [
+    "missing", "missing_primary", "missing_companion",
+    "failing_primary", "failing_companion", "passing",
+])
+def test_reported_band_requires_passing_wall_evidence(
+    tmp_path, wall_state,
 ) -> None:
     config = _config(averaging_window=4000)
     times = list(range(1000, 25001, 100))  # 40 samples inside the window
@@ -501,13 +515,37 @@ def test_reported_result_carries_a_band_that_names_itself_numerical_only(
                          cv=2.6e-3, config=config, times=times)
     coarse = _write_force_dat(tmp_path / "coarse.dat", ct=3.42e-3, cp=7.4e-4,
                               cv=2.68e-3, config=config, times=times)
+    measurements = {"primary": WALL_MEASUREMENT, "companion_0": WALL_MEASUREMENT}
+    if wall_state == "missing":
+        measurements = {}
+    elif wall_state.startswith("missing_"):
+        measurements.pop("primary" if wall_state == "missing_primary" else "companion_0")
+    elif wall_state.startswith("failing_"):
+        key = "primary" if wall_state == "failing_primary" else "companion_0"
+        measurements[key] = replace(WALL_MEASUREMENT, y_plus_max=600)
     manifest = evaluate_referent_free_run(
         f, config, mesh_cells=1_500_000,
         companions=[(coarse, 546_978)],
+        near_wall_criteria=WALL_CRITERIA,
+        near_wall_measurements=measurements,
     )
+    diagnostic_band = manifest["uncertainty"]["u_sn"]
+    assert diagnostic_band is not None and diagnostic_band > 0
+    admissible = wall_state == "passing"
+    assert manifest["admissibility"]["admissible"] is admissible
+    expected_status = (
+        "PASS" if admissible else "FAIL" if wall_state.startswith("failing_")
+        else "NOT_EVALUATED"
+    )
+    assert manifest["near_wall"]["status"] == expected_status
     reported = manifest["reported_result"]
     assert reported["ct"] == pytest.approx(3.3e-3, rel=1e-6)
-    assert reported["plus_minus"] is not None
+    if admissible:
+        assert reported["plus_minus"] == diagnostic_band
+    else:
+        assert reported["plus_minus"] is None
+        assert "No band may be quoted" in reported["statement"]
+        assert any("near-wall" in reason for reason in manifest["admissibility"]["reasons"])
     statement = reported["statement"].lower()
     assert "numerical" in statement
     assert "not" in statement and "valid" in statement
@@ -606,9 +644,14 @@ def test_kcs_path_still_gates_against_its_referent(tmp_path) -> None:
     path = tmp_path / "kcs_force.dat"
     path.write_text("\n".join(lines) + "\n")
 
-    manifest = evaluate_ship_resistance_run(path, kcs)
+    manifest = evaluate_ship_resistance_run(
+        path, kcs, near_wall_criteria=WALL_CRITERIA,
+        near_wall_measurements={"primary": WALL_MEASUREMENT},
+    )
     assert manifest["all_passed"] is True
-    assert set(manifest["summary"]) == {"V1", "V2a", "V2b"}
+    assert manifest["summary"] == {
+        "V1": True, "V2a": True, "V2b": True, "near_wall": True,
+    }
 
 
 def test_kcs_normalisation_guard_still_refuses_the_mesh_derived_area() -> None:

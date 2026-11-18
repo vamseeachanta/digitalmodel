@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OrcaFlex resource declaration audit</title>
+<style>
+body { max-width: 65rem; margin: 2rem auto; padding: 0 1rem; font: 1rem/1.6 system-ui; color: #172b3a; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #aab8c0; padding: .5rem; text-align: left; }
+pre { padding: 1rem; background: #eef3f6; overflow-x: auto; }
+code { font-size: .95em; }
+</style>
+<main>
+<h1>OrcaFlex resource declaration audit</h1>
+<h2>Summary</h2>
+<p>The source inventory identifies native-model constructor candidates and worker-pool declarations
+without importing the inspected modules. No runtime budget is established. The governing finding
+is that a pool's worker count alone cannot establish native thread demand: the vendor documents
+processing-core defaults when <code>threadCount</code> is omitted.</p>
+<h2>Revision history</h2>
+<table>
+<thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-10-19</td><td>Initial source audit and explicit resource accounting,
+to distinguish worker declarations from native solver threads.</td></tr></tbody>
+</table>
+<p>Table 1. Revision history.</p>
+
+<h2>Scope and basis</h2>
+<p>Scope is <code>src/digitalmodel/solvers/orcaflex</code> and
+<code>src/digitalmodel/workflows</code>, inspected separately at base revision
+<code>6476218e8f5af3fa7d16c3dafc60b6a9084c6e6c</code> plus the accompanying audit module.
+Tests, examples outside these directories, scripts and other solver packages are outside this inventory.
+The JSON output enumerates every successfully parsed Python source file, its SHA-256 digest,
+skipped symbolic links and errors. Coverage is established only for the enumerated files.</p>
+<p>The source for constructor argument order, default processing-core behavior and handle reuse is
+<a href="https://www.orcina.com/webhelp/OrcFxAPI/Content/html/Pythonreference%2CModel.htm">Orcina,
+OrcFxAPI Python reference: Model</a>, Construction and threadCount, online edition retrieved
+2026-10-19. No release number is stated on that page. The source for executor worker arguments is
+<a href="https://docs.python.org/3.11/library/concurrent.futures.html">Python 3.11 documentation:
+concurrent.futures</a>, Executor Objects, ThreadPoolExecutor and ProcessPoolExecutor, retrieved 2026-10-19.</p>
+
+<h2>Inventory findings</h2>
+<table>
+<thead><tr><th>Source scope</th><th>Python files parsed</th><th>Model-call candidates</th><th>Pool candidates</th><th>Parse/read errors</th></tr></thead>
+<tbody>
+<tr><td>OrcaFlex package</td><td>298</td><td>48</td><td>27</td><td>0</td></tr>
+<tr><td>Workflows</td><td>147</td><td>12</td><td>14</td><td>0</td></tr>
+</tbody>
+</table>
+<p>Table 2. Source observations at the stated revision and audit-module addition; counts are not runtime concurrency.</p>
+<p>Across these roots, 46 model-call candidates declare no explicit thread count, 13 declare a positive
+integer literal, and one has unresolved expanded arguments. All inventory budgets are
+<code>NOT_EVALUATED</code>. These are syntactic categories: a candidate is not proof of an OrcFxAPI binding.</p>
+<p>Both optimized parallel analysis implementations construct models with omitted native thread arguments
+and declare separate executor pools. The regular parallel-analysis leaf instead forwards conditional
+expanded arguments; that call remains unresolved by static inspection. The batch workflow supplies
+a thread setting to that leaf. These observations do not establish runtime readback or total CPU use.</p>
+
+<h2>Reproduction</h2>
+<pre><code>PYTHONPATH=src python -m digitalmodel.solvers.orcaflex.resource_audit src/digitalmodel/solvers/orcaflex
+PYTHONPATH=src python -m digitalmodel.solvers.orcaflex.resource_audit src/digitalmodel/workflows</code></pre>
+<p>Each command emits JSON to standard output and exits nonzero on parse/read errors. The normal package
+dependencies are required when using module execution. The same file also supports direct Python
+execution without importing the package initializer.</p>
+
+<h2>Explicit resource accounting</h2>
+<p><code>evaluate_budget(workers, threads_per_model, cpu_budget)</code> evaluates a homogeneous configuration
+with explicitly supplied positive integer counts. Missing inputs give <code>NOT_EVALUATED</code>.
+No processing-core count, reserve fraction or licence limit is inferred.</p>
+<pre><code>requested_threads = workers × threads_per_model
+WITHIN_BUDGET if requested_threads ≤ cpu_budget
+EXCEEDS_BUDGET otherwise</code></pre>
+<p>This is an exact accounting identity, obtained by summing the same configured thread count for each worker;
+it is not an empirical engineering formula or performance model. An independent test example enumerates
+four workers reserving three threads each as [3, 3, 3, 3], summing to twelve against eight supplied CPU slots.
+The CPU-slot count is a synthetic test input, not an acceptance limit for a real installation.</p>
+
+<h2>Interpretation and limits</h2>
+<ul>
+<li><code>scope_operations</code> reports recognized method names in the same lexical scope. Simulation,
+extraction and conversion evidence may coexist; no exclusive operation classification is inferred.</li>
+<li>Attribute calls named <code>Model</code>, direct OrcFxAPI Model imports and recognized pools are candidates.
+Binding shadowing, reassignments, wrappers, arbitrary factory aliases and indirect calls are not resolved.</li>
+<li>Methods called on different objects in the same scope may contribute operation evidence.
+An empty operation list means unclassified, not idle or non-simulation.</li>
+<li>Constructor arguments do not establish post-load settings, property mutations, native readback,
+simultaneous active models, process-tree threads, CPU affinity, memory demand, licences or throughput.</li>
+<li>Expanded arguments, computed expressions and existing-model handles remain unresolved. Symlinks are skipped.
+Digests identify the source bytes read; filesystem changes during traversal are not an atomic snapshot.</li>
+</ul>
+<h2>Way forward</h2>
+<p>The next change should establish explicit per-workflow contracts, associate each pool with its model-producing
+leaf, and verify native requested/observed thread counts without changing engineering inputs. Native execution
+and runtime policy changes remain outside this audit. Tracking:
+<a href="https://github.com/vamseeachanta/digitalmodel/issues/2130">issue 2130</a>.</p>
+</main>
+</html>

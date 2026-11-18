@@ -1,7 +1,7 @@
 #! /bin/bash
 # common shell script utils 
 
-# - [ ] #todo #13_siva_AceEngineer #ae_au have to use this all over the place
+# - [ ] #todo have to use this all over the place
 
 # Define ANSI color codes as static variables
 readonly RED="\033[31m"

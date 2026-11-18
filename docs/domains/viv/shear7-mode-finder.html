@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shear7 mode finder</title>
+<style>
+body { font: 1rem/1.6 system-ui, sans-serif; max-width: 58rem; margin: 2rem auto; padding: 0 1rem; }
+pre { overflow-x: auto; padding: 1rem; background: #f3f5f7; }
+table { border-collapse: collapse; } th, td { border: 1px solid #bbb; padding: .4rem .8rem; }
+caption { caption-side: bottom; text-align: left; padding-top: .4rem; }
+</style>
+<main>
+<h1>Shear7 mode finder</h1>
+<p>The parser reads existing Shear7 text outputs and exports excited-mode lists
+and a cross-tabulation of power-in nodes. It ports the first-region behavior of
+ModesFind.m and the directory batch role of FindModes.m (2009). No solver is
+started or imported. Input counts and node identifiers are preserved.</p>
+<h2>Revision history</h2>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-10-19</td><td>Introduce the parser, exports and synthetic
+worked example so existing outputs can be summarized without MATLAB.</td></tr>
+<tr><td>2</td><td>2026-10-24</td><td>Match file suffixes without case sensitivity
+and state the private parity-evidence limit so discovery and reproducibility
+limits are explicit.</td></tr></tbody>
+<caption>Table 1. Document revision history.</caption></table>
+<h2>Use</h2>
+<pre><code>shear7-mode-finder results --output-dir summaries --output-format csv
+shear7-mode-finder results --output-dir summaries --output-format json
+shear7-mode-finder results --output-dir summaries --output-format yaml
+
+# Source checkout, with the package dependencies available:
+PYTHONPATH=src python -m digitalmodel.subsea.viv_tools.shear7_mode_finder \
+  examples/viv/shear7_mode_finder --extension .txt \
+  --output-dir summaries --output-format json</code></pre>
+<p>The input directory is scanned non-recursively for the case-insensitive literal suffix
+(default <code>.out</code>). File names are sorted lexically. The command writes
+<code>ExcitedModes</code> and <code>PowerInRegion</code> files with the selected
+extension. It does not change the working directory. Existing exports are
+replaced; inputs cannot also be export destinations, including symbolic links
+and hard links. A failed parse returns exit status 2 before exports are opened.
+A missing directory or empty match set is an error.</p>
+<h2>Method and source</h2>
+<p>The format basis is ModesFind.m (2009), its above-cutoff sentinel, modal
+excitation-region table, lift-coefficient table and NodeList assignment/output
+loops. FindModes.m (2009) supplies the directory-processing role; the Python CLI
+uses explicit arguments rather than a separate FindModes.txt settings file.
+The restricted source and reference results are inspected read-only and are
+not distributed here. The maintained package location is
+<code>digitalmodel.subsea.viv_tools.shear7_mode_finder</code>; the obsolete
+hyphenated source location in the original issue is not recreated.</p>
+<ol>
+<li>Read the declared count after <code>the number of modes above cutoff is:</code>
+and then read that many integer mode rows after <code>These modes are:</code>.
+The potentially-excited modal-frequency table is not this list.</li>
+<li>Find <code>Mode No. No. of Nodes Length Ratio</code>, allowing variable
+whitespace and capitalization, and read the first summary row.</li>
+<li>Read the declared number of rows below <code>node number Cl Fn/Fvo</code>.
+Keep the node identifiers, checking that the coefficient columns contain finite
+numbers. A present <code>mode number:</code> label shall match the summary row.</li>
+<li>For each file column, place its first node in row one, its second node in
+row two, and continue. Shorter lists receive zero padding.</li>
+</ol>
+<p>The zero padding is the MATLAB NodeList convention, not a physical zero or a
+node identifier. Node IDs shall be positive and unique. The row index denotes
+position in each list, not a common physical node across files. Only the first
+mode's region is represented, even when multiple excited modes are listed.
+JSON and YAML expose <code>power_in_modes</code> to make that selection explicit.
+The CSV matrix retains the legacy file-column arrangement. This is parsing and
+indexing; no physical equation, coefficient or acceptance limit is introduced.</p>
+<h2>Worked example</h2>
+<p>The committed inputs
+<a href="../../../examples/viv/shear7_mode_finder/case_a.txt">case_a.txt</a> and
+<a href="../../../examples/viv/shear7_mode_finder/case_b.txt">case_b.txt</a>
+are synthetic format demonstrations. Every count, identifier, length ratio and
+coefficient in them is invented; none is qualified engineering input.</p>
+<p>Case A declares two modes, 3 and 7. Its first region belongs to mode 3 and
+lists nodes 4, 8 and 9. Mode 7 lists nodes 20 and 21, which are excluded by the
+legacy first-region rule. Case B declares mode 5 with one listed node, 2.</p>
+<p>Independent hand calculation: align the two lists by ordinal position.
+Row one is [4, 2]. Row two is [8, 0] because B has no second entry. Row three is
+[9, 0] because B has no third entry. The excited-mode output is [[3, 7], [5]].</p>
+<pre><code>{
+  "files": ["case_a.txt", "case_b.txt"],
+  "power_in_modes": [3, 5],
+  "node_list": [[4, 2], [8, 0], [9, 0]]
+}</code></pre>
+<p>The same example is asserted in <code>test_worked_example</code>. Additional
+tests cover export readback in CSV, JSON and YAML; missing and truncated
+sections; malformed and duplicate identifiers; Fortran D exponents; explicit
+zero modes; repeated calls; deterministic file ordering; and input protection.</p>
+<h2>Archive comparison and limitations</h2>
+<p>Read-only comparison against saved ExcitedModes.dat and PowerInRegion.dat
+outputs matches all 37 excited-mode lists and the full 1,182-row by 37-column
+NodeList matrix (43,734 entries). This establishes parity for that inspected
+archive set, not every Shear7 version. Restricted file names, raw files and
+case-specific results are excluded from this public artifact. The parity evidence
+is retained privately with digests; the comparison cannot be independently
+reproduced from this repository. It was not rerun for revision 2.</p>
+<p>A declared zero-mode count gives an empty result. A first region with a zero
+node count gives no node rows. Missing markers and malformed or truncated
+counted rows raise errors; they do not silently become a zero-mode result.
+Only the declared number of rows is consumed, as in the original algorithm.</p>
+<p>Other output dialects, non-UTF-8 encodings and all-mode regional extraction
+are not established by this port. YAML export requires PyYAML, already a package
+dependency. The original settings-file syntax and byte-for-byte DAT formatting
+are not supported; CSV, JSON and YAML preserve the parsed content. No fatigue,
+excitation or design acceptance conclusion follows from the exported IDs.</p>
+<p>The public <a href="https://shear7.com/support/">support page</a> was checked
+on 2026-10-19. Its linked guide returned HTTP 404; the alternative download did
+not provide readable guide text. No numerical value or format rule is inferred
+from that unavailable document. The algorithm inspection and synthetic hand
+calculations provide the basis used here.</p>
+</main>
+</html>

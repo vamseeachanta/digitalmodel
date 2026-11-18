@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Generate Python scripts for Blender 3D visualization of offshore GIS data.
 
 This module produces script *text* that can be executed inside Blender.
@@ -22,6 +24,11 @@ class BlenderScriptGenerator:
 
         Each dict in *points_data* must contain either
         ``{'name', 'x', 'y', 'z'}`` or ``{'name', 'longitude', 'latitude', 'elevation'}``.
+        Input sequence order and repeated entries are retained, with ``name``
+        used as the object identifier. Coordinates and heights are copied
+        verbatim into scene coordinates; no CRS or unit conversion is applied,
+        including for geographic aliases. Callers must supply coordinates in
+        their intended scene units. The *scale* sets sphere radius only.
         """
         normalised = cls._normalise_points(points_data)
         points_literal = repr(normalised)

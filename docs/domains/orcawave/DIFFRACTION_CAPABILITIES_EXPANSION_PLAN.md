@@ -18,7 +18,7 @@ This plan expands diffraction analysis capabilities for AQWA and OrcaWave in a f
 ### AQWA
 - Analysis utilities, RAO workflows, and parsers: `src/digitalmodel/modules/aqwa/`
 - EF server integration: `src/digitalmodel/modules/aqwa/aqwa_analysis_ef_server.py`
-- Example configs and scripts: `docs/domains/aqwa/scripts/wlng_diffraction_analysis/`
+- Project diffraction configs and decks: kept in the private data repository (not in this repo)
 - Example runs and references: `docs/domains/aqwa/examples/`
 
 ## Target Capabilities

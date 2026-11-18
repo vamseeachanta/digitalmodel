@@ -241,23 +241,23 @@ class TestPumpEfficiencyWithRealData:
     """Tests using real well card data."""
 
     @pytest.fixture
-    def well_7699227(self):
-        """Load well 7699227 test data."""
-        filepath = TEST_DATA_DIR / "7699227.json"
+    def well_echo(self):
+        """Load well field well echo test data."""
+        filepath = TEST_DATA_DIR / "field_well_echo.json"
         if filepath.exists():
             return load_from_json_file(filepath)
-        pytest.skip("Test data file 7699227.json not found")
+        pytest.skip("Test data file field_well_echo.json not found")
 
-    def test_pump_efficiency_7699227(self, well_7699227):
-        """Test pump efficiency with well 7699227 data."""
-        if well_7699227.well_test is None:
-            pytest.skip("No well test data in 7699227.json")
+    def test_pump_efficiency_echo(self, well_echo):
+        """Test pump efficiency with well field well echo data."""
+        if well_echo.well_test is None:
+            pytest.skip("No well test data in field_well_echo.json")
 
         # Assume theoretical production from typical calculation
         theoretical = 200.0  # BPD
 
         result = calculate_pump_efficiency(
-            well_7699227,
+            well_echo,
             theoretical_production=theoretical,
         )
 

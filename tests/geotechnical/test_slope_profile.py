@@ -215,3 +215,61 @@ def test_positive_gradient_rejects_invalid_explicit_datum(datum):
                        "su_gradient_kpa_per_m": 1.5, "reference_elevation_m": datum}]
     with pytest.raises(ValueError, match="reference_elevation_m"):
         validate_profile(data)
+
+
+def _run_preflight_snippets(monkeypatch, last_section):
+    """Execute the example in order, refusing optional solver imports."""
+    import builtins
+    from pathlib import Path
+    import re
+
+    document = (
+        Path(__file__).resolve().parents[2]
+        / "docs/examples/slope-profile-preflight.md"
+    ).read_text(encoding="utf-8")
+    snippets = re.findall(r"^```python\n(.*?)^```$", document, flags=re.M | re.S)
+    sections = ("supplied-profile", "missing-datum", "translated-profile")
+    assert len(snippets) == len(sections)
+    original_import = builtins.__import__
+
+    def forbid_solver_import(name, *args, **kwargs):
+        if name.split(".")[0] in {"xslope", "gmsh", "openpyxl"}:
+            pytest.fail("preflight example attempted an optional solver import")
+        return original_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(builtins, "__import__", forbid_solver_import)
+    namespace = {}
+    for section, snippet in zip(sections, snippets):
+        exec(compile(snippet, f"<preflight:{section}>", "exec"), namespace)
+        if section == last_section:
+            break
+    return namespace
+
+
+@pytest.mark.parametrize(
+    "section", ["supplied-profile", "missing-datum", "translated-profile"]
+)
+def test_documented_preflight_snippets(section, monkeypatch):
+    """Run every Python block in the preflight example without solver access."""
+    _run_preflight_snippets(monkeypatch, section)
+
+
+@pytest.mark.parametrize("offset", [-100, 100])
+def test_documented_preflight_relative_depths(offset, monkeypatch):
+    """Hand calculation from the example's synthetic input and depth tables.
+
+    Reference 10 m minus elevations (10, 4, -2) m gives depths (0, 6, 12) m.
+    With supplied Su_ref = 5 kPa and gradient = 1.5 kPa/m the corresponding
+    illustrative strengths are (5, 14, 23) kPa. These are arithmetic checks,
+    not a stability solution. Both translations are specified in the example.
+    """
+    namespace = _run_preflight_snippets(monkeypatch, "translated-profile")
+    original = namespace["checked"]["layers"][0]
+    translated = namespace["translated_profiles"][offset]["layers"][0]
+    for elevation, depth, strength in [(10, 0, 5), (4, 6, 14), (-2, 12, 23)]:
+        assert original["reference_elevation_m"] - elevation == depth
+        assert translated["reference_elevation_m"] - (elevation + offset) == depth
+        assert (
+            translated["su_kpa"] + translated["su_gradient_kpa_per_m"] * depth
+            == strength
+        )

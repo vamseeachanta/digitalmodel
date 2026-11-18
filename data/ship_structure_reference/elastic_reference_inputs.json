@@ -1,0 +1,219 @@
+{
+  "schema_version": 1,
+  "geometry_basis": "author_selected_synthetic_not_stock",
+  "section_property_basis": "no_section_properties_used",
+  "axes": "x_along_span_y_along_breadth",
+  "units": {
+    "length": "mm",
+    "stress": "MPa"
+  },
+  "sources": [
+    {
+      "key": "mit-plate-buckling",
+      "issuer": "MIT OpenCourseWare",
+      "url": "https://ocw.mit.edu/courses/2-080j-structural-mechanics-fall-2013/resources/mit2_080jf13_lecture11/",
+      "edition": "2.080J Structural Mechanics, Fall 2013",
+      "source_date": "2013",
+      "retrieved_on": "2026-10-22",
+      "locator": "Section 11.2, Eqs. 11.15-11.17; Section 11.1, free transverse expansion",
+      "catalog_source_id": {
+        "state": "unknown",
+        "reason": "Existing discovery catalog unavailable; no issued identity inferred"
+      },
+      "rights_status": "metadata_only"
+    },
+    {
+      "key": "mit-plate-rigidity",
+      "issuer": "MIT OpenCourseWare",
+      "url": "https://ocw.mit.edu/courses/2-080j-structural-mechanics-fall-2013/resources/mit2_080jf13_lecture4/",
+      "edition": "2.080J Structural Mechanics, Fall 2013",
+      "source_date": "2013",
+      "retrieved_on": "2026-10-22",
+      "locator": "Eq. 4.60; Eqs. 4.14 and 4.16, elastic moduli",
+      "catalog_source_id": {
+        "state": "unknown",
+        "reason": "Existing discovery catalog unavailable; no issued identity inferred"
+      },
+      "rights_status": "metadata_only"
+    }
+  ],
+  "materials": {
+    "synthetic-nu0": {
+      "youngs_modulus_MPa": 120000.0,
+      "poisson_ratio": 0.0,
+      "basis": "author_selected_synthetic",
+      "condition": "Synthetic isotropic elastic fixture; no marine grade, heat or delivery condition",
+      "source_keys": [
+        "mit-plate-buckling",
+        "mit-plate-rigidity"
+      ],
+      "readiness": "analytical_fixture_only"
+    },
+    "synthetic-nu03": {
+      "youngs_modulus_MPa": 120000.0,
+      "poisson_ratio": 0.3,
+      "basis": "author_selected_synthetic",
+      "condition": "Synthetic isotropic elastic fixture; no marine grade, heat or delivery condition",
+      "source_keys": [
+        "mit-plate-buckling",
+        "mit-plate-rigidity"
+      ],
+      "readiness": "analytical_fixture_only"
+    }
+  },
+  "cases": [
+    {
+      "structure": "plate",
+      "profile": "none",
+      "span_mm": 100.0,
+      "breadth_mm": 100.0,
+      "initial_thickness_mm": 2.0,
+      "material_id": "synthetic-nu0",
+      "sigma_x_MPa": 10.0,
+      "sigma_y_MPa": 0.0,
+      "tau_MPa": 0.0,
+      "plate_loss_mm": 0.0,
+      "web_loss_mm": 0.0,
+      "flange_loss_mm": 0.0,
+      "support": "simply_supported_free_transverse_expansion",
+      "loss_model": "whole_field_uniform",
+      "load_basis": "fixed_stress"
+    },
+    {
+      "structure": "plate",
+      "profile": "none",
+      "span_mm": 100.0,
+      "breadth_mm": 100.0,
+      "initial_thickness_mm": 2.0,
+      "material_id": "synthetic-nu0",
+      "sigma_x_MPa": 10.0,
+      "sigma_y_MPa": 0.0,
+      "tau_MPa": 0.0,
+      "plate_loss_mm": 1.0,
+      "web_loss_mm": 0.0,
+      "flange_loss_mm": 0.0,
+      "support": "simply_supported_free_transverse_expansion",
+      "loss_model": "whole_field_uniform",
+      "load_basis": "fixed_stress"
+    },
+    {
+      "structure": "plate",
+      "profile": "none",
+      "span_mm": 100.0,
+      "breadth_mm": 100.0,
+      "initial_thickness_mm": 2.0,
+      "material_id": "synthetic-nu0",
+      "sigma_x_MPa": 10.0,
+      "sigma_y_MPa": 0.0,
+      "tau_MPa": 0.0,
+      "plate_loss_mm": 1.5,
+      "web_loss_mm": 0.0,
+      "flange_loss_mm": 0.0,
+      "support": "simply_supported_free_transverse_expansion",
+      "loss_model": "whole_field_uniform",
+      "load_basis": "fixed_stress"
+    },
+    {
+      "structure": "plate",
+      "profile": "none",
+      "span_mm": 150.0,
+      "breadth_mm": 100.0,
+      "initial_thickness_mm": 2.0,
+      "material_id": "synthetic-nu0",
+      "sigma_x_MPa": 10.0,
+      "sigma_y_MPa": 0.0,
+      "tau_MPa": 0.0,
+      "plate_loss_mm": 1.0,
+      "web_loss_mm": 0.0,
+      "flange_loss_mm": 0.0,
+      "support": "simply_supported_free_transverse_expansion",
+      "loss_model": "whole_field_uniform",
+      "load_basis": "fixed_stress"
+    },
+    {
+      "structure": "plate",
+      "profile": "none",
+      "span_mm": 100.0,
+      "breadth_mm": 100.0,
+      "initial_thickness_mm": 2.0,
+      "material_id": "synthetic-nu03",
+      "sigma_x_MPa": 10.0,
+      "sigma_y_MPa": 0.0,
+      "tau_MPa": 0.0,
+      "plate_loss_mm": 1.0,
+      "web_loss_mm": 0.0,
+      "flange_loss_mm": 0.0,
+      "support": "simply_supported_free_transverse_expansion",
+      "loss_model": "whole_field_uniform",
+      "load_basis": "fixed_stress"
+    },
+    {
+      "structure": "panel",
+      "profile": "synthetic-tee",
+      "span_mm": 100.0,
+      "breadth_mm": 100.0,
+      "initial_thickness_mm": 2.0,
+      "material_id": "synthetic-nu0",
+      "sigma_x_MPa": 10.0,
+      "sigma_y_MPa": 0.0,
+      "tau_MPa": 0.0,
+      "plate_loss_mm": 0.0,
+      "web_loss_mm": 0.2,
+      "flange_loss_mm": 0.0,
+      "support": "simply_supported_free_transverse_expansion",
+      "loss_model": "whole_field_uniform",
+      "load_basis": "fixed_stress"
+    },
+    {
+      "structure": "panel",
+      "profile": "synthetic-tee",
+      "span_mm": 100.0,
+      "breadth_mm": 100.0,
+      "initial_thickness_mm": 2.0,
+      "material_id": "synthetic-nu0",
+      "sigma_x_MPa": 10.0,
+      "sigma_y_MPa": 0.0,
+      "tau_MPa": 0.0,
+      "plate_loss_mm": 0.0,
+      "web_loss_mm": 0.0,
+      "flange_loss_mm": 0.2,
+      "support": "simply_supported_free_transverse_expansion",
+      "loss_model": "whole_field_uniform",
+      "load_basis": "fixed_stress"
+    },
+    {
+      "structure": "plate",
+      "profile": "none",
+      "span_mm": 100.0,
+      "breadth_mm": 100.0,
+      "initial_thickness_mm": 2.0,
+      "material_id": "synthetic-nu0",
+      "sigma_x_MPa": 10.0,
+      "sigma_y_MPa": 0.0,
+      "tau_MPa": 0.0,
+      "plate_loss_mm": 0.0,
+      "web_loss_mm": 0.0,
+      "flange_loss_mm": 0.0,
+      "support": "simply_supported_free_transverse_expansion",
+      "loss_model": "local_patch",
+      "load_basis": "fixed_stress"
+    },
+    {
+      "structure": "plate",
+      "profile": "none",
+      "span_mm": 100.0,
+      "breadth_mm": 100.0,
+      "initial_thickness_mm": 2.0,
+      "material_id": "synthetic-nu0",
+      "sigma_x_MPa": 10.0,
+      "sigma_y_MPa": 0.0,
+      "tau_MPa": 0.0,
+      "plate_loss_mm": 0.0,
+      "web_loss_mm": 0.0,
+      "flange_loss_mm": 0.0,
+      "support": "clamped",
+      "loss_model": "whole_field_uniform",
+      "load_basis": "fixed_stress"
+    }
+  ]
+}

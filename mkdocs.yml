@@ -5,6 +5,8 @@ site_dir: site
 
 nav:
   - Home: index.md
+  - Fitness for Service:
+      - Pipeline FFS Assessment: ffs/pipeline-ffs-assessment.html
 
   # ---------------------------------------------------------------------------
   # CFD — Computational Fluid Dynamics
@@ -29,6 +31,7 @@ nav:
   # Contributing / Standards
   # ---------------------------------------------------------------------------
   - Contributing:
+      - Import Safety: contributing/import-safety.md
       - Release Authorization: contributing/releases.md
       - Page Layout Standard: _assets/LAYOUT.md
 

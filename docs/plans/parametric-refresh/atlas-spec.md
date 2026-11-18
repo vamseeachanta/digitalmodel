@@ -8,9 +8,15 @@
 
 Enhance the **existing** digitalmodel workflows with a pre-computed **parametric atlas**:
 a parameter grid plus a per-physics surrogate, stored as a provenance-stamped artifact.
-The Deckhand bot serves instant **interpolated** answers from an atlas via its `EXECUTE`
-path; out-of-range or low-confidence queries fall back to the existing 24h-SLA custom
-on-demand run, which remains the deliverable of record.
+The `parametric_query` workflow returns **interpolated** answers from an atlas
+(see [`docs/registry/workflows.yaml`](../../registry/workflows.yaml) for query
+examples and outputs). Out-of-range or low-confidence queries return an
+escalation status under the query contract below. Interpolated atlas answers are
+screening values; a full solver run remains the deliverable of record. Escalated
+queries will request a full run through the current licensed-run route; execution
+will remain blocked until a dispatch and result-return route is documented.
+
+Deckhand retired 2026-10-18 (deckhand issue 599).
 
 This document fixes the four contracts every downstream slice inherits:
 
@@ -29,7 +35,7 @@ The atlas earns its keep differently across the cost tiers:
 - **Fast (<1 s) workflows** (mooring/spectral fatigue, code checks, geotechnical): a fresh
   run is already instant, so the atlas is **not** about speed. Its value is a queryable,
   bounded **response surface** — instant what-if / sensitivity sweeps across a continuum
-  without constructing a full input file, plus a uniform interface the bot can interpolate
+  without constructing a full input file, plus a uniform interface the workflow can interpolate
   and bound with confidence.
 - **Licensed / slow workflows** (AQWA/OrcaWave diffraction, OrcaFlex): here the atlas **is**
   about speed — a 5–30 min licensed solve becomes a sub-second lookup. These get sparse
@@ -216,5 +222,3 @@ routed to escalate until the atlas is refreshed.
   own `tolerance`).
 - Sparse-library coverage maps for licensed solvers
   ([digitalmodel#801](https://github.com/vamseeachanta/digitalmodel/issues/801)).
-- The Deckhand routing/voice wiring
-  ([deckhand#437](https://github.com/vamseeachanta/deckhand/issues/437)).

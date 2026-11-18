@@ -27,7 +27,8 @@ __all__ = [
     "wall_normal_first_cell_height",
 ]
 
-#: k-omega closure constant.
+#: Notes on CFD: General Principles (2022), section 7.10, equation (7.38).
+#: https://doc.cfd.direct/notes/cfd-general-principles/specific-dissipation-rate
 C_MU = 0.09
 
 
@@ -48,9 +49,12 @@ class TurbulenceMethod(str, Enum):
 #: near-quiescent; 1% is the conventional stand-in when nothing was measured.
 DEFAULT_TURBULENCE_INTENSITY = 0.01
 
-#: nut_inf / nu. Small enough that the freestream carries no meaningful eddy
-#: viscosity to the hull, large enough to seed the model.
-DEFAULT_VISCOSITY_RATIO = 0.1
+#: nut_inf / nu. Initialisation choice, following SU2 v8.0.1's
+#: config_template.cfg, FREESTREAM_TURB2LAMVISCRATIO (lines 224-225):
+#: https://github.com/su2code/SU2/blob/v8.0.1/config_template.cfg#L224-L225
+#: This seeds the model; a developed turbulent boundary layer still requires
+#: solution checks. It is not a universal lower bound on caller-supplied ratios.
+DEFAULT_VISCOSITY_RATIO = 10.0
 
 #: l / Lpp for the LENGTH_SCALE method.
 DEFAULT_LENGTH_SCALE_FACTOR = 0.07
@@ -114,6 +118,12 @@ def derive_inlet_turbulence(
 
     Whichever route set omega, ``nut = k / omega`` holds, and the implied
     length scale is reported so a reviewer can sanity-check either way.
+
+    Initialisation relations: Notes on CFD: General Principles (2022),
+    section 7.2, equation (7.6), and section 7.10, equations (7.38)-(7.40).
+    These describe inlet estimates; SST's solved eddy viscosity also depends
+    on its shear-stress limiter (section 7.11). The default ratio alone does
+    not establish friction recovery or prevent downstream turbulence decay.
     """
     if velocity <= 0:
         raise ValueError(f"velocity must be positive, got {velocity}")

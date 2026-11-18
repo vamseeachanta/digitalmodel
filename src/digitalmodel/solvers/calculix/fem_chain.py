@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 ABOUTME: End-to-end FEM analysis chain — geometry creation via gmsh, INP export,
 CalculiX solve, and result extraction in a single pipeline call.
@@ -12,7 +15,7 @@ from typing import Optional
 
 import numpy as np
 
-from .inp_writer import INPWriter
+from .inp_writer import ELEMENT_TYPE_MAP, INPWriter
 from .result_parser import CalculiXResultParser
 
 
@@ -42,10 +45,46 @@ class FEMChain:
         self._node_sets: dict[str, list[int]] = {}
         self._element_sets: dict[str, list[int]] = {}
         self._inp_path: Optional[Path] = None
+        self._hole_radius: float | None = None
 
     # ------------------------------------------------------------------
     # Geometry creation
     # ------------------------------------------------------------------
+
+    def set_mesh(self, nodes, elements: dict, *, node_sets=None, element_sets=None):
+        """Accept a geometry-provider mesh with dense zero-based indices.
+
+        Coordinates use the caller's consistent length unit. External gmsh tags
+        must be remapped by the geometry provider, not decremented blindly.
+        Installing a new mesh invalidates any previously generated input deck.
+        """
+        nodes = np.asarray(nodes, dtype=float)
+        if nodes.ndim != 2 or nodes.shape[1] != 3 or not len(nodes) or not np.isfinite(nodes).all():
+            raise ValueError("Nodes require a nonempty finite (n, 3) array")
+        copied = {}
+        for name, data in elements.items():
+            if name not in ELEMENT_TYPE_MAP:
+                raise ValueError(f"Unsupported mesh element type: {name}")
+            conn = np.asarray(data["connectivity"])
+            width = int(name.split()[-1])
+            if (conn.ndim != 2 or conn.shape[1] != width or not len(conn)
+                    or not np.issubdtype(conn.dtype, np.integer)
+                    or (conn < 0).any() or (conn >= len(nodes)).any()):
+                raise ValueError("Invalid zero-based element connectivity")
+            copied[name] = {**data, "connectivity": conn.copy()}
+        if not copied:
+            raise ValueError("At least one element is required")
+        total = sum(len(data["connectivity"]) for data in copied.values())
+        for sets, limit in ((node_sets or {}, len(nodes)), (element_sets or {}, total)):
+            for ids in sets.values():
+                if any(not isinstance(i, (int, np.integer)) or isinstance(i, bool)
+                       or i < 0 or i >= limit for i in ids):
+                    raise ValueError("Mesh set index is outside the mesh")
+        self._nodes, self._elements = nodes.copy(), copied
+        self._node_sets = {k: list(v) for k, v in (node_sets or {}).items()}
+        self._element_sets = {k: list(v) for k, v in (element_sets or {}).items()}
+        self._inp_path = None
+        self._hole_radius = None
 
     def create_plate_with_hole(
         self,
@@ -83,7 +122,7 @@ class FEMChain:
             cyl = gmsh.model.occ.addCylinder(
                 0, 0, -thickness, 0, 0, 3 * thickness, hole_r,
             )
-            result = gmsh.model.occ.cut([(3, plate)], [(3, cyl)])
+            gmsh.model.occ.cut([(3, plate)], [(3, cyl)])
             gmsh.model.occ.synchronize()
 
             gmsh.model.mesh.setSize(gmsh.model.getEntities(0), element_size)
@@ -117,6 +156,7 @@ class FEMChain:
         finally:
             gmsh.finalize()
 
+        self._hole_radius = hole_r
         return stats
 
     # ------------------------------------------------------------------
@@ -128,20 +168,27 @@ class FEMChain:
         material: dict,
         loads: list,
         boundary_conditions: list,
+        *,
+        shell_sections: list | None = None,
+        step: dict | None = None,
     ) -> Path:
         """Write the INP file from current mesh and analysis parameters."""
         if self._nodes is None:
-            raise RuntimeError("No mesh data — call create_plate_with_hole first")
+            raise RuntimeError("No mesh data — call set_mesh or create_plate_with_hole first")
 
         writer = INPWriter(self._nodes, self._elements)
         writer.add_material(material["name"], material["E"], material["nu"])
+        if "plastic_rows" in material:
+            writer.add_plasticity(material["name"], material["plastic_rows"])
+        for section in shell_sections or []:
+            writer.add_shell_section(**section)
 
         for name, ids in self._node_sets.items():
             writer.add_node_set(name, ids)
         for name, ids in self._element_sets.items():
             writer.add_element_set(name, ids)
 
-        writer.add_step()
+        writer.add_step(**(step or {}))
 
         for bc in boundary_conditions:
             nset = bc["node_set"]
@@ -149,6 +196,12 @@ class FEMChain:
                 writer.add_boundary_condition(nset, dof, bc.get("value", 0.0))
 
         for ld in loads:
+            if ld["type"].lower() == "pressure":
+                writer.add_pressure(ld["element_set"], ld["magnitude"], ld.get("face", "P"))
+                continue
+            if ld["type"].lower() == "hydrostatic":
+                writer.add_hydrostatic_pressure(**{k: v for k, v in ld.items() if k != "type"})
+                continue
             direction = ld.get("direction", (1, 0, 0))
             writer.add_load(
                 ld["node_set"], ld["type"], ld["magnitude"], direction,
@@ -193,17 +246,32 @@ class FEMChain:
     # ------------------------------------------------------------------
 
     def extract_results(self) -> dict:
-        """Parse solver results and return summary."""
+        """Parse solver results and return summary.
+
+        Status parse errors are explicit and leave FRD/DAT results available.
+        An unreadable history supplies no convergence or collapse conclusion.
+        """
         parser = CalculiXResultParser(self.JOB_NAME, self.work_dir)
         frd = parser.parse_frd_file()
-        max_vm = parser.get_max_von_mises()
-        max_disp = parser.get_max_displacement()
-        max_sxx = parser.get_max_stress_component("sxx")
+        max_vm = parser.get_max_von_mises() if frd["stresses"] else None
+        max_disp = parser.get_max_displacement() if frd["displacements"] else None
+        max_sxx = parser.get_max_stress_component("sxx") if frd["stresses"] else None
 
         # Find max stress near hole (exclude load/BC application nodes)
         hole_sxx = self._max_stress_near_hole(parser)
 
+        status = None
+        if (self.work_dir / f"{self.JOB_NAME}.sta").exists():
+            try:
+                status = {"parse_status": "OK", **parser.parse_sta_file()}
+            except ValueError as exc:
+                status = {"parse_status": "ERROR", "error": str(exc),
+                          "collapse_status": "NOT_EVALUATED"}
+
         return {
+            "fields": frd,
+            "status": status,
+            "dat": parser.parse_dat_file() if (self.work_dir / f"{self.JOB_NAME}.dat").exists() else None,
             "max_von_mises": max_vm,
             "max_sxx": max_sxx,
             "hole_sxx": hole_sxx,
@@ -212,12 +280,12 @@ class FEMChain:
             "n_stress_nodes": len(frd["stresses"]),
         }
 
-    def _max_stress_near_hole(self, parser: CalculiXResultParser) -> float:
+    def _max_stress_near_hole(self, parser: CalculiXResultParser) -> float | None:
         """Find max σ_xx near the hole, excluding boundary/load regions."""
-        if self._nodes is None:
-            return 0.0
+        if self._nodes is None or self._hole_radius is None or not parser._stresses:
+            return None
         max_sxx = 0.0
-        hole_r = 10.0  # Default from run_plate_validation
+        hole_r = self._hole_radius
         search_r = hole_r * 3.0
         for node_id, stress in parser._stresses.items():
             # node_id is 1-based; nodes array is 0-based
@@ -238,7 +306,13 @@ class FEMChain:
         """
         Full chain: plate with hole -> mesh -> solve -> Kt.
 
-        Uses quarter-symmetry model with W/d > 5 so theoretical Kt ~ 3.0.
+        Uses quarter-symmetry and equal nodal forces on the x = W/2 face.
+        The comparison is Kirsch's infinite-plate Kt = 3.0, referred to
+        gross-section stress (the applied far-field stress):
+        https://doc.comsol.com/6.3/doc/com.comsol.help.models.sme.kirsch_plate/kirsch_plate.html
+        Net-section Kt = gross-section Kt * (W - d)/W, where d = 2 * hole_r.
+        At W/d = 10 the finite-width strip correction is small but nonzero;
+        the existing 5% test criterion is retained, without applying a correction.
         """
         plate_w = 200.0
         plate_h = 200.0
@@ -250,7 +324,7 @@ class FEMChain:
             plate_w, plate_h, hole_r, thickness, element_size,
         )
 
-        # Applied traction as equivalent nodal loads on quarter model
+        # Equal nodal forces on the x = W/2 face of the quarter model
         # Far edge spans y=0..plate_h/2, total force = σ × t × (H/2)
         n_load = len(self._node_sets.get("LOAD", [1]))
         force_per_node = sigma_applied * thickness * (plate_h / 2.0) / n_load
@@ -291,20 +365,27 @@ class FEMChain:
     # ------------------------------------------------------------------
 
     def _extract_gmsh_data(self, gmsh_module):
-        """Extract nodes and elements from gmsh into internal storage."""
+        """Install a volume mesh only after validating its one-based node tags."""
         node_tags, node_coords, _ = gmsh_module.model.mesh.getNodes()
-        self._nodes = node_coords.reshape(-1, 3)
+        if not np.array_equal(node_tags, np.arange(1, len(node_tags) + 1)):
+            raise ValueError("Gmsh node tags must be exactly 1..N in coordinate order")
+        nodes = node_coords.reshape(-1, 3)
 
-        self._elements = {}
-        for etype in gmsh_module.model.mesh.getElementTypes():
+        elements = {}
+        for etype in gmsh_module.model.mesh.getElementTypes(dim=3):
             etags, enodes = gmsh_module.model.mesh.getElementsByType(etype)
             props = gmsh_module.model.mesh.getElementProperties(etype)
-            name, dim, order, npn = props[0], props[1], props[2], props[3]
+            name, dim, npn = props[0], props[1], props[3]
+            if not np.isin(enodes, node_tags).all():
+                raise ValueError("Element connectivity references an absent node")
             conn = enodes.reshape(-1, npn)
-            self._elements[name] = {
+            elements[name] = {
                 "connectivity": conn - 1,  # 0-based
                 "dimension": dim,
             }
+        if not elements or not any(len(e["connectivity"]) for e in elements.values()):
+            raise ValueError("Gmsh mesh must contain volume elements")
+        self._nodes, self._elements = nodes, elements
 
     def _identify_plate_sets(self, gmsh_module, hw, hh, thickness, hole_r):
         """Identify node sets for boundary conditions on the plate model."""

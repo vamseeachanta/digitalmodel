@@ -1,0 +1,63 @@
+[
+  {
+    "case_id": "case-001",
+    "model_sha256": "ad20c47f279b28ce37fce8600167faf8f72a24ed43f9eec7e87d25b7e560ebdb",
+    "evidence_kind": "hand_calculation",
+    "solver_version": null,
+    "source": "Independent answer in README.md: constructed 60 kN effective tensions and 0.2 per metre curvature; not a physical response or solver output",
+    "period_s": [
+      0,
+      100
+    ],
+    "extrema": {
+      "Mooring_1": {
+        "quantity": "effective_tension",
+        "unit": "kN",
+        "max": 60,
+        "coverage": "whole_line"
+      },
+      "Mooring_2": {
+        "quantity": "effective_tension",
+        "unit": "kN",
+        "max": 60,
+        "coverage": "whole_line"
+      },
+      "Mooring_3": {
+        "quantity": "effective_tension",
+        "unit": "kN",
+        "max": 60,
+        "coverage": "whole_line"
+      },
+      "Mooring_4": {
+        "quantity": "effective_tension",
+        "unit": "kN",
+        "max": 60,
+        "coverage": "whole_line"
+      },
+      "Mooring_5": {
+        "quantity": "effective_tension",
+        "unit": "kN",
+        "max": 60,
+        "coverage": "whole_line"
+      },
+      "Mooring_6": {
+        "quantity": "effective_tension",
+        "unit": "kN",
+        "max": 60,
+        "coverage": "whole_line"
+      },
+      "Hawser": {
+        "quantity": "effective_tension",
+        "unit": "kN",
+        "max": 60,
+        "coverage": "whole_line"
+      },
+      "TransferHose": {
+        "quantity": "curvature",
+        "unit": "1/m",
+        "max": 0.2,
+        "coverage": "whole_line"
+      }
+    }
+  }
+]

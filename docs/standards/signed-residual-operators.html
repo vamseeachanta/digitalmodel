@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Signed residual operators for analysis criteria</title>
+<style>
+body { max-width: 68rem; margin: 2rem auto; padding: 0 1rem; font: 1rem/1.6 sans-serif; color: #23343d; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #aab8c0; padding: .6rem; text-align: left; vertical-align: top; }
+caption { caption-side: bottom; text-align: left; padding: .5rem 0; }
+code, pre { overflow-wrap: anywhere; }
+pre { white-space: pre-wrap; background: #f1f5f7; padding: 1rem; }
+</style>
+</head>
+<body>
+<h1>Signed residual operators for analysis criteria</h1>
+<p><strong>Summary.</strong> The reusable comparison contract distinguishes a signed
+value from an absolute residual and a relative error. Each criterion names its
+operator, comparator, units and source. Numerical PASS means only that the
+declared comparison holds; source qualification and engineering acceptance remain
+separate. This supplement supports the
+<a href="analysis-parametric-lookup-criteria.html">engineering analysis criteria</a>,
+AC-01, AC-02 and AC-08.</p>
+
+<h2>Revision history</h2>
+<table>
+<thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-10-19</td><td>Explicit signed and residual operators,
+zero-reference policy and an offline cylinder mapping prevent a negative
+violation from passing a magnitude limit.</td></tr></tbody>
+<caption>Revision record for the operator supplement.</caption>
+</table>
+
+<h2>Operator definitions</h2>
+<p>Let q be the observed value and r the reference in the declared response unit U.
+The comparator is one of <code>&lt;</code>, <code>&lt;=</code>, <code>&gt;</code> or
+<code>&gt;=</code>. Equality is decided by that comparator, without an implicit
+tolerance. The limit and comparator basis are required inputs.</p>
+<table>
+<thead><tr><th>Operator</th><th>Metric</th><th>Metric and limit unit</th><th>Basis</th></tr></thead>
+<tbody>
+<tr><td><code>signed_value</code></td><td>q</td><td>U</td><td>The observed quantity
+is compared directly. This is the identity operation; it does not imply a
+magnitude bound. A reference is refused.</td></tr>
+<tr><td><code>absolute_residual</code></td><td>|q − r|</td><td>U</td><td>
+<a href="https://dlmf.nist.gov/3.1#E8">NIST DLMF, equation 3.1.8</a>.
+The reference is required, including an explicit zero for a residual origin.</td></tr>
+<tr><td><code>relative_error</code></td><td>|q − r| / |r|</td><td><code>1</code>
+(dimensionless)</td><td><a href="https://dlmf.nist.gov/3.1#E9">NIST DLMF,
+equation 3.1.9</a>, for a nonzero reference.</td></tr>
+</tbody>
+<caption>Explicit transformations precede the declared comparator.</caption>
+</table>
+
+<h2>Dimensioned floors and zero references</h2>
+<p>With an explicitly supplied positive denominator floor f in U, relative error
+is defined here as <code>|q − r| / max(|r|, f)</code>. This is a declared software
+policy extending the nonzero-reference definition; NIST supplies no floor or
+acceptance limit. Both <code>reference_floor</code> and <code>floor_source</code>
+are required together. The floor is refused for the other operators. A relative
+limit has unit <code>1</code>; the denominator floor has the response unit.</p>
+<p>A zero reference without a floor returns <code>NOT_EVALUATED</code>, even for
+a zero observation. A nonzero near-zero reference without a floor uses its actual
+magnitude; no hidden cutoff is introduced. Missing observations or required
+references and mismatched units also return <code>NOT_EVALUATED</code>, with a
+reason and no metric. Invalid definitions, nonfinite numbers and binary floats
+are refused with <code>ValueError</code>. Unit tokens match exactly; conversion
+and alias resolution are not implemented.</p>
+<p>A denominator floor is distinct from the dimensioned absolute-error allowance
+in a hybrid rule <code>|q − r| &lt;= max(relative_limit × |r|, absolute_floor)</code>.
+That rule can use <code>absolute_residual</code> with its independently established
+limit supplied by the caller. This module does not silently translate either
+floor policy into the other or choose engineering tolerances.</p>
+
+<h2>Reusable interface and evidence</h2>
+<p>The public interface is
+<code>digitalmodel.infrastructure.analysis_criteria</code>:
+<code>Quantity</code>, <code>Criterion</code> and <code>CriterionResult</code>.
+Inputs use exact decimal strings or <code>Decimal</code>. Comparisons use exact
+rational arithmetic, independent of ambient decimal precision and rounding.
+<code>to_record()</code> retains inputs, units, criterion source, comparator,
+limit, floor source and status as JSON-compatible values. A metric is stored as
+integer numerator and denominator strings; absence is JSON null, distinct from
+the true-zero numerator. Sources are caller assertions and require separate
+verification; nonempty text alone does not authenticate a source.</p>
+<pre><code>from digitalmodel.infrastructure.analysis_criteria import Criterion, Quantity
+
+# Synthetic hand calculation: |-2 - 0| = 2 &gt; 1 kN.
+criterion = Criterion(
+    operator="absolute_residual", comparator="&lt;=", response_unit="kN",
+    limit=Quantity("1", "kN"), source="Synthetic hand calculation in this example",
+)
+result = criterion.evaluate(Quantity("-2", "kN"), Quantity("0", "kN"))
+assert result.status == "FAIL"
+record = result.to_record()</code></pre>
+
+<h2>Bounded adapter assessment</h2>
+<table>
+<thead><tr><th>Inspected surface</th><th>Finding</th><th>Disposition</th></tr></thead>
+<tbody>
+<tr><td><code>ansys/cylinder_criteria.py</code></td><td>Existing checks already
+compare absolute residuals with inclusive upper bounds.</td><td>
+<code>ansys/cylinder_criterion_operators.py</code> maps the seven existing check
+families: accuracy, expected zero, auxiliary, axial equilibrium, zero control,
+refinement magnitude and refinement decrease. Units follow the frozen response
+convention: stress in MPa, displacement in mm and axial force in N.</td></tr>
+<tr><td><code>motion_forecast/criteria.py</code></td><td>Operation criteria bind
+governing quantities to caution and limit pairs.</td><td>Inspected only; no
+residual mapping or migration is established.</td></tr>
+<tr><td><code>config/cfd/calm_water_study.json</code> and its criteria tests</td>
+<td>Study-specific source and convergence requirements use a separate contract.</td>
+<td>Inspected only; no residual mapping or migration is established.</td></tr>
+</tbody>
+<caption>Enumerated local assessment; other adapters have not been assessed here.</caption>
+</table>
+<p>The cylinder adapter reads the supplied receipt limit and recomputes its
+magnitude comparison; it does not trust the receipt's <code>passed</code> flag.
+Its source labels refer to the retained canary proposal's criterion entries;
+they do not prove receipt authenticity or native measurement units. The frozen
+evaluator, thresholds and source pins are unchanged. Adoption into a preparation
+freeze requires review of the exact code and basis; this mapping grants no
+preparation or execution authority. No solver is invoked.</p>
+
+<h2>Tests and limitations</h2>
+<p>Tests include equal-magnitude positive and negative violations, signed
+comparators, strict and inclusive boundaries, positive and negative references,
+zero and near-zero references, dimensioned floors, malformed definitions, unit
+mismatches, missing evidence, JSON readback and repeating ratios under changed
+decimal contexts. Expected metrics are derived by hand in test docstrings.
+Cylinder parity tests compare every check in a synthetic complete case with the
+existing evaluator; that is interface regression coverage, not an independent
+physical reference or native validation. Sources, applicability and limit
+selection remain the analysis caller's responsibility.</p>
+
+<h2>Sources</h2>
+<ul>
+<li><a href="https://dlmf.nist.gov/3.1">NIST Digital Library of Mathematical
+Functions, version 1.2.8, released 2026-09-15</a>, section 3.1(v),
+equations 3.1.8 and 3.1.9. The public page was retrieved successfully on
+2026-10-19; definitions were read from its mathematical markup.</li>
+<li><a href="../plans/evidence/2026-09-13-issue-2121-canary-proposal.json">Retained
+cylinder canary proposal (2026)</a>, criteria entries. The adapter inherits
+receipt limits without adding or modifying values.</li>
+</ul>
+</body>
+</html>

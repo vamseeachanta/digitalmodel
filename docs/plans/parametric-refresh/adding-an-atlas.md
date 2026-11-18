@@ -2,8 +2,11 @@
 
 > Operational companion to [`atlas-spec.md`](./atlas-spec.md) (which fixes the
 > contracts). This is the **recipe**: how to turn an existing offline,
-> closed-form digitalmodel workflow into a committed, drift-gated atlas the
-> Deckhand bot serves instantly via `parametric_query`.
+> closed-form digitalmodel workflow into a committed, drift-gated atlas queried
+> through `parametric_query` (see the query examples and outputs in
+> [`docs/registry/workflows.yaml`](../../registry/workflows.yaml)).
+>
+> Deckhand retired 2026-10-18 (deckhand issue 599).
 
 ## When this applies
 

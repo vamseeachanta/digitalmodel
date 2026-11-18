@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SNAME acceptance reconciliation</title>
+<style>
+body { font: 1rem/1.5 system-ui, sans-serif; max-width: 100rem; margin: auto; padding: 2rem; color: #172c3c; background: #fff; }
+h1, h2 { line-height: 1.2; }
+a { color: #075a9c; }
+table { border-collapse: collapse; width: 100%; margin: 1rem 0 2rem; }
+th, td { border: 1px solid #aab8c2; padding: .6rem; text-align: left; vertical-align: top; }
+th { background: #edf3f7; }
+caption { caption-side: bottom; text-align: left; padding-top: .5rem; }
+code { overflow-wrap: anywhere; }
+.scroll { overflow-x: auto; }
+</style>
+</head>
+<body>
+<main>
+<h1>SNAME acceptance reconciliation</h1>
+<p id="summary">All five criteria of #1760 are mapped below. Resistance and stability functions exist,
+but implementation and passing regressions do not establish extraction from ten SNAME papers or five
+qualified published cases. The selected EN400 examples include two altered-input regressions.
+This report reconciles evidence; it does not close #1760 or qualify calculations for engineering use.</p>
+<h2>Revision history</h2>
+<table>
+<thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-11-16</td><td>Map acceptance criteria to existing code, tests and source gaps so regression coverage is not mistaken for source qualification.</td></tr></tbody>
+<caption>Table 1. Initial evidence reconciliation.</caption>
+</table>
+<p>Repository evidence pin: <code>c13bd2b7ae8513f05c6d20772aa245255ce18f1d</code>.
+The inspected HEAD and origin/main were equal before authoring. Line coordinates below refer to that pin.
+Working-tree links permit local reading; immutable GitHub contents records in <a href="#sources">Sources</a>
+provide the pinned file contents through the public API without requiring repository installation.</p>
+<h2>Status definitions</h2>
+<ul>
+<li><strong>IMPLEMENTED</strong>: a callable implementation and the named regression assertions exist; no accuracy claim follows.</li>
+<li><strong>PARTIAL_DOCUMENTATION</strong>: method descriptions and callable docstrings exist; a complete API reference is not established.</li>
+<li><strong>UNMET</strong>: the evidence required by the criterion is absent from the inspected inputs.</li>
+<li><strong>NOT_EVALUATED</strong>: independent method or published-answer qualification has not been completed.</li>
+<li><strong>REPOSITORY_REGRESSION_ONLY</strong>: the existing test passes; source-answer and tolerance qualification remain incomplete, even where inputs match.</li>
+<li><strong>ALTERED_INPUT_REGRESSION</strong>: the existing test uses inputs different from the cited published example and cannot count as its reproduction.</li>
+</ul>
+<h2>Acceptance evidence map</h2>
+<div class="scroll">
+<table>
+<thead><tr><th scope="col">Exact criterion</th><th scope="col">Implementation locator</th><th scope="col">Existing test node or assertion</th><th scope="col">Source status and qualified scope</th><th scope="col">Remaining evidence and next checkpoint</th></tr></thead>
+<tbody>
+<tr id="criterion-1"><td>Formulas extracted from top 10 SNAME papers</td>
+<td>UNMET. No named ten-paper selection or equation/page map is enumerated in #1760.</td>
+<td>No extraction-specific test node is identified. Existing calculation regressions do not test corpus extraction.</td>
+<td>NOT_EVALUATED. The issue's <code>docs/document-intelligence/sname-extraction-plan.md</code> locator is absent at the pin.</td>
+<td>Supply a named selection, accessible source locators and an equation/page-to-method map for a separately bounded extraction step. EN400 is not a substitute for this criterion.</td></tr>
+<tr id="criterion-2"><td>Resistance estimation method implemented</td>
+<td>IMPLEMENTED: <a href="../../../src/digitalmodel/naval_architecture/resistance.py">resistance.py</a>:25–112, including shaft horsepower and friction/scaling helpers;
+<a href="../../../src/digitalmodel/naval_architecture/holtrop_mennen.py">holtrop_mennen.py</a> supplies hull resistance components.</td>
+<td><code>test_example_7_1_shaft_horsepower</code>:347 retains <code>abs(result - 50000.0) &lt; 100.0</code>.
+<code>test_ittc_1957_cf_cited_value_matches_plain</code>:29 retains equality to <code>ittc_1957_cf(1e9)</code>.
+<code>test_report_accounts_for_each_enabled_reference</code>:68,75–76 retains <code>NOT_EVALUATED</code>.</td>
+<td>Basic API and regression coverage exist. Holtrop-Mennen engineering accuracy is NOT_EVALUATED;
+the <a href="holtrop-reference-qualification.md">qualification note</a>:126–164 retains unverified targets, unresolved equations and applicability limits.</td>
+<td>Continue primary-paper and independent-answer qualification under #2020. Do not tune coefficients to approximate fixture targets or infer accuracy from citation emission.</td></tr>
+<tr id="criterion-3"><td>Stability calculation method implemented</td>
+<td>IMPLEMENTED: <a href="../../../src/digitalmodel/naval_architecture/stability.py">stability.py</a>:26–122 supplies GZ, TCG and free-surface corrections.</td>
+<td><code>test_righting_arm_gz_correction[heel_0]</code> through <code>[heel_40]</code>:285–303 assert absolute error &lt; 0.15 ft.
+<code>test_gz_from_cross_curves_cited_value_matches_plain</code>:29 retains equality to <code>gz_from_cross_curves(30, 10, 5)</code>.</td>
+<td>Chapter 4 regression and citation coverage exist. The five GZ nodes are one source example, not five independently qualified cases.</td>
+<td>Reconcile source targets and derive tolerances from printed precision before promoting the example; see <a href="#example-4">the GZ inventory row</a>.</td></tr>
+<tr id="criterion-4"><td>At least 5 validation cases (published vs computed match)</td>
+<td>UNMET as qualified published evidence. The <a href="../../../tests/naval_architecture/test_en400_worked_examples.py">EN400 test file</a>
+covers Chapters 1–4, 7 and 10, plus synthetic integration checks.</td>
+<td>The five selected source examples are inventoried below with exact nodes, expectations and tolerances.
+The curves-of-form node at :222 remains XFAIL with its missing-table reason.</td>
+<td>Three selected examples remain REPOSITORY_REGRESSION_ONLY; two are ALTERED_INPUT_REGRESSION.
+Zero of these five is promoted to qualified published evidence in this report.</td>
+<td>The earlier #1760 statement that existing EN400 tests exceed this criterion is not established by their passing count.
+Audit each source answer and rounding-derived tolerance, correct altered cases under a subsequent plan, and retain the missing-table gap.</td></tr>
+<tr id="criterion-5"><td>Module documented with API reference</td>
+<td>PARTIAL_DOCUMENTATION: <a href="../../../src/digitalmodel/naval_architecture/docs/agent-pack.md">agent-pack.md</a>:78–109 maps methods,
+:129–134 labels regressions and unverified sources; function docstrings describe inputs and units.</td>
+<td>No assertion establishes a complete API reference.
+<code>test_ittc_1957_cf_cited_emits_en400_citation</code> and <code>test_gz_from_cross_curves_cited_emits_en400_citation</code>:37–41 preserve EN400, Summer 2020 and chapter metadata.</td>
+<td>Method navigation and provenance metadata are documented; completeness and engineering qualification of an API reference are NOT_EVALUATED.</td>
+<td>Review callable coverage, parameter/return units and source links before marking the documentation criterion complete. Citation metadata alone does not prove source reproduction.</td></tr>
+</tbody>
+<caption>Table 2. Criterion wording from #1760, separated into implementation, regression and source evidence.</caption>
+</table>
+</div>
+<h2>Five selected EN400 examples</h2>
+<p>Node prefix: <code>tests/naval_architecture/test_en400_worked_examples.py::</code>.
+Repository expectations below are in-test literals, not independently extracted fixture answers.
+The <a href="../../../tests/fixtures/test_vectors/naval_architecture/en400_fundamentals.yaml">fundamentals YAML</a>
+records a source label and assumptions, but these nodes do not load it as their oracle.</p>
+<div class="scroll">
+<table>
+<thead><tr><th scope="col">Example and exact node suffix</th><th scope="col">Repository inputs, target and tolerance</th><th scope="col">Published inputs and answer</th><th scope="col">Source locator and disposition</th></tr></thead>
+<tbody>
+<tr id="example-1"><td>1.1 mass-to-weight<br><code>TestEN400Ch1Fundamentals::test_example_1_1_mass_to_weight</code> (:40–47)</td>
+<td>Mass 1.0 slug; target 32.17 lb; absolute error &lt; 0.01 lb.</td>
+<td>Mass 1 slug, gravity 32.17 ft/s²; answer 32.17 lb. Inputs and printed target match.</td>
+<td><a href="https://www.usna.edu/NAOE/_files/documents/Courses/EN400/EN400_Course_Notes,_Summer_2020.pdf#page=17">PDF p. 17</a>, printed p. 1-7.
+REPOSITORY_REGRESSION_ONLY: the tolerance is inherited, not derived from source precision.</td></tr>
+<tr id="example-2"><td>2.1 buoyant force<br><code>TestEN400Ch2HullFormGeometry::test_example_2_1_buoyant_force</code> (:76–83)</td>
+<td>Volume 20.0 ft³, saltwater selector; target 1280.0 lb; absolute error &lt; 1.0 lb.</td>
+<td>Volume 20 ft³, density 1.99 slug/ft³ and gravity 32.17 ft/s²; printed answer 1280 lb.
+The code uses specific weight 64.0 lb/ft³ rather than multiplying the two printed constants.</td>
+<td><a href="https://www.usna.edu/NAOE/_files/documents/Courses/EN400/EN400_Course_Notes,_Summer_2020.pdf#page=49">PDF p. 49</a>, printed p. 2-6.
+REPOSITORY_REGRESSION_ONLY: volume and fluid selection match; constant rounding and tolerance remain unaudited.</td></tr>
+<tr id="example-3"><td>3.2 vertical CG shift<br><code>TestEN400Ch3Hydrostatics::test_example_3_2_vertical_cg_shift</code> (:231–243)</td>
+<td>Displacement 4092.0 LT, initial KG 18.5 ft; add 100.0 LT at 30.0 ft.
+Target 18.774 ft; absolute error &lt; 0.01 ft.</td>
+<td>Displacement 4092 LT, initial KG 18.9 ft; add 200 LT at 10 ft and remove 75 LT at 20 ft.
+Printed final KG 18.5 ft.</td>
+<td><a href="https://www.usna.edu/NAOE/_files/documents/Courses/EN400/EN400_Course_Notes,_Summer_2020.pdf#page=107">PDF p. 107</a>, printed p. 3-12.
+ALTERED_INPUT_REGRESSION: a different loading case; its pass cannot reproduce Example 3.2.</td></tr>
+<tr id="example-4"><td>4.1 GZ correction<br><code>TestEN400Ch4Stability::test_righting_arm_gz_correction[heel_0]</code>,
+<code>[heel_10]</code>, <code>[heel_20]</code>, <code>[heel_30]</code>, <code>[heel_40]</code> (:281–303)</td>
+<td>KG 23.84 ft; heel (degrees) 0,10,20,30,40; KN (ft) 0,5.08,10.10,15.02,19.67.
+Targets (ft) 0,0.94,1.95,3.10,4.35; absolute error &lt; 0.15 ft per node.</td>
+<td>Same KG and selected cross-curve inputs at displacement 8600 LT.
+Printed corrected arms (ft) 0,0.94,1.95,3.11,4.36. The last two targets differ from the repository literals.</td>
+<td><a href="https://www.usna.edu/NAOE/_files/documents/Courses/EN400/EN400_Course_Notes,_Summer_2020.pdf#page=153">PDF p. 153</a>, printed p. 4-14.
+REPOSITORY_REGRESSION_ONLY: matching inputs do not resolve target rounding or justify the inherited tolerance.</td></tr>
+<tr id="example-7"><td>7.1 shaft horsepower<br><code>TestEN400Ch7ResistancePowering::test_example_7_1_shaft_horsepower</code> (:340–347)</td>
+<td>EHP 30000.0 HP, propulsive coefficient 0.60; target 50000.0 HP; absolute error &lt; 100.0 HP.</td>
+<td>EHP 30000 HP at 19 knots, propulsive efficiency 0.70; printed SHP 42860 HP.</td>
+<td><a href="https://www.usna.edu/NAOE/_files/documents/Courses/EN400/EN400_Course_Notes,_Summer_2020.pdf#page=253">PDF p. 253</a>, printed p. 7-5.
+ALTERED_INPUT_REGRESSION: changed efficiency changes the result; the current pass does not reproduce the published case.</td></tr>
+</tbody>
+<caption>Table 3. Source readback against five existing examples. All tolerances remain unchanged and unqualified.</caption>
+</table>
+</div>
+<h2>Unresolved paper qualifications</h2>
+<table>
+<thead><tr><th scope="col">Source selection</th><th scope="col">Status and missing evidence</th><th scope="col">Next checkpoint</th></tr></thead>
+<tbody>
+<tr><td><cite>An approximate power prediction method</cite> (1982)</td><td>NOT_EVALUATED. The existing qualification note records an access-required download, without paper equations or a traced worked answer.</td><td>#2020: obtain readable primary equations, determine formulation and map an independent answer with rounding-derived tolerance.</td></tr>
+<tr><td><cite>A statistical re-analysis of resistance and propulsion data</cite> (1984)</td><td>NOT_EVALUATED. The note records historical failed candidate addresses; the paper and equation/version map remain absent.</td><td>#2020: resolve primary source access and applicability before coefficient corrections or numerical qualification.</td></tr>
+<tr><td>Unspecified top-ten SNAME selection</td><td>UNMET. No ten titles, years, page ranges or method-to-equation map is enumerated in #1760; the extraction-plan locator is absent.</td><td>#1760: identify a first bounded source selection. The two resistance papers are qualification dependencies, not an invented top-ten list.</td></tr>
+</tbody>
+<caption>Table 4. Historical access evidence is taken from the existing note; no fresh access claim is made for either resistance paper.</caption>
+</table>
+<h2>Verification and limits</h2>
+<p>The unchanged four-file selection ran before and after authoring: 48 passed and 1 XFAIL in each run.
+The XFAIL is <code>TestEN400Ch3Hydrostatics::test_example_3_1_displacement_from_curves_of_form</code>;
+the existing reason is <q>curves_of_form needs ship hydrostatic data tables</q>. It contributes no qualified case.</p>
+<p>Selection: <code>test_en400_worked_examples.py</code>, <code>test_holtrop_reproduction.py</code>,
+<code>test_resistance_citations.py</code> and <code>test_stability_citations.py</code> in <code>tests/naval_architecture/</code>.
+Execution uses <code>PYTHONPATH=src uv run --no-project</code> with pytest, PyYAML and pytest-asyncio,
+then <code>python -m pytest &lt;selection&gt; -q -rA -p no:cacheprovider</code>, with temporary outputs outside the repository.</p>
+<p>The published-page path test at <code>tests/legal/test_published_pages_have_no_internal_paths.py:220</code>
+already fails before authoring on 11 unrelated pages. Reading those files from origin/main confirms identical contents.
+The legal-file outcomes before and after authoring are 12 passed and 1 pre-existing failure.
+The new page has no detected absolute filesystem path; the pre-existing disclosures are outside this report's scope.</p>
+<p>No calculation module, fixture, tolerance, citation behavior or dependency is changed. No extraction of paid papers,
+solver run, new numerical qualification or complete corpus selection is delivered. Source-answer and tolerance audits
+remain separate work; a second-provider review of this report is required before acceptance.</p>
+<h2 id="sources">Sources and pinned locators</h2>
+<p>Public source: USNA, <cite>EN400 Principles of Ship Performance</cite>, Summer 2020;
+retrieved 2026-11-16 at 10:06:51 UTC, HTTP 200. Saved source SHA-256:
+<code>f8f4807492bffcc61cfe1b03bc7a0f457d7ab5209bb0404bba44a4e363be7cec</code>.
+The five PDF page links above identify the inspected pages. Original PDF bytes remain outside this repository.</p>
+<ul>
+<li><a href="https://api.github.com/repositories/590299785/contents/src/digitalmodel/naval_architecture/resistance.py?ref=c13bd2b7ae8513f05c6d20772aa245255ce18f1d">Resistance source at pin</a>:25–112.</li>
+<li><a href="https://api.github.com/repositories/590299785/contents/src/digitalmodel/naval_architecture/stability.py?ref=c13bd2b7ae8513f05c6d20772aa245255ce18f1d">Stability source at pin</a>:26–122.</li>
+<li><a href="https://api.github.com/repositories/590299785/contents/src/digitalmodel/naval_architecture/holtrop_mennen.py?ref=c13bd2b7ae8513f05c6d20772aa245255ce18f1d">Hull resistance source at pin</a>.</li>
+<li><a href="https://api.github.com/repositories/590299785/contents/docs/domains/naval_architecture/holtrop-reference-qualification.md?ref=c13bd2b7ae8513f05c6d20772aa245255ce18f1d">Holtrop qualification note at pin</a>:17–45,126–164.</li>
+<li><a href="https://api.github.com/repositories/590299785/contents/tests/naval_architecture/test_en400_worked_examples.py?ref=c13bd2b7ae8513f05c6d20772aa245255ce18f1d">EN400 nodes and assertions at pin</a>.</li>
+<li><a href="https://api.github.com/repositories/590299785/contents/tests/naval_architecture/test_holtrop_reproduction.py?ref=c13bd2b7ae8513f05c6d20772aa245255ce18f1d">Holtrop diagnostic preservation assertions at pin</a>:66–80.</li>
+<li><a href="https://api.github.com/repositories/590299785/contents/tests/naval_architecture/test_resistance_citations.py?ref=c13bd2b7ae8513f05c6d20772aa245255ce18f1d">Resistance citation assertions at pin</a>:26–62;
+<a href="../../../tests/naval_architecture/test_resistance_citations.py">working-tree file</a>.</li>
+<li><a href="https://api.github.com/repositories/590299785/contents/tests/naval_architecture/test_stability_citations.py?ref=c13bd2b7ae8513f05c6d20772aa245255ce18f1d">Stability citation assertions at pin</a>:26–62;
+<a href="../../../tests/naval_architecture/test_stability_citations.py">working-tree file</a>.</li>
+<li><a href="https://api.github.com/repositories/590299785/contents/src/digitalmodel/naval_architecture/docs/agent-pack.md?ref=c13bd2b7ae8513f05c6d20772aa245255ce18f1d">Method and regression documentation at pin</a>:78–109,129–134.</li>
+<li><a href="https://api.github.com/repositories/590299785/contents/tests/fixtures/test_vectors/naval_architecture/en400_fundamentals.yaml?ref=c13bd2b7ae8513f05c6d20772aa245255ce18f1d">Fundamentals fixture source label at pin</a>.</li>
+</ul>
+</main>
+</body>
+</html>

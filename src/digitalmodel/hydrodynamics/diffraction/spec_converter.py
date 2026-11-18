@@ -21,6 +21,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from digitalmodel.hydrodynamics.diffraction.mesh_preflight import write_preflight_reports
 from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 from digitalmodel.hydrodynamics.diffraction.mesh_packaging import (
@@ -60,6 +61,7 @@ class SpecConverter:
         self.spec = DiffractionSpec.from_yaml(self.spec_path)
         # Non-blocking mesh quality warnings from the most recent convert()
         self.quality_warnings: list[str] = []
+        self.preflight_reports: dict[str, list[dict]] = {}
         self.backends: dict[str, AQWABackend | OrcaWaveBackend] = {
             "aqwa": AQWABackend(),
             "orcawave": OrcaWaveBackend(),
@@ -150,6 +152,8 @@ class SpecConverter:
         else:
             result = backend.generate_modular(spec_to_generate, output_dir)
 
+        self.preflight_reports[solver] = [dict(report) for report in backend.preflight_reports]
+        write_preflight_reports(self.preflight_reports[solver], output_dir)
         return result
 
     def convert_all(

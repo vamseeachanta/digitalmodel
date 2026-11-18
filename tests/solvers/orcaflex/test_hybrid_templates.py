@@ -40,6 +40,7 @@ def template_files():
     return get_all_template_files()
 
 
+@pytest.mark.solver
 @pytest.mark.skipif(not ORCFXAPI_AVAILABLE, reason="OrcFxAPI not available")
 class TestHybridTemplates:
     """Test suite for hybrid OrcaFlex templates."""

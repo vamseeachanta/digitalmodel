@@ -1,9 +1,11 @@
 # Material Grade Matrix — Validation Record (2026-06-28)
 
 Backing for `src/digitalmodel/materials/` (issue #1088, EPIC #1080 workstream B).
-The matrix is the single source of truth that the line-pipe (#1087), casing
-(#1090), rod (#1091) and structural modules consume, replacing 8+ scattered
-strength dicts that disagreed on values and units.
+The matrix stores edition-qualified strengths and separate compatibility
+snapshots. API 5L product levels are selected explicitly; an unavailable product
+level raises an error. Original-standard qualification is **NOT_EVALUATED**
+pending the maintainer's licensed-text check for
+[issue 2726](https://github.com/vamseeachanta/digitalmodel/issues/2726).
 
 ## Revision history
 
@@ -11,8 +13,13 @@ strength dicts that disagreed on values and units.
 |---|---|---|
 | 1 | 2026-10-18 | Added the #2726 supersession note to distinguish historical conversions from the current product-level basis. |
 | 2 | 2026-10-18 | Reworded the grade designation sentence to pass the engineering register check. |
+| 3 | 2026-10-21 | Replaced the superseded PSL interpretation with the current lookup basis and added an executable example to prevent stale answers. |
 
 ## Scope
+
+This initial family inventory is historical. The current registry also includes
+ASTM A312 austenitic and ASTM A790 duplex pipe grades; `materials.grades` is the
+authoritative inventory.
 
 | Standard | Grades | Count |
 |---|---|---|
@@ -22,38 +29,47 @@ strength dicts that disagreed on values and units.
 
 Stored in **MPa** (SI); psi properties and back-compat adapters provided.
 
-## Reconciliation of the prior disagreement
+## Product-level basis and historical conversions
 
-**Superseded by #2726:** the reconciliation and golden-value table below
-record the historical interpretation. Converted legacy tensile strengths are
-not the current API 5L 46th-edition SI minima. Current PSL1 entries use
-9.3.1 Table 6; X80 has no PSL1 entry. A25 and A have no PSL2 entry under
-9.3.2 Table 7. Consult `materials.grades` for supported product levels;
-licensed-text verification by the maintainer remains required before #2726 closes.
+The repository cites API 5L, *Line Pipe*, 46th edition (2018), clause 9.3.1,
+Table 6 (PSL1 tensile-test requirements), and clause 9.3.2, Table 7 (PSL2
+tensile-test requirements). `materials.grades` stores the SI entries directly;
+a ksi conversion is not used to derive those entries. Each available product level
+has its own source string, which is retained in `materials.database` records.
 
-The scattered tables disagreed on X52 in two distinct ways, both now resolved
-and documented per record:
+The common PSL1/PSL2 grades have equal SI tensile minima in this repository
+basis. PSL1 ends at X70; X80 and higher grades have no PSL1 record. A25 and A
+have no PSL2 record. Unsupported or unknown API product levels raise
+`ValueError` instead of selecting a different product level.
 
-1. **SMYS 358 / 359 / 360 MPa** — 358–359 are the US-customary `52 ksi`
-   conversion (52,000 psi = 358.5 MPa); 360 MPa is the ISO 3183 metric grade
-   `L360`. The matrix stores the ISO metric value (`smys_mpa`) and preserves the
-   ksi grade designation via `grade_ksi` for psi back-compat.
-2. **SMTS 455 vs 460 MPa** — this is the **PSL1 vs PSL2** split, *not* an error.
-   PSL1 X52 minimum tensile = 455 MPa; PSL2 = 460 MPa. The matrix stores PSL2 in
-   `smts_mpa` and PSL1 in `smts_psl1_mpa`; `smts_mpa(name, psl=...)` selects.
+Earlier versions treated converted US-customary tensile snapshots as PSL1
+SI minima and mixed truncation with rounding. That interpretation is
+superseded. The `legacy_*` adapters preserve historical consumer inputs;
+their outputs do not establish a current product-standard requirement.
+Consumer migration remains tracked in
+[issue 1089](https://github.com/vamseeachanta/digitalmodel/issues/1089).
 
-The same PSL1/PSL2 pattern explains the X60 (517/520), X65 (530/535), X70
-(565/570) and X80 (620/625) differences seen across the legacy dicts.
+The public [API publications catalogue (2023)](https://www.api.org/-/media/files/publications/2023_catalog/2023_api_publications_catalog.pdf)
+identifies the edition and publication year; it does not establish the table
+entries. A separate public [supplier specification](https://uniasen.com/standards/api-5l/),
+UNIASEN, *API 5L Pipe Specification*, names the same edition in its
+Specification section. Its Mechanical Requirement tables provide the
+independent published cross-check for the API strength fixtures and example
+(accessed 2026-10-21). That cross-check does not replace an inspection of the
+licensed standard. The maintainer's licensed-text check remains required
+before issue closure.
 
-## Golden values (published references)
+## Repository regression anchors
 
-Spot-checked against API 5L (46th ed.) / ISO 3183, IACS UR W11, EN 10025-2:
+These entries are read from `src/digitalmodel/materials/grades.py`, with its
+API 5L (46th edition) / ISO 3183, IACS UR W11 and EN 10025-2 citations.
+They describe the repository basis; original-source qualification is pending.
 
 | Grade | SMYS (MPa) | SMTS (MPa) | Note |
 |---|---|---|---|
-| X52 | 360 | 460 (PSL2) / 455 (PSL1) | ISO L360 |
-| X65 | 450 | 535 (PSL2) / 530 (PSL1) | ISO L450 |
-| X80 | 555 | 625 (PSL2) / 620 (PSL1) | ISO L555 |
+| X52 | 360 | 460 (PSL1 and PSL2) | ISO L360 |
+| X65 | 450 | 535 (PSL1 and PSL2) | ISO L450 |
+| X80 | 555 | 625 (PSL2) | ISO L555; PSL1 absent |
 | X120 | 830 | 915 | PSL2 only |
 | Grade A (hull) | 235 | 400 | NS, Charpy +20 C |
 | AH36 / EH36 / FH36 | 355 | 490 | letter = toughness only |
@@ -62,6 +78,58 @@ Spot-checked against API 5L (46th ed.) / ISO 3183, IACS UR W11, EN 10025-2:
 
 Young's modulus by family: line pipe 207 GPa, hull 206 GPa, EN structural
 210 GPa; ν = 0.30, ρ = 7850 kg/m³.
+
+## Worked example: explicit PSL1 lookup
+
+Inputs are grade `X52` (alias `L360`) and product level `PSL1`. The method
+selects the cited SI table entry, then compares the direct lookup and the
+indexed database. No strength equation or ksi rounding is applied. The
+expected answer below is read independently from the supplier's Mechanical
+Requirement PSL1 table, row L360/X52, and agrees with the existing grade
+source's API 5L, 46th edition (2018), clause 9.3.1/Table 6 citation.
+Original-standard qualification remains **NOT_EVALUATED**.
+
+```pycon
+>>> from digitalmodel.materials import smts_mpa
+>>> from digitalmodel.materials.database import load_database
+>>> database = load_database()
+>>> record = database.lookup("L360", psl="psl1")
+>>> (record.designation, record.product_level, record.strengths.units)
+('X52', 'PSL1', 'MPa')
+>>> smts_mpa("X52", psl="PSL1")
+460.0
+>>> record.strengths.smts_mpa
+460.0
+>>> smts_mpa("X52", psl="PSL2") == record.strengths.smts_mpa
+True
+>>> record.edition
+'46th ed.'
+>>> record.provenance.citation
+'API 5L (46th ed.), 9.3.1 Table 6 (PSL1), SI'
+
+```
+
+The answer is the stored tensile minimum for the selected product level;
+it is not a complete pipe qualification. An unsupported request is rejected:
+
+```pycon
+>>> smts_mpa("X80", psl="PSL1")
+Traceback (most recent call last):
+    ...
+ValueError: X80: PSL1 is not listed in API 5L 46th ed. Table 6
+>>> database.lookup("X80", psl="PSL1")
+Traceback (most recent call last):
+    ...
+ValueError: X80: PSL1 is not listed in API 5L 46th ed. Table 6
+
+```
+
+`tests/materials/test_psl1_example.py` executes these prompts and checks their
+answers. Run it together with the grade, database and audit regression tests:
+
+```sh
+PYTHONPATH=src uv run python -m pytest tests/materials
+```
 
 ## Back-compat verification
 
@@ -77,11 +145,13 @@ convention and guards against drift:
 
 ## Tests
 
-`tests/materials/test_grade_matrix.py` — 29 tests: published-value golden
-parametrizations (API 5L / IACS / EN), the legacy back-compat equalities, the
-toughness-letter invariance, ISO-alias and name-collision lookup behavior
-(API `A` vs hull `Grade A`), psi conversions, and registry completeness (33
-grades). All passing.
+`tests/materials/test_grade_matrix.py` covers all API 5L registry grades,
+product-level availability, the IACS / EN anchors, compatibility views,
+aliases and registry completeness. `tests/materials/test_audit_regressions.py`
+covers API product-level citations and rejected requests across the public
+strength views. `tests/materials/test_database.py` checks indexed records and
+repository provenance. Test results describe regression coverage, not
+licensed-text verification.
 
 ## Deferred
 

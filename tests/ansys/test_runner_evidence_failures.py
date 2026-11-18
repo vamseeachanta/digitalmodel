@@ -22,7 +22,7 @@ def _setup(tmp_path, monkeypatch, write_log=True):
         return SimpleNamespace(returncode=0, stdout="solver stdout", stderr="solver stderr")
 
     monkeypatch.setattr(ANSYSRunner, "_detect_executable", lambda self: Path("fake"))
-    monkeypatch.setattr("digitalmodel.ansys.runner.subprocess.run", simulate)
+    monkeypatch.setattr("digitalmodel.ansys.runner._run_solver_process", simulate)
     return script, output, calls
 
 

@@ -7,10 +7,12 @@ that can be used as a starting template for new service endpoints.
 import os
 
 from flask import Blueprint, jsonify, make_response
-from flask_httpauth import HTTPBasicAuth
+from digitalmodel.web.authentication import (
+    UTF8BasicAuth, verify_environment_credentials,
+)
 from flask_restful import Api, Resource
 
-auth = HTTPBasicAuth()
+auth = UTF8BasicAuth()
 
 AppName = os.path.basename(__file__).split(".")[0]
 AppBlueprint = Blueprint(AppName, __name__, template_folder="templates")
@@ -35,17 +37,15 @@ def _basic_auth_password_for(username):
     return value if matches else None
 
 
-@auth.get_password
-def get_password(username):
-    """Retrieve the password for HTTP basic authentication.
+def _basic_auth_verify_password(username, password):
+    """Use the template's independent environment settings with the common verifier."""
+    return verify_environment_credentials(username, password, prefix="TEMPLATE_CODE")
 
-    Args:
-        username: The username to authenticate.
 
-    Returns:
-        The password string if username is valid, None otherwise.
-    """
-    return _basic_auth_password_for(username)
+@auth.verify_password
+def verify_password(username, password):
+    """Verify live environment credentials using UTF-8 byte comparisons."""
+    return _basic_auth_verify_password(username, password)
 
 
 @auth.error_handler
