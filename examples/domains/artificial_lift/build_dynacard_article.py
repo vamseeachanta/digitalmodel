@@ -1,4 +1,5 @@
-"""Build the dynacard article (revision 3) as one static, offline HTML page.
+"""Build the dynacard article (revision 4) as one static, offline HTML page, and its
+detail pages in this repository.
 
 Inputs, all saved in this repository:
 - examples/report-evals/dynacard-pump-card/results.json: public example well results;
@@ -7,8 +8,13 @@ Inputs, all saved in this repository:
 - docs/domains/artificial_lift/dynacard-article/article-inputs.json: the example well's
   cards, inputs and shape reading, written by ``--refresh`` from the report analysis.
 
+Outputs: the article page, the Figure 1 data, and the Markdown detail pages that the
+article's appendices summarise and link (README, example well, numerical methods, ten
+examples, reusable prompts). The article links the detail pages at DETAIL_COMMIT.
+
 Charts are inline SVG written here; the page loads nothing from the network. Without
-JavaScript every example panel is shown; the inline script adds the hover view.
+JavaScript every example panel is shown; the inline script adds the hover view, opens on
+DEFAULT_EXAMPLE and marks the selected row.
 
 Usage (from the repository root):
     PYTHONPATH=src python examples/domains/artificial_lift/build_dynacard_article.py [--refresh] [--check]
@@ -32,6 +38,18 @@ CARDS_CSV = FOLDER / "figure-1-cards.csv"
 REPORT = Path("examples/report-evals/dynacard-pump-card/results.json")
 EXAMPLES = Path("docs/domains/artificial_lift/dynacard-examples/results.json")
 REPRODUCTION = Path("docs/apps/dynacard/reproduction.json")
+# Detail pages: each holds in full what one appendix of the article summarises.
+PAGES = {
+    "readme": FOLDER / "README.md",
+    "example_well": FOLDER / "example-well.md",
+    "methods": FOLDER / "numerical-methods.md",
+    "examples": FOLDER / "ten-examples.md",
+    "prompts": FOLDER / "reusable-prompts.md",
+}
+PROMPT = Path("examples/report-evals/dynacard-pump-card/PROMPT.md")
+REPORT_PAGE = Path("docs/domains/artificial_lift/dynacard-pump-card-report.md")
+BUILDER = Path("examples/domains/artificial_lift/build_dynacard_article.py")
+EXAMPLES_BUILDER = Path("examples/domains/artificial_lift/build_dynacard_worked_examples.py")
 
 REPO = "https://github.com/vamseeachanta/digitalmodel"
 # Pinned public commits of the linked pages: the pump-card report and its prompt, and the
@@ -43,8 +61,16 @@ APP_VERSION_DATE = "14 Nov 2026"  # UTC date of APP_COMMIT
 # Commit that added figure-1-cards.csv; the test checks the file has not changed since.
 CARDS_COMMIT = "242f931efefa8facbe337502a2cdb4cebe08fd78"
 PLATE_DOI = "https://doi.org/10.17632/hnfwm9mjs6.1"
+# Commit that holds the detail pages as published; the test checks they have not changed
+# since. None until the pages are first committed (links then follow the branch).
+DETAIL_COMMIT = None
+DETAIL_BRANCH = "feat/dynacard-article-r3"
+# The example selected when the page opens: not Example 1, so the reader sees at once
+# that selecting a row changes the row colour and the chart (maintainer review of revision 3, note 4).
+DEFAULT_EXAMPLE = 3
 
-REVISION = "Revision 3, 13 Nov 2026"
+REVISION = "Revision 4, 18 Nov 2026"
+REVISION_SHORT = "revision 4 of 18 Nov 2026"
 CLOSING = ("If you have run your own analysis, see a way to improve this one, or have an idea "
            "for a future issue, write to support@aceengineer.com. We read every reply and "
            "credit the ideas we use and provide results we obtained.")
@@ -130,6 +156,24 @@ def blob(commit: str, path: str) -> str:
 
 def tree(commit: str, path: str) -> str:
     return f"{REPO}/tree/{commit}/{path}"
+
+
+def detail(key: str) -> str:
+    """Link to a detail page, pinned to DETAIL_COMMIT once the pages are committed."""
+    return blob(DETAIL_COMMIT or DETAIL_BRANCH, PAGES[key].as_posix())
+
+
+def repo_link(key: str) -> str:
+    name = PAGES[key].name
+    return f'<a href="{detail(key)}">digitalmodel on GitHub, {esc(name)}</a>'
+
+
+def caption(notes, title) -> str:
+    """Numbered notes first, the figure title below them (FW-FIG-14)."""
+    js_attr = ' class="js-only"'
+    items = "".join(f"<li{js_attr if js else ''}>{text}</li>" for text, js in notes)
+    return (f'<figcaption><ol class="fig-notes">{items}</ol>'
+            f'<p class="fig-title"><b>{title}</b></p></figcaption>')
 
 
 def pct_score(p: float) -> str:
@@ -282,9 +326,12 @@ def figure_one(f) -> str:
     return (f'<figure id="figure-1">{svg}'
             '<div class="legend"><span class="key k-surface"></span>Surface card, measured'
             '<span class="key k-pump"></span>Pump card, computed</div>'
-            '<figcaption><b>Figure 1. Surface card and computed pump card, public example well.</b> '
-            f'Surface stroke {r["surface_stroke_in"]:.1f} in, pump stroke {r["pump_stroke_in"]:.1f} in. '
-            f'Data: <a href="{blob(CARDS_COMMIT, CARDS_CSV.as_posix())}">figure-1-cards.csv</a>, version of 13 Nov 2026.</figcaption></figure>')
+            + caption([(f'Surface stroke {r["surface_stroke_in"]:.1f} in, pump stroke {r["pump_stroke_in"]:.1f} in; '
+                        'each card is drawn from the bottom of its stroke.', False),
+                       (f'Data: <a href="{blob(CARDS_COMMIT, CARDS_CSV.as_posix())}">figure-1-cards.csv</a>, '
+                        'version of 13 Nov 2026.', False)],
+                      "Figure 1. Surface card and computed pump card, public example well.")
+            + '</figure>')
 
 
 def example_panel(rec) -> str:
@@ -311,7 +358,9 @@ def example_panel(rec) -> str:
         f'<span class="prob-track"><span class="prob-bar" style="width:{100 * v:.1f}%"></span></span>'
         f'<span class="prob-value">{pct_score(v)}</span></div>' for k, v in probs)
     return (f'<section class="example-panel" id="example-{rec["index"]}">'
-            f'<h3>Example {rec["index"]}: {esc(rec["english_gloss"])}</h3>{svg}'
+            f'<h3>Example {rec["index"]}: {esc(rec["english_gloss"])}</h3>'
+            f'<p class="select-note">Example {rec["index"]} is selected in the table. '
+            f'Select another row to show its cards and reading.</p>{svg}'
             '<div class="legend small"><span class="key k-surface"></span>Surface card'
             '<span class="key k-plate"></span>Plate shape<span class="key k-pump"></span>Pump card, computed</div>'
             f'<div class="probs" aria-label="Shape model, three highest classes">{bars}</div><ul>'
@@ -337,11 +386,21 @@ def examples_view(f) -> str:
              '</tr></thead><tbody>' + "".join(rows) + '</tbody></table></div>')
     panels = "".join(example_panel(rec) for rec in f["records"])
     readme = blob(APP_COMMIT, "docs/domains/artificial_lift/dynacard-examples/README.md")
-    return (f'<figure id="figure-2"><div class="examples-view"><div class="examples-table">{table}'
-            '<p class="hint">Point at a row, or select it, to show that example.</p></div>'
+    default = next(r for r in f["records"] if r["index"] == DEFAULT_EXAMPLE)
+    notes = [
+        (f'Example {DEFAULT_EXAMPLE}, {esc(default["english_gloss"].lower())}, is selected when the page opens. '
+         'Pointing at a row also selects it; the arrow keys move between rows.', True),
+        ('Each panel shows the surface card (blue), the plate shape (grey) and the computed pump card '
+         "(orange), with the shape model's three highest classes.", False),
+        ('Match "yes, assumed": the plate label is matched by assumption to a model class of another name.', False),
+        (f'Data: one CSV per example in the <a href="{readme}">worked examples</a>, version of {APP_VERSION_DATE}.', False),
+    ]
+    title = ('Figure 2. Ten pump conditions: model reading and cards'
+             '<span class="js-only">. Select a row in the table to show that example</span>.')
+    return (f'<figure id="figure-2" data-default="{DEFAULT_EXAMPLE}">'
+            f'<div class="examples-view"><div class="examples-table">{table}</div>'
             f'<div class="examples-panels" aria-live="polite">{panels}</div></div>'
-            '<figcaption><b>Figure 2. Ten pump conditions: model reading and cards.</b> '
-            f'Data: one CSV per example in the <a href="{readme}">worked examples</a>, version of {APP_VERSION_DATE}.</figcaption></figure>')
+            + caption(notes, title) + '</figure>')
 
 
 def contents(sections) -> str:
@@ -365,8 +424,8 @@ def body(f) -> str:
 <h1>Dynamometer card analysis: from the surface card to the pump card and a diagnosis</h1>
 <blockquote class="takeaway">A surface card, measured at the top of a rod-pumped well, carries enough to see the pump at the bottom of the well and to screen that pump from the office.</blockquote>
 <div class="opening">
-<p>A rod pump works at the bottom of the well, out of sight. What the operator measures is the surface card: the load on the polished rod against its position, over one stroke. That card mixes the pump's work with the weight, stretch and vibration of the rod string, so a pump problem can hide inside it.</p>
-<p>The capability shown here takes the rod string out of the picture. From the surface card and the well's rod and pump data, it computes the pump card, reads how far the plunger travels, how full the pump fills and what load it lifts, and gives a first reading of the pump's condition. It runs in a web page, so a well can be screened from the office and the well visit planned around a specific check.</p>
+<p>A rod pump works at the bottom of the well, out of sight. What the operator measures is the surface card: the load on the polished rod against its position, over one stroke. The card data contains all of this information at once: the pump's work, and the weight, stretch and vibration of the rod string, so a pump problem can hide inside it.</p>
+<p>To keep the problem simple, the capability shown here takes the rod string out of the picture. From the surface card and the well's rod and pump data, it computes the pump card, reads how far the plunger travels, how full the pump fills and what load it lifts, and gives a first reading of the pump's condition. It runs in a web page, so a well can be screened from the office and the well visit planned around a specific check. The rod string itself is the subject of later articles in this rod pump series.</p>
 </div>
 <p>Based on public data, two of the cards are shown in Figure 1.</p>
 <ul>
@@ -378,14 +437,12 @@ def body(f) -> str:
 <h2 id="key-conclusions">Key conclusions</h2>
 <p>The key conclusions for the example well are as follows:</p>
 <ul>
-<li>The pump fills to {r['fillage_pct']:.0f} % of its stroke. At 24 hours a day and no slip, it displaces {r['pump_displacement_bbl_day']:.1f} bbl/day, against {r['gross_displacement_bbl_day']:.1f} bbl/day for a full pump, so about {f['unused_capacity']:.0f} bbl/day of pump capacity is not used.</li>
-<li>On this card the pump fills to {r['fillage_pct']:.0f} %. The cause, whether inflow, gas, valve leakage or a corner-detection error, is a check for the well.</li>
+<li>The pump fills to {r['fillage_pct']:.0f} % of its stroke. At 24 hours a day and no slip, it displaces {r['pump_displacement_bbl_day']:.1f} bbl/day, against {r['gross_displacement_bbl_day']:.1f} bbl/day for a full pump, so about {f['unused_capacity']:.0f} bbl/day of pump capacity is not used. The cause, whether inflow, gas, valve leakage or a corner-detection error, is a check for the well.</li>
 <li>The plunger lifts a fluid load of {r['fluid_load_lbf']:,.0f} lbf on each upstroke.</li>
 <li>The pump stroke is {r['pump_stroke_in']:.1f} in, {100 * r['stroke_ratio']:.0f} % of the surface stroke. Rod stretch and rod dynamics take the rest, which the surface card alone does not separate.</li>
 <li>The card shape reads as {top['label'].lower()}{GLOSS.get(top['label'].lower(), '')}. This reading is a hypothesis to check at the well; the pump card, the fillage and the fluid load are the result.</li>
-<li>The well record marks this card as a shutdown card that the source system could not analyse, so the fillage and the fluid load rest on this calculation alone.</li>
 </ul>
-<p>Two numerical methods are available for the pump card: a finite-difference method and a frequency-domain method. On this well their pump cards agree closely, within {r['gibbs_default_load_nrmse_pct']:.2f} % of the load range. Both are in the reusable prompt; Appendix B compares them, and Appendix A gives the inputs and limits of the example well.</p>
+<p>Two numerical methods are available for the pump card: a finite-difference method and a frequency-domain method. On this well their pump cards agree within {r['gibbs_default_load_nrmse_pct']:.2f} % of the load range, so for this problem the two methods are equivalent. Appendices A and B give the example well and the comparison.</p>
 <h2 id="ten-conditions">Ten pump conditions read from their surface cards</h2>
 <p>Based on public data, ten common pump conditions are run through the same analysis, from surface card to pump card to a reading of the pump's condition. Each surface card is built from a published card shape, taken as a pump card by assumption, at an assumed stroke and load, so the cards illustrate shapes rather than field wells. They are shown in Figure 2.</p>
 <ul>
@@ -399,7 +456,7 @@ def body(f) -> str:
 <p>The same analysis runs in a web page in the <a href="{app}">digitalmodel library</a> (version of {APP_VERSION_DATE}); it needs no installation and no network once its files are on disk. Load a surface card with the well's rod and pump data, and the page draws the pump card and reads fillage, fluid load and the model readings.</p>
 <p><a href="{report_md}">Read the full study</a> (version of 12 Nov 2026)</p>
 <p>To try it out or adapt the analysis, see <a href="#appendix-d">reusable prompt</a>.</p>
-<p>The work leaves open the accuracy of the model readings on field cards: both models are trained on synthetic cards, and no labelled field cards were available to test them.</p>
+<p>The work leaves open the accuracy of the model readings on field cards: both models are trained on generated cards, and no labelled field cards were available to test them.</p>
 <aside class="offer">AceEngineer runs analyses of this kind as fixed-scope engineering projects.</aside>
 <p class="closing">{CLOSING}</p>
 <p class="signoff">Prepared: Analyst Deckhand. Checked: Editor Deckhand. Approved: Vamsee Achanta. {REVISION}.</p>
@@ -413,18 +470,16 @@ def body(f) -> str:
 """
 
 
-def table(headers, rows, caption) -> str:
-    head = "".join(f"<th>{esc(h)}</th>" for h in headers)
-    body_rows = "".join("<tr>" + "".join(f"<td>{c}</td>" for c in row) + "</tr>" for row in rows)
-    return (f'<div class="table-wrap"><table class="data"><thead><tr>{head}</tr></thead><tbody>{body_rows}</tbody></table></div>'
-            f'<p class="caption"><b>{caption}</b></p>')
+def md_table(headers, rows, caption_text) -> str:
+    """Markdown table with its caption below it (engineering register rule 6)."""
+    lines = ["| " + " | ".join(headers) + " |", "| " + " | ".join("---" for _ in headers) + " |"]
+    lines += ["| " + " | ".join(str(c) for c in row) + " |" for row in rows]
+    return "\n".join(lines) + f"\n\n{caption_text}\n"
 
 
-def appendices(f) -> str:
+def well_rows(f):
     r = f["report"]
     w = f["inputs"]["well"]
-    plate = f["inputs"]["plate_score"]
-    top = f["inputs"]["shape_top_three"]
     rods = w["rod_string"]
     inputs_rows = [
         ["Pumping speed", f"{w['strokes_per_minute']:.2f}", "SPM"],
@@ -444,69 +499,270 @@ def appendices(f) -> str:
         ["Maximum and minimum pump load", f"{r['maximum_pump_load_lbf']:,.0f}; {r['minimum_pump_load_lbf']:,.0f}", "lbf"],
         ["Displacement, fillage-adjusted and full pump", f"{r['pump_displacement_bbl_day']:.2f}; {r['gross_displacement_bbl_day']:.2f}", "bbl/day"],
     ]
+    return inputs_rows, result_rows
+
+
+def method_figures(f):
+    r = f["report"]
+    spread = max(r["default_reference_load_nrmse_pct"], r["gibbs_reference_load_nrmse_pct"])
+    return r["gibbs_default_load_nrmse_pct"], spread
+
+
+def appendices(f) -> str:
+    """Short appendices: a summary and a pinned link to the detail page (maintainer review of revision 3, notes 5 to 7)."""
+    r = f["report"]
+    w = f["inputs"]["well"]
+    pair, spread = method_figures(f)
     a = f"""
 <h2 id="appendix-a">Appendix A Example well: inputs, results and limits</h2>
-<p>The data, results and limits of the public example well are given in this appendix. The well is one anonymised field well in the digitalmodel library.</p>
-{table(["Input", "Value", "Unit"], inputs_rows, "Table A1. Example well inputs, from the well record; fluid density derived from its well test.")}
-{table(["Result", "Value", "Unit"], result_rows, "Table A2. Example well results, finite-difference method; displacement at 24 h/day and no slip.")}
+<p>The example well behind Figure 1 and the key conclusions is summarised in this appendix.</p>
 <ul>
-<li>The well record labels this card a shutdown card. The source system reports that its own corner detection, which finds the points where the valves open and close, failed on it, so the fillage and the fluid load rest on the corner detection of the digitalmodel library alone.</li>
-<li>The rod string in the record ends at {f['rod_length']:,.0f} ft and the pump is at {w['pump_depth_ft']:,.0f} ft. The end of the rod string is taken as the pump; the {w['pump_depth_ft'] - f['rod_length']:,.0f} ft between them is not represented.</li>
-<li>The shape model gives {top[0]['label'].lower()} a model score of {100 * top[0]['probability']:.2f} %. The score is the model's own output, not the chance that the fault is present. The model is trained on synthetic cards; on the ten plate shapes it is correct on {plate['including_assumed']['correct']} of {plate['including_assumed']['count']} ({plate['literal']['correct']} of the {plate['literal']['count']} whose plate label has the same name as a model class). The plate shapes also shape the synthetic training cards, so they are not an independent test.</li>
-<li>The inputs that matter most: a 1 % larger rod diameter lowers the maximum pump load by about {abs(r['factor_1pct_rod_diameter_maximum_pump_load_lbf']):.1f} % and the fillage by about {abs(r['factor_1pct_rod_diameter_fillage_pct']):.1f} %; a 1 % load-cell gain error raises the maximum pump load by about {r['factor_1pct_surface_load_scale_maximum_pump_load_lbf']:.1f} %; a 1 % surface position scale error moves the pump stroke by about {r['factor_1pct_surface_position_scale_pump_stroke_in']:.1f} %. The full sensitivity table is in the full study.</li>
-<li>Limits: unanchored tubing is not modelled and only steel rods are accepted. The frequency-domain method treats the well as vertical. A card alone does not give production; run time and slip are needed. The web page assumes a vertical well, anchored tubing and samples evenly spaced in time. Fluid load and fillage step with the detected corner samples, so rounding the last digit of a card can move the fluid load by tens of lbf: {f['precision_load']:.0f} lbf at most in the ten examples.</li>
-</ul>"""
-    b_rows = [["Frequency domain", "Finite difference (default)", f"{r['gibbs_default_load_nrmse_pct']:.2f}"],
-              ["Finite difference (default)", "Card stored in the well record", f"{r['default_reference_load_nrmse_pct']:.2f}"],
-              ["Frequency domain", "Card stored in the well record", f"{r['gibbs_reference_load_nrmse_pct']:.2f}"]]
+<li>The well is one anonymised field well in the digitalmodel library: a {w['plunger_diameter_in']:.3f} in plunger at {w['pump_depth_ft']:,.0f} ft on a two-taper steel rod string, pumped at {w['strokes_per_minute']:.2f} strokes a minute. Its record marks this card as a shutdown card that the source system could not analyse, so the fillage and the fluid load rest on this calculation alone.</li>
+<li>The inputs that matter most: a 1 % larger rod diameter lowers the maximum pump load by about {abs(r['factor_1pct_rod_diameter_maximum_pump_load_lbf']):.1f} %, and a 1 % load-cell gain error raises it by about {r['factor_1pct_surface_load_scale_maximum_pump_load_lbf']:.1f} %.</li>
+<li>Unanchored tubing is not modelled and only steel rods are accepted; the frequency-domain method and the web page treat the well as vertical.</li>
+</ul>
+<p>Inputs, results, sensitivity and limits in full: {repo_link("example_well")}.</p>"""
     b = f"""
 <h2 id="appendix-b">Appendix B The two numerical methods compared</h2>
-<p>The two methods that compute the pump card are compared in this appendix.</p>
+<p>The key conclusion of the comparison of the two methods is given in this appendix.</p>
 <ul>
-<li>Finite-difference method, the default: it marches the damped wave equation for axial motion through the tapered rod string, after Everitt and Jennings (1992) [2].</li>
-<li>Frequency-domain method: it solves the rod model of Gibbs (1963) [1] harmonic by harmonic, with 15 harmonics, and treats the well as vertical.</li>
-<li>The well record also stores a pump card from the source system's own finite-difference calculation.</li>
+<li>A finite-difference method, the default, and a frequency-domain method compute the pump card. On the example well their pump cards differ by {pair:.2f} % of the load range, and each is within {spread:.2f} % of the card stored in the well record.</li>
+<li>For this problem, at this accuracy, the methods are equivalent. All results in this article use the default method.</li>
+<li>As more types of card come in, the two methods are kept side by side: some physical behaviour may be captured better by one method than by the other.</li>
 </ul>
-{table(["Pump card", "Compared with", "Load difference (% of load range)"], b_rows, "Table B1. Root-mean-square load difference between pump cards.")}
-<p>The two methods agree to {r['gibbs_default_load_nrmse_pct']:.2f} % of the load range, and each is within {max(r['default_reference_load_nrmse_pct'], r['gibbs_reference_load_nrmse_pct']):.2f} % of the stored card. The stored card uses damping close to that of the default method, so its agreement with that method is a regression check; the frequency-domain method is the independent one. All results in this article use the default method.</p>"""
-    c_rows = []
-    for rec in f["records"]:
-        an, d = rec["analysis"], rec["diagnosis"]
-        c_rows.append([str(rec["index"]), esc(rec["english_gloss"]), f"{an['surface_stroke_in']:.2f}",
-                       f"{an['pump_gross_stroke_in']:.2f}", f"{an['fillage_pct']:.1f}",
-                       f"{an['fluid_load_lbf']:,.0f}", f"{rec['round_trip']['load_nrmse_pct']:.2f}",
-                       esc(PLAIN[d['shape_only']['classification']]), esc(PLAIN[d['shipped']['classification']])])
-    basis = f["basis"]
-    readme = blob(APP_COMMIT, "docs/domains/artificial_lift/dynacard-examples/README.md")
-    matrix = blob(APP_COMMIT, "docs/domains/artificial_lift/dynacard-examples/diagnostics-matrix.png")
+<p>Methods and comparison in full: {repo_link("methods")}.</p>"""
     c = f"""
 <h2 id="appendix-c">Appendix C The ten examples in detail</h2>
-<p>How the ten examples are built and their full values are given in this appendix.</p>
+<p>How the ten examples of Figure 2 are built is summarised in this appendix.</p>
 <ul>
-<li>Each of the ten shapes of the public diagnostic plate [3] is scaled to an assumed {basis['stroke_in']['value']:.0f} in pump stroke and to the static fluid load of a {w['plunger_diameter_in']:.1f} in plunger at {w['pump_depth_ft']:,.0f} ft with {w['tubing_pressure_psi']:.0f} psi tubing pressure and zero pump intake pressure ({basis['load_range_lbf']['value']:,.0f} lbf). These are shape illustrations, not field pump cards. The plate gives shapes only, with no stroke or load, and does not say whether they are surface or pump cards; they are taken as pump cards by assumption.</li>
-<li>Each scaled shape is lifted to a surface card through the rod string of the example well and then analysed like a measured card. The surface cards are therefore synthesised, not measured.</li>
-<li>The plate labels insufficient supply and sand production have no model class of the same name; they are matched to fluid pound and sand wear by assumption.</li>
-<li>The shape model names {f['matches']} of the 10 conditions; the second, shipped model names {f['shipped']}. Model scores are the models' own outputs, not the chance that a fault is present.</li>
+<li>Each surface card starts from one of the ten shapes of the public diagnostic plate [3], taken as a pump card by assumption and scaled to an assumed stroke and load. It is lifted to the surface through the rod string of the example well and then analysed like a measured card.</li>
 <li>The web page reproduces the library on all ten examples: pump loads within {upper_bound(f['repro_load'])} lbf and {"the same" if f['repro_labels'] else "different"} model labels.</li>
 </ul>
-{table(["No.", "Condition", "Surface stroke (in)", "Pump stroke (in)", "Fillage (%)", "Fluid load (lbf)", "Round trip (% of load range)", "Shape model", "Shipped model"], c_rows, "Table C1. Ten worked examples, finite-difference method.")}
-<p>The probabilities of all model classes are shown in the <a href="{matrix}">diagnostics matrix</a>; each example's figure and data are in the <a href="{readme}">worked examples</a>. Both are versions of {APP_VERSION_DATE}.</p>"""
-    prompt = blob(REPORT_COMMIT, "examples/report-evals/dynacard-pump-card/PROMPT.md")
+<p>Basis, assumptions and the full values of each example: {repo_link("examples")}.</p>"""
     fixture = blob(APP_COMMIT, f["inputs"]["fixture"])
     d = f"""
 <h2 id="appendix-d">Appendix D Reusable prompts</h2>
-<p>The reusable prompt lets your team, or your assistant, rebuild this analysis from public code and then run it on a card of your own. To have a study of your own rod pump done for you instead, see below.</p>
-<p><b>What you need to run this</b></p>
 <ul>
-<li>Data required: none beyond the public data below.</li>
-<li>Data required to adapt: a surface card over one stroke, the rod string, the pump depth and plunger diameter, and the pumping speed.</li>
-<li>Paid or behind an account: none.</li>
-<li>Changes over time: the prompt runs the latest version of the analysis code until that version is published; the data links are pinned to a commit.</li>
+<li>Rebuild this analysis from public code with your own AI assistant, and check it against the published values.</li>
+<li>Then run it on a surface card of your own well.</li>
 </ul>
-<p>Give this prompt to your assistant: <a href="{prompt}">reusable prompt for the pump card analysis</a>, in the digitalmodel library, version of 12 Nov 2026.</p>
-<p>Data: public example well, file <a href="{fixture}">cleansed_well_001.json</a> of the digitalmodel library, MIT licence, version of {APP_VERSION_DATE}; public diagnostic plate, Mendeley Data, <a href="{PLATE_DOI}">doi:10.17632/hnfwm9mjs6.1</a>, CC0 1.0, retrieved 11 Oct 2026.</p>
-<p>To have a study of your own rod pump done for you, write to support@aceengineer.com.</p>"""
+<p>Prompts, data and check values: {repo_link("prompts")}.</p>
+<p>Data: public example well, file <a href="{fixture}">cleansed_well_001.json</a> of the digitalmodel library, MIT licence, version of {APP_VERSION_DATE}; public diagnostic plate [3], CC0 1.0, retrieved 11 Oct 2026.</p>"""
     return a + b + c + d
+
+
+# ---------------------------------------------------------------- detail pages (Markdown)
+
+ARTICLE_TITLE = "Dynamometer card analysis: from the surface card to the pump card and a diagnosis"
+
+
+def page_head(title: str, appendix: str, purposes) -> str:
+    bullets = "\n".join(f"- {p}" for p in purposes)
+    return (f"# {title}\n\n"
+            f'Dynacard article ("{ARTICLE_TITLE}"), {REVISION_SHORT}. This page holds in full what '
+            f"{appendix} of the article summarises. `{BUILDER.as_posix()}` "
+            "writes it from the saved results.\n\n"
+            f"Purpose:\n\n{bullets}\n")
+
+
+def page_readme(f) -> str:
+    rows = [
+        ["[Example well](example-well.md)", "Inputs, results, sensitivity and limits of the public example well", "Appendix A"],
+        ["[Numerical methods](numerical-methods.md)", "The finite-difference and frequency-domain methods and their comparison", "Appendix B"],
+        ["[Ten examples](ten-examples.md)", "How the ten pump conditions are built, and their full values", "Appendix C"],
+        ["[Reusable prompts](reusable-prompts.md)", "The prompts to rebuild the analysis and run it on your own card", "Appendix D"],
+    ]
+    return (f"# Dynacard article: detail pages\n\n"
+            f'Article: "{ARTICLE_TITLE}", {REVISION_SHORT}. The article gives a short summary in each '
+            "appendix; this folder holds the detail in full, one page per appendix.\n\n"
+            + md_table(["Page", "What it holds", "Article part"], rows, "Table 1. Detail pages of the article.")
+            + "\nOther files in this folder:\n\n"
+            "- `dynacard-article.html`: the article page, static and offline.\n"
+            "- `article-inputs.json`: the example well's cards, inputs and shape reading, from the report analysis.\n"
+            "- `figure-1-cards.csv`: the data of Figure 1.\n\n"
+            "Rebuild every file in this folder, or check that none is stale, from the repository root:\n\n"
+            "```text\n"
+            f"PYTHONPATH=src python {BUILDER.as_posix()}\n"
+            f"PYTHONPATH=src python {BUILDER.as_posix()} --check\n"
+            "```\n")
+
+
+def page_example_well(f) -> str:
+    r = f["report"]
+    w = f["inputs"]["well"]
+    plate = f["inputs"]["plate_score"]
+    top = f["inputs"]["shape_top_three"]
+    inputs_rows, result_rows = well_rows(f)
+    fixture = blob(APP_COMMIT, f["inputs"]["fixture"])
+    report_md = blob(REPORT_COMMIT, REPORT_PAGE.as_posix())
+    return (page_head("Example well: inputs, results and limits", "Appendix A", [
+                "Give the inputs and results of the public example well behind Figure 1 and the key conclusions.",
+                "State the sensitivity and the limits that apply to the example well and to the web page."])
+            + f"\nThe well is one anonymised field well in this library: [cleansed_well_001.json]({fixture}), "
+              f"version of {APP_VERSION_DATE}.\n\n"
+            + "## Inputs\n\n"
+            + md_table(["Input", "Value", "Unit"], inputs_rows,
+                       "Table 1. Example well inputs, from the well record; fluid density derived from its well test.")
+            + "\n## Results\n\n"
+            + md_table(["Result", "Value", "Unit"], result_rows,
+                       "Table 2. Example well results, finite-difference method; displacement at 24 h/day and no slip.")
+            + "\n## Notes and limits\n\n"
+            + f"- The well record labels this card a shutdown card. The source system reports that its own corner "
+              "detection, which finds the points where the valves open and close, failed on it, so the fillage and "
+              "the fluid load rest on the corner detection of the digitalmodel library alone.\n"
+            + f"- The rod string in the record ends at {f['rod_length']:,.0f} ft and the pump is at "
+              f"{w['pump_depth_ft']:,.0f} ft. The end of the rod string is taken as the pump; the "
+              f"{w['pump_depth_ft'] - f['rod_length']:,.0f} ft between them is not represented.\n"
+            + f"- The shape model gives {top[0]['label'].lower()} a model score of {100 * top[0]['probability']:.2f} %. "
+              "The score is the model's own output, not the chance that the fault is present. The model is trained on "
+              f"generated cards; on the ten plate shapes it is correct on {plate['including_assumed']['correct']} of "
+              f"{plate['including_assumed']['count']} ({plate['literal']['correct']} of the {plate['literal']['count']} "
+              "whose plate label has the same name as a model class). The plate shapes also shape the generated "
+              "training cards, so they are not an independent test.\n"
+            + f"- The inputs that matter most: a 1 % larger rod diameter lowers the maximum pump load by about "
+              f"{abs(r['factor_1pct_rod_diameter_maximum_pump_load_lbf']):.1f} % and the fillage by about "
+              f"{abs(r['factor_1pct_rod_diameter_fillage_pct']):.1f} %; a 1 % load-cell gain error raises the maximum "
+              f"pump load by about {r['factor_1pct_surface_load_scale_maximum_pump_load_lbf']:.1f} %; a 1 % surface "
+              f"position scale error moves the pump stroke by about "
+              f"{r['factor_1pct_surface_position_scale_pump_stroke_in']:.1f} %. The full sensitivity table is in "
+              f"Appendix A of the [full study]({report_md}).\n"
+            + "- Limits: unanchored tubing is not modelled and only steel rods are accepted. The frequency-domain "
+              "method treats the well as vertical. A card alone does not give production; run time and slip are needed. The web page "
+              "assumes a vertical well, anchored tubing and samples evenly spaced in time. Fluid load and fillage step "
+              "with the detected corner samples, so rounding the last digit of a card can move the fluid load by tens "
+              f"of lbf: {f['precision_load']:.0f} lbf at most in the ten examples.\n")
+
+
+def page_methods(f) -> str:
+    r = f["report"]
+    pair, spread = method_figures(f)
+    rows = [["Frequency domain", "Finite difference (default)", f"{r['gibbs_default_load_nrmse_pct']:.2f}"],
+            ["Finite difference (default)", "Card stored in the well record", f"{r['default_reference_load_nrmse_pct']:.2f}"],
+            ["Frequency domain", "Card stored in the well record", f"{r['gibbs_reference_load_nrmse_pct']:.2f}"]]
+    report_md = blob(REPORT_COMMIT, REPORT_PAGE.as_posix())
+    return (page_head("Two numerical methods for the pump card", "Appendix B", [
+                "Describe the two methods that compute the pump card from the surface card.",
+                "Compare their pump cards on the public example well, and state what the comparison means."])
+            + "\n## Key conclusion\n\n"
+            + f"- On the public example well the pump cards of the two methods differ by {pair:.2f} % of the load "
+              f"range, and each is within {spread:.2f} % of the card stored in the well record (Table 1).\n"
+            + "- For this problem, at this accuracy, the methods are equivalent. All results in the article use the "
+              "default method.\n"
+            + "- As more types of card come in, the two methods are kept side by side: some physical behaviour may be "
+              "captured better by one method than by the other.\n"
+            + "\n## Methods\n\n"
+            + "- Finite-difference method, the default: it marches the damped wave equation for axial motion through "
+              "the tapered rod string, after Everitt and Jennings (1992), "
+              "[SPE-18189-PA](https://doi.org/10.2118/18189-PA).\n"
+            + "- Frequency-domain method: it solves the rod model of Gibbs (1963), "
+              "[SPE-588-PA](https://doi.org/10.2118/588-PA), harmonic by harmonic, with 15 harmonics, and treats the "
+              "well as vertical.\n"
+            + "- The well record also stores a pump card from the source system's own finite-difference calculation.\n"
+            + "\n## Comparison on the example well\n\n"
+            + md_table(["Pump card", "Compared with", "Load difference (% of load range)"], rows,
+                       "Table 1. Root-mean-square load difference between pump cards.")
+            + "\nThe stored card uses damping close to that of the default method, so its agreement with that method "
+              "is a regression check; the frequency-domain method is the independent one.\n\n"
+            + f"The method and the checks of both solvers are given in sections 3 and 4 of the [full study]({report_md}).\n")
+
+
+def page_examples(f) -> str:
+    w = f["inputs"]["well"]
+    basis = f["basis"]
+    rows = []
+    for rec in f["records"]:
+        an, d = rec["analysis"], rec["diagnosis"]
+        rows.append([str(rec["index"]), rec["english_gloss"], f"{an['surface_stroke_in']:.2f}",
+                     f"{an['pump_gross_stroke_in']:.2f}", f"{an['fillage_pct']:.1f}",
+                     f"{an['fluid_load_lbf']:,.0f}", f"{rec['round_trip']['load_nrmse_pct']:.2f}",
+                     PLAIN[d['shape_only']['classification']], PLAIN[d['shipped']['classification']]])
+    readme = blob(APP_COMMIT, "docs/domains/artificial_lift/dynacard-examples/README.md")
+    matrix = blob(APP_COMMIT, "docs/domains/artificial_lift/dynacard-examples/diagnostics-matrix.png")
+    return (page_head("Ten pump conditions: how the examples are built, and their values", "Appendix C", [
+                "Say how the ten examples of Figure 2 are built from the public diagnostic plate.",
+                "Give the full values of each example and the model readings."])
+            + "\n## How the examples are built\n\n"
+            + f"- Each of the ten shapes of the public diagnostic plate "
+              f"([doi:10.17632/hnfwm9mjs6.1]({PLATE_DOI}), CC0 1.0, retrieved 11 Oct 2026) is scaled to an assumed "
+              f"{basis['stroke_in']['value']:.0f} in pump stroke and to the static fluid load of a "
+              f"{w['plunger_diameter_in']:.1f} in plunger at {w['pump_depth_ft']:,.0f} ft with "
+              f"{w['tubing_pressure_psi']:.0f} psi tubing pressure and zero pump intake pressure "
+              f"({basis['load_range_lbf']['value']:,.0f} lbf). These are shape illustrations, not field pump cards. "
+              "The plate gives shapes only, with no stroke or load, and does not say whether they are surface or pump "
+              "cards; they are taken as pump cards by assumption.\n"
+            + "- Each scaled shape is lifted to a surface card through the rod string of the example well and then "
+              "analysed like a measured card. The surface cards are therefore synthesised, not measured.\n"
+            + "- The plate labels insufficient supply and sand production have no model class of the same name; they "
+              "are matched to fluid pound and sand wear by assumption.\n"
+            + f"- The shape model names {f['matches']} of the 10 conditions; the second, shipped model names "
+              f"{f['shipped']}. Model scores are the models' own outputs, not the chance that a fault is present.\n"
+            + f"- The web page reproduces the library on all ten examples: pump loads within "
+              f"{upper_bound(f['repro_load'])} lbf and {'the same' if f['repro_labels'] else 'different'} model labels.\n"
+            + "\n## Values\n\n"
+            + md_table(["No.", "Condition", "Surface stroke (in)", "Pump stroke (in)", "Fillage (%)",
+                        "Fluid load (lbf)", "Round trip (% of load range)", "Shape model", "Shipped model"], rows,
+                       "Table 1. Ten worked examples, finite-difference method.")
+            + f"\nThe probabilities of all model classes are shown in the [diagnostics matrix]({matrix}); each "
+              f"example's figure and data are in the [worked examples]({readme}). Both are versions of "
+              f"{APP_VERSION_DATE}.\n")
+
+
+def page_prompts(f) -> str:
+    r = f["report"]
+    prompt = blob(REPORT_COMMIT, PROMPT.as_posix())
+    fixture = blob(APP_COMMIT, f["inputs"]["fixture"])
+    app = blob(APP_COMMIT, "docs/apps/dynacard/README.md")
+    template = blob(REPORT_COMMIT, "examples/report-evals/dynacard-pump-card/reader-card-template.json")
+    checks = (f"surface stroke {r['surface_stroke_in']:.2f} in, pump stroke {r['pump_stroke_in']:.2f} in, "
+              f"fluid load {r['fluid_load_lbf']:,.0f} lbf, fillage {r['fillage_pct']:.2f} %, displacement "
+              f"{r['pump_displacement_bbl_day']:.2f} bbl/day fillage-adjusted and "
+              f"{r['gross_displacement_bbl_day']:.2f} bbl/day for a full pump, at 24 h/day and no slip")
+    return (f"# Reusable prompts: surface card to pump card\n\n"
+            f'Dynacard article ("{ARTICLE_TITLE}"), {REVISION_SHORT}. This page holds in full what Appendix D '
+            f"of the article summarises. `{BUILDER.as_posix()}` writes it from the saved "
+            "results.\n\n"
+            "These prompts let your team, or your AI assistant, rebuild the article's analysis from public code and "
+            "then run it on a card of your own. To have a study of your own rod pump done for you instead, see "
+            "below.\n\n"
+            "## What you need to run this\n\n"
+            "- Data required: none beyond the public data set below.\n"
+            "- Data required to adapt: a surface card over one stroke, the rod string, the pump depth and plunger "
+            "diameter, and the pumping speed.\n"
+            "- Paid or behind an account: none.\n"
+            "- Changes over time: the prompt runs the latest version of the analysis code until that version is "
+            "published; the data links are pinned to a commit.\n\n"
+            "## Reproduce the published result\n\n"
+            "Give this prompt to your assistant:\n\n"
+            "> Turn the surface dynamometer card of the public example well in the digitalmodel library into a pump "
+            "card with the wave equation, and read pump stroke, fluid load and fillage from it. Follow PROMPT.md "
+            "in examples/report-evals/dynacard-pump-card step by step: it gives the commands, the inputs to ask "
+            "for and the expected values. Grade the result with eval.py beside it.\n\n"
+            f"- Complete prompt, to copy whole: [PROMPT.md]({prompt}), version of 12 Nov 2026.\n"
+            f"- Check values on the public example well, finite-difference method: {checks}.\n"
+            "- The ten examples of Figure 2 rebuild from the repository root with "
+            f"`PYTHONPATH=src python {EXAMPLES_BUILDER.as_posix()} --check`; their values are in "
+            "[ten-examples.md](ten-examples.md).\n\n"
+            "## Adapt it to your project\n\n"
+            "Give this prompt to your assistant:\n\n"
+            "> Copy reader-card-template.json beside PROMPT.md, replace the surface card samples and the as-run rod "
+            "string, pump depth, plunger diameter and pumping speed with my well's values, and run analysis.py on "
+            "the new file as PROMPT.md shows. Ask me for every item PROMPT.md lists under \"Ask me before you go on "
+            "if\". Keep every ASSUMED input, and report every shape reading as a hypothesis to check at the well.\n\n"
+            f"- Template: [reader-card-template.json]({template}).\n"
+            f"- Without an assistant: the [web page]({app}) of the library, version of {APP_VERSION_DATE}, loads a "
+            "surface card as a CSV with the well's rod and pump data and draws the pump card.\n\n"
+            "## Data set\n\n"
+            f"- Public example well: [cleansed_well_001.json]({fixture}) of the digitalmodel library, MIT licence, "
+            f"version of {APP_VERSION_DATE}.\n"
+            f"- Public diagnostic plate of ten pump working conditions: Mendeley Data, version 1, "
+            f"[doi:10.17632/hnfwm9mjs6.1]({PLATE_DOI}), CC0 1.0, retrieved 11 Oct 2026.\n\n"
+            "To have a study of your own rod pump done for you, write to support@aceengineer.com.\n")
+
+
+def detail_pages(f) -> dict:
+    return {PAGES["readme"]: page_readme(f), PAGES["example_well"]: page_example_well(f),
+            PAGES["methods"]: page_methods(f), PAGES["examples"]: page_examples(f),
+            PAGES["prompts"]: page_prompts(f)}
 
 
 CSS = """
@@ -540,14 +796,17 @@ figure{margin:18px 0}figcaption,.caption{font:13px/1.45 system-ui,sans-serif;col
 table{border-collapse:collapse;width:100%%;font:13px/1.4 system-ui,sans-serif}
 th,td{border-bottom:1px solid var(--line);padding:5px 6px;text-align:left;vertical-align:top}th{color:var(--ink2);font-weight:600}
 td.num{text-align:right;font-variant-numeric:tabular-nums}td.yes{color:#1b6e3a}td.no{color:#9a3412}
-table.examples tbody tr{cursor:pointer}table.examples tbody tr:hover,table.examples tbody tr:focus,table.examples tbody tr.active{background:#eef4fb;outline:none}
-.hint{font:12px system-ui,sans-serif;color:var(--muted);margin:6px 0 0;display:none}
+table.examples tbody tr{cursor:pointer}
+table.examples tbody tr:hover,table.examples tbody tr:focus,table.examples tbody tr.active{background:#d6e6f8;box-shadow:inset 4px 0 0 var(--blue);outline:none}
+.select-note{display:none;font:13px/1.4 system-ui,sans-serif;color:var(--blue);margin:0 0 6px}
+.js-only{display:none}.js li.js-only{display:list-item}.js span.js-only{display:inline}
+figcaption .fig-notes{margin:6px 0 2px;padding-left:18px}figcaption .fig-title{margin:2px 0 0}
 .examples-panels{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-top:16px}
 .example-panel ul{font-size:14px;padding-left:18px;margin:6px 0 0}
 .probs{font:12px system-ui,sans-serif;margin-top:8px}.prob-row{display:grid;grid-template-columns:150px 1fr 64px;gap:8px;align-items:center;margin:2px 0}
 .prob-track{background:#f0efec;height:8px;border-radius:4px;overflow:hidden}.prob-bar{display:block;height:8px;background:var(--orange);border-radius:4px}
 .prob-value{text-align:right;color:var(--ink2)}
-.js .hint{display:block}
+.js .select-note{display:block}
 .js .examples-view{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
 .js .examples-panels{display:block;margin-top:0;position:sticky;top:16px}
 .js .example-panel{display:none}.js .example-panel.active{display:block}
@@ -555,7 +814,7 @@ table.examples tbody tr{cursor:pointer}table.examples tbody tr:hover,table.examp
 aside.offer{border:1px solid var(--line);border-radius:6px;padding:10px 14px;font:14px system-ui,sans-serif;color:var(--ink2);margin:16px 0}
 .signoff{font:12px system-ui,sans-serif;color:var(--muted)}
 ol.refs{font-size:14px}
-@media print{.contents,.hint{display:none}.page{display:block}.js .example-panel{display:block}.js .examples-view{display:block}}
+@media print{.contents,.select-note,.js-only{display:none}.page{display:block}.js .example-panel{display:block}.js .examples-view{display:block}}
 """ % (BLUE, ORANGE, GREY)
 
 SCRIPT = """
@@ -563,7 +822,7 @@ SCRIPT = """
 var root=document.documentElement;root.className+=' js';
 var rows=Array.prototype.slice.call(document.querySelectorAll('tr[data-example]'));
 function show(n){
-  rows.forEach(function(r){var on=r.getAttribute('data-example')===n;r.classList.toggle('active',on);});
+  rows.forEach(function(r){var on=r.getAttribute('data-example')===n;r.classList.toggle('active',on);r.setAttribute('aria-selected',on?'true':'false');});
   Array.prototype.forEach.call(document.querySelectorAll('.example-panel'),function(p){p.classList.toggle('active',p.id==='example-'+n);});
 }
 rows.forEach(function(r){var n=r.getAttribute('data-example');
@@ -573,7 +832,8 @@ rows.forEach(function(r){var n=r.getAttribute('data-example');
     if(e.key==='ArrowDown'&&i<rows.length-1){rows[i+1].focus();e.preventDefault();}
     if(e.key==='ArrowUp'&&i>0){rows[i-1].focus();e.preventDefault();}});
 });
-if(rows.length){show(rows[0].getAttribute('data-example'));}
+var fig=document.getElementById('figure-2');var first=fig&&fig.getAttribute('data-default');
+if(rows.length){show(first||rows[0].getAttribute('data-example'));}
 })();
 """
 
@@ -582,7 +842,7 @@ def build_html(root: Path = ROOT) -> str:
     f = facts(load_sources(root))
     sections = [("key-conclusions", "Key conclusions"), ("ten-conditions", "Ten pump conditions"),
                 ("own-card", "Run the analysis on your own card"), ("references", "References"),
-                ("appendix-a", "A Example well"), ("appendix-b", "B Two methods"),
+                ("appendix-a", "A Example well"), ("appendix-b", "B Two numerical methods"),
                 ("appendix-c", "C Ten examples"), ("appendix-d", "D Reusable prompts")]
     csp = ("default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; "
            "img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'")
@@ -619,6 +879,7 @@ def main(argv=None) -> int:
     inputs = json.loads((ROOT / INPUTS).read_text(encoding="utf-8"))
     outputs[CARDS_CSV] = figure_csv(inputs)
     outputs[ARTICLE] = build_html(ROOT)
+    outputs.update(detail_pages(facts(load_sources(ROOT))))
     if args.check:
         stale = [str(p) for p, text in outputs.items()
                  if not (ROOT / p).exists() or (ROOT / p).read_text(encoding="utf-8") != text]
