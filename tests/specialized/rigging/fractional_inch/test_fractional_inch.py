@@ -40,7 +40,7 @@ def read_live_evidence(source):
 def formula_cases():
     cases = []
     for path in FIXTURES:
-        evidence = json.loads(path.read_text())
+        evidence = json.loads(path.read_text(encoding="utf-8"))
         for record in evidence["formulas"]:
             cases.append(pytest.param(
                 path, record["sheet"], record["cell"],
@@ -73,12 +73,12 @@ def assert_result(actual, expected, record):
 
 @pytest.mark.parametrize("fixture,sheet,address", formula_cases())
 def test_formulas_from_fixture(fixture, sheet, address):
-    compare_formula(json.loads(fixture.read_text()), sheet, address)
+    compare_formula(json.loads(fixture.read_text(encoding="utf-8")), sheet, address)
 
 
 @pytest.mark.parametrize("fixture,sheet,address", formula_cases())
 def test_formulas_from_workbook(fixture, sheet, address):
-    committed = json.loads(fixture.read_text())
+    committed = json.loads(fixture.read_text(encoding="utf-8"))
     live = read_live_evidence(committed["source"])
     assert live == committed
     compare_formula(live, sheet, address)
@@ -86,7 +86,7 @@ def test_formulas_from_workbook(fixture, sheet, address):
 
 @pytest.mark.parametrize("fixture,total,cached", zip(FIXTURES, (4,), (4,)))
 def test_formula_inventory(fixture, total, cached):
-    evidence = json.loads(fixture.read_text())
+    evidence = json.loads(fixture.read_text(encoding="utf-8"))
     records = evidence["formulas"]
     assert len(records) == total
     assert len({(r["sheet"], r["cell"]) for r in records}) == total

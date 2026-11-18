@@ -86,7 +86,7 @@ The shared `tests/geotechnical/slope_input_labels/formula_evidence.py` extractor
 
 `test_slope_input_labels.py` runs one fixture case and one direct-workbook case for every formula cell. It independently scans source lookup rows and evaluates the IF conditions, for the slope labels and guidance. Direct-workbook cases verify extracted evidence equals the committed fixture and skip if a workbook is absent. The fixture cases still run without workbooks. Text is compared exactly. Numbers use relative tolerance 1e-9 and absolute tolerance 1e-12; no tolerance is relaxed. Supplemental cases exercise populated and failed reinforcement lookups, case-insensitive conditions, missing material IDs, duplicate lookup IDs, and blank return cells.
 
-The slope tests contain 313 cases. Of 144 formula cells, 6 have non-null cached values and 138 are checked by independent hand formulas. See `COVERAGE.md` for the sheet-level accounting and cache limits.
+The slope tests contain 315 cases. Two extractor cases regenerate all three fixtures byte for byte with absolute and relative output directories under emulated Windows newline defaults. Of 144 formula cells, 6 have non-null cached values and 138 are checked by independent hand formulas. See `COVERAGE.md` for the sheet-level accounting and cache limits.
 
 From the repository root, run:
 

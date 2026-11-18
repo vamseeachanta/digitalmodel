@@ -147,12 +147,12 @@ def main() -> None:
         else:
             output_dir = REPOSITORY / "tests/specialized/rigging/fractional_inch/fixtures"
             filename = "anchor_shackle_sizes.json"
-        output_dir = args.output_dir if args.output_dir is not None else output_dir
-        output_dir.resolve().relative_to(REPOSITORY)
+        output_dir = (args.output_dir if args.output_dir is not None else output_dir).resolve()
+        output_dir.relative_to(REPOSITORY)
         output_dir.mkdir(parents=True, exist_ok=True)
         destination = output_dir / filename
         destination.write_text(
-            format_evidence(evidence), encoding="utf-8",
+            format_evidence(evidence), encoding="utf-8", newline="\n",
         )
         print(f"{destination.relative_to(REPOSITORY)}: {len(evidence['formulas'])} formulas")
 

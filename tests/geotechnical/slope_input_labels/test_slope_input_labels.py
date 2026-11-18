@@ -10,6 +10,8 @@ from collections import Counter
 from functools import lru_cache
 from pathlib import Path
 import re
+import shutil
+import sys
 
 import pytest
 
@@ -73,7 +75,7 @@ def hand_material_name(key, evidence):
 def formula_cases():
     cases = []
     for path in FIXTURES:
-        evidence = json.loads(path.read_text())
+        evidence = json.loads(path.read_text(encoding="utf-8"))
         for record in evidence["formulas"]:
             cases.append(pytest.param(
                 path, record["sheet"], record["cell"],
@@ -160,12 +162,12 @@ def assert_result(actual, expected, record):
 
 @pytest.mark.parametrize("fixture,sheet,address", formula_cases())
 def test_formulas_from_fixture(fixture, sheet, address):
-    compare_formula(json.loads(fixture.read_text()), sheet, address)
+    compare_formula(json.loads(fixture.read_text(encoding="utf-8")), sheet, address)
 
 
 @pytest.mark.parametrize("fixture,sheet,address", formula_cases())
 def test_formulas_from_workbook(fixture, sheet, address):
-    committed = json.loads(fixture.read_text())
+    committed = json.loads(fixture.read_text(encoding="utf-8"))
     live = read_live_evidence(committed["source"])
     assert live == committed
     compare_formula(live, sheet, address)
@@ -173,7 +175,7 @@ def test_formulas_from_workbook(fixture, sheet, address):
 
 @pytest.mark.parametrize("fixture,total,cached", zip(FIXTURES, (72, 72), (2, 4)))
 def test_formula_inventory(fixture, total, cached):
-    evidence = json.loads(fixture.read_text())
+    evidence = json.loads(fixture.read_text(encoding="utf-8"))
     records = evidence["formulas"]
     assert len(records) == total
     assert len({(r["sheet"], r["cell"]) for r in records}) == total
@@ -190,7 +192,7 @@ def test_formula_inventory(fixture, total, cached):
 ))
 def test_reinforcement_populated_and_failed_lookup(fixture, selected):
     """Exercise real lookup rows hidden behind blank selectors in the sources."""
-    evidence = json.loads(fixture.read_text())
+    evidence = json.loads(fixture.read_text(encoding="utf-8"))
     evidence["constants"]["reinforce"]["G3"] = selected
     for address in ("H3", "I3"):
         compare_formula(evidence, "reinforce", address)
@@ -198,7 +200,7 @@ def test_reinforcement_populated_and_failed_lookup(fixture, selected):
 
 @pytest.mark.parametrize("fixture", FIXTURES)
 def test_material_lookup_missing_id_blank_name_and_first_match(fixture):
-    evidence = json.loads(fixture.read_text())
+    evidence = json.loads(fixture.read_text(encoding="utf-8"))
     rows = material_rows(evidence)
     assert material_name(MaterialLabelInput(1), rows) == "soil"
     assert material_name(MaterialLabelInput(2), rows) == ""
@@ -216,7 +218,7 @@ def test_water_guidance_other_modes(mode, expected):
 
 
 def test_water_guidance_is_case_insensitive():
-    evidence = json.loads(FIXTURES[0].read_text())
+    evidence = json.loads(FIXTURES[0].read_text(encoding="utf-8"))
     evidence["constants"]["main"]["D23"] = "AUTO"
     compare_formula(evidence, "dloads", "B2")
 
@@ -227,3 +229,40 @@ def test_reinforcement_first_match_and_blank_return_cells():
         ReinforcementRule("Nail", "Axial", "Passive"),
     )
     assert reinforcement_properties(ReinforcementInput("Nail"), rules) == (0, 0)
+
+
+@pytest.mark.parametrize("relative_output", [False, True])
+def test_extractor_output_is_reproducible(tmp_path, monkeypatch, relative_output):
+    """Regenerate real workbook evidence under Windows newline defaults."""
+    spec = importlib.util.spec_from_file_location(
+        "formula_evidence_output", HERE / "formula_evidence.py",
+    )
+    extractor = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(extractor)
+    for source in extractor.SOURCES:
+        destination = tmp_path / source
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(REPOSITORY / source, destination)
+    extract = extractor.extract_workbook
+    monkeypatch.setattr(extractor, "REPOSITORY", tmp_path)
+    monkeypatch.setattr(
+        extractor, "extract_workbook", lambda path: extract(path, repository=tmp_path),
+    )
+    write_text = Path.write_text
+
+    def windows_write_text(path, data, encoding=None, errors=None, newline=None):
+        return write_text(
+            path, data, encoding=encoding, errors=errors,
+            newline="\r\n" if newline is None else newline,
+        )
+
+    monkeypatch.setattr(Path, "write_text", windows_write_text)
+    monkeypatch.chdir(tmp_path)
+    output_dir = Path("generated") if relative_output else tmp_path / "generated"
+    monkeypatch.setattr(sys, "argv", ["formula_evidence.py", "--output-dir", str(output_dir)])
+    extractor.main()
+    fixtures = (*FIXTURES, REPOSITORY / (
+        "tests/specialized/rigging/fractional_inch/fixtures/anchor_shackle_sizes.json"
+    ))
+    for fixture in fixtures:
+        assert (output_dir / fixture.name).read_bytes() == fixture.read_bytes()
