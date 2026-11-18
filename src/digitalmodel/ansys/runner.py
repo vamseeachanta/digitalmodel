@@ -21,6 +21,7 @@ import hashlib
 import math
 import os
 import platform
+import re
 import shutil
 import subprocess
 import time
@@ -91,6 +92,7 @@ class ANSYSRunResult:
 
 # Standard Windows MAPDL install locations (probed only on Windows).
 def _standard_paths() -> list[Path]:
+    """Return existing Windows candidates in descending numeric release order."""
     if platform.system() != "Windows":
         return []
     roots = [Path(r"C:\Program Files\ANSYS Inc")]
@@ -98,7 +100,14 @@ def _standard_paths() -> list[Path]:
     for root in roots:
         if not root.is_dir():
             continue
-        for ver_dir in sorted(root.glob("v*"), reverse=True):
+        versions = [
+            path for path in root.glob("v*")
+            if re.fullmatch(r"v[0-9]+", path.name) and path.is_dir()
+        ]
+        # Equal numeric releases use descending directory names for stable ties.
+        for ver_dir in sorted(
+            versions, key=lambda path: (int(path.name[1:]), path.name), reverse=True,
+        ):
             exe = ver_dir / "ansys" / "bin" / "winx64" / "MAPDL.exe"
             if exe.is_file():
                 exes.append(exe)
@@ -249,6 +258,7 @@ class ANSYSRunner:
             self._result.error_message = error
 
     def _detect_executable(self) -> Optional[Path]:
+        """Prefer explicit config, environment, standard installations, then PATH."""
         configured = self._config.executable_path
         if configured is not None:
             return Path(configured).resolve() if Path(configured).is_file() else None
@@ -256,12 +266,12 @@ class ANSYSRunner:
             val = os.environ.get(env_var)
             if val and Path(val).is_file():
                 return Path(val)
+        for std in _standard_paths():
+            return std
         for name in ("mapdl", "ansys", "MAPDL.exe", "ansys.exe"):
             found = shutil.which(name)
             if found:
                 return Path(found)
-        for std in _standard_paths():
-            return std
         return None
 
     def _detect_error(self, return_code: int, out_file: Optional[Path]) -> Optional[str]:
