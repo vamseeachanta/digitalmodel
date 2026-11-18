@@ -33,7 +33,8 @@ def load_detector():
 def assert_regressions_executed(domains, pytestconfig):
     """Check both ownership and the pytest operands actually used by CI."""
     workflows = next(domain for domain in domains if domain.name == "workflows")
-    gates = yaml.safe_load((ROOT / ".claude/quality-gates.yaml").read_text())["gates"]
+    gate_file = ROOT / ".claude/quality-gates.yaml"
+    gates = yaml.safe_load(gate_file.read_text(encoding="utf-8"))["gates"]
     gate = gates["tests-workflows"]
     test_path = Path(REGRESSIONS)
     assert any(test_path.is_relative_to(root) for root in workflows.roots)
@@ -73,7 +74,8 @@ def test_full_sweep_includes_executed_regressions(pytestconfig):
         ("quality-gates-by-domain.yml", "domain-tests"),
         ("full-matrix-sweep.yml", "sweep-tests"),
     ):
-        workflow = yaml.safe_load((ROOT / ".github/workflows" / filename).read_text())
+        workflow_file = ROOT / ".github/workflows" / filename
+        workflow = yaml.safe_load(workflow_file.read_text(encoding="utf-8"))
         steps = workflow["jobs"][job]["steps"]
         read_gate = next(step for step in steps if step.get("id") == "gate")
         run_gate = next(step for step in steps if step.get("id") == "domain-gate")
