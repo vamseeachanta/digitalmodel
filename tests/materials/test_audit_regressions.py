@@ -12,11 +12,19 @@ from digitalmodel.materials.line_pipe import line_pipe
 
 
 @pytest.mark.parametrize(
-    "name,minimum", [("X42", 415), ("X46", 435), ("X52", 460),
+    "name,minimum", [("A25", 310), ("A", 335), ("B", 415),
+                     ("X42", 415), ("X46", 435), ("X52", 460),
                      ("X56", 490), ("X60", 520), ("X65", 535), ("X70", 570)],
 )
 def test_psl1_si_minima_and_table_provenance(name, minimum):
-    """API 5L 46th ed., 9.3.1 / Table 6 SI minima, not converted legacy ksi."""
+    """API 5L 46th ed. (2018), 9.3.1 / Table 6 SI tensile entries.
+
+    Published cross-check: UNIASEN, API 5L Pipe Specification, Mechanical
+    Requirement PSL1 table, https://uniasen.com/standards/api-5l/, accessed
+    2026-10-21. Its Specification section names API Spec 5L 46th 2018.
+    The supplier's publication is independent of the code under test;
+    qualification against the licensed standard remains pending.
+    """
     record = load_database().lookup(name, psl="PSL1")
     assert grades.smts_mpa(name, psl="PSL1") == minimum
     assert record.strengths.smts_mpa == minimum
@@ -31,7 +39,8 @@ def test_psl1_unlisted_grades_raise(name):
     database = load_database()
     assert not any(r.designation == name and r.product_level == "PSL1"
                    for r in database.values())
-    for query in (grades.smts_mpa, database.lookup):
+    for query in (grades.smts_mpa, grades.smts_psi, grades.smts_pa,
+                  grades.smts_kn_m2, database.lookup):
         with pytest.raises(ValueError, match="PSL1"):
             query(name, psl="PSL1")
 
@@ -72,7 +81,8 @@ def test_psl2_provenance_excludes_psl1_table(name):
 
 @pytest.mark.parametrize("psl", ["unknown", "PSL3", ""])
 def test_unknown_api_product_level_raises(psl):
-    for query in (grades.smts_mpa, load_database().lookup):
+    for query in (grades.smts_mpa, grades.smts_psi, grades.smts_pa,
+                  grades.smts_kn_m2, load_database().lookup):
         with pytest.raises(ValueError, match="PSL"):
             query("X52", psl=psl)
 

@@ -198,10 +198,18 @@ class AllowableCurve:
                 "allowable curve needs >= 2 knots with matching x/positive/"
                 "negative lengths"
             )
+        for field_name in ("x_m", "positive", "negative"):
+            if not np.all(np.isfinite(getattr(self, field_name))):
+                raise ValueError(
+                    f"allowable curve {field_name} must contain only finite values"
+                )
+        for field_name in ("positive", "negative"):
+            if any(value <= 0.0 for value in getattr(self, field_name)):
+                raise ValueError(
+                    f"allowable curve {field_name} values must be positive magnitudes"
+                )
         if any(b <= a for a, b in zip(self.x_m, self.x_m[1:])):
             raise ValueError("allowable curve x_m must ascend")
-        if min(min(self.positive), min(self.negative)) <= 0.0:
-            raise ValueError("allowable values must be positive magnitudes")
 
     def limit_for(self, x: float, value: float) -> float:
         table = self.positive if value >= 0.0 else self.negative

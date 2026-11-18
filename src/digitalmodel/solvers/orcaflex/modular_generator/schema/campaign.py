@@ -11,7 +11,7 @@ from typing import Any, Iterator
 import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
 
-from ._overrides import apply_dotted_override
+from ._overrides import apply_dotted_override, dump_authored
 from .environment import Current, SeabedStiffness, Waves, Wind
 from .root import ProjectInputSpec
 
@@ -554,8 +554,11 @@ class CampaignGenerator:
                 combo parameters.
 
         Returns:
-            CampaignResult with aggregated statistics. manifest_path is set
-            only in spec_only mode.
+            CampaignResult with aggregated statistics. manifest_path identifies
+            a manifest written by this call, only in spec_only mode when at least
+            one run is generated. It is None when every run is skipped (for
+            example, when resume finds every spec.yml sentinel); any existing
+            manifest is left unchanged.
         """
         output_dir = Path(output_dir)
         output_dir.mkdir(parents=True, exist_ok=True)
@@ -609,9 +612,11 @@ class CampaignGenerator:
                     # to their plain values; a python-mode dump would emit
                     # !!python/object/apply tags that the yaml.safe_load used
                     # by spec.yml consumers (cli.py, ModularModelGenerator)
-                    # cannot read.
+                    # cannot read. Only authored and edited fields are
+                    # written, so schema defaults stay unset when spec.yml is
+                    # loaded again (riser-plus-generic rendering relies on it).
                     (run_dir / "spec.yml").write_text(
-                        yaml.dump(spec.model_dump(mode="json"), default_flow_style=False)
+                        yaml.dump(dump_authored(spec, mode="json"), default_flow_style=False)
                     )
                     manifest_runs.append({"name": name, "combo": combo})
                     logger.info("Generated spec: %s", name)

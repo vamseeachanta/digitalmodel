@@ -13,6 +13,7 @@ calibration nor numerical validation against a published example.
 | Revision | Date | Change and reason |
 | --- | --- | --- |
 | 1 | 2026-10-14 | Define selection decisions and expose implementation gaps to prevent misleading VLP substitution. |
+| 2 | 2026-10-18 | Add optional selection assessments with source locators and explicit unevaluated qualification checks. |
 
 ## IPR comparison and policy
 
@@ -75,6 +76,39 @@ invented by the selector.
 `tests/production_engineering/test_method_selector.py` exercises the choices,
 bubble-point boundaries, malformed pressures, absent drive evidence,
 unsupported fluids and refusal to substitute published-method aliases.
+
+### Selection evidence
+
+The same module additionally exports:
+
+- `assess_ipr_selection(reservoir_state, fluid_props) -> SelectionAssessment`
+- `assess_vlp_selection(regime, fluid_props) -> SelectionAssessment`
+
+These call the existing selectors, so their successful names and precedence
+are unchanged. The immutable result contains `method`, `rationale`, `sources`,
+`open_checks`, and `qualification_status`. Sources are passage locators into
+the literature survey or an implementation inventory, not accuracy scores.
+All results carry `qualification_status="NOT_EVALUATED"`, including successful
+screening selections. This status concerns engineering qualification, not
+whether a screening decision was made.
+
+Unsupported physical cases have `method=None` and the original rejection
+reason. Unknown regimes and malformed pressures/flags still raise `ValueError`.
+The original string APIs continue to raise `NotImplementedError` for unsupported
+physical cases. Callers needing an executable choice must check `method`;
+neither its presence nor the metadata establishes design approval.
+
+IPR assessments record numerical applicability, parameter fit/field calibration
+and original-paper example validation as unevaluated. VLP assessments record
+published-method implementation/ranges, pressure-survey calibration and
+original-paper validation as unevaluated. No numerical threshold or standard
+value is inferred from a bibliographic abstract. The fitted Fetkovich parameters
+remain required when constructing that model, even with declared multirate data.
+
+The new `test_selection_assessment.py` includes independent synthetic arithmetic
+using the opened passages listed in the literature survey. It checks the
+Vogel saturated boundary and composite bubble-point boundary, metadata gaps,
+unsupported cases, immutability and preserved input errors.
 
 ## Remaining evidence
 

@@ -1,0 +1,67 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.1.1, pluggy-1.7.0
+[path removed]
+configfile: pytest.ini (WARNING: ignoring pytest config in pyproject.toml!)
+collected 17 items / 13 deselected / 4 selected
+
+tests/solvers/mystran/test_fe10_benchmark.py FFFF                        [100%]
+
+=================================== FAILURES ===================================
+_____________ test_unequal_fibres_are_averaged_then_tensor_rotated _____________
+tests/solvers/mystran/test_fe10_benchmark.py:112: in test_unequal_fibres_are_averaged_then_tensor_rotated
+    module = extractor()
+             ^^^^^^^^^^^
+tests/solvers/mystran/test_fe10_benchmark.py:103: in extractor
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1130: in get_data
+    ???
+[path removed]
+_ test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows[1 CENTER -50 10 20 3\n] _
+tests/solvers/mystran/test_fe10_benchmark.py:127: in test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows
+    extractor().mid_surface_stresses(native)
+    ^^^^^^^^^^^
+tests/solvers/mystran/test_fe10_benchmark.py:103: in extractor
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1130: in get_data
+    ???
+[path removed]
+_ test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows[1 CENTER -50 10 20 3\n50 nan 20 3\n] _
+tests/solvers/mystran/test_fe10_benchmark.py:127: in test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows
+    extractor().mid_surface_stresses(native)
+    ^^^^^^^^^^^
+tests/solvers/mystran/test_fe10_benchmark.py:103: in extractor
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1130: in get_data
+    ???
+[path removed]
+_ test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows[1 CENTER -50 10 20 3\n50 10 20 3\n1 CENTER -50 10 20 3\n50 10 20 3\n] _
+tests/solvers/mystran/test_fe10_benchmark.py:127: in test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows
+    extractor().mid_surface_stresses(native)
+    ^^^^^^^^^^^
+tests/solvers/mystran/test_fe10_benchmark.py:103: in extractor
+    spec.loader.exec_module(module)
+<frozen importlib._bootstrap_external>:936: in exec_module
+    ???
+<frozen importlib._bootstrap_external>:1073: in get_code
+    ???
+<frozen importlib._bootstrap_external>:1130: in get_data
+    ???
+[path removed]
+=========================== short test summary info ============================
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_unequal_fibres_are_averaged_then_tensor_rotated
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows[1 CENTER -50 10 20 3\n]
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows[1 CENTER -50 10 20 3\n50 nan 20 3\n]
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows[1 CENTER -50 10 20 3\n50 10 20 3\n1 CENTER -50 10 20 3\n50 10 20 3\n]
+======================= 4 failed, 13 deselected in 0.14s =======================

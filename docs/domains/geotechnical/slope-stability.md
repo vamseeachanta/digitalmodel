@@ -16,6 +16,7 @@ Results are screening calculations; no design acceptance threshold is assigned.
 | 5 | 2026-10-18 | Document the unimplemented datum-below-layer warning and retain its open reference in #2704. |
 | 6 | 2026-10-18 | Track the datum-below-layer diagnostic separately in #2785 so the remaining warning has a dedicated acceptance criterion. |
 | 7 | 2026-10-19 | Reject positive-gradient datums below the entire layer to diagnose an inactive strength gradient. |
+| 8 | 2026-10-22 | Declare optional installation extras and support vertical head boundaries; add an independent confined-flow example. |
 
 ## Basis and boundaries
 
@@ -38,14 +39,20 @@ and the ai extra are unsupported.
 
 Imports are lazy. The tested combination is xslope 1.0.3, gmsh 4.15.2 and NumPy
 1.26.4. The required range is gmsh>=4.15 and numpy>=1.24.0,<2.0.0.
-The optional slope extra and regenerated lock are not delivered: lock regeneration
-cannot resolve the declared sibling path dependency in an isolated checkout.
-Base dependency declarations and lock are preserved. An independently managed
-environment can install the dependencies explicitly:
+Install the `slope` extra for limit equilibrium or `slope-seepage` for limit
+equilibrium plus seepage meshing. Both pin the benchmarked xslope release;
+Gmsh stays outside the stability-only extra, as in the upstream optional FEM
+dependency. Neither extra enables Studio or external service integrations.
 
 ~~~sh
-pip install "xslope==1.0.3" "gmsh>=4.15" "numpy>=1.24.0,<2.0.0"
+pip install "digitalmodel[slope]"
+pip install "digitalmodel[slope-seepage]"
 ~~~
+
+The repository lock remains unchanged: regeneration is excluded from this
+change, and the checkout declares a sibling source dependency. The extras
+declare package metadata; a synchronized lock is still needed for locked
+repository installation. The existing NumPy constraint remains in force.
 
 Install and import were exercised on Linux x86-64 with Python 3.11 and 3.12.
 Stability execution is also exercised on Linux Arm with Python 3.11; Gmsh
@@ -82,6 +89,16 @@ angles degrees, conductivity m/s and seismic coefficient dimensionless.
 | circles | One to ten starting circles with x_m, y_m, positive radius_m |
 | seepage.element_size_m | Positive target linear-triangle mesh size |
 | seepage.heads_m | Two to five head blocks, each with head_m and boundary_m |
+
+Head boundaries are ordered polylines with finite coordinates and no consecutive
+duplicate points. Vertical segments and either traversal direction are supported;
+the increasing-x restriction still applies to ground, layer and water-table
+surfaces. Each head is a prescribed **total** head in metres above the model
+datum, held along its polyline. This maps to the upstream plain specified-head
+condition, rather than a reservoir level or an exit face. Boundary placement on
+the intended mesh edges remains the engineer's responsibility. An omitted
+seepage block requests stability alone; an explicit null block is rejected.
+See the upstream [boundary conditions](https://xslope.org/en/latest/seep/overview/#boundary-conditions).
 
 Undrained strength maps to upstream cp behavior:
 Su(y) = su_kpa + su_gradient_kpa_per_m × max(0, reference_elevation_m − y).
@@ -232,6 +249,56 @@ examples do not establish suitability for a particular design or all seepage
 boundary conditions. See the upstream
 [input template](https://xslope.org/en/latest/usage/input_template/) and
 [seepage-to-stability interface](https://xslope.org/en/latest/seep/seep_slope/).
+
+## Confined seepage worked example
+
+The [confined-flow input](../../../examples/workflows/slope-stability/seepage-input.yml)
+uses synthetic properties and geometry supplied for this calculation. It is a
+saturated rectangle, 20.0 m long and 10.0 m thick, with isotropic conductivity
+1.0 × 10⁻⁵ m/s. The vertical left and right sides have prescribed total heads
+12.0 m and 10.0 m respectively; the top and bottom are impermeable. These are
+illustrative inputs, with no design acceptance limit or inferred soil properties.
+
+The governing equation is ∇·(k∇h) = 0 and Darcy velocity is v = −k∇h
+([xslope seepage overview, governing equations](https://xslope.org/en/latest/seep/overview/),
+accessed 2026-10-22). With constant conductivity, these boundaries give the exact
+linear field h(x) = 12.0 − (2.0/20.0)x. Integrating the horizontal velocity over
+the 10.0 m thickness gives the discharge per unit out-of-plane width:
+
+~~~text
+q/width = k × thickness × (left_head − right_head) / length
+        = (1.0 × 10⁻⁵) × 10.0 × (12.0 − 10.0) / 20.0
+        = 1.0 × 10⁻⁵ m²/s
+~~~
+
+Run the seepage calculation from the repository root in an environment with
+`slope-seepage` installed. Supply an existing scratch directory as the argument;
+all temporary inputs are written there.
+
+~~~sh
+python - "$SCRATCH_DIRECTORY" <<'PY'
+from pathlib import Path
+import sys
+import yaml
+from digitalmodel.geotechnical.slope_stability import build_slope_model, run_seepage
+
+source = Path("examples/workflows/slope-stability/seepage-input.yml")
+profile = yaml.safe_load(source.read_text())["profile"]
+model = build_slope_model(profile, Path(sys.argv[1]))
+result = run_seepage(model, profile["seepage"]["element_size_m"])
+print(f"Discharge per width: {result.discharge_per_width:.1e} m²/s")
+print(f"Converged: {result.converged}")
+PY
+~~~
+
+The independent expected answer is `1.0e-05 m²/s`. The regression compares the
+finite-element discharge with this answer to 1.0 % relative tolerance, allowing
+numerical variation; the linear field is representable by linear triangles.
+This example checks steady confined flow only. It does not establish a slope
+factor of safety, a free-surface solution or a design disposition. The shared
+profile includes unused strength and circle inputs; the example calls only the
+seepage adapter. Numerical execution requires Gmsh and remains untested where
+that dependency is unavailable.
 
 ## Third-party licences
 

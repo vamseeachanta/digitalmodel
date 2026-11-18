@@ -191,7 +191,7 @@ class TestInterPhaseDurationMath:
         stats = timeline_duration_stats([])
         for pair in ("concept_to_feed", "feed_to_fid", "fid_to_first_oil", "concept_to_first_oil"):
             assert stats[pair]["count"] == 0
-            assert stats[pair]["mean"] == 0.0
+            assert stats[pair]["mean"] is None
 
     def test_stats_keys_present(self):
         stats = timeline_duration_stats(PROJECTS_WITH_TIMELINE)
@@ -281,10 +281,10 @@ class TestScheduleDistributions:
                 f"{label}: p10={d['p10']} p50={d['p50']} p90={d['p90']}"
             )
 
-    def test_empty_list_returns_zeros(self):
+    def test_empty_list_returns_unknown_percentiles(self):
         dists = schedule_distributions([])
         for d in dists.values():
-            assert d == {"p10": 0.0, "p50": 0.0, "p90": 0.0}
+            assert d == {"p10": None, "p50": None, "p90": None}
 
     def test_single_project_all_percentiles_equal(self):
         """With one data point, p10 == p50 == p90 == that value."""
@@ -338,6 +338,107 @@ class TestBoundaryEdgeCases:
         # With 2 data points P10 <= P50 <= P90 must hold
         d = semi["concept_to_feed"]
         assert d["p10"] <= d["p50"] <= d["p90"]
+
+
+@pytest.mark.parametrize("projects", [[], [_make_project("synthetic", "synthetic")]])
+def test_empty_timeline_statistics_are_unknown(projects):
+    """No complete date pair supplies zero observations, not a measured duration."""
+    expected = {
+        pair: {"count": 0, "mean": None, "p10": None, "p50": None, "p90": None}
+        for pair in (
+            "concept_to_feed", "feed_to_fid", "fid_to_first_oil", "concept_to_first_oil"
+        )
+    }
+    stats = timeline_duration_stats(projects)
+    assert stats == expected
+    assert all(type(pair["count"]) is int for pair in stats.values())
+    grouped = duration_stats_by_concept_type(projects)
+    assert grouped == ({"synthetic": expected} if projects else {})
+    for group in grouped.values():
+        assert all(type(pair["count"]) is int for pair in group.values())
+    assert schedule_distributions(projects) == {
+        pair: {"p10": None, "p50": None, "p90": None} for pair in expected
+    }
+
+
+@pytest.mark.parametrize(
+    "missing_phase, expected_pairs",
+    [
+        ("year_concept", [(0, None), (1, 2.0), (1, 3.0), (0, None)]),
+        ("year_feed", [(0, None), (0, None), (1, 3.0), (1, 6.0)]),
+        ("year_fid", [(1, 1.0), (0, None), (0, None), (1, 6.0)]),
+        ("year_first_oil", [(1, 1.0), (1, 2.0), (0, None), (0, None)]),
+    ],
+)
+def test_records_missing_one_phase_preserve_available_statistics(
+    missing_phase, expected_pairs
+):
+    """Hand calculation: synthetic dates give 2001-2000=1, 2003-2001=2,
+    2006-2003=3 and 2006-2000=6 years; each usable pair has one observation.
+    Removing either endpoint leaves zero observations for that pair.
+    """
+    dates = dict(
+        year_concept=2000, year_feed=2001, year_fid=2003, year_first_oil=2006
+    )
+    dates[missing_phase] = None
+    projects = [_make_project("synthetic", "synthetic", **dates)]
+    stats = timeline_duration_stats(projects)
+    grouped = duration_stats_by_concept_type(projects)["synthetic"]
+    distributions = schedule_distributions(projects)
+    pairs = (
+        "concept_to_feed", "feed_to_fid", "fid_to_first_oil", "concept_to_first_oil"
+    )
+    assert set(stats) == set(grouped) == set(distributions) == set(pairs)
+    for pair, (count, duration) in zip(pairs, expected_pairs):
+        expected = {
+            "count": count, "mean": duration,
+            "p10": duration, "p50": duration, "p90": duration,
+        }
+        assert stats[pair] == grouped[pair] == expected
+        assert type(stats[pair]["count"]) is type(grouped[pair]["count"]) is int
+        assert distributions[pair] == {"p10": duration, "p50": duration, "p90": duration}
+
+
+def test_same_year_transition_is_zero():
+    """One synthetic record gives 2000-2000=0 years for every date pair."""
+    projects = [_make_project("synthetic", "synthetic", 2000, 2000, 2000, 2000)]
+    stats = timeline_duration_stats(projects)
+    grouped = duration_stats_by_concept_type(projects)["synthetic"]
+    distributions = schedule_distributions(projects)
+    pairs = {"concept_to_feed", "feed_to_fid", "fid_to_first_oil", "concept_to_first_oil"}
+    assert set(stats) == set(grouped) == set(distributions) == pairs
+    for pair in pairs:
+        expected = {"count": 1, "mean": 0.0, "p10": 0.0, "p50": 0.0, "p90": 0.0}
+        assert stats[pair] == grouped[pair] == expected
+        assert type(stats[pair]["count"]) is type(grouped[pair]["count"]) is int
+        for key in ("mean", "p10", "p50", "p90"):
+            assert type(stats[pair][key]) is type(grouped[pair][key]) is float
+        assert distributions[pair] == {"p10": 0.0, "p50": 0.0, "p90": 0.0}
+
+
+def test_two_duration_exclusive_quantiles_matches_hand_calculation():
+    """Synthetic durations: 2001-2000=1 and 2003-2000=3 years.
+
+    Hand calculation for exclusive positions h=(n+1)*p: h=0.3, 1.5, 2.7.
+    Linear extrapolation gives 1+(h-1)*(3-1): P10=-0.4, P50=2, P90=4.4;
+    mean=(1+3)/2=2. The negative tail is a software convention, not a duration.
+    An absolute tolerance of 1e-12 years allows floating arithmetic roundoff.
+    """
+    projects = [
+        _make_project("synthetic", "synthetic", year_feed=2000, year_fid=2001),
+        _make_project("synthetic", "synthetic", year_feed=2000, year_fid=2003),
+    ]
+    stats = timeline_duration_stats(projects)["feed_to_fid"]
+    grouped = duration_stats_by_concept_type(projects)["synthetic"]["feed_to_fid"]
+    for result in (stats, grouped):
+        assert type(result["count"]) is int
+        assert result["count"] == 2
+        assert result["mean"] == pytest.approx(2.0, rel=0, abs=1e-12)
+        for key, expected in {"p10": -0.4, "p50": 2.0, "p90": 4.4}.items():
+            assert result[key] == pytest.approx(expected, rel=0, abs=1e-12)
+    assert schedule_distributions(projects)["feed_to_fid"] == pytest.approx(
+        {"p10": -0.4, "p50": 2.0, "p90": 4.4}, rel=0, abs=1e-12
+    )
 
 
 def test_package_surface_exports_timeline_helpers():

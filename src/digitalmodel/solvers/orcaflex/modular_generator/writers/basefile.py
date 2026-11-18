@@ -44,9 +44,9 @@ are rejected rather than inferred. Format source: Orcina, OrcaFlex online help,
 2026-10-19:
 https://www.orcina.com/webhelp/OrcaFlex/Content/html/Variationmodels.htm
 
-This syntax guard covers registered named collections and per-type VariableData
-collections, not a solver comparison. Object existence, deeper nested collections
-and native preservation of unselected data still require separate qualification.
+This syntax guard covers registered named collections, per-type VariableData,
+and nested Name-bearing lists. Object existence and native preservation of
+unselected data still require separate qualification.
 """
 
 from __future__ import annotations
@@ -77,6 +77,39 @@ _NAMED_COLLECTIONS = frozenset(_OBJECT_SECTIONS) | frozenset(
 
 _COMPOSITION_DIRECTIVES = frozenset({"basefile", "basefilenotracking", "includefile"})
 
+# Orcina, Variation models, opening example and Text data format (accessed
+# 2026-10-22): WaveTrains and Draughts are nested named collections. Knowing
+# these keys, including Wings supported by named-list conversion, applies the
+# same structural guard to mappings and treats empty lists as empty edits.
+_NESTED_NAMED_COLLECTIONS = frozenset({"WaveTrains", "Draughts", "Wings"})
+
+
+def _nested_modifications(value: Any, path: str, *, artifact: bool = False) -> Any:
+    """Walk properties without interpreting ordinary numeric table rows."""
+    if isinstance(value, Mapping):
+        result = {}
+        for key, child in value.items():
+            child_path = f"{path}.{key}"
+            if key in _NESTED_NAMED_COLLECTIONS:
+                if artifact:
+                    if not isinstance(child, Mapping):
+                        raise ValueError(f"{child_path}: artifact must use named-object mappings")
+                    _validate_object_modifications(child_path, child)
+                    result[key] = child
+                else:
+                    result[key] = _object_modifications(child_path, child)
+            else:
+                result[key] = _nested_modifications(child, child_path, artifact=artifact)
+        return result
+    if isinstance(value, list):
+        # A named list is creation syntax even below an unregistered property.
+        if any(isinstance(item, Mapping) and "Name" in item for item in value):
+            if artifact:
+                raise ValueError(f"{path}: artifact must use named-object mappings")
+            return _object_modifications(path, value)
+        return [_nested_modifications(item, path, artifact=artifact) for item in value]
+    return deepcopy(value)
+
 
 def _validate_object_modifications(section: str, objects: Mapping[str, Any]) -> None:
     """Reject structural operations in a name-keyed property override."""
@@ -101,6 +134,7 @@ def _validate_object_modifications(section: str, objects: Mapping[str, Any]) -> 
             for key in properties
         ):
             raise ValueError(f"{section}: renaming is not a property override")
+        _nested_modifications(properties, f"{section}.{name}", artifact=True)
 
 
 def _object_modifications(section: str, value: Any) -> dict[str, Any]:
@@ -129,8 +163,12 @@ def _object_modifications(section: str, value: Any) -> dict[str, Any]:
     else:
         raise ValueError(f"{section}: expected a named object list or mapping")
 
+    objects = {
+        name: _nested_modifications(properties, f"{section}.{name}")
+        for name, properties in objects.items()
+    }
     _validate_object_modifications(section, objects)
-    return deepcopy(objects)
+    return objects
 
 
 def validate_variation_document(document: Mapping[str, Any]) -> None:
@@ -145,7 +183,7 @@ def validate_variation_document(document: Mapping[str, Any]) -> None:
     creation and deletion syntax, rather than passed through unchecked.
     Raises ValueError on a syntax violation and leaves the document unchanged.
 
-    This guard does not check object existence, deeper nested named collections,
+    This guard does not check object existence, unnamed nested collections,
     duplicate YAML keys lost during parsing, or native resolved-model data.
     """
     if not isinstance(document, Mapping) or not document:
@@ -167,6 +205,8 @@ def validate_variation_document(document: Mapping[str, Any]) -> None:
                 if not isinstance(objects, Mapping):
                     raise ValueError(f"{collection}: artifact must use named-object mappings")
                 _validate_object_modifications(collection, objects)
+        else:
+            _nested_modifications(value, section, artifact=True)
 
 
 def _named_collections(section: str, value: Any) -> dict[str, Any]:
@@ -276,7 +316,7 @@ def _relative_base_reference(base_path: Path, out_dir: Path) -> str:
         relative = base_path.relative_to(out_dir)
     except ValueError:
         relative = Path(os.path.relpath(base_path.resolve(), out_dir.resolve()))
-    return str(relative).replace("\\", "/")
+    return relative.as_posix()
 
 
 def build_variation_document(
@@ -341,7 +381,7 @@ def build_variation_document(
             elif section in _NAMED_COLLECTIONS:
                 document[section] = _object_modifications(section, value)
             else:
-                document[section] = deepcopy(value)
+                document[section] = _nested_modifications(value, section)
 
     # Object sections in dependency order, so a referenced object is always
     # declared before the object that references it.
@@ -372,7 +412,7 @@ def write_variation_model(
     document = build_variation_document(base_path, overrides, out_path)
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(out_path, "w", encoding="utf-8") as handle:
+    with open(out_path, "w", encoding="utf-8", newline="\n") as handle:
         yaml.dump(
             document,
             handle,

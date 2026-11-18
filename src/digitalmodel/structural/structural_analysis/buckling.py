@@ -33,11 +33,19 @@ class PlateBucklingAnalyzer:
 
         Args:
             plate: Plate geometry
-            boundary_conditions: Boundary condition type
+            boundary_conditions: Only "simply_supported" is supported (default).
 
         Returns:
             Elastic buckling stress (MPa)
+
+        Raises:
+            ValueError: If boundary_conditions is not "simply_supported".
         """
+        if boundary_conditions != "simply_supported":
+            raise ValueError(
+                "Unsupported boundary_conditions: only 'simply_supported' is supported"
+            )
+
         a = plate.length
         b = plate.width
         t = plate.thickness

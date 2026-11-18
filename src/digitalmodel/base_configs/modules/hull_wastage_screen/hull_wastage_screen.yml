@@ -1,0 +1,9 @@
+basename: hull_wastage_screen
+
+# Representative thickness inputs and sourced limits are supplied by the
+# caller. This template supplies engine defaults, not acceptance criteria.
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true

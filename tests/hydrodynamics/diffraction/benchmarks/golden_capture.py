@@ -46,12 +46,12 @@ def golden_path_for(spec_path: Path) -> Path:
 
 
 def expected_refusal(spec_path: Path) -> str | None:
-    """Refusals remain part of the frozen corpus until full meshes are supplied."""
+    """Missing geometry is refused; matching stored sectors use their goldens."""
     if spec_path.parent.parent.name != "L00_validation_wamit":
         return None
-    if spec_path.parent.name == "3.3":
-        return "Partial GDF mesh"
-    if spec_path.parent.name in {"2.1", "2.2", "2.3", "2.6", "2.8", "2.9", "3.1", "3.2"}:
+    # Retain the earlier 2.7 golden as a historical emission reference only.
+    # Its absent mesh prevents comparison; restoring evidence must precede reuse.
+    if spec_path.parent.name in {"2.1", "2.2", "2.3", "2.6", "2.7", "2.8", "2.9", "3.1", "3.2"}:
         return "Cannot verify GDF symmetry"
     return None
 

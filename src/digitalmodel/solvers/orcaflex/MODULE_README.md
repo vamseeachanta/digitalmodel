@@ -1,8 +1,8 @@
 # OrcaFlex Integration Module
 
 **Version**: 1.0.0
-**Status**: ✅ Production Ready
-**Standards**: OrcaFlex API, Offshore Engineering Best Practices
+**Status**: beta (parent solvers group in [module routing](../../../../docs/registry/module-routing.yaml))
+**Qualification**: Route-specific evidence is required; see the [helper evidence](docs/helper-evidence.html).
 
 ---
 
@@ -440,16 +440,23 @@ orcaflex-universal --verbose --test
 
 ### Parallel Processing
 
-- **Default**: 30 workers
-- **Recommended**: Match CPU cores for small models
-- **Large models**: Reduce workers to avoid memory issues
+Worker-count recommendations are **UNVERIFIED**. The
+[universal runner constructor](universal/universal_runner.py) defaults to 30
+workers; that implementation value is not an independently qualified optimum.
+The optimized parallel helper instead selects dynamic allocation when
+`num_threads=None`. See the [helper evidence](docs/helper-evidence.html) for the
+source boundaries and missing benchmark evidence.
 
 ```python
-# Adjust workers based on model size
-runner = UniversalOrcaFlexRunner(max_workers=10)  # For large models
+# requested_workers is an explicit caller decision, not a recommendation here.
+runner = UniversalOrcaFlexRunner(max_workers=requested_workers)
 ```
 
 ### Benchmarks
+
+The earlier timing and speedup table is **UNVERIFIED**: input identities,
+repeated measurements and native output readback are absent. These values do
+not establish throughput or an optimal worker count for other models.
 
 | Models | Workers | Time | Speedup |
 |--------|---------|------|---------|
@@ -541,7 +548,7 @@ not possible on Linux. To transfer this work to a Windows machine:
 
 - **OrcaFlex API**: Full compatibility with OrcFxAPI
 - **File Formats**: Supports .yml, .dat, .sim files
-- **Parallel Processing**: Thread-safe execution
+- **Parallel Processing**: process or thread executors; thread safety NOT_EVALUATED (see [helper evidence](docs/helper-evidence.html))
 - **Error Handling**: Comprehensive exception handling
 
 ---
@@ -587,14 +594,14 @@ OrcaFlex Demo is a GUI application that cannot be used for headless/automated fi
 - ✅ Unified module structure
 - ✅ Comprehensive testing infrastructure
 - ✅ CI/CD automation
-- ✅ Production-ready documentation
+- Documentation maturity follows the beta parent solvers group (see helper evidence)
 - ✅ Two CLI commands
 - ✅ Python API
 - ✅ Mock mode support
 
 ---
 
-**Module Status**: ✅ Production Ready
-**Test Coverage**: >85%
+**Module Status**: beta (parent solvers group; source cited above)
+**Test Coverage**: UNVERIFIED; no module-wide coverage measurement is supplied here
 **CLI Commands**: 2 registered
 **Integration**: Compatible with all digitalmodel modules

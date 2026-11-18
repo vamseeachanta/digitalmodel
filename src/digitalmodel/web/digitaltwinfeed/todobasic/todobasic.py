@@ -6,9 +6,9 @@ routing with HTTP basic authentication for all task endpoints.
 
 from digitalmodel.web.digitaltwinfeed.basic_auth import basic_auth_verify_password
 from flask import Blueprint, abort, jsonify, make_response, request, url_for
-from flask_httpauth import HTTPBasicAuth
+from digitalmodel.web.authentication import UTF8BasicAuth
 
-auth = HTTPBasicAuth()
+auth = UTF8BasicAuth()
 
 todobasic = Blueprint('todobasic', __name__, template_folder='templates')
 

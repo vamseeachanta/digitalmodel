@@ -202,7 +202,7 @@ def _is_block_end(raw: str) -> bool:
 #: because a coordinate card's node number spills into the keyword columns --
 #: node 13905 on structure 1 reads as keyword "1390" -- and counting those
 #: reported fourteen structures in a deck that defines one.
-_BODY_KEYWORDS = frozenset({"PMAS", "FIDP", "FISK"})
+_BODY_KEYWORDS = frozenset({"PMAS", "FIDP", "FISK", "SSTF"})
 
 #: Records read per structure. A blank-owner one of these that no block
 #: assigns cannot be credited to a body in a multi-structure deck.
@@ -446,7 +446,13 @@ def read_aqwa_basis(
                         freqs.append(2.0 * math.pi * value)
                     else:
                         headings.append(value)
-        elif keyword in ("FIDP", "FISK") and mine:
+        # SSTF: AQWA Reference Manual 2025 R1, section 11.7.1. Retain
+        # legacy FISK readback for existing repository evidence only.
+        elif keyword in ("FIDP", "FISK", "SSTF") and mine:
+            if keyword == "SSTF":
+                second_structure = int(raw[10:15].strip() or 0)
+                if second_structure not in (0, structure):
+                    raise AmbiguousDeck("coupled SSTF readback is unsupported")
             fields = _column_fields(raw, 7)
             if fields is not None:
                 if stray:
@@ -455,7 +461,10 @@ def read_aqwa_basis(
                 if 1 <= mode <= 6:
                     target = (damping_cards if keyword == "FIDP"
                               else stiffness_cards)
-                    target[mode] = fields[1:7]
+                    if keyword == "SSTF" and mode in target:
+                        target[mode] = [a + b for a, b in zip(target[mode], fields[1:7])]
+                    else:
+                        target[mode] = fields[1:7]
                 else:
                     notes.append(
                         f"{keyword} record carries mode index {mode}, outside "
@@ -495,7 +504,7 @@ def read_aqwa_basis(
     if cog is None and cog_node is not None:
         notes.append(f"mass node {cog_node} has no coordinate card in this deck")
     if damping_cards and not stiffness_cards:
-        notes.append("deck carries additional damping (FIDP) but no FISK")
+        notes.append("deck carries additional damping (FIDP) but no SSTF/FISK")
 
     return AqwaBasis(
         mass=mass, inertia=inertia, centre_of_gravity=cog, cog_node=cog_node,

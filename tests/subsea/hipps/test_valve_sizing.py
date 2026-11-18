@@ -43,6 +43,30 @@ def test_decimal_intermediate_underflow_and_inverse():
     )
 
 
+def test_nonzero_vapor_extreme_differential_and_inverse():
+    """Additional qualification using the cited Sourcebook equations above.
+
+    Synthetic hand basis: p1=2^1000, pv=2^999, p2=0, FF=Fp=1,
+    FLP=2^-700, SG=2, N1=2 and C=4. Then head=2^1000-2^999=2^999,
+    dp_max=2^(-2*700+999)=2^-401 < p1-p2, so flow is choked.
+    sqrt(dp_max/SG)=sqrt(2^-402)=2^-201 and q=2*1*4*2^-201=2^-198.
+    Independently, C_required=2^-198/(2*1*2^-201)=4.
+    The recovery square 2^-1400 underflows binary64; the final drop does not.
+    Exact binary equality is required. These are arithmetic stress probes,
+    not qualified operating conditions.
+    """
+    inputs = dict(
+        p_upstream=2.0**1000, p_downstream=0.0, specific_gravity=2.0,
+        unit_constant=2.0, piping_factor=1.0, recovery_factor=2.0**-700,
+        critical_pressure_ratio=1.0, vapor_pressure=2.0**999,
+    )
+    result = liquid_capacity(coefficient=4.0, **inputs)
+    assert result.choked is True
+    assert result.effective_drop == 2.0**-401
+    assert result.rate == 2.0**-198
+    assert required_liquid_coefficient(rate=2.0**-198, **inputs) == 4.0
+
+
 @pytest.mark.parametrize(
     "recovery_exp,piping_exp,pressure_exp,drop_exp,rate_exp,choked",
     [

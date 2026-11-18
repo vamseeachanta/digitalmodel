@@ -49,7 +49,9 @@ Their statics default to ``"direct"`` (no tension ring, so no yawed-ring branch)
 balance and the rotary vertical reaction.
 
 Use with :func:`digitalmodel.solvers.orcaflex.parallel_runner.run_cases` and
-``adapter="digitalmodel.drilling_riser.campaign:ADAPTER"``.
+``adapter="digitalmodel.drilling_riser.campaign:ADAPTER"`` and ``qa=context``.
+The context must contain independently approved evidence for every case; see
+``docs/domains/orcaflex/qa-admission.md`` for the admission contract.
 """
 
 from __future__ import annotations

@@ -259,7 +259,7 @@ class TestTemplateGenerator:
         assert generated['Environment']['WaterDepth'] == 200
 
     def test_generate_with_basefile_reference(self, temp_output_dir, sample_base_template, sample_variation):
-        """Test generating with BaseFile + IncludeFile reference (OrcaFlex format)."""
+        """Reference mode must modify the existing line by name (issue #2137)."""
         from digitalmodel.solvers.orcaflex.template_generator import TemplateGenerator
 
         output_file = temp_output_dir / "case_output.yml"
@@ -269,7 +269,7 @@ class TestTemplateGenerator:
             base_file=sample_base_template,
             variation_file=sample_variation,
             output_file=output_file,
-            as_reference=True  # Generate as BaseFile + IncludeFile reference
+            as_reference=True
         )
 
         assert result['success'] is True
@@ -280,11 +280,15 @@ class TestTemplateGenerator:
             content = yaml.safe_load(f)
 
         assert 'BaseFile' in content
-        assert 'IncludeFile' in content
+        assert 'IncludeFile' not in content
+        source = yaml.safe_load(sample_variation.read_text())
+        properties = source['Lines'][0].copy()
+        name = properties.pop('Name')
+        assert content['Lines'] == {name: properties}
 
     def test_reference_paths_resolve_from_arbitrary_output_dir(
             self, temp_output_dir, sample_base_template, sample_variation):
-        """BaseFile/IncludeFile references must resolve from the output file's
+        """The BaseFile reference must resolve from the output file's
         directory even when the output is NOT inside the template's cases/
         folder (regression: fallback used to emit a fixed '../base/...')."""
         from digitalmodel.solvers.orcaflex.template_generator import TemplateGenerator
@@ -307,14 +311,11 @@ class TestTemplateGenerator:
 
         # The emitted relative paths must actually resolve to the input files
         base_resolved = (output_file.parent / content['BaseFile']).resolve()
-        variation_resolved = (output_file.parent / content['IncludeFile']).resolve()
 
         assert base_resolved == sample_base_template.resolve(), (
             f"BaseFile reference dangles: {content['BaseFile']}"
         )
-        assert variation_resolved == sample_variation.resolve(), (
-            f"IncludeFile reference dangles: {content['IncludeFile']}"
-        )
+        assert 'IncludeFile' not in content
 
     def test_reference_paths_in_cases_dir_stay_relative(
             self, temp_output_dir, sample_base_template, sample_variation):
@@ -340,7 +341,7 @@ class TestTemplateGenerator:
             content = yaml.safe_load(f)
 
         assert content['BaseFile'] == '../base/test_base.yml'
-        assert content['IncludeFile'] == '../variations/deep_water.yml'
+        assert 'IncludeFile' not in content
 
 
 class TestModelValidator:

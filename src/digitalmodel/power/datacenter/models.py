@@ -8,7 +8,10 @@ from enum import Enum
 
 
 class RedundancyScheme(Enum):
-    """Power redundancy schemes per Uptime Institute topology standards."""
+    """Declared redundancy labels for the local topology heuristic.
+
+    These labels do not establish equipment counts or certified tier compliance.
+    """
 
     N = "n"
     N_PLUS_1 = "n+1"
@@ -25,9 +28,12 @@ class PowerComponent:
     component_type : str
         Component category (utility, transformer, switchgear, pdu, generator).
     rated_kva : float
-        Rated apparent power capacity in kVA.
+        Input-side apparent power capacity in kVA under the local convention.
+        An equipment output nameplate rating requires conversion before use.
     efficiency : float
-        Power conversion efficiency (0.0–1.0). Default 1.0 (lossless passthrough).
+        Real-power output/input ratio. The apparent-power calculations assume
+        equal, nonzero power factors at every input and output. The default
+        represents lossless passthrough; the base class does not validate it.
     name : str
         Human-readable identifier.
     """
@@ -56,7 +62,7 @@ class UPSModule(PowerComponent):
         Whether automatic bypass is available during maintenance.
     """
 
-    efficiency: float = 0.95  # UPS typical efficiency
+    efficiency: float = 0.95  # Local assumption: docs/agent-pack.md, section 6 S05.
     battery_runtime_min: float = 10.0
     bypass_enabled: bool = True
 
@@ -68,7 +74,7 @@ class UPSModule(PowerComponent):
         # Local positive-rating contract: issue 2749, item 2 (not a design limit).
         if self.rated_kva <= 0:
             raise ValueError(f"rated_kva must be positive, got {self.rated_kva}")
-        if not 0.0 < self.efficiency <= 1.0:
+        if not math.isfinite(self.efficiency) or not 0.0 < self.efficiency <= 1.0:
             raise ValueError(
                 f"efficiency must be in (0, 1], got {self.efficiency}"
             )
@@ -79,7 +85,13 @@ class UPSModule(PowerComponent):
 
     @property
     def output_kva(self) -> float:
-        """Effective output after efficiency losses."""
+        """Local input-rated output estimate: rated_kva times efficiency.
+
+        Equal, nonzero input/output power factors are assumed, so the real-power
+        efficiency also scales apparent power. This is not an output nameplate
+        rating. Basis: ENERGY STAR UPS Test Method (Dec-2017), section 5 A,
+        equation 2; Eligibility Criteria v2.0, section 1 K (power factor).
+        """
         return self.rated_kva * self.efficiency
 
 
@@ -88,12 +100,16 @@ class STSModule(PowerComponent):
     """Static Transfer Switch — automatic source transfer between paths.
 
     Construction requires a finite, positive rated_kva and a finite,
-    nonnegative transfer_time_ms (local input contract).
+    nonnegative transfer_time_ms. Efficiency must be finite and in (0, 1]
+    under the local passive-component contract (issue 2749, item 3).
+    Boolean and non-real efficiencies are rejected with ValueError.
 
     Attributes
     ----------
     transfer_time_ms : float
-        Transfer time in milliseconds (typically 4–10 ms).
+        Transfer time in milliseconds; the default is a local assumption.
+    efficiency : float
+        Real-power output/input ratio; the inherited default is lossless.
     preferred_source : str
         Label of the preferred power source.
     alternate_source : str
@@ -123,6 +139,21 @@ class STSModule(PowerComponent):
         if self.transfer_time_ms < 0:
             raise ValueError(
                 f"transfer_time_ms must be non-negative, got {self.transfer_time_ms}"
+            )
+        # Local finite, passive-efficiency contract: issue 2749, item 3.
+        # Bounds 0 < eta <= 1 exclude zero output and power creation.
+        try:
+            valid_efficiency = (
+                not isinstance(self.efficiency, bool)
+                and math.isfinite(self.efficiency)
+                and 0.0 < self.efficiency <= 1.0
+            )
+        except TypeError:
+            valid_efficiency = False
+        if not valid_efficiency:
+            raise ValueError(
+                "efficiency must be a non-boolean finite real number in (0, 1], "
+                f"got {self.efficiency}"
             )
         if not self.component_type:
             self.component_type = "sts"

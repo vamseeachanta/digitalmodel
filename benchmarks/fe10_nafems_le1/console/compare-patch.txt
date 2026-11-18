@@ -1,0 +1,17 @@
+program: MYSTRAN 19.0.0; patch test, FE10 band 0.1 % (fixed benchmark criteria)
+element 1 sigma_xx_MPa     300.0000 expected   300.0000  diff -0.0 %  PASS
+element 1 sigma_yy_MPa     300.0000 expected   300.0000  diff 0.0 %  PASS
+element 1 tau_xy_MPa        80.7692 expected    80.7692  diff 0.0 %  PASS
+element 2 sigma_xx_MPa     299.9998 expected   300.0000  diff -0.0 %  PASS
+element 2 sigma_yy_MPa     300.0002 expected   300.0000  diff 0.0 %  PASS
+element 2 tau_xy_MPa        80.7692 expected    80.7692  diff 0.0 %  PASS
+element 3 sigma_xx_MPa     300.0003 expected   300.0000  diff 0.0 %  PASS
+element 3 sigma_yy_MPa     299.9997 expected   300.0000  diff -0.0 %  PASS
+element 3 tau_xy_MPa        80.7692 expected    80.7692  diff -0.0 %  PASS
+element 4 sigma_xx_MPa     299.9997 expected   300.0000  diff -0.0 %  PASS
+element 4 sigma_yy_MPa     300.0003 expected   300.0000  diff 0.0 %  PASS
+element 4 tau_xy_MPa        80.7692 expected    80.7692  diff -0.0 %  PASS
+element 5 sigma_xx_MPa     300.0000 expected   300.0000  diff -0.0 %  PASS
+element 5 sigma_yy_MPa     300.0000 expected   300.0000  diff 0.0 %  PASS
+element 5 tau_xy_MPa        80.7692 expected    80.7692  diff -0.0 %  PASS
+SUMMARY PASS: 15 compared, 0 FAIL; all within 0.1 %

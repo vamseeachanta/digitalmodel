@@ -41,7 +41,9 @@ environment:
     profile:                          # [depth (m), speed multiplier on ref speed]
       - [0, 0.46]                     # Surface: 46% of ref speed
       - [6, 0.39]                     # 6m depth: 39% of ref speed
-      - [15, 0.33]                    # 15m depth: 33% of ref speed
+      # End at the 8 m bottom; interpolate the original (6, 0.39), (15, 0.33):
+      # 0.39 + (0.33 - 0.39) * (8 - 6) / (15 - 6), rounded to two decimals.
+      - [8, 0.38]
   wind:
     speed: 8.87                       # Wind speed (m/s)
     direction: 270                    # Wind direction (deg from North)

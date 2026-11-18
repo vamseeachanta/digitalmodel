@@ -5,8 +5,6 @@ AC3: TopologyValidator with SPOF detection and tier classification — ≥10 tes
 
 from __future__ import annotations
 
-import pytest
-
 from digitalmodel.power.datacenter.models import (
     RedundancyScheme,
     UPSModule,
@@ -90,22 +88,22 @@ class TestSPOFDetection:
 
 
 class TestTierClassification:
-    """Test Uptime Institute tier classification (Tier I–IV)."""
+    """Test historical local levels through the compatibility alias."""
 
     def test_tier_i_no_redundancy(self):
-        """Single path, no UPS = Tier I."""
+        """Single path without UPS gives local level 1."""
         path = _make_single_path(with_ups=False)
         validator = TopologyValidator(paths=[path])
         assert validator.classify_tier() == 1
 
     def test_tier_ii_single_path_with_ups(self):
-        """Single path with UPS = Tier II."""
+        """Single path with UPS gives local level 2, without redundancy proof."""
         path = _make_single_path(with_ups=True)
         validator = TopologyValidator(paths=[path])
         assert validator.classify_tier() == 2
 
     def test_tier_iii_dual_path_with_sts(self):
-        """Dual path + STS for concurrently maintainable = Tier III."""
+        """Dual paths with STS give local level 3, without maintenance proof."""
         paths = _make_dual_paths()
         # Add STS to connect paths
         paths[0].add_component(STSModule(rated_kva=500.0, name="STS-1"))
@@ -113,7 +111,7 @@ class TestTierClassification:
         assert validator.classify_tier() == 3
 
     def test_tier_iv_fully_fault_tolerant(self):
-        """2N+1 with STS and independent utilities = Tier IV."""
+        """Three 2N+1 paths with STS and no detected SPOFs give local level 4."""
         paths = _make_dual_paths()
         # Add STS to each path
         for p in paths:

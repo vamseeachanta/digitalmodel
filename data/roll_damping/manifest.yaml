@@ -1,0 +1,23 @@
+generated_by: scripts/roll_damping/build_manifest.py
+route: public
+tables:
+  benchmark_cases:
+    file: benchmark_cases.csv
+    sha256: 019a9f310c5c780db0dcd84e2ef5337b7a2093cbf9e00a92598267388dd20ecf
+    rows: 21
+  sources:
+    file: sources.csv
+    sha256: 3853a93b310708e83b318f33aa938e4b598ab2beb3ea0d8652e39dd0550cdca0
+    rows: 16
+  method_matrix:
+    file: method_matrix.csv
+    sha256: 86b9cd15cc02a0f252d9780ddf6b944470c679cb94bb572f62377796e70089a1
+    rows: 13
+  wiki_tables:
+    file: wiki_tables.csv
+    sha256: 65994837d4b2d6a3d3c782060d5cce4c0d4e484e90f58c9166724361e23cea08
+    rows: 5
+  acceptance_criteria:
+    file: acceptance_criteria.yaml
+    sha256: f58d26ad273c7c98ea7a454bfd39e6ad3249e3f92385f952005913ec85fb4719
+    quantities: 8

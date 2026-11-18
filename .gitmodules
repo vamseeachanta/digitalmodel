@@ -1,4 +1,5 @@
 # assetutilities is a sibling-repo dependency, not a git submodule.
 # Development: clone vamseeachanta/assetutilities alongside this repo;
 # [tool.uv.sources] in pyproject.toml resolves it as an editable path.
-# CI: UV_NO_SOURCES=true falls back to the PyPI-published version.
+# CI: --no-sources disables that path; the gates in .claude/quality-gates.yaml
+# overlay assetutilities from git main until a release >=0.1.1 is on PyPI.

@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><title>Tank-bottom CP implementation plan</title>
+<body><h1>Tank-bottom CP implementation plan</h1>
+<p>Scope: <a href="https://github.com/vamseeachanta/digitalmodel/issues/3811">tank-bottom CP and reference conversion</a>.
+Public sources and explicit design inputs will support screening;
+the calculation will not establish API 651 compliance.</p>
+<ol><li>Tests will first specify the 40 m arithmetic, exact circular ribbon chords, feed topology,
+finite SI inputs, adverse foundation conditions, conversion signs, and survey/report equivalence.</li>
+<li>The existing current-demand kernel and validation helpers will be reused. A uniformly loaded
+conductor model will integrate Ohm's law; measured centre and edge potentials will be assessed separately.</li>
+<li>Electrode metadata will name electrolyte, temperature, source and approximation. Survey, monitoring,
+potential checks and reports will share one conversion utility; native criteria will retain their basis.</li>
+<li>The worked example and user guide will identify all synthetic inputs and distinguish minimum ribbon
+length from installed grid length. The local capability explorer will link the example.</li>
+<li>The CP test folder and nearest specialized CP tests will be run. The final diff, staged bytes,
+public-source rights and working-tree residue will be inspected before commit, push and a ready PR.</li></ol>
+<p>Adversarial plan review: default disposition will be changes required until sign reversal, ambiguous
+Ag/AgCl, zinc drift, ON-potential misuse, circular edge coverage and inferred polarization risks are addressed.
+Required inputs and explicit limitations will address these risks. No universal soil-resistivity threshold,
+ribbon discharge rating or maximum spacing will be inferred from API 651.</p>
+</body></html>

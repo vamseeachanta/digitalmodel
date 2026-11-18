@@ -17,9 +17,10 @@ from __future__ import annotations
 
 import re
 from dataclasses import asdict
+from datetime import date
 from typing import Annotated, Any, Literal, Mapping, Optional, Union
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, HttpUrl, field_validator, model_validator
 
 from digitalmodel.citations.schema import Citation, CitationValidationError
 from digitalmodel.reporting.provenance import Provenance
@@ -265,16 +266,48 @@ class Section(_Strict):
 # ---------------------------------------------------------------------------
 
 
+class PublicWebCitation(_Strict):
+    """A public equation source, with an explicit retrieval date and URL.
+
+    This report reference does not resolve or replace wiki-backed citations
+    used to qualify calculation constants. Rendering makes no network request.
+    """
+
+    code_id: str
+    publisher: str
+    revision: str
+    section: str
+    url: HttpUrl
+    retrieved: date
+    note: str = ""
+
+    @field_validator("code_id", "publisher", "revision", "section")
+    @classmethod
+    def _check_text(cls, value: str) -> str:
+        return _non_empty(value, "public citation field")
+
+    @field_validator("url")
+    @classmethod
+    def _check_url(cls, value: HttpUrl) -> HttpUrl:
+        if value.username is not None or value.password is not None:
+            raise ValueError("public citation URL must not contain credentials")
+        return value
+
+
 def _coerce_citation(item: Any, index: int) -> dict[str, Any]:
+    if isinstance(item, PublicWebCitation):
+        return item.model_dump(mode="json")
     if isinstance(item, Citation):
         return asdict(item)
     if isinstance(item, Mapping):
+        if "url" in item:
+            return PublicWebCitation.model_validate(dict(item)).model_dump(mode="json")
         try:
             return asdict(Citation(**dict(item)))
         except (TypeError, CitationValidationError) as exc:
             raise ValueError(f"citations[{index}] invalid: {exc}") from exc
     raise ValueError(
-        f"citations[{index}] must be a Citation or a mapping, got "
+        f"citations[{index}] must be a Citation, PublicWebCitation or a mapping, got "
         f"{type(item).__name__}"
     )
 
@@ -283,7 +316,8 @@ class ReportSpec(BaseModel):
     """Everything the engine needs to render one report.
 
     ``citations`` accepts :class:`~digitalmodel.citations.schema.Citation`
-    dataclasses (or mappings with the same fields) and stores them as plain
+    dataclasses, :class:`PublicWebCitation` objects (or mappings with the same
+    fields) and stores them as plain
     dicts so the spec serialises to JSON unchanged. ``provenance`` must declare
     at least one source by render time (:meth:`Provenance.require`).
     ``manifest`` is validated against :data:`MANIFEST_REQUIRED_FIELDS` when

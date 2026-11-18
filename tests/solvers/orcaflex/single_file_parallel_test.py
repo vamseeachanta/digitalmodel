@@ -311,8 +311,8 @@ class SingleFileParallelStrategy:
 def run_strategy_comparison():
     """Run comparison of parallelization strategies."""
     
-    # Use the real test files
-    test_dir = Path("D:/1522/ctr7/orcaflex/rev_a08/runtime_test")
+    # Use the real test files (under DIGITALMODEL_PRIVATE_DATA when available)
+    test_dir = Path(os.environ.get("DIGITALMODEL_PRIVATE_DATA", "<project_data>")) / "ctr7" / "orcaflex" / "rev_a08" / "runtime_test"
     test_files = [
         str(test_dir / "fsts_l015_hwl_125km3_l100_pb_005yr__cl_015deg.sim"),
         str(test_dir / "fsts_l015_hwl_ncl_000deg.sim")

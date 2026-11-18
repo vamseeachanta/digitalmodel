@@ -24,6 +24,9 @@ from pydantic import BaseModel, Field
 
 from digitalmodel.cathodic_protection import _kernels as kernel
 from digitalmodel.cathodic_protection import dnv_rp_f106
+from digitalmodel.cathodic_protection.reference_electrodes import (
+    ReferenceElectrode, convert_potential,
+)
 
 _MA_PER_A: float = 1000.0
 
@@ -279,11 +282,13 @@ OVERPROTECTION_THRESHOLD_V: float = -1.200  # V vs CSE — hydrogen embrittlemen
 class CriteriaResult(BaseModel):
     """Result of protection potential criteria check."""
 
+    reference_electrode: ReferenceElectrode = ReferenceElectrode.CSE
+
     measured_potential_V: float = Field(
-        ..., description="Measured pipe-to-soil potential [V vs CSE]"
+        ..., description="Measured pipe-to-soil potential [V vs reference_electrode]"
     )
     criterion_V: float = Field(
-        ..., description="Protection criterion potential [V vs CSE]"
+        ..., description="Protection criterion [V vs reference_electrode]"
     )
     is_protected: bool = Field(
         ..., description="Whether measured potential meets criterion"
@@ -418,6 +423,9 @@ def soil_resistivity_correction(
 def check_potential_criteria(
     measured_potential_V_CSE: float,
     environment: str = "aerobic",
+    *,
+    reference_electrode: ReferenceElectrode | str = "CSE",
+    zinc_potential_she_V: float | None = None,
 ) -> CriteriaResult:
     """Check if measured potential meets protection criteria per NACE SP0169 §6.2.
 
@@ -428,7 +436,8 @@ def check_potential_criteria(
     Parameters
     ----------
     measured_potential_V_CSE : float
-        Measured pipe-to-soil potential [V vs CSE].
+        Measured pipe-to-soil potential [V]. The legacy parameter name is
+        retained; reference_electrode specifies its actual basis.
     environment : str
         "aerobic" or "anaerobic" (SRB environments).
 
@@ -442,13 +451,21 @@ def check_potential_criteria(
     else:
         criterion = PROTECTION_POTENTIAL_CSE
 
+    options = {"zinc_potential_she_V": zinc_potential_she_V}
+    criterion = convert_potential(criterion, "CSE", reference_electrode, **options)
+    overprotection_limit = convert_potential(
+        OVERPROTECTION_THRESHOLD_V, "CSE", reference_electrode, **options,
+    )
+    # Validate the measurement in the same shared conversion path.
+    convert_potential(measured_potential_V_CSE, reference_electrode, reference_electrode, **options)
     # Protection: measured must be more negative than (or equal to) criterion
     is_protected = measured_potential_V_CSE <= criterion
 
     # Overprotection: very negative potentials risk hydrogen embrittlement
-    is_overprotected = measured_potential_V_CSE < OVERPROTECTION_THRESHOLD_V
+    is_overprotected = measured_potential_V_CSE < overprotection_limit
 
     return CriteriaResult(
+        reference_electrode=reference_electrode,
         measured_potential_V=measured_potential_V_CSE,
         criterion_V=criterion,
         is_protected=is_protected,

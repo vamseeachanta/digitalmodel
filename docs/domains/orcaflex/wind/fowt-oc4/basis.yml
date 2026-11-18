@@ -1,0 +1,239 @@
+description: NREL 5 MW reference turbine on the OC4-DeepCwind semi-submersible. Values transcribed from
+  the OC4 Phase II definition report or read from the OpenFAST regression-test inputs.
+reference_commit: dd5feaaaa500ba7283140107806300d551cff0a7
+environment:
+  water_depth:
+    value: 200.0
+    unit: m
+    source: Robertson et al. (2014), NREL/TP-5000-60601; Table 4-6; printed page 25
+  water_density:
+    value: 1025.0
+    unit: kg/m^3
+    source: Robertson et al. (2014), NREL/TP-5000-60601; Table 4-6; printed page 25
+published:
+  displacement:
+    value: 13917.0
+    unit: m^3
+    source: Robertson et al. (2014), NREL/TP-5000-60601; Table 4-6; printed page 25
+  center_of_buoyancy:
+    value:
+    - 0.0
+    - 0.0
+    - -13.15
+    unit: m
+    source: Robertson et al. (2014), NREL/TP-5000-60601; Table 4-6, 13.15 m below SWL; printed page 25
+  buoyancy_force:
+    value: 139890000.0
+    unit: N
+    source: Robertson et al. (2014), NREL/TP-5000-60601; Table 4-6; printed page 25
+  hydrostatic_stiffness:
+    value:
+    - 0.0
+    - 0.0
+    - 3836000.0
+    - -377600000.0
+    - -377600000.0
+    - 0.0
+    unit: N/m for heave; N m/rad for roll and pitch
+    source: Robertson et al. (2014), NREL/TP-5000-60601; Table 4-6 and Eq. (4-3); gravity term excluded;
+      printed pages 11, 25
+  natural_frequencies_text:
+    value:
+      surge: 0.01
+      heave: 0.058
+      pitch: 0.04
+    unit: Hz
+    source: Robertson et al. (2014), NREL/CP-5000-61154; results text on the response spectra for irregular-wave
+      load cases 2.2 and 3.2 (Hs 6 m, Tp 10 s), PDF page 13; quoted to one or two significant figures
+comparators:
+  openfast_linearisation_periods:
+    value:
+      surge: 106.892115
+      sway: 106.971271
+      heave: 17.2833272
+      roll: 25.3263294
+      pitch: 25.4474769
+      yaw: 80.2215727
+    unit: s
+    source: OpenFAST/r-test; glue-codes/openfast/5MW_OC4Semi_Linear/5MW_OC4Semi_Linear.1.lin; state matrix
+      A eigen-analysis; mode per DOF chosen by largest platform-displacement share among modes with damping
+      ratio < 0.1 and frequency < 0.1 Hz; OpenFAST v4.1.2-727 output; commit dd5feaaaa500ba7283140107806300d551cff0a7
+  openfast_linearisation_damping:
+    value:
+      surge: 0.00916746364
+      sway: 0.00919129334
+      heave: 0.0113625503
+      roll: 0.0109830526
+      pitch: 0.0110502358
+      yaw: 0.00509299695
+    unit: fraction of critical
+    source: OpenFAST/r-test; glue-codes/openfast/5MW_OC4Semi_Linear/5MW_OC4Semi_Linear.1.lin; same eigenmodes;
+      commit dd5feaaaa500ba7283140107806300d551cff0a7
+system:
+  mass:
+    value: 14072324.492717916
+    unit: kg
+    source: aggregation of the components listed under system.components; M=sum(m), CG=sum(m r)/M, I_CG=sum(I_i
+      + m_i((d.d)I - d d^T))
+  center_of_gravity:
+    value:
+    - -0.010129812534732885
+    - 0.0
+    - -9.894318090911867
+    unit: m
+    source: aggregation of the components listed under system.components; M=sum(m), CG=sum(m r)/M, I_CG=sum(I_i
+      + m_i((d.d)I - d d^T))
+  inertia_cg:
+    value:
+    - - 11323694059.527006
+      - 0.0
+      - 14560473.544570893
+    - - 0.0
+      - 11308588614.9532
+      - 0.0
+    - - 14560473.544570893
+      - 0.0
+      - 12285114089.269117
+    unit: kg m^2
+    source: aggregation of the components listed under system.components; M=sum(m), CG=sum(m r)/M, I_CG=sum(I_i
+      + m_i((d.d)I - d d^T))
+  components:
+  - name: platform including ballast
+    mass: 13473000.0
+    centre:
+    - 0.0
+    - 0.0
+    - -13.46
+    inertia:
+    - - 6827000000.0
+      - 0
+      - 0
+    - - 0
+      - 6827000000.0
+      - 0
+    - - 0
+      - 0
+      - 12260000000.0
+    source: Robertson et al. (2014), NREL/TP-5000-60601; Table 3-3; printed page 9
+  - name: tower
+    mass: 249718.00279999996
+    centre:
+    - 0.0
+    - 0.0
+    - 43.23885702850096
+    inertia:
+    - - 121693146.71091993
+      - 0
+      - 0
+    - - 0
+      - 121693146.71091993
+      - 0
+    - - 0
+      - 0
+      - 0.0
+    source: OpenFAST/r-test; glue-codes/openfast/5MW_OC4Semi_Linear/NRELOffshrBsline5MW_OC4DeepCwindSemi_ElastoDyn_Tower.dat;
+      HtFract,TMassDen integrated between TowerBsHt and TowerHt; torsional inertia neglected; commit dd5feaaaa500ba7283140107806300d551cff0a7
+  - name: nacelle
+    mass: 240000.0
+    centre:
+    - 1.9
+    - 0.0
+    - 89.35
+    inertia:
+    - - 1741490.0
+      - 0
+      - 0
+    - - 0
+      - 1741490.0
+      - 0
+    - - 0
+      - 0
+      - 1741490.0
+    source: OpenFAST/r-test; glue-codes/openfast/5MW_OC4Semi_Linear/NRELOffshrBsline5MW_OC4DeepCwindSemi_ElastoDyn.dat;
+      NacMass,NacCMxn,NacCMzn,NacYIner; Izz about the nacelle centre from NacYIner by the parallel-axis
+      theorem; Ixx and Iyy are not given and are assumed equal to Izz; commit dd5feaaaa500ba7283140107806300d551cff0a7
+  - name: rotor (hub and three blades)
+    mass: 109606.48991791577
+    centre:
+    - -5.460899345352782
+    - 0.0
+    - 90.04032678537449
+    inertia:
+    - - 38478043.84292657
+      - 0
+      - 0
+    - - 0
+      - 19239021.921463285
+      - 0
+    - - 0
+      - 0
+      - 19239021.921463285
+    source: OpenFAST/r-test; glue-codes/openfast/5MW_OC4Semi_Linear/NRELOffshrBsline5MW_OC4DeepCwindSemi_ElastoDyn.dat;
+      HubMass,HubIner,OverHang,Twr2Shft,ShftTilt,PreCone,TipRad,HubRad; blade BMassDen x AdjBlMs integrated;
+      transverse inertia taken as half the polar inertia (three-blade rotor); tilt rotation of the tensor
+      neglected; commit dd5feaaaa500ba7283140107806300d551cff0a7
+mooring:
+  line_count:
+    value: 3
+    unit: count
+    source: Robertson et al. (2014), NREL/TP-5000-60601; Table 5-1; printed page 26
+  volume_equivalent_diameter:
+    value: 0.0766
+    unit: m
+    source: Robertson et al. (2014), NREL/TP-5000-60601; Table 5-1; printed page 26
+  mass_per_length:
+    value: 113.35
+    unit: kg/m
+    source: Robertson et al. (2014), NREL/TP-5000-60601; Table 5-1; printed page 26
+  axial_stiffness:
+    value: 753600000.0
+    unit: N
+    source: Robertson et al. (2014), NREL/TP-5000-60601; Table 5-1, 753.6 MN; printed page 26
+  unstretched_length:
+    value: 835.5
+    unit: m
+    source: Robertson et al. (2014), NREL/TP-5000-60601; Table 5-1; printed page 26 (the r-test MAP input
+      uses 835.35 m)
+  normal_drag_coefficient:
+    value: 1.1
+    unit: '-'
+    source: Robertson et al. (2014), NREL/TP-5000-60601; Table 5-1; printed page 26
+  added_mass_coefficient:
+    value: 1.0
+    unit: '-'
+    source: Robertson et al. (2014), NREL/TP-5000-60601; Table 5-1; printed page 26
+  fairleads:
+    value:
+    - - 20.434000000000005
+      - 35.39272620186244
+      - -14.0
+    - - -40.868
+      - 5.004886538755404e-15
+      - -14.0
+    - - 20.434000000000005
+      - -35.39272620186244
+      - -14.0
+    unit: m
+    source: Robertson et al. (2014), NREL/TP-5000-60601; Table 5-1 radius 40.868 m, depth 14 m; azimuths
+      60, 180, 300 degree from OpenFAST/r-test glue-codes/openfast/5MW_OC4Semi_Linear/NRELOffshrBsline5MW_OC4DeepCwindSemi_MAP.dat
+      (Line 1 at 60 degree, repeat 240 120)
+  anchors:
+    value:
+    - - 418.8000000000001
+      - 725.3828782098458
+      - -200.0
+    - - -837.6
+      - 1.0257641589658231e-13
+      - -200.0
+    - - 418.8000000000001
+      - -725.3828782098458
+      - -200.0
+    unit: m
+    source: Robertson et al. (2014), NREL/TP-5000-60601; Table 5-1 radius 837.6 m, depth 200 m; same azimuths
+  minimum_breaking_load: null
+geometry:
+  hull_length:
+    value: 67.3
+    unit: m
+    source: 'Robertson et al. (2014), NREL/TP-5000-60601; Table 3-1 and 3-2: offset columns at x 14.43
+      and -28.87 m, base column diameter 24 m; printed page 7'

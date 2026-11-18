@@ -9,6 +9,8 @@ import math
 from dataclasses import dataclass, field
 from typing import Any, Optional, Union
 
+import numpy as np
+
 from .catalog import HullCatalog, HullCatalogEntry
 from .panel_catalog import PanelCatalog, PanelCatalogEntry
 
@@ -155,12 +157,24 @@ def _scaling_factors(
 
 
 def _validate_target(target: HullLookupTarget) -> None:
-    """Raise ValueError for missing or non-positive required dimensions."""
+    """Require finite positive dimensions and any supplied displacement."""
     for name in ("loa_m", "beam_m", "draft_m"):
         value = getattr(target, name)
         if value is None or not math.isfinite(value) or value <= 0:
             raise ValueError(f"{name} must be a finite positive number")
 
+    displacement = target.displacement_t
+    if displacement is not None:
+        try:
+            valid = (
+                not isinstance(displacement, (bool, np.bool_))
+                and math.isfinite(displacement)
+                and displacement > 0
+            )
+        except (TypeError, ValueError, OverflowError):
+            valid = False
+        if not valid:
+            raise ValueError("displacement_t must be a finite positive number")
 
 
 # ---------------------------------------------------------------------------
@@ -199,15 +213,19 @@ class HullLookup:
 
         Args:
             target: Target vessel dimensions.
-            n: Number of results to return.
+            n: Positive integer number of results to return; excludes booleans.
+               If fewer candidates are available, return all of them.
 
         Returns:
             List of ``HullMatch`` objects, best match first.
 
         Raises:
-            ValueError: If required dimensions (loa_m, beam_m, draft_m)
-                        are missing or non-positive.
+            ValueError: If n is not a positive integer, required dimensions
+                        are missing or not finite positive numbers, or supplied
+                        displacement is not a finite positive number.
         """
+        if isinstance(n, bool) or not isinstance(n, int) or n <= 0:
+            raise ValueError("n must be a positive integer")
         _validate_target(target)
         scored = self._score_all(target)
         scored.sort(key=lambda x: x.similarity_score, reverse=True)
@@ -223,7 +241,9 @@ class HullLookup:
             Best ``HullMatch``.
 
         Raises:
-            ValueError: If required dimensions are missing or non-positive.
+            ValueError: If required dimensions are missing or not finite
+                        positive numbers, or supplied displacement is not a
+                        finite positive number.
         """
         matches = self.find_closest(target, n=1)
         return matches[0]

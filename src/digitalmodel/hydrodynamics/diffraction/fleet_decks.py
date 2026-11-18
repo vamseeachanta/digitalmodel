@@ -10,9 +10,9 @@ scopes, deduped) and:
     ``orcawave_batch_runner`` and dispatch-ready through the licensed-run lane.
 
 License-free: this only *prepares* decks + the batch config. The solves run on a
-licensed OrcaWave/AQWA machine. Parametric forms that a single hull surface can't
-represent (semisub/spar) emit a placeholder deck flagged ``mesh-to-supply`` and
-are excluded from the batch config by default.
+licensed OrcaWave/AQWA machine. Unsupported forms retain a specification and
+manifest flagged ``mesh-to-supply``, without generating a native deck. They are
+excluded from the batch config by default.
 """
 
 from __future__ import annotations
@@ -114,7 +114,7 @@ def generate_fleet_decks(
         {
             "vessel": d.vessel,
             "vessel_dir": d.deck_path.parent.name,
-            "deck": d.deck_path.name,
+            "deck": None if d.mesh_kind == "placeholder" else d.deck_path.name,
             "spec": d.spec_path.name,
             "form": d.form,
             "mesh_kind": d.mesh_kind,
@@ -139,7 +139,9 @@ def generate_fleet_decks(
                 ),
             },
             indent=2,
-        )
+        ),
+        encoding="utf-8",
+        newline="\n",
     )
     result.index_path = index_path
     return result
@@ -174,9 +176,9 @@ def emit_orcawave_batch_config(
                 # The batch runner loads jobs via DiffractionSpec.from_yaml, so
                 # point it at the canonical spec.yml — NOT the OrcaWave-native
                 # deck .yml (which would fail schema validation at load time).
-                "spec_path": str(deck.spec_path),
+                "spec_path": deck.spec_path.as_posix(),
                 "job_name": vessel_dir.name,
-                "output_dir": str(base_output_dir / vessel_dir.name),
+                "output_dir": (base_output_dir / vessel_dir.name).as_posix(),
                 "validate": validate,
                 "generate_plots": generate_plots,
                 "export_formats": export_formats or ["csv"],
@@ -186,12 +188,14 @@ def emit_orcawave_batch_config(
     config = {
         "execution_mode": execution_mode,
         "max_workers": max_workers,
-        "base_output_dir": str(base_output_dir),
+        "base_output_dir": base_output_dir.as_posix(),
         "generate_summary_report": True,
         "jobs": jobs,
     }
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    out_path.write_text(yaml.safe_dump(config, sort_keys=False))
+    out_path.write_text(
+        yaml.safe_dump(config, sort_keys=False), encoding="utf-8", newline="\n"
+    )
     return out_path
 
 

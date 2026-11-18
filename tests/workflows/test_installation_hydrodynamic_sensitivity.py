@@ -114,6 +114,7 @@ def test_nested_master_rejected(prepared, tmp_path, field):
     assert not (tmp_path / 'nested').exists()
 
 
+@pytest.mark.solver
 def test_native_named_override_preserves_connections(tmp_path):
     api = pytest.importorskip('OrcFxAPI')
     import digitalmodel.workflows.installation_hydrodynamic_sensitivity as workflow

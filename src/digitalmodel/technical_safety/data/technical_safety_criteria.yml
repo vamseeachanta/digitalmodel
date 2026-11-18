@@ -1,0 +1,34 @@
+# Historical regression values supplied in issue #3821 only. Not independently verified
+# against a public primary copy of this edition. No standard text is reproduced.
+# Pool, average and water-reduced fluxes are deliberately required caller inputs.
+schema_version: 1
+editions:
+  s_dp_001_1996_rev2:
+    standard: NORSOK S-DP-001
+    edition: Rev. 2 (1996)
+    status: superseded
+    values:
+      supply_vessel_collision_energy:
+        value: 14.0
+        unit: MJ
+        citation:
+          standard: NORSOK S-DP-001
+          edition: Rev. 2 (1996)
+          clause: "8.1"
+          note: Historical regression input from issue #3821; unverified; tests only.
+      riser_collision_energy:
+        value: 14.0
+        unit: MJ
+        citation:
+          standard: NORSOK S-DP-001
+          edition: Rev. 2 (1996)
+          clause: "7.8"
+          note: Historical regression input from issue #3821; unverified; tests only.
+      jet_peak:
+        value: 250.0
+        unit: kW/m2
+        citation:
+          standard: NORSOK S-DP-001
+          edition: Rev. 2 (1996)
+          clause: "11.3, step 3"
+          note: Historical regression input from issue #3821; unverified; tests only.

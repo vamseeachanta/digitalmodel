@@ -22,14 +22,14 @@ opp_rg = OPPRangeGraph()
 
 class OPPSummary_superseded:
     def process_summary_superseded(self, cfg):
-        # TODO DELETE by end of WLNG project or 2024-02-01
+        # TODO DELETE by end of Client W project or 2024-02-01
         if "summary_settings" in cfg:
             SummaryDFAllFiles = self.process_summary_groups(cfg)
             self.SummaryDFAllFiles = SummaryDFAllFiles
             self.save_summary_superseded(cfg, self.SummaryDFAllFiles, self.load_matrix)
 
     def process_summary_groups_superseded(self, cfg):
-        # TODO DELETE by end of WLNG project or 2024-02-01
+        # TODO DELETE by end of Client W project or 2024-02-01
 
         summary_cfg = cfg["summary_settings"].copy()
         SummaryDFAllFiles = [pd.DataFrame()] * len(summary_cfg["groups"])
@@ -96,7 +96,7 @@ class OPPSummary_superseded:
         fileIndex,
         cfg,
     ):
-        # TODO DELETE by end of WLNG project or 2024-02-01
+        # TODO DELETE by end of Client W project or 2024-02-01
         summary_group_cfg = cfg["summary_settings"]["groups"][SummaryIndex]
         if SummaryDF.empty:
             columns = self.get_summary_df_columns(summary_group_cfg)
@@ -172,7 +172,7 @@ class OPPSummary_superseded:
         return SummaryDF
 
     def get_loading_condition_array_superseded(self, file_index):
-        # TODO DELETE by end of WLNG project or 2024-02-01
+        # TODO DELETE by end of Client W project or 2024-02-01
         if self.load_matrix is None:
             loading_condition_array = []
         else:

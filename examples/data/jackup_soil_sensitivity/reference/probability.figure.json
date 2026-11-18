@@ -1,0 +1,58 @@
+{
+  "data": [
+    {
+      "error_y": {
+        "array": [
+          0.5600609011740199,
+          0.6308845837961763,
+          0.3891342324640279,
+          0.03839983706765957
+        ],
+        "arrayminus": [
+          0.5911417292965737,
+          0.659784301173294,
+          0.42407808419560045,
+          0.0
+        ],
+        "symmetric": false,
+        "type": "data"
+      },
+      "hovertemplate": "%{x}<br>%{y:.1f}%<extra></extra>",
+      "name": "Descending peak reached",
+      "type": "bar",
+      "x": [
+        "sand_over_soft",
+        "sand_over_soft_punching",
+        "stiff_over_soft",
+        "uniform_soft"
+      ],
+      "y": [
+        90.47,
+        87.63,
+        95.5,
+        0.0
+      ]
+    }
+  ],
+  "layout": {
+    "meta": {
+      "basis": "assumed, based on previous experience",
+      "interpretation": "Per-leg model probability; excludes model and distribution uncertainty.",
+      "interval": "95% Wilson score",
+      "sample_count_per_case": 10000,
+      "seed": 20261028
+    },
+    "title": {
+      "text": "Conditional punch-through probability at assumed preload"
+    },
+    "yaxis": {
+      "range": [
+        0,
+        100
+      ],
+      "title": {
+        "text": "Probability (%)"
+      }
+    }
+  }
+}

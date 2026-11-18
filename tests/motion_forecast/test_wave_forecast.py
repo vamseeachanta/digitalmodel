@@ -104,6 +104,86 @@ def test_surface_at_reference_is_sum_of_component_cosines():
     assert np.allclose(surface_elevation(fc, 0.0, 0.0, t), expected, atol=1e-9)
 
 
+@pytest.mark.parametrize("vector_times", [False, True], ids=["scalar", "vector"])
+def test_finite_depth_surface_phase_reference(vector_times):
+    # Basis for both finite-depth cases: USACE Coastal Engineering Manual,
+    # EM 1110-2-1100 (2002), Part II, sections II-1-2.c(2) and c(3),
+    # wave celerity, length and period; the sinusoidal wave profile.
+    # Independent hand calculation, with chosen synthetic inputs (SI units):
+    # k=0.2, h=3 give kh=0.6, so omega=sqrt(g*k*tanh(k*h)), not sqrt(g*k).
+    # At heading 90 degrees, d_hat=(0, 1). From reference (3, -4), choose
+    # delta_x=10 and delta_y=pi/(2*k). Then k*d_hat.delta_p=pi/2.
+    # With phi=pi/2, theta=omega*t: at successive quarter-periods,
+    # cos(theta)=(1, 0, -1, 0, 1). Reversing the spatial phase sign instead
+    # gives theta=omega*t+pi and reverses the extrema.
+    k, depth, amplitude = 0.2, 3.0, 1.3
+    omega = np.sqrt(GRAVITY * k * np.tanh(k * depth))
+    period = 2.0 * np.pi / omega
+    reference = (3.0, -4.0)
+    x, y = reference[0] + 10.0, reference[1] + np.pi / (2.0 * k)
+    fc = WaveForecast(
+        [WaveComponent(omega, amplitude, np.pi / 2.0, 90.0)],
+        horizon=period,
+        phase_reference_location=reference,
+        water_depth=depth,
+    )
+    times = period * np.array([0.0, 0.25, 0.5, 0.75, 1.0])
+    expected = [amplitude, 0.0, -amplitude, 0.0, amplitude]
+    # The plan's 1e-9 m absolute tolerance allows dispersion-solver roundoff;
+    # no relative tolerance is needed for these exact extrema and zero crossings.
+    if vector_times:
+        actual = surface_elevation(fc, x, y, times)
+        assert actual.shape == times.shape
+        np.testing.assert_allclose(actual, expected, rtol=0.0, atol=1e-9)
+    else:
+        for time, elevation in zip(times, expected):
+            actual = surface_elevation(fc, x, y, float(time))
+            assert np.ndim(actual) == 0
+            assert actual == pytest.approx(elevation, rel=0.0, abs=1e-9)
+
+
+def test_surface_translation_preserves_phase():
+    # Independent coordinate identity: (p+s)-(p_ref+s)=p-p_ref.
+    # Chosen synthetic inputs: reference (3, -4), observation (11, 7),
+    # translation (-6, 9) m, and oblique heading 30 degrees exercise both axes.
+    # Reuse the explicit finite-depth dispersion construction k=0.2, h=3 m;
+    # amplitude=1.3 m and phase=pi/3 are arbitrary, nonzero fixture values.
+    k, depth = 0.2, 3.0
+    omega = np.sqrt(GRAVITY * k * np.tanh(k * depth))
+    period = 2.0 * np.pi / omega
+    components = [WaveComponent(omega, 1.3, np.pi / 3.0, 30.0)]
+    reference, observation, shift = (3.0, -4.0), (11.0, 7.0), (-6.0, 9.0)
+    fc = WaveForecast(
+        components, horizon=period,
+        phase_reference_location=reference, water_depth=depth,
+    )
+    shifted = WaveForecast(
+        components, horizon=period,
+        phase_reference_location=tuple(a + b for a, b in zip(reference, shift)),
+        water_depth=depth,
+    )
+    x, y = observation
+    sx, sy = shift
+    # Quarter-period samples span a full cycle; use the plan's 1e-9 m tolerance.
+    times = period * np.array([0.0, 0.25, 0.5, 0.75, 1.0])
+    # Hand calculation: delta=(8,11), projected onto (sqrt(3)/2,1/2), gives
+    # alpha=pi/3-(4*sqrt(3)+11/2)/5. At quarter-period samples the elevations
+    # are 1.3*(cos(alpha),-sin(alpha),-cos(alpha),sin(alpha),cos(alpha)).
+    # These literals are independent of the evaluator and its wavenumber helper.
+    expected = [
+        0.171557303637, 1.288630316099, -0.171557303637,
+        -1.288630316099, 0.171557303637,
+    ]
+    original = surface_elevation(fc, x, y, times)
+    translated = surface_elevation(shifted, x + sx, y + sy, times)
+    np.testing.assert_allclose(original, expected, rtol=0.0, atol=1e-9)
+    np.testing.assert_allclose(translated, expected, rtol=0.0, atol=1e-9)
+    np.testing.assert_allclose(
+        translated, original,
+        rtol=0.0, atol=1e-9,
+    )
+
+
 # ---- ingest seam ----
 
 def test_synthetic_wave_field_flows_through_reconstruct():

@@ -1,0 +1,16 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.1.1, pluggy-1.7.0
+[path removed]
+configfile: pytest.ini (WARNING: ignoring pytest config in pyproject.toml!)
+collected 17 items / 12 deselected / 5 selected
+
+tests/solvers/mystran/test_fe10_benchmark.py .....                       [100%]
+
+==================================== PASSES ====================================
+=========================== short test summary info ============================
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_comparator_selftest
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_unequal_fibres_are_averaged_then_tensor_rotated
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows[1 CENTER -50 10 20 3\n]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows[1 CENTER -50 10 20 3\n50 nan 20 3\n]
+PASSED tests/solvers/mystran/test_fe10_benchmark.py::test_extractor_rejects_incomplete_nonfinite_or_duplicate_rows[1 CENTER -50 10 20 3\n50 10 20 3\n1 CENTER -50 10 20 3\n50 10 20 3\n]
+======================= 5 passed, 12 deselected in 0.23s =======================

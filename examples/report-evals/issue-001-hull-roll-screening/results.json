@@ -1,0 +1,378 @@
+{
+ "$schema": "https://www.aceengineer.com/assets/data/report-evals/results.schema.json",
+ "schema_version": "1.0",
+ "report": {
+  "id": "issue-001-hull-roll-screening",
+  "title": "Generic hull roll reduction with a U-tube anti-roll tank: screening estimate",
+  "url": "https://www.aceengineer.com/newsletter/issue-001-energy-street/",
+  "published": "2026-10-27",
+  "family": "newsletter",
+  "related_urls": [
+   "https://vamseeachanta.github.io/digitalmodel/cfd/generic-hull-roll-screening.html"
+  ]
+ },
+ "code": {
+  "repo": "https://github.com/vamseeachanta/digitalmodel",
+  "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
+  "paths": [
+   "scripts/capabilities/build_generic_hull_screening.py",
+   "src/digitalmodel/hydrodynamics/utube_tank.py",
+   "docs/api/cfd/data/generic_hull_roll_screening.json",
+   "tests/hydrodynamics/test_generic_hull_screening.py"
+  ],
+  "python": "3.10 or later, standard library only",
+  "install": "none: clone the repository; no package install is needed"
+ },
+ "inputs": [
+  {
+   "id": "tank_and_hull_inputs",
+   "description": "Leg length 20 m, leg width 6 m, fill depth 5 m, centroid offset 5 m, conduit area 6.8 m2, effective conduit length 5.2 m, density 1025 kg/m3, loss coefficient 2.389, loss area exponent 2.1381, bare-roll reference 5 deg, hull periods 18 s and 21 s, hull damping 2 % and 5 %, alpha 0.02 to 0.20",
+   "source": "digitalmodel builder script and public U-tube model (all ASSUMED on the study page)",
+   "url": "https://github.com/vamseeachanta/digitalmodel/blob/8d08ea24198dcb99217df82325688a331f8aefce/scripts/capabilities/build_generic_hull_screening.py",
+   "licence": "MIT",
+   "version_or_date": "8d08ea24198dcb99217df82325688a331f8aefce",
+   "updates": "never",
+   "supplied_by": "repository",
+   "required": true
+  }
+ ],
+ "missing_data": [
+  {
+   "id": "real_hull",
+   "what": "A real hull: roll period, roll damping (% of critical), roll restoring and the tank's place and size",
+   "why": "The study uses a generic normalized hull; no real hull data is public.",
+   "how_to_supply": "Give the roll period, damping ratio and restoring; alpha is the tank's quasi-static moment stiffness divided by the hull's roll restoring.",
+   "effect": "None on the published result; needed to adapt it."
+  },
+  {
+   "id": "cfd_calibration_cases",
+   "what": "The 35 CFD cases behind the tank moment fit",
+   "why": "They are published as aggregate results only.",
+   "how_to_supply": "Not available to readers.",
+   "effect": "The fit can be used but not rebuilt."
+  }
+ ],
+ "cannot_do": [
+  "Rebuild the tank moment fit from the 35 CFD cases (aggregate results only).",
+  "Validate the estimate against a real vessel: no model or full-scale test is cited.",
+  "Give a design value: it is a screening estimate on invented geometry."
+ ],
+ "eval": {
+  "command": "python examples/report-evals/issue-001-hull-roll-screening/eval.py",
+  "prompt": "examples/report-evals/issue-001-hull-roll-screening/PROMPT.md",
+  "cadence": "weekly",
+  "runtime_s": 5,
+  "network": false,
+  "ref": "main"
+ },
+ "results": [
+  {
+   "id": "reduction_18s_2pct_alpha002",
+   "label": "Peak roll reduction, 18 s hull roll period, 2 % hull damping, alpha 0.02",
+   "page_ref": "Study page Figure 5.3 and Table A.1",
+   "value": 24.3,
+   "unit": "%",
+   "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
+   "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "Generic normalized hull: no real hull mass, inertia or restoring is used.",
+    "Screening estimate on invented tank geometry; engineering review pending; no real-vessel test backs it.",
+    "The tank moment fit is validated for forcing periods of 20 s and longer; the 18 s results lie below that band."
+   ]
+  },
+  {
+   "id": "reduction_18s_5pct_alpha002",
+   "label": "Peak roll reduction, 18 s hull roll period, 5 % hull damping, alpha 0.02",
+   "page_ref": "Study page Figure 5.3 and Table A.1",
+   "value": 10.5,
+   "unit": "%",
+   "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
+   "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "Generic normalized hull: no real hull mass, inertia or restoring is used.",
+    "Screening estimate on invented tank geometry; engineering review pending; no real-vessel test backs it.",
+    "The tank moment fit is validated for forcing periods of 20 s and longer; the 18 s results lie below that band."
+   ]
+  },
+  {
+   "id": "reduction_18s_2pct_alpha005",
+   "label": "Peak roll reduction, 18 s hull roll period, 2 % hull damping, alpha 0.05",
+   "page_ref": "Issue 1 page; study page section 1 and Figure 5.3",
+   "value": 46.1,
+   "unit": "%",
+   "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
+   "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "Generic normalized hull: no real hull mass, inertia or restoring is used.",
+    "Screening estimate on invented tank geometry; engineering review pending; no real-vessel test backs it.",
+    "The tank moment fit is validated for forcing periods of 20 s and longer; the 18 s results lie below that band."
+   ]
+  },
+  {
+   "id": "reduction_18s_5pct_alpha005",
+   "label": "Peak roll reduction, 18 s hull roll period, 5 % hull damping, alpha 0.05",
+   "page_ref": "Issue 1 page; study page section 1 and Figure 5.3",
+   "value": 23.3,
+   "unit": "%",
+   "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
+   "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "Generic normalized hull: no real hull mass, inertia or restoring is used.",
+    "Screening estimate on invented tank geometry; engineering review pending; no real-vessel test backs it.",
+    "The tank moment fit is validated for forcing periods of 20 s and longer; the 18 s results lie below that band."
+   ]
+  },
+  {
+   "id": "reduction_18s_2pct_alpha010",
+   "label": "Peak roll reduction, 18 s hull roll period, 2 % hull damping, alpha 0.10",
+   "page_ref": "Study page Figure 5.3 and Table A.1",
+   "value": 61.4,
+   "unit": "%",
+   "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
+   "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "Generic normalized hull: no real hull mass, inertia or restoring is used.",
+    "Screening estimate on invented tank geometry; engineering review pending; no real-vessel test backs it.",
+    "The tank moment fit is validated for forcing periods of 20 s and longer; the 18 s results lie below that band."
+   ]
+  },
+  {
+   "id": "reduction_18s_5pct_alpha010",
+   "label": "Peak roll reduction, 18 s hull roll period, 5 % hull damping, alpha 0.10",
+   "page_ref": "Study page Figure 5.3 and Table A.1",
+   "value": 37.9,
+   "unit": "%",
+   "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
+   "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "Generic normalized hull: no real hull mass, inertia or restoring is used.",
+    "Screening estimate on invented tank geometry; engineering review pending; no real-vessel test backs it.",
+    "The tank moment fit is validated for forcing periods of 20 s and longer; the 18 s results lie below that band."
+   ]
+  },
+  {
+   "id": "reduction_18s_2pct_alpha015",
+   "label": "Peak roll reduction, 18 s hull roll period, 2 % hull damping, alpha 0.15",
+   "page_ref": "Study page Figure 5.3 and Table A.1",
+   "value": 66.0,
+   "unit": "%",
+   "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
+   "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "Generic normalized hull: no real hull mass, inertia or restoring is used.",
+    "Screening estimate on invented tank geometry; engineering review pending; no real-vessel test backs it.",
+    "The tank moment fit is validated for forcing periods of 20 s and longer; the 18 s results lie below that band."
+   ]
+  },
+  {
+   "id": "reduction_18s_5pct_alpha015",
+   "label": "Peak roll reduction, 18 s hull roll period, 5 % hull damping, alpha 0.15",
+   "page_ref": "Study page Figure 5.3 and Table A.1",
+   "value": 45.6,
+   "unit": "%",
+   "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
+   "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "Generic normalized hull: no real hull mass, inertia or restoring is used.",
+    "Screening estimate on invented tank geometry; engineering review pending; no real-vessel test backs it.",
+    "The tank moment fit is validated for forcing periods of 20 s and longer; the 18 s results lie below that band."
+   ]
+  },
+  {
+   "id": "reduction_18s_2pct_alpha020",
+   "label": "Peak roll reduction, 18 s hull roll period, 2 % hull damping, alpha 0.20",
+   "page_ref": "Study page Figure 5.3 and Table A.1",
+   "value": 67.2,
+   "unit": "%",
+   "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
+   "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "Generic normalized hull: no real hull mass, inertia or restoring is used.",
+    "Screening estimate on invented tank geometry; engineering review pending; no real-vessel test backs it.",
+    "The tank moment fit is validated for forcing periods of 20 s and longer; the 18 s results lie below that band."
+   ]
+  },
+  {
+   "id": "reduction_18s_5pct_alpha020",
+   "label": "Peak roll reduction, 18 s hull roll period, 5 % hull damping, alpha 0.20",
+   "page_ref": "Study page Figure 5.3 and Table A.1",
+   "value": 48.7,
+   "unit": "%",
+   "period": "one regular-wave sweep, 0.7 to 1.3 times the roll period",
+   "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "Generic normalized hull: no real hull mass, inertia or restoring is used.",
+    "Screening estimate on invented tank geometry; engineering review pending; no real-vessel test backs it.",
+    "The tank moment fit is validated for forcing periods of 20 s and longer; the 18 s results lie below that band."
+   ]
+  },
+  {
+   "id": "tank_peak_period_18s_2pct_alpha005",
+   "label": "Forcing period of the coupled roll peak, 18 s hull, 2 % damping, alpha 0.05",
+   "page_ref": "Study page section 1",
+   "value": 18.5,
+   "unit": "s",
+   "period": "one regular-wave sweep",
+   "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "Generic normalized hull: no real hull mass, inertia or restoring is used.",
+    "The tank moment fit is validated for forcing periods of 20 s and longer; the 18 s results lie below that band."
+   ]
+  },
+  {
+   "id": "long_period_penalty_60s_alpha005",
+   "label": "Extra roll at 60 s forcing with the tank, 18 s hull, 2 % damping, alpha 0.05",
+   "page_ref": "Study page section 1",
+   "value": 6.0,
+   "unit": "%",
+   "period": "60 s forcing period",
+   "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "Generic normalized hull: no real hull mass, inertia or restoring is used.",
+    "Screening estimate on invented tank geometry; engineering review pending; no real-vessel test backs it."
+   ]
+  },
+  {
+   "id": "long_period_penalty_60s_alpha020",
+   "label": "Extra roll at 60 s forcing with the tank, 18 s hull, 2 % damping, alpha 0.20",
+   "page_ref": "Study page section 1",
+   "value": 29.5,
+   "unit": "%",
+   "period": "60 s forcing period",
+   "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute() (on main); scripts/capabilities/build_generic_hull_screening.py compute() with src/digitalmodel/hydrodynamics/utube_tank.py",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "Generic normalized hull: no real hull mass, inertia or restoring is used.",
+    "Screening estimate on invented tank geometry; engineering review pending; no real-vessel test backs it."
+   ]
+  },
+  {
+   "id": "slow_forcing_limit_alpha020",
+   "label": "Slow-forcing limit of extra roll, 1/(1 - alpha) - 1, alpha 0.20",
+   "page_ref": "Study page section 1",
+   "value": 25.0,
+   "unit": "%",
+   "period": "quasi-static limit",
+   "source": "Closed form quoted on the study page",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py compute()",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
+   "tolerance": {
+    "abs": 0.05
+   },
+   "basis": "fixed",
+   "limits": [
+    "Quasi-static limit only."
+   ]
+  },
+  {
+   "id": "archive_cases_reproduced",
+   "label": "Declared cases (2 roll periods x 2 damping ratios x 5 alphas) reproduced one to one by a fresh run, six quantities each",
+   "page_ref": "Study page Table A.1",
+   "value": 20,
+   "unit": "cases",
+   "period": "all 20 cases of Table A.1",
+   "source": "digitalmodel generic hull roll screening, data file docs/api/cfd/data/generic_hull_roll_screening.json (generated 25 October 2026)",
+   "method": "examples/report-evals/issue-001-hull-roll-screening/eval.py archive_check() (on main): no duplicate or missing case; reduction, bare and tank peak RAO and 60 s penalty within 1e-9 relative; peak periods equal at 0.0001 s",
+   "repo": "https://github.com/vamseeachanta/digitalmodel",
+   "commit": "8d08ea24198dcb99217df82325688a331f8aefce",
+   "tolerance": {
+    "abs": 0
+   },
+   "basis": "fixed",
+   "limits": [
+    "Checks the code against its own committed output, not against a measurement."
+   ]
+  }
+ ]
+}

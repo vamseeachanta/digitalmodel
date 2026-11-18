@@ -1,0 +1,24 @@
+{
+  "source": "REQUIRED: reviewed geometry, loading, sampling and heading-convention basis",
+  "meshes": {
+    "coarse": null,
+    "medium": null,
+    "fine": null
+  },
+  "frequencies_rad_s": null,
+  "headings_deg": null,
+  "criteria": {
+    "mesh_absolute_m_per_m": {
+      "value": null,
+      "source": "REQUIRED: approved mesh-pair amplitude-difference limit and applicability"
+    },
+    "solver_absolute_m_per_m": {
+      "value": null,
+      "source": "REQUIRED: approved cross-solver amplitude-difference limit and applicability"
+    },
+    "asymptotic_max_rad_s": {
+      "value": null,
+      "source": "REQUIRED: body-specific long-wave applicability, including depth and resonance separation"
+    }
+  }
+}

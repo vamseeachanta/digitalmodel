@@ -15,6 +15,7 @@ References:
 """
 
 from dataclasses import dataclass
+from math import isfinite
 
 from digitalmodel.tug.constants import FUEL_CO2_FACTOR, FUEL_LHV_MJ_PER_KG
 
@@ -72,11 +73,21 @@ def imo_tier_iii_nox_limit(rated_rpm: float) -> float:
 
 
 def cycle_energy(installed_power_kw: float, profile: list[OperatingPhase]) -> float:
-    """Total propulsion energy per operating cycle, kWh."""
-    if installed_power_kw <= 0:
-        raise ValueError("installed_power_kw must be positive")
+    """Total propulsion energy per operating cycle, kWh.
+
+    Installed power must be finite and positive. Each phase must have a finite,
+    nonnegative duration and a finite power fraction in [0, 1]. Zero load and
+    zero-duration phases are permitted; an empty profile is rejected.
+    """
+    if not isfinite(installed_power_kw) or installed_power_kw <= 0:
+        raise ValueError("installed_power_kw must be finite and positive")
     if not profile:
         raise ValueError("profile must contain at least one operating phase")
+    for index, phase in enumerate(profile):
+        if not isfinite(phase.duration_h) or phase.duration_h < 0:
+            raise ValueError(f"profile[{index}].duration_h must be finite and nonnegative")
+        if not isfinite(phase.power_fraction) or not 0.0 <= phase.power_fraction <= 1.0:
+            raise ValueError(f"profile[{index}].power_fraction must be finite and in [0, 1]")
     return sum(installed_power_kw * p.power_fraction * p.duration_h for p in profile)
 
 

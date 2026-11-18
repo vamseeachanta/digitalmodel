@@ -146,55 +146,19 @@ class TestTheGateFailsClosed:
         assert "scanned 1 file" in out.stdout
 
 
-class TestTheExistingBacklog:
-    """The tracked tree is not clean, and the gate is retrofitted around that.
+class TestManualAudit:
+    """The retirement policy retains manual scanning, not a live-tree budget.
 
-    A gate added to a repository with existing debt has two options: require
-    the whole backlog to be cleared before it can be switched on, in which case
-    it is never switched on; or block new content and leave the backlog as
-    backlog. This takes the second, which is why the hook runs on staged files
-    and `--all` is an audit rather than a build step.
-
-    The number is recorded here so that it is visible and so that a later pass
-    can show it falling. It is not asserted as a target: the classification of
-    some of these names is an open question, and one token accounts for most of
-    the count through two generated result files.
+    Source: docs/legal-scanning.md, retirement notice (2026-10-03), and
+    tests/governance/test_identifier_gate_retirement.py. Expected statuses
+    follow the scanner CLI contract: clean content succeeds; a finding fails.
     """
 
-    #: Measured 2026-09-21 after the HIGH-severity redaction: 11,647. Re-measured
-    #: 2026-09-23 at 21,640 once the job-code rule was made case-insensitive and
-    #: underscore-aware and the UNC rule was corrected -- the same tree, seen
-    #: more completely. Not a regression; the earlier figure undercounted.
-    #: Re-measured 2026-09-23 after review round 3 at 21,786: file names are now
-    #: scanned too, and spreadsheet cell coordinates no longer count.
-    #: Owner decision C11 (2026-09-24) cleared the current tree: 0, with the
-    #: files reported to the owner listed as exclusions in the rules file. CI
-    #: now scans the whole tree on every push (quality-gates.yml).
-    BASELINE_FINDINGS = 0
-    #: Files the gate cannot read (binary, not declared media). Same logic:
-    #: this may fall, it must not rise. 507 once solver results and array
-    #: formats stopped being exempt by extension; 469 at C11.
-    BASELINE_UNINSPECTABLE = 469
-
-    @pytest.mark.slow
-    def test_the_backlog_has_not_grown(self):
-        out = run("--all")
-        if out.returncode == 0:
-            return                      # the backlog is gone; nothing to guard
-        text = out.stdout or ""
-        import re as _re
-
-        u = _re.search(r"(\d+) uninspectable", text)
-        assert u, f"could not read an uninspectable count from:\n{text[:2000]}"
-        assert int(u.group(1)) <= self.BASELINE_UNINSPECTABLE, (
-            f"uninspectable files rose from {self.BASELINE_UNINSPECTABLE} to "
-            f"{u.group(1)}")
-        m = _re.search(r"(\d+) finding\(s\)", text)
-        if m is None:
-            return                      # no findings, only binaries: fine
-        found = int(m.group(1))
-        assert found <= self.BASELINE_FINDINGS, (
-            f"identifier findings rose from {self.BASELINE_FINDINGS} to "
-            f"{found}. The gate runs on staged files at commit time, so this "
-            f"means content was added another way -- check the most recent "
-            f"merge.")
+    @pytest.mark.parametrize("parts,status", [
+        (("ordinary engineering text",), 0),
+        (("see B", "1234 for the scope"), 1),
+    ])
+    def test_manual_audit_still_checks_supplied_content(self, tmp_path, parts, status):
+        out = run(write(tmp_path, "".join(parts) + "\n"))
+        assert out.returncode == status, out.stdout
+        assert "scanned 1 file" in out.stdout

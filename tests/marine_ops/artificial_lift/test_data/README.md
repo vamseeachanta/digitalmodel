@@ -1,7 +1,7 @@
 # Cleansed Well Test Data for Artificial Lift
 
 ## Overview
-This directory contains anonymized production well data derived from historical KBR and Oxy Cipher engineering projects. It is used to ensure the robustness of `digitalmodel` algorithms against real-world well configurations.
+This directory contains anonymized production well data derived from historical engineering projects. It is used to ensure the robustness of `digitalmodel` algorithms against real-world well configurations.
 
 ## Data Cleansing (Anonymization)
 All files in this directory have been processed to remove proprietary information:

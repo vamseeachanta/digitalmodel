@@ -21,7 +21,7 @@ INPUT_NAMES = ("model.json", "matrix.json", "benchmark_candidates.json", "criter
 
 
 def _read(path: Path) -> dict:
-    return json.loads(path.read_text())
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def _digest(path: Path) -> str:
@@ -29,7 +29,8 @@ def _digest(path: Path) -> str:
 
 
 def _write(path: Path, value: object) -> None:
-    path.write_text(json.dumps(value, sort_keys=True, indent=2, allow_nan=False) + "\n")
+    path.write_text(json.dumps(value, sort_keys=True, indent=2, allow_nan=False) + "\n",
+                    encoding="utf-8", newline="\n")
 
 
 def _revision(data: dict) -> str:
@@ -140,14 +141,14 @@ def build(data: Path, output: Path) -> dict:
             '<style>body{font-family:sans-serif;max-width:72em;margin:2em auto;padding:1em}table{border-collapse:collapse}td,th{border:1px solid #888;padding:.4em;text-align:left}section{margin:2em 0}</style>'
             '</head><body><h1>Passing-ship mooring analysis preparation</h1>'
             f'<p>Revision: {escape(revisions["revision"])}</p>' + ''.join(content) + '</body></html>\n')
-    (output / "report.html").write_text(page)
-    inputs = {str((data / name).relative_to(root)): _digest(data / name) for name in INPUT_NAMES}
+    (output / "report.html").write_text(page, encoding="utf-8", newline="\n")
+    inputs = {(data / name).relative_to(root).as_posix(): _digest(data / name) for name in INPUT_NAMES}
     for module in (Path(__file__), Path(__file__).with_name("preparation.py"),
                    Path(__file__).with_name("calculator.py"), Path(__file__).with_name("formulations.py"),
                    Path(__file__).with_name("configuration.py"), Path(__file__).with_name("input_schemas.py")):
-        inputs[str(module.relative_to(root))] = _digest(module)
+        inputs[module.relative_to(root).as_posix()] = _digest(module)
     catenary = root / "src/digitalmodel/marine_ops/marine_analysis/catenary/simplified.py"
-    inputs[str(catenary.relative_to(root))] = _digest(catenary)
+    inputs[catenary.relative_to(root).as_posix()] = _digest(catenary)
     manifest = {"revision": revisions["revision"], "base_commit": receipt["base_commit"],
                 "execution": receipt, "launch_allowed": False, "approved_manifest_sha256": None,
                 "adapter": None, "qualified_benchmarks": 0, "matrix_entries": len(matrix),
@@ -169,7 +170,9 @@ def build(data: Path, output: Path) -> dict:
         for name, digest in inputs.items()
     }
     _write(output / "manifest.template.json", manifest)
-    (output / "manifest.sha256").write_text(_digest(output / "manifest.template.json") + "  manifest.template.json\n")
+    (output / "manifest.sha256").write_text(
+        _digest(output / "manifest.template.json") + "  manifest.template.json\n",
+        encoding="utf-8", newline="\n")
     return manifest
 
 

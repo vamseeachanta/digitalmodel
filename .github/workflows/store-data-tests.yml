@@ -2,6 +2,7 @@ name: Content store tests
 
 "on":
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - ".gitignore"
       - ".github/workflows/store-data-tests.yml"
@@ -17,15 +18,21 @@ name: Content store tests
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   content-store:
-    runs-on: ubuntu-latest
+    # Draft pull requests wait: the gates start when the pull request is marked ready.
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
       - name: Install test dependencies
-        run: python -m pip install pytest pytest-asyncio
+        run: python -m pip install pytest pytest-asyncio pyyaml
       - name: Test retrieval and manifest
         run: python -m pytest tests/data

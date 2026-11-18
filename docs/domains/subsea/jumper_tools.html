@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Subsea jumper calculation tools</title>
+<style>
+body { max-width: 70rem; margin: 2rem auto; padding: 0 1rem; font: 1rem/1.6 sans-serif; color: #172b3a; }
+table { border-collapse: collapse; width: 100%; }
+td, th { border: 1px solid #bccbd3; padding: .5rem; text-align: left; }
+caption { caption-side: bottom; text-align: left; padding: .4rem 0; }
+pre { overflow-x: auto; background: #eef3f6; padding: 1rem; }
+code { background: #eef3f6; }
+</style>
+<main>
+<h1>Subsea jumper calculation tools</h1>
+<h2>Summary</h2>
+<p>The package <code>digitalmodel.subsea.jumper_tools</code> calculates annular
+section properties, a prescribed-tension flexible catenary, and line-mesh geometry.
+Inputs use SI units. Material data, gravity and geometry are supplied explicitly.
+The tools support preliminary calculations; neither spreadsheet parity nor
+structural design acceptance is established.</p>
+
+<h2>Revision history</h2>
+<table>
+<tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>1</td><td>2026-10-19</td><td>Introduce sourced equations, a formula extractor,
+independent hand calculations and an example so assumptions and missing evidence remain visible.</td></tr>
+<tr><td>2</td><td>2026-10-24</td><td>Document the positive-weight catenary domain
+and explicit workbook-view mismatch errors to clarify input limits.</td></tr>
+<caption>Table 1. Document revision history.</caption>
+</table>
+
+<h2>Scope and evidence</h2>
+<p>Three calculation slices address the section, catenary and geometry portions of
+issue 1645. The modules use the importable
+<code>src/digitalmodel/subsea/jumper_tools/</code> location rather than a
+hyphenated source directory. Existing installation calculations and the
+<code>catenary_riser</code> engineering basis were inspected; existing APIs are
+unchanged. The new scalar interface avoids their material libraries, fixed
+gravity assumptions and solver dependencies.</p>
+<p>The three original workbooks are absent from the inspected checkout. Their
+formulas have therefore not been extracted or compared. The formula extractor
+is tested on synthetic workbooks only. Workbook formula mapping, configuration
+optimization and workbook-specific FE conventions remain follow-up work under
+the same issue. These limitations prevent a claim of complete spreadsheet replacement.</p>
+
+<h2>Calculation basis</h2>
+<h3>S1. Concentric circular section</h3>
+<p>Let D denote pipe outside diameter, t wall thickness, c radial coating thickness,
+d = D − 2t bore diameter and D<sub>c</sub> = D + 2c coated diameter.
+The domain is D &gt; 0, 0 &lt; t &lt; D/2 and c ≥ 0.</p>
+<pre>A_pipe = π(D² − d²)/4 = πt(D − t)
+A_bore = πd²/4
+A_coat = π(D_c² − D²)/4 = πc(D + c)
+A_displaced = πD_c²/4
+I = π(D⁴ − d⁴)/64
+Z = I/(D/2)
+EA = E A_pipe
+EI = E I</pre>
+<p><a href="https://engineeringstatics.org/MOI-common-shapes.html#MOI-circles">Engineering
+Statics: Open and Interactive (first released 2020), section 10.2.4</a> derives
+the disk polar inertia from dA = 2πr dr. Integration between d/2 and D/2 gives
+A = ∫2πr dr and J = ∫2πr³ dr. Circular symmetry gives I = J/2. The factors
+4 and 64 follow from integration and diameter-to-radius conversion. Z is the
+definition of elastic section modulus. EA and EI are stiffness products for the
+homogeneous linear elastic pipe; coating contributes weight and displacement only.
+No empirical coefficient or standard-derived material constant is introduced.</p>
+
+<h3>S2. Mass and fully submerged weight</h3>
+<pre>m_dry = ρ_pipe A_pipe + ρ_coat A_coat
+m_filled = m_dry + ρ_contents A_bore
+w_submerged = g (m_filled − ρ_water A_displaced)</pre>
+<p>Masses are in kg/m, densities in kg/m³, gravity in m/s² and w in N/m.
+Positive w acts downward. Negative w is retained, rather than clipped.
+<a href="https://openstax.org/books/university-physics-volume-1/pages/14-4-archimedes-principle-and-buoyancy">University
+Physics Volume 1 (2016), section 14.4</a> gives buoyancy as displaced-fluid weight.
+This model assumes a sealed external envelope, full bore contents, concentric
+nonporous coating, and complete submergence. Flooded/open-ended, partially filled
+and partially immersed configurations require a different displacement balance.</p>
+
+<h3>C1. Flexible catenary</h3>
+<p>H is prescribed horizontal tension, w uniform downward submerged weight,
+h top elevation above the flat seabed and L total available length. H, w and L
+are positive; h is nonnegative. This sagging catenary requires w &gt; 0:
+buoyant sections with negative weight and neutrally buoyant sections are rejected,
+even though the section calculator retains negative submerged weight.
+No endpoint span is prescribed independently.</p>
+<pre>a = H/w
+z = a (cosh(x/a) − 1)
+s = a sinh(x/a) = sqrt(h(h + 2a))
+x = a asinh(s/a)
+V_top = w s
+T_top = H + w h
+θ_horizontal = atan2(V_top, H)
+θ_vertical = atan2(H, V_top)
+L_grounded = L − s ≥ 0
+touchdown = (L_grounded, 0, 0)
+top = (L_grounded + x, 0, h)</pre>
+<p><a href="https://www.mygeodesy.id.au/documents/Catenary%20Curve.pdf">Catenary
+Curve (2019), equations (1), (3), (4), (9), (10) and (14)</a> establishes force
+balance, arc length and tension. Its y origin is translated downward by a to
+place touchdown at z = 0. The hyperbolic identity cosh²u − sinh²u = 1 gives
+s² = h(h + 2a). Combining it with T² = H² + (ws)² gives T = H + wh.
+The implementation uses inverse sinh to preserve small h/a and rejects length
+infeasibility without silently truncating suspended length.</p>
+<p>This is a static, inextensible, perfectly flexible line under uniform vertical
+load. It excludes bending stiffness, current, axial extension, soil resistance,
+friction, buoyancy transitions and dynamic effects. It cannot establish a rigid
+jumper equilibrium or a bending acceptance result. The grounded portion is
+straight and frictionless; H must be sustained at the first endpoint.</p>
+
+<h3>F1. Geometry discretization</h3>
+<p>For a straight segment from P to Q, local coordinate τ ∈ [0,1] gives
+P(τ) = (1 − τ)P + τQ. These coefficients follow by imposing P(0) = P and
+P(1) = Q on a linear polynomial; no empirical number is used. A requested
+integer count n places nodes at τ = i/n. Shared corners are retained once.</p>
+<p>The catenary mesh samples equal arc increments s<sub>i</sub> = is/n on the
+suspended portion only. C1 gives x<sub>i</sub> = a asinh(s<sub>i</sub>/a) and
+z<sub>i</sub> = sqrt(a² + s<sub>i</sub>²) − a. A rationalized height expression
+avoids cancellation. Node coordinates are in the x-z plane, with z upward.
+Connectivity is one-based. Returned element lengths are straight chord lengths,
+which are shorter than their curved reference arcs and are not unstretched arc
+lengths. The geometry does not define FE materials, element type, loads, boundary
+conditions, mesh convergence or bend fabrication radii. Polyline corners remain sharp.</p>
+
+<h2>Worked example</h2>
+<p>All inputs below are synthetic arithmetic values, chosen to permit independent
+hand calculation. They are not measurements, material recommendations or design inputs.</p>
+<table>
+<tr><th>Quantity</th><th>Input</th><th>Unit</th></tr>
+<tr><td>Outside diameter</td><td>2.000</td><td>m</td></tr>
+<tr><td>Wall thickness</td><td>0.500</td><td>m</td></tr>
+<tr><td>Coating thickness</td><td>0.500</td><td>m</td></tr>
+<tr><td>Pipe, coating, contents and water densities</td><td>8; 2; 4; 3</td><td>kg/m³</td></tr>
+<tr><td>Young's modulus</td><td>100</td><td>Pa</td></tr>
+<tr><td>Gravity</td><td>10</td><td>m/s²</td></tr>
+<tr><td>Horizontal tension</td><td>10w</td><td>N</td></tr>
+<tr><td>Top elevation; total length</td><td>10; 20</td><td>m</td></tr>
+<caption>Table 2. Synthetic example inputs; H/w is chosen as 10 m.</caption>
+</table>
+<pre>d = 1 m; D_c = 3 m
+A_pipe = 3π/4 m²; A_bore = π/4 m²; A_coat = 5π/4 m²
+I = 15π/64 m⁴; Z = 15π/64 m³
+m_dry = 17π/2 kg/m; m_filled = 19π/2 kg/m
+displaced mass = 27π/4 kg/m; w = 55π/2 N/m
+EA = 75π N; EI = 375π/16 N m²
+a = 10 m; H = 275π N
+s = 10 sqrt(3) m; x = 10 log(2 + sqrt(3)) m
+L_grounded = 20 − 10 sqrt(3) m
+T_top = 550π N; θ_horizontal = π/3 rad; θ_vertical = π/6 rad
+two-element mid-arc node:
+  x = L_grounded + 10 asinh(sqrt(3)/2) m
+  z = sqrt(175) − 10 m</pre>
+<p>The independent polyline example has vertices (0,0,0), (3,0,0), (3,4,0) m.
+One element per segment gives lengths 3 m and 4 m, and connectivity (1,2), (2,3).
+The test suite varies coating, elevation and element counts and writes each
+expected-value derivation in the corresponding test docstring.</p>
+<pre>PYTHONPATH=src python examples/subsea/jumper_tools/basic_usage.py</pre>
+<p>The example prints its inputs, results and explicit NOT_EVALUATED statuses.
+No solver is imported and no file is written. Its unrounded JSON values support
+calculation reuse; the exact expressions above provide the hand-calculation basis.</p>
+
+<h2>Workbook extraction and remaining qualification</h2>
+<pre>from digitalmodel.subsea.jumper_tools.workbook_formulas import extract_formulas
+extraction = extract_formulas("supplied.xlsx")
+print(extraction.source_sha256)
+for record in extraction.formulas:
+    print(record.sheet, record.cell, record.formula, record.cached_value)</pre>
+<p>The optional openpyxl dependency reads formula and cached-value views from one
+immutable input snapshot. Workbook bytes are hashed and never modified. All
+worksheets, including hidden sheets, are inspected. Only ordinary text formulas
+are supported; unsupported formula objects and mismatched sheet, row or cell
+counts between views raise an error. Macros, external links
+and Excel formulas are not executed. Missing or stale cached values are not
+promoted to validated engineering results. Extraction records can contain private
+sheet names or formula text and require a separate publication review.</p>
+<p>Spreadsheet comparison and design-code checks are NOT_EVALUATED. Qualification
+requires the source workbooks, formula-to-API mapping, units and assumptions,
+and at least two independently reviewed reference cases for each calculator.
+Configuration optimization and workbook-specific FE conventions require those
+sources before their equivalence can be established. No licensed publication
+values or acceptance factors are reproduced.</p>
+</main>
+</html>

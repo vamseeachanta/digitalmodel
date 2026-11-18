@@ -28,41 +28,43 @@ give them ``--finest-cell`` or ``DM_CFD_FINEST_CELL_M``.
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import os
 import sys
 from pathlib import Path
 
-# WHERE THE PACKAGE COMES FROM. The chain is deployed to the solve host as a
-# copy of scripts/cfd alone, so "it imports on my checkout" is not evidence.
-# Three routes, in order, and an actionable refusal if none of them work --
-# never a silent skip, because a gate that cannot run must not look like a
-# gate that passed.
+# Load the canonical, standard-library-only reader directly. Importing its
+# package would execute unrelated solver modules and require their dependencies.
 _CANDIDATES = [
-    Path(__file__).resolve().parents[2] / "src",   # running from a checkout
-    Path(__file__).resolve().parents[2] / "dm_src",  # deployed lane: deploy_lane.sh ships the
-                                                     # package to <lane cfd root>/dm_src beside
-                                                     # <campaign>/scripts, two levels up from here
     Path(os.environ.get("DM_CFD_SRC", "")) if os.environ.get("DM_CFD_SRC") else None,
+    Path(__file__).resolve().parents[2] / "dm_src",
+    Path(__file__).resolve().parents[2] / "src",
 ]
 for _candidate in _CANDIDATES:
-    if _candidate is not None and (_candidate / "digitalmodel").is_dir():
-        sys.path.insert(0, str(_candidate))
-
-try:
-    from digitalmodel.solvers.openfoam.hull_face_resolution import (  # noqa: E402
-        DEFAULT_FACE_AREA_FACTOR,
-        HullFaceResolutionError,
-        assert_patch_face_resolution,
-        finest_in_plane_cell_m,
-        patch_face_areas,
-    )
-except ImportError as _exc:  # pragma: no cover - deployment failure path
+    if _candidate is not None:
+        _path = _candidate / "digitalmodel/solvers/openfoam/hull_face_resolution.py"
+        if _path.is_file():
+            _spec = importlib.util.spec_from_file_location("_hull_face_resolution", _path)
+            _reader = importlib.util.module_from_spec(_spec)
+            # dataclasses resolves annotations through the defining module.
+            sys.modules[_spec.name] = _reader
+            try:
+                _spec.loader.exec_module(_reader)
+            except (ImportError, OSError) as _exc:
+                sys.exit(f"FACE RESOLUTION VERDICT: FAIL -- cannot load mesh reader: {_exc}")
+            break
+else:
     sys.exit(
-        f"FACE RESOLUTION VERDICT: FAIL -- cannot import digitalmodel "
-        f"({_exc}). Install the package on this host or point DM_CFD_SRC at a "
-        f"checkout's src/ directory. The gate is not optional: skipping it "
-        f"releases a solve onto a mesh nobody has measured."
+        "FACE RESOLUTION VERDICT: FAIL -- cannot locate mesh reader; "
+        "set DM_CFD_SRC to a source directory containing "
+        "digitalmodel/solvers/openfoam/hull_face_resolution.py."
     )
+
+DEFAULT_FACE_AREA_FACTOR = _reader.DEFAULT_FACE_AREA_FACTOR
+HullFaceResolutionError = _reader.HullFaceResolutionError
+assert_patch_face_resolution = _reader.assert_patch_face_resolution
+finest_in_plane_cell_m = _reader.finest_in_plane_cell_m
+patch_face_areas = _reader.patch_face_areas
 
 
 def _float_env(name: str) -> float | None:

@@ -229,8 +229,8 @@ The following location ledger includes every mapped entry for the three families
 | Module-level entry; mapped independent | [src/digitalmodel/marine_ops/marine_analysis/validation/validate_catenary.py:L12-L24] |
 | `demonstrate_usage`; mapped copy | [src/digitalmodel/marine_ops/marine_analysis/validation/validate_catenary.py:L123-L167] |
 | Module-level entry; mapped independent | [src/digitalmodel/marine_ops/marine_analysis/visualization/integration_charts.py:L40-L52] |
-| `FPSOMooringFullWorkflow._baseline_span`; mapped independent | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L198-L226] |
-| `FPSOMooringFullWorkflow._line_tensions`; mapped independent | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L282-L289] |
+| `FPSOMooringFullWorkflow._baseline_span`; mapped independent | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L205-L233] |
+| `FPSOMooringFullWorkflow._line_tensions`; mapped independent | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L289-L296] |
 | `solve_catenary`; mapped independent | [src/digitalmodel/orcaflex/mooring_design.py:L251-L335] |
 | `MooringLineDesign.estimate_catenary`; mapped independent | [src/digitalmodel/orcaflex/mooring_design.py:L385-L403] |
 | `JLayConfig.calculate_sagbend`; mapped independent | [src/digitalmodel/orcaflex/pipelay_analysis.py:L222-L260] |
@@ -837,11 +837,11 @@ The following location ledger includes every mapped entry for the three families
 | `_cli_output_dir`; mapped independent | [src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py:L34-L36] |
 | `load_data`; mapped independent | [src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py:L55-L64] |
 | `main`; mapped independent | [src/digitalmodel/marine_ops/marine_analysis/visualization/ocimf_charts.py:L448-L493] |
-| `OCIMFDatabase.get_coefficients`; mapped copy | [src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py:L320-L371] |
-| `EnvironmentalForces.calculate_total_forces`; mapped copy | [src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py:L642-L691] |
-| `create_sample_database`; mapped copy | [src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py:L875-L946] |
-| `FPSOMooringFullWorkflow._environmental_forces`; mapped independent | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L77-L101] |
-| `FPSOMooringFullWorkflow._ocimf_database_path`; mapped independent | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L103-L113] |
+| `OCIMFDatabase.get_coefficients`; mapped copy | [src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py:L323-L374] |
+| `EnvironmentalForces.calculate_total_forces`; mapped copy | [src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py:L645-L694] |
+| `create_sample_database`; mapped copy | [src/digitalmodel/marine_ops/marine_engineering/environmental_loading/ocimf.py:L878-L952] |
+| `FPSOMooringFullWorkflow._environmental_forces`; mapped independent | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L78-L102] |
+| `FPSOMooringFullWorkflow._ocimf_database`; mapped independent | [src/digitalmodel/marine_ops/marine_engineering/mooring_analysis/fpso_full_workflow.py:L104-L120] |
 | `_resolve_arrow_direction_in_body_frame`; mapped independent | [src/digitalmodel/marine_ops/marine_engineering/visualization/polar_force_overlay.py:L39-L60] |
 | `polar_force_overlay`; mapped independent | [src/digitalmodel/marine_ops/marine_engineering/visualization/polar_force_overlay.py:L273-L357] |
 | `threshold_speed_for_steerage`; mapped independent | [src/digitalmodel/naval_architecture/maneuvering_envelope.py:L211-L246] |

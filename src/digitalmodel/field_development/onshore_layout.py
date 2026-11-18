@@ -59,16 +59,20 @@ import matplotlib
 import numpy as np
 import yaml
 
+from digitalmodel.common.hydraulics import swamee_jain_friction_factor
+
 matplotlib.use("Agg")  # non-interactive backend for file output
 import matplotlib.pyplot as plt  # noqa: E402
 
+from digitalmodel.infrastructure.utils.pipe_friction import (  # noqa: E402
+    LAMINAR_REYNOLDS_LIMIT as LAMINAR_REYNOLDS_LIMIT,
+    swamee_jain_friction_factor,
+)
 from .schematics.renderer import render_figure  # noqa: E402
 
 # --- physical constants ------------------------------------------------------
 GRAVITY_M_PER_S2 = 9.80665
 SECONDS_PER_DAY = 86_400.0
-# Below this Reynolds number the laminar friction factor f = 64/Re applies.
-LAMINAR_REYNOLDS_LIMIT = 2_300.0
 
 _REQUIRED_SECTIONS = ("field", "terrain", "host", "wells", "flowlines", "fluid", "plot")
 
@@ -300,28 +304,6 @@ def build_layout(config: dict[str, Any], base_dir: str | Path = ".") -> FieldLay
 # ---------------------------------------------------------------------------
 # Screening calc — Darcy-Weisbach + Swamee-Jain
 # ---------------------------------------------------------------------------
-
-
-def swamee_jain_friction_factor(reynolds: float, relative_roughness: float) -> float:
-    """Darcy friction factor.
-
-    Laminar (Re < 2300): f = 64/Re (exact, Hagen-Poiseuille).
-    Turbulent: Swamee-Jain explicit approximation to the Colebrook-White
-    equation —
-
-        f = 0.25 / [log10(eps/(3.7 D) + 5.74 / Re^0.9)]^2
-
-    Reference: Swamee, P.K. & Jain, A.K. (1976), "Explicit equations for
-    pipe-flow problems", Journal of the Hydraulics Division, ASCE, 102(5),
-    657-664. Stated validity 5e3 <= Re <= 3e8, 1e-6 <= eps/D <= 1e-2; within
-    ~1% of Colebrook-White there. In the transition band 2300 < Re < 5000 it
-    is used here as a screening-grade approximation.
-    """
-    if reynolds <= 0:
-        raise ValueError(f"reynolds must be > 0, got {reynolds!r}")
-    if reynolds < LAMINAR_REYNOLDS_LIMIT:
-        return 64.0 / reynolds
-    return 0.25 / math.log10(relative_roughness / 3.7 + 5.74 / reynolds**0.9) ** 2
 
 
 def darcy_weisbach_pressure_drop(

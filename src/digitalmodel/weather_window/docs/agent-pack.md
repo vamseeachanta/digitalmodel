@@ -4,10 +4,12 @@
 | --- | --- |
 | Module / repository | `weather_window` / `digitalmodel` |
 | Package / scope | `src/digitalmodel/weather_window`; both Python files, with the imported persistence implementation examined as a dependency |
-| Pack revision / date | 0 / 2026-10-18 |
+| Pack revision / date | 1 / 2026-10-25 |
 | Code pin | `f1d58a2ac0db65e68b5b690f0a609ef4746d114e` |
 | Analysis family | Engineering calculations (`EC`); AQG r0, Python calculations |
 | Quality role / status | Engineering calculations quality manager / `DRAFT` |
+
+Weather-window dependency source citations are refreshed to `ff5124706aed26ec8b64629b9a31686d2c9c05ed`; this package and the other source citations retain the code pin above.
 
 ## 1. Purpose and scope
 
@@ -35,7 +37,7 @@ Input contract (ranges below describe implemented checks, rather than recommende
 | Output | Unit / representation | Contract and evidence |
 | --- | --- | --- |
 | `record_hours`, `workability_pct` | h, % | Record length is sample count times interval; workability uses the helper's total below-limit hours divided by record hours. [src/digitalmodel/weather_window/workflow.py:L69-L89] |
-| `longest_window_hours`, `mean_window_hours`, `p10_window_hours`, `p90_window_hours` | h | Copied from `analyse_persistence`, whose nonempty statistics round to one decimal place. [src/digitalmodel/weather_window/workflow.py:L91-L94] [src/digitalmodel/orcaflex/weather_window.py:L224-L234] |
+| `longest_window_hours`, `mean_window_hours`, `p10_window_hours`, `p90_window_hours` | h | Copied from `analyse_persistence`, whose nonempty statistics round to one decimal place. [src/digitalmodel/weather_window/workflow.py:L91-L94] [src/digitalmodel/orcaflex/weather_window.py:L253-L263] |
 | `num_windows`, `num_viable_windows` | count | Total from persistence; viable windows counted from unrounded local durations. [src/digitalmodel/weather_window/workflow.py:L72-L73] [src/digitalmodel/weather_window/workflow.py:L95-L96] |
 | `operation_fits_window`, `screening_status` | boolean, `pass` / `fail` | Fit compares the helper's rounded maximum with required duration; final status also applies workability. [src/digitalmodel/weather_window/workflow.py:L77-L81] [src/digitalmodel/weather_window/workflow.py:L97-L98] |
 | `standard`, input echoes | text, m, h, % | Result includes a descriptive reference string and threshold echoes, without a `Citation` sidecar. [src/digitalmodel/weather_window/workflow.py:L83-L99] |
@@ -47,15 +49,15 @@ Input contract (ranges below describe implemented checks, rather than recommende
 
 `assess_weather_window` delegates statistics to `analyse_persistence`, separately extracts durations for viable-window counting, computes workability as `100 * total_hours_below / record_hours`, and uses a logical conjunction for the verdict. [src/digitalmodel/weather_window/workflow.py:L69-L81]
 
-The dependency also uses inclusive comparison, returns zero statistics when there are no windows, and rounds nonempty statistics including maximum and total below-limit hours before returning them. [src/digitalmodel/orcaflex/weather_window.py:L177-L234]
+The dependency also uses inclusive comparison, returns zero statistics when there are no windows, and rounds nonempty statistics including maximum and total below-limit hours before returning them. [src/digitalmodel/orcaflex/weather_window.py:L206-L263]
 
 | Reference as named in the source | Edition / clause evidence | Implementation relationship |
 | --- | --- | --- |
-| DNV-OS-H101; Marine Operations, General | No edition; dependency names Section 3 | Persistence reference, not a checked standard-derived criterion. [src/digitalmodel/weather_window/workflow.py:L19-L20] [src/digitalmodel/orcaflex/weather_window.py:L9-L13] [src/digitalmodel/orcaflex/weather_window.py:L182-L195] |
+| DNV-OS-H101; Marine Operations, General | No edition; dependency names Section 3 | Persistence reference, not a checked standard-derived criterion. [src/digitalmodel/weather_window/workflow.py:L19-L20] [src/digitalmodel/orcaflex/weather_window.py:L9-L13] [src/digitalmodel/orcaflex/weather_window.py:L211-L224] |
 | DNV-ST-N001; Marine Operations, General | No edition or clause | Docstring reference only in this package. [src/digitalmodel/weather_window/workflow.py:L19-L20] [src/digitalmodel/orcaflex/weather_window.py:L9-L13] |
 | DNV-RP-H103; Modelling and Analysis of Marine Operations | No edition or clause | Dependency describes weather criteria; no clause attached to the wrapper calculation. [src/digitalmodel/weather_window/workflow.py:L19-L20] [src/digitalmodel/orcaflex/weather_window.py:L9-L13] |
-| API RP 2MET; Metocean Design and Operating Conditions | No edition or clause in this package; dependency's seasonal class names Section 5 | Seasonal class is outside this package's computation path. [src/digitalmodel/weather_window/workflow.py:L19-L20] [src/digitalmodel/orcaflex/weather_window.py:L9-L13] [src/digitalmodel/orcaflex/weather_window.py:L241-L245] [src/digitalmodel/weather_window/workflow.py:L58-L70] |
-| Noble Denton 0027/ND; General Guidelines for Marine Operations | No edition; persistence dependency names no numbered clause | Appears in docstring and result label. [src/digitalmodel/weather_window/workflow.py:L19-L20] [src/digitalmodel/weather_window/workflow.py:L83-L84] [src/digitalmodel/orcaflex/weather_window.py:L9-L13] [src/digitalmodel/orcaflex/weather_window.py:L194-L195] |
+| API RP 2MET; Metocean Design and Operating Conditions | No edition or clause in this package; dependency's seasonal class names Section 5 | Seasonal class is outside this package's computation path. [src/digitalmodel/weather_window/workflow.py:L19-L20] [src/digitalmodel/orcaflex/weather_window.py:L9-L13] [src/digitalmodel/orcaflex/weather_window.py:L270-L274] [src/digitalmodel/weather_window/workflow.py:L58-L70] |
+| Noble Denton 0027/ND; General Guidelines for Marine Operations | No edition; persistence dependency names no numbered clause | Appears in docstring and result label. [src/digitalmodel/weather_window/workflow.py:L19-L20] [src/digitalmodel/weather_window/workflow.py:L83-L84] [src/digitalmodel/orcaflex/weather_window.py:L9-L13] [src/digitalmodel/orcaflex/weather_window.py:L223-L224] |
 
 UNVERIFIED: editions, clause titles and compliance with the named standards; clause text not checked against the licensed copy; issue pending (3).
 
@@ -84,7 +86,7 @@ Gate assignment: AQG r0 section 10, Python calculations, and section 9 for G5; t
 | --- | --- | --- | --- |
 | G0 | Applicable: WW0 positive guards; WW1 finite values, sampling and units | WW0: 4 of 4 invalid calls rejected (case count). WW1: 0 invalid samples/scalars accepted (case count); Hs nonnegative m, limits/duration/interval positive m or h, optional workability in 0 to 100 % | WW0 passes; WW1 detects missing guards, issue pending (1); conversion and fixed-interval assumptions are in section 6. [src/digitalmodel/weather_window/workflow.py:L48-L80] [src/digitalmodel/weather_window/workflow.py:L102-L116] |
 | G1 | Applicable: WW2 Python imports and existing tests | 19 of 19 calculation/dependency/workflow tests pass; 0 failures, skips or NOT_RUN cases (test counts) | V1, R1 and all 17 dependency tests; load route is Python import plus offline engine dispatch, with 0 solver launches. [tests/workflows/test_durable_workflows.py:L57-L92] [tests/workflows/test_durable_workflows.py:L2310-L2349] [tests/orcaflex/test_weather_window.py:L1-L147] [src/digitalmodel/engine.py:L381-L384] |
-| G2 | Applicable: WW3 closed-form comparison; WW4 rounding boundary consistency | WW3: durations differ by 0.0 h and workability by at most 0.1 percentage point from direct counting, counts exact. WW4: 0 inconsistent fit/count verdicts; workability error at most 0.1 percentage point | WW3 passes; WW4 exposes a rounded-duration and rounded-total defect, issue pending (2); the helper is not an independent hand-check reference. [tests/workflows/test_durable_workflows.py:L2322-L2349] [src/digitalmodel/weather_window/workflow.py:L69-L81] [src/digitalmodel/orcaflex/weather_window.py:L224-L234] |
+| G2 | Applicable: WW3 closed-form comparison; WW4 rounding boundary consistency | WW3: durations differ by 0.0 h and workability by at most 0.1 percentage point from direct counting, counts exact. WW4: 0 inconsistent fit/count verdicts; workability error at most 0.1 percentage point | WW3 passes; WW4 exposes a rounded-duration and rounded-total defect, issue pending (2); the helper is not an independent hand-check reference. [tests/workflows/test_durable_workflows.py:L2322-L2349] [src/digitalmodel/weather_window/workflow.py:L69-L81] [src/digitalmodel/orcaflex/weather_window.py:L253-L263] |
 | G3 | `NOT_APPLICABLE` | No dynamics integration or simulation-time output in this screening function | Scalar persistence calculation only. [src/digitalmodel/weather_window/workflow.py:L48-L99] |
 | G4 | `NOT_APPLICABLE` | No mesh, diffraction body, buoyancy or RAO output in this screening function | Scalar persistence calculation only. [src/digitalmodel/weather_window/workflow.py:L48-L99] |
 | G5 | Applicable: WW5 summary trace; WW6 evidence completeness | WW5: 0 mismatches in result/status between returned config and JSON (field count). WW6: 1 reproducible input fingerprint, 0 unresolved reference items and 0 unmatched example results (counts) | WW5 passes for result/status; WW6 finds missing fingerprint and reference evidence, issue pending (3); this pack does not clear production QA. [src/digitalmodel/weather_window/workflow.py:L119-L141] [src/digitalmodel/weather_window/workflow.py:L83-L99] |
@@ -172,9 +174,9 @@ rg -n --glob '*.py' 'float\(|int\(|dtype=float|or \{\}|get\(|None|hours|_m|write
 
 | Additional pitfall / incident | Cause and detection | Follow-up |
 | --- | --- | --- |
-| Rounded fit and exposure | Rounded helper maximum can indicate fit with zero viable windows; rounded total below-limit hours can erase a short record's workability. WW4 detects both; do not use the helper as an independent decision-boundary reference. [src/digitalmodel/weather_window/workflow.py:L72-L81] [src/digitalmodel/orcaflex/weather_window.py:L224-L234] | Issue pending (2). |
+| Rounded fit and exposure | Rounded helper maximum can indicate fit with zero viable windows; rounded total below-limit hours can erase a short record's workability. WW4 detects both; do not use the helper as an independent decision-boundary reference. [src/digitalmodel/weather_window/workflow.py:L72-L81] [src/digitalmodel/orcaflex/weather_window.py:L253-L263] | Issue pending (2). |
 | Standards/provenance are descriptive | WW6 detects absent editions, clause evidence and citation sidecar in results. [src/digitalmodel/weather_window/workflow.py:L19-L20] [src/digitalmodel/weather_window/workflow.py:L83-L99] | Issue pending (3). |
-| #2614: upstream wind/current fields ignored | Confirmed in `OperabilityInput`: fields are declared, but calculation uses only Hs/Tp; this wrapper does not call that class. No detection check exists for wind/current rejection in this package. [src/digitalmodel/orcaflex/weather_window.py:L108-L132] [src/digitalmodel/weather_window/workflow.py:L58-L70] | #2614; use this wrapper only for its explicit Hs screening contract. |
+| [#2614](https://github.com/vamseeachanta/digitalmodel/issues/2614): upstream wind/current rejection | Non-None wind/current limits are rejected during `OperabilityInput` validation and checked again before calculation; the regression file covers validation, trusted-data bypasses and fail-before-scatter behaviour. This wrapper does not call that class. [src/digitalmodel/orcaflex/weather_window.py:L107-L161] [tests/orcaflex/test_operability_limits.py] [src/digitalmodel/weather_window/workflow.py:L58-L70] | Rejection is implemented upstream; this wrapper retains its explicit Hs-only screening contract. |
 | #924: feature lead, not a defect incident | Closed-form and workflow assertions cover the feature's run counting and fit; WW2/WW3 are detection checks for regression. [tests/workflows/test_durable_workflows.py:L1554-L1568] [tests/workflows/test_durable_workflows.py:L2310-L2349] | No incident attributed to this issue. |
 | #1661: integration lead, not an established incident | Current package accepts caller-provided Hs values and contains no network fetch. [src/digitalmodel/weather_window/workflow.py:L23-L29] [src/digitalmodel/weather_window/workflow.py:L102-L141] | #1661; no detection check exists for live-data integration here. |
 
@@ -184,7 +186,7 @@ Append-only review record; no clearance or shared-log receipt is asserted by thi
 
 | Date | Record | Lesson to retain | Evidence | Pack change / shared-log entry |
 | --- | --- | --- | --- | --- |
-| 2026-10-18 | Initial pack | Check window-fit and viable-count agreement using unrounded durations before accepting rounded persistence summaries. | [src/digitalmodel/weather_window/workflow.py:L72-L81] [src/digitalmodel/orcaflex/weather_window.py:L224-L234] | Sections 5/6 define WW4; shared-log entry unassigned, issue pending (2). |
+| 2026-10-18 | Initial pack | Check window-fit and viable-count agreement using unrounded durations before accepting rounded persistence summaries. | [src/digitalmodel/weather_window/workflow.py:L72-L81] [src/digitalmodel/orcaflex/weather_window.py:L253-L263] | Sections 5/6 define WW4; shared-log entry unassigned, issue pending (2). |
 
 ## 8. Ownership
 
@@ -207,14 +209,14 @@ OrcaFlex occurrence audit: case-sensitive `rg -n 'OrcaFlex' src/digitalmodel/wea
 
 Implementation-map inventory: map ref `3256bab95f84da3d9fadce8d5dcf8458d66d1eb4`, data revision `270c8759c374b67a7f032953e7fcdb14e0224461`, `docs/registry/implementation-map.yaml` on `codex/implmap-work`; 0 families have an implementation path inside `src/digitalmodel/weather_window/`, so the required inventory is empty, counted families = 0, and the counted-family search is `NOT_APPLICABLE` for that reason. The map pin is separate from this pack's code pin.
 
-Map follow-up: register continuous below-limit run extraction, persistence statistics, workability fraction and continuous-duration fit from section 3; issue pending (4). [src/digitalmodel/weather_window/workflow.py:L30-L99] [src/digitalmodel/orcaflex/weather_window.py:L177-L234]
+Map follow-up: register continuous below-limit run extraction, persistence statistics, workability fraction and continuous-duration fit from section 3; issue pending (4). [src/digitalmodel/weather_window/workflow.py:L30-L99] [src/digitalmodel/orcaflex/weather_window.py:L206-L263]
 
-Repository-wide discovery (including `scripts/`) used `rg -n --glob '*.py' 'analyse_persistence|window_lengths_hours|assess_weather_window|weather_window_operability|consecutive.*window|persistence' src scripts tests`; the algorithm-bearing alternatives and helpers found are classified below, independently of the empty counted-family inventory. [src/digitalmodel/weather_window/workflow.py:L30-L99] [src/digitalmodel/orcaflex/weather_window.py:L177-L234] [src/digitalmodel/parametric/generate.py:L451-L475] [src/digitalmodel/marine_ops/installation/operability.py:L190-L235]
+Repository-wide discovery (including `scripts/`) used `rg -n --glob '*.py' 'analyse_persistence|window_lengths_hours|assess_weather_window|weather_window_operability|consecutive.*window|persistence' src scripts tests`; the algorithm-bearing alternatives and helpers found are classified below, independently of the empty counted-family inventory. [src/digitalmodel/weather_window/workflow.py:L30-L99] [src/digitalmodel/orcaflex/weather_window.py:L206-L263] [src/digitalmodel/parametric/generate.py:L451-L475] [src/digitalmodel/marine_ops/installation/operability.py:L190-L235]
 
 | Definition | Classification / distinction |
 | --- | --- |
 | `window_lengths_hours` and `assess_weather_window` | In-package direct run extraction and workability/fit calculation, both already in section 3. [src/digitalmodel/weather_window/workflow.py:L30-L99] |
-| `analyse_persistence` | External direct implementation of the same run counting plus aggregate statistics; the wrapper delegates statistics but repeats extraction for viable counts. [src/digitalmodel/orcaflex/weather_window.py:L177-L234] [src/digitalmodel/weather_window/workflow.py:L69-L77] |
+| `analyse_persistence` | External direct implementation of the same run counting plus aggregate statistics; the wrapper delegates statistics but repeats extraction for viable counts. [src/digitalmodel/orcaflex/weather_window.py:L206-L263] [src/digitalmodel/weather_window/workflow.py:L69-L77] |
 | `_weather_window_operability_pct` | External direct planned-operability formula over helper statistics, with a fixed synthetic record and exponential persistence approximation; map follow-up, not a counted-family miss. [src/digitalmodel/parametric/generate.py:L435-L475] |
 | `weather_window_operability` | External scatter-probability integration against interpolated Hs limits by period, distinct from time-series persistence; map follow-up. [src/digitalmodel/marine_ops/installation/operability.py:L190-L235] |
 | `router` / `_write_summary` | Delegate, assemble and serialize; no further persistence algorithm. [src/digitalmodel/weather_window/workflow.py:L102-L141] |
@@ -224,7 +226,7 @@ No repository-wide uniqueness claim follows from this search; future map rows an
 
 ## 10. Coverage and open items
 
-Code coverage read set: both package files, the complete persistence dependency, the engine dispatch, existing routing/workflow inventories, both selected test files and the parametric/installation alternatives. [src/digitalmodel/weather_window/__init__.py:L1-L6] [src/digitalmodel/weather_window/workflow.py:L1-L141] [src/digitalmodel/orcaflex/weather_window.py:L1-L311] [src/digitalmodel/engine.py:L381-L384] [docs/registry/module-routing.yaml:L692-L697] [docs/registry/workflows.yaml:L1207-L1225] [tests/orcaflex/test_weather_window.py:L1-L147] [tests/workflows/test_durable_workflows.py:L2310-L2349] [src/digitalmodel/parametric/generate.py:L435-L475] [src/digitalmodel/marine_ops/installation/operability.py:L190-L235]
+Code coverage read set: both package files, the complete persistence dependency, the engine dispatch, existing routing/workflow inventories, both selected test files and the parametric/installation alternatives. [src/digitalmodel/weather_window/__init__.py:L1-L6] [src/digitalmodel/weather_window/workflow.py:L1-L141] [src/digitalmodel/orcaflex/weather_window.py:L1-L340] [src/digitalmodel/engine.py:L381-L384] [docs/registry/module-routing.yaml:L692-L697] [docs/registry/workflows.yaml:L1207-L1225] [tests/orcaflex/test_weather_window.py:L1-L147] [tests/workflows/test_durable_workflows.py:L2310-L2349] [src/digitalmodel/parametric/generate.py:L435-L475] [src/digitalmodel/marine_ops/installation/operability.py:L190-L235]
 
 Documentation discovery/read set (no README exists inside the package at the pin; its only files are the two Python sources): [src/digitalmodel/weather_window/__init__.py:L1-L6] [src/digitalmodel/weather_window/workflow.py:L1-L141]
 
@@ -244,10 +246,10 @@ Offline evidence at the code pin, baseline and after this documentation change: 
 | Open item | Disposition / responsibility / tracking |
 | --- | --- |
 | C1: finite values, ranges, fixed interval, units and locale conventions; missing negative-input tests | Maintainers to define the input contract and add tests; WW1 detects the numeric gap. Issue pending (1). [src/digitalmodel/weather_window/workflow.py:L48-L80] [src/digitalmodel/weather_window/workflow.py:L102-L116] |
-| C2: fit/count disagreement and rounded exposure | Maintainers to use unrounded decision quantities and add WW4 boundary tests. Issue pending (2). [src/digitalmodel/weather_window/workflow.py:L72-L81] [src/digitalmodel/orcaflex/weather_window.py:L224-L234] |
+| C2: fit/count disagreement and rounded exposure | Maintainers to use unrounded decision quantities and add WW4 boundary tests. Issue pending (2). [src/digitalmodel/weather_window/workflow.py:L72-L81] [src/digitalmodel/orcaflex/weather_window.py:L253-L263] |
 | C3: standards qualification from section 3, independent published benchmark, Citation sidecar, input fingerprint and output provenance | Family quality manager to confirm editions/clause titles; maintainers to add evidence and test coverage. Issue pending (3). [src/digitalmodel/weather_window/workflow.py:L19-L20] [src/digitalmodel/weather_window/workflow.py:L83-L99] [src/digitalmodel/weather_window/workflow.py:L132-L141] |
 | C4: section-3 method families absent from map inventory | Maintainers to register families and re-run inventory/search at the first map revision with in-package rows. Issue pending (4). [src/digitalmodel/weather_window/workflow.py:L30-L99] |
-| C5: upstream wind/current limits are ignored | Existing defect #2614; separate from this Hs-only wrapper, and no detection check exists here. [src/digitalmodel/orcaflex/weather_window.py:L108-L132] [src/digitalmodel/weather_window/workflow.py:L48-L54] |
+| C5: upstream wind/current rejection | [#2614](https://github.com/vamseeachanta/digitalmodel/issues/2614) is addressed by rejecting active unsupported limits, with regression coverage in [tests/orcaflex/test_operability_limits.py]; the separate Hs-only wrapper retains its existing contract. [src/digitalmodel/orcaflex/weather_window.py:L107-L161] [src/digitalmodel/weather_window/workflow.py:L48-L54] |
 | C6: live metocean integration | Existing integration lead #1661; current router expects provided series, and no live-data detection check exists here. [src/digitalmodel/weather_window/workflow.py:L102-L117] |
 
-Existing issue #924 is a feature reference; the confirmed upstream incident is #2614, while new input, rounding, provenance and map gaps are grouped into four issue drafts rather than altering calculation code. [src/digitalmodel/weather_window/workflow.py:L48-L141] [src/digitalmodel/orcaflex/weather_window.py:L108-L132] [src/digitalmodel/orcaflex/weather_window.py:L224-L234]
+Existing issue [#924](https://github.com/vamseeachanta/digitalmodel/issues/924) is a feature reference; the upstream incident [#2614](https://github.com/vamseeachanta/digitalmodel/issues/2614) is addressed by unsupported-limit rejection. The remaining input, rounding, provenance and map gaps are grouped into four issue drafts. [src/digitalmodel/weather_window/workflow.py:L48-L141] [src/digitalmodel/orcaflex/weather_window.py:L107-L161] [src/digitalmodel/orcaflex/weather_window.py:L253-L263]

@@ -37,6 +37,8 @@ from digitalmodel.hydrodynamics.models import (
 )
 from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 # ---------------------------------------------------------------------------
 # Numpy integration helper
@@ -44,9 +46,7 @@ from digitalmodel.hydrodynamics.wave_spectra import WaveSpectra
 
 def _trapz(y: np.ndarray, x: np.ndarray) -> float:
     """Integrate using trapezoidal rule, compatible with old and new numpy."""
-    if hasattr(np, "trapezoid"):
-        return float(np.trapezoid(y, x))
-    return float(np.trapz(y, x))
+    return float(_trapezoid(y, x))
 
 
 # ---------------------------------------------------------------------------

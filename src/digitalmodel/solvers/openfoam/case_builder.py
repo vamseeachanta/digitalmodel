@@ -13,6 +13,7 @@ from typing import List, Optional
 from loguru import logger
 
 from .initial_fields import (
+    validate_turbulence_wall_boundaries,
     write_alpha_water,
     write_pressure_field,
     write_turbulence_fields,
@@ -109,7 +110,14 @@ class OpenFOAMCaseBuilder:
 
         Returns:
             Path to the created case directory.
+
+        Raises:
+            ValueError: A live supported turbulence wall function targets a
+                non-wall generated patch. No case files are written on failure.
         """
+        validate_turbulence_wall_boundaries(
+            self._case.turbulence_model, self._case.boundary_conditions
+        )
         parent_dir = Path(parent_dir)
         case_dir = parent_dir / self._case.name
         logger.info(f"Building OpenFOAM case: {case_dir}")
@@ -244,7 +252,9 @@ class OpenFOAMCaseBuilder:
     def _write_block_mesh_dict(self, system_dir: Path) -> None:
         """Write system/blockMeshDict from DomainConfig."""
         content = _foam_header("dictionary", "blockMeshDict")
-        content += render_block_mesh_dict_body(self._case.domain)
+        content += render_block_mesh_dict_body(
+            self._case.domain, self._case.boundary_conditions
+        )
         content += _FOOTER
         (system_dir / "blockMeshDict").write_text(content)
 
@@ -325,6 +335,8 @@ class OpenFOAMCaseBuilder:
         bcs = self._case.boundary_conditions
         write_velocity_field(zero_dir, boundary_conditions=bcs)
         write_pressure_field(zero_dir, is_multiphase=is_mp, boundary_conditions=bcs)
-        write_turbulence_fields(zero_dir, self._case.turbulence_model)
+        write_turbulence_fields(
+            zero_dir, self._case.turbulence_model, boundary_conditions=bcs
+        )
         if is_mp:
             write_alpha_water(zero_dir, boundary_conditions=bcs)

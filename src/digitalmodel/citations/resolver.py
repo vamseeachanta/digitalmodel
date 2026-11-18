@@ -39,7 +39,7 @@ from __future__ import annotations
 import logging
 import os
 import warnings
-from pathlib import Path
+from pathlib import Path, PurePath
 from typing import Optional
 
 from digitalmodel.citations.schema import CitationResolutionError
@@ -50,6 +50,8 @@ ROUTING_RULE_URL = (
     "https://github.com/vamseeachanta/workspace-hub/blob/main/"
     ".claude/rules/codes-standards-data-routing.md"
 )
+
+RESOLVER_UNCONFIGURED_PREFIX = "resolver_unconfigured:"
 
 _WALK_HARD_CAP = 8
 
@@ -91,7 +93,10 @@ def resolve_wiki_base(*, override: Optional[Path] = None) -> Path:
         raise CitationResolutionError(
             code_id="<resolver>",
             wiki_path="<base>",
-            reason=f"override_invalid:{override!s} does not contain wikis/ or knowledge/wikis/",
+            reason=(
+                f"override_invalid:{Path(override).as_posix()} "
+                "does not contain wikis/ or knowledge/wikis/"
+            ),
         )
 
     # 2. LLM_WIKI_PATH env var
@@ -104,7 +109,8 @@ def resolve_wiki_base(*, override: Optional[Path] = None) -> Path:
                 code_id="<resolver>",
                 wiki_path="<base>",
                 reason=(
-                    f"llm_wiki_path_invalid: LLM_WIKI_PATH={env_path!s} does not exist"
+                    f"llm_wiki_path_invalid: LLM_WIKI_PATH={env_path.as_posix()} "
+                    "does not exist"
                 ),
             )
         validated = _validate_clone(env_path)
@@ -116,7 +122,7 @@ def resolve_wiki_base(*, override: Optional[Path] = None) -> Path:
             code_id="<resolver>",
             wiki_path="<base>",
             reason=(
-                f"llm_wiki_path_stale_clone: LLM_WIKI_PATH={env_path!s} exists "
+                f"llm_wiki_path_stale_clone: LLM_WIKI_PATH={env_path.as_posix()} exists "
                 "but does not contain wikis/ or knowledge/wikis/ subdirectory"
             ),
         )
@@ -152,7 +158,8 @@ def resolve_wiki_base(*, override: Optional[Path] = None) -> Path:
             code_id="<resolver>",
             wiki_path="<base>",
             reason=(
-                f"digitalmodel_repo_root_invalid: DIGITALMODEL_REPO_ROOT={legacy_path!s} "
+                "digitalmodel_repo_root_invalid: "
+                f"DIGITALMODEL_REPO_ROOT={legacy_path.as_posix()} "
                 "does not exist or does not contain wikis/ or knowledge/wikis/. "
                 "Consider migrating to LLM_WIKI_PATH (the legacy alias is deprecated)."
             ),
@@ -182,7 +189,7 @@ def resolve_wiki_base(*, override: Optional[Path] = None) -> Path:
         code_id="<resolver>",
         wiki_path="<base>",
         reason=(
-            "resolver_unconfigured: cannot find an llm-wiki clone.\n\n"
+            f"{RESOLVER_UNCONFIGURED_PREFIX} cannot find an llm-wiki clone.\n\n"
             "The vamseeachanta/llm-wiki repo is PRIVATE as of 2026-05-20 "
             "(codes-standards-data-routing rule §4).\n\n"
             "To fix: clone the private repo (requires GitHub auth) and set:\n"
@@ -272,9 +279,9 @@ def _redact(value: object) -> str:
     Keeps the trailing path segments (useful for diagnosis) while not shipping the
     user's absolute home-directory layout to centralized log aggregators (#618).
     """
-    text = str(value)
+    text = value.as_posix() if isinstance(value, PurePath) else str(value)
     try:
-        home = str(Path.home())
+        home = Path.home().as_posix()
     except (RuntimeError, OSError):
         return text
     if home and text.startswith(home):
