@@ -72,7 +72,9 @@ policy. The [commit-status API documentation](https://docs.github.com/en/rest/co
 requests a short description but gives no numeric bound; 140 is not claimed as
 a verified protocol limit. The status description starts with
 `base <full commit id>:`, the base tip the head was merged into, followed by the module count, the elapsed time and every
-module that did not pass. A result is evidence for one head on one base: a new
+module that did not pass, as space permits. Module entries are added whole;
+when entries do not fit, an explicit `; +N more` marker gives the omitted count
+(or `+N more` if no entry fits). A result is evidence for one head on one base: a new
 push needs a new run, and a merge step that requires an up-to-date result
 compares that commit id with the current tip of the base branch and runs the
 gate again when the base has moved.
@@ -103,9 +105,9 @@ hosted job only when the gate ran the same check on the merged tree:
 The gate selects shards from the pull request's own change, so it can run
 fewer shards than a hosted run that compared a head behind its base. A failed
 hosted shard that the gate did not run is not superseded and still blocks. The
-same holds when the description is cut at the length cap before a module name:
-a name that is not readable there counts as not run. A job that has not
-finished is disregarded.
+same holds when a module is omitted to fit the description cap: only complete
+module entries count as evidence; the omission marker supplies no coverage.
+A job that has not finished is disregarded.
 
 These runs are not advisory:
 
@@ -140,6 +142,13 @@ These runs are not advisory:
   requested value is supplied to every module, including dependency URL expansion.
 - An existing Git identity for the temporary merge, read from normal runtime
   configuration or environment. The gate supplies no identity override.
+  A failed merge with unmerged paths is a conflict (`failure`); a failed merge
+  without unmerged paths, including missing identity, is a host error (`error`).
+- No existing run directory for the same head under
+  `<work-root>/wt/pr-<number>-<first-eight-head-characters>`. A run retained by
+  `--keep`, or left by a killed process, blocks later runs for that head with
+  `error` until the retained checkouts are inspected and removed manually.
+  The gate does not remove a previous run automatically.
 - `npm` for the `contracts` module and `libglu1-mesa` for `solver-smoke` and
   `specialized`. A missing prerequisite fails that module; nothing is installed
   with elevated rights.

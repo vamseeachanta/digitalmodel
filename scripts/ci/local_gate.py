@@ -358,6 +358,23 @@ def run_modules(modules: list[Module], jobs: int, run_one: Callable[[Module], Re
         return list(pool.map(run_one, modules))
 
 
+def describe_modules(prefix: str, names: list[str], suffix: str = "") -> str:
+    """Fit complete module entries, marking how many the description omits."""
+    text = prefix + ", ".join(names) + suffix
+    if len(text) <= DESCRIPTION_LIMIT:
+        return text
+    listed: list[str] = []
+    for index, name in enumerate(names):
+        candidate = ", ".join([*listed, name])
+        remaining = len(names) - index - 1
+        marker = f"; +{remaining} more" if remaining else ""
+        if len(prefix + candidate + marker + suffix) > DESCRIPTION_LIMIT:
+            break
+        listed.append(name)
+    detail = ", ".join(listed) + "; " if listed else ""
+    return prefix + detail + f"+{len(names) - len(listed)} more" + suffix
+
+
 def summarize(results: list[Result], seconds: float, tip: str, stopped: bool = False) -> tuple[str, str]:
     """Return the commit-status state and a description within the local cap.
 
@@ -372,12 +389,10 @@ def summarize(results: list[Result], seconds: float, tip: str, stopped: bool = F
         text = f"base {tip}: stopped before completion; {total - len(bad)}/{total} modules had passed"
         return "failure", text[:DESCRIPTION_LIMIT]
     if not bad:
-        names = ", ".join(r.name for r in results)
-        text = f"base {tip}: {total}/{total} modules passed in {seconds:.0f} s ({names})"
-        return "success", text[:DESCRIPTION_LIMIT]
-    detail = ", ".join(f"{r.name} ({r.status})" for r in bad)
-    text = f"base {tip}: {total - len(bad)}/{total} modules passed in {seconds:.0f} s; not passed: {detail}"
-    return "failure", text[:DESCRIPTION_LIMIT]
+        prefix = f"base {tip}: {total}/{total} modules passed in {seconds:.0f} s ("
+        return "success", describe_modules(prefix, [r.name for r in results], ")")
+    prefix = f"base {tip}: {total - len(bad)}/{total} modules passed in {seconds:.0f} s; not passed: "
+    return "failure", describe_modules(prefix, [f"{r.name} ({r.status})" for r in bad])
 
 
 def post_status(repo: str, sha: str, state: str, description: str, run: Runner = capture) -> None:
@@ -414,7 +429,10 @@ def prepare_tree(args: argparse.Namespace, base: str, worktree: Path, run: Runne
     merge = run(["git", "-C", str(worktree), "merge", "--no-ff", "--no-edit", args.sha],
                 check=False)
     if merge.returncode != 0:
-        raise MergeConflict(f"head does not merge into base {tip[:8]}")
+        unmerged = run(["git", "-C", str(worktree), "diff", "--name-only", "--diff-filter=U"])
+        if unmerged.stdout.strip():
+            raise MergeConflict(f"head does not merge into base {tip[:8]}")
+        raise GateError(f"merge exited {merge.returncode}: {merge.stderr.strip()[-300:]}")
     return tip
 
 

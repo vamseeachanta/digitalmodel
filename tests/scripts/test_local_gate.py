@@ -188,6 +188,25 @@ def test_summary_always_names_the_full_tested_base_first(status: str) -> None:
     assert gate.summarize(many, 1, TIP)[1].startswith(f"base {TIP}: ")
 
 
+@pytest.mark.parametrize("status", ["pass", "fail"])
+def test_summary_lists_complete_modules_with_an_omission_count(status: str) -> None:
+    names = ["lint", "ci-harness", "hydrodynamics", "hydrodynamics-other",
+             "orcaflex-solver", "subsea"]
+    results = [gate.Result(name, status) for name in names]
+    # The old 140-character slice ends exactly after "orcaflex" on success,
+    # incorrectly naming a different domain from the executed orcaflex-solver.
+    state, text = gate.summarize(results, 12345, TIP)
+    assert len(text) <= 140
+    if status == "pass":
+        assert state == "success"
+        assert text == (f"base {TIP}: 6/6 modules passed in 12345 s "
+                        "(lint, ci-harness, hydrodynamics, hydrodynamics-other; +2 more)")
+    else:
+        assert state == "failure"
+        assert text == (f"base {TIP}: 0/6 modules passed in 12345 s; not passed: "
+                        "lint (fail), ci-harness (fail); +4 more")
+
+
 def test_run_modules_keeps_plan_order() -> None:
     modules = [gate.Module(str(i), []) for i in range(8)]
     results = gate.run_modules(modules, 3, lambda m: gate.Result(m.name, "pass"))
@@ -495,6 +514,33 @@ def test_prepare_tree_uses_existing_git_identity(tmp_path: Path) -> None:
     merge = next(cmd for cmd in calls if "merge" in cmd)
     # Git obtains identity from its normal runtime configuration and environment.
     assert merge == ["git", "-C", str(tree), "merge", "--no-ff", "--no-edit", SHA]
+
+
+@pytest.mark.parametrize("unmerged", ["conflicted.txt\n", ""])
+def test_prepare_tree_classifies_failed_merge(tmp_path: Path, unmerged: str) -> None:
+    calls = []
+    stderr = "Committer identity unknown"
+
+    def capture(cmd, **kwargs):
+        calls.append(cmd)
+        if "merge" in cmd:
+            assert kwargs["check"] is False
+            return subprocess.CompletedProcess(cmd, 128, "", stderr)
+        stdout = unmerged if "diff" in cmd else SHA if "refs/local-gate/pr-7" in cmd else TIP
+        return subprocess.CompletedProcess(cmd, 0, stdout, "")
+
+    args = gate.parse_args(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository",
+                            "--work-root", str(tmp_path)])
+    tree = tmp_path / "tree"
+    expected = gate.MergeConflict if unmerged else gate.GateError
+    with pytest.raises(expected) as caught:
+        gate.prepare_tree(args, "main", tree, run=capture)
+    assert type(caught.value) is expected
+    assert ["git", "-C", str(tree), "diff", "--name-only", "--diff-filter=U"] in calls
+    if unmerged:
+        assert str(caught.value) == f"head does not merge into base {TIP[:8]}"
+    else:
+        assert str(caught.value) == f"merge exited 128: {stderr}"
 
 
 # --- review at 46eeff4b ------------------------------------------------------
