@@ -8,6 +8,15 @@ on:
       - "src/digitalmodel/solvers/openfoam/**"
       - "tests/solvers/gmsh_meshing/**"
       - "tests/solvers/openfoam/**"
+      - "examples/hydrodynamics/oc4-semisub/**"
+      - "tests/hydrodynamics/test_oc4_public_mesh.py"
+      - "tests/hydrodynamics/test_oc4_extended_band.py"
+      - "tests/hydrodynamics/test_oc4_complex_export.py"
+      - "tests/hydrodynamics/test_oc4_staged_band.py"
+      - "tests/hydrodynamics/test_oc4_tail_bound.py"
+      - "tests/hydrodynamics/test_oc4_damage_tail.py"
+      - "tests/hydrodynamics/test_oc4_retained_measurements.py"
+      - "tests/solvers/smoke/test_ci_registration.py"
       - "tests/scripts/test_cfd_python_install.py"
       - "tests/scripts/test_dispatch_cfd_run.py"
       - "tests/scripts/test_synthetic_tank_3d_smoke.py"
@@ -21,12 +30,21 @@ on:
       - "uv.lock"
       - ".github/workflows/gmsh-meshing-tests.yml"
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
     paths:
       - "src/digitalmodel/solvers/gmsh_meshing/**"
       - "src/digitalmodel/solvers/openfoam/**"
       - "tests/solvers/gmsh_meshing/**"
       - "tests/solvers/openfoam/**"
+      - "examples/hydrodynamics/oc4-semisub/**"
+      - "tests/hydrodynamics/test_oc4_public_mesh.py"
+      - "tests/hydrodynamics/test_oc4_extended_band.py"
+      - "tests/hydrodynamics/test_oc4_complex_export.py"
+      - "tests/hydrodynamics/test_oc4_staged_band.py"
+      - "tests/hydrodynamics/test_oc4_tail_bound.py"
+      - "tests/hydrodynamics/test_oc4_damage_tail.py"
+      - "tests/hydrodynamics/test_oc4_retained_measurements.py"
+      - "tests/solvers/smoke/test_ci_registration.py"
       - "tests/scripts/test_cfd_python_install.py"
       - "tests/scripts/test_dispatch_cfd_run.py"
       - "tests/scripts/test_synthetic_tank_3d_smoke.py"
@@ -42,7 +60,8 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
+  # A title or description edit gets a group of its own, so its no-op run cancels nothing.
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}${{ (github.event.action == 'edited' && !github.event.changes.base) && format('-metadata-edit-{0}', github.run_id) || '' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -50,7 +69,12 @@ permissions:
 
 jobs:
   focused-tests:
-    runs-on: ubuntu-latest
+    name: "${{ (github.event.action == 'edited' && !github.event.changes.base) && 'Not run for a metadata edit - focused-tests' || 'focused-tests' }}"
+    # Draft pull requests wait: the gates start when the pull request is marked ready.
+    # A title or description edit ("edited" without a base change) runs no job. The job then
+    # takes another name, so its skipped check does not stand in for an earlier result.
+    if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.draft) && !(github.event.action == 'edited' && !github.event.changes.base) }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","x64"]') }}
     timeout-minutes: 20
     defaults:
       run:
@@ -147,13 +171,27 @@ jobs:
           test "$(git -C ../assetutilities rev-parse 'HEAD^{tree}')" = \
             "5f7434fcb3a348a7e04bf9de228e6ce2c49a87cb"
 
+      # Release binary of actionlint v1.7.12 (tag commit
+      # 914e7df21a07ef503a81201c76d2b11c789d3fca), verified against its
+      # published SHA-256, so the job does not depend on the runner having Go.
       - name: Install pinned actionlint
-        run: >-
-          go install github.com/rhysd/actionlint/cmd/actionlint@914e7df21a07ef503a81201c76d2b11c789d3fca
+        env:
+          ACTIONLINT_VERSION: "1.7.12"
+          ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+        run: |
+          set -euo pipefail
+          archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          dir="$RUNNER_TEMP/actionlint"
+          mkdir -p "$dir"
+          curl -fsSL --retry 3 -o "$dir/$archive" \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/${archive}"
+          echo "${ACTIONLINT_SHA256}  $dir/$archive" | sha256sum -c -
+          tar -xzf "$dir/$archive" -C "$dir" actionlint
+          "$dir/actionlint" -version
 
       - name: Lint workflow syntax
         run: |
-          "$(go env GOPATH)/bin/actionlint" .github/workflows/gmsh-meshing-tests.yml
+          "$RUNNER_TEMP/actionlint/actionlint" .github/workflows/gmsh-meshing-tests.yml
 
       - name: Install uv
         uses: astral-sh/setup-uv@v6
@@ -164,7 +202,7 @@ jobs:
         run: uv python install 3.11
 
       - name: Install Gmsh runtime libraries
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq libglu1-mesa
+        run: dpkg -s libglu1-mesa >/dev/null 2>&1 || (sudo -n apt-get update -qq && sudo -n apt-get install -y -qq libglu1-mesa)
 
       - name: Sync locked environment
         run: uv sync --frozen --extra cfd --extra test
@@ -181,6 +219,14 @@ jobs:
       - name: Run bridge tests
         run: |
           uv run --frozen --extra cfd --extra test pytest -q \
+            tests/hydrodynamics/test_oc4_public_mesh.py \
+            tests/hydrodynamics/test_oc4_extended_band.py \
+            tests/hydrodynamics/test_oc4_complex_export.py \
+            tests/hydrodynamics/test_oc4_staged_band.py \
+            tests/hydrodynamics/test_oc4_tail_bound.py \
+            tests/hydrodynamics/test_oc4_damage_tail.py \
+            tests/hydrodynamics/test_oc4_retained_measurements.py \
+            tests/solvers/smoke/test_ci_registration.py \
             tests/solvers/gmsh_meshing/test_tank_fixture.py \
             tests/solvers/openfoam/test_poly_mesh_contract.py \
             tests/solvers/openfoam/test_gmsh_bridge.py \

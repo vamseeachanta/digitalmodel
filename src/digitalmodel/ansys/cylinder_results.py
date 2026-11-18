@@ -4,6 +4,8 @@ from decimal import (Context, Decimal, InvalidOperation, DivisionByZero, Overflo
 from functools import wraps
 import re
 
+from digitalmodel.ansys.analysis_records import decimal_text
+
 D = Decimal
 COMPONENTS = {'SX': 'sigma_r', 'SZ': 'sigma_theta', 'SY': 'sigma_z',
               'SXY': 'tau_rz', 'UX': 'u_r', 'UY': 'u_z'}
@@ -59,6 +61,13 @@ def parse_e24(field, unit):
     exponent = int(field.split(b'E')[1])
     if abs(exponent) > 100:
         raise EvidenceError('Exponent outside bounded canary representation')
+    # Source: analysis_records.decimal_text (revision 6476218e) bounds the
+    # adjusted exponent of package values, which can differ from written E24
+    # exponents when the mantissa starts with zero.
+    try:
+        decimal_text(field.decode('ascii').strip())
+    except ValueError as exc:
+        raise EvidenceError('Decimal outside bounded package representation') from exc
     return value, D(5).scaleb(exponent - 17)
 
 

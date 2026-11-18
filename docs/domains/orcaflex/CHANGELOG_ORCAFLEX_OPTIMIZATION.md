@@ -98,7 +98,7 @@ optimal_threads = resource_mgr.calculate_optimal_threads(file_paths)
 #### Rollback Instructions (if needed)
 ```bash
 # To rollback to original configuration
-cd /d/1522/<CTR>/orcaflex/rev_a08/runtime_test
+cd <project_data>/<CTR>/orcaflex/rev_a08/runtime_test
 cp dm_fsts_backup_20250825.yml dm_fsts.yml
 cp dm_fsts_lngc_backup_20250825.yml dm_fsts_lngc.yml
 ```

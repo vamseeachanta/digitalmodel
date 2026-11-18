@@ -1,0 +1,4 @@
+patch exit 0 seconds 0.091
+le1_8x24 exit 0 seconds 0.264
+le1_16x48 exit 0 seconds 0.84
+le1_32x96 exit 0 seconds 3.141

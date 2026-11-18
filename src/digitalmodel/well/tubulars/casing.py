@@ -80,6 +80,9 @@ def casing_grade(name: str) -> CasingGrade:
 # Nominal weight includes the coupling, so it differs slightly from the
 # plain-end weight; the wall thickness is the governing dimension.
 # ---------------------------------------------------------------------------
+# API Spec 5CT standard drift-mandrel allowance for casing below 9-5/8 in OD.
+SMALL_CASING_DRIFT_ALLOWANCE_IN = 0.125
+
 CASING_SIZES: dict[tuple[float, float], float] = {
     (4.5, 9.50): 0.205, (4.5, 11.60): 0.250, (4.5, 13.50): 0.290,
     (4.5, 15.10): 0.337,
@@ -198,11 +201,18 @@ class Casing:
     grade: CasingGrade
     weight_ppf: Optional[float] = None
     code_reference: str = CODE_REFERENCE
+    # Nominal drift is supplied or populated by casing() for small casing only.
+    # Basis: API Spec 5CT standard drift allowance, ID - 1/8 in below 9-5/8 in OD.
+    drift_in: Optional[float] = None
 
     def __post_init__(self) -> None:
         if self.od_in <= 0 or self.wt_in <= 0 or self.wt_in >= self.od_in / 2.0:
             raise ValueError(
                 f"invalid geometry od={self.od_in}, wt={self.wt_in}")
+        if self.drift_in is not None and (
+            not math.isfinite(self.drift_in) or not 0 < self.drift_in <= self.id_in
+        ):
+            raise ValueError("drift_in must be finite, positive and no greater than ID")
 
     @property
     def id_in(self) -> float:
@@ -285,6 +295,7 @@ def casing(
     od_in: float,
     weight_ppf: Optional[float] = None,
     wt_in: Optional[float] = None,
+    drift_in: Optional[float] = None,
 ) -> Casing:
     """Build a :class:`Casing` from a grade plus OD and weight (or wall).
 
@@ -293,6 +304,11 @@ def casing(
         od_in: Outside diameter (inches).
         weight_ppf: Nominal weight (lb/ft); looks up the catalog wall.
         wt_in: Explicit wall thickness (inches), instead of ``weight_ppf``.
+        drift_in: Verified drift (inches), if supplied. For small casing
+            (OD <= 8.625 in) only, the nominal default is ID - 0.125 in, the
+            API Spec 5CT standard drift-mandrel allowance for that size range.
+            Larger casing requires a product-specific input; None denotes
+            missing drift evidence.
     """
     g = grade if isinstance(grade, CasingGrade) else casing_grade(grade)
     if weight_ppf is not None and wt_in is not None:
@@ -303,7 +319,10 @@ def casing(
         wt = wt_in
     else:
         raise ValueError("Provide weight_ppf or wt_in for the wall thickness")
-    return Casing(od_in=od_in, wt_in=wt, grade=g, weight_ppf=weight_ppf)
+    if drift_in is None and od_in <= 8.625:
+        drift_in = od_in - 2.0 * wt - SMALL_CASING_DRIFT_ALLOWANCE_IN
+    return Casing(od_in=od_in, wt_in=wt, grade=g, weight_ppf=weight_ppf,
+                  drift_in=drift_in)
 
 
 def list_tubing_sizes() -> list[tuple[float, float]]:

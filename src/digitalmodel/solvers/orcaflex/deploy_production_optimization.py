@@ -33,8 +33,9 @@ try:
 except ImportError:
     BaselinePerformanceTest = None
 
-# Production directories - READ ONLY
-PRODUCTION_DIR = Path("D:/1522/ctr7/orcaflex/rev_a08/runtime_test")
+# Production directories - READ ONLY. Project data lives under
+# DIGITALMODEL_PRIVATE_DATA; the default is a placeholder.
+PRODUCTION_DIR = Path(os.environ.get("DIGITALMODEL_PRIVATE_DATA", "<project_data>")) / "ctr7" / "orcaflex" / "rev_a08" / "runtime_test"
 OUTPUT_DIR = Path("D:/github/digitalmodel/test_output/production_test")
 REPORTS_DIR = Path("D:/github/digitalmodel/reports/production_deployment")
 
@@ -312,7 +313,7 @@ safety:
   read_only_sim_files: true
   preserve_originals: true
   protected_paths:
-    - "D:/1522/ctr7/orcaflex/rev_a08/runtime_test/*.sim"
+    - "<project_data>/ctr7/orcaflex/rev_a08/runtime_test/*.sim"
     - "*/production/*.sim"
     - "*/runtime_test/*.sim"
 """

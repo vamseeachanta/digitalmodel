@@ -9,6 +9,7 @@ import runpy
 from copy import deepcopy
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from urllib.parse import urlsplit
 
 import pytest
 
@@ -32,17 +33,43 @@ def fetcher():
 
 @pytest.fixture
 def template():
-    original = json.loads(MANIFEST.read_text())
-    result = deepcopy(original)
-    result.pop("assembly", None)
-    for index, source in enumerate(result["sources"]):
-        suffix = "robots.txt" if source["role"] == "access_policy" else str(index)
-        source["source_url"] = f"https://example.org/{suffix}"
-    # Two independent sites with their own access policies.
-    for source in result["sources"][3:]:
-        source["source_url"] = source["source_url"].replace(
-            "example.org", "example.net"
+    roles = ["access_policy", "fleet_page", "fleet_page", "access_policy"]
+    roles += ["fleet_page"] * 3 + ["specification"] * 4
+    sources = []
+    for index, role in enumerate(roles):
+        site = "example.org" if index < 3 else "example.net"
+        suffix = "robots.txt" if role == "access_policy" else str(index)
+        url = f"https://{site}/{suffix}"
+        sources.append(
+            {
+                "source_url": url,
+                "resolved_url": url,
+                "retrieved_utc": "2026-10-11T12:00:00Z",
+                "sha256": "a" * 64,
+                "size_bytes": 42,
+                "status": "pending",
+                "role": role,
+                "source_vintage": "Synthetic fixture",
+                "licence_terms": "Synthetic fixture; no real vessel facts.",
+            }
         )
+    return {
+        "retrieval_policy": json.loads(MANIFEST.read_text())["retrieval_policy"],
+        "refused_sites": [],
+        "sources": sources,
+    }
+
+
+@pytest.fixture
+def committed():
+    result = json.loads(MANIFEST.read_text())
+    result.pop("assembly", None)
+    sites = {}
+    for index, source in enumerate(result["sources"]):
+        host = urlsplit(source["source_url"]).netloc
+        site = sites.setdefault(host, f"site{len(sites)}.example.org")
+        suffix = "robots.txt" if source["role"] == "access_policy" else str(index)
+        source["source_url"] = f"https://{site}/{suffix}"
     return result
 
 
@@ -62,16 +89,39 @@ def transport(url, user_agent, timeout):
     return 200, url, body
 
 
-def test_emitted_manifest_contract(fetcher, template, tmp_path):
+def test_emitted_manifest_contract(fetcher, committed, tmp_path):
     output = tmp_path / "raw"
-    result = fetcher(template, output, ROOT, transport=transport, pause=lambda _: None)
-    committed = json.loads(MANIFEST.read_text())
-    committed.pop("assembly", None)
+    result = fetcher(committed, output, ROOT, transport=transport, pause=lambda _: None)
     assert shape(result) == shape(committed)
     saved = json.loads((output / MANIFEST.name).read_text())
     assert saved == result
-    assert len(list(output.glob("*.document"))) == 11
+    assert len(list(output.glob("*.document"))) == len(committed["sources"])
+    assert result["refused_sites"] == []
     assert all(source["status"] == "retrieved" for source in result["sources"])
+
+
+def test_third_site_refusal_leaves_other_sites(fetcher, template, tmp_path):
+    third = deepcopy(template["sources"][:2])
+    for source in third:
+        source["source_url"] = source["source_url"].replace(
+            "example.org", "third.example.org"
+        )
+    template["sources"].extend(third)
+    calls = []
+
+    def refused(url, user_agent, timeout):
+        calls.append(url)
+        if url == "https://third.example.org/1":
+            return 403, url, b"refused"
+        return transport(url, user_agent, timeout)
+
+    result = fetcher(template, tmp_path, ROOT, transport=refused, pause=lambda _: None)
+    assert result["refused_sites"] == [
+        {"site": "third.example.org", "reason": "HTTP refusal or redirect: 403"}
+    ]
+    assert sum(s["status"] == "retrieved" for s in result["sources"]) == 11
+    assert result["sources"][-2:] == third
+    assert len(calls) == 13
 
 
 @pytest.mark.parametrize("status", [401, 403, 429])

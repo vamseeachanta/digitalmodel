@@ -122,7 +122,7 @@ Module IDs reference `docs/registry/module-routing.yaml`. Maturity levels (produ
 
 ### Category A -- Blocks Current Work
 
-1. ~~**0/150 structural tests runnable.**~~ Largely closed — 1,724 structural tests now collect successfully. Issues (b) RAOPlotter import and (c) PYTHONPATH were fixed previously; issue (a) `extract_hydro_coefficients` bare import fixed in `validate_phase2.py` (2026-10-08). The `TEST_STATUS_DASHBOARD.md` is stale (generated 2025-10-03).
+1. ~~**0/150 structural tests runnable.**~~ Closed — the suite this figure described is `tests/marine_ops/marine_engineering/`, not `tests/structural/`. On 2026-11-01, with the gates' assetutilities git overlay, it ran 437 passed, 2 skipped, 9 xfailed. Full-suite collection with `-m "not solver and not slow"`: 34,584 tests, 0 collection errors. Issues (b) RAOPlotter import and (c) PYTHONPATH were fixed earlier; issue (a), the `extract_hydro_coefficients` bare import, was fixed in `validate_phase2.py` (2026-10-08). `TEST_STATUS_DASHBOARD.md` is stale (generated 2025-10-03).
 
 2. ~~**pyproject.toml version mismatch.**~~ Closed — pyproject.toml, __init__.py, and CHANGELOG now all read 2.1.0 (2026-09-10).
 
@@ -132,7 +132,7 @@ Module IDs reference `docs/registry/module-routing.yaml`. Maturity levels (produ
 
 4. **Duplicate module paths.** Catenary solver canonical location is `marine_ops/marine_analysis/catenary/` (2,125 lines, ~40 import sites, proper BVP solver). `marine_ops/marine_engineering/` is a pure re-export facade. `subsea/catenary_riser/` is a complementary riser-specific domain layer with its own CLI. `subsea/catenary/` never existed.
 
-5. ~~**Stale coverage metrics.**~~ Closed — stale `coverage.json` removed; CI generates fresh coverage on every run.
+5. ~~**Stale coverage metrics.**~~ Closed — no `coverage.json` is tracked in the repository; CI generates coverage on each run.
 
 ### Category C -- Aspirational (not blocking, not in roadmap)
 

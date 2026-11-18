@@ -7,7 +7,7 @@ Two levels of validation:
    OrcFxAPI.Model().LoadData()
 
 Usage:
-    uv run pytest tests/domains/orcaflex/test_load_orcaflex_files.py -v
+    uv run pytest tests/solvers/orcaflex/test_load_orcaflex_files.py -v
 """
 
 import platform
@@ -16,19 +16,10 @@ from pathlib import Path
 import pytest
 import yaml
 
-try:
-    import OrcFxAPI
+DOCS_BASE = Path(__file__).resolve().parents[3] / "docs" / "domains" / "orcaflex"
 
-    ORCAFLEX_AVAILABLE = True
-except (ImportError, ModuleNotFoundError):
-    ORCAFLEX_AVAILABLE = False
-
-DOCS_BASE = Path(__file__).resolve().parents[3] / "docs" / "modules" / "orcaflex"
-
-PIPELINE_24IN = (
-    DOCS_BASE / "pipeline" / "installation" / "floating" / "24in_pipeline"
-)
-INPUT_FILE_DIR = DOCS_BASE / "input_file"
+PIPELINE_24IN = DOCS_BASE / "pipeline" / "installation" / "floating" / "24in_pipeline"
+INPUT_FILE_DIR = Path(__file__).with_name("fixtures") / "load_files"
 
 # Known OrcaFlex top-level keys for monolithic model files
 ORCAFLEX_MODEL_KEYS = {
@@ -62,23 +53,26 @@ ORCAFLEX_COMPOSITION_KEYS = {"BaseFile", "includefile", "IncludeFile"}
 
 
 def collect_orcaflex_files(directory: Path) -> list[Path]:
-    """Collect all .yml and .dat files that are OrcaFlex model files."""
+    """Collect required model fixtures, rejecting stale or empty directories."""
+    assert directory.is_dir(), f"Missing OrcaFlex fixture directory: {directory}"
     files = []
     for ext in ("*.yml", "*.dat"):
         files.extend(directory.rglob(ext))
-    return sorted(
+    files = sorted(
         f
         for f in files
-        if "postproc" not in str(f)
-        and "parameters.yml" not in f.name
+        if "postproc" not in f.relative_to(directory).parts
+        # Generator specifications and parameter settings are not models.
+        and f.name not in {"parameters.yml", "spec.yml", "spec_qa.yml"}
         and "dm_pipeline_postproc" not in f.name
     )
+    assert files, f"No OrcaFlex model fixtures found in: {directory}"
+    return files
 
 
-ALL_FILES = collect_orcaflex_files(PIPELINE_24IN) if PIPELINE_24IN.exists() else []
+ALL_FILES = collect_orcaflex_files(PIPELINE_24IN)
 
 
-@pytest.mark.skipif(not ALL_FILES, reason="No OrcaFlex files found")
 @pytest.mark.parametrize(
     "model_file",
     ALL_FILES,
@@ -90,25 +84,29 @@ def test_yaml_structure(model_file: Path):
     data = yaml.safe_load(content)
 
     assert data is not None, f"YAML is empty: {model_file.name}"
+    # Current modular/master.yml is a sequence of includefile mappings.
+    if isinstance(data, list):
+        assert data, f"Include sequence is empty: {model_file.name}"
+        for entry in data:
+            assert isinstance(entry, dict) and set(entry) & ORCAFLEX_COMPOSITION_KEYS, (
+                f"Invalid include entry in {model_file.name}: {entry}"
+            )
+        return
     assert isinstance(data, dict), f"YAML root is not a dict: {model_file.name}"
 
     keys = set(data.keys())
     has_orcaflex_keys = bool(keys & ORCAFLEX_INCLUDE_KEYS)
     has_composition_keys = bool(keys & ORCAFLEX_COMPOSITION_KEYS)
     assert has_orcaflex_keys or has_composition_keys, (
-        f"No OrcaFlex or composition keys found in {model_file.name}. "
-        f"Keys: {keys}"
+        f"No OrcaFlex or composition keys found in {model_file.name}. Keys: {keys}"
     )
 
 
-@pytest.mark.skipif(not ALL_FILES, reason="No OrcaFlex files found")
 @pytest.mark.parametrize(
     "model_file",
     [f for f in ALL_FILES if "includes" not in str(f)],
     ids=[
-        str(f.relative_to(PIPELINE_24IN))
-        for f in ALL_FILES
-        if "includes" not in str(f)
+        str(f.relative_to(PIPELINE_24IN)) for f in ALL_FILES if "includes" not in str(f)
     ],
 )
 def test_yaml_model_has_general(model_file: Path):
@@ -119,24 +117,22 @@ def test_yaml_model_has_general(model_file: Path):
     if data and "General" in data:
         general = data["General"]
         assert isinstance(general, dict), "General section must be a dict"
-        assert len(general) > 0, (
-            f"General section is empty in {model_file.name}"
-        )
+        assert len(general) > 0, f"General section is empty in {model_file.name}"
 
 
-@pytest.mark.skipif(not ORCAFLEX_AVAILABLE, reason="OrcFxAPI not available on Linux")
-@pytest.mark.skipif(not ALL_FILES, reason="No OrcaFlex files found")
+@pytest.mark.solver
+@pytest.mark.skipif(platform.system() != "Windows", reason="OrcFxAPI requires Windows")
 @pytest.mark.parametrize(
     "model_file",
     [f for f in ALL_FILES if "includes" not in str(f)],
     ids=[
-        str(f.relative_to(PIPELINE_24IN))
-        for f in ALL_FILES
-        if "includes" not in str(f)
+        str(f.relative_to(PIPELINE_24IN)) for f in ALL_FILES if "includes" not in str(f)
     ],
 )
 def test_orcaflex_api_load(model_file: Path):
     """Full model validation via OrcFxAPI (Windows only)."""
+    # Keep the licensed interface out of licence-free test collection.
+    OrcFxAPI = pytest.importorskip("OrcFxAPI")
     model = OrcFxAPI.Model()
     model.LoadData(str(model_file))
     assert model is not None
@@ -144,15 +140,16 @@ def test_orcaflex_api_load(model_file: Path):
 
 
 # ---------------------------------------------------------------------------
-# input_file directory tests (good file + known-error file)
+# Symbolic input fixtures (good file + known-error file; no solver run)
 # ---------------------------------------------------------------------------
 
-INPUT_FILES = collect_orcaflex_files(INPUT_FILE_DIR) if INPUT_FILE_DIR.exists() else []
+INPUT_FILES = collect_orcaflex_files(INPUT_FILE_DIR)
 INPUT_GOOD_FILES = [f for f in INPUT_FILES if "_error" not in f.stem]
 INPUT_ERROR_FILES = [f for f in INPUT_FILES if "_error" in f.stem]
+assert INPUT_GOOD_FILES, "No good OrcaFlex input fixtures found"
+assert INPUT_ERROR_FILES, "No known-error OrcaFlex input fixtures found"
 
 
-@pytest.mark.skipif(not INPUT_GOOD_FILES, reason="No input_file good files found")
 @pytest.mark.parametrize(
     "model_file",
     INPUT_GOOD_FILES,
@@ -169,7 +166,6 @@ def test_input_file_yaml_valid(model_file: Path):
     assert "Environment" in data, f"Missing Environment section in {model_file.name}"
 
 
-@pytest.mark.skipif(not INPUT_ERROR_FILES, reason="No input_file error files found")
 @pytest.mark.parametrize(
     "model_file",
     INPUT_ERROR_FILES,
@@ -178,9 +174,8 @@ def test_input_file_yaml_valid(model_file: Path):
 def test_input_file_error_yaml_parses(model_file: Path):
     """Error files should parse as valid YAML but contain data-level errors.
 
-    These files are structurally valid YAML but have intentional data issues
-    (e.g., truncated names like '3LPP+CWC8' instead of '3LPP+CWC80') that
-    OrcaFlex would reject at model load time.
+    The symbolic error fixture defines coating_defined but references
+    coating_missing. This tests reference membership, without a solver run.
     """
     content = model_file.read_text(encoding="utf-8-sig")
     data = yaml.safe_load(content)
@@ -192,7 +187,6 @@ def test_input_file_error_yaml_parses(model_file: Path):
     assert "General" in data, "Error file should still have General section"
 
 
-@pytest.mark.skipif(not INPUT_GOOD_FILES, reason="No input_file good files found")
 @pytest.mark.parametrize(
     "model_file",
     INPUT_GOOD_FILES,
@@ -201,7 +195,8 @@ def test_input_file_error_yaml_parses(model_file: Path):
 def test_input_file_coating_references_valid(model_file: Path):
     """Verify all CoatingThickness references resolve to defined coatings.
 
-    Catches the same error OrcaFlex reports:
+    By inspection of coating.yml, the reference coating_defined belongs to
+    the defined set {coating_defined}. Detects the reference error:
       'Failed to set CoatingThickness=X (Data source X does not exist)'
     """
     content = model_file.read_text(encoding="utf-8-sig")
@@ -222,7 +217,6 @@ def test_input_file_coating_references_valid(model_file: Path):
             )
 
 
-@pytest.mark.skipif(not INPUT_ERROR_FILES, reason="No input_file error files found")
 @pytest.mark.parametrize(
     "model_file",
     INPUT_ERROR_FILES,
@@ -231,9 +225,8 @@ def test_input_file_coating_references_valid(model_file: Path):
 def test_input_file_error_has_bad_coating_ref(model_file: Path):
     """Verify the error file has a broken coating reference.
 
-    The error file defines '3LPP+CWC8' but references '3LPP+CWC80',
-    matching the OrcaFlex error:
-      'Failed to set CoatingThickness=3LPP+CWC80 (Data source does not exist)'
+    By inspection of coating_error.yml, coating_missing is not a member of
+    the defined set {coating_defined}. No numerical solver result is asserted.
     """
     content = model_file.read_text(encoding="utf-8-sig")
     data = yaml.safe_load(content)
@@ -257,7 +250,6 @@ def test_input_file_error_has_bad_coating_ref(model_file: Path):
     )
 
 
-@pytest.mark.skipif(not INPUT_ERROR_FILES, reason="No input_file error files found")
 @pytest.mark.parametrize(
     "model_file",
     INPUT_ERROR_FILES,
@@ -273,8 +265,7 @@ def test_input_file_error_has_known_diff(model_file: Path):
     good_file = model_file.parent / good_name
 
     assert good_file.exists(), (
-        f"No matching good file for {model_file.name}. "
-        f"Expected: {good_name}"
+        f"No matching good file for {model_file.name}. Expected: {good_name}"
     )
 
     error_content = model_file.read_text(encoding="utf-8-sig")

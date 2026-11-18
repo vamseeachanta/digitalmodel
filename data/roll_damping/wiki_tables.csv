@@ -1,0 +1,6 @@
+table_id,source_id,wiki_path,content
+chakrabarti2001-c1,chakrabarti2001,wikis/marine-engineering/wiki/datasets/papers/chakrabarti-2001-empirical-roll-damping-ships-barges/chakrabarti-2001-empirical-roll-damping-ships-barges-table-001.csv,C1 against B/KG for the drag-coefficient eddy route (eqs. 13-17)
+chakrabarti2001-c2,chakrabarti2001,wikis/marine-engineering/wiki/datasets/papers/chakrabarti-2001-empirical-roll-damping-ships-barges/chakrabarti-2001-empirical-roll-damping-ships-barges-table-002.csv,C2 against bilge angle alpha and re/D for the drag-coefficient eddy route
+chakrabarti2001-t1,chakrabarti2001,wikis/marine-engineering/wiki/datasets/papers/chakrabarti-2001-empirical-roll-damping-ships-barges/chakrabarti-2001-empirical-roll-damping-ships-barges-table-003.csv,Table 1 damping factors of the derrick barge and the ship by formula and rake
+chakrabarti2001-source,chakrabarti2001,wikis/naval-architecture/wiki/sources/chakrabarti-2001-empirical-roll-damping-ships-barges.md,Source page: components eqs. 1-60 and limits; resolves the calculator citations
+ittc2024-simplified-ikeda-q6,ittc2024,wikis/naval-architecture/wiki/datasets/roll-damping-literature-2026-11/ittc-2024-simplified-ikeda-q6.csv,Q6 coefficients of the simplified Ikeda eddy regression (Kawahara Maekawa and Ikeda 2009) as printed in ITTC 7.5-02-07-04.5 (2024) Table 4

@@ -59,3 +59,178 @@ def test_regression_uncertainty_uses_residual_degrees_of_freedom(repeats, with_n
     assert result.residuals == pytest.approx(
         np.tile(np.array([-4., 3., 5., -3., -1.]) / 5, repeats)
     )
+
+
+@pytest.mark.parametrize("repeats", [1, 10])
+@pytest.mark.parametrize("confidence_level", [0.90, 0.99])
+def test_coefficient_intervals_agree_with_scipy(repeats, confidence_level):
+    """Check n=5 and n=50 against an independent regression implementation.
+
+    Inputs and replication counts are the hand calculation above. Confidence
+    levels are synthetic probability inputs, not acceptance criteria. Expected
+    coefficient standard errors come from scipy.stats.linregress, documented
+    in SciPy 1.16.2 (2025), including its Student interval example:
+    https://docs.scipy.org/doc/scipy-1.16.2/reference/generated/scipy.stats.linregress.html
+    """
+    x = np.tile(np.array([1., 2., 3., 4., 5.]), repeats)
+    y = np.tile(np.array([2., 4., 5., 4., 5.]), repeats)
+    reference = stats.linregress(x, y)
+    result = StatisticalAnalysisService().perform_linear_regression(
+        x, y, confidence_level=confidence_level
+    )
+    # Two coefficients and two tails: NIST section 4.4.3.1 and SciPy above.
+    critical = stats.t.isf((1 - confidence_level) / 2, len(x) - 2)
+    assert result.slope == pytest.approx(reference.slope)
+    assert result.intercept == pytest.approx(reference.intercept)
+    assert result.p_value == pytest.approx(reference.pvalue)
+    assert result.confidence_intervals["slope"] == pytest.approx(
+        (reference.slope - critical * reference.stderr,
+         reference.slope + critical * reference.stderr)
+    )
+    assert result.confidence_intervals["intercept"] == pytest.approx(
+        (reference.intercept - critical * reference.intercept_stderr,
+         reference.intercept + critical * reference.intercept_stderr)
+    )
+
+
+@pytest.mark.parametrize("retained", [0, 1, 2])
+def test_insufficient_retained_pairs_rejected(retained):
+    """NIST 4.4.3.1: n-p must be positive; p=2 requires n>=3.
+
+    Synthetic arrays have three raw rows and zero, one or two retained pairs.
+    No residual variance or Student interval can be estimated in these cases.
+    """
+    x = np.arange(3, dtype=float)
+    y = x.copy()
+    y[retained:] = np.nan
+    with pytest.raises(ValueError, match="at least 3 valid data points"):
+        StatisticalAnalysisService().perform_linear_regression(x, y)
+
+
+def test_constant_predictor_rejected():
+    """x=(1,1,1) gives Sxx=0, so neither slope nor its SE is identifiable.
+
+    SciPy 1.16.2 (2025), linregress implementation rejects identical x values:
+    https://github.com/scipy/scipy/blob/v1.16.2/scipy/stats/_stats_py.py
+    """
+    with pytest.raises(ValueError, match="distinct"):
+        StatisticalAnalysisService().perform_linear_regression(
+            np.ones(3), np.arange(3, dtype=float)
+        )
+
+
+@pytest.mark.parametrize("value", [np.inf, -np.inf])
+@pytest.mark.parametrize("axis", ["x", "y"])
+def test_infinite_retained_values_rejected(value, axis):
+    """Synthetic infinities cannot define finite SSE, Sxx or intervals."""
+    data = {"x": np.arange(3, dtype=float), "y": np.arange(3, dtype=float)}
+    data[axis][0] = value
+    with pytest.raises(ValueError, match="finite"):
+        StatisticalAnalysisService().perform_linear_regression(data["x"], data["y"])
+
+
+@pytest.mark.parametrize(
+    "confidence_level",
+    [0., 1., -0.1, 1.1, np.nan, np.inf, None, "invalid", 1j,
+     pytest.param(10**400, id="overflow")]
+)
+def test_invalid_confidence_level_rejected(confidence_level):
+    """A finite two-sided Student quantile requires probability in (0,1).
+
+    Endpoints and out-of-domain synthetic inputs follow the quantile convention
+    in NIST e-Handbook (2012), section 1.3.6.7.2, cited above.
+    """
+    with pytest.raises(ValueError, match="confidence_level"):
+        StatisticalAnalysisService().perform_linear_regression(
+            np.arange(3, dtype=float), np.arange(3, dtype=float), confidence_level
+        )
+
+
+@pytest.mark.parametrize("confidence_level", ["0.9", "0.99"])
+def test_numeric_confidence_text_matches_float(confidence_level):
+    """Numeric text denotes the same supplied probability as its float value."""
+    x = np.arange(1., 6.)
+    y = np.array([2., 4., 5., 4., 5.])
+    service = StatisticalAnalysisService()
+    expected = service.perform_linear_regression(x, y, float(confidence_level))
+    result = service.perform_linear_regression(x, y, confidence_level)
+    for coefficient in ["slope", "intercept"]:
+        assert result.confidence_intervals[coefficient] == pytest.approx(
+            expected.confidence_intervals[coefficient]
+        )
+
+
+@pytest.mark.parametrize("value", [0., 0.1, 0.3])
+@pytest.mark.parametrize("with_nan", [False, True])
+def test_constant_response_inference_is_undefined(value, with_nan):
+    """SST=0 and the zero-slope statistic are undefined for constant responses.
+
+    Decimal constants can leave small fitting residuals; that rounding must
+    not turn undefined inference into finite p-values or R-squared values.
+    Only retained pairs determine whether the response is constant.
+    """
+    x = np.arange(1., 8.)
+    y = np.full(7, value)
+    if with_nan:
+        x = np.append(x, [np.nan, 8.])
+        y = np.append(y, [1., np.nan])
+    with np.errstate(divide="raise", invalid="raise"):
+        result = StatisticalAnalysisService().perform_linear_regression(x, y)
+    assert math.isnan(result.p_value)
+    assert math.isnan(result.r_squared)
+    assert result.slope == pytest.approx(0.)
+    assert result.intercept == pytest.approx(value)
+    assert result.predicted_values == pytest.approx(np.full(7, value))
+
+
+@pytest.mark.parametrize("slope", [-1., 0., 1.])
+def test_zero_residual_variance_has_explicit_inference(slope):
+    """Hand calculation: x=(-1,-1,1,1), y=b*x, b in {-1,0,1}.
+
+    xbar=ybar=0, Sxx=4, fitted slope=b, intercept=0 and SSE=0. NIST
+    4.4.3.1 gives s=SE(slope)=SE(intercept)=0, so intervals collapse.
+    For b!=0 the two-sided Student tail tends to zero as s tends to zero;
+    for b=0, t=0/0 is undefined and this API reports NaN explicitly. These
+    are limiting/algebraic cases, not evidence of measured zero uncertainty.
+    """
+    x = np.array([-1., -1., 1., 1.])
+    # Turn numerical warnings into failures, independently of global filters.
+    with np.errstate(divide="raise", invalid="raise"):
+        result = StatisticalAnalysisService().perform_linear_regression(x, slope * x)
+    assert result.std_error == 0
+    assert result.confidence_intervals["slope"] == (slope, slope)
+    assert result.confidence_intervals["intercept"] == (0., 0.)
+    if slope:
+        assert result.p_value == 0
+        assert result.r_squared == 1
+    else:
+        assert math.isnan(result.p_value)
+        assert math.isnan(result.r_squared)
+
+
+def test_small_nonzero_p_value_preserved():
+    """Hand calculation: add 10*x to the five-point case, repeated ten times.
+
+    This gives n=50, slope=53/5, intercept=11/5, SSE=24, Sxx=100,
+    s^2=24/48=1/2, SE(slope)=sqrt(1/200), t=(53/5)*sqrt(200).
+    Expected p=2*Student_sf(t,48), using NIST 4.4.3.1 and the two-sided
+    tail convention in SciPy 1.16.2 (2025), _get_pvalue in _stats_py.py.
+    Positive and negative slopes must have the same two-sided probability.
+    Compare the probability ratio to unity with pytest's default tolerance;
+    this prevents a zero result from passing an absolute-error comparison
+    simply because the independent probability is very small.
+    """
+    x = np.tile(np.array([1., 2., 3., 4., 5.]), 10)
+    y = np.tile(np.array([2., 4., 5., 4., 5.]), 10) + 10 * x
+    expected = 2 * stats.t.sf((53 / 5) * math.sqrt(200), 48)
+    assert expected > 0
+    for sign in [-1, 1]:
+        result = StatisticalAnalysisService().perform_linear_regression(x, sign * y)
+        assert result.p_value / expected == pytest.approx(1)
+
+
+@pytest.mark.parametrize("x", [np.array(1.), np.ones((3, 1))])
+def test_non_vector_input_rejected(x):
+    """Scalar and matrix fixtures cannot represent paired observation vectors."""
+    with pytest.raises(ValueError, match="one-dimensional"):
+        StatisticalAnalysisService().perform_linear_regression(x, np.arange(3.))

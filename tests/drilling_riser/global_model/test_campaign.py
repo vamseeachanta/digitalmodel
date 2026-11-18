@@ -13,6 +13,8 @@ from digitalmodel.drilling_riser import campaign as cp
 from digitalmodel.solvers.orcaflex import orcaflex_api
 from digitalmodel.solvers.orcaflex import parallel_runner as pr
 
+from tests.solvers.orcaflex.qa_fixtures import control_fingerprint, make_qa
+
 from .conftest import synthetic_spec
 from .test_nonlinear_vessel_foundation import _vessel_motion
 
@@ -163,8 +165,18 @@ def test_runner_with_campaign_adapter_statics_modal_regular_and_proxies(base_spe
             "base_spec": base_spec, "heading_deg": 0.0, "dynamics": {**dyn, "time_step_s": 0.02},
             "proxy": {"kind": "disconnect"}}},
     ]
+    # Synthetic controls exercise admission mechanics, not engineering qualification.
+    from digitalmodel.drilling_riser.campaign import ADAPTER
+
+    controls = tmp_path / "controls"
+    fingerprints = {
+        case["case_id"]: control_fingerprint(
+            ADAPTER.build(case, controls / case["case_id"] / "model"), case)
+        for case in cases
+    }
+    qa = make_qa(cases, controls / "qa", fingerprints, version="11.6c")
     out = pr.run_cases(cases, adapter="digitalmodel.drilling_riser.campaign:ADAPTER", out_dir=tmp_path,
-                       max_workers=5)
+                       max_workers=5, qa=qa)
     by = {r["case_id"]: r for r in out["results"]}
     assert {k: r["status"] for k, r in by.items()} == {k: "ok" for k in by}, [r.get("message") for r in by.values()]
     ch = {k: json.loads((tmp_path / r["results_path"]).read_text(encoding="utf-8"))["channels"] for k, r in by.items()}

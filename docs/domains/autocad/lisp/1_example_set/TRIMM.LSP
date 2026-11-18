@@ -11,7 +11,7 @@
 ;insert a 3DFace instead of a Pline and then do a hidden line plot.
 ;
 ;Acknowledgements to Tony Tanzillo for help in converting coords from WCS to
-;ECS and for the streamlined MCS to WCS conversion. The method of measuring 
+;entity coordinate system and for the streamlined MCS to WCS conversion. The method of measuring
 ;the length of text entities is as described in Cadalyst Aug 91.
 ;
 ;               ***IMPORTANT WARNING TO UK USERS***
@@ -28,7 +28,7 @@
 ;(getss) which loops until a selection set of cutting/boundary edges has
 ;been collected. If the entity selected is nested then (getss) calls (makent) 
 ;which will make a new temporary entity in the drawing as the cutting/boundary
-;edge, (converting the coords from MCS to ECS). The original block remains
+;edge, (converting the coords from MCS to entity coordinate system). The original block remains
 ;unaffected. If the entity selected is nested and is a polyline then (getss) 
 ;calls (ploop) which loops through the entities and prepares a list of the 
 ;header, vertices and seqend; before calling (makent) to make the new 
@@ -111,7 +111,7 @@
 		(/= (car a) 210)	;and not group code 210
 	);and
 	(progn
-	(if (= typ "LINE")		;Dont change ECS of Lines
+	(if (= typ "LINE")		;Dont change entity coordinate system of Lines
 		(setq newpt (mcs2wcs (cdr a)))
 		(setq newpt (trans (mcs2wcs (cdr a)) 0 exvx))
 	);end if

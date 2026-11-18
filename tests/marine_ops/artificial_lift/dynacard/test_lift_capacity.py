@@ -268,16 +268,16 @@ class TestLiftCapacityWithRealData:
     """Tests using real well card data."""
 
     @pytest.fixture
-    def well_7699227(self):
-        """Load well 7699227 test data."""
-        filepath = TEST_DATA_DIR / "7699227.json"
+    def well_echo(self):
+        """Load well field well echo test data."""
+        filepath = TEST_DATA_DIR / "field_well_echo.json"
         if filepath.exists():
             return load_from_json_file(filepath)
-        pytest.skip("Test data file 7699227.json not found")
+        pytest.skip("Test data file field_well_echo.json not found")
 
-    def test_lift_capacity_7699227(self, well_7699227):
-        """Test lift capacity with well 7699227 data."""
-        result = calculate_lift_capacity(well_7699227, downhole_stroke=100.0)
+    def test_lift_capacity_echo(self, well_echo):
+        """Test lift capacity with well field well echo data."""
+        result = calculate_lift_capacity(well_echo, downhole_stroke=100.0)
 
         # Should have valid lift capacity
         assert result.lift_capacity > 0

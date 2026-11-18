@@ -299,7 +299,7 @@ def _local_providers():
     providers = []
     for path, tree in _trees():
         kind = FOLDERS.get(_folder(path))
-        registered = [fn for fn in callbacks(tree) if any((last(d) == 'get_password' for d in fn.decorator_list))]
+        registered = [fn for fn in callbacks(tree) if any((last(d) in {'get_password', 'verify_password'} for d in fn.decorator_list))]
         if not registered or kind == 'application':
             continue
         fn = next((n for n in tree.body if isinstance(n, ast.FunctionDef) and n.name == '_basic_auth_password_for'), None)

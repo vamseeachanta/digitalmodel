@@ -1,0 +1,9 @@
+{
+  "document": "ittc-watcher-restart.html",
+  "changes": [
+    {"section": "3", "description": "Strict post-arming timestamp eligibility."},
+    {"section": "5", "description": "Pass counters reset across selected histories."},
+    {"section": "6", "description": "Synthetic example with hand calculation."},
+    {"section": "7", "description": "Validation evidence and unverified platform checks."}
+  ]
+}

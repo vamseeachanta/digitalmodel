@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """FFS HTML report generator.
 
 Produces a self-contained single-file HTML report suitable for printing to PDF.
@@ -45,6 +48,17 @@ _VERDICT_COLORS = {
     "FAIL_LEVEL_2": "#c62828",
 }
 _DEFAULT_COLOR = "#757575"
+
+
+def _life_text(life: Optional[float], rate: Optional[float], *, summary: bool = False) -> str:
+    """Infinity describes a projection only with an explicit zero-rate basis."""
+    if life is not None and math.isfinite(life) and life >= 0:
+        return f"{life:.1f} yr" if summary else f"{life:.2f} years"
+    if life == math.inf and rate == 0.0:
+        return ("&#x221e; (no corrosion)" if summary
+                else "Unlimited (no further corrosion assumed)")
+    return "Not evaluated"
+
 
 _CSS = (
     "<style>"
@@ -129,8 +143,19 @@ class FFSReport:
         # asset-class wording for the report (#2205); falls back to the verdict
         verdict_label = str(decision.get("action") or verdict)
         rsf = decision.get("rsf", float("nan"))
-        rsf_a = decision.get("rsf_a", 0.9)
+        rsf_a = decision.get("rsf_a", float("nan"))
+        rsf = float("nan") if rsf is None else rsf
+        rsf_a = float("nan") if rsf_a is None else rsf_a
         remaining_life = decision.get("remaining_life_yr", float("nan"))
+        if "corrosion_rate_in_per_yr" in decision:
+            basis_rate = decision["corrosion_rate_in_per_yr"]
+            if (corrosion_rate_in_per_yr is not None
+                    and corrosion_rate_in_per_yr != basis_rate
+                    and not (basis_rate is not None
+                             and math.isnan(corrosion_rate_in_per_yr)
+                             and math.isnan(basis_rate))):
+                raise ValueError("Report corrosion rate conflicts with the decision basis")
+            corrosion_rate_in_per_yr = basis_rate
         criterion = decision.get("governing_criterion", "")
         if verdict == "REPAIR" and repair_recommendation:
             repair_summary = str(repair_recommendation.get("summary", "")).strip()
@@ -160,6 +185,7 @@ class FFSReport:
                 rsf_a,
                 rerated_mawp_psi=decision.get("rerated_mawp_psi"),
                 verdict_label=verdict_label,
+                corrosion_rate_in_per_yr=corrosion_rate_in_per_yr,
             ),
             FFSReport._section_component_data(
                 component_id,
@@ -353,14 +379,12 @@ class FFSReport:
         rsf_a: float,
         rerated_mawp_psi: float | None = None,
         verdict_label: str | None = None,
+        corrosion_rate_in_per_yr: Optional[float] = None,
     ) -> str:
         label = verdict_label or verdict
-        rl_str = (
-            f"{remaining_life:.1f} yr"
-            if math.isfinite(remaining_life)
-            else "&#x221e; (no corrosion)"
-        )
+        rl_str = _life_text(remaining_life, corrosion_rate_in_per_yr, summary=True)
         rsf_str = f"{rsf:.4f}" if math.isfinite(rsf) else "N/A"
+        rsfa_str = f"{rsf_a:.2f}" if math.isfinite(rsf_a) else "Not evaluated"
         return (
             "<div class='section'>\n"
             "<h2>1. Executive Summary</h2>\n"
@@ -374,7 +398,7 @@ class FFSReport:
             f"<tr><td>Governing Standard</td><td>API 579-1/ASME FFS-1 2021 Edition</td></tr>\n"
             f"<tr><td>Assessment Verdict</td><td><strong>{html.escape(label)}</strong></td></tr>\n"
             f"<tr><td>Remaining Strength Factor (RSF)</td><td>{rsf_str}</td></tr>\n"
-            f"<tr><td>Allowable RSF (RSFa)</td><td>{rsf_a:.2f}</td></tr>\n"
+            f"<tr><td>Allowable RSF (RSFa)</td><td>{rsfa_str}</td></tr>\n"
             f"<tr><td>Estimated Remaining Life</td><td>{rl_str}</td></tr>\n"
             + (
                 f"<tr><td>Re-rated MAWP (MAWP_r = MAWP &times; RSF/RSFa, "
@@ -451,12 +475,16 @@ class FFSReport:
         decision: dict,
     ) -> str:
         rsf_str = f"{rsf:.4f}" if math.isfinite(rsf) else "N/A"
-        verdict = "ACCEPT" if rsf >= rsf_a else "FAIL"
-        color = _VERDICT_COLORS.get(
+        rsfa_str = f"{rsf_a:.2f}" if math.isfinite(rsf_a) else "Not evaluated"
+        verdict = (("ACCEPT" if rsf >= rsf_a else "FAIL")
+                   if math.isfinite(rsf) and math.isfinite(rsf_a) else "NOT_EVALUATED")
+        color = _DEFAULT_COLOR if verdict == "NOT_EVALUATED" else _VERDICT_COLORS.get(
             "ACCEPT" if rsf >= rsf_a else "REPAIR", _DEFAULT_COLOR
         )
-        folias = decision.get("folias_factor", 1.0)
-        l2_verdict = decision.get("verdict", "")
+        folias = decision.get("folias_factor")
+        folias_str = (f"{folias:.4f}" if folias is not None and math.isfinite(folias)
+                      else "Not evaluated")
+        l2_verdict = decision.get("level2_verdict", "Not evaluated")
         return (
             "<div class='section'>\n"
             "<h2>4. Level 2 Assessment (API 579 Part 4/5 §4.4 / §5.4)</h2>\n"
@@ -464,15 +492,15 @@ class FFSReport:
             "<tr><th>Parameter</th><th>Value</th><th>Status</th></tr>\n"
             f"<tr><td>Area-Averaged Thickness (t_am)</td><td>{t_am:.4f} inch</td><td>—</td></tr>\n"
             f"<tr><td>Minimum Measured Thickness (t_mm)</td><td>{t_mm:.4f} inch</td><td>—</td></tr>\n"
-            f"<tr><td>Folias Bulging Factor (M_t)</td><td>{folias:.4f}</td><td>—</td></tr>\n"
+            f"<tr><td>Folias Bulging Factor (M_t)</td><td>{folias_str}</td><td>—</td></tr>\n"
             f"<tr><td>Remaining Strength Factor (RSF)</td><td>{rsf_str}</td>"
             f"<td style='color:{color}'><strong>{html.escape(verdict)}</strong></td></tr>\n"
-            f"<tr><td>Allowable RSF (RSFa)</td><td>{rsf_a:.2f}</td><td>—</td></tr>\n"
+            f"<tr><td>Allowable RSF (RSFa)</td><td>{rsfa_str}</td><td>—</td></tr>\n"
             f"<tr><td>Level 2 Verdict</td>"
             f"<td colspan='2'><strong>{html.escape(l2_verdict)}</strong></td></tr>\n"
             "</table>\n"
             "<p class='disclaimer'>RSF calculated per API 579-1/ASME FFS-1 2021 Part 5 §5.4.2.2 "
-            "(LML) or Part 4 §4.4.2 (GML).  RSFa = 0.9 per Annex 2B.</p>\n"
+            "(LML) or Part 4 §4.4.2 (GML). RSFa is the supplied assessment criterion.</p>\n"
             "</div>\n"
         )
 
@@ -483,11 +511,7 @@ class FFSReport:
         remaining_life: float,
         corr_rate: Optional[float],
     ) -> str:
-        rl_str = (
-            f"{remaining_life:.2f} years"
-            if math.isfinite(remaining_life)
-            else "Unlimited (no further corrosion assumed)"
-        )
+        rl_str = _life_text(remaining_life, corr_rate)
         rate_str = f"{corr_rate:.4f} in/yr" if corr_rate is not None else "Not provided"
         return (
             "<div class='section'>\n"

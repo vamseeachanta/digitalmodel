@@ -72,7 +72,8 @@ class ProductionDataHandler:
     def __init__(self, base_path: str = None, sample_timesteps: int = 1000):
         """Initialize the production data handler"""
         if base_path is None:
-            prod_path = Path("D:/1522/ctr9/fatigue_wsp_method/07c_fatigue/csv")
+            # Production data lives under DIGITALMODEL_PRIVATE_DATA.
+            prod_path = Path(os.environ.get("DIGITALMODEL_PRIVATE_DATA", "<project_data>")) / "ctr9" / "fatigue_wsp_method" / "07c_fatigue" / "csv"
             sample_path = Path("sample_data")
             
             if prod_path.exists():

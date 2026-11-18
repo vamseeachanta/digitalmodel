@@ -17,6 +17,11 @@ Extended with 8 additional modules (v2.0):
 
 from .sn_curves import get_sn_curve, DNV_CURVES
 from .damage import miner_damage, design_life_check, thickness_correction
+from .design_fatigue_factor import (
+    DFFCategory,
+    required_calculated_life,
+    select_design_fatigue_factor,
+)
 from .crack_growth import paris_law_life, stress_intensity_factor, inspection_interval
 from .woehler_fitting import fit_woehler_curve, design_curve
 from .rainflow import rainflow_count, stress_histogram, fatigue_life
@@ -93,6 +98,9 @@ __all__ = [
     "DNV_CURVES",
     "miner_damage",
     "design_life_check",
+    "DFFCategory",
+    "required_calculated_life",
+    "select_design_fatigue_factor",
     "thickness_correction",
     "paris_law_life",
     "stress_intensity_factor",

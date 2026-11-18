@@ -1,8 +1,17 @@
 """Cathodic protection calculations — API RP 1632, ISO 15589-2, DNV-RP-B401
 (2005-2021) and DNV-RP-F103 cited tables and bracelet design, the shared
-formula kernel, and impressed current fuel system CP design."""
+formula kernel, impressed current fuel system CP design, API 651 context
+tank-bottom screening, and shared reference-electrode conversion."""
 
 from typing import Any
+
+from digitalmodel.cathodic_protection.api_651_tank_bottom import (
+    TankBottomInput, TankBottomResult, assess_tank_bottom,
+    check_center_edge_polarization, conductor_voltage_drop, ribbon_grid,
+)
+from digitalmodel.cathodic_protection.reference_electrodes import (
+    ReferenceElectrode, convert_potential, electrode_reference,
+)
 
 from digitalmodel.cathodic_protection._edition import (
     DEFAULT_EDITION,
@@ -560,6 +569,10 @@ __all__ = [
     "check_potential_criteria",
     "design_pipeline_cp",
     "soil_resistivity_correction",
+    # API 651 context screening and shared electrode conversion
+    "TankBottomInput", "TankBottomResult", "assess_tank_bottom",
+    "check_center_edge_polarization", "conductor_voltage_drop", "ribbon_grid",
+    "ReferenceElectrode", "convert_potential", "electrode_reference",
     # pipeline_anode_bank
     "AnodeBankDesignInput",
     "AnodeBankDesignResult",

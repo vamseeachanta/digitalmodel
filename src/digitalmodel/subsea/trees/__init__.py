@@ -6,7 +6,8 @@
 Delivered modules:
 - ``design_checks``: existing API 6A / API 17D rating-envelope check.
 - ``tree_catalog``: source-bearing registry for single/dual-bore, HXT/VXT trees.
-- ``pressure_control``: liquid Cv, ideal trim, series losses and choking screen.
+- ``pressure_control``: liquid Cv, ideal trim, series losses, no-fittings
+  choking differential from supplied fluid/recovery factors and choking screen.
 - ``flow_capacity``: caller-coefficient velocity limits and separate-port handoff.
 
 No seeded public equipment catalogue or verified clause-level citation basis
@@ -33,6 +34,7 @@ from digitalmodel.subsea.trees.flow_capacity import (
 from digitalmodel.subsea.trees.pressure_control import (
     ChokeFlow,
     liquid_choke_flow,
+    liquid_critical_drop,
     series_pressure_drop,
     trim_cv,
     valve_pressure_drop,
@@ -42,6 +44,6 @@ from digitalmodel.subsea.trees.tree_catalog import TreeCatalog, TreeEntry
 __all__ = [
     "TreeRatingResult", "select_rated_working_pressure", "tree_rating_check",
     "BoreCapacity", "FlowHandoff", "bore_capacity", "flow_handoff",
-    "ChokeFlow", "liquid_choke_flow", "series_pressure_drop", "trim_cv",
+    "ChokeFlow", "liquid_choke_flow", "liquid_critical_drop", "series_pressure_drop", "trim_cv",
     "valve_pressure_drop", "TreeCatalog", "TreeEntry",
 ]

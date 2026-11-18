@@ -1732,7 +1732,7 @@
     (cond 
       ((= (logand bit70 8) 8)   ; 3DPOLY
         (set_tile "ptype" (setq pltype"3D polyline"))
-        (setq pointype 0)       ; WCS or ECS point values
+        (setq pointype 0)       ; WCS or entity coordinate system point values
         (mode_tile "fit" 1)
         (mode_tile "mesh" 1)
         (mode_tile "bezier" 1)

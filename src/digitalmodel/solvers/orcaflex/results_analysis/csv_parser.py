@@ -16,6 +16,8 @@ from enum import Enum
 import math
 import warnings
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 # Suppress pandas warnings for cleaner logs
 warnings.filterwarnings('ignore', category=pd.errors.ParserWarning)
 
@@ -536,7 +538,7 @@ def extract_time_series_stats(df: pd.DataFrame, time_col: str = 'time') -> Dict:
                 # Additional statistics for time series
                 if len(data) == len(time_data):
                     # Can calculate proper RMS over time
-                    col_stats['time_rms'] = float(np.sqrt(np.trapz(data**2, time_data) / T))
+                    col_stats['time_rms'] = float(np.sqrt(_trapezoid(data**2, time_data) / T))
                 
                 stats[col] = col_stats
                 

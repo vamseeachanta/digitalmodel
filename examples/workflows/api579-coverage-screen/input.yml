@@ -1,0 +1,19 @@
+# Synthetic reference labels; no measured or licensed numerical data.
+basename: api579_coverage_screen
+default:
+  log_level: INFO
+  config:
+    overwrite:
+      output: true
+coverage_requests:
+  - part: 8
+    evidence:
+      design_data: synthetic-design-record
+      operating_history: synthetic-history-record
+      inspection_data: synthetic-geometry-record
+  - part: 14
+    evidence:
+      design_data: synthetic-material-record
+      operating_history: synthetic-load-history-record
+  - part: 13
+  - part: 11

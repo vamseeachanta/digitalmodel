@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Longitudinal curvature contribution analysis</title>
+<style>
+body { max-width: 58rem; margin: 2rem auto; padding: 0 1rem;
+       font: 1rem/1.5 system-ui, sans-serif; color: #172331; }
+table { border-collapse: collapse; width: 100%; }
+th, td { border: 1px solid #b8c6d1; padding: .5rem; text-align: left; }
+caption { caption-side: bottom; text-align: left; padding: .5rem 0; }
+pre { padding: 1rem; background: #eef3f6; overflow-x: auto; }
+</style>
+</head>
+<body>
+<h1>Longitudinal curvature contribution analysis</h1>
+<h2>Summary</h2>
+<p>The diagnostic separates supplied vertex quadrature into lower end, middle,
+and upper end contributions to dimensionless double-curvature intensity.
+It supports investigation of end-closure effects; no hull is qualified by this
+calculation. Native estimator integration and end-closure acceptance remain
+NOT_EVALUATED.</p>
+<h2>Revision history</h2>
+<table>
+<tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr>
+<tr><td>1</td><td>2026-10-19</td><td>Add explicit area-weighted region contributions,
+coverage and independent hand controls to separate end-region effects.</td></tr>
+<tr><td>2</td><td>2026-10-25</td><td>Preserve decimal midpoint membership and
+nonzero intensity across extreme area ratios; document numerical limits.</td></tr>
+<caption>Table 1. Diagnostic method revisions.</caption>
+</table>
+<h2>Method and source</h2>
+<p><a href="https://arxiv.org/html/2609.27544v1">Geometry-Based Metrics for
+Early-Stage Hull-Form Producibility Screening (2026), arXiv:2609.27544v1</a>,
+equations (3), (4) and (39), gives the local density, valid-area average and
+discrete area-weighted quadrature. The paper was retrieved successfully on
+2026-10-19. Regional contributions are derived by restricting the numerator
+to each region; their shares are ratios to the total intensity.</p>
+<p><a href="https://github.com/cnr-inm-mao/hullprod/blob/07f23578411b26c12a28587cfe2e4f56c2190034/docs/metrics.md">HullProd,
+Recommended metrics (2026), Total double-curvature intensity</a> defines
+q<sub>D</sub> = |K| L<sub>ref</sub><sup>2</sup> and its valid-area average.
+The public source was retrieved successfully on 2026-10-19. Its SHA-256 is
+<code>31b62a410360ce2cb221769d0ed6716f1ae6dee2ecbe6f67b858b05a82129983</code>.</p>
+<p>The implemented quadrature is</p>
+<pre>A_valid = sum(A_i for valid i)
+I_D = sum(A_i * abs(K_i) * Lref**2 for valid i) / A_valid
+I_D_region = sum(A_i * abs(K_i) * Lref**2 for valid i in region) / A_valid
+share_region = I_D_region / I_D</pre>
+<p>The last two equations are an additive partition of the source equation,
+not additional HullProd metrics. Each region uses the same global valid-area
+denominator; these are contributions, not separately averaged regional indices.
+Shares use absolute Gaussian curvature, so saddle contributions remain positive.</p>
+<h2>Inputs and interpretation</h2>
+<p>The caller supplies longitudinal coordinates, Gaussian curvature, associated
+vertex areas, a boolean validity mask, a reference length, and an end fraction.
+Coordinates and reference length use one consistent length unit; areas use its
+square and Gaussian curvature its inverse square. No unit conversion is inferred.
+The axis direction is supplied by the caller; lower and upper do not imply bow
+and stern.</p>
+<p>For coordinate limits x_min and x_max, the lower cut is
+x_min + f (x_max - x_min), and the upper cut is x_max - f (x_max - x_min).
+Half-span cuts are computed as the average of the endpoint coordinates.
+Cut vertices and the immediately adjacent binary64 values on either side belong
+to the middle to absorb boundary rounding. End intervals use strict inequalities
+against these expanded middle boundaries. The mathematical bound
+0 &lt; f &le; 1/2 prevents overlapping end intervals;
+it is not a fabrication limit. The full coordinate span includes invalid samples.
+Vertices are assigned as whole quadrature samples; triangles are not clipped.</p>
+<p>Quadrature combines binary mantissas and exponents before rescaling each
+contribution, so small normalized areas do not erase representable intensity.
+Overflow, invalid arithmetic and underflow raise ValueError; nonzero
+contributions and intensity shares are never silently rounded down to zero.</p>
+<p>Areas shall come from the same represented quadrature as the curvature.
+Matching array lengths alone does not establish correspondence. Supplying
+barycentric areas for curvature integrated with other weights need not reproduce
+HullProd's signature. This helper does not extract native fields or establish
+their vertex ordering, reliability or source status.</p>
+<table>
+<tr><th>Status</th><th>Criterion</th><th>Disposition</th></tr>
+<tr><td>EVALUATED</td><td>All positive area has valid curvature</td><td>The supplied
+quadrature is evaluated; engineering acceptance is not established.</td></tr>
+<tr><td>PARTIAL</td><td>Some positive area is excluded</td><td>Values apply only to
+the represented valid subset; total and valid areas are both reported.</td></tr>
+<tr><td>NOT_EVALUATED</td><td>No positive valid area</td><td>Intensity and shares
+are absent, represented by None rather than zero.</td></tr>
+<caption>Table 2. Coverage status applies independently to the whole input and each region.</caption>
+</table>
+<p>A developable input with valid area gives I_D = 0; intensity shares are then
+undefined because their denominator is zero. No default end fraction, fairness
+threshold, fabrication limit, or estimator reliability decision is applied.</p>
+<h2>Use</h2>
+<pre>from digitalmodel.hydrodynamics.hull_library.curvature_regions import (
+    summarize_curvature_regions,
+)
+
+summary = summarize_curvature_regions(
+    longitudinal_coordinates=x,
+    gaussian_curvature=K,
+    vertex_area=area_weights,
+    valid=valid_mask,
+    lref=reference_length,
+    end_fraction=chosen_end_fraction,
+)</pre>
+<h2>Independent hand control</h2>
+<p>Synthetic coordinates are (0, 1, 2, 3, 4), with area weights (1, 2, 2, 2, 1)
+and K = (1, -2, 0, 1, -1) in consistent arbitrary units. All samples are valid;
+Lref = 2 and f = 1/4 are test inputs. Total area is 8 and the weighted absolute
+curvature is 1 + 4 + 0 + 2 + 1 = 8. Thus I_D = 4 &times; 8 / 8 = 4.</p>
+<table>
+<tr><th>Region</th><th>Area [unit squared]</th><th>I_D contribution [1]</th><th>Intensity share [%]</th></tr>
+<tr><td>Lower end</td><td>1</td><td>0.5</td><td>12.5</td></tr>
+<tr><td>Middle, including both cut vertices</td><td>6</td><td>3.0</td><td>75.0</td></tr>
+<tr><td>Upper end</td><td>1</td><td>0.5</td><td>12.5</td></tr>
+<caption>Table 3. Hand-calculated synthetic control; no measured hull data is used.</caption>
+</table>
+<p>Masking the second sample removes area 2 and weighted absolute curvature 4.
+Valid area becomes 6, I_D becomes 4 &times; 4 / 6 = 8/3, and the middle
+contribution becomes 4 &times; 2 / 6 = 4/3. The tests also cover zero curvature,
+missing valid area, scale invariance, shape errors, nonfinite inputs, overflow,
+and excluded areas smaller than floating-point sum resolution. Decimal midpoint
+membership is checked through area and contribution. Independent 450-digit
+decimal controls cover extreme finite area ratios; unrepresentable nonzero
+contributions and shares are rejected.</p>
+<h2>Later slices</h2>
+<p>Native field and area-weight extraction, vertex-order qualification,
+matched-density hull comparisons, and end-closure acceptance remain separate
+work. The present diagnostic does not replace the existing global signature,
+change interpolation, or establish mesh convergence.</p>
+</body>
+</html>

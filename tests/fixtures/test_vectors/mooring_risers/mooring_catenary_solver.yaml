@@ -11,6 +11,14 @@ provenance:
     sha256: "0b843cbb2f901b4238b031c37e5e4e7fc5d9b077f84f8e741fa6b0ad6332fb27"
     retrieved: "2026-10-11"
   equations:
+    technical_report:
+      title: "Dynamics Modeling and Loads Analysis of an Offshore Floating Wind Turbine"
+      number: "NREL/TP-500-41958"
+      year: 2007
+      url: "https://docs.nlr.gov/docs/fy08osti/41958.pdf"
+      equations: "(2-35a,b): elastic spans; (2-41a,b): signed equilibrium; (2-43a,b): coordinates; (2-44): tension"
+      retrieved: "2026-10-19"
+      reuse_terms: "Public technical report, cited for equations only; no report text, implementation or tabulated data copied"
     source: "MoorPy elastic catenary equations, eval_func_cat, ProfileType 1"
     url: "https://github.com/NatLabRockies/MoorPy/blob/1fb29f8eca2618543b2df7056adfdfce0265737b/moorpy/Catenary.py#L1170-L1185"
     location: "Lines 1170-1185; EXF and EZF endpoint residuals"
@@ -19,6 +27,10 @@ provenance:
     license_url: "https://github.com/NatLabRockies/MoorPy/blob/1fb29f8eca2618543b2df7056adfdfce0265737b/LICENSE.txt"
   derivation: "tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py"
   precision: "Forces and parameter rounded to six decimal places; elongation to twelve. Tolerances are half the last displayed decimal unit."
+  output_precision:
+    # Decimal places from provenance.precision above; these are storage limits.
+    force_and_parameter: 6
+    elongation: 12
 equations:
   - name: "Signed vertical equilibrium"
     latex: "V(s) = V_a + w s, \\quad V_f - V_a = w L"

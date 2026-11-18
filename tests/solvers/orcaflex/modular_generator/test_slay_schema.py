@@ -42,7 +42,7 @@ def vessel_properties_data():
 def vessel_data(vessel_properties_data):
     """Minimal valid Vessel data."""
     return {
-        "name": "Eclipse",
+        "name": "VesselA",
         "properties": vessel_properties_data,
     }
 
@@ -130,7 +130,7 @@ class TestVessel:
 
     def test_valid_vessel(self, vessel_data):
         vessel = Vessel(**vessel_data)
-        assert vessel.name == "Eclipse"
+        assert vessel.name == "VesselA"
         assert vessel.position == [0, 0, 0]
         assert vessel.orientation == [0, 0, 0]
         assert vessel.mooring is None
@@ -211,7 +211,7 @@ class TestEquipmentSlayFields:
     def test_equipment_with_vessel(self, vessel_data):
         eq = Equipment(vessel=vessel_data)
         assert eq.vessel is not None
-        assert eq.vessel.name == "Eclipse"
+        assert eq.vessel.name == "VesselA"
 
     def test_equipment_with_all_slay(self, vessel_data, stinger_data, tensioner_data):
         eq = Equipment(
@@ -271,14 +271,14 @@ class TestSlaySpecFiles:
 
     def test_sb_sa_loads_and_validates(self, slay_spec_data):
         spec = ProjectInputSpec(**slay_spec_data)
-        assert spec.metadata.name == "prpp_sb_sa_10in"
+        assert spec.metadata.name == "prja_sb_sa_10in"
         assert spec.pipeline.material == "X60"
-        assert spec.equipment.vessel.name == "Eclipse"
+        assert spec.equipment.vessel.name == "VesselA"
         assert spec.equipment.tensioner.tension_value == 585.4
 
     def test_rs8_id_loads_and_validates(self, rs8_spec_data):
         spec = ProjectInputSpec(**rs8_spec_data)
-        assert spec.metadata.name == "prpp_rs8_id_10in"
+        assert spec.metadata.name == "prja_rs8_id_10in"
         assert spec.equipment.tensioner.tension_value == 566.9
 
     def test_sb_sa_pipeline_dimensions(self, slay_spec_data):

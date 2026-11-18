@@ -18,8 +18,10 @@ Invocation is subprocess-based (no PyANSYS hard dependency).
 from __future__ import annotations
 
 import hashlib
+import math
 import os
 import platform
+import re
 import shutil
 import subprocess
 import time
@@ -28,8 +30,14 @@ from enum import Enum
 from pathlib import Path
 from typing import Optional
 
+from digitalmodel.ansys.runner_process import (
+    ProcessCleanupError,
+    run_process as _run_solver_process,
+)
+
 # APDL solver error markers (MAPDL may return rc=0 yet write errors to the log).
 _ERROR_MARKERS = ("*** ERROR ***", "SOLUTION NOT CONVERGED", "*** FATAL ***")
+_DISTRIBUTED_FLAGS = {"-dis", "-mpi", "-machines"}
 _RESULT_SUFFIXES = (".rst", ".rth", ".out", ".mntr", ".db", ".csv")
 
 
@@ -50,6 +58,22 @@ class ANSYSRunConfig:
     dry_run: bool = False
     extra_args: list[str] = field(default_factory=list)
 
+    def __post_init__(self) -> None:
+        if (
+            isinstance(self.timeout_seconds, bool)
+            or not isinstance(self.timeout_seconds, (int, float))
+            or not math.isfinite(self.timeout_seconds)
+            or self.timeout_seconds <= 0
+        ):
+            raise ValueError("timeout_seconds must be finite and positive")
+        if not isinstance(self.extra_args, list) or not all(
+            isinstance(arg, str) for arg in self.extra_args
+        ):
+            raise ValueError("extra_args must be a list of str")
+        flags = {arg.lower() for arg in self.extra_args}
+        if "-smp" in flags and flags & _DISTRIBUTED_FLAGS:
+            raise ValueError("choose either -smp or distributed mode")
+
 
 @dataclass
 class ANSYSRunResult:
@@ -63,10 +87,12 @@ class ANSYSRunResult:
     stderr: str = ""
     error_message: Optional[str] = None
     duration_seconds: float = 0.0
+    retained_supervisor_token: Optional[str] = None
 
 
 # Standard Windows MAPDL install locations (probed only on Windows).
 def _standard_paths() -> list[Path]:
+    """Return existing Windows candidates in descending numeric release order."""
     if platform.system() != "Windows":
         return []
     roots = [Path(r"C:\Program Files\ANSYS Inc")]
@@ -74,7 +100,14 @@ def _standard_paths() -> list[Path]:
     for root in roots:
         if not root.is_dir():
             continue
-        for ver_dir in sorted(root.glob("v*"), reverse=True):
+        versions = [
+            path for path in root.glob("v*")
+            if re.fullmatch(r"v[0-9]+", path.name) and path.is_dir()
+        ]
+        # Equal numeric releases use descending directory names for stable ties.
+        for ver_dir in sorted(
+            versions, key=lambda path: (int(path.name[1:]), path.name), reverse=True,
+        ):
             exe = ver_dir / "ansys" / "bin" / "winx64" / "MAPDL.exe"
             if exe.is_file():
                 exes.append(exe)
@@ -159,23 +192,34 @@ class ANSYSRunner:
         out_file = self._result.output_dir / f"{self._result.input_file.stem}.out"
         previous_files = self._snapshot_result_files(self._result.output_dir)
         self._result.status = ANSYSRunStatus.RUNNING
+        # Single-node runs default to SMP; preserve explicit distributed options.
+        explicit_mode = any(
+            arg.lower() in {"-smp"} | _DISTRIBUTED_FLAGS for arg in self._config.extra_args
+        )
+        mode = [] if explicit_mode else ["-smp"]
         argv = [str(exe), "-b", "-i", str(self._result.input_file),
-                "-o", str(out_file), *self._config.extra_args]
+                "-o", str(out_file), *mode, *self._config.extra_args]
         try:
-            proc = subprocess.run(  # noqa: S603 - argv is fixed; script is fs-resolved.
-                argv, cwd=str(self._result.output_dir), capture_output=True,
-                text=True, timeout=self._config.timeout_seconds, check=False,
+            proc = _run_solver_process(
+                argv, cwd=str(self._result.output_dir), timeout=self._config.timeout_seconds,
             )
         except subprocess.TimeoutExpired as exc:
             self._record_timeout(exc, previous_files, out_file)
+            return
+        except ProcessCleanupError as exc:
+            self._result.return_code = exc.return_code
+            self._result.retained_supervisor_token = exc.retained_supervisor_token
+            self._record_timeout(
+                exc, previous_files, out_file, error_message=str(exc),
+            )
             return
         self._result.return_code = proc.returncode
         self._result.stdout = proc.stdout or ""
         self._result.stderr = proc.stderr or ""
         self._collect_evidence(previous_files, out_file, proc.returncode)
 
-    def _record_timeout(self, exc, previous_files, out_file) -> None:
-        """Retain partial evidence while timeout remains an unconditional failure."""
+    def _record_timeout(self, exc, previous_files, out_file, error_message=None) -> None:
+        """Retain partial evidence while invocation failure stays unconditional."""
         assert self._result is not None
         for field_name in ("stdout", "stderr"):
             value = getattr(exc, field_name) or ""
@@ -188,7 +232,8 @@ class ANSYSRunner:
         except OSError as error:
             evidence_error = f"; partial evidence unavailable: {error}"
         self._result.status = ANSYSRunStatus.FAILED
-        self._result.error_message = f"MAPDL timeout after {exc.timeout} seconds{evidence_error}"
+        message = error_message or f"MAPDL timeout after {exc.timeout} seconds"
+        self._result.error_message = message + evidence_error
 
     def _collect_evidence(self, previous_files, out_file, return_code) -> None:
         """Attribute fresh outputs and publish only a readable solver log."""
@@ -213,6 +258,7 @@ class ANSYSRunner:
             self._result.error_message = error
 
     def _detect_executable(self) -> Optional[Path]:
+        """Prefer explicit config, environment, standard installations, then PATH."""
         configured = self._config.executable_path
         if configured is not None:
             return Path(configured).resolve() if Path(configured).is_file() else None
@@ -220,12 +266,12 @@ class ANSYSRunner:
             val = os.environ.get(env_var)
             if val and Path(val).is_file():
                 return Path(val)
+        for std in _standard_paths():
+            return std
         for name in ("mapdl", "ansys", "MAPDL.exe", "ansys.exe"):
             found = shutil.which(name)
             if found:
                 return Path(found)
-        for std in _standard_paths():
-            return std
         return None
 
     def _detect_error(self, return_code: int, out_file: Optional[Path]) -> Optional[str]:
@@ -289,6 +335,6 @@ def run_ansys(
         executable_path=Path(executable_path) if executable_path else None,
         timeout_seconds=timeout_seconds,
         dry_run=dry_run,
-        extra_args=list(extra_args or []),
+        extra_args=[] if extra_args is None else extra_args,
     )
     return ANSYSRunner(config).run(script_path)

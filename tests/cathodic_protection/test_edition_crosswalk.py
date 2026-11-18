@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """Edition crosswalk: one B401 jacket and one F103 flowline across editions (#2208).
 
 Documented differences (see docs/plans/2026-09-26-issue-2208-cp-editions.md):
@@ -199,7 +202,7 @@ def test_f103_flowline_60c_fbe_differs_between_2010_and_2019():
         "dnv-rp-f103 2010 Table A.1",
         "dnv-rp-b401 2011 Table 10-8",
         "dnv-rp-b401 2011 Table 10-6",
-        "dnv-rp-b401 2011 Table 10-6 with Sec. 5 (structure-to-electrolyte potential criteria)",
+        "dnv-rp-b401 2011 Table 10-6 with Sec. 5.4.1 (design protective potential)",
     ]
     assert r19.citations == [
         "dnv-rp-f103 2019-09 Table 6-2",

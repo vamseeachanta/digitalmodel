@@ -16,7 +16,19 @@ Usage:
     PYTHONPATH=src uv run python -m pytest tests/naval_architecture/ -k "stability"
 """
 
+from fractions import Fraction
+from math import ulp
+from pathlib import Path
+
 import pytest
+import yaml
+
+
+SIMPSON_POLYNOMIAL_VECTORS = yaml.safe_load(
+    Path(__file__).with_name("simpson_polynomial_vectors.yaml").read_text(
+        encoding="utf-8"
+    )
+)
 
 
 # ---------------------------------------------------------------------------
@@ -104,6 +116,98 @@ class TestEN400Ch2HullFormGeometry:
         half_area = simpsons_first_rule(offsets_ft, spacing_ft)
         area = 2 * half_area
         assert abs(area - expected_area_ft2) < 10.0
+
+    @pytest.mark.parametrize(
+        "vector", SIMPSON_POLYNOMIAL_VECTORS, ids=lambda vector: vector["id"]
+    )
+    def test_simpsons_first_rule_polynomial(self, vector):
+        """Integrate synthetic dimensionless polynomials against hand calculus.
+
+        Method reference: digitalmodel.naval_architecture.integration.
+        simpsons_first_rule docstring (equally spaced stations, odd count).
+        All coefficients, bounds and affine constants are synthetic test inputs,
+        not extracted literature values. The YAML ordinates are direct samples:
+
+        translated_quadratic: f(x) = (x - 2)^2 + 1 on [1, 5].
+        F(x) = (x - 2)^3/3 + x; F(5) = 14, F(1) = 2/3;
+        integral = 14 - 2/3 = 40/3.
+
+        mixed_sign_cubic: f(x) = x^3 - 2*x + 1 on [-2, 1].
+        F(x) = x^4/4 - x^2 + x; F(1) = 1/4, F(-2) = -2;
+        integral = 1/4 - (-2) = 9/4. Ordinates include both signs.
+
+        affine_rescaled_quadratic: u = 3*x + 5 maps [1, 5] to [8, 20].
+        g(u) = f((u - 5)/3) = (u - 11)^2/9 + 1.
+        G(u) = (u - 11)^3/27 + u; G(20) = 47, G(8) = 7;
+        integral = 47 - 7 = 40 = 3*(40/3), since du = 3*dx.
+
+        One binary64 ULP of the rounded exact fraction allows only roundoff.
+        """
+        from digitalmodel.naval_architecture.integration import (
+            simpsons_first_rule,
+        )
+
+        expected = float(Fraction(vector["integral"]))
+        result = simpsons_first_rule(vector["ordinates"], vector["spacing"])
+        assert result == pytest.approx(expected, rel=0.0, abs=ulp(expected))
+
+    def test_simpsons_first_rule_affine_spacing(self):
+        """Check the synthetic u = 3*x + 5 substitution derived above.
+
+        F(5) - F(1) = 14 - 2/3 = 40/3 for the original quadratic;
+        G(20) - G(8) = 47 - 7 = 40 for the transformed quadratic.
+        The shift leaves ordinates unchanged and du = 3*dx scales the area.
+        """
+        from digitalmodel.naval_architecture.integration import (
+            simpsons_first_rule,
+        )
+
+        vectors = {vector["id"]: vector for vector in SIMPSON_POLYNOMIAL_VECTORS}
+        original = vectors["translated_quadratic"]
+        transformed = vectors["affine_rescaled_quadratic"]
+        scale, shift = 3.0, 5.0  # Synthetic substitution in the docstring.
+        assert transformed["stations"] == [
+            scale * x + shift for x in original["stations"]
+        ]
+        assert transformed["ordinates"] == original["ordinates"]
+        assert transformed["spacing"] == scale * original["spacing"]
+
+        original_area = simpsons_first_rule(
+            original["ordinates"], original["spacing"]
+        )
+        transformed_area = simpsons_first_rule(
+            transformed["ordinates"], transformed["spacing"]
+        )
+        expected = float(Fraction(transformed["integral"]))
+        assert transformed_area == pytest.approx(
+            scale * original_area, rel=0.0, abs=ulp(expected)
+        )
+
+    @pytest.mark.parametrize(
+        "ordinates, message",
+        [
+            pytest.param([], "Need at least 3 ordinates", id="empty"),
+            pytest.param([1.0], "Need at least 3 ordinates", id="one"),
+            pytest.param([1.0, 1.0], "Need at least 3 ordinates", id="two"),
+            pytest.param(
+                [1.0, 1.0, 1.0, 1.0],
+                "requires odd number of ordinates, got 4",
+                id="even_composite",
+            ),
+        ],
+    )
+    def test_simpsons_first_rule_invalid_ordinate_count(self, ordinates, message):
+        """Preserve the production count guards with synthetic unit ordinates.
+
+        Reference: simpsons_first_rule docstring and existing ValueError guards
+        in digitalmodel.naval_architecture.integration; spacing is a unit step.
+        """
+        from digitalmodel.naval_architecture.integration import (
+            simpsons_first_rule,
+        )
+
+        with pytest.raises(ValueError, match=message):
+            simpsons_first_rule(ordinates, spacing=1.0)
 
 
 # ---------------------------------------------------------------------------

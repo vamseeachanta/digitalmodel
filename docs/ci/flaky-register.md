@@ -8,10 +8,21 @@ The register never deselects or skips a test. In enforce mode, a retry-recovered
 test ID can clear only when its register entry has `status: open` and a nonempty
 `evidence` list. Every URL must resolve to a completed failing job for the same
 shard in this repository, from a main push or scheduled run. PR evidence, other
-shards and unverifiable metadata cannot authorize a recovery. Missing, fixed,
-empty or unreadable entries keep the shard red.
+shards and unverifiable metadata cannot authorize a recovery. The evidence job's
+pytest short summary must list the exact registered ID as `FAILED` or `ERROR`,
+including any parameter case. API URLs using `repositories/<id>` must carry this
+repository's numeric ID. Missing, fixed, empty or unreadable entries keep the
+shard red.
 Each entry records a unique ID, kind, first and last observation dates, run
 evidence, cause (including uncertainty), fix reference or `pending`, and status.
+
+Evidence depends on downloadable job logs as well as run metadata. Logs expire
+according to the repository's log-retention policy; metadata can remain after
+the logs disappear. Expired, deleted, unreadable or unparsed logs make an entry
+ineligible, reported as `missing open entry with evidence`. Before enabling
+enforcement, refresh evidence with a qualifying main push or scheduled failure
+whose job log still lists the exact registered ID. Run metadata alone cannot
+establish that the registered test failed.
 
 `scripts/ci/run_shard.py --mode report --shard NAME --junit reports/junit-NAME.xml --max-retry-ids 20 -- COMMAND`
 runs the original command unchanged. Report mode is the default: it always
@@ -38,13 +49,10 @@ classifying each as pre-existing on fresh main evidence for the same shard and
 ID, registered with evidence after recovery, or NEW. The committed baseline mode
 remains `report`. Recovered IDs are excluded from open main-baseline failures.
 
-The Atlas drift gate runs its direct command. The diagnostic `--signal-retry`
-option retries the whole command once after a signal exit (128 or above),
-excluding timeout and termination
-codes. Ordinary exits 1 to 127 propagate without retry. Both modes return the
-first signal exit, and the record and summary retain both attempt exits.
+Atlas runs its direct command and is outside the retry pilot. Signal exits
+propagate without retry in both modes.
 `--decide-only --from-log LOG` inspects cached hosted
-logs without executing their content. Neither an isolated pass nor a signal
+logs without executing their content. Neither an isolated pass nor a diagnostic
 retry establishes a failure's cause; shared state and leftover files can also
 produce a retry pass. Failures whose test IDs cannot be established retain their
 raw classname and name in the retry record and job summary.

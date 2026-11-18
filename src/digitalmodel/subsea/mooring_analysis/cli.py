@@ -176,6 +176,10 @@ def design_verification(
     try:
         # Get material from library
         base_material = get_material(material)
+        # A buoyant line cannot rise from a horizontal seabed tangent under
+        # its own weight: section 19.3 (2024) cited in catenary.py.
+        if base_material.weight_water <= 0:
+            raise ValueError("Touchdown catenary requires positive submerged weight")
         base_material.length = line_length
 
         # Create vessel

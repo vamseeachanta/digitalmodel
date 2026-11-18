@@ -13,10 +13,15 @@ Test Coverage:
 - Stiffness (EA) calculations
 """
 
+import hashlib
+import importlib.util
+import json
+import sys
+
 import pytest
 import numpy as np
 import pandas as pd
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from enum import Enum
 from typing import Optional, List
 from pathlib import Path
@@ -696,6 +701,185 @@ class TestComponentDatabaseIntegration:
         assert abs(weight_ratio - diameter_ratio_squared) / diameter_ratio_squared < 0.1, (
             f"Weight ratio {weight_ratio:.2f} deviates from D^2 scaling {diameter_ratio_squared:.2f}"
         )
+
+
+# ============================================================================
+# PRODUCTION CSV QUERIES WITH AN INDEPENDENT SYNTHETIC ORACLE
+# ============================================================================
+
+@pytest.fixture(scope="module")
+def production_component_module():
+    """Load the production file without unrelated package initializers.
+
+    Match the isolation used in test_component_database_public.py; these
+    queries exercise the actual CSV loader and schema, not the embedded
+    formula-based ComponentDatabase above.
+    """
+    module_path = (
+        Path(__file__).resolve().parents[3] / "src" / "digitalmodel"
+        / "marine_ops" / "marine_engineering" / "mooring_analysis"
+        / "component_database.py"
+    )
+    spec = importlib.util.spec_from_file_location(
+        "synthetic_round_trip_component_database", module_path
+    )
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = module
+    try:
+        spec.loader.exec_module(module)
+        yield module
+    finally:
+        sys.modules.pop(spec.name)
+
+
+@pytest.fixture(params=["authored", "reversed", "interleaved"])
+def synthetic_chain_database(request, tmp_path, production_component_module):
+    """Write independently authored rows and a matching synthetic sidecar.
+
+    Numeric properties, units and hand-evaluated query outcomes are cited to
+    synthetic_chain_round_trip.json. No historical formula helper or public
+    component generator is used. Source metadata below is deliberately
+    synthetic, including its schema-required revision and timestamp fields;
+    it asserts no external retrieval or engineering qualification.
+    """
+    fixture_path = Path(__file__).with_name("synthetic_chain_round_trip.json")
+    fixture_bytes = fixture_path.read_bytes()
+    oracle = json.loads(fixture_bytes)
+    rows = oracle["rows"]
+    if request.param == "reversed":
+        rows = list(reversed(rows))
+    elif request.param == "interleaved":
+        rows = rows[::2] + rows[1::2]
+
+    # The production provenance schema requires all three CSVs and an excerpt.
+    tables = {
+        "chain": pd.DataFrame(rows),
+        "wire": pd.DataFrame(columns=[
+            "diameter", "construction", "grade", "mbl", "stiffness",
+            "weight_air", "weight_water",
+        ]),
+        "line": pd.DataFrame(columns=[
+            "diameter", "material", "mbl", "stiffness", "weight_air", "weight_water",
+        ]),
+    }
+    for kind, table in tables.items():
+        table.to_csv(tmp_path / f"{kind}_properties.csv", index=False)
+    (tmp_path / "sources").mkdir()
+    (tmp_path / "sources" / "moorpy_coefficients.json").write_bytes(fixture_bytes)
+    digest = hashlib.sha256(fixture_bytes).hexdigest()
+    source = {
+        "source_id": "synthetic-chain-round-trip",
+        "name": "Independent synthetic chain fixture; test use only",
+        "url": "https://example.invalid/synthetic-chain-round-trip",
+        "commit": "0" * 40,
+        "file": fixture_path.name,
+        "locator": "rows identified by part_number",
+        "retrieved_at": "2026-10-15T00:00:00Z",
+        "license": "Synthetic test data only",
+        "terms": "Authored for regression tests; no engineering use",
+        "terms_url": "https://example.invalid/synthetic-test-terms",
+        "sha256": digest,
+    }
+    records = [
+        {
+            "identity": {key: row[key] for key in ("diameter", "grade", "link_type")},
+            "source": source["source_id"],
+            "kind": "reference-model",
+            "fixture_record": row["part_number"],
+            "limitations": oracle["basis"],
+        }
+        for row in rows
+    ]
+    manifest = {
+        "schema_version": 1,  # mooring_component_schema.validate_provenance
+        "units": oracle["units"],
+        "sources": {source["source_id"]: source},
+        "diameter_source": {**source, "owner_repo": "repository test fixture"},
+        "excerpt_sha256": digest,
+        "tables": {
+            kind: {
+                "row_count": len(table),
+                "sha256": hashlib.sha256(
+                    (tmp_path / f"{kind}_properties.csv").read_bytes()
+                ).hexdigest(),
+            }
+            for kind, table in tables.items()
+        },
+        "rows": {"chain": records, "wire": [], "line": []},
+    }
+    (tmp_path / "provenance.json").write_text(json.dumps(manifest))
+    database = production_component_module.ComponentDatabase(tmp_path)
+    return database, oracle, manifest
+
+
+class TestProductionChainRoundTrip:
+    """Check listing, exact lookup and MBL selection against authored rows."""
+
+    def test_listing_lookup_and_mbl_selection(self, synthetic_chain_database):
+        database, oracle, manifest = synthetic_chain_database
+        expected_rows = {row["part_number"]: row for row in oracle["rows"]}
+        listed = database.list_available_chains().to_dict("records")
+        assert {row["part_number"]: row for row in listed} == expected_rows
+        assert len(listed) == len(expected_rows)
+
+        # Listing and exact lookup preserve every property in the declared units.
+        assert database.provenance["units"] == oracle["units"]
+        for row in listed:
+            specification = {
+                key: row[key] for key in ("diameter", "grade", "link_type")
+            }
+            chain = database.get_chain(**specification)
+            assert asdict(chain) == expected_rows[row["part_number"]]
+            record = next(
+                record for record in manifest["rows"]["chain"]
+                if record["fixture_record"] == chain.part_number
+            )
+            expected_provenance = {
+                **record,
+                "source": manifest["sources"][record["source"]],
+                "diameter_source": manifest["diameter_source"],
+            }
+            assert database.get_provenance("chain", **specification) == expected_provenance
+
+        for case in oracle["selection_cases"]:
+            available = database.list_available_chains(grade="R4", link_type="Stud Link")
+            eligible = available[available["mbl"] >= case["target_mbl"]]
+            assert set(eligible["part_number"]) == set(case["eligible"])
+            if case["selected"] is None:
+                with pytest.raises(ValueError, match="No R4 Stud Link chain found"):
+                    database.find_chain_by_mbl(
+                        case["required_mbl"], grade="R4", link_type="Stud Link",
+                        safety_factor=case["safety_factor"],
+                    )
+            else:
+                selected = database.find_chain_by_mbl(
+                    case["required_mbl"], grade="R4", link_type="Stud Link",
+                    safety_factor=case["safety_factor"],
+                )
+                assert asdict(selected) == expected_rows[case["selected"]]
+                assert selected == database.get_chain(
+                    selected.diameter, selected.grade, selected.link_type
+                )
+                assert database.get_provenance(
+                    "chain", selected.diameter, grade=selected.grade,
+                    link_type=selected.link_type,
+                )["fixture_record"] == case["selected"]
+        assert database.provenance == manifest
+
+    def test_no_matching_specification(self, synthetic_chain_database):
+        database, oracle, manifest = synthetic_chain_database
+        for specification in oracle["missing_specifications"]:
+            with pytest.raises(ValueError, match="Chain not found"):
+                database.get_chain(**specification)
+            with pytest.raises(ValueError, match="Provenance not found"):
+                database.get_provenance("chain", **specification)
+        # The missing grade is taken from the independent no-match oracle.
+        missing_grade = next(
+            specification["grade"] for specification in oracle["missing_specifications"]
+            if specification["grade"] not in {row["grade"] for row in oracle["rows"]}
+        )
+        assert database.list_available_chains(grade=missing_grade).empty
+        assert database.provenance == manifest
 
 
 if __name__ == "__main__":

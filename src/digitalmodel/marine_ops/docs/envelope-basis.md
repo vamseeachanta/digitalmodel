@@ -105,3 +105,36 @@ clause or alpha-table provenance. The result's `alpha_source` and
 `citation_sidecar` carry this limitation for catalogue and custom operations.
 The maintainer shall qualify inputs before design use; screening metadata
 does not authenticate a project-specific alpha or standards citation.
+
+## Qualification evidence gaps
+
+Issue #2769 acceptance and audit #2747, section 12 require alpha selection
+to account for planned operation period, design significant wave height and
+forecast level. This is an evidence requirement; no standard designation,
+edition, clause, table or selection relationship has been verified here.
+The API does not yet accept those selection inputs or qualified citations.
+
+Every computed result therefore retains `unverified_screening` and carries
+`citation_sidecar.qualification.status = "NOT_EVALUATED"`. This status concerns
+standards qualification, independently of the numerical point's `evaluated`
+flag. The qualification record explicitly leaves standard designation, edition,
+motion-limit clause, alpha clause/table and evidence reference null.
+
+`alpha_source.dependencies` leaves `planned_operation_period_h`, `design_hs_m`
+and `forecast_level` null. Wave peak period `Tp` is not the planned operation
+period; spectral normalization height `hs_ref` is not the design wave height.
+Neither a computed forecast limit nor descriptive `Operation.basis` supplies
+these missing dependencies or authenticates a citation.
+
+`alpha_source.value` records the alpha used; `citation_sidecar.motion_limits`
+records each DOF, significant single-amplitude limit and unit used. These are
+input snapshots for traceability, not qualified acceptance criteria. Table B6
+is referenced only when the operation matches its catalogue entry; custom
+operations, including changed operations reusing a catalogue key, carry a null
+`catalogue_table`. Separate results receive independent metadata records.
+
+Later work must confirm the applicable designation, edition and governing
+clauses from authorized references, document alpha selection over the required
+dependencies, and validate citations against the actual inputs before permitting
+qualified status. No licensed standard content or new engineering limit is
+introduced by these gap records.

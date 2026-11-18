@@ -1,5 +1,0 @@
-﻿VesselTypes:
-  includefile: 03_a_fst1_l_vessel_type.yml
-
-Vessels:
-  includefile: 03_b_fst1_l_vessel.yml

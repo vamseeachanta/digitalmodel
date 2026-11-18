@@ -1,5 +1,8 @@
 # Riser fatigue knowledge pack
 
+Current input guards are described in [the input evidence contract](input-validation.md).
+The audit observations below describe the pinned code revision in the header.
+
 | Header | Value |
 |---|---|
 | Module / repository | riser_fatigue / digitalmodel |

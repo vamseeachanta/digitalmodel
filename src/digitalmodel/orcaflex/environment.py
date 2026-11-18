@@ -21,6 +21,8 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 from pydantic import BaseModel, Field
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 # ---------------------------------------------------------------------------
 # Enums
@@ -166,7 +168,7 @@ class WaveSpectrumParams(BaseModel):
 
         # Normalise to preserve Hs
         df = np.mean(np.diff(f)) if len(f) > 1 else 1.0
-        m0 = np.trapz(jonswap[f > 0], f[f > 0]) if np.any(f > 0) else 1.0
+        m0 = _trapezoid(jonswap[f > 0], f[f > 0]) if np.any(f > 0) else 1.0
         if m0 > 0:
             target_m0 = (self.hs / 4.0) ** 2
             jonswap *= target_m0 / m0

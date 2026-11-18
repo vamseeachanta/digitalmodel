@@ -186,13 +186,15 @@ class TestTrainingDataset:
     def test_generates_correct_count(self):
         cards, labels = generate_training_dataset(samples_per_mode=5)
         assert len(cards) == len(labels)
-        assert len(cards) == 5 * len(ALL_GENERATORS)  # 5 per mode
+        assert len(cards) == 5 * (len(ALL_GENERATORS) - 2)
 
     def test_all_modes_represented(self):
         cards, labels = generate_training_dataset(samples_per_mode=3)
         unique_labels = set(labels)
-        assert unique_labels == set(ALL_GENERATORS)
-        assert len(unique_labels) == 20
+        assert unique_labels == set(ALL_GENERATORS) - {
+            "PLUNGER_UNDERTRAVEL", "TUBING_MOVEMENT"
+        }
+        assert len(unique_labels) == 18
 
     def test_all_cards_valid(self):
         cards, labels = generate_training_dataset(samples_per_mode=2)

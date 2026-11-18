@@ -2,7 +2,7 @@
 # ABOUTME: Expected values come from the reference implementation, stored in the fixture.
 """Tests for :mod:`...dynacard.everitt_jennings`.
 
-The `7699227` fixture is a real (anonymized) deviated well carrying the
+The `field well echo` fixture is a real (anonymized) deviated well carrying the
 reference implementation's own expected downhole-card extremes under
 ``Performance.Calculated_DownholeCard_*``. Those four numbers are the parity
 target; the remaining tests guard the defect that motivated this solver.
@@ -27,7 +27,7 @@ from digitalmodel.marine_ops.artificial_lift.dynacard.everitt_jennings.solver im
     _march,
 )
 
-FIXTURE = Path(__file__).parent / "testdata" / "7699227.json"
+FIXTURE = Path(__file__).parent / "testdata" / "field_well_echo.json"
 
 # The fixture leaves viscosity null, so damping is estimated from a default.
 # Parity holds to ~2.5%; see the viscosity sweep noted on the tracking issue —

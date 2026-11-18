@@ -141,15 +141,92 @@ PENDING_TABLE_B_ROWS = ("touchdown_x", "sag_bend_strain", "stiff_closure")
 PENDING_REFERENCE_REASON = "published reference pending, #2608"
 
 
+def table_b_reference_basis():
+    """Describe the evidence still needed for the three pending Table B rows.
+
+    A published mechanics equation does not establish a comparison band or a
+    case-specific stiff-pipe answer. The inspected cable source explicitly
+    omits bending stiffness. No source or allowable supplied by a caller can
+    enable these rows; changing that policy requires a reviewed implementation.
+    Each call returns a fresh, JSON-compatible record for retained QA output.
+    """
+    # Public equation source: NREL/TP-500-41958, November 2007, section 2.5,
+    # printed pages 36, 39 and 41. Equation (2-38) gives grounded cable length;
+    # (2-43a,b) give elastic cable coordinates. Page 36 excludes bending stiffness.
+    # These are background mechanics, not published S-lay acceptance criteria.
+    source = {
+        "title": "Dynamics Modeling and Loads Analysis of an Offshore Floating Wind Turbine",
+        "edition": "NREL/TP-500-41958, November 2007",
+        "locator": "Section 2.5, equations (2-38), (2-43a,b)",
+        "url": "https://www.osti.gov/servlets/purl/921803",
+        "role": "background method only",
+        "limitation": "The cable model neglects bending stiffness (printed page 36).",
+    }
+    requirements = {
+        "touchdown_x": {
+            "quantity": "Pipe-axis touchdown global X coordinate",
+            "unit": "m",
+            "required_evidence": [
+                "Published stiff-pipe reference solution with inputs and coordinate frame",
+                "Definition of touchdown and treatment of coated radius and seabed contact",
+                "Published comparison criterion, edition and clause or table",
+            ],
+            "method_limitation": (
+                "Cable coordinates alone do not establish the stiff-pipe touchdown position."
+            ),
+        },
+        "sag_bend_strain": {
+            "quantity": "Maximum sag-bend longitudinal strain",
+            "unit": "dimensionless",
+            "required_evidence": [
+                "Published stiff-pipe reference solution with inputs and sag-bend region",
+                "Definition of bending-only or total strain and the applicable pipe fibre",
+                "Published strain comparison criterion, edition and clause or table",
+            ],
+            "method_limitation": (
+                "A cable model without bending stiffness cannot supply sag-bend pipe strain."
+            ),
+        },
+        "stiff_closure": {
+            "quantity": "Stiff-pipe length-closure residual",
+            "unit": "m",
+            "required_evidence": [
+                "Published stiff-pipe closure method and reproducible reference inputs",
+                "Definition of residual sign, unstretched length, axial stretch and end motion",
+                "Published residual criterion, edition and clause or table",
+            ],
+            "method_limitation": (
+                "Grounded cable length does not qualify stiff-pipe closure or tensioner travel."
+            ),
+        },
+    }
+    return {
+        "reviewed_sources": {"elastic_catenary": source},
+        "rows": {
+            name: {
+                "status": "NOT_EVALUATED",
+                "acceptance_source": None,
+                "numeric_tolerance": None,
+                **requirements[name],
+            }
+            for name in PENDING_TABLE_B_ROWS
+        },
+    }
+
+
 def evaluate_static_acceptance(*, wire_length, end_a_reaction, last_support_force,
                                grounded_tension, overbend_strain, lift_off_arc,
                                departure_angle, reference, touchdown_x=None,
-                               sag_bend_strain=None, diameter=0.762, radius=150):
+                               sag_bend_strain=None, diameter, radius):
     """Report static QA with separate pass, fail and NOT_EVALUATED counts.
 
     Touchdown, sag-bend and stiff closure await published references in #2608.
     Their readings and any supplied reference values do not affect acceptance.
+    The reference_basis record identifies missing evidence without enabling rows.
     S1 bounds conformity; S2 design acceptance and convergence remain separate.
+    Required diameter (pipe outer diameter) and radius (stinger radius) are in
+    metres. The report retains both inputs, the dimensionless S1 limit
+    1.10 * diameter / (2 * radius), and their units (m, m, 1).
     """
     if len(grounded_tension) == 0:
         raise ValueError("Grounded tension readback is required")
@@ -161,11 +238,12 @@ def evaluate_static_acceptance(*, wire_length, end_a_reaction, last_support_forc
         raise ValueError("Finite native readings and reference values required")
     if diameter <= 0 or radius <= 0:
         raise ValueError("Positive diameter and radius required")
+    s1_limit = 1.10 * diameter / (2 * radius)
     checks = {
         "wire_length": (5 <= wire_length <= 15, "Tensioner wire must remain between 5 and 15 m"),
         "end_a_reaction": (end_a_reaction > 0, "End A must remain in contact with its nearest support"),
         "stinger_conformity": (
-            0 <= overbend_strain <= 1.10 * diameter / (2 * radius) and last_support_force == 0,
+            0 <= overbend_strain <= s1_limit and last_support_force == 0,
             "S1 requires strain conformity and zero last-support force"),
         "lift_off_arc": (abs(lift_off_arc - reference["lift_off_arc"]) <= 5 + 1e-12,
                          "lift_off_arc differs from Table B beyond its QA tolerance"),
@@ -183,7 +261,10 @@ def evaluate_static_acceptance(*, wire_length, end_a_reaction, last_support_forc
                                    ("not_evaluated", "NOT_EVALUATED"))}
     status = ("rejected" if counts["failed"] else
               f"accepted with {counts['not_evaluated']} rows not evaluated")
-    return {"status": status, "fully_accepted": False, "counts": counts, "rows": rows}
+    return {"status": status, "fully_accepted": False, "counts": counts, "rows": rows,
+            "diameter": diameter, "radius": radius, "s1_limit": s1_limit,
+            "units": {"diameter": "m", "radius": "m", "s1_limit": "1"},
+            "reference_basis": table_b_reference_basis()}
 
 
 def assert_static_acceptance(**readings):

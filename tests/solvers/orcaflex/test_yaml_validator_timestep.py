@@ -17,10 +17,10 @@ SECTIONS = [
 ]
 
 
-def check(tmp_path, content):
+def check(tmp_path, content, *, strict_profile=False):
     path = tmp_path / "model.yml"
     path.write_text(textwrap.dedent(content), encoding="utf-8")
-    return validate_orcaflex_yaml(path)
+    return validate_orcaflex_yaml(path, strict_profile=strict_profile)
 
 
 def general(*rows):
@@ -156,7 +156,8 @@ def test_known_wrong_section_errors(tmp_path, section):
 
 
 def test_intervening_include_invalidates_known_prefix(tmp_path):
-    (tmp_path / "overlay.yml").write_text(f"{MODE}: false\n", encoding="utf-8")
+    (tmp_path / "overlay.yml").write_text(
+        f"{MODE}: false\n", encoding="utf-8", newline="\n")
     result = check(tmp_path, general(
         f"{METHOD}: Implicit time domain", f"{MODE}: true",
         "includefile: overlay.yml", f"{MAXIMUM}: 0.125"))
@@ -170,14 +171,20 @@ def test_intervening_include_invalidates_known_prefix(tmp_path):
     [f"{METHOD}: Explicit time domain", f"{MODE}: true",
      f"{MAXIMUM}: 0.125", f"{METHOD}: Implicit time domain"],
 ])
-def test_duplicate_relevant_keys_warn_before_dictionary_collapse(tmp_path, rows):
-    assert_unresolved(check(tmp_path, general(*rows)))
+def test_duplicate_relevant_keys_error_before_dictionary_collapse(tmp_path, rows):
+    result = check(tmp_path, general(*rows), strict_profile=True)
+    assert not result.valid
+    assert any("Duplicate mapping key" in issue.message for issue in result.errors)
+    assert result.warnings  # Assignment-time context diagnostics are retained.
 
 
-def test_duplicate_general_mappings_warn(tmp_path):
+def test_duplicate_general_mappings_error(tmp_path):
     content = general(f"{MODE}: false") + general(
         f"{METHOD}: Implicit time domain", f"{MODE}: true", f"{MAXIMUM}: 0.125")
-    assert_unresolved(check(tmp_path, content))
+    result = check(tmp_path, content, strict_profile=True)
+    assert not result.valid
+    assert any(issue.property == "General" for issue in result.errors)
+    assert result.warnings
 
 
 def test_merge_alias_cannot_silently_supply_context(tmp_path):
@@ -246,15 +253,16 @@ def test_generator_preserves_and_reorders_maximum_then_validator_recognizes(tmp_
     output = GenericModelBuilder(spec, BuilderContext()).build()
     settings = output["General"]
     assert settings[MAXIMUM] == properties[MAXIMUM]
-    assert list(settings).index(MODE) < list(settings).index(MAXIMUM)
+    assert (list(settings).index(METHOD) < list(settings).index(MODE)
+            < list(settings).index(MAXIMUM))
     assert spec.generic.general_properties == properties
-    # The method arrives from the earlier base include in real generation.
     overlay = check(tmp_path, yaml.safe_dump(output, sort_keys=False))
-    assert_unresolved(overlay)
-    combined = {METHOD: "Implicit time domain", **settings}
-    result = check(tmp_path, yaml.safe_dump({"General": combined}, sort_keys=False))
-    assert not result.errors
-    assert not result.warnings
+    assert not overlay.errors
+    assert not overlay.warnings
+    # A fragment without the method still requires inherited context.
+    fragment = {key: value for key, value in settings.items() if key != METHOD}
+    assert_unresolved(check(
+        tmp_path, yaml.safe_dump({"General": fragment}, sort_keys=False)))
 
 
 @pytest.mark.parametrize("misplaced", [
@@ -277,7 +285,8 @@ def test_production_validator_refuses_wrong_load_format(tmp_path, misplaced):
         vessel[misplaced] = vessel["Draughts"][0].pop(misplaced)
         expected = "Draughts"
     path = tmp_path / "wrong.yml"
-    path.write_text(yaml.safe_dump(wrong, sort_keys=False), encoding="utf-8")
+    path.write_text(
+        yaml.safe_dump(wrong, sort_keys=False), encoding="utf-8", newline="\n")
     result = validate_orcaflex_yaml(path)
     assert not result.valid
     assert any(misplaced in issue.message and expected in issue.message

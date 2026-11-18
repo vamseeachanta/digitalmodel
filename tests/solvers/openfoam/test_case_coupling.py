@@ -135,7 +135,7 @@ class TestMapper:
     # docs/reports/issue-1528-outlet-vent/.
     #
     # `top` is the z=max patch, above the free surface for any fill below 1.0,
-    # so no mesh-topology change is needed.
+    # while the closed outlet requires wall topology and wall functions (#1979).
 
     def test_outlet_carries_no_pressure_opening_below_the_free_surface(self):
         case = map_sweep_case_to_openfoam_case(_sweep_case(), _spec())
@@ -143,7 +143,7 @@ class TestMapper:
             bc for bc in case.boundary_conditions
             if bc.patch_name == "outlet" and bc.field == "p_rgh"
         )
-        assert outlet_p.bc_type is BoundaryType.ZERO_GRADIENT
+        assert outlet_p.bc_type is BoundaryType.FIXED_FLUX_PRESSURE
 
     def test_outlet_velocity_is_closed_to_a_no_slip_wall(self):
         case = map_sweep_case_to_openfoam_case(_sweep_case(), _spec())

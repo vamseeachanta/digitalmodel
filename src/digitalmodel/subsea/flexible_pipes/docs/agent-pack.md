@@ -293,3 +293,6 @@ The calculation citation contract was read; the package result objects lack its 
 | Integrity-screen research is not an implemented remaining-life method in this package | Calculation maintainer | #2200; no detection check exists here. [docs/research/ffs-unbonded-flexible-pipe-integrity-screen.md:L3-L15] |
 
 No client-derived values or private sidecar entry are required for the inline synthetic tests used by this pack. [tests/subsea/flexible_pipes/test_flexible_pipes.py:L30-L104] [tests/subsea/flexible_pipes/test_flexible_pipes.py:L110-L248]
+
+The [mechanics boundary specification](../../../../../docs/subsea/flexible_pipe_mechanics_boundary.md)
+defines research-only metadata, unresolved qualification inputs and proposed follow-up tests; it adds no mechanics or qualified exporter.

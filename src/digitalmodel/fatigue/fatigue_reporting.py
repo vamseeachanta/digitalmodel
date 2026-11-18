@@ -429,7 +429,9 @@ def report_to_html(
 
     Assembles from the shared ``digitalmodel.reporting`` block library; each
     section is a view over ``report`` (the SSOT). ``provenance`` is mandatory --
-    declare where the fatigue results came from. Returns the HTML string, or
+    declare sources, code_edition and validated_path (plus units_system when
+    known). The caller supplies this metadata; missing fields fail closed.
+    Returns the HTML string, or
     writes to ``output_path`` and returns it.
     """
     from digitalmodel.reporting import ReportSection, SectionMode, assemble_report

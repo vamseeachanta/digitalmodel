@@ -198,7 +198,7 @@ def _sample(
              "the loss-only proxy is out of scope."],
         )
     validity = merge(scope, local)
-    if not validity.ok:
+    if not local.ok:
         return DimensionalResult(
             reading.location_id, "OUT_OF_SCOPE", None, None, None, validity
         )
@@ -209,6 +209,10 @@ def _sample(
     if area[0] <= 0:
         raise ValueError("area ratio is outside representable positive precision")
     status = _interval_status(loss, (lower, upper), inspection)
+    # Evidence gaps withhold clearance but cannot erase an adverse comparison.
+    # These are geometric bounds only, including when uniform loss is unproven.
+    if not scope.ok and status != "EXCEEDS_LIMITS":
+        status = "OUT_OF_SCOPE"
     return DimensionalResult(reading.location_id, status, (lower, upper), loss, area, validity)
 
 

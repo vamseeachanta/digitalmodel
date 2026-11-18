@@ -60,7 +60,7 @@ def _run(wall_m: float, code: DesignCode) -> dict:
     )
     factors = DesignFactors(safety_class=_SC)
     res = WallThicknessAnalyzer(geom, mat, loads, factors, code=code).perform_analysis()
-    checks = {k: round(float(v), 4) for k, v in res.checks.items()}
+    checks = {k: round(float(v), 4) for k, v in res.checks.items() if k != "combined"}
     return {
         "max_util": round(float(res.max_utilisation), 4),
         "governing": res.governing_check,
@@ -94,6 +94,11 @@ def build_study() -> dict:
             "p_int_mpa": _P_INT / 1e6, "p_ext_mpa": _P_EXT / 1e6,
             "safety_class": _SC.value, "fab_tol": _FAB_TOL,
             "wall_mm": _WALL_MM,
+            "load_case": "pressure-only",
+            "effective_tension_n": 0.0,
+            "bending_moment_nm": 0.0,
+            "data_limits": "Pressure-only sweep with zero effective tension and zero bending moment; "
+                           "combined tension and bending are not evaluated.",
         },
         "code_reference": code_ref,
         "min_wall_pass": min_wall_pass,
@@ -152,6 +157,8 @@ _HTML = """<!DOCTYPE html>
 every registered design code. Drag the wall thickness to watch each code's governing utilization move;
 a bar reaching the navy line (utilization&nbsp;=&nbsp;1.0) is at its code limit. Computed live by
 <code>WallThicknessAnalyzer</code> &mdash; values embedded from a real engine run, not mocked.</p>
+<p class="sub">Pressure-only sweep with zero effective tension and zero bending moment;
+combined tension and bending are not evaluated.</p>
 <div class="spec" id="spec"></div>
 
 <div class="panel">

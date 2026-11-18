@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import asdict
-from pathlib import Path
+from io import StringIO
 from typing import Any
 import numpy as np
 
@@ -22,6 +22,7 @@ from digitalmodel.marine_ops.marine_engineering.mooring_analysis import (
 from .component_database import ChainGrade, ChainProperties, ComponentDatabase, LinkType
 from .fpso_full_catenary import baseline_bounds
 from .fpso_full_output import (
+    configured_result_folder,
     json_safe,
     print_self_check,
     result_folder,
@@ -81,7 +82,7 @@ class FPSOMooringFullWorkflow:
         environment: dict,
         spectrum: dict,
     ) -> dict:
-        database = OCIMFDatabase(str(self._ocimf_database_path(cfg)))
+        database = self._ocimf_database(cfg)
         calculator = EnvironmentalForces(database)
         conditions = EnvironmentalConditions(
             wind_speed=float(environment["wind_speed"]),
@@ -100,17 +101,23 @@ class FPSOMooringFullWorkflow:
         total_fy = steady.total_fy + wave["force_N"] * wave["unit_y"]
         return self._force_output(steady, wave, total_fx, total_fy)
 
-    def _ocimf_database_path(self, cfg: dict) -> Path:
-        path = result_folder(cfg) / "ocimf_coefficients_sample.csv"
+    def _ocimf_database(self, cfg: dict) -> OCIMFDatabase:
+        """Use synthetic demo coefficients; persist only to configured output.
+
+        The existing generator and CSV parser are retained for numerical parity.
+        These samples are not qualified engineering coefficient data.
+        """
+        folder = configured_result_folder(cfg)
+        if folder is None:
+            with StringIO() as stream:
+                create_sample_database(stream, verbose=False)
+                stream.seek(0)
+                return OCIMFDatabase(stream)
+        path = folder / "ocimf_coefficients_sample.csv"
         if not path.exists():
             path.parent.mkdir(parents=True, exist_ok=True)
-            create_sample_database(
-                str(path),
-                num_vessels=5,
-                num_headings=13,
-                num_displacements=3,
-            )
-        return path
+            create_sample_database(str(path))
+        return OCIMFDatabase(path)
 
     def _vessel_geometry(self, vessel: dict) -> VesselGeometry:
         loa = float(vessel["loa"])

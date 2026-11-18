@@ -1,0 +1,96 @@
+[
+  {
+    "command": "mystran --help",
+    "exit_code": 2,
+    "meaning": "Banner printed; option is treated as an input name and EOF follows."
+  },
+  {
+    "command": "uv run --no-project --with pyNastran python benchmarks/fe10_nafems_le1/tools/validate_decks.py",
+    "exit_code": 0,
+    "console": "fe0.txt"
+  },
+  {
+    "command": "mystran le1_8x24.bdf",
+    "exit_code": 0,
+    "console": "mystran-le1_8x24.txt",
+    "working_directory": "separate scratch case directory"
+  },
+  {
+    "command": "python -I tools/extract_stresses.py --deck inputs/le1_8x24.bdf --f06 <scratch>/le1_8x24.F06 --output results-le1_8x24.csv",
+    "exit_code": 0,
+    "console": "extract-le1_8x24.txt"
+  },
+  {
+    "command": "python -I compare.py --le1 results-le1_8x24.csv",
+    "exit_code": 1,
+    "console": "compare-le1_8x24.txt"
+  },
+  {
+    "command": "mystran le1_16x48.bdf",
+    "exit_code": 0,
+    "console": "mystran-le1_16x48.txt",
+    "working_directory": "separate scratch case directory"
+  },
+  {
+    "command": "python -I tools/extract_stresses.py --deck inputs/le1_16x48.bdf --f06 <scratch>/le1_16x48.F06 --output results-le1_16x48.csv",
+    "exit_code": 0,
+    "console": "extract-le1_16x48.txt"
+  },
+  {
+    "command": "python -I compare.py --le1 results-le1_16x48.csv",
+    "exit_code": 0,
+    "console": "compare-le1_16x48.txt"
+  },
+  {
+    "command": "mystran le1_32x96.bdf",
+    "exit_code": 0,
+    "console": "mystran-le1_32x96.txt",
+    "working_directory": "separate scratch case directory"
+  },
+  {
+    "command": "python -I tools/extract_stresses.py --deck inputs/le1_32x96.bdf --f06 <scratch>/le1_32x96.F06 --output results-le1_32x96.csv",
+    "exit_code": 0,
+    "console": "extract-le1_32x96.txt"
+  },
+  {
+    "command": "python -I compare.py --le1 results-le1_32x96.csv",
+    "exit_code": 0,
+    "console": "compare-le1_32x96.txt"
+  },
+  {
+    "command": "mystran patch.bdf",
+    "exit_code": 0,
+    "console": "mystran-patch.txt",
+    "working_directory": "separate scratch case directory"
+  },
+  {
+    "command": "python -I tools/extract_stresses.py --deck inputs/patch.bdf --f06 <scratch>/patch.F06 --output results-patch.csv",
+    "exit_code": 0,
+    "console": "extract-patch.txt"
+  },
+  {
+    "command": "python -I compare.py --patch results-patch.csv",
+    "exit_code": 0,
+    "console": "compare-patch.txt"
+  },
+  {
+    "command": "python -I compare.py --selftest",
+    "exit_code": 0,
+    "console": "compare-selftest.txt"
+  },
+  {
+    "command": "uv run --no-project --with pytest --with PyYAML python -m pytest tests/solvers/mystran/test_fe10_benchmark.py tests/repo_structure -q -rA -p no:cacheprovider --basetemp=<scratch>/bt-final",
+    "exit_code": 0,
+    "console": "pytest-final.txt",
+    "counts": {
+      "benchmark": 22,
+      "structure": 54,
+      "total": 76
+    }
+  },
+  {
+    "command": "Direct pre_commit_hooks modules, mypy, pydocstyle, repository structure and Windows-path checks",
+    "exit_code": 0,
+    "console": "file-checks-pass.txt"
+  }
+]

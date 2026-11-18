@@ -1,4 +1,4 @@
-A typical setting when convergence not acheived. Example of WLNG Orcaflex model with 2 FSTs. This setting was required for only a few runs
+A typical setting when convergence not acheived. Example of a Client W OrcaFlex model with 2 FSTs. This setting was required for only a few runs
 
 **Configuration - Basic**
 <code>

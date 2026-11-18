@@ -52,4 +52,5 @@ Lines:
   LayAzimuth: 0.0
   ContentsMethod: Uniform
   ContentsDensity: 0.8
+  ContentsPressure: 0.0
   StaticsStep2: Full statics

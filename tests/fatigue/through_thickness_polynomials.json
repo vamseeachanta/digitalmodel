@@ -1,0 +1,58 @@
+{
+  "basis": "Synthetic hand calculation; y in mm, stress in MPa. No measured or standard-derived data.",
+  "derivation": [
+    "For s(y)=c+a*y over 0<=y<=t: integral(s dy)=c*t+a*t^2/2.",
+    "Integral(s*(t/2-y) dy)=[c*t*y/2+(a*t/2-c)*y^2/2-a*y^3/3]_0^t=-a*t^3/12.",
+    "Hence membrane=c+a*t/2, surface bending=-a*t/2, toe=membrane+bending=c, root=membrane-bending=c+a*t, and analytic peak=0.",
+    "Choose t=8 and the explicit uniform grid below with h=1/4. Choose constant s=48, signed affine s=-36+6*y, and their sum s=12+6*y.",
+    "The stress integrals are respectively 384, -96 and 288 MPa*mm; the first moments are 0, -256 and -256 MPa*mm^2. Divide by t for membrane and multiply by 6/t^2 for bending.",
+    "Membrane trapezoidal integration is exact for these affine polynomials. For f=s*(t/2-y), f''=-2*a, so trapezoidal moment minus exact moment is t*h^2*f''/12. The bending error magnitude is abs(a)*h^2/t: 0 for the constant and 3/64 MPa for each sloped profile.",
+    "The returned components are rounded to three decimal places: each rounding error is at most 1/2000 MPa. Add this to the quadrature bound; sums of two rounded components allow two rounding bounds. Relative tolerances are disabled in the tests."
+  ],
+  "thickness_mm": 8.0,
+  "positions_mm": [
+    0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 1.75,
+    2.0, 2.25, 2.5, 2.75, 3.0, 3.25, 3.5, 3.75,
+    4.0, 4.25, 4.5, 4.75, 5.0, 5.25, 5.5, 5.75,
+    6.0, 6.25, 6.5, 6.75, 7.0, 7.25, 7.5, 7.75, 8.0
+  ],
+  "rounding_bound_mpa": 0.0005,
+  "profiles": {
+    "constant": {
+      "intercept_mpa": 48.0,
+      "slope_mpa_per_mm": 0.0,
+      "bending_quadrature_bound_mpa": 0.0,
+      "integrated": {
+        "membrane_mpa": 48.0,
+        "bending_mpa": 0.0,
+        "surface_mpa": 48.0,
+        "root_mpa": 48.0,
+        "peak_mpa": 0.0
+      }
+    },
+    "affine": {
+      "intercept_mpa": -36.0,
+      "slope_mpa_per_mm": 6.0,
+      "bending_quadrature_bound_mpa": 0.046875,
+      "integrated": {
+        "membrane_mpa": -12.0,
+        "bending_mpa": -24.0,
+        "surface_mpa": -36.0,
+        "root_mpa": 12.0,
+        "peak_mpa": 0.0
+      }
+    },
+    "superposition": {
+      "intercept_mpa": 12.0,
+      "slope_mpa_per_mm": 6.0,
+      "bending_quadrature_bound_mpa": 0.046875,
+      "integrated": {
+        "membrane_mpa": 36.0,
+        "bending_mpa": -24.0,
+        "surface_mpa": 12.0,
+        "root_mpa": 60.0,
+        "peak_mpa": 0.0
+      }
+    }
+  }
+}

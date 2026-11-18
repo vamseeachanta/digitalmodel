@@ -1,0 +1,42 @@
+# Synthetic demonstration, not measured data or a qualified platform design.
+# Dent inputs: Design Approximations for Offshore Tubulars Against Collisions
+# (1987), Volume I, section 6.3.1 and equations 6.13-6.17.
+# Uniform wall preparation (2012):
+# BOEMRE TA&R 677, Appendix A: ISO 19902:2007 A13.8 / NORSOK N-004 corroded members (secondary citation)
+members:
+  - id: dent-example
+    flooded: false
+    severed: false
+    uniform_corrosion: false
+    dent:
+      midwall_diameter_to_thickness: 40.0
+      reduced_slenderness: 1.0
+      dent_depth_ratio: 0.1
+      neutral_axis_bow_ratio: 0.005
+      elastic_to_yield_ratio: 600.0
+      axial_demand_ratio: 0.2
+      simply_supported: true
+      sharp_midspan_dent: true
+      bow_at_plastic_neutral_axis: true
+      has_applied_bending: false
+      has_hydrostatic_pressure: false
+  - id: uniform-wall-example
+    flooded: false
+    severed: false
+    uniform_corrosion: true
+    section:
+      outer_diameter: 10.0
+      wall_thickness: 1.0
+      yield_strength: 50.0
+      elastic_modulus: 30000.0
+      effective_length: 100.0
+    remaining_thickness: 0.5
+    actions:
+      axial_force: 30.0
+      bending_moment: 20.0
+      Cm: 1.0
+      is_tension: false
+  - id: severed-example
+    flooded: false
+    severed: true
+    uniform_corrosion: false

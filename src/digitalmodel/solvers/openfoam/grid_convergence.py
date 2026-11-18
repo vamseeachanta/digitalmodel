@@ -129,12 +129,22 @@ def settled_mean(coefficient_dat: Path, column: str = "Cd", window: int = 400) -
 
 
 def gci_report(cases: Sequence[Path], column: str = "Cd", window: int = 400,
-               coeff_relpath: str = "postProcessing/forceCoeffs/0/coefficient.dat") -> dict:
+               coeff_relpath: str = "postProcessing/forceCoeffs/0/coefficient.dat",
+               *, near_wall_measurements=None, near_wall_criteria=None) -> dict:
     """Assemble a triplet report from three case directories (any order).
 
     Reads each case's in-plane cell from ``case_provenance.json`` and the
     settled coefficient from its forceCoeffs output; sorts fine -> coarse.
     """
+    from .near_wall_acceptance import assess_near_wall
+
+    names = [Path(case).name for case in cases]
+    if len(set(names)) != len(names):
+        raise GridConvergenceError("near-wall case identities must be unique")
+    supplied = near_wall_measurements or {}
+    wall = assess_near_wall({name: supplied.get(name) for name in names}, near_wall_criteria)
+    if not wall["passed"]:
+        raise GridConvergenceError(f"near-wall qualification {wall['status']}: {wall}")
     rows = []
     for case in cases:
         case = Path(case)
@@ -146,7 +156,7 @@ def gci_report(cases: Sequence[Path], column: str = "Cd", window: int = 400,
                          cells_per_wavelength=prov["mesh"]["free_surface"].get("cells_per_wavelength")))
     rows.sort(key=lambda r: r["h_m"])
     gc = grid_convergence([r["h_m"] for r in rows], [r["value"] for r in rows])
-    return {"column": column, "window": window, "meshes": rows, "gci": gc.to_dict()}
+    return {"column": column, "window": window, "meshes": rows, "gci": gc.to_dict(), "near_wall": wall}
 
 
 # --------------------------------------------------------------------------- #
@@ -173,8 +183,17 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("cases", nargs=3, type=Path)
     ap.add_argument("--window", type=int, default=400)
     ap.add_argument("--json", type=Path, default=None, help="write the full report here")
+    ap.add_argument("--near-wall", type=Path, required=True,
+                    help="JSON with criteria and per-case measured wall evidence")
     ns = ap.parse_args(argv)
-    rep = gci_report(ns.cases, column="Cd", window=ns.window)
+    from .near_wall_acceptance import NearWallCriteria, WallMeasurement
+
+    evidence = json.loads(ns.near_wall.read_text(encoding="utf-8"))
+    criteria = NearWallCriteria(**evidence["criteria"])
+    measurements = {name: WallMeasurement(**value)
+                    for name, value in evidence["measurements"].items()}
+    rep = gci_report(ns.cases, column="Cd", window=ns.window,
+                     near_wall_criteria=criteria, near_wall_measurements=measurements)
     meshes = rep["meshes"]
     for m in meshes:
         pr, vi = force_split(next(c for c in ns.cases if c.name == m["case"]), ns.window)

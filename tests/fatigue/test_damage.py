@@ -3,6 +3,7 @@
 import numpy as np
 import pandas as pd
 import pytest
+from pylife.materiallaws.woehlercurve import WoehlerCurve
 
 from digitalmodel.fatigue.sn_curves import get_sn_curve
 from digitalmodel.fatigue.damage import (
@@ -26,6 +27,34 @@ def simple_histogram():
 
 
 class TestMinerDamage:
+    @pytest.mark.parametrize("explicit_endurance", [False, True])
+    def test_mixed_finite_and_perfect_endurance_bins(self, explicit_endurance):
+        # Synthetic Basquin curve: N(200) = 1e6 * (200/100)^-3 = 125000;
+        # Miner sum = 1/125000 + 10000/infinity = 8e-6. pyLife's
+        # WoehlerCurve contract defines absent k_2 as perfect endurance.
+        parameters = {"SD": 100.0, "ND": 1e6, "k_1": 3.0}
+        if explicit_endurance:
+            parameters["k_2"] = np.inf
+        curve = WoehlerCurve(pd.Series(parameters))
+        histogram = pd.DataFrame({"stress_range": [200.0, 50.0], "cycles": [1, 10000]})
+        result = miner_damage(histogram, curve)
+        assert result["allowable_cycles"].tolist() == [125000.0, np.inf]
+        assert result["damage"].tolist() == pytest.approx([8e-6, 0.0])
+        assert result.attrs["total_damage"] == pytest.approx(8e-6, rel=1e-12)
+
+    @pytest.mark.parametrize("k_2", [5.0, np.inf])
+    def test_infinity_above_endurance_limit_is_rejected(self, monkeypatch, k_2):
+        curve = WoehlerCurve(pd.Series({"SD": 100.0, "ND": 1e6, "k_1": 3.0, "k_2": k_2}))
+        monkeypatch.setattr(curve, "cycles", lambda stress: np.full(len(stress), np.inf))
+        with pytest.raises(ValueError, match="allowable"):
+            miner_damage(pd.DataFrame({"stress_range": [200.0], "cycles": [1]}), curve)
+
+    @pytest.mark.parametrize("stress, cycles", [([0.0], [10.0]), ([100.0], [0.0])])
+    def test_unloaded_histogram_has_zero_damage(self, f_curve, stress, cycles):
+        result = miner_damage(pd.DataFrame({"stress_range": stress, "cycles": cycles}), f_curve)
+        assert result.attrs["total_damage"] == 0.0
+        assert result["damage"].tolist() == [0.0]
+
     def test_returns_dataframe_with_damage_columns(self, simple_histogram, f_curve):
         result = miner_damage(simple_histogram, f_curve)
         assert "allowable_cycles" in result.columns

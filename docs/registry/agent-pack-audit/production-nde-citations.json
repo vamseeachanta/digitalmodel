@@ -1,0 +1,1291 @@
+{
+  "summary": "Repository-wide citation collection: 64 passed, 36 failed on unchanged baseline imports in the dependency-expanded environment.",
+  "revision_history": [
+    {
+      "revision": 1,
+      "date": "2026-10-22",
+      "change": "Record import failures and main-source evidence without changing existing citations."
+    }
+  ],
+  "code_pin": "3554b14fde67f44b1c52b81b6c72106282eaff29",
+  "command": "uv run --no-project --no-build --with pytest --with pytest-asyncio --with scipy --with pyyaml --with ruamel.yaml --with pandas --with pydantic --with loguru --with pint --with requests --with jsonschema --with matplotlib --with h5py --with jinja2 --with plotly --with openpyxl --with sympy --with networkx python -m pytest tests/docs/test_agent_pack_node_ids.py -q -rA -p no:cacheprovider --basetemp=<scratch>/bt-all-nodes-deps",
+  "collector": {
+    "path": "tests/docs/test_agent_pack_node_ids.py",
+    "main_blob_sha256": "006a26e7077d28c2807afeabb8207f911299612f7b6e6928db25982d42688bf3"
+  },
+  "proof": "Each listed pack, collector and traceback source was read with git show origin/main and byte-compared with the working copy. No baseline tests were rerun on an export or another checkout.",
+  "limits": "Import failures prevent confirming the cited node IDs; no missing node is inferred solely from a missing collector after an import failure.",
+  "failures": [
+    {
+      "pack": "src/digitalmodel/asset_integrity/assessment/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/asset_integrity/test_ffs_1094_quickwins.py::test_gml_t_am_is_area_average_not_mean_of_column_means",
+        "tests/asset_integrity/test_ffs_assessment.py::TestGridParserFromDataFrame::test_mm_to_inch_conversion",
+        "tests/asset_integrity/test_pitting_workflow.py::test_pitted_grid_routes_and_workflow_returns_formula_anchor",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[api579-pitting-screen]"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/code_checks/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/code_checks/test_code_check_workflow.py::test_api_rp_2rd_code_check_workflow_writes_results_and_summary",
+        "tests/code_checks/test_code_check_workflow.py::test_code_check_workflow_unknown_code_fails_closed",
+        "tests/code_checks/test_dnv_os_f101.py::test_local_buckling_combined_handcalc",
+        "tests/code_checks/test_dnv_os_f101.py::test_plastic_axial_capacity",
+        "tests/code_checks/test_dnv_os_f101.py::test_plastic_moment_capacity",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[api-2sk-mooring]",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[api-rp-2rd-riser]",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[dnv-os-f201-riser]"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/code_checks/test_code_check_workflow.py",
+          "line": 8,
+          "main_blob_sha256": "3fca829e5cf9c5137afea9a8c5c4311c780ccd19fd92a0898f32464b8ac4fc3e"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/drilling_riser/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/contracts/test_string_addressed_dependencies.py::test_the_three_known_defects_are_still_derived",
+        "tests/drilling_riser/test_assembly_golden.py::test_16q_min_top_tension_golden",
+        "tests/drilling_riser/test_assembly_golden.py::test_16q_rsu0014_setting_side_consistency",
+        "tests/drilling_riser/test_assembly_golden.py::test_16q_rsu0023_mud_weight_sweep_golden",
+        "tests/drilling_riser/test_assembly_golden.py::test_16q_rsu0023_tsrmin_composition_golden",
+        "tests/drilling_riser/test_assembly_golden.py::test_16q_wave2_min_vertical_top_tension_golden[RSU-0010-keys0-min_slip_ring_tension_kips-n_wires-min_vertical_top_tension_kips]",
+        "tests/drilling_riser/test_assembly_golden.py::test_16q_wave2_min_vertical_top_tension_golden[RSU-0012-keys1-min_slip_ring_tension_kips-n_wires-min_vertical_top_tension_kips]",
+        "tests/drilling_riser/test_assembly_golden.py::test_16q_wave2_min_vertical_top_tension_golden[RSU-0014-keys2-tsr_min_kips-n_tensioners-api_min_vertical_top_tension_kips]",
+        "tests/drilling_riser/test_assembly_golden.py::test_16q_wave2_min_vertical_top_tension_golden[RSU-0023-keys3-tsr_min_kips-n_tensioners-tmin_vert_kips]",
+        "tests/drilling_riser/test_assembly_golden.py::test_16q_wave2_overall_min_top_tension_golden",
+        "tests/drilling_riser/test_assembly_golden.py::test_rsu0077_shallow_water_tension_to_rotate_contract_schema",
+        "tests/drilling_riser/test_assembly_golden.py::test_setting_side_values_present_but_not_asserted",
+        "tests/drilling_riser/test_drive_off_worked_example.py::test_reproduce_drive_off_worked_example",
+        "tests/drilling_riser/test_envelope.py::test_16q_and_amjig_can_produce_different_allowable_masks",
+        "tests/drilling_riser/test_envelope.py::test_resolve_amjig_criteria_from_private_wiki",
+        "tests/drilling_riser/test_operability_atlas.py::test_rebuild_is_byte_identical",
+        "tests/drilling_riser/test_registry_batch.py::test_rsu0077_registry_batch_is_runnable_source",
+        "tests/drilling_riser/test_response_correction.py::test_cited_limit_is_untouched_by_correction",
+        "tests/drilling_riser/test_riser_response.py::test_no_offset_no_current_is_zero",
+        "tests/drilling_riser/test_riser_response.py::test_pure_offset_is_rigid_tilt_no_moment",
+        "tests/drilling_riser/test_riser_response.py::test_shear_lower_matches_closed_form",
+        "tests/drilling_riser/test_riser_stackup_workflow.py::test_riser_stackup_workflow_writes_profile_next_to_input",
+        "tests/drilling_riser/test_schedule_assembly.py::test_rsu0019_endpoints_within_3_percent",
+        "tests/drilling_riser/test_schedule_assembly.py::test_rsu0021_endpoints_finding_band",
+        "tests/drilling_riser/test_schedule_assembly.py::test_rsu0021_lmrp_inclusion_hypothesis",
+        "tests/drilling_riser/test_schedule_assembly.py::test_rsu0038_schedule_is_raster_only",
+        "tests/drilling_riser/test_schedule_assembly.py::test_rsu0040_endpoints_finding_band",
+        "tests/drilling_riser/test_schedule_assembly.py::test_rsu0040_five_bare_swap_consistency",
+        "tests/drilling_riser/test_schedule_assembly.py::test_schedule_assembly_structure[RSU-0019]",
+        "tests/drilling_riser/test_schedule_assembly.py::test_schedule_assembly_structure[RSU-0021]",
+        "tests/drilling_riser/test_schedule_assembly.py::test_schedule_assembly_structure[RSU-0040]",
+        "tests/drilling_riser/test_schedule_assembly.py::test_tension_is_mud_linear_increasing",
+        "tests/drilling_riser/test_schedule_assembly.py::test_unknown_rsu_fails_closed",
+        "tests/drilling_riser/test_tsj_workflow.py::test_tsj_sizing_workflow_writes_section_utilisation_next_to_input",
+        "tests/riser_database/test_citations.py::test_get_amjig_envelope_criteria_emits_private_wiki_citation"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/drilling_riser/test_riser_stackup_workflow.py",
+          "line": 7,
+          "main_blob_sha256": "3c921ce473e26b95f412e96e3f623f820f3327c121f5196d639e8a902efd3a6a"
+        },
+        {
+          "path": "tests/drilling_riser/test_tsj_workflow.py",
+          "line": 8,
+          "main_blob_sha256": "b2ae254ea7d8c0b66d06b7b10e2f33e8686cae112dbb1c03b65c1fe7f44ac463"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/drilling_riser/stackup_drawing/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/drilling_riser/stackup_drawing/test_render_reconcile.py::test_golden_snapshot",
+        "tests/drilling_riser/stackup_drawing/test_render_reconcile.py::test_synthetic_fixture_renders_and_reconciles_clean",
+        "tests/drilling_riser/stackup_drawing/test_schema_adapters.py::test_from_schedule_assembly_renders_na_and_reconciles",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-stackup-drawing]"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/fatigue/docs/agent-pack.md",
+      "missing_modules": [
+        "pylife"
+      ],
+      "cited_node_ids": [
+        "tests/fatigue/test_assessment.py::test_duration_and_design_factor_are_explicit",
+        "tests/fatigue/test_assessment.py::test_export_reads_native_output_and_workbook_back",
+        "tests/fatigue/test_hotspot_stress.py::TestThroughThicknessLinearisation::test_pure_bending_distribution",
+        "tests/fatigue/test_hotspot_stress.py::TestThroughThicknessLinearisation::test_uniform_tension_membrane_only",
+        "tests/fatigue/test_multiaxial_fatigue.py::TestVonMisesEquivalent::test_uniaxial_returns_same"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/fatigue/__init__.py",
+          "line": 18,
+          "main_blob_sha256": "6d070565d40968df94d032071f65226c7526479dd5ac4a9207a459b971f6a220"
+        },
+        {
+          "path": "src/digitalmodel/fatigue/sn_curves.py",
+          "line": 26,
+          "main_blob_sha256": "d44cc670bbc4c3f6a3dce6d4b7804f6b3ebcc6951271398a8be6b0d7d4d70f11"
+        },
+        {
+          "path": "tests/fatigue/test_assessment.py",
+          "line": 16,
+          "main_blob_sha256": "ef10f53981ee816ac39a4faa35bcd26cd221ac40baaac702007b6c86a945c16a"
+        },
+        {
+          "path": "tests/fatigue/test_hotspot_stress.py",
+          "line": 14,
+          "main_blob_sha256": "43daef281c9724fb67c443f5e2f42228e0291c91aa6bc3ddd8649afb443281f8"
+        },
+        {
+          "path": "tests/fatigue/test_multiaxial_fatigue.py",
+          "line": 6,
+          "main_blob_sha256": "acc1692c61849b300be2ae5f5182aa04403e4cff935788bd3d3def9ccc8c55ff"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/field_development/schematics/docs/agent-pack.md",
+      "missing_modules": [
+        "seaborn"
+      ],
+      "cited_node_ids": [
+        "tests/test_field_development_schematic.py::TestFpsoSpreadSchematic::test_mooring_line_angles_evenly_distributed",
+        "tests/test_field_development_schematic.py::TestLayoutMath::test_template_x_positions_evenly_spaced",
+        "tests/test_field_development_schematic.py::TestLayoutMath::test_well_positions_symmetric_around_template",
+        "tests/test_field_development_schematic.py::TestPlatformSchematic::test_render_with_satellite_wells",
+        "tests/test_field_development_schematic.py::TestRenderer::test_render_png_creates_file",
+        "tests/test_field_development_schematic.py::TestRenderer::test_render_svg_creates_file"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/field_development/__init__.py",
+          "line": 92,
+          "main_blob_sha256": "9e26e893afdec4e664db7379dddffa1ac151cfec097cd8c03d74c7d5abe579a1"
+        },
+        {
+          "path": "src/digitalmodel/field_development/layout_model.py",
+          "line": 70,
+          "main_blob_sha256": "93b585e7ba8e3b27542676fd1a0c502019641758a2ccd41ded0e728441312c29"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_analysis/__init__.py",
+          "line": 73,
+          "main_blob_sha256": "96b4d52443a0ead57c601940320e381ae4e46a54cc93797d9d1c3f3358d0bccd"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_analysis/hydrodynamic_coefficients/__init__.py",
+          "line": 47,
+          "main_blob_sha256": "ee9f92662e95d5bdf6f23742aff3441fa7baa1bf8704b5409b414613987a3242"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_analysis/hydrodynamic_coefficients/plotting.py",
+          "line": 17,
+          "main_blob_sha256": "f1ef97ba9dc6b31cab3367a14ff62dee0d954ed4b0cf9a4df22c7b9e444dcc33"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_analysis/profiling/__init__.py",
+          "line": 18,
+          "main_blob_sha256": "4fb6a8555461bf24ba651f9872b2b356ca4c7c1c181ca524ac93a622065a461f"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py",
+          "line": 61,
+          "main_blob_sha256": "2ffe834c913b549f6ec58f0e56fc093d1f551a950e628d152a49aa7972f1ab9d"
+        },
+        {
+          "path": "tests/test_field_development_schematic.py",
+          "line": 16,
+          "main_blob_sha256": "e4447ede380a40a598a7d1b4dc27754811a5b0983fb24a94f48c5a6bf8771ed0"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/floating_wind/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/floating_wind/test_economics_workflow.py::test_router_reproduces_base_case",
+        "tests/floating_wind/test_floaters.py::test_semi_is_stable_and_in_plausible_period_band",
+        "tests/floating_wind/test_floaters.py::test_well_sized_spar_is_stable_with_long_heave",
+        "tests/floating_wind/test_qualification.py::test_weighted_mean_is_correct",
+        "tests/floating_wind/test_report.py::test_writes_html_file",
+        "tests/floating_wind/test_screening.py::test_mooring_check_only_when_criteria_given",
+        "tests/floating_wind/test_solver_tier.py::test_box_gdf_is_well_formed",
+        "tests/floating_wind/test_solver_tier.py::test_orcawave_spec_inertia_from_properties",
+        "tests/floating_wind/test_standardization.py::test_wrights_law_doubling",
+        "tests/floating_wind/test_workflow.py::test_floating_wind_sizing_workflow_offline"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/floating_wind/test_workflow.py",
+          "line": 13,
+          "main_blob_sha256": "d8286247224f10676eb113b4c09f1ebd4c8ee6739ac57ac4e34f3ba97b5dc38a"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/geotechnical/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/geotechnical/test_mudmat_eccentricity.py::test_default_axis_preserves_width_eccentricity",
+        "tests/geotechnical/test_mudmat_eccentricity.py::test_length_eccentricity_can_exceed_half_original_width",
+        "tests/geotechnical/test_pile_capacity_composite.py::TestAlphaMethodCapacitySingleLayer::test_components_sum_to_total",
+        "tests/geotechnical/test_pile_capacity_dark_intel.py::TestDarkIntelAxialCapacity::test_total_axial_capacity_kn",
+        "tests/workflows/test_durable_workflows.py::test_liquefaction_seed_idriss_closed_form",
+        "tests/workflows/test_durable_workflows.py::test_mudmat_bearing_capacity_factors_match_brinch_hansen",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[anchor-capacity]",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[drag-anchor-holding]",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[liquefaction-triggering]",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[mudmat-bearing-capacity]",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[pile-axial-capacity]",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[pile-capacity]",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[scour-assessment]"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/hydrodynamics/aqwa/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py::TestAqwaLISFilesRealData::test_get_data_from_lis_file",
+        "tests/hydrodynamics/aqwa/test_audit_damping.py::test_harmonic_heave_and_symmetric_roll",
+        "tests/hydrodynamics/aqwa/test_audit_damping.py::test_natural_frequency_zeta_and_period",
+        "tests/hydrodynamics/aqwa/test_audit_damping.py::test_summary_uses_resonance_not_grid_peak",
+        "tests/hydrodynamics/aqwa/test_audit_dat.py::test_deck6_template",
+        "tests/hydrodynamics/aqwa/test_viscous_damping_determination.py::test_restoring_falls_back_to_dat_when_lis_missing",
+        "tests/hydrodynamics/aqwa/test_viscous_damping_determination.py::test_restoring_prioritizes_lis_values"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/hydrodynamics/aqwa/__init__.py",
+          "line": 3,
+          "main_blob_sha256": "d0f650d4511904ce5da3a2d00318d4944635769de9a9b60c5ef64a2cc0eb638d"
+        },
+        {
+          "path": "src/digitalmodel/hydrodynamics/aqwa/aqwa_lis_files.py",
+          "line": 9,
+          "main_blob_sha256": "5ad3a6e5d79277594330828b36b982d42afb77a521ddc59c2635a6894847e63a"
+        },
+        {
+          "path": "src/digitalmodel/hydrodynamics/aqwa/aqwa_post_process.py",
+          "line": 4,
+          "main_blob_sha256": "96e2cf861097c01621097265b61e8e6a1a430884e8f9205fc11ea94875a72a5c"
+        },
+        {
+          "path": "src/digitalmodel/hydrodynamics/aqwa/aqwa_router.py",
+          "line": 10,
+          "main_blob_sha256": "85b75776833f25b1e52e61c714c7365202c23f6f2a9d98abca0c61892d22c3e7"
+        },
+        {
+          "path": "tests/hydrodynamics/aqwa/test_aqwa_lis_parser_real_data.py",
+          "line": 14,
+          "main_blob_sha256": "b4a0cb265a96b3b321b0b6ca71d5e67ae55b547e771d87c3cbf1c2a7fe8308ae"
+        },
+        {
+          "path": "tests/hydrodynamics/aqwa/test_audit_damping.py",
+          "line": 5,
+          "main_blob_sha256": "9d605e29b1512c2f28e53fa6324059f65068a1af5922e642a10b65a58da77ea4"
+        },
+        {
+          "path": "tests/hydrodynamics/aqwa/test_audit_dat.py",
+          "line": 7,
+          "main_blob_sha256": "82005095d2dd09a3ab75c72dfe34bf18f697a9cd3c00034eba382be627758b67"
+        },
+        {
+          "path": "tests/hydrodynamics/aqwa/test_audit_workflow.py",
+          "line": 7,
+          "main_blob_sha256": "7215f2fa6b617d80fd39b050485aa136c62927c31ccff003cb1ff286ddeada9a"
+        },
+        {
+          "path": "tests/hydrodynamics/aqwa/test_viscous_damping_determination.py",
+          "line": 5,
+          "main_blob_sha256": "163d1ea651605009e203ed1fa87ea4e642e3965beac4cac3ad5df88f20d08d07"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/hydrodynamics/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/hydrodynamics/test_hydrodynamics_unit.py::TestWaveSpectra::test_spectral_moments",
+        "tests/hydrodynamics/test_seakeeping.py::TestComputeResponseSpectrum::test_scaling_by_rao_squared",
+        "tests/hydrodynamics/test_seakeeping.py::TestMotionExceedance::test_known_rayleigh_value",
+        "tests/hydrodynamics/test_seakeeping.py::TestSpectralMoments::test_m0_of_flat_spectrum",
+        "tests/hydrodynamics/test_sloshing.py::test_rectangular_fundamental_period_golden",
+        "tests/test_propeller_rudder_interaction.py::TestSodingForces::test_symmetric_rudder_angles",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[propeller-rudder-interaction]"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/hydrodynamics/hull_library/docs/agent-pack.md",
+      "missing_modules": [
+        "shapely"
+      ],
+      "cited_node_ids": [
+        "tests/hydrodynamics/hull_library/test_column_pontoon_form.py::test_oc4_published_geometry",
+        "tests/hydrodynamics/hull_library/test_column_pontoon_form.py::test_spar_hand_hydrostatics",
+        "tests/hydrodynamics/hull_library/test_parametric_form.py::test_box_closed_form",
+        "tests/hydrodynamics/hull_library/test_rao_registry_identity.py::test_issue_reproduction",
+        "tests/hydrodynamics/hull_library/test_refinement_classifications.py::test_rectangular_cutout_flags_follow_first_refinement"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/hydrodynamics/hull_library/__init__.py",
+          "line": 12,
+          "main_blob_sha256": "f684af1e6515b36a497caeb8acc00b20820936737455081ecf1be364a9a1d2d2"
+        },
+        {
+          "path": "src/digitalmodel/hydrodynamics/hull_library/mesh_cutouts.py",
+          "line": 16,
+          "main_blob_sha256": "0dabce0f8f94f24f5ccd5134a915fc38e7a5952805f593b11839542c48f0fd05"
+        },
+        {
+          "path": "tests/hydrodynamics/hull_library/conftest.py",
+          "line": 5,
+          "main_blob_sha256": "f3484c95b2a15feee1dac940022fa8a187b9d8f89c783cb36e6310ac6eaa2a25"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/infrastructure/base_solvers/docs/agent-pack.md",
+      "missing_modules": [
+        "deepdiff",
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/infrastructure/unit/test_base_solvers_base.py::TestBaseSolver::test_results_isolation",
+        "tests/infrastructure/unit/test_structural_solvers_week2.py::TestElasticBucklingSolver::test_solve_column_buckling",
+        "tests/infrastructure/unit/test_structural_solvers_week2.py::TestPostProcessingUtilities::test_compute_von_mises_shear",
+        "tests/specialized/cathodic_protection/test_astm_g80.py::TestDisbondingArea::test_nominal_annular_area",
+        "tests/specialized/ship_design/test_ship_fatigue_analysis_import.py::test_damage_from_rainflow_cycles_is_real_miners_sum",
+        "tests/specialized/ship_design/test_ship_fatigue_analysis_import.py::test_default_sn_cfg_shape",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[fatigue-analysis]",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[plate-buckling]"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "src/digitalmodel/infrastructure/base_solvers/fatigue/fatigue_analysis.py",
+          "line": 3,
+          "main_blob_sha256": "81ba2accbe0453d66e5a6eaadae58884073628294a46b76a39df8110caa01a2a"
+        },
+        {
+          "path": "tests/specialized/ship_design/test_ship_fatigue_analysis_import.py",
+          "line": 30,
+          "main_blob_sha256": "2f3e2b4025cb2058fc3b09768abe8cc5b35507e4bdc469d5eb221bc2e9fb2bb9"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/marine_ops/artificial_lift/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/marine_ops/artificial_lift/dynacard/test_geometry.py::TestCardGeometryCalculator::test_calculate_centroid_rectangle",
+        "tests/marine_ops/artificial_lift/dynacard/test_geometry.py::TestCardGeometryCalculator::test_calculate_rectangle_area",
+        "tests/marine_ops/artificial_lift/dynacard/test_geometry.py::TestCardGeometryCalculator::test_calculate_triangle_area",
+        "tests/marine_ops/artificial_lift/test_solver_parity.py::test_corner_metrics_match_available_vendor_analyses",
+        "tests/marine_ops/artificial_lift/test_solver_parity.py::test_solver_parity_with_vendor_downhole_cards",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[artificial-lift-field-health]",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[dynacard-diagnostics]"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/marine_ops/marine_analysis/docs/agent-pack.md",
+      "missing_modules": [
+        "seaborn"
+      ],
+      "cited_node_ids": [
+        "tests/contracts/test_string_addressed_dependencies.py::test_the_three_known_defects_are_still_derived",
+        "tests/marine_ops/marine_analysis/test_rao_quality_checks.py::TestIntegrationWithRealData::test_real_data_report_structure",
+        "tests/marine_ops/marine_analysis/test_rao_quality_checks.py::TestIntegrationWithRealData::test_real_semi_rao_quality_check",
+        "tests/marine_ops/marine_engineering/catenary/test_catenary_integration.py::TestUnifiedModuleIntegration::test_phase1_solver_still_works",
+        "tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py::test_fixture_matches_independent_derivation",
+        "tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py::test_inextensible_chord_arc_and_end_forces",
+        "tests/marine_ops/marine_engineering/catenary/test_catenary_reference.py::test_solver_against_reconciled_fixture",
+        "tests/marine_ops/marine_engineering/catenary/test_simplified.py::TestSimplifiedCatenarySolverAngleBased::test_angle_based_basic",
+        "tests/marine_ops/marine_engineering/catenary/test_simplified.py::TestSimplifiedCatenarySolverForceBased::test_force_based_basic",
+        "tests/marine_ops/marine_engineering/test_unified_rao_reader.py::TestUnifiedRAOReader::test_data_model_to_dict_conversion",
+        "tests/marine_ops/marine_engineering/test_unified_rao_reader.py::TestUnifiedRAOReader::test_read_orcaflex_yml",
+        "tests/test_lazy_wave_legacy_comparison.py::TestLegacyComparison::test_hangoff_section_matches_legacy"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/_compat.py",
+          "line": 230,
+          "main_blob_sha256": "3c576d940a69d2f69d1e601ff7430c235f77d52a4ea0ca964ef8849539c42844"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_analysis/__init__.py",
+          "line": 73,
+          "main_blob_sha256": "96b4d52443a0ead57c601940320e381ae4e46a54cc93797d9d1c3f3358d0bccd"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_analysis/hydrodynamic_coefficients/__init__.py",
+          "line": 47,
+          "main_blob_sha256": "ee9f92662e95d5bdf6f23742aff3441fa7baa1bf8704b5409b414613987a3242"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_analysis/hydrodynamic_coefficients/plotting.py",
+          "line": 17,
+          "main_blob_sha256": "f1ef97ba9dc6b31cab3367a14ff62dee0d954ed4b0cf9a4df22c7b9e444dcc33"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_analysis/profiling/__init__.py",
+          "line": 18,
+          "main_blob_sha256": "4fb6a8555461bf24ba651f9872b2b356ca4c7c1c181ca524ac93a622065a461f"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_analysis/profiling/__init__.py",
+          "line": 19,
+          "main_blob_sha256": "4fb6a8555461bf24ba651f9872b2b356ca4c7c1c181ca524ac93a622065a461f"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_analysis/profiling/performance_charts.py",
+          "line": 21,
+          "main_blob_sha256": "eed39e7c6605268123079981b97d7dd1a9c99f8cd4b4374b666d54b6974d986d"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py",
+          "line": 61,
+          "main_blob_sha256": "2ffe834c913b549f6ec58f0e56fc093d1f551a950e628d152a49aa7972f1ab9d"
+        },
+        {
+          "path": "tests/marine_ops/marine_analysis/test_rao_quality_checks.py",
+          "line": 25,
+          "main_blob_sha256": "2bc8ae5377e1aa5ebc7575dba2f697f96e2e857a176d950de12ad847d3a1c2a6"
+        },
+        {
+          "path": "tests/marine_ops/marine_engineering/catenary/test_simplified.py",
+          "line": 13,
+          "main_blob_sha256": "6cf7d94d490c7111228fb1086af6580b4a5121e5f6614e09d35b64fc7aa5f786"
+        },
+        {
+          "path": "tests/marine_ops/marine_engineering/test_unified_rao_reader.py",
+          "line": 17,
+          "main_blob_sha256": "62a53e0976db308f743cafce111440003927f3d0572091f0b95f4aa5fbdf01e9"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/marine_ops/marine_engineering/docs/agent-pack.md",
+      "missing_modules": [
+        "seaborn",
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py::TestFatigueLifeReport::test_fatigue_life_inverse_of_damage_per_year",
+        "tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py::TestFatigueLifeReport::test_inspection_interval_is_fraction_of_fatigue_life",
+        "tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py::TestSNcurve::test_custom_sn_curve",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[fpso-mooring-full]",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[hydro-coefficients]"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_analysis/__init__.py",
+          "line": 73,
+          "main_blob_sha256": "96b4d52443a0ead57c601940320e381ae4e46a54cc93797d9d1c3f3358d0bccd"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_analysis/hydrodynamic_coefficients/__init__.py",
+          "line": 47,
+          "main_blob_sha256": "ee9f92662e95d5bdf6f23742aff3441fa7baa1bf8704b5409b414613987a3242"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_analysis/hydrodynamic_coefficients/plotting.py",
+          "line": 17,
+          "main_blob_sha256": "f1ef97ba9dc6b31cab3367a14ff62dee0d954ed4b0cf9a4df22c7b9e444dcc33"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_analysis/profiling/__init__.py",
+          "line": 18,
+          "main_blob_sha256": "4fb6a8555461bf24ba651f9872b2b356ca4c7c1c181ca524ac93a622065a461f"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_analysis/profiling/profile_modules.py",
+          "line": 61,
+          "main_blob_sha256": "2ffe834c913b549f6ec58f0e56fc093d1f551a950e628d152a49aa7972f1ab9d"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/marine_engineering/__init__.py",
+          "line": 18,
+          "main_blob_sha256": "3990dc3d3a411562e5b77d39be111932e1ae59ce916e8c4e89ebd8201f4ffbc9"
+        },
+        {
+          "path": "tests/marine_ops/marine_engineering/test_calm_buoy_fatigue.py",
+          "line": 23,
+          "main_blob_sha256": "ad76495e92a5509f5c2ee040e406b6d2502ff88a906398b6a48725e638e1f255"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/marine_ops/reservoir/docs/agent-pack.md",
+      "missing_modules": [
+        "sklearn"
+      ],
+      "cited_node_ids": [
+        "tests/marine_ops/reservoir/test_modeling.py::TestMaterialBalance::test_tank_material_balance_no_production",
+        "tests/marine_ops/reservoir/test_modeling.py::TestMaterialBalance::test_tank_material_balance_pressure_drop",
+        "tests/marine_ops/reservoir/test_modeling.py::TestReservoirSimulation::test_setup_grid_initial_pressure",
+        "tests/marine_ops/reservoir/test_modeling.py::TestWellTestAnalysis::test_calculate_r_squared_perfect_fit",
+        "tests/test_reservoir_framework.py::TestReservoirProperties::test_pore_volume_calculation"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/marine_ops/reservoir/__init__.py",
+          "line": 36,
+          "main_blob_sha256": "596d53a35b5eeefb1ac46cc138e4c78b32912a1c77761668c0fbc141883bad59"
+        },
+        {
+          "path": "src/digitalmodel/marine_ops/reservoir/analysis.py",
+          "line": 26,
+          "main_blob_sha256": "794c522909ad6ee5064e5f73dc563fd619074cf10a8c0865c821c28a36447178"
+        },
+        {
+          "path": "tests/marine_ops/reservoir/test_modeling.py",
+          "line": 20,
+          "main_blob_sha256": "e57f3497601893f1097f9d3cbdbd30211e329311c19994709c312cf91fe7de35"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/orcaflex/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/orcaflex/test_fowt_mooring_workflow.py::test_fowt_mooring_workflow_offline",
+        "tests/orcaflex/test_pipelay_analysis.py::TestStingerRadius::test_basic_calculation",
+        "tests/orcaflex/test_postprocessor.py::TestTimeSeriesStats::test_rms_calculation",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[fowt-mooring]"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/orcaflex/test_fowt_mooring_workflow.py",
+          "line": 17,
+          "main_blob_sha256": "45a9438ba80ac935c8e557262b4aa6b1f3542b1ce6ae8bb8644eea7f12704985"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/pipelay/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/pipelay/test_pipelay_workflow.py::test_jlay_higher_tension_reduces_sagbend_strain",
+        "tests/pipelay/test_pipelay_workflow.py::test_jlay_template_runs_offline",
+        "tests/pipelay/test_pipelay_workflow.py::test_reel_lay_template_runs_offline",
+        "tests/pipelay/test_pipelay_workflow.py::test_reeling_strain_exceeding_limit_fails",
+        "tests/pipelay/test_pipelay_workflow.py::test_router_rejects_unknown_method"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/pipelay/test_pipelay_workflow.py",
+          "line": 15,
+          "main_blob_sha256": "06849c95cdcb42c3fa82e77e33d9eca0304335b6b34812093160e9340114ba05"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/rao_spectral_fatigue/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/workflows/test_durable_workflows.py::test_rao_spectral_fatigue_constant_rao_matches_fixed_gain_screening",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[rao-spectral-fatigue]"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/riser_fatigue/docs/agent-pack.md",
+      "missing_modules": [
+        "pylife",
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/riser_fatigue/test_riser_fatigue_workflow.py::test_riser_fatigue_example_runs_offline",
+        "tests/riser_fatigue/test_touchdown.py::test_dff_governs_verdict",
+        "tests/riser_fatigue/test_touchdown.py::test_single_bin_hand_verified"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "src/digitalmodel/fatigue/__init__.py",
+          "line": 18,
+          "main_blob_sha256": "6d070565d40968df94d032071f65226c7526479dd5ac4a9207a459b971f6a220"
+        },
+        {
+          "path": "src/digitalmodel/fatigue/sn_curves.py",
+          "line": 26,
+          "main_blob_sha256": "d44cc670bbc4c3f6a3dce6d4b7804f6b3ebcc6951271398a8be6b0d7d4d70f11"
+        },
+        {
+          "path": "src/digitalmodel/riser_fatigue/__init__.py",
+          "line": 9,
+          "main_blob_sha256": "d92d7ae893836ef295b1668c368bc166c97628dab8e5afb7ebdfa39f4c5383db"
+        },
+        {
+          "path": "src/digitalmodel/riser_fatigue/touchdown.py",
+          "line": 34,
+          "main_blob_sha256": "5d1f0579ef4659cf3e30ccda65c713602a8d4d27876972d7d14720977ebee0c5"
+        },
+        {
+          "path": "tests/riser_fatigue/test_riser_fatigue_workflow.py",
+          "line": 14,
+          "main_blob_sha256": "c66fcd9bb4da926d69265109d6fe30916e7149ee6ef1e778c8cd73e125ea4626"
+        },
+        {
+          "path": "tests/riser_fatigue/test_touchdown.py",
+          "line": 12,
+          "main_blob_sha256": "6b8f150337343cb4d28cf88966f13aff5c580c606032e0e157866cc3e4e98b68"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/signal_processing/signal_analysis/docs/agent-pack.md",
+      "missing_modules": [
+        "pylife"
+      ],
+      "cited_node_ids": [
+        "tests/signal_processing/signal_analysis/core/test_spectral.py::TestComputePSD::test_welch_psd",
+        "tests/signal_processing/signal_analysis/core/test_spectral.py::TestFFTMethod::test_frequency_resolution",
+        "tests/signal_processing/signal_analysis/core/test_spectral.py::TestFFTMethod::test_peak_at_signal_frequency",
+        "tests/signal_processing/signal_analysis/core/test_spectral.py::TestInverseTransform::test_roundtrip_returns_real_array",
+        "tests/signal_processing/signal_analysis/test_pack_acceptance.py::test_single_slope_damage_closed_form"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/fatigue/__init__.py",
+          "line": 18,
+          "main_blob_sha256": "6d070565d40968df94d032071f65226c7526479dd5ac4a9207a459b971f6a220"
+        },
+        {
+          "path": "src/digitalmodel/fatigue/sn_curves.py",
+          "line": 26,
+          "main_blob_sha256": "d44cc670bbc4c3f6a3dce6d4b7804f6b3ebcc6951271398a8be6b0d7d4d70f11"
+        },
+        {
+          "path": "src/digitalmodel/signal_processing/signal_analysis/fatigue/__init__.py",
+          "line": 11,
+          "main_blob_sha256": "380df49b38a5cd42d2766ee656649543368026782195509cd7b1a4484009b86e"
+        },
+        {
+          "path": "src/digitalmodel/signal_processing/signal_analysis/fatigue/curves.py",
+          "line": 12,
+          "main_blob_sha256": "5a396ffc34b66b8c21b6df6101b7473b2c69b88a24e55aedb548e7da2090e8ba"
+        },
+        {
+          "path": "tests/signal_processing/signal_analysis/test_pack_acceptance.py",
+          "line": 10,
+          "main_blob_sha256": "038f8b85f655c76c0f87e5744d3c290c68eb22d92fd76cea528410acfc7ca5dd"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/solvers/orcaflex/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/orcaflex/test_generic_scr_slwr.py::test_analytical_reference_reproduces_from_basis",
+        "tests/solvers/orcaflex/test_model_catalogue.py::TestModelCatalogue::test_counts_and_global_chord",
+        "tests/solvers/orcaflex/test_model_header_guard.py::TestModelHeaderGuard::test_header_boundary_and_directives",
+        "tests/solvers/orcaflex/test_values_equal_bool_normalization.py::TestBoolStringEquivalence::test_true_equals_yes_left",
+        "tests/solvers/orcaflex/test_yaml_validator_timestep.py::test_explicit_disabled_prefix_is_error[false]",
+        "tests/solvers/orcaflex/test_yaml_validator_timestep.py::test_known_enabled_context_accepts_positive_maximum[true]",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[orcaflex-strength-post]"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/solvers/orcaflex/results_analysis/docs/agent-pack.md",
+      "missing_modules": [
+        "sklearn"
+      ],
+      "cited_node_ids": [
+        "tests/solvers/orcaflex/results_analysis/test_csv_parser.py::TestExtractPolarData::test_values_are_last_row",
+        "tests/solvers/orcaflex/results_analysis/test_csv_parser.py::TestExtractTimeSeriesStats::test_rms_calculation",
+        "tests/solvers/orcaflex/results_analysis/test_csv_parser.py::TestExtractTimeSeriesStats::test_rms_sine_wave",
+        "tests/solvers/orcaflex/results_analysis/test_csv_parser.py::TestParseChunked::test_latin1_chunked_raises_unicode_error",
+        "tests/solvers/orcaflex/results_analysis/test_csv_parser.py::TestValidatePolarData::test_missing_headings_flagged",
+        "tests/solvers/orcaflex/results_analysis/test_statistical_analysis.py::TestLinearRegression::test_nan_values_filtered",
+        "tests/solvers/orcaflex/results_analysis/test_statistical_analysis.py::TestLinearRegression::test_perfect_fit"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/solvers/orcaflex/results_analysis/statistical_analysis.py",
+          "line": 16,
+          "main_blob_sha256": "f0fc23a0c92a616db0fd52b011f44a5023133e91d8bcd69c6046474419312723"
+        },
+        {
+          "path": "tests/solvers/orcaflex/results_analysis/test_statistical_analysis.py",
+          "line": 9,
+          "main_blob_sha256": "edc84bc0ba3321b69c4ccfde9eadfe37147c020a5c4c7b615495c0b35635cb9f"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/solvers/orcaflex/universal/docs/agent-pack.md",
+      "missing_modules": [
+        "psutil"
+      ],
+      "cited_node_ids": [
+        "tests/solvers/orcaflex/universal/test_universal_runner.py::TestRealOrcaFlexFiles::test_real_dat_files",
+        "tests/solvers/orcaflex/universal/test_universal_runner.py::TestUniversalRunner::test_batch_processor",
+        "tests/solvers/orcaflex/universal/test_universal_runner.py::TestUniversalRunner::test_initialization",
+        "tests/solvers/orcaflex/universal/test_universal_runner.py::TestUniversalRunner::test_mock_processing",
+        "tests/solvers/orcaflex/universal/test_universal_runner.py::TestUniversalRunner::test_model_discovery",
+        "tests/solvers/orcaflex/universal/test_universal_runner.py::TestUniversalRunner::test_path_resolver",
+        "tests/solvers/orcaflex/universal/test_universal_runner.py::TestUniversalRunner::test_pattern_matching",
+        "tests/solvers/orcaflex/universal/test_universal_runner.py::TestUniversalRunner::test_status_reporter"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/solvers/orcaflex/universal/__init__.py",
+          "line": 25,
+          "main_blob_sha256": "32218cbb4cb0bdcbe6fbb7f23c105d083ccc26ea9a78168d3364b8a1a93488eb"
+        },
+        {
+          "path": "src/digitalmodel/solvers/orcaflex/universal/batch_processor.py",
+          "line": 15,
+          "main_blob_sha256": "93330a65c5eef7e4d38d5fb57bfec5fe9e8015cfd51c768542488c16b382a374"
+        },
+        {
+          "path": "tests/solvers/orcaflex/universal/test_universal_runner.py",
+          "line": 22,
+          "main_blob_sha256": "98a665dcab9385d3b55f6a725408038821f89c915e8e7e9b0d01484bcd08457e"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/structural/docs/agent-pack.md",
+      "missing_modules": [
+        "pylife"
+      ],
+      "cited_node_ids": [
+        "tests/structural/test_buckling_parametric.py::test_default_sweep_case_count",
+        "tests/structural/test_panel_buckling_parametric.py::test_n_cases_helper_matches_default",
+        "tests/structural/test_panel_design_explorer.py::test_allowable_boundary_consistent",
+        "tests/test_parametric_coordinator.py::TestCoordinatorCombined::test_combined_summary_has_both_domain_keys",
+        "tests/test_spectral_fatigue.py::TestSpectralMoments::test_m0_from_spectrum",
+        "tests/test_spectral_fatigue.py::TestSpectralParameters::test_bandwidth_parameter",
+        "tests/test_spectral_fatigue.py::TestSpectralParameters::test_zero_crossing_period",
+        "tests/test_wall_thickness_quickcheck_example.py::test_cache_matches_fresh_compute",
+        "tests/workflow_api/test_run_workflow_buckling.py::test_buckling_reference_golden_bare_in_repo_id"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/fatigue/__init__.py",
+          "line": 18,
+          "main_blob_sha256": "6d070565d40968df94d032071f65226c7526479dd5ac4a9207a459b971f6a220"
+        },
+        {
+          "path": "src/digitalmodel/fatigue/sn_curves.py",
+          "line": 26,
+          "main_blob_sha256": "d44cc670bbc4c3f6a3dce6d4b7804f6b3ebcc6951271398a8be6b0d7d4d70f11"
+        },
+        {
+          "path": "src/digitalmodel/structural/fatigue/__init__.py",
+          "line": 45,
+          "main_blob_sha256": "c8ef3ce4c6b47b12281de0a5fb99f7bb23943cc7c4d1c5569c3f228c54b6251b"
+        },
+        {
+          "path": "src/digitalmodel/structural/fatigue/sn_curves.py",
+          "line": 1082,
+          "main_blob_sha256": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad"
+        },
+        {
+          "path": "src/digitalmodel/structural/parametric_coordinator.py",
+          "line": 28,
+          "main_blob_sha256": "fe5eaa2561ef38f7eaab3727255936b68df1ca4726019a2e7487b56aa1a22c05"
+        },
+        {
+          "path": "tests/test_parametric_coordinator.py",
+          "line": 15,
+          "main_blob_sha256": "a8d67905f77750022e5e778c3b156ffa6567d76292bb549d6469d05907ba6cef"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/structural/fatigue/docs/agent-pack.md",
+      "missing_modules": [
+        "pylife"
+      ],
+      "cited_node_ids": [
+        "tests/structural/fatigue/test_damage_accumulation.py::TestLinearDamageAccumulation::test_multi_level_damage_is_sum",
+        "tests/structural/fatigue/test_worked_examples.py::TestIntegration::test_custom_design_life_consistent",
+        "tests/structural/fatigue/test_worked_examples.py::TestMooringChain::test_chain_damage_positive",
+        "tests/structural/fatigue/test_worked_examples.py::TestPipelineGirthWeld::test_longer_design_life_more_damage"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/fatigue/__init__.py",
+          "line": 18,
+          "main_blob_sha256": "6d070565d40968df94d032071f65226c7526479dd5ac4a9207a459b971f6a220"
+        },
+        {
+          "path": "src/digitalmodel/fatigue/sn_curves.py",
+          "line": 26,
+          "main_blob_sha256": "d44cc670bbc4c3f6a3dce6d4b7804f6b3ebcc6951271398a8be6b0d7d4d70f11"
+        },
+        {
+          "path": "src/digitalmodel/structural/fatigue/__init__.py",
+          "line": 45,
+          "main_blob_sha256": "c8ef3ce4c6b47b12281de0a5fb99f7bb23943cc7c4d1c5569c3f228c54b6251b"
+        },
+        {
+          "path": "src/digitalmodel/structural/fatigue/sn_curves.py",
+          "line": 1082,
+          "main_blob_sha256": "f03f6c45df155bf2563691dc2534813566435e987427fec7194e6f79bf93bdad"
+        },
+        {
+          "path": "tests/structural/fatigue/conftest.py",
+          "line": 10,
+          "main_blob_sha256": "8702f5203840da1a985fce5a08a2453f8c72aaf39839918904932621cfb7654e"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/structural/fatigue_apps/docs/agent-pack.md",
+      "missing_modules": [
+        "seaborn"
+      ],
+      "cited_node_ids": [
+        "tests/structural/fatigue_analysis/test_rainflow_counter.py::TestRainflowCounter::test_simple_sine_wave",
+        "tests/structural/fatigue_analysis/test_reference_seastate_processor.py::TestReferenceSeaStateProcessor::test_calculate_overall_fatigue_life",
+        "tests/structural/fatigue_analysis/test_reference_seastate_processor.py::TestTensionToStressConverter::test_custom_lookup_table"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/structural/fatigue_apps/__init__.py",
+          "line": 39,
+          "main_blob_sha256": "baecc04798804977f76f37aa7e860c885954b917e6d9f7b584bdda49033cd4f2"
+        },
+        {
+          "path": "src/digitalmodel/structural/fatigue_apps/visualizer.py",
+          "line": 12,
+          "main_blob_sha256": "9a06ef817635c5b0695f42dcf911a244c3a62bc45992ef01455dd4eca188f005"
+        },
+        {
+          "path": "tests/structural/fatigue_analysis/test_reference_seastate_processor.py",
+          "line": 17,
+          "main_blob_sha256": "1bec5dd9d59416b1dbb9c0fc7a77d208aba518345ef14ef16f6b225b5361aea1"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/structural/jacket_topside/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/structural/jacket_topside/test_dented_axial_screen.py::test_hand_calculation",
+        "tests/structural/jacket_topside/test_dented_axial_screen.py::test_published_b1_remains_unvalidated",
+        "tests/structural/jacket_topside/test_jacket_topside.py::TestAxialCompression::test_hand_calc_inelastic",
+        "tests/structural/jacket_topside/test_jacket_topside.py::TestPunchingShear::test_low_load_passes",
+        "tests/structural/jacket_topside/test_jacket_topside.py::TestTubularSection::test_cross_sectional_area",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[jacket-member-joint-checks]"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/structural/pipe_capacity/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/structural/pipe_capacity/test_pipe_capacity_custom.py::TestDNVWallThicknessBurst::test_get_burst_minimum_thickness_positive_design_pressure",
+        "tests/structural/pipe_capacity/test_pipe_capacity_custom.py::TestDNVWallThicknessCollapse::test_collapse_minimum_thickness_satisfies_target",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[pipe-capacity]"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/subsea/pipeline/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/subsea/pipeline/test_free_span_f105.py::TestSpanNaturalFrequency::test_fn_IL_pinned_pinned_range",
+        "tests/subsea/pipeline/test_hobbs_lateral_buckling.py::test_finite_mode_equations[HobbsMode.MODE_3]",
+        "tests/subsea/pipeline/test_hobbs_lateral_buckling.py::test_from_dimensions_matches_annulus_formulae",
+        "tests/subsea/pipeline/test_pipeline_pressure.py::TestDnvWallThickness::test_formula_no_allowances",
+        "tests/workflows/test_durable_workflows.py::test_span_rectification_support_count_closed_form"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/subsea/viv_analysis/docs/agent-pack.md",
+      "missing_modules": [
+        "deepdiff",
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/subsea/viv_analysis/test_viv_analysis.py::test_run_process",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[viv-analysis]"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "src/digitalmodel/infrastructure/base_solvers/marine/__init__.py",
+          "line": 6,
+          "main_blob_sha256": "48e5d4674349225e0445d020f5715bf9fcb607a66cb5dfbf983dbaf3de52d68e"
+        },
+        {
+          "path": "src/digitalmodel/infrastructure/base_solvers/marine/pipe_properties.py",
+          "line": 6,
+          "main_blob_sha256": "96439a48744fae195498f0b72e327ce52b8e8d208e60510cfcea038120476a13"
+        },
+        {
+          "path": "src/digitalmodel/subsea/viv_analysis/viv_analysis.py",
+          "line": 7,
+          "main_blob_sha256": "0ab3a0781531370e091b8ba0aa96a8d80149c0f9de77f20429abdcf844039c09"
+        },
+        {
+          "path": "tests/subsea/viv_analysis/test_viv_analysis.py",
+          "line": 9,
+          "main_blob_sha256": "4f4641128bc3124f3296b44d2e484bf4cdf4223cb20e1a48da6273da2f3f6082"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/synthetic_rope_mooring_fatigue/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/parametric/test_atlas.py::test_fatigue_bins_handler_shared_by_both_ropes",
+        "tests/parametric/test_atlas.py::test_synthetic_rope_fatigue_atlas_is_log_log_exact",
+        "tests/workflows/test_durable_workflows.py::test_synthetic_rope_tn_curve_matches_dnv_os_e301_table_f3",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[synthetic-rope-mooring-fatigue]"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/viv_screening/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[riser-viv-screening]",
+        "tests/workflows/test_viv_screening_workflow.py::test_committed_example_runs_through_engine_and_is_stable",
+        "tests/workflows/test_viv_screening_workflow.py::test_il_only_lock_in_is_unassessed"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        },
+        {
+          "path": "tests/workflows/test_viv_screening_workflow.py",
+          "line": 11,
+          "main_blob_sha256": "992eb50075f86bdb6eb83d61d0306b3ac2e1627ec4c85944d1a5d03d4b4250c5"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/weather_window/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/workflows/test_durable_workflows.py::test_weather_window_persistence_and_fit_closed_form",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[weather-window]"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/well/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/well/test_swab_surge.py::test_swab_surge_workflow_offline",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[casing-design]",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[rop-analysis]",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[tubular-design-envelope]",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[well-bore-design]",
+        "tests/workflows/test_durable_workflows.py::test_workflow_registry[well-hydraulics]"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/well/test_swab_surge.py",
+          "line": 11,
+          "main_blob_sha256": "860a02caa490a9886b4eb0c78194d8afa85142f2406261a8e8397d6dfd27b11a"
+        },
+        {
+          "path": "tests/workflows/test_durable_workflows.py",
+          "line": 13,
+          "main_blob_sha256": "31c5ef145aa986aff1513d06d2f9a7cc92a3f4894e366ffa7ae5670cdb7556e2"
+        }
+      ]
+    },
+    {
+      "pack": "src/digitalmodel/well/drilling/docs/agent-pack.md",
+      "missing_modules": [
+        "webcolors"
+      ],
+      "cited_node_ids": [
+        "tests/well/drilling/test_dysfunction_detector.py::TestKickDetection::test_kick_false_positive_balanced_flow",
+        "tests/well/drilling/test_hydraulics.py::TestAnnularVelocity::test_formula_correctness",
+        "tests/well/drilling/test_hydraulics.py::TestECD::test_ecd_equals_mud_weight_plus_friction_component",
+        "tests/well/drilling/test_rop_models.py::TestWarrenROPPhysics::test_power_law_formula",
+        "tests/well/drilling/test_well_bore_design.py::TestCasingProgram::test_big_hole_casing_count",
+        "tests/well/test_dual_gradient.py::test_dual_gradient_bhp_matches_two_column_hydrostatic",
+        "tests/well/test_pore_pressure.py::test_eaton_resistivity_normal_trend_gives_normal_pressure",
+        "tests/well/test_swab_surge.py::test_max_safe_trip_speed_keeps_emw_inside_window"
+      ],
+      "main_evidence": [
+        {
+          "path": "src/digitalmodel/engine.py",
+          "line": 12,
+          "main_blob_sha256": "e84fa291e75936ada7677412490f469eb164f8539434067849509f403d467e5c"
+        },
+        {
+          "path": "tests/well/test_swab_surge.py",
+          "line": 11,
+          "main_blob_sha256": "860a02caa490a9886b4eb0c78194d8afa85142f2406261a8e8397d6dfd27b11a"
+        }
+      ]
+    }
+  ]
+}

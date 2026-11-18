@@ -1,4 +1,12 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Tests for orcawave.hydro_coefficients module."""
+
+import os
+from pathlib import Path
+import re
+import subprocess
+import sys
 
 import numpy as np
 import pytest
@@ -14,6 +22,8 @@ from digitalmodel.orcawave.hydro_coefficients import (
     to_native_added_mass,
     to_native_damping,
 )
+from digitalmodel.orcawave.qa_gates import check_hydrodynamics
+from digitalmodel.orcawave.rao_processing import RAOTable
 
 
 def _make_matrix(freq: float, diag_val: float) -> HydroMatrix6x6:
@@ -51,12 +61,25 @@ class TestHydroMatrix6x6:
         m = _make_matrix(0.1, 50.0)
         assert m.frequency_rad_s == 0.1
 
-    def test_matrix_symmetry(self):
+    def test_asymmetric_added_mass_is_refused_by_gate(self):
+        """Reciprocity, sidecar C1/Q1; #2748 section 15.
+
+        Assumed A12=30, A21=0 and diagonal=200 give error 30/200=15%,
+        exceeding the declared pack tolerance of 2%. Raw input is retained
+        for diagnostics, then refused for use by check_hydrodynamics.
+        """
         vals = np.eye(6) * 200.0
-        vals[0, 1] = vals[1, 0] = 30.0
+        vals[0, 1] = 30.0
         m = HydroMatrix6x6(frequency_rad_s=0.5, values=vals.tolist())
-        arr = m.to_numpy()
-        np.testing.assert_allclose(arr, arr.T, atol=1e-10)
+        coefficients = HydroCoefficients(
+            added_mass=[m], radiation_damping=[_make_matrix(0.5, 1)]
+        )
+        heave = RAOTable(
+            dof="Heave", unit="m/m", periods=[30], headings_deg=[0],
+            amplitudes=[[1]], phases_deg=[[0]],
+        )
+        with pytest.raises(ValueError, match="asymmetry"):
+            check_hydrodynamics(coefficients, heave)
 
 
 class TestInterpolation:
@@ -114,10 +137,17 @@ class TestWAMITFormat:
     def test_wamit_damping_export(self):
         coeffs = _make_coefficients()
         text = to_native_damping(coeffs)
-        lines = [l for l in text.strip().splitlines() if l.strip()]
+        lines = [line for line in text.strip().splitlines() if line.strip()]
         assert len(lines) > 0
 
     def test_hydrostatic_restoring(self):
+        """C2, WAMIT 7.5 manual 3.1; assumed #2748 section 15 inputs.
+
+        C33=1025*9.81*3000=30165750;
+        C44=1025*9.81*10000*2=201105000;
+        C55=1025*9.81*10000*100=10055250000, in SI units.
+        rel=1e-12 is the issue acceptance, not an engineering tolerance.
+        """
         c = create_hydrostatic_restoring(
             displaced_volume_m3=10000.0,
             waterplane_area_m2=3000.0,
@@ -126,12 +156,10 @@ class TestWAMITFormat:
         )
         arr = np.array(c)
         assert arr.shape == (6, 6)
-        # Heave restoring > 0
-        assert arr[2, 2] > 0
-        # Roll restoring > 0
-        assert arr[3, 3] > 0
-        # Pitch restoring > 0
-        assert arr[4, 4] > 0
+        np.testing.assert_allclose(
+            np.diag(arr)[2:5], [30165750, 201105000, 10055250000],
+            rtol=1e-12, atol=0,
+        )
         # Surge restoring = 0
         assert arr[0, 0] == 0.0
 
@@ -150,3 +178,84 @@ def test_native_parser_preserves_valid_rows_among_blank_lines():
     matrices = from_native_added_mass("\n1 3 3 4\n\n")
     assert len(matrices) == 1
     assert matrices[0].values[2][2] == 4
+
+
+@pytest.mark.parametrize(
+    "omega",
+    [1.0, 2.0, 3.0, 4.5, 5.0],
+    ids=["lower-knot", "interior-first", "middle-knot", "interior-second", "upper-knot"],
+)
+def test_interpolate_full_symmetric_affine_matrix(omega):
+    """Check every entry against the example's independent hand calculation."""
+    # Source of all synthetic constants: Hand calculation in
+    # docs/examples/hydro-coefficient-interpolation.md. No solver data is used.
+    intercept = np.array([
+        [100, 12, 13, 14, 15, 16],
+        [12, 200, 23, 24, 25, 26],
+        [13, 23, 300, 34, 35, 36],
+        [14, 24, 34, 400, 45, 46],
+        [15, 25, 35, 45, 500, 56],
+        [16, 26, 36, 46, 56, 600],
+    ])
+    slope = np.array([
+        [2, -1, -2, -3, -4, -5],
+        [-1, 4, -1, -2, -3, -4],
+        [-2, -1, 6, -1, -2, -3],
+        [-3, -2, -1, 8, -1, -2],
+        [-4, -3, -2, -1, 10, -1],
+        [-5, -4, -3, -2, -1, 12],
+    ])
+    matrices = [
+        HydroMatrix6x6(
+            frequency_rad_s=knot,
+            values=(intercept + knot * slope).tolist(),
+        )
+        for knot in (1.0, 3.0, 5.0)
+    ]
+    # Scalar oracle: evaluate the stated affine law, not the interpolation rule.
+    expected = np.array([
+        [
+            100 * i + 2 * i * omega if i == j
+            else 10 * min(i, j) + max(i, j) + (min(i, j) - max(i, j)) * omega
+            for j in range(1, 7)
+        ]
+        for i in range(1, 7)
+    ])
+
+    result = interpolate_matrix_at_frequency(matrices, omega)
+
+    # Binary-exact inputs and arithmetic need no numerical tolerance here.
+    np.testing.assert_array_equal(result, expected)
+    np.testing.assert_array_equal(result, result.T)
+
+
+def test_hydro_coefficient_interpolation_example(tmp_path):
+    """Execute the published snippet in isolation without a licensed solver."""
+    root = Path(__file__).resolve().parents[2]
+    document = (root / "docs/examples/hydro-coefficient-interpolation.md").read_text(
+        encoding="utf-8"
+    )
+    snippets = re.findall(r"```python\n(.*?)\n```", document, re.DOTALL)
+    assert len(snippets) == 1
+    guard = """
+import importlib.abc
+import sys
+
+class RejectLicensedSolver(importlib.abc.MetaPathFinder):
+    def find_spec(self, fullname, path=None, target=None):
+        if fullname.split('.')[0] == 'OrcFxAPI':
+            raise AssertionError('The example must not import a licensed solver')
+        return None
+
+sys.meta_path.insert(0, RejectLicensedSolver())
+"""
+    result = subprocess.run(
+        [sys.executable, "-c", guard + snippets[0]],
+        cwd=tmp_path,
+        env={**os.environ, "PYTHONPATH": str(root / "src")},
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.strip() == "Interpolation audit passed."

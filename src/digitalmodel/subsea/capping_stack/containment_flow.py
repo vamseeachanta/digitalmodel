@@ -29,7 +29,19 @@ computes the time history and peak internally from elastic characteristics,
 an IPR/injection formation boundary and the nonlinear choke boundary. No
 external surge allowance is required for that single-density model. No
 API 17W / API STD 53 edition or clause
-compliance is claimed; that qualification remains open under issue 1997.
+compliance is claimed; that qualification is NOT_EVALUATED under issue 1997.
+
+Opened steady-flow method sources (slice 1): TR94-12, *Multiphase Flow
+Production Model* (1994), section 2.4.1, equation 2-7, for linear PI:
+https://www.bsee.gov/sites/bsee.gov/files/tap-technical-assessment-program/300ae.pdf
+DOE-HDBK-1012/3-92 (1992), HT-03 equations 3-1 (q=A*v), 3-12 (extended
+Bernoulli) and 3-14 (Darcy loss), for constant-density lift:
+https://www.energy.gov/documents/doe-hdbk-1012-92vol3
+NIST DLMF (2010), v1.2.8, section 3.8(iii), for native root bracketing:
+https://dlmf.nist.gov/3.8.iii
+API clause text was not available for this slice; no standard limits are
+inferred. Source qualification of the existing Vogel, gas and transient
+methods remains OPEN for later slices of issue 1997.
 """
 
 from __future__ import annotations
@@ -40,6 +52,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from ..hipps.valve_sizing import _nonnegative, _positive
+from ._root_finding import _bisect
 from .containment_capacity import ContainmentResult, G, check_containment
 
 
@@ -136,31 +149,6 @@ def _rate(function: Callable[[float], float], pressure: float) -> float:
     value = function(pressure)
     _nonnegative(callback_rate=value)
     return value
-
-
-def _bisect(function: Callable[[float], float], low: float, high: float) -> float:
-    """Solve a bracketed residual to floating-point resolution, up to 100 steps."""
-    left, right = function(low), function(high)
-    if left == 0:
-        return low
-    if right == 0:
-        return high
-    if not math.isfinite(left) or not math.isfinite(right) or left * right > 0:
-        raise ValueError("finite opposite-sign root bracket is required")
-    for _ in range(100):
-        middle = (low + high) / 2
-        if middle == low or middle == high:
-            return middle
-        value = function(middle)
-        if not math.isfinite(value):
-            raise ValueError("non-finite operating-point residual")
-        if value == 0:
-            return middle
-        if (value > 0) == (left > 0):
-            low, left = middle, value
-        else:
-            high = middle
-    raise ValueError("operating-point bisection did not converge")
 
 
 def solve_operating_point(
