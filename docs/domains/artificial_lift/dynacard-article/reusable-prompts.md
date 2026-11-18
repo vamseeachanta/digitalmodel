@@ -2,7 +2,7 @@
 
 Dynacard article ("Dynamometer card analysis: from the surface card to the pump card and a diagnosis"), revision 4 of 18 Nov 2026. This page holds in full what Appendix D of the article summarises. `examples/domains/artificial_lift/build_dynacard_article.py` writes it from the saved results.
 
-These prompts let your team, or your AI assistant, rebuild the article's analysis from public code and then run it on a card of your own. To have a study of your own rod pump done for you instead, see below.
+These prompts let your team, or your assistant, rebuild the article's analysis from public code and then run it on a card of your own. To have a study of your own rod pump done for you instead, see below.
 
 ## What you need to run this
 

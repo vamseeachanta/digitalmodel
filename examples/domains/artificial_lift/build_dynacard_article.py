@@ -543,11 +543,11 @@ def appendices(f) -> str:
     d = f"""
 <h2 id="appendix-d">Appendix D Reusable prompts</h2>
 <ul>
-<li>Rebuild this analysis from public code with your own AI assistant, and check it against the published values.</li>
+<li>Rebuild this analysis from public code with your own assistant, and check it against the published values.</li>
 <li>Then run it on a surface card of your own well.</li>
 </ul>
 <p>Prompts, data and check values: {repo_link("prompts")}.</p>
-<p>Data: public example well, file <a href="{fixture}">cleansed_well_001.json</a> of the digitalmodel library, MIT licence, version of {APP_VERSION_DATE}; public diagnostic plate [3], CC0 1.0, retrieved 11 Oct 2026.</p>"""
+<p>Public data set: the example well, file <a href="{fixture}">cleansed_well_001.json</a> of the digitalmodel library, MIT licence, version of {APP_VERSION_DATE}; the diagnostic plate [3], CC0 1.0, retrieved 11 Oct 2026.</p>"""
     return a + b + c + d
 
 
@@ -721,7 +721,7 @@ def page_prompts(f) -> str:
             f'Dynacard article ("{ARTICLE_TITLE}"), {REVISION_SHORT}. This page holds in full what Appendix D '
             f"of the article summarises. `{BUILDER.as_posix()}` writes it from the saved "
             "results.\n\n"
-            "These prompts let your team, or your AI assistant, rebuild the article's analysis from public code and "
+            "These prompts let your team, or your assistant, rebuild the article's analysis from public code and "
             "then run it on a card of your own. To have a study of your own rod pump done for you instead, see "
             "below.\n\n"
             "## What you need to run this\n\n"
