@@ -1,15 +1,15 @@
 # RAO convention conversion
 
-`rao_conventions.py` implements the convention equations stated in a legacy
-engineering workbook. It converts one normalized displacement-RAO sample at a
-time. It uses the existing `diffraction_units` functions for frequency and angle
-units. It does not infer conventions from a solver name.
+`rao_conventions.py` converts one normalized displacement-RAO sample at a time
+using cosine phase definitions and an opposite heading reference axis with
+unchanged angular sense. It uses the existing `diffraction_units` functions for
+frequency and angle units. It does not infer conventions from a solver name.
 
 `RAOInput` is a frozen, validated SI record:
 
 | Field | Units and component order |
 |---|---|
-| `angular_frequency_rad_s` | rad/s; finite and positive |
+| `angular_frequency_rad_s` | rad/s; finite and positive after float conversion |
 | `translation_m_per_m` | m response per m wave amplitude; surge, sway, heave |
 | `rotation_rad_per_m` | rad response per m wave amplitude; roll, pitch, yaw |
 | `phase_rad` | rad; surge, sway, heave, roll, pitch, yaw |
@@ -24,25 +24,27 @@ seconds, translations in m/m, rotations in deg/m, and phases in degrees. Field
 names carry their units. Component order is preserved at each boundary.
 Unrepresentable frequency, period, or exported angle values are rejected.
 
-The source defines a lag by `x = a R cos(omega t - phi)` and the destination
+A lag is defined by `x = a R cos(omega t - phi)` and the destination
 uses `x = a R cos(omega t + epsilon)`. Therefore `epsilon = -phi`. Phases are
 not wrapped: full turns remain full turns. With `mirrored_about_x=True`, the
-source's longitudinal symmetry rule adds pi to the converted phases of sway,
+longitudinal symmetry rule adds pi to the converted phases of sway,
 roll, and yaw only; magnitudes are unchanged. This assumes physical port/starboard
 symmetry and represents reflection in the longitudinal vertical plane, rather
-than rotation of a coordinate system.
+than rotation of a coordinate system. Callers must assign the mirrored wave
+heading, beta to -beta, in the same frame.
+
+A reversed phase is rejected if floating-point addition cannot retain the
+half-turn within an absolute error of `1e-12` rad. This bounds the angular error
+introduced by the reversal; it is not a bound on subsequent time arithmetic.
+Unmirrored negation remains available for every finite phase. Full turns are
+retained rather than reduced to admit an otherwise unrepresentable reversal.
 
 `wave_frequency_hz` computes `f = omega/(2*pi)` and `wave_period_s` computes
-`T = 2*pi/omega`. `opposite_axis_heading_rad` implements the source's
+`T = 2*pi/omega`. `opposite_axis_heading_rad` implements
 `heading_destination = heading_source - pi` for a finite source angle in
 `[0, 2*pi]`, with the same sense of angular measurement on both axes. Output is
 in `(-pi, pi]`; source zero is represented by +pi, equivalent to the equation's
 -pi endpoint. This helper does not mirror headings automatically.
-
-The method does not preserve erroneous spreadsheet addressing. Each call uses
-the sample supplied by its caller. Spreadsheet row/column helpers,
-metadata, charts, pasted results and copy-to-clipboard macros are outside this
-module.
 
 ## Related code
 
@@ -56,18 +58,14 @@ conversion in `[0, 360)` degrees; `opposite_axis_heading_rad` returns radians in
 
 ## Standards and clauses
 
-No named engineering standard, edition or clause is stated in the source's
-method material. The source's references section is empty. The equations above
-are convention definitions and mathematical unit identities; no standards
-compliance is established. Embedded long-period reference tables have no
-bibliographic attribution and are not implemented here.
+The equations above are convention definitions and mathematical unit identities;
+no standards compliance is established. No reference tables or empirical
+coefficients are implemented.
 
 ## Input gaps and limits
 
-- Repeated source tables have inconsistent amplitude labels (normalized RAOs
-  versus displacement/rotation). The caller must establish normalization per
-  wave amplitude before constructing a sample. Wave height and wave slope
-  normalization are unsupported.
+- The caller must establish normalization per wave amplitude before constructing
+  a sample. Wave height and wave slope normalization are unsupported.
 - No reference-point locations or transfer equation are supplied. Lever-arm
   transfer is outside this revision; rotational amplitudes are not applied to
   another point.
@@ -79,8 +77,8 @@ bibliographic attribution and are not implemented here.
   expansion require a separately specified mapping.
 - The symmetry rule requires a symmetric vessel and consistent motion axes.
   This module does not establish either from data.
-- Standard titles, editions, clauses and the attribution of theoretical
-  long-period tables remain missing source evidence.
+- Input records carry no lag/lead tag. Callers must track the phase convention
+  and avoid converting a lead sample as though it contained lags.
 
 A next revision may add reference-point transfer, explicit coordinate transforms
 and normalization variants after those definitions and independent verification
@@ -88,5 +86,5 @@ criteria are supplied. No source RAO dataset or private cached result is include
 
 The tests use illustrative examples and independent trigonometric identities,
 unit formulas, limiting cases and validation checks. Run them from the repository
-root with `python -m pytest tests/hydrodynamics/rao_conventions` in an environment
-with the repository dependencies installed.
+root with `python -m pytest tests/hydrodynamics/diffraction/test_rao_conventions.py`
+in an environment with the repository dependencies installed.

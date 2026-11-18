@@ -1,5 +1,6 @@
 """Illustrative examples; expectations are independent hand formulas."""
 import math
+from fractions import Fraction
 
 import pytest
 
@@ -62,8 +63,7 @@ def test_six_component_conversion_uses_si_and_reflects_only_odd_motions():
     assert result.rotation_deg_per_m == pytest.approx(rotation_deg)
     # Hand formula: -phase, with +180 for sway, roll and yaw only.
     assert result.phase_deg == pytest.approx(
-        tuple(-p + (180.0 if i in (1, 3, 5) else 0.0)
-              for i, p in enumerate(phase_deg))
+        (-30.0, 120.0, -120.0, -60.0, -300.0, 135.0)
     )
     unreflected = export_rao_degrees(convert_lag_rao_to_lead(sample))
     assert unreflected.phase_deg == pytest.approx(tuple(-p for p in phase_deg))
@@ -209,3 +209,54 @@ def test_oversized_integer_inputs_raise_validation_errors():
         wave_frequency_hz(10**400)
     with pytest.raises(ValueError):
         _illustrative_si_sample(phase_rad=(10**400, 0.0, 0.0, 0.0, 0.0, 0.0))
+
+
+@pytest.mark.parametrize('entry', ['si', 'degrees', 'frequency', 'period'])
+def test_frequency_underflow_is_rejected_at_float_boundary(entry):
+    from digitalmodel.hydrodynamics.diffraction.rao_conventions import RAOInput
+    omega = Fraction(1, 10**400)
+    with pytest.raises(ValueError, match='positive'):
+        if entry == 'si':
+            _illustrative_si_sample(angular_frequency_rad_s=omega)
+        elif entry == 'degrees':
+            RAOInput.from_degrees(
+                angular_frequency_rad_s=omega,
+                translation_m_per_m=(0.0,) * 3,
+                rotation_deg_per_m=(0.0,) * 3,
+                phase_deg=(0.0,) * 6,
+            )
+        elif entry == 'frequency':
+            wave_frequency_hz(omega)
+        else:
+            wave_period_s(omega)
+
+
+@pytest.mark.parametrize('lag', [2.0**15, -2.0**15, 2.0**57, -2.0**57])
+@pytest.mark.parametrize('entry', ['phase', 'sample'])
+def test_inaccurate_unwrapped_half_turn_is_rejected(lag, entry):
+    from digitalmodel.hydrodynamics.diffraction.rao_conventions import (
+        convert_lag_rao_to_lead,
+        lag_to_lead_phase_rad,
+    )
+    # Unmirrored phase negation remains exact, even at large magnitudes.
+    assert lag_to_lead_phase_rad(lag) == -lag
+    with pytest.raises(ValueError, match='half-turn'):
+        if entry == 'phase':
+            lag_to_lead_phase_rad(lag, reverse_axis=True)
+        else:
+            sample = _illustrative_si_sample(phase_rad=(0.0, lag, 0.0, 0.0, 0.0, 0.0))
+            convert_lag_rao_to_lead(sample, mirrored_about_x=True)
+
+
+@pytest.mark.parametrize('lag', [0.0, 2.0 * math.pi + 0.3, -2.0 * math.pi - 0.3,
+                                 2.0**12, -2.0**12])
+def test_representable_half_turn_negates_input_cosine(lag):
+    from digitalmodel.hydrodynamics.diffraction.rao_conventions import (
+        lag_to_lead_phase_rad,
+    )
+    lead = lag_to_lead_phase_rad(lag, reverse_axis=True)
+    assert lead == -lag + math.pi
+    for time_angle in (0.0, 0.7, -1.5):
+        assert math.cos(time_angle + lead) == pytest.approx(
+            -math.cos(time_angle - lag), rel=0.0, abs=1e-12,
+        )
