@@ -15,9 +15,9 @@ Columns, each a shard count:
 * ``routed``: fork point against the head, with ``scripts/ci/src_domain_routes.json``;
 * one further column per ``--table NAME=PATH``.
 
-Use, in a checkout of the base branch whose object store holds the heads::
+Use, in a checkout whose object store holds the base and heads::
 
-    python scripts/ci/measure_shard_selection.py --merges 50
+    python scripts/ci/measure_shard_selection.py --base-ref origin/main --merges 50
     python scripts/ci/measure_shard_selection.py --heads heads.txt   # one "<label> <commit>" per line
 """
 
@@ -50,8 +50,9 @@ def units(changed: list[str]) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    parser.add_argument("--merges", type=int, default=0, help="number of newest commits of HEAD to measure")
-    parser.add_argument("--heads", type=Path, help='file of "<label> <commit>" lines to measure against HEAD')
+    parser.add_argument("--base-ref", default="HEAD", help="base revision for merge and pull-request measurements")
+    parser.add_argument("--merges", type=int, default=0, help="number of first-parent commits to measure")
+    parser.add_argument("--heads", type=Path, help='file of "<label> <commit>" lines to measure against the base')
     parser.add_argument("--table", action="append", default=[], help="NAME=PATH of another route table")
     parser.add_argument("--domains-file", type=Path, default=Path("tests/DOMAINS.md"))
     args = parser.parse_args(argv)
@@ -73,9 +74,9 @@ def main(argv: list[str] | None = None) -> int:
         return len(detector.touched_domains(changed, domains, start, head, pinned_domains=pins,
                                             src_routes=routes))
 
-    tip = git("rev-parse", "HEAD")
+    tip = git("rev-parse", "--verify", "--end-of-options", f"{args.base_ref}^{{commit}}")
     print(f"tip {tip} shards {len(domains)}", flush=True)
-    for commit in git("rev-list", "-n", str(args.merges), tip).split() if args.merges else ():
+    for commit in git("rev-list", "--first-parent", "-n", str(args.merges), tip).split() if args.merges else ():
         parent = git("rev-parse", f"{commit}^")
         refs = (parent, commit)
         row = [f"unrouted {count(parent, commit, refs, None)}"]

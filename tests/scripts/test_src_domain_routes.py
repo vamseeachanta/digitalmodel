@@ -243,9 +243,37 @@ READS = {
 }
 
 
+COMPLETED = {"alpha": "pass", "beta": "fail", "gamma": "pass"}
+
+
+def test_globbed_roots_read_every_matching_test(derive, tmp_path) -> None:
+    make_tree(tmp_path)
+    folder = tmp_path / "tests/alpha"
+    (folder / "test_b.py").write_text("import digitalmodel.engine")
+    domain = derive.detector.Domain("alpha", ("tests/alpha/test_*.py",))
+    assert derive.named_units(tmp_path, [domain])["alpha"] == {
+        "solvers/", "solvers/orcaflex/", "engine.py"}
+
+
+@pytest.mark.parametrize("pattern", ["tests/missing_*.py", "tests/missing.py"])
+def test_unmatched_root_is_an_error(derive, tmp_path, pattern) -> None:
+    make_tree(tmp_path)
+    domain = derive.detector.Domain("alpha", (pattern,))
+    with pytest.raises(ValueError) as exc:
+        derive.named_units(tmp_path, [domain])
+    assert pattern in str(exc.value) and "alpha" in str(exc.value)
+
+
+def test_trace_without_a_result_reads_everything(derive, tmp_path) -> None:
+    make_tree(tmp_path)
+    table = derive.build(tmp_path, READS, commit="c" * 40, shards={"alpha": "pass", "beta": "pass"})
+    assert table["routes"]["src/digitalmodel/engine.py"] == ["beta", "gamma"]
+    assert table["routes"]["src/digitalmodel/solvers/orcaflex/"] == ["alpha", "gamma"]
+
+
 def test_build_routes_from_recorded_reads(derive, tmp_path) -> None:
     make_tree(tmp_path)
-    table = derive.build(tmp_path, READS, commit="c" * 40, shards={"alpha": "pass"})
+    table = derive.build(tmp_path, READS, commit="c" * 40, shards=COMPLETED)
     assert table["routes"] == {
         "src/digitalmodel/engine.py": ["beta"],
         "src/digitalmodel/solvers/": ["alpha", "beta"],
@@ -258,7 +286,7 @@ def test_build_routes_from_recorded_reads(derive, tmp_path) -> None:
         "src/digitalmodel/lonely/": derive.NOBODY,
         "src/digitalmodel/solvers/unread/": derive.NOBODY,
     }
-    assert table["trace"] == {"commit": "c" * 40, "shards": {"alpha": "pass"}}
+    assert table["trace"] == {"commit": "c" * 40, "shards": COMPLETED}
     assert derive.drift(tmp_path, table) == []
 
 
@@ -276,13 +304,19 @@ def test_a_shard_that_did_not_finish_reads_everything(derive, tmp_path) -> None:
 def test_a_shard_missing_from_the_trace_reads_everything(derive, tmp_path) -> None:
     make_tree(tmp_path)
     reads = {name: paths for name, paths in READS.items() if name != "gamma"}
-    table = derive.build(tmp_path, reads, commit="c" * 40, shards={})
+    table = derive.build(tmp_path, reads, commit="c" * 40, shards=COMPLETED)
     assert table["routes"]["src/digitalmodel/solvers/orcaflex/"] == ["alpha", "gamma"]
+
+
+def test_empty_trace_with_a_result_reads_everything(derive, tmp_path) -> None:
+    make_tree(tmp_path)
+    table = derive.build(tmp_path, {**READS, "gamma": set()}, commit="c" * 40, shards=COMPLETED)
+    assert table["routes"]["src/digitalmodel/engine.py"] == ["beta", "gamma"]
 
 
 def test_test_file_naming_an_unread_unit_is_drift_and_write_repairs_it(derive, tmp_path) -> None:
     make_tree(tmp_path)
-    table = derive.build(tmp_path, READS, commit="c" * 40, shards={})
+    table = derive.build(tmp_path, READS, commit="c" * 40, shards=COMPLETED)
     (tmp_path / "tests/gamma/test_c.py").write_text(
         "from digitalmodel.solvers import mesh\nROOT / 'src/digitalmodel/engine.py'\n", encoding="utf-8")
     found = derive.drift(tmp_path, table)
@@ -302,7 +336,7 @@ def test_test_file_naming_an_unread_unit_is_drift_and_write_repairs_it(derive, t
 
 def test_naming_an_unrouted_or_unknown_unit_is_not_drift(derive, tmp_path) -> None:
     make_tree(tmp_path)
-    table = derive.build(tmp_path, READS, commit="c" * 40, shards={})
+    table = derive.build(tmp_path, READS, commit="c" * 40, shards=COMPLETED)
     (tmp_path / "tests/gamma/test_c.py").write_text(
         "import digitalmodel.lonely\nimport digitalmodel.core\nimport digitalmodel.absent\n",
         encoding="utf-8")

@@ -111,14 +111,17 @@ def named_units(root: Path, domains: list) -> dict[str, set[str]]:
     for domain in domains:
         files: set[Path] = set()
         for item in domain.roots:
-            path = root / item
-            files.update(path.rglob("*.py") if path.is_dir() else [path] if path.suffix == ".py" else [])
+            matches = list(root.glob(item))
+            if not matches:
+                raise ValueError(f"{domain.name}: test root {item!r} matched nothing")
+            for path in matches:
+                if path.is_dir():
+                    files.update(path.rglob("*.py"))
+                elif path.suffix == ".py":
+                    files.add(path)
         found: set[str] = set()
         for file in sorted(files):
-            try:
-                text = file.read_text(encoding="utf-8", errors="replace")
-            except OSError:
-                continue
+            text = file.read_text(encoding="utf-8", errors="replace")
             if "digitalmodel" not in text:
                 continue
             for first, second in DOTTED.findall(text):
@@ -172,7 +175,7 @@ def build(root: Path, reads: dict[str, set[str]], commit: str, shards: dict[str,
         for key in found:
             readers[key].add(shard)
     untraced = {name for name in names
-                if name not in reads or shards.get(name, TRUSTED[0]) not in TRUSTED}
+                if not reads.get(name) or shards.get(name) not in TRUSTED}
     for shards_of_unit in readers.values():
         if shards_of_unit:
             shards_of_unit |= untraced
