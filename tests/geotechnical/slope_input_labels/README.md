@@ -2,7 +2,7 @@
 
 ## Workbook map (recorded before implementation)
 
-Inspection uses openpyxl in formula and cached-value modes. Only new files are added. Source workbooks are read without saving.
+Inspection uses openpyxl in formula and cached-value modes, with XML inspection for result types and value-element presence. Source workbooks are read without saving.
 
 ### `tests/fixtures/geotechnical/slope/xslope_simple1.xlsx`
 
@@ -12,14 +12,14 @@ Sheets: 15. External links: 0. VBA archive present: False.
 | --- | ---: | ---: | --- |
 | main | 0 | 0 | No formula results; remaining geometry, soil, boundary and option inputs are outside this helper conversion |
 | mat | 0 | 0 | No formula results; remaining geometry, soil, boundary and option inputs are outside this helper conversion |
-| profile | 15 | 0 | A6:AQ6, every third column; row 5 material IDs and mat columns A:B |
-| polygon | 15 | 0 | A7:AQ7, every third column; rows 5–6 type/ID and mat columns A:B |
+| profile | 15 | 15 | A6:AQ6, every third column; row 5 material IDs and mat columns A:B |
+| polygon | 15 | 15 | A7:AQ7, every third column; rows 5–6 type/ID and mat columns A:B |
 | piezo | 0 | 0 | No formula results; remaining geometry, soil, boundary and option inputs are outside this helper conversion |
 | circles | 0 | 0 | No formula results; remaining geometry, soil, boundary and option inputs are outside this helper conversion |
 | non-circ | 0 | 0 | No formula results; remaining geometry, soil, boundary and option inputs are outside this helper conversion |
 | dloads | 1 | 1 | B2 guidance; main!D23 water-load mode |
 | dloads (2) | 1 | 1 | B2 guidance; main!D23 water-load mode |
-| reinforce | 40 | 0 | H3:I22; G3:G22 types and exact lookup table Z8:AB11 |
+| reinforce | 40 | 40 | H3:I22; G3:G22 types and exact lookup table Z8:AB11 |
 | piles | 0 | 0 | No formula results; remaining geometry, soil, boundary and option inputs are outside this helper conversion |
 | lloads | 0 | 0 | No formula results; remaining geometry, soil, boundary and option inputs are outside this helper conversion |
 | seep bc | 0 | 0 | No formula results; remaining geometry, soil, boundary and option inputs are outside this helper conversion |
@@ -36,14 +36,14 @@ Sheets: 15. External links: 0. VBA archive present: False.
 | --- | ---: | ---: | --- |
 | main | 0 | 0 | No formula results; remaining geometry, soil, boundary and option inputs are outside this helper conversion |
 | mat | 0 | 0 | No formula results; remaining geometry, soil, boundary and option inputs are outside this helper conversion |
-| profile | 15 | 1 | A6:AQ6, every third column; row 5 material IDs and mat columns A:B |
-| polygon | 15 | 1 | A7:AQ7, every third column; rows 5–6 type/ID and mat columns A:B |
+| profile | 15 | 15 | A6:AQ6, every third column; row 5 material IDs and mat columns A:B |
+| polygon | 15 | 15 | A7:AQ7, every third column; rows 5–6 type/ID and mat columns A:B |
 | piezo | 0 | 0 | No formula results; remaining geometry, soil, boundary and option inputs are outside this helper conversion |
 | circles | 0 | 0 | No formula results; remaining geometry, soil, boundary and option inputs are outside this helper conversion |
 | non-circ | 0 | 0 | No formula results; remaining geometry, soil, boundary and option inputs are outside this helper conversion |
 | dloads | 1 | 1 | B2 guidance; main!D24 water-load mode |
 | dloads (2) | 1 | 1 | B2 guidance; main!D24 water-load mode |
-| reinforce | 40 | 0 | H3:I22; G3:G22 types and exact lookup table AB8:AD11 |
+| reinforce | 40 | 40 | H3:I22; G3:G22 types and exact lookup table AB8:AD11 |
 | piles | 0 | 0 | No formula results; remaining geometry, soil, boundary and option inputs are outside this helper conversion |
 | lloads | 0 | 0 | No formula results; remaining geometry, soil, boundary and option inputs are outside this helper conversion |
 | seep bc | 0 | 0 | No formula results; remaining geometry, soil, boundary and option inputs are outside this helper conversion |
@@ -82,11 +82,11 @@ All formulas in scope are implemented and tested. No formula conversion remains.
 
 Calculation code is in `src/digitalmodel/geotechnical/slope_input_labels.py` and implements material, polygon, reinforcement and load-guidance helpers. Inputs are frozen dataclasses, collections are tuples, and functions do not mutate inputs or import Excel libraries. Literal reinforcement names use case-insensitive first-match lookups. The two source tables have equivalent contents at their respective locations.
 
-The shared `tests/geotechnical/slope_input_labels/formula_evidence.py` extractor reads each workbook twice and writes all formula texts, cached values (including null), required input constants (including blank cells, grouped one worksheet row per JSON line), sheet counts, defined names and link/VBA metadata into `fixtures/`. Whole-column material lookups are captured through the last nonblank sheet row; later blank rows cannot match the nonblank material IDs in these workbooks.
+The shared `tests/geotechnical/slope_input_labels/formula_evidence.py` extractor reads each workbook twice and writes all formula texts, cached result types, value-element presence and values (including explicit empty text and null for missing results), required input constants (including blank cells, grouped one worksheet row per JSON line), sheet counts, defined names and link/VBA metadata into `fixtures/`. Whole-column material lookups are captured through the last nonblank sheet row; later blank rows cannot match the nonblank material IDs in these workbooks.
 
 `test_slope_input_labels.py` runs one fixture case and one direct-workbook case for every formula cell. It independently scans source lookup rows and evaluates the IF conditions, for the slope labels and guidance. Direct-workbook cases verify extracted evidence equals the committed fixture and skip if a workbook is absent. The fixture cases still run without workbooks. Text is compared exactly. Numbers use relative tolerance 1e-9 and absolute tolerance 1e-12; no tolerance is relaxed. Supplemental cases exercise populated and failed reinforcement lookups, case-insensitive conditions, missing material IDs, duplicate lookup IDs, and blank return cells.
 
-The slope tests contain 315 cases. Two extractor cases regenerate all three fixtures byte for byte with absolute and relative output directories under emulated Windows newline defaults. Of 144 formula cells, 6 have non-null cached values and 138 are checked by independent hand formulas. See `COVERAGE.md` for the sheet-level accounting and cache limits.
+The slope tests contain 319 cases. Two extractor cases use self-contained workbooks with absent, empty and populated caches to exercise absolute and relative output directories under emulated Windows newline defaults. They require no source workbooks. Direct-workbook cases retain extracted-evidence comparisons when sources are present. Of 144 formula cells, all have stored string results: 138 are explicit empty text and 6 are nonempty. All are checked against independent hand formulas; 142 stored values agree with current inputs. The simple workbook stores empty text at profile!A6 and polygon!A7, where material ID 1 currently yields `soil`. Both discrepancies are asserted explicitly, rather than classified as missing caches. Cache freshness is unverified. See `COVERAGE.md` for the sheet-level accounting and cache limits.
 
 From the repository root, run:
 

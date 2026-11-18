@@ -12,6 +12,9 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+import posixpath
+from xml.etree import ElementTree
+from zipfile import ZipFile
 
 from openpyxl import load_workbook
 from openpyxl.formula import Tokenizer
@@ -26,6 +29,35 @@ SOURCES = (
 )
 
 
+def formula_cache_metadata(path: Path) -> dict:
+    """Read result types and value-element presence before openpyxl coercion."""
+    ns = "{http://schemas.openxmlformats.org/spreadsheetml/2006/main}"
+    rel_ns = "{http://schemas.openxmlformats.org/officeDocument/2006/relationships}"
+    with ZipFile(path) as archive:
+        relationships = {
+            rel.attrib["Id"]: rel.attrib["Target"]
+            for rel in ElementTree.fromstring(archive.read("xl/_rels/workbook.xml.rels"))
+        }
+        caches = {}
+        workbook = ElementTree.fromstring(archive.read("xl/workbook.xml"))
+        for sheet in workbook.find(ns + "sheets"):
+            target = relationships[sheet.attrib[rel_ns + "id"]]
+            member = (
+                target.lstrip("/") if target.startswith("/")
+                else posixpath.normpath(posixpath.join("xl", target))
+            )
+            root = ElementTree.fromstring(archive.read(member))
+            caches[sheet.attrib["name"]] = {
+                cell.attrib["r"]: {
+                    "cached_type": cell.get("t", "n"),
+                    "cached_value_present": cell.find(ns + "v") is not None,
+                }
+                for cell in root.iter(ns + "c")
+                if cell.find(ns + "f") is not None
+            }
+    return caches
+
+
 def extract_workbook(path: Path, repository: Path = REPOSITORY) -> dict:
     """Read formulas and caches separately, including referenced blank inputs.
 
@@ -35,6 +67,7 @@ def extract_workbook(path: Path, repository: Path = REPOSITORY) -> dict:
     named or external references fail rather than silently omitting input evidence.
     """
     source = path.resolve().relative_to(repository.resolve()).as_posix()
+    caches = formula_cache_metadata(path)
     formulas_book = load_workbook(path, data_only=False, keep_links=True)
     cached_book = load_workbook(path, data_only=True, keep_links=True)
     try:
@@ -48,6 +81,10 @@ def extract_workbook(path: Path, repository: Path = REPOSITORY) -> dict:
                 "formula_count": len(cells),
                 "cached_count": sum(
                     cached_book[sheet.title][c.coordinate].value is not None
+                    or (
+                        caches[sheet.title][c.coordinate]["cached_type"] == "str"
+                        and caches[sheet.title][c.coordinate]["cached_value_present"]
+                    )
                     for c in cells
                 ),
             })
@@ -73,11 +110,20 @@ def extract_workbook(path: Path, repository: Path = REPOSITORY) -> dict:
                         for dependency in row:
                             if dependency.data_type != "f":
                                 constants[target.title][dependency.coordinate] = dependency.value
+                metadata = caches[sheet.title][cell.coordinate]
+                cached_value = cached_book[sheet.title][cell.coordinate].value
+                if (
+                    metadata["cached_type"] == "str"
+                    and metadata["cached_value_present"]
+                    and cached_value is None
+                ):
+                    cached_value = ""
                 formulas.append({
                     "sheet": sheet.title,
                     "cell": cell.coordinate,
                     "formula": cell.value,
-                    "cached_value": cached_book[sheet.title][cell.coordinate].value,
+                    **metadata,
+                    "cached_value": cached_value,
                 })
         if "main" in constants:
             constants["main"]["D8"] = formulas_book["main"]["D8"].value

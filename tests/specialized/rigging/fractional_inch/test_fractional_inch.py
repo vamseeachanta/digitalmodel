@@ -1,11 +1,12 @@
 """Independent per-cell evidence for fractional-inch shackle sizes.
 
-Text results compare exactly. Numeric results use relative 1e-9 and absolute
-1e-12; fractional inches are binary-exact here, requiring no relaxed tolerance.
+The four fractional-inch results are binary-exact and compare exactly with
+independent rational arithmetic and stored workbook values.
 """
 
 import importlib.util
 import json
+import math
 from collections import Counter
 from fractions import Fraction
 from functools import lru_cache
@@ -65,10 +66,7 @@ def compare_formula(evidence, sheet, address):
 
 
 def assert_result(actual, expected, record):
-    if isinstance(expected, (int, float)):
-        assert actual == pytest.approx(expected, rel=1e-9, abs=1e-12), record
-    else:
-        assert actual == expected, record
+    assert actual == expected, record
 
 
 @pytest.mark.parametrize("fixture,sheet,address", formula_cases())
@@ -95,3 +93,15 @@ def test_formula_inventory(fixture, total, cached):
         sheet["sheet"]: sheet["formula_count"]
         for sheet in evidence["sheets"] if sheet["formula_count"]
     }
+
+
+@pytest.mark.parametrize("perturb", ("conversion", "cache"))
+def test_binary_exact_fraction_rejects_adjacent_float(monkeypatch, perturb):
+    evidence = json.loads(FIXTURES[0].read_text(encoding="utf-8"))
+    adjacent = math.nextafter(0.1875, 1.0)
+    if perturb == "conversion":
+        monkeypatch.setattr(FromString, "convert_fraction_to_float", lambda *_: adjacent)
+    else:
+        evidence["formulas"][0]["cached_value"] = adjacent
+    with pytest.raises(AssertionError):
+        compare_formula(evidence, "Sheet1", "A2")

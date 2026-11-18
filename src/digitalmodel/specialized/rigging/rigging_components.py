@@ -1,5 +1,6 @@
 import io
 import math
+import re
 
 import pkgutil
 
@@ -178,7 +179,12 @@ class Shackles:
         size = shackle.get("size_in")
         if isinstance(size, str) and "/" in size:
             try:
-                shackle["size_in"] = FromString().convert_fraction_to_float(size)
+                if re.fullmatch(r"[+-]?[0-9]+(?: [0-9]+)?/[0-9]+", size) is None:
+                    raise ValueError("Expected a fraction or mixed number")
+                converted_size = FromString().convert_fraction_to_float(size)
+                if not math.isfinite(converted_size):
+                    raise ValueError("Expected a finite size")
+                shackle["size_in"] = converted_size
             except (ValueError, ZeroDivisionError) as error:
                 raise ValueError(
                     f"Invalid fractional size for shackle part number {cfg['part_number']!r}"

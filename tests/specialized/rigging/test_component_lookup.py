@@ -173,7 +173,11 @@ def test_shackle_fractional_size_uses_existing_converter(shackles, size, expecte
     assert table["size_in"].tolist() == [size, size]
 
 
-@pytest.mark.parametrize("size", ["1-3/16", "1  3/16", "1/0", "invalid/size"])
+@pytest.mark.parametrize("size", [
+    "1-3/16", "1  3/16", "1/0", "invalid/size", "bad 3/16", "NaN/16",
+    "inf/1", "bad -1 3/16", "3/16 trailing", "1e999/1",
+    "9" * 400 + "/1",
+])
 def test_malformed_shackle_fraction_names_part_number(shackles, size):
     table = shackles.shackle_data["G2130"]
     table["size_in"] = size
