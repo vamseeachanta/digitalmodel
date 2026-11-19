@@ -138,7 +138,7 @@ def component_split_consistent(
     tolerance = _nonnegative(absolute_tolerance_kn)
     component_sum = _finite(_finite(components.viscous_kn)
                             + _finite(components.pressure_kn))
-    residual = _finite(components.total_kn - component_sum)
+    residual = _finite(_finite(components.total_kn) - component_sum)
     return abs(residual) <= tolerance
 
 

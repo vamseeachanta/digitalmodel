@@ -3,6 +3,7 @@
 from dataclasses import FrozenInstanceError
 from decimal import Decimal
 import math
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -148,6 +149,14 @@ def test_float32_total_does_not_erase_split_residual():
     condition = TrimCondition(-0.4, 8, forces)
     with pytest.raises(ValueError, match="split"):
         tabulate_trim([condition], absolute_tolerance_kn=0)
+
+
+def test_duck_typed_float32_total_does_not_erase_split_residual():
+    forces = SimpleNamespace(
+        total_kn=np.float32(420), viscous_kn=260, pressure_kn=160.000001,
+    )
+    assert not component_split_consistent(forces, absolute_tolerance_kn=0)
+    assert component_split_consistent(forces, absolute_tolerance_kn=0.000001)
 
 
 def test_single_row_is_its_own_reference():
