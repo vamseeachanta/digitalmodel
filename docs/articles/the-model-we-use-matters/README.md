@@ -1,10 +1,12 @@
-# The model we use matters: article pages
+# Sloshing example and reusable prompts
 
-Article: "The model we use matters", The Deckhand Chronicles, revision 5 of 19 Nov 2026.
+These pages accompany pending revision 5 (19 Nov 2026), which carries the working title quoted below.
 
-These pages hold in full what the article's appendices summarise.
+> The model we use matters
 
-- [method-and-data.md](method-and-data.md): Appendix A Method and data.
-- [reusable-prompts.md](reusable-prompts.md): Appendix B Reusable prompts (reproduce the published result; adapt it to your project).
+The published article, [Why the model you use matters](https://www.aceengineer.com/newsletter/topics/why-the-model-you-use-matters/) (4 Nov 2026), labels its prompt section “Appendix A. Reusable prompts”. That version does not link to either companion page.
 
-Questions and improvements: support@aceengineer.com.
+- [Method and data](method-and-data.md) gives the tank dimensions, assumptions and sources.
+- [Reusable prompts](reusable-prompts.md) includes the calculation and the instructions for comparing model responses.
+
+Questions and corrections can be submitted through the [public contact page](https://www.aceengineer.com/contact.html).

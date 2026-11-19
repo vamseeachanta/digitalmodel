@@ -1,13 +1,13 @@
 # Reusable prompts
 
-Article: "The model we use matters", The Deckhand Chronicles, revision 5 of 19 Nov 2026. This page holds in full what Appendix B of the article summarises.
+The [companion index](README.md) identifies the article revision for this prompt set.
 
 These prompts recompute the article's worked example and turn your own problems into a repeatable check of each model and provider.
 
 ## What you need to run this
 
 - Data required: the public article's illustrative rectangular tank, length 1.0 m, fill depths 0.15 m and 0.70 m, and gravity 9.81 m/s^2.
-- Data required to adapt: your own problem set, one problem per line, each with its known answer or the check you will apply; inputs, units, assumptions, acceptance criteria and permission to use the data.
+- To compare models, prepare a question sheet and a separate private answer key. Use only data cleared for each provider.
 - Paid or behind an account: nothing for the arithmetic; Python is free. Testing a model may need the provider's account and paid usage. The textbook in References may need purchase or library access.
 - Changes over time: model releases, provider settings, prices and available usage change; record the model, provider, date, prompt and answers. The illustrative tank inputs and equations below are fixed.
 
@@ -60,30 +60,32 @@ high, using the full answer as the denominator.
 
 ## Adapt it to your project
 
+Give each problem an ID. On the question sheet, put the question, inputs, units
+and permitted assumptions under that ID. Include a case where a shortcut breaks
+and one where it agrees. In a private answer key, record the reference answer or
+planned check, the acceptance criterion and any numerical tolerance for each ID.
+Set the criteria before collecting responses.
+
+Start a fresh session for each model. Send only the prompt below and the
+identical question sheet to each session. Keep the worked example, the key and
+other models’ responses out of those sessions.
+
 ```text
-Before you start, ask me for: my engineering problem set, one problem per
-line; each known answer or planned check; input data, units and sources;
-assumptions; acceptance criteria; permission to use the data; the models
-and providers to compare; available usage and budget; and the date.
-
-I will send this prompt, unchanged, to each model under test myself:
-"Here is my problem set, one problem per line, each with its known answer
-or the check I will apply. Solve each problem and state every assumption
-you make. Mark each problem you cannot solve, or solve only by a
-simplification, and name the simplification."
-
-Then I give you all the answers. Keep the same prompt and set for every
-model and provider. Compare each answer with its known answer or planned check. Record the model, provider,
-date, settings, tools, prompt, answer, assumptions and checking result.
-Check the inputs and units. Include a case where a tempting shortcut
-breaks, such as the article's shallow fill, alongside one where it agrees.
-Keep unsolved problems for the next model and raise complexity step by
-step as models solve more. Where useful, split a problem into smaller
-steps, each with a known answer. Report which checks still need a hand check.
-Remind me to send only problems I may share with that provider, and for
-confidential work to use an account where training on my data is off.
-Where a step needs a paid standard or book I do not hold, cite it and
-mark it "to be checked".
+Solve each problem on the question sheet using its inputs, units and
+permitted assumptions. For each ID, show the calculation and result with
+units. State the assumptions used and any simplification. If the inputs are
+insufficient, say what is missing. Identify any step that still requires a
+manual check. Cite any unavailable source and mark the affected step “to be checked”.
 ```
+
+Save all responses before scoring. For each ID, compare the returned result
+and units with the withheld answer key. Apply the recorded check and tolerance.
+Record the input sources, model, provider, date, settings, tools, prompt, answer and outcome,
+including unsolved problems and checks still requiring a reference or hand calculation.
+Retain unsolved cases for the next comparison. If a case is split into smaller
+steps, keep their reference answers in the key as well.
+
+Confirm usage limits and budget before testing. For confidential inputs,
+check that sharing is permitted and training on the submitted data is off.
 
 Public data set: AceEngineer publishes the illustrative tank inputs and the two schematics on the article page, 4 Nov 2026. These are illustrations rather than measured data; no CSV is required. The page states no separate data licence. The adapted data set is your own problem set.
