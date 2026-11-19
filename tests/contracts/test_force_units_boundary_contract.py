@@ -108,9 +108,10 @@ UNIT_SUFFIX_RE = re.compile(
 )
 
 # These quantities share a noun with forces or torques, but have different dimensions.
-_AREA_MOMENT_OR_LINE_LOAD = re.compile(
-    r"(?:second|polar)_moment_m4|line_load_(?:n_per_m|lbf_per_in)", re.IGNORECASE
+_EXACT_QUANTITY_NAMES = (
+    "second_moment_m4", "polar_moment_m4", "line_load_n_per_m", "line_load_lbf_per_in",
 )
+_AREA_MOMENT_OR_LINE_LOAD = re.compile("|".join(_EXACT_QUANTITY_NAMES), re.IGNORECASE)
 
 
 def _has_unit(name: str) -> bool:
@@ -123,7 +124,7 @@ _ACCEPTED_SUFFIXES_MSG = (
     "SI: " + "/".join("_" + s for s in SI_SUFFIXES) + " | "
     "imperial: " + "/".join("_" + s for s in IMPERIAL_SUFFIXES) + " | "
     "dimensionless: " + "/".join("_" + s for s in DIMENSIONLESS_SUFFIXES) +
-    " | second/polar moments of area: _m4 | line loads: _n_per_m/_lbf_per_in"
+    " | exact area moment and line load names: " + ", ".join(_EXACT_QUANTITY_NAMES)
 )
 
 #: Annotations that count as a bare-float context.
@@ -204,7 +205,7 @@ def scan_offenders(src_root: Path = _SRC_ROOT) -> set[tuple[str, str]]:
         pkg_dir = src_root / pkg
         for py in sorted(pkg_dir.rglob("*.py")):
             relpath = py.relative_to(src_root).as_posix()
-            tree = ast.parse(py.read_text(encoding="utf-8"), filename=str(py))
+            tree = ast.parse(py.read_text(encoding="utf-8"), filename=relpath)
             offenders |= _scan_tree(tree, relpath)
     return offenders
 
@@ -368,11 +369,14 @@ def test_scanner_accepts_imperial_and_dimensionless_names(name: str):
     ("top_tension_lbf_per_in", False),
     ("line_load_m4", False),
     ("polar_moment_n_per_m", False),
+    ("pipe_second_moment_m4", False),
+    ("riser_line_load_n_per_m", False),
 ])
 def test_area_moment_and_line_load_units_match_the_quantity(name, expected_valid):
     for source in (f"class Section:\n    {name}: float", f"def read(*, {name}: float): pass"):
         offenders = _scan_tree(ast.parse(source), "<self-test>")
         assert offenders == (set() if expected_valid else {("<self-test>", name)})
+    assert (name in _ACCEPTED_SUFFIXES_MSG) == expected_valid
 
 
 @pytest.mark.parametrize(
@@ -383,6 +387,17 @@ def test_widened_vocabulary_still_rejects_bare_names(name: str):
     with NO unit declaration at all is still an offender."""
     src = f"def f({name}: float) -> float:\n    return {name}\n"
     assert ("<self-test>", name) in _scan_tree(ast.parse(src), "<self-test>")
+
+
+def test_scanner_syntax_error_names_source_relative_file(tmp_path):
+    relative = "digitalmodel/drilling_riser/invalid.py"
+    source = tmp_path / relative
+    source.parent.mkdir(parents=True)
+    source.write_text("def broken(\n", encoding="utf-8", newline="\n")
+    with pytest.raises(SyntaxError) as error:
+        scan_offenders(tmp_path)
+    source_relative = error.value.filename == relative
+    assert source_relative, "Expected a source-relative filename with forward slashes"
 
 
 def test_no_new_unsuffixed_force_names():
