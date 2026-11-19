@@ -14,6 +14,13 @@ def test_force_interpolation_preserves_softening_and_endpoints():
     assert interpolate_force(curve, 0.06) == 400.0
 
 
+@pytest.mark.parametrize("endpoint", [2**54, float(2**54)])
+def test_force_interpolation_preserves_the_last_newton(endpoint):
+    extent = 2**54
+    curve = ForceCurve(0, (0, endpoint), (extent, 0))
+    assert interpolate_force(curve, extent - 1) == 1
+
+
 def test_pressure_and_line_load_normalization_have_distinct_units():
     from digitalmodel.geotechnical.tabulated_py_curves import (
         SpringGeometry, force_from_pressure, force_from_line_resistance,
@@ -26,6 +33,15 @@ def test_pressure_and_line_load_normalization_have_distinct_units():
     assert force_from_pressure(25000.0, geometry) == expected_n
     assert pressure_from_force(expected_n, geometry) == 25000.0
     assert force_from_line_resistance(12000.0, 2.0) == 12000.0 * 2.0
+
+
+@pytest.mark.parametrize("exponent", [-600, 600])
+def test_pressure_conversion_preserves_force_over_unit_area(exponent):
+    from digitalmodel.geotechnical.tabulated_py_curves import SpringGeometry, pressure_from_force
+
+    force_n = 2.0**exponent
+    geometry = SpringGeometry(2.0**-exponent, 2.0**exponent)
+    assert pressure_from_force(force_n, geometry) == force_n
 
 
 def test_force_quantization_preserves_exact_boundaries():
@@ -53,6 +69,16 @@ def test_depth_interpolation_uses_one_common_displacement_grid():
     assert interpolate_depth((shallow, deep), 5.0) == deep
     with pytest.raises(ValueError, match="outside"):
         interpolate_depth((shallow, deep), 6.0)
+
+
+@pytest.mark.parametrize("endpoint", [2**54, float(2**54)])
+def test_depth_interpolation_preserves_the_last_pascal(endpoint):
+    from digitalmodel.geotechnical.tabulated_py_curves import PressureCurve, interpolate_depth
+
+    extent = 2**54
+    shallow = PressureCurve(0, (0, 1), (0, extent))
+    deep = PressureCurve(endpoint, (0, 1), (0, 0))
+    assert interpolate_depth((shallow, deep), extent - 1).pressure_pa == (0, 1)
 
 
 def test_spring_table_is_odd_and_scales_pressure_by_projected_area():

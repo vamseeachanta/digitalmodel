@@ -92,11 +92,26 @@ def test_spring_requires_explicit_origin_and_nonnegative_sensitivity_multiplier(
     ))
 
 
+@pytest.mark.parametrize("displacement_m, force_n", [
+    (0.1, -20), (-0.1, 20), (Fraction(1, 2**1100), -1),
+])
+def test_spring_point_rejects_opposite_nonzero_signs(displacement_m, force_n):
+    with pytest.raises(ValueError, match="sign"):
+        SpringPoint(displacement_m, force_n)
+
+
+@pytest.mark.parametrize("displacement_m", [-0.1, 0.1])
+def test_spring_point_accepts_zero_resistance(displacement_m):
+    assert SpringPoint(displacement_m, 0).force_n == 0
+
+
 def test_nonfinite_computed_outputs_are_rejected():
     with pytest.raises(ValueError):
         force_from_pressure(1e308, SpringGeometry(10.0, 10.0))
     with pytest.raises(ValueError):
         force_from_line_resistance(1e308, 10.0)
+    with pytest.raises(ValueError, match="computed pressure_pa"):
+        pressure_from_force(2.0**1000, SpringGeometry(1, 2.0**-1000))
     with pytest.raises(ValueError):
         SpringPoint(inf, 1.0)
 
@@ -126,6 +141,21 @@ def test_quantization_handles_small_quanta_and_rejects_output_overflow():
     assert round_force_up(1.0, 5e-324) == 1.0
     with pytest.raises(ValueError):
         round_force_up(1.7e308, 1e308)
+
+
+@pytest.mark.skipif(np.finfo(np.longdouble).nmant <= np.finfo(float).nmant,
+                    reason="requires more significand bits than binary64")
+def test_quantization_uses_the_extended_precision_force():
+    force_n = np.nextafter(np.longdouble(1), np.longdouble(2))
+    assert round_force_up(force_n, 1) == 2.0
+
+
+@pytest.mark.skipif(np.finfo(np.longdouble).minexp >= np.finfo(float).minexp,
+                    reason="requires a wider exponent range than binary64")
+def test_quantization_preserves_a_positive_quantum_below_binary64():
+    quantum_n = np.ldexp(np.longdouble(1), -1075)
+    # One newton is an exact multiple of this power of two.
+    assert round_force_up(1, quantum_n) == 1.0
 
 
 @pytest.mark.parametrize("scalar", [np.uint64, np.int64, np.float32])
@@ -197,7 +227,7 @@ def test_integer_force_product_beyond_double_range_raises_value_error():
     lambda value: round_force_up(value, 1),
     lambda value: SpringGeometry(value, 1),
     lambda value: SpringPoint(value, 1),
-    lambda value: SpringPoint(1, -value),
+    lambda value: SpringPoint(-1, -value),
 ])
 def test_integer_input_beyond_double_range_raises_value_error(operation):
     with pytest.raises(ValueError):
@@ -207,7 +237,7 @@ def test_integer_input_beyond_double_range_raises_value_error(operation):
 @pytest.mark.parametrize("operation,coordinate", [
     (lambda value: ForceCurve(value, (0, 1), (0, 1)), "depth_m"),
     (lambda value: SpringPoint(value, 1), "displacement_m"),
-    (lambda value: SpringPoint(1, -value), "force_n"),
+    (lambda value: SpringPoint(-1, -value), "force_n"),
 ])
 def test_extended_precision_storage_remains_finite_after_conversion(operation, coordinate):
     stored = getattr(operation(np.longdouble(1.5)), coordinate)

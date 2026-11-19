@@ -54,7 +54,7 @@ from __future__ import annotations
 from bisect import bisect_left
 from dataclasses import dataclass
 from fractions import Fraction
-from math import inf, isfinite, nextafter
+from math import ceil, inf, isfinite, nextafter
 from numbers import Integral, Rational, Real
 
 
@@ -94,6 +94,7 @@ class ForceCurve:
     force_n: tuple[float, ...]
 
     def __post_init__(self) -> None:
+        """Validate the displacement axis and its force ordinates."""
         object.__setattr__(self, "displacement_m", tuple(
             _finite(value, "displacement_m") for value in self.displacement_m
         ))
@@ -114,8 +115,12 @@ def _linear(x: float, axis: tuple[float, ...], values: tuple[float, ...]) -> flo
     if axis[high] == x:
         return values[high]
     low = high - 1
-    fraction = (x - axis[low]) / (axis[high] - axis[low])
-    return values[low] + fraction * (values[high] - values[low])
+    # Measure both distances directly so the smaller weight survives near a knot.
+    coordinate = Fraction(x)
+    from_low = coordinate - Fraction(axis[low])
+    from_high = Fraction(axis[high]) - coordinate
+    weighted_sum = from_high * Fraction(values[low]) + from_low * Fraction(values[high])
+    return float(weighted_sum / (from_low + from_high))
 
 
 def interpolate_force(curve: ForceCurve, displacement_m: float) -> float:
@@ -134,6 +139,7 @@ class SpringGeometry:
     tributary_length_m: float
 
     def __post_init__(self) -> None:
+        """Require finite, positive dimensions for the projected area."""
         for name in ("diameter_m", "tributary_length_m"):
             value = getattr(self, name)
             value = _finite(value, name)
@@ -167,11 +173,22 @@ def force_from_line_resistance(
 
 
 def pressure_from_force(force_n: float, geometry: SpringGeometry) -> float:
-    """p = F / diameter / tributary length (Pa)."""
+    """Divide force by projected area and round the resulting pressure in Pa."""
     force_n = _finite(force_n, "force_n")
-    result = force_n / geometry.diameter_m / geometry.tributary_length_m
-    _finite(result, "computed pressure_pa")
-    return result
+    area = Fraction(geometry.diameter_m) * Fraction(geometry.tributary_length_m)
+    try:
+        return float(Fraction(force_n) / area)
+    except OverflowError as error:
+        raise ValueError("computed pressure_pa is not finite") from error
+
+
+def _exact_fraction(value: float) -> Fraction:
+    if isinstance(value, Rational):
+        # Fixed-width integer numerators must not enter Fraction arithmetic.
+        return Fraction(int(value.numerator), int(value.denominator))
+    if hasattr(value, "as_integer_ratio"):
+        return Fraction(*value.as_integer_ratio())
+    return Fraction(float(value))
 
 
 def round_force_up(force_n: float, quantum_n: float) -> float:
@@ -187,15 +204,11 @@ def round_force_up(force_n: float, quantum_n: float) -> float:
     _finite(quantum_n, "quantum_n")
     if quantum_n == 0:
         raise ValueError("quantum_n must be positive")
-    f = Fraction(force_n) if isinstance(force_n, Rational) else Fraction(float(force_n))
-    q = Fraction(quantum_n) if isinstance(quantum_n, Rational) else Fraction(float(quantum_n))
-    fn, fd = int(f.numerator), int(f.denominator)
-    qn, qd = int(q.numerator), int(q.denominator)
-    numerator, denominator = fn * qd, fd * qn
-    steps = -(-numerator // denominator)
+    quantum = _exact_fraction(quantum_n)
+    multiple = ceil(_exact_fraction(force_n) / quantum) * quantum
     try:
-        result = (steps * qn) / qd
-        if Fraction(result) < Fraction(steps * qn, qd):
+        result = float(multiple)
+        if result < multiple:
             result = nextafter(result, inf)
     except OverflowError as error:
         raise ValueError("computed rounded force_n is not finite") from error
@@ -215,6 +228,7 @@ class PressureCurve:
     pressure_pa: tuple[float, ...]
 
     def __post_init__(self) -> None:
+        """Validate the displacement axis and its pressure ordinates."""
         object.__setattr__(self, "displacement_m", tuple(
             _finite(value, "displacement_m") for value in self.displacement_m
         ))
@@ -262,9 +276,13 @@ class SpringPoint:
     force_n: float
 
     def __post_init__(self) -> None:
-        for name in ("displacement_m", "force_n"):
-            value = getattr(self, name)
-            object.__setattr__(self, name, _finite(value, "spring coordinates", minimum=-inf))
+        """Validate the signs of both inputs before storing their normalized values."""
+        displacement = _finite(self.displacement_m, "displacement_m", minimum=-inf)
+        force = _finite(self.force_n, "force_n", minimum=-inf)
+        if self.displacement_m < 0 < self.force_n or self.force_n < 0 < self.displacement_m:
+            raise ValueError("nonzero displacement and force must have the same sign")
+        object.__setattr__(self, "displacement_m", displacement)
+        object.__setattr__(self, "force_n", force)
 
 
 def symmetric_spring_points(
