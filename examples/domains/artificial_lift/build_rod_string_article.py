@@ -41,7 +41,7 @@ LIBRARY_DATE = "19 Nov 2026"
 PROMPT_COMMIT = "796e99f91fbf9f47ab6fa8b0c3e21c4a72961088"
 # Commit that holds the detail pages the article links; its reusable-prompts page names PROMPT_COMMIT.
 # Empty: the article page is not written.
-DETAIL_COMMIT = "d38245b079ba458b0163335a79f62ccb7e61dcf2"
+DETAIL_COMMIT = "ea7a571d034152dc470925cc446b4a79f05f88de"
 REVISION = "Revision 2, 19 Nov 2026"
 ARTICLE_TITLE = "Rod string mechanics: what stretch, load and damping do to the dynamometer card"
 OPENING_CARD = FOLDER / "opening-card.png"  # 1200 x 627 link-preview image (og:image)
