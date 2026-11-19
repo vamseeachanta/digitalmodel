@@ -121,7 +121,9 @@ def test_reject_unknown_reference_or_readiness(data, field, value, message):
         load_database(data)
 
 
-@pytest.mark.parametrize("field", ["qualified", "source", "size_description(bytes)", 42])
+@pytest.mark.parametrize("field", [
+    "qualified", "source", "size_descripton", "size_description(bytes)", 42,
+])
 def test_reject_unknown_dataset_field(data, field):
     data["datasets"][0][field] = True
     with pytest.raises(ValueError, match=re.escape(f"unknown dataset field {field!r}")):
