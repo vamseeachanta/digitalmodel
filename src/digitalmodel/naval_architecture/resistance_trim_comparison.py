@@ -133,12 +133,13 @@ def component_split_consistent(
     """Check abs(total - (viscous + pressure)) <= absolute_tolerance_kn.
 
     No implicit relative tolerance or physical acceptance criterion is applied.
-    A finite nonnegative tolerance is required, and a nonfinite sum is rejected.
+    Finite nonnegative components and tolerance are required, including for
+    duck-typed inputs; a nonfinite sum is rejected.
     """
     tolerance = _nonnegative(absolute_tolerance_kn)
-    component_sum = _finite(_finite(components.viscous_kn)
-                            + _finite(components.pressure_kn))
-    residual = _finite(_finite(components.total_kn) - component_sum)
+    component_sum = _finite(_nonnegative(components.viscous_kn)
+                            + _nonnegative(components.pressure_kn))
+    residual = _finite(_nonnegative(components.total_kn) - component_sum)
     return abs(residual) <= tolerance
 
 

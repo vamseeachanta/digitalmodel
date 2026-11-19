@@ -62,6 +62,17 @@ def test_component_split_uses_absolute_tolerance_only():
     )
 
 
+@pytest.mark.parametrize("total,viscous,pressure", [
+    (-1, -0.5, -0.5), (-1, 0, 0), (0, -1, 0), (0, 0, -1),
+])
+def test_duck_typed_negative_components_rejected(total, viscous, pressure):
+    forces = SimpleNamespace(
+        total_kn=total, viscous_kn=viscous, pressure_kn=pressure,
+    )
+    with pytest.raises(ValueError, match="nonnegative"):
+        component_split_consistent(forces, absolute_tolerance_kn=1)
+
+
 @pytest.mark.parametrize("force,speed", [(420, 8), (0, 8), (420, 0)])
 def test_power_unit_identity(force, speed):
     # kN * m/s = kW; the Decimal product is independent of the public helper.
@@ -152,6 +163,8 @@ def test_float32_total_does_not_erase_split_residual():
 
 
 def test_duck_typed_float32_total_does_not_erase_split_residual():
+    # NumPy 2 weak scalar promotion rounds a Python float to float32 here.
+    # NumPy 1 promotes to float64, so this case guards the fix under NumPy 2.
     forces = SimpleNamespace(
         total_kn=np.float32(420), viscous_kn=260, pressure_kn=160.000001,
     )
