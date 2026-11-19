@@ -16,7 +16,7 @@ This prompt lets your team rebuild the article's rod string results from public 
 Give this prompt to your assistant:
 
 ```text
-Clone https://github.com/vamseeachanta/digitalmodel and check out commit <the commit that holds this page>.
+Clone https://github.com/vamseeachanta/digitalmodel and check out commit ce8ab68ce224cf30675aab5a17529a93e537ba1f.
 Install the package with its test extra, then run from the repository root:
   PYTHONPATH=src python examples/domains/artificial_lift/build_rod_string_article.py --refresh --check
 The command reruns the analysis and reports any page that differs from the committed one.

@@ -37,7 +37,7 @@ REPO = "https://github.com/vamseeachanta/digitalmodel"
 LIBRARY_COMMIT = "a26efaa413c962105cdd49ce6b5122b5d0ab0b58"
 LIBRARY_DATE = "19 Nov 2026"
 # Commit that holds the detail pages the article links. Empty: the article page is not written.
-DETAIL_COMMIT = ""
+DETAIL_COMMIT = "ce8ab68ce224cf30675aab5a17529a93e537ba1f"
 REVISION = "Revision 1, 19 Nov 2026"
 ARTICLE_TITLE = "Rod string mechanics: what stretch, load and damping do to the dynamometer card"
 
