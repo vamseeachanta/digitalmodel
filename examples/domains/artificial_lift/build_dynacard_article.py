@@ -71,8 +71,8 @@ DEFAULT_EXAMPLE = 3
 # Two highest class probabilities closer than this are reported as an uncertain reading.
 CLOSE_SPLIT = 0.10
 
-REVISION = "Revision 4.2, 19 Nov 2026"
-# The detail pages name the article revision they were published with; r4.2 changes only the
+REVISION = "Revision 4.3, 19 Nov 2026"
+# The detail pages name the article revision they were published with; r4.2 and r4.3 change only the
 # article opening, so the pinned pages (DETAIL_COMMIT) keep their revision 4.1 wording.
 REVISION_SHORT = "revision 4.1 of 18 Nov 2026"
 CLOSING = ("If you have run your own analysis, see a way to improve this one, or have an idea "
@@ -431,6 +431,31 @@ def contents(sections) -> str:
     return f'<nav class="contents" aria-label="Contents"><p>Contents</p><ol>{items}</ol></nav>'
 
 
+def objective_block(f, r) -> str:
+    """The objective at a glance, as plain text (owner, r4.2 review, 19 Nov 2026: text, not a picture)."""
+    rows = [
+        ("Objective", "Screen a rod pump from the office, from the surface card measured at the top of the well."),
+        ("Inputs", "The surface card: the load on the polished rod against its position, over one stroke. "
+                   "The well's rod and pump data: rod sizes and lengths, pump depth, plunger size and pumping speed."),
+        ("Method", "<ol><li>Model the rod string with the wave equation [1], [2] to remove its weight, stretch and "
+                   "vibration from the card.</li><li>Compute the pump card at the bottom of the rod string.</li>"
+                   "<li>Read the pump stroke, fillage and fluid load from the pump card.</li>"
+                   "<li>Read the pump card's shape with a shape model for a first reading of the pump's "
+                   "condition.</li></ol>"),
+        ("Output", "The pump card, its stroke, fillage and fluid load, and a first reading of the pump's "
+                   "condition, as a hypothesis to check at the well."),
+        ("Data", "A public example well, and ten labelled card shapes of common pump conditions, called a "
+                 "diagnostic plate, from a public rod-pump dataset published on Mendeley Data in 2020 [3]."),
+        ("Result", f"Example well: the pump moves {100 * r['stroke_ratio']:.0f} % of the surface stroke and, on "
+                   f"its only card, a shutdown card, fills to {r['fillage_pct']:.0f} %. Ten shapes: the shape "
+                   f"model names {f['matches']} of 10."),
+    ]
+    cells = "".join(f'<tr><th scope="row">{name}</th><td>{text}</td></tr>' for name, text in rows)
+    return (f'<figure id="objective" class="objective"><table><tbody>{cells}</tbody></table>'
+            '<figcaption class="caption">At a glance: the objective, inputs, method, output and result.</figcaption>'
+            '</figure>')
+
+
 def body(f) -> str:
     r = f["report"]
     top = f["inputs"]["shape_top_three"][0]
@@ -446,6 +471,7 @@ def body(f) -> str:
 <p class="label">Energy Street · Rod pump diagnostics</p>
 <h1>Dynamometer card analysis: from the surface card to the pump card and a diagnosis</h1>
 <blockquote class="takeaway">A surface card, measured at the top of a rod-pumped well, carries enough to see the pump at the bottom of the well and to screen that pump from the office.</blockquote>
+{objective_block(f, r)}
 <div class="opening">
 <p>Diagnosing a rod pump is always a challenge. The pump works at the bottom of the well, out of sight. Some wells measure the downhole card, but most measure only the surface card: the load on the polished rod against its position, over one stroke. The card data contains all of this information at once: the pump's work, the weight, stretch and vibration of the rod string, the pumping unit, even loose bolts, so a pump problem can hide inside it.</p>
 <p>Our troubleshooting tool computes the pump card from the surface card and gives a first reading of the pump's condition. To keep the problem simple, it models the rod string only to remove its effect from the card. The rod string, the pumping unit and other component anomalies are the subjects of later articles in this rod pump series, and practical diagnostics and repairs follow the engineering.</p>
@@ -828,6 +854,7 @@ h1{font-size:30px;line-height:1.25;margin:6px 0 16px;color:var(--navy)}
 h2{font-size:22px;color:var(--navy);margin:36px 0 10px}h3{font-size:16px;margin:0 0 6px;font-family:system-ui,sans-serif}
 blockquote.takeaway{margin:0 0 20px;padding:12px 18px;border-left:4px solid var(--teal);background:#f3f8f8;font-size:17px}
 figure{margin:18px 0}figcaption,.caption{font:13px/1.45 system-ui,sans-serif;color:var(--ink2);margin-top:6px}
+figure.objective th{width:7em}figure.objective ol{margin:0;padding-left:18px}
 .chart{width:100%%;height:auto;display:block;background:var(--surface)}
 .chart .grid{stroke:var(--line);stroke-width:1}.chart .axis{stroke:var(--muted);stroke-width:1}
 .chart .tick{font:11px system-ui,sans-serif;fill:var(--ink2)}.chart .axis-title{font:12px system-ui,sans-serif;fill:var(--ink2)}
