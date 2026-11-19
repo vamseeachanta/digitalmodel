@@ -4,11 +4,11 @@ Article: "Fitness for service of corroded pipelines: strength and remaining usef
 
 Method. Section A is rated by the simplified local metal-loss relation of API 579-1/ASME FFS-1, Parts 2 and 5 [6], from the ASME B31.8 rating before loss [7]. The burst pressures come from the five methods of References 1 to 5, with the allowable factors stated in "Five methods give four different pressures". Life is projected at a constant thinning rate to the wall at which the reduced rating falls to the design pressure.
 
-Editions and evaluation levels. The editions are those the library cites; the linked publisher pages may show later editions. The evaluation level for each method, as implemented, is to be checked by the Corrosion Deckhand against the evaluation levels of ASME B31G-2012, the edition the library cites:
+Editions and evaluation levels. The editions are those the library cites; the linked publisher pages may show later editions. The evaluation level of each method is the one the library implements, listed below. This assessment does not compare these levels with those of ASME B31G-2012, the edition the library cites.
 
-- B31G and Modified B31G [1, 2]: Level 1 evaluation (to be checked).
-- RSTRENG [3]: Level 2 effective-area evaluation (to be checked).
-- RSTRENG-2D [4]: Level 2 effective-area evaluation (to be checked); the implementation projects each axial row to its greatest depth.
+- B31G and Modified B31G [1, 2]: Level 1 evaluation.
+- RSTRENG [3]: Level 2 effective-area evaluation.
+- RSTRENG-2D [4]: Level 2 effective-area evaluation; the implementation projects each axial row to its greatest depth.
 
 Public data set: our corroded-pipeline worked example in digitalmodel, published by AceEngineer, MIT licence, worked-example readings, retrieved 12 Nov 2026 at commit 09089a121a16069c4b657d1a320a630a23ab1dd5. <https://github.com/vamseeachanta/digitalmodel/tree/09089a121a16069c4b657d1a320a630a23ab1dd5/examples/workflows/pipeline-ffs-assessment>
 
