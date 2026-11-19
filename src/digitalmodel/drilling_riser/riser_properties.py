@@ -33,6 +33,14 @@ length and SI prefix factors. The caller supplies the basis for mass and force
 coefficients. Joint properties carry the input citations, and each tension
 balance cites the kilo prefix at the kN boundary.
 
+To revalidate a returned citation against the packaged NIST record, pass the
+package root to the public validator::
+
+    from digitalmodel.citations import validate_citation
+    from digitalmodel.drilling_riser.riser_properties import PACKAGED_CITATION_ROOT
+
+    validate_citation(balance.citations[0], repo_root=PACKAGED_CITATION_ROOT)
+
 Joint dry and apparent submerged masses are on one load basis: the same
 contents, coatings and attachments. On that basis the apparent submerged mass
 is the dry mass less the displaced water mass, which cannot be negative, so a
@@ -76,7 +84,7 @@ from digitalmodel.drilling_riser.stackup import effective_tension
 FOOT_TO_METER = 0.3048  # NIST SP 811 (2008) Appendix B.8, boldface (exact).
 KILO = 1000.0  # NIST SP 811 (2008) Sec. 4.3 Table 5: kilo = 10**3.
 
-_CITATION_ROOT = Path(__file__).parent
+PACKAGED_CITATION_ROOT = Path(__file__).parent
 _LENGTH_SECTION = 'Appendix B.8 (international foot and inch)'
 _KILO_SECTION = 'Section 4.3, Table 5 (kilo)'
 
@@ -87,7 +95,7 @@ def _nist_reference(section: str) -> Citation:
         wiki_path='wikis/engineering-standards/wiki/standards/nist-sp-811.md',
         source_sibling='generic',
     )
-    validate_citation(citation, repo_root=_CITATION_ROOT)
+    validate_citation(citation, repo_root=PACKAGED_CITATION_ROOT)
     return citation
 
 

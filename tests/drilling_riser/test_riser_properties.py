@@ -14,7 +14,7 @@ from math import pi, sqrt
 import numpy as np
 import pytest
 
-from digitalmodel.citations import Citation, CitationResolutionError
+from digitalmodel.citations import Citation, CitationResolutionError, validate_citation
 from digitalmodel.drilling_riser import riser_properties
 from digitalmodel.drilling_riser.riser_properties import (
     BuoyancyInput,
@@ -346,9 +346,17 @@ def test_exact_conversions_carry_their_nist_source():
     assert SoilResistanceInput(1, 2, 3).citations == ()
 
 
+def test_consumer_revalidates_tension_citation_from_package(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / 'wikis').mkdir()
+    monkeypatch.setenv('LLM_WIKI_PATH', str(tmp_path))
+    balance = compute_tension_balance(TensionInput(8000, 100, 10))
+    validate_citation(balance.citations[0], repo_root=riser_properties.PACKAGED_CITATION_ROOT)
+
+
 @pytest.mark.parametrize('revision', [None, '1995'])
 def test_conversion_requires_matching_source_metadata(tmp_path, monkeypatch, revision):
-    monkeypatch.setattr(riser_properties, '_CITATION_ROOT', tmp_path)
+    monkeypatch.setattr(riser_properties, 'PACKAGED_CITATION_ROOT', tmp_path)
     if revision is not None:
         page = tmp_path / 'wikis/engineering-standards/wiki/standards/nist-sp-811.md'
         page.parent.mkdir(parents=True)
