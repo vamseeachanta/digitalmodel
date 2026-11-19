@@ -38,5 +38,5 @@
 </tbody></table><p class="caption">Table 3. Gaps are specific to the sources inspected in this run; no exhaustive source-search or industry-coverage claim is made.</p>
 <h2>Provenance sidecar validation</h2>
 <p>Legacy loading is selected only when <code>provenance.json</code> is absent. A present sidecar must decode to a JSON object. JSON null, arrays, strings, numbers and booleans are rejected with <code>ValueError</code> before any CSV is read, including when a required CSV is missing. An empty object is rejected by the existing completeness validation. This contract does not qualify the computed seed properties or close the engineering gaps in Table 3.</p>
-<p>On Linux, a directory at <code>provenance.json</code> raises <code>IsADirectoryError</code>. The loader reads the sidecar using Python's default text encoding (UTF-8 in UTF-8 mode, otherwise the locale encoding). Bytes that this encoding cannot decode raise <code>UnicodeDecodeError</code>, a subclass of <code>ValueError</code>. Both errors occur before JSON validation.</p>
+<p>The loader reads <code>provenance.json</code> as UTF-8 in every locale. Invalid UTF-8 raises <code>UnicodeDecodeError</code>, a subclass of <code>ValueError</code>. On Linux, a directory at the sidecar path raises <code>IsADirectoryError</code>. Both errors occur before JSON validation.</p>
 </html>

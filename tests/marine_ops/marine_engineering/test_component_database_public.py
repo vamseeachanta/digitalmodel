@@ -243,3 +243,33 @@ def test_empty_object_sidecar_is_incomplete(copied_data):
     (copied_data / 'provenance.json').write_text('{}')
     with pytest.raises(ValueError, match='provenance.*incomplete sidecar'):
         ComponentDatabase(copied_data)
+
+
+def test_utf8_sidecar_preserves_source_name_in_c_locale(copied_data, monkeypatch):
+    import subprocess
+
+    sidecar = copied_data / 'provenance.json'
+    provenance = json.loads(sidecar.read_bytes())
+    name = 'Référence'
+    provenance['sources']['moorpy']['name'] = name
+    sidecar.write_text(json.dumps(provenance, ensure_ascii=False), encoding='utf-8')
+
+    # Python selects UTF-8 mode and the default text encoding at startup.
+    monkeypatch.setenv('LC_ALL', 'C')
+    monkeypatch.setenv('PYTHONCOERCECLOCALE', '0')
+    result = subprocess.check_output([
+        sys.executable, '-X', 'utf8=0', '-c',
+        'import json, sys\n'
+        'from pathlib import Path\n'
+        'from digitalmodel.data.mooring_component_schema import load_tables\n'
+        '_, provenance = load_tables(Path(sys.argv[1]))\n'
+        'print(json.dumps(provenance["sources"]["moorpy"]["name"]))',
+        str(copied_data),
+    ], cwd=Path(__file__).resolve().parents[3] / 'src')
+    assert json.loads(result) == name
+
+
+def test_invalid_utf8_sidecar_fails_before_csv_loading(tmp_path):
+    (tmp_path / 'provenance.json').write_bytes(b'{"name": "\xff"}')
+    with pytest.raises(UnicodeDecodeError):
+        ComponentDatabase(tmp_path)

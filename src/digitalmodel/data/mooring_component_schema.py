@@ -130,7 +130,7 @@ def load_tables(data_dir):
     provenance = None
     if sidecar.exists():
         try:
-            provenance = json.loads(sidecar.read_text())
+            provenance = json.loads(sidecar.read_text(encoding='utf-8'))
         except json.JSONDecodeError as exc:
             raise ValueError(f'provenance: malformed JSON: {exc.msg}') from exc
         if not isinstance(provenance, dict):
