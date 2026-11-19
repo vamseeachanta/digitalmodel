@@ -2,7 +2,7 @@
 
 Article: "Training (and attitude towards) an AI assistant", The Deckhand Chronicles, revision 5 of 19 Nov 2026. This page holds in full what Appendix B of the article summarises.
 
-The reproduce prompt fits the public Norris observations and compares the result with NIST's certified values. The adapt prompt helps you write an instruction file and a small problem set for your own work. To have a study of your own engineering workflow done for you instead, see below.
+The reproduce prompt fits the public Norris observations and compares the result with NIST's certified values. The adapt prompt helps you write an instruction file and a small problem set for your own work.
 
 ## What you need to run this
 
@@ -115,5 +115,3 @@ none is provided, record the missing clause and ask for it.
 ```
 
 Public data set: NIST Statistical Reference Datasets, Norris linear regression, NIST SRD 140, free to download without sign-in; retrieved 12 Nov 2026. Cite NIST as the source.
-
-To have a study of your own engineering workflow done for you, write to support@aceengineer.com.
