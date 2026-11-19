@@ -38,7 +38,7 @@ LIBRARY_COMMIT = "a26efaa413c962105cdd49ce6b5122b5d0ab0b58"
 LIBRARY_DATE = "19 Nov 2026"
 # Commit a reader checks out to reproduce the results (named on the reusable-prompts page). It holds this
 # builder, results.json and the detail pages; empty: the page names no commit yet.
-PROMPT_COMMIT = ""
+PROMPT_COMMIT = "796e99f91fbf9f47ab6fa8b0c3e21c4a72961088"
 # Commit that holds the detail pages the article links; its reusable-prompts page names PROMPT_COMMIT.
 # Empty: the article page is not written.
 DETAIL_COMMIT = ""
