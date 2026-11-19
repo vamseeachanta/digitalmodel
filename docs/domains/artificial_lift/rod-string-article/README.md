@@ -1,0 +1,30 @@
+# Rod string article: detail pages
+
+Rod string article ("Rod string mechanics: what stretch, load and damping do to the dynamometer card"), revision 1, 19 nov 2026. `examples/domains/artificial_lift/build_rod_string_article.py` writes it from `results.json`; the results come from the library at [a26efaa4](https://github.com/vamseeachanta/digitalmodel/tree/a26efaa413c962105cdd49ce6b5122b5d0ab0b58/) (version of 19 Nov 2026).
+
+Purpose:
+
+- Hold the detail behind the rod string article, part 2 of the rod pump series.
+- Give the data behind every figure, so each number can be checked.
+
+## Pages
+
+- [Example well, stretch, stress and sensitivity](stroke-and-stress.md): Appendix A.
+- [Damping](damping.md): Appendix B.
+- [Method and its limits](method-and-limits.md): Appendix C.
+- [Reusable prompts](reusable-prompts.md): Appendix D.
+
+## Data
+
+- [results.json](results.json): every saved result, written by `--refresh`.
+- [figure-1-cards-at-depth.csv](figure-1-cards-at-depth.csv): Figure 1.
+- [figure-2-3-depth-profile.csv](figure-2-3-depth-profile.csv): Figures 2 and 3.
+- [figure-4-damping-cards.csv](figure-4-damping-cards.csv): Figure 4.
+- [sensitivity.csv](sensitivity.csv): sensitivity factors.
+
+## Rebuild
+
+```
+PYTHONPATH=src python examples/domains/artificial_lift/build_rod_string_article.py --refresh
+PYTHONPATH=src python examples/domains/artificial_lift/build_rod_string_article.py --check
+```
