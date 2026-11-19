@@ -62,7 +62,7 @@ Table 3. Example well results, finite-difference method, 200 grid points, estima
 
 ## How the stretch and stress are worked
 
-- Static stretch of each taper: fluid load × 12 × length / (area × modulus), in inches: the axial deformation of a bar, δ = PL/(AE) (Hibbeler, Mechanics of Materials, chapter 4, edition to be confirmed), with the rod elastic constant of `rod_pump/rod_string.py` (`rod_elastic_constant`).
+- Static stretch of each taper: fluid load × 12 × length / (area × modulus), in inches: the axial deformation of a bar, δ = PL/(AE) (Hibbeler, Mechanics of Materials, chapter 4), with the rod elastic constant of `rod_pump/rod_string.py` (`rod_elastic_constant`).
 - The fluid load, 3,310 lbf, is read from the computed pump card; the stress at the polished rod needs only the surface card; the stress at the taper joint needs the computed load profile.
 - Hand check: 7/8 in rods, area 0.6013 in²; 3/4 in rods, area 0.4418 in²; modulus 30,500,000 psi. Stretch = 3,310 × (12 × 1,400 / (0.6013 × 30,500,000) + 12 × 3,350 / (0.4418 × 30,500,000)) = 12.91 in.
 - Stress at the polished rod: 12,240 lbf / 0.6013 in² = 20,360 psi. Stress at the top of the 3/4 in rods: the peak rod load interpolated to 1,400 ft, 9,531 lbf, over 0.4418 in² = 21,570 psi.
@@ -70,7 +70,7 @@ Table 3. Example well results, finite-difference method, 200 grid points, estima
 
 ## Goodman check
 
-The modified Goodman diagram of API RP 11BR (edition to be confirmed) gives the allowable stress SA = (T/4 + M × Smin) × SF, with T = 115,000 psi (Grade D), M = 0.5625 and SF = 1, all from the well record. The loading is (Smax − Smin) / (SA − Smin), the share of the allowable stress range in use. The well record's own RodStressSigmaA and RodStress values follow the same two relations.
+The modified Goodman diagram of API RP 11BR gives the allowable stress SA = (T/4 + M × Smin) × SF, with T = 115,000 psi (Grade D), M = 0.5625 and SF = 1, all from the well record. The loading is (Smax − Smin) / (SA − Smin), the share of the allowable stress range in use. The well record's own RodStressSigmaA and RodStress values follow the same two relations.
 
 | Point | Basis | Peak stress (psi) | Minimum stress (psi) | Allowable SA (psi) | Loading (%) |
 | --- | --- | --- | --- | --- | --- |

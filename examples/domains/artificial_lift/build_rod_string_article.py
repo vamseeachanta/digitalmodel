@@ -852,9 +852,9 @@ def body(f) -> str:
         "mathematischen Physik. Mathematische Annalen 100, 32–74. "
         '<a href="https://doi.org/10.1007/BF01448839">doi:10.1007/BF01448839</a>.</li>'
         "<li>Hibbeler, R. C. Mechanics of Materials. Pearson. Chapter 4, Axial load: elastic deformation of an "
-        "axially loaded member, δ = PL/(AE). Edition to be confirmed.</li>"
+        "axially loaded member, δ = PL/(AE).</li>"
         "<li>American Petroleum Institute. API RP 11BR, Recommended Practice for the Care and Handling of Sucker "
-        "Rods: the modified Goodman diagram. Edition to be confirmed.</li>"
+        "Rods: the modified Goodman diagram.</li>"
         f'<li>digitalmodel library, MIT licence, version of {LIBRARY_DATE}. '
         f'<a href="{REPO}/tree/{LIBRARY_COMMIT}/">github.com/vamseeachanta/digitalmodel</a>; finite-difference '
         f'solver: <a href="{lib}">everitt_jennings/solver.py</a>.</li></ol>',
@@ -1109,8 +1109,8 @@ def page_stroke(f) -> str:
         "Table 3. Example well results, finite-difference method, 200 grid points, estimated damping.", "",
         "## How the stretch and stress are worked", "",
         "- Static stretch of each taper: fluid load × 12 × length / (area × modulus), in inches: the axial "
-        "deformation of a bar, δ = PL/(AE) (Hibbeler, Mechanics of Materials, chapter 4, edition to be "
-        "confirmed), with the rod elastic constant of `rod_pump/rod_string.py` (`rod_elastic_constant`).",
+        "deformation of a bar, δ = PL/(AE) (Hibbeler, Mechanics of Materials, chapter 4), with the rod elastic "
+        "constant of `rod_pump/rod_string.py` (`rod_elastic_constant`).",
         "- The fluid load, 3,310 lbf, is read from the computed pump card; the stress at the polished rod needs "
         "only the surface card; the stress at the taper joint needs the computed load profile.",
         f"- Hand check: 7/8 in rods, area 0.6013 in²; 3/4 in rods, area 0.4418 in²; modulus "
@@ -1122,7 +1122,7 @@ def page_stroke(f) -> str:
         "- The solver averages the load at the grid point at the taper joint between its neighbours, because the "
         "strain-derived load steps where the area steps.",
         "", "## Goodman check", "",
-        f"The modified Goodman diagram of API RP 11BR (edition to be confirmed) gives the allowable stress "
+        f"The modified Goodman diagram of API RP 11BR gives the allowable stress "
         f"SA = (T/4 + M × Smin) × SF, with T = {f['tensile']} psi (Grade {f['grade']}), M = {g2['goodman_m']} "
         f"and SF = {f['sf']}, all from the well record. The loading is (Smax − Smin) / (SA − Smin), the share "
         "of the allowable stress range in use. The well record's own RodStressSigmaA and RodStress values follow "
