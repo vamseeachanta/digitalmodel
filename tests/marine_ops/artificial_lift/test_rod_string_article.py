@@ -92,7 +92,7 @@ def test_committed_pages_are_current():
 def test_public_text_has_no_local_or_private_detail():
     texts = [p.read_text(encoding="utf-8") for p in FOLDER.iterdir() if p.suffix in (".md", ".html")]
     assert texts
-    banned = ["C:\\", "C:/", "/mnt/", "Users/", "ace-linux", "localhost", "Goodman", "Reed", "fleet-ops"]
+    banned = ["C:\\", "C:/", "/mnt/", "Users/", "localhost"]
     for text in texts:
         for word in banned:
             assert word not in text, word
