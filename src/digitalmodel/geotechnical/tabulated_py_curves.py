@@ -149,11 +149,13 @@ class SpringGeometry:
 
 
 def force_from_pressure(pressure_pa: float, geometry: SpringGeometry) -> float:
-    """F = pressure * diameter * tributary length (N)."""
+    """F = pressure * diameter * tributary length (N), using the exact area."""
     pressure_pa = _finite(pressure_pa, "pressure_pa")
-    result = pressure_pa * geometry.diameter_m * geometry.tributary_length_m
-    _finite(result, "computed force_n")
-    return result
+    area = Fraction(geometry.diameter_m) * Fraction(geometry.tributary_length_m)
+    try:
+        return float(Fraction(pressure_pa) * area)
+    except OverflowError as error:
+        raise ValueError("computed force_n is not finite") from error
 
 
 def force_from_line_resistance(
@@ -199,6 +201,9 @@ def round_force_up(force_n: float, quantum_n: float) -> float:
     Exact binary input ratios determine which side of a boundary applies.
     The returned float is at least the exact selected multiple; if no finite
     float can represent that upper bound, ValueError is raised.
+    With a non-dyadic quantum (for example 0.1 N), that float can exceed the
+    selected multiple. Rounding it again can add a quantum: this operation
+    is not idempotent. Quantize the original force rather than a stored result.
     """
     _finite(force_n, "force_n")
     _finite(quantum_n, "quantum_n")

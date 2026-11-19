@@ -94,3 +94,50 @@ def test_spring_table_is_odd_and_scales_pressure_by_projected_area():
     assert [point.force_n for point in points] == pytest.approx(
         [-expected_positive_n[1], -expected_positive_n[0], 0.0, *expected_positive_n]
     )
+
+
+@pytest.mark.parametrize("exponent", [-600, 600])
+def test_force_conversion_preserves_pressure_over_unit_area(exponent):
+    from digitalmodel.geotechnical.tabulated_py_curves import SpringGeometry, force_from_pressure
+
+    pressure_pa = 2.0**exponent
+    geometry = SpringGeometry(2.0**exponent, 2.0**-exponent)
+    # The dimensions cancel exactly, so the force has the same numerical value.
+    assert force_from_pressure(pressure_pa, geometry) == pressure_pa
+
+
+@pytest.mark.parametrize("exponent", [-600, 600])
+def test_spring_table_preserves_pressure_over_unit_area(exponent):
+    from digitalmodel.geotechnical.tabulated_py_curves import (
+        PressureCurve, SpringGeometry, symmetric_spring_points,
+    )
+
+    pressure_pa = 2.0**exponent
+    curve = PressureCurve(1, (0, 1), (0, pressure_pa))
+    geometry = SpringGeometry(2.0**exponent, 2.0**-exponent)
+    points = symmetric_spring_points(curve, geometry)
+    assert [point.force_n for point in points] == [-pressure_pa, 0, pressure_pa]
+
+
+@pytest.mark.parametrize("force_n,first_n,second_n", [
+    (1024, 1024.0000000000002, 1024.1000000000001),
+    (0.3, 0.30000000000000004, 0.4),
+])
+def test_non_dyadic_quantization_can_advance_when_repeated(force_n, first_n, second_n):
+    from digitalmodel.geotechnical.tabulated_py_curves import round_force_up
+
+    # Pin the documented limitation when a rounded float is stored and rounded again.
+    assert round_force_up(force_n, 0.1) == first_n
+    assert round_force_up(first_n, 0.1) == second_n
+
+
+def test_spring_table_mirrors_the_sign_of_zero_resistance():
+    from math import copysign
+    from digitalmodel.geotechnical.tabulated_py_curves import (
+        PressureCurve, SpringGeometry, symmetric_spring_points,
+    )
+
+    curve = PressureCurve(1, (0, 1), (0, 1))
+    points = symmetric_spring_points(curve, SpringGeometry(1.0, 1.0), sensitivity_ratio=-1.0)
+    assert [point.force_n for point in points] == [0, 0, 0]
+    assert [copysign(1, point.force_n) for point in points] == [-1, 1, 1]
