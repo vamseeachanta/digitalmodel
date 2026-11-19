@@ -546,7 +546,7 @@ def appendices(f) -> str:
 <p>The example well behind Figure 1 and the key conclusions is summarised in this appendix.</p>
 <ul>
 <li>The well is one anonymised field well in the digitalmodel library: a {w['plunger_diameter_in']:.3f} in plunger at {w['pump_depth_ft']:,.0f} ft on a two-taper steel rod string, pumped at {w['strokes_per_minute']:.2f} strokes a minute.</li>
-<li>The inputs that matter most: a 1 % larger rod diameter lowers the maximum pump load by about {abs(r['factor_1pct_rod_diameter_maximum_pump_load_lbf']):.1f} %, and a 1 % load-cell gain error raises it by about {r['factor_1pct_surface_load_scale_maximum_pump_load_lbf']:.1f} %.</li>
+<li>The inputs that matter most: a 1 % larger rod diameter lowers the maximum pump load by about {abs(r['sensitivity_rod_diameter_plus1_maximum_pump_load_lbf']):.1f} %, and a 1 % load-cell gain error raises it by about {r['factor_1pct_surface_load_scale_maximum_pump_load_lbf']:.1f} %.</li>
 <li>Unanchored tubing is not modelled and only steel rods are accepted. Both methods and the web page treat the well as vertical; a deviation survey is flagged, not modelled.</li>
 </ul>
 <p>Inputs, results, sensitivity and limits in full: {repo_link("example_well")}.</p>"""
