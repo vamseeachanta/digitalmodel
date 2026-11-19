@@ -9,6 +9,7 @@ Rebuild command: PYTHONPATH=src python examples/domains/artificial_lift/build_ro
 import importlib.util
 import json
 import math
+import re
 from pathlib import Path
 
 import pytest
@@ -89,13 +90,35 @@ def test_committed_pages_are_current():
         "rebuild: PYTHONPATH=src python examples/domains/artificial_lift/build_rod_string_article.py")
 
 
+def test_goodman_check_against_hand_calculation():
+    g1, g2 = RESULTS["goodman"]
+    # Grade D, T = 115,000 psi, M = 0.5625, SF = 1, from the well record.
+    assert (g2["grade"], g2["minimum_tensile_psi"], g2["goodman_m"], g2["service_factor"]) == ("D", 115000, 0.5625, 1)
+    # Top of the 3/4 in rods: SA = 115,000 / 4 + 0.5625 * 10,453.47 = 28,750 + 5,880.08 = 34,630.08 psi;
+    # loading = (21,573.79 - 10,453.47) / (34,630.08 - 10,453.47) = 11,120.32 / 24,176.61 = 46.00 %.
+    assert g2["ours"]["allowable_psi"] == pytest.approx(34630.08, abs=0.05)
+    assert g2["ours"]["loading_pct"] == pytest.approx(46.00, abs=0.01)
+    # At the polished rod both bases agree with the record's own values (35.07 %).
+    assert g1["ours"]["loading_pct"] == pytest.approx(g1["record"]["loading_pct"], abs=0.01)
+    # The record's own SigmaA follows the same relation: 28,750 + 0.5625 * 12,077.75 = 35,543.74 psi.
+    assert g2["record"]["allowable_psi"] == pytest.approx(28750 + 0.5625 * g2["record"]["min_psi"], abs=0.01)
+    # The record's offset at the joint is a constant load, peak and minimum alike (within 2 lbf).
+    off = RESULTS["record_offset_top_taper2"]
+    assert abs(off["max_lbf"] - off["min_lbf"]) < 2.0
+
+
 def test_public_text_has_no_local_or_private_detail():
     texts = [p.read_text(encoding="utf-8") for p in FOLDER.iterdir() if p.suffix in (".md", ".html")]
     assert texts
     banned = ["C:\\", "C:/", "/mnt/", "Users/", "localhost"]
+    # Generic patterns, naming nothing: private-network addresses and private-network host-name suffixes.
+    private = re.compile(r"\b(10\.\d{1,3}|192\.168|172\.(1[6-9]|2\d|3[01]))\.\d{1,3}\.\d{1,3}\b"
+                         r"|\b[\w-]+\.(local|lan|internal|ts\.net)\b", re.IGNORECASE)
     for text in texts:
         for word in banned:
             assert word not in text, word
+        found = private.search(text)
+        assert found is None, found and found.group(0)
     article = FOLDER / "rod-string-article.html"
     if article.exists():
         text = article.read_text(encoding="utf-8")

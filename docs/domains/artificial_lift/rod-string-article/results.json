@@ -4647,6 +4647,22 @@
     "fillage_pct": -0.4651,
     "peak_stress_top_taper2_psi": 0.0027,
     "damping_share_pct": 0.1677
+   },
+   "plus_pct": {
+    "pump_stroke_in": 0.318,
+    "static_stretch_in": -0.9634,
+    "max_pump_load_lbf": 0.0326,
+    "fillage_pct": -0.4591,
+    "peak_stress_top_taper2_psi": 0.0026,
+    "damping_share_pct": 0.1667
+   },
+   "minus_pct": {
+    "pump_stroke_in": -0.3245,
+    "static_stretch_in": 0.9824,
+    "max_pump_load_lbf": -0.0332,
+    "fillage_pct": 0.4711,
+    "peak_stress_top_taper2_psi": -0.0027,
+    "damping_share_pct": -0.1688
    }
   },
   {
@@ -4659,6 +4675,22 @@
     "fillage_pct": -0.4619,
     "peak_stress_top_taper2_psi": 0.0027,
     "damping_share_pct": 0.1679
+   },
+   "plus_pct": {
+    "pump_stroke_in": 1.5883,
+    "static_stretch_in": -6.8701,
+    "max_pump_load_lbf": 0.1568,
+    "fillage_pct": -2.1444,
+    "peak_stress_top_taper2_psi": 0.0124,
+    "damping_share_pct": 0.8137
+   },
+   "minus_pct": {
+    "pump_stroke_in": -1.6781,
+    "static_stretch_in": 5.6524,
+    "max_pump_load_lbf": -0.1727,
+    "fillage_pct": 2.4744,
+    "peak_stress_top_taper2_psi": -0.0144,
+    "damping_share_pct": -0.8657
    }
   },
   {
@@ -4671,6 +4703,22 @@
     "fillage_pct": -0.9366,
     "peak_stress_top_taper2_psi": -2.557,
     "damping_share_pct": 2.1652
+   },
+   "plus_pct": {
+    "pump_stroke_in": 0.5697,
+    "static_stretch_in": -1.8411,
+    "max_pump_load_lbf": -3.157,
+    "fillage_pct": -0.9172,
+    "peak_stress_top_taper2_psi": -2.5186,
+    "damping_share_pct": 2.1919
+   },
+   "minus_pct": {
+    "pump_stroke_in": -0.5871,
+    "static_stretch_in": 2.5075,
+    "max_pump_load_lbf": 3.1256,
+    "fillage_pct": 0.9561,
+    "peak_stress_top_taper2_psi": 2.5953,
+    "damping_share_pct": -2.1385
    }
   },
   {
@@ -4683,6 +4731,22 @@
     "fillage_pct": -0.9315,
     "peak_stress_top_taper2_psi": -2.5693,
     "damping_share_pct": 2.171
+   },
+   "plus_pct": {
+    "pump_stroke_in": 2.9455,
+    "static_stretch_in": -11.4501,
+    "max_pump_load_lbf": -16.0992,
+    "fillage_pct": -4.062,
+    "peak_stress_top_taper2_psi": -11.8839,
+    "damping_share_pct": 11.5249
+   },
+   "minus_pct": {
+    "pump_stroke_in": -3.0712,
+    "static_stretch_in": 10.5095,
+    "max_pump_load_lbf": 15.3136,
+    "fillage_pct": 5.2529,
+    "peak_stress_top_taper2_psi": 13.8092,
+    "damping_share_pct": -10.1852
    }
   },
   {
@@ -4695,6 +4759,22 @@
     "fillage_pct": -0.0018,
     "peak_stress_top_taper2_psi": -0.3196,
     "damping_share_pct": -0.0217
+   },
+   "plus_pct": {
+    "pump_stroke_in": -0.032,
+    "static_stretch_in": 0.0423,
+    "max_pump_load_lbf": -1.8221,
+    "fillage_pct": -0.0018,
+    "peak_stress_top_taper2_psi": -0.3196,
+    "damping_share_pct": -0.0215
+   },
+   "minus_pct": {
+    "pump_stroke_in": 0.0321,
+    "static_stretch_in": 0.5575,
+    "max_pump_load_lbf": 1.8221,
+    "fillage_pct": 0.0017,
+    "peak_stress_top_taper2_psi": 0.3196,
+    "damping_share_pct": 0.0218
    }
   },
   {
@@ -4707,6 +4787,22 @@
     "fillage_pct": -0.0028,
     "peak_stress_top_taper2_psi": -0.3196,
     "damping_share_pct": -0.0218
+   },
+   "plus_pct": {
+    "pump_stroke_in": -0.1494,
+    "static_stretch_in": 0.1292,
+    "max_pump_load_lbf": -9.1104,
+    "fillage_pct": -0.0197,
+    "peak_stress_top_taper2_psi": -1.598,
+    "damping_share_pct": -0.1048
+   },
+   "minus_pct": {
+    "pump_stroke_in": 0.1607,
+    "static_stretch_in": -1.9117,
+    "max_pump_load_lbf": 9.1105,
+    "fillage_pct": 0.0083,
+    "peak_stress_top_taper2_psi": 1.5976,
+    "damping_share_pct": 0.1128
    }
   },
   {
@@ -4719,6 +4815,22 @@
     "fillage_pct": -0.0,
     "peak_stress_top_taper2_psi": 0.0387,
     "damping_share_pct": 0.0
+   },
+   "plus_pct": {
+    "pump_stroke_in": -0.0,
+    "static_stretch_in": 0.0,
+    "max_pump_load_lbf": 0.2188,
+    "fillage_pct": 0.0,
+    "peak_stress_top_taper2_psi": 0.0387,
+    "damping_share_pct": -0.0
+   },
+   "minus_pct": {
+    "pump_stroke_in": -0.0,
+    "static_stretch_in": 0.0,
+    "max_pump_load_lbf": -0.2188,
+    "fillage_pct": 0.0,
+    "peak_stress_top_taper2_psi": -0.0387,
+    "damping_share_pct": -0.0
    }
   },
   {
@@ -4731,6 +4843,22 @@
     "fillage_pct": -0.0,
     "peak_stress_top_taper2_psi": 0.0387,
     "damping_share_pct": 0.0
+   },
+   "plus_pct": {
+    "pump_stroke_in": -0.0,
+    "static_stretch_in": 0.0,
+    "max_pump_load_lbf": 1.0939,
+    "fillage_pct": -0.0,
+    "peak_stress_top_taper2_psi": 0.1936,
+    "damping_share_pct": -0.0
+   },
+   "minus_pct": {
+    "pump_stroke_in": -0.0,
+    "static_stretch_in": -0.0,
+    "max_pump_load_lbf": -1.0939,
+    "fillage_pct": 0.0,
+    "peak_stress_top_taper2_psi": -0.1936,
+    "damping_share_pct": -0.0
    }
   },
   {
@@ -4743,6 +4871,22 @@
     "fillage_pct": -0.0055,
     "peak_stress_top_taper2_psi": 0.0129,
     "damping_share_pct": 0.9501
+   },
+   "plus_pct": {
+    "pump_stroke_in": -0.063,
+    "static_stretch_in": 0.081,
+    "max_pump_load_lbf": 0.0408,
+    "fillage_pct": -0.0063,
+    "peak_stress_top_taper2_psi": 0.0129,
+    "damping_share_pct": 0.9502
+   },
+   "minus_pct": {
+    "pump_stroke_in": 0.0639,
+    "static_stretch_in": 0.5191,
+    "max_pump_load_lbf": -0.0404,
+    "fillage_pct": 0.0046,
+    "peak_stress_top_taper2_psi": -0.0128,
+    "damping_share_pct": -0.9501
    }
   },
   {
@@ -4755,6 +4899,22 @@
     "fillage_pct": -0.0074,
     "peak_stress_top_taper2_psi": 0.0128,
     "damping_share_pct": 0.9497
+   },
+   "plus_pct": {
+    "pump_stroke_in": -0.3013,
+    "static_stretch_in": -0.2887,
+    "max_pump_load_lbf": 0.2088,
+    "fillage_pct": -0.0526,
+    "peak_stress_top_taper2_psi": 0.0652,
+    "damping_share_pct": 4.7486
+   },
+   "minus_pct": {
+    "pump_stroke_in": 0.3144,
+    "static_stretch_in": -3.3405,
+    "max_pump_load_lbf": -0.198,
+    "fillage_pct": 0.0218,
+    "peak_stress_top_taper2_psi": -0.0623,
+    "damping_share_pct": -4.7483
    }
   },
   {
@@ -4767,6 +4927,22 @@
     "fillage_pct": -0.0012,
     "peak_stress_top_taper2_psi": -0.0001,
     "damping_share_pct": 0.9935
+   },
+   "plus_pct": {
+    "pump_stroke_in": -0.0001,
+    "static_stretch_in": -0.0041,
+    "max_pump_load_lbf": -0.0004,
+    "fillage_pct": -0.0012,
+    "peak_stress_top_taper2_psi": -0.0001,
+    "damping_share_pct": 0.9935
+   },
+   "minus_pct": {
+    "pump_stroke_in": 0.0001,
+    "static_stretch_in": 0.0041,
+    "max_pump_load_lbf": 0.0004,
+    "fillage_pct": 0.0012,
+    "peak_stress_top_taper2_psi": 0.0001,
+    "damping_share_pct": -0.9935
    }
   },
   {
@@ -4779,6 +4955,22 @@
     "fillage_pct": -0.0012,
     "peak_stress_top_taper2_psi": -0.0001,
     "damping_share_pct": 0.9935
+   },
+   "plus_pct": {
+    "pump_stroke_in": -0.0004,
+    "static_stretch_in": -0.0206,
+    "max_pump_load_lbf": -0.0019,
+    "fillage_pct": -0.0061,
+    "peak_stress_top_taper2_psi": -0.0003,
+    "damping_share_pct": 4.9676
+   },
+   "minus_pct": {
+    "pump_stroke_in": 0.0004,
+    "static_stretch_in": 0.0206,
+    "max_pump_load_lbf": 0.0019,
+    "fillage_pct": 0.0061,
+    "peak_stress_top_taper2_psi": 0.0003,
+    "damping_share_pct": -4.9676
    }
   },
   {
@@ -4791,6 +4983,22 @@
     "fillage_pct": 0.0026,
     "peak_stress_top_taper2_psi": 0.0,
     "damping_share_pct": -1.7551
+   },
+   "plus_pct": {
+    "pump_stroke_in": 0.0001,
+    "static_stretch_in": 0.0071,
+    "max_pump_load_lbf": 0.0002,
+    "fillage_pct": 0.0025,
+    "peak_stress_top_taper2_psi": 0.0,
+    "damping_share_pct": -1.7102
+   },
+   "minus_pct": {
+    "pump_stroke_in": -0.0001,
+    "static_stretch_in": -0.0074,
+    "max_pump_load_lbf": -0.0002,
+    "fillage_pct": -0.0027,
+    "peak_stress_top_taper2_psi": -0.0,
+    "damping_share_pct": 1.8001
    }
   },
   {
@@ -4803,6 +5011,22 @@
     "fillage_pct": 0.0026,
     "peak_stress_top_taper2_psi": 0.0,
     "damping_share_pct": -1.7828
+   },
+   "plus_pct": {
+    "pump_stroke_in": 0.0004,
+    "static_stretch_in": 0.0321,
+    "max_pump_load_lbf": 0.0008,
+    "fillage_pct": 0.0117,
+    "peak_stress_top_taper2_psi": 0.0,
+    "damping_share_pct": -7.7736
+   },
+   "minus_pct": {
+    "pump_stroke_in": -0.0005,
+    "static_stretch_in": -0.0414,
+    "max_pump_load_lbf": -0.0016,
+    "fillage_pct": -0.0147,
+    "peak_stress_top_taper2_psi": -0.0001,
+    "damping_share_pct": 10.0549
    }
   },
   {
@@ -4815,6 +5039,22 @@
     "fillage_pct": 0.468,
     "peak_stress_top_taper2_psi": 1.2783,
     "damping_share_pct": -1.1397
+   },
+   "plus_pct": {
+    "pump_stroke_in": -0.2891,
+    "static_stretch_in": 1.5401,
+    "max_pump_load_lbf": 2.5708,
+    "fillage_pct": 0.4694,
+    "peak_stress_top_taper2_psi": 1.2783,
+    "damping_share_pct": -1.1277
+   },
+   "minus_pct": {
+    "pump_stroke_in": 0.2891,
+    "static_stretch_in": -0.9346,
+    "max_pump_load_lbf": -2.5708,
+    "fillage_pct": -0.4667,
+    "peak_stress_top_taper2_psi": -1.2783,
+    "damping_share_pct": 1.1517
    }
   },
   {
@@ -4827,6 +5067,22 @@
     "fillage_pct": 0.4643,
     "peak_stress_top_taper2_psi": 1.2783,
     "damping_share_pct": -1.1426
+   },
+   "plus_pct": {
+    "pump_stroke_in": -1.439,
+    "static_stretch_in": 5.1988,
+    "max_pump_load_lbf": 12.8541,
+    "fillage_pct": 2.3788,
+    "peak_stress_top_taper2_psi": 6.3913,
+    "damping_share_pct": -5.4115
+   },
+   "minus_pct": {
+    "pump_stroke_in": 1.5079,
+    "static_stretch_in": -5.2707,
+    "max_pump_load_lbf": -12.8541,
+    "fillage_pct": -2.2646,
+    "peak_stress_top_taper2_psi": -6.3913,
+    "damping_share_pct": 6.0144
    }
   },
   {
@@ -4839,6 +5095,22 @@
     "fillage_pct": -0.4681,
     "peak_stress_top_taper2_psi": 0.0091,
     "damping_share_pct": 1.1396
+   },
+   "plus_pct": {
+    "pump_stroke_in": 1.2891,
+    "static_stretch_in": 0.0654,
+    "max_pump_load_lbf": 0.053,
+    "fillage_pct": -0.4621,
+    "peak_stress_top_taper2_psi": 0.0091,
+    "damping_share_pct": 1.1402
+   },
+   "minus_pct": {
+    "pump_stroke_in": -1.2891,
+    "static_stretch_in": 0.5341,
+    "max_pump_load_lbf": -0.053,
+    "fillage_pct": 0.4741,
+    "peak_stress_top_taper2_psi": -0.0091,
+    "damping_share_pct": -1.1389
    }
   },
   {
@@ -4851,7 +5123,78 @@
     "fillage_pct": -0.4671,
     "peak_stress_top_taper2_psi": 0.0091,
     "damping_share_pct": 1.1394
+   },
+   "plus_pct": {
+    "pump_stroke_in": 6.4996,
+    "static_stretch_in": -0.3018,
+    "max_pump_load_lbf": 0.265,
+    "fillage_pct": -2.1636,
+    "peak_stress_top_taper2_psi": 0.0453,
+    "damping_share_pct": 5.713
+   },
+   "minus_pct": {
+    "pump_stroke_in": -6.4373,
+    "static_stretch_in": 0.1733,
+    "max_pump_load_lbf": -0.265,
+    "fillage_pct": 2.507,
+    "peak_stress_top_taper2_psi": -0.0453,
+    "damping_share_pct": -5.6812
    }
   }
- ]
+ ],
+ "goodman": [
+  {
+   "grade": "D",
+   "minimum_tensile_psi": 115000,
+   "goodman_m": 0.5625,
+   "service_factor": 1,
+   "ours": {
+    "max_psi": 20355.202648239534,
+    "min_psi": 12133.297264832978,
+    "allowable_psi": 35574.97971146855,
+    "loading_pct": 35.07387066659369
+   },
+   "record": {
+    "max_psi": 20355.578864498868,
+    "min_psi": 12133.675562110746,
+    "allowable_psi": 35575.19250368729,
+    "loading_pct": 35.07410942252426
+   }
+  },
+  {
+   "grade": "D",
+   "minimum_tensile_psi": 115000,
+   "goodman_m": 0.5625,
+   "service_factor": 1,
+   "ours": {
+    "max_psi": 21573.792141529906,
+    "min_psi": 10453.471375069976,
+    "allowable_psi": 34630.07764847686,
+    "loading_pct": 45.99620244753604
+   },
+   "record": {
+    "max_psi": 23195.13281772002,
+    "min_psi": 12077.754036525272,
+    "allowable_psi": 35543.73664554547,
+    "loading_pct": 47.37657470572441
+   }
+  }
+ ],
+ "record_offset_top_taper2": {
+  "max_lbf": 716.2863689932265,
+  "min_lbf": 717.586098269236,
+  "buoyancy_below_solver_lbf": 649.9333384786374,
+  "buoyancy_below_rp11l_lbf": 710.0620972977994,
+  "record_pump_card_mean_minus_ours_lbf": -21.745876588699048
+ },
+ "record_well": {
+  "water_cut_pct": 96,
+  "viscosity_cp": null,
+  "damping_per_s": [
+   0.009484454594504305,
+   0.010920379840925825,
+   0.03755792148897036,
+   0.03666698425677881
+  ]
+ }
 }

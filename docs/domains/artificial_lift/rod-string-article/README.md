@@ -1,6 +1,6 @@
 # Rod string article: detail pages
 
-Rod string article ("Rod string mechanics: what stretch, load and damping do to the dynamometer card"), revision 1, 19 nov 2026. `examples/domains/artificial_lift/build_rod_string_article.py` writes it from `results.json`; the results come from the library at [a26efaa4](https://github.com/vamseeachanta/digitalmodel/tree/a26efaa413c962105cdd49ce6b5122b5d0ab0b58/) (version of 19 Nov 2026).
+Rod string article ("Rod string mechanics: what stretch, load and damping do to the dynamometer card"), revision 2, 19 Nov 2026. `examples/domains/artificial_lift/build_rod_string_article.py` writes it from `results.json`; the results come from the library at [a26efaa4](https://github.com/vamseeachanta/digitalmodel/tree/a26efaa413c962105cdd49ce6b5122b5d0ab0b58/) (version of 19 Nov 2026).
 
 Purpose:
 
@@ -21,6 +21,7 @@ Purpose:
 - [figure-2-3-depth-profile.csv](figure-2-3-depth-profile.csv): Figures 2 and 3.
 - [figure-4-damping-cards.csv](figure-4-damping-cards.csv): Figure 4.
 - [sensitivity.csv](sensitivity.csv): sensitivity factors.
+- [opening-card.png](opening-card.png): the article's 1200 x 627 link-preview image; its inset draws the cards of Figure 1.
 
 ## Rebuild
 
