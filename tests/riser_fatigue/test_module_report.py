@@ -20,6 +20,7 @@ import pytest
 import yaml
 
 from digitalmodel.riser_fatigue.workflow import router
+from scripts.ci.domain_gate_command import effective_command, load_gates
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -388,19 +389,13 @@ def test_cli_uses_utf8_even_with_an_ascii_locale(tmp_path):
     assert (tmp_path / "report/report.html").read_bytes() == (REPORT / "report.html").read_bytes()
 
 
-def test_ci_subsea_command_collects_the_report_suite(monkeypatch, capsys):
-    """Run the workflow's actual command-selection code and retain every gate."""
-    workflow = yaml.safe_load((ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(encoding="utf-8"))
-    gates = yaml.safe_load((ROOT / ".claude/quality-gates.yaml").read_text(encoding="utf-8"))["gates"]
-    step = next(step for job in workflow["jobs"].values() for step in job.get("steps", [])
-                if step.get("name") == "Read domain gate command")
-    code = step["run"].split("<<'PY'\n", 1)[1].split("\nPY", 1)[0]
-    for name, gate in gates.items():
-        if not name.startswith("tests-") or "command" not in gate:
+def test_ci_subsea_command_collects_the_report_suite():
+    """Read the effective workflow command and retain every direct gate."""
+    document = load_gates(ROOT / ".claude/quality-gates.yaml")
+    for name, gate in document["gates"].items():
+        if "command" not in gate:
             continue
-        monkeypatch.setenv("GATE_NAME", name)
-        exec(compile(code, "<workflow command selection>", "exec"), {})
-        command = shlex.split(capsys.readouterr().out.strip())
+        command = shlex.split(effective_command(document, name, "quality-gates-by-domain"))
         original = shlex.split(gate["command"])
         assert command[:len(original)] == original
         if name == "tests-subsea":
