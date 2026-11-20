@@ -32,6 +32,7 @@ from .sn_library import (
     curve_count, summary_table, SNCurveRecord, SNCatalog,
 )
 from .scf_library import (
+    short_chord_factor_f1, short_chord_factor_f2, short_chord_factor_f3,
     efthymiou_ty_axial, efthymiou_ty_ipb, efthymiou_ty_opb,
     efthymiou_k_axial, scf_butt_weld_misalignment,
     scf_cruciform_joint, scf_fillet_weld_toe,
@@ -120,6 +121,9 @@ __all__ = [
     "SNCurveRecord",
     "SNCatalog",
     # scf_library
+    "short_chord_factor_f1",
+    "short_chord_factor_f2",
+    "short_chord_factor_f3",
     "efthymiou_ty_axial",
     "efthymiou_ty_ipb",
     "efthymiou_ty_opb",
