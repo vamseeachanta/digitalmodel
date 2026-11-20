@@ -313,6 +313,7 @@ jobs:
             tests/workflows/automation/test_quality_gates.py \
             tests/workflows/test_durable_workflows.py \
             tests/workflows/test_ci_triggers.py \
+            tests/workflows/test_sweep_parity.py \
             tests/riser_bom/test_ci.py \
             -q --tb=line
 
@@ -449,10 +450,7 @@ jobs:
 
           with open(".claude/quality-gates.yaml", encoding="utf-8") as handle:
               gates = yaml.safe_load(handle)["gates"]
-          command = gates[os.environ["GATE_NAME"]]["command"]
-          if os.environ["GATE_NAME"] == "tests-subsea":
-              command += " tests/riser_fatigue/ tests/riser_bom/"
-          print(command)
+          print(gates[os.environ["GATE_NAME"]]["command"])
           PY
           )
           {
@@ -484,10 +482,7 @@ jobs:
 
       - name: Run geotechnical solver benchmarks
         if: matrix.domain == 'specialized'
-        run: >-
-          PYTHONPATH=src uv run --no-sources --with-editable '.[test]'
-          --with 'xslope==1.0.3' --with 'gmsh>=4.15'
-          python -m pytest tests/geotechnical -q -rA -p no:cacheprovider
+        run: bash tests/geotechnical/run_solver_benchmarks.sh
 
       - name: Extract shard result
         if: always()
