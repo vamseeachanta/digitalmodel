@@ -37,10 +37,10 @@ line resistance (N/m), reject decreasing resistance, and hold end curves outside
 the tabulated depth range. This module retains softening, raises for out-of-range
 depths instead of holding end curves, and uses a pressure basis (Pa).
 
-Implementation plan
--------------------
-This scoped plan covers the separate pressure-basis module alongside the
-existing line-resistance helpers identified above.
+Scope
+-----
+This module provides separate pressure-basis utilities alongside the existing
+line-resistance helpers identified above.
 1. Validate immutable ForceCurve, PressureCurve, SpringGeometry and SpringPoint
    inputs, preserving supplied softening and requiring explicit units and origin.
 2. Provide interpolate_force and interpolate_depth on bounded tables and a common
@@ -183,7 +183,12 @@ def _float_force(product: Fraction) -> float:
 def force_from_pressure(pressure_pa: float, geometry: SpringGeometry) -> int | float:
     """F = pressure * diameter * tributary length (N), using the exact area.
 
-    Integral products remain exact for subsequent force quantization.
+    Integral products return int, including products of float inputs, and remain
+    exact for subsequent force quantization. Non-integral products are rounded
+    once to float, so later quantization can select fewer quanta than the exact
+    product. For example, pressure 1 + 2**-52 Pa over area (2**53 - 1) m² returns
+    2**53 N; quantum 2**53 N then selects one quantum although the exact product
+    requires two.
     """
     product = _pressure_force_product(pressure_pa, geometry)
     if product.denominator == 1:
@@ -287,6 +292,8 @@ def interpolate_depth(
     Curves must be ordered by strictly increasing depth.
     Missing grid points require displacement interpolation before this call.
     Out-of-range depths raise ValueError, including above/below a single curve.
+    The returned depth label is stored as int or float and can round to an input
+    depth even when exact-query interpolation gives different pressures.
     """
     if not curves:
         raise ValueError("at least one pressure curve is required")
