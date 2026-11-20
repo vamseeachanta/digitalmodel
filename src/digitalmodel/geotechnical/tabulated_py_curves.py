@@ -29,9 +29,9 @@ inferred. All inputs are finite, nonnegative magnitudes except signed spring
 points and sensitivity >= -1. Stored scalars retain supplied ratios as built-in
 integers, floats or Fractions. Validation requires a finite binary64 conversion;
 tiny nonzero ratios remain nonzero, so they cannot supply an implicit origin.
-Interpolation retains flat ordinates and exact results when rounding would escape
-the stored endpoint bounds or turn a nonzero ordinate into zero.
-Computed integral results remain integers; other non-integral outputs round once
+Interpolation retains flat ordinates and exact interior ratios: integral results
+remain integers, exactly representable non-integral results return floats, and
+other results return Fractions. Other computed non-integral outputs round once
 to float and can underflow. Quantization uses the exact input ratio; converting
 units before quantization can change the selected quantum at a boundary.
 
@@ -155,12 +155,9 @@ def _linear(x: _Scalar, axis: tuple[_Scalar, ...], values: tuple[_Scalar, ...]) 
     weighted_sum = from_high * Fraction(values[low]) + from_low * Fraction(values[high])
     exact = weighted_sum / (from_low + from_high)
     result = _rounded_result(exact, "interpolated ordinate")
-    # Preserve the convex bounds of the supplied ordinates, including rational
-    # endpoints that lie between floats. Also retain a nonzero origin ordinate.
-    lower, upper = sorted((values[low], values[high]))
-    if result < lower or result > upper or (exact and result == 0):
-        return exact
-    return result
+    # Preserve exact interior ratios as well as endpoint bounds: rounding inside
+    # the bounds can reverse direction between integral and fractional results.
+    return exact if result != exact else result
 
 
 def interpolate_force(curve: ForceCurve, displacement_m: _Scalar) -> _Scalar:
@@ -168,8 +165,8 @@ def interpolate_force(curve: ForceCurve, displacement_m: _Scalar) -> _Scalar:
 
     Extrapolation raises ValueError; force reduction is retained. Knots and flat
     intervals return the stored ratio. Computed integral results remain integers;
-    results that would round outside the stored endpoint bounds or from nonzero
-    to zero retain their ratio. Other results round once to float.
+    exactly representable non-integral results return floats. Other interior
+    results retain their exact ratio as a Fraction, preserving segment direction.
     """
     return _linear(displacement_m, curve.displacement_m, curve.force_n)
 
@@ -265,12 +262,13 @@ def round_force_up(force_n: _Scalar, quantum_n: _Scalar) -> float:
 
     The caller declares quantum_n; no precision or force conversion factor
     is assumed.
-    Exact binary input ratios determine which side of a boundary applies.
+    Exact input ratios determine which side of a boundary applies.
     The returned float is at least the exact selected multiple; if no finite
     float can represent that upper bound, ValueError is raised.
-    With a non-dyadic quantum (for example 0.1 N), that float can exceed the
-    selected multiple. Rounding it again can add a quantum: this operation
-    is not idempotent. Quantize the original force rather than a stored result.
+    If that float exceeds the exact selected multiple, rounding it again can
+    add a quantum, even with an integer step: 2**53 N with a 3 N step returns
+    2**53+2 N, then 2**53+4 N on repetition. This operation is not idempotent.
+    Quantize the original force rather than a stored result.
     """
     _finite(force_n, "force_n")
     _finite(quantum_n, "quantum_n")
@@ -323,8 +321,9 @@ def interpolate_depth(
     Out-of-range depths raise ValueError, including above/below a single curve.
     The returned depth label retains the supplied ratio, as do stored ordinates.
     Flat intervals retain the stored pressure ratio. Integral results remain
-    integers; results that would round outside the stored endpoint bounds or
-    from nonzero to zero retain their ratio. Other results round once to float.
+    integers; exactly representable non-integral results return floats. Other
+    interior results retain their exact ratio as a Fraction, preserving segment
+    direction.
     """
     if not curves:
         raise ValueError("at least one pressure curve is required")

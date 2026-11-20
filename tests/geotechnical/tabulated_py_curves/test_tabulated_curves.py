@@ -149,7 +149,7 @@ def test_spring_table_preserves_pressure_over_unit_area(exponent):
     (1024, 1024.0000000000002, 1024.1000000000001, 10240, 10241),
     (0.3, 0.30000000000000004, 0.4, 3, 4),
 ])
-def test_non_dyadic_quantization_can_advance_when_repeated(
+def test_float_quantization_can_advance_when_repeated(
     force_n, first_n, second_n, first_count, second_count,
 ):
     from fractions import Fraction
@@ -354,3 +354,96 @@ def test_nonflat_depth_interpolation_retains_the_endpoint_spring_quantum(falling
     for curve in (*curves, result):
         points = symmetric_spring_points(curve, SpringGeometry(10, 10))
         assert round_force_up(points[-1].force_n, 1) == 7
+
+
+@pytest.mark.parametrize("falling", [False, True])
+def test_force_interpolation_retains_exact_ordered_interior_ratios(falling):
+    from fractions import Fraction
+    from digitalmodel.geotechnical.tabulated_py_curves import round_force_up
+
+    magnitude = 2**54
+    ordinates = (magnitude + 4, magnitude) if falling else (magnitude, magnitude + 4)
+    curve = ForceCurve(0, (0, 4), ordinates)
+    queries = (0, 1, Fraction(5, 4), 2, Fraction(11, 4), 3, 4)
+    expected = tuple(magnitude + (4 - q if falling else q) for q in queries)
+    results = tuple(interpolate_force(curve, q) for q in queries)
+    # The slope is exactly +1 or -1 N/m, including between integer queries.
+    assert results == expected
+    assert results == tuple(sorted(results, reverse=falling))
+    quanta = tuple(round_force_up(value, magnitude) for value in results)
+    assert quanta == tuple(sorted(quanta, reverse=falling))
+    assert quanta == ((2 * magnitude,) * 6 + (magnitude,) if falling
+                      else (magnitude,) + (2 * magnitude,) * 6)
+
+
+@pytest.mark.parametrize("falling", [False, True])
+def test_depth_interpolation_retains_exact_ordered_interior_ratios(falling):
+    from fractions import Fraction
+    from digitalmodel.geotechnical.tabulated_py_curves import (
+        PressureCurve, interpolate_depth, round_force_up,
+    )
+
+    magnitude = 2**54
+    ordinates = (magnitude + 4, magnitude) if falling else (magnitude, magnitude + 4)
+    curves = tuple(PressureCurve(z, (0, 1), (0, p)) for z, p in zip((0, 4), ordinates))
+    queries = (0, 1, Fraction(5, 4), 2, Fraction(11, 4), 3, 4)
+    expected = tuple(magnitude + (4 - q if falling else q) for q in queries)
+    results = tuple(interpolate_depth(curves, q).pressure_pa[-1] for q in queries)
+    # A +1 or -1 Pa/m slope has the same force ratios over a unit area.
+    assert results == expected
+    assert results == tuple(sorted(results, reverse=falling))
+    quanta = tuple(round_force_up(value, magnitude) for value in results)
+    assert quanta == tuple(sorted(quanta, reverse=falling))
+    assert quanta == ((2 * magnitude,) * 6 + (magnitude,) if falling
+                      else (magnitude,) + (2 * magnitude,) * 6)
+
+
+@pytest.mark.parametrize("falling", [False, True])
+def test_force_interpolation_retains_the_exact_lower_bound(falling):
+    from fractions import Fraction
+    from math import nextafter
+    from digitalmodel.geotechnical.tabulated_py_curves import round_force_up
+
+    lower, upper = Fraction(3, 10), Fraction(31, 100)
+    ordinates = (upper, lower) if falling else (lower, upper)
+    query = nextafter(1.0, 0.0) if falling else nextafter(0.0, 1.0)
+    result = interpolate_force(ForceCurve(0, (0, 1), ordinates), query)
+    # The exact ordinate is above 3/10 N even though its nearest float is below.
+    assert lower < result < upper
+    assert Fraction(float(result)) < lower
+    assert round_force_up(result, lower) == round_force_up(2 * lower, lower)
+
+
+@pytest.mark.parametrize("falling", [False, True])
+def test_depth_interpolation_retains_the_exact_lower_bound(falling):
+    from fractions import Fraction
+    from math import nextafter
+    from digitalmodel.geotechnical.tabulated_py_curves import PressureCurve, interpolate_depth
+
+    lower, upper = Fraction(3, 10), Fraction(31, 100)
+    ordinates = (upper, lower) if falling else (lower, upper)
+    curves = tuple(PressureCurve(z, (0, 1), (0, p)) for z, p in enumerate(ordinates))
+    query = nextafter(1.0, 0.0) if falling else nextafter(0.0, 1.0)
+    result = interpolate_depth(curves, query).pressure_pa[-1]
+    # The exact pressure stays above 3/10 Pa in both endpoint orders.
+    assert lower < result < upper
+    assert Fraction(float(result)) < lower
+
+
+def test_integer_step_quantization_can_advance_when_repeated():
+    from fractions import Fraction
+    from math import inf, nextafter
+    from digitalmodel.geotechnical.tabulated_py_curves import round_force_up
+
+    force_n = 2**53
+    # 2**53 is 2 modulo 3. The next multiples are 2**53+1 and 2**53+4.
+    # The first is between floats, so its upper float crosses that exact multiple.
+    first_multiple, second_multiple = force_n + 1, force_n + 4
+    first_n, second_n = float(force_n + 2), float(force_n + 4)
+    assert first_multiple % 3 == second_multiple % 3 == 0
+    assert first_multiple - 3 < force_n <= first_multiple
+    assert second_multiple - 3 < Fraction(first_n) <= second_multiple
+    assert Fraction(nextafter(first_n, -inf)) < first_multiple < Fraction(first_n)
+    assert Fraction(nextafter(second_n, -inf)) < second_multiple == Fraction(second_n)
+    assert round_force_up(force_n, 3) == first_n
+    assert round_force_up(first_n, 3) == second_n
