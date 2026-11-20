@@ -127,10 +127,14 @@ def validate_provenance(data_dir, tables, provenance):
 def load_tables(data_dir):
     """Load historical CSVs or a fail-closed curated library with a sidecar."""
     sidecar = data_dir / 'provenance.json'
-    try:
-        provenance = json.loads(sidecar.read_text()) if sidecar.exists() else None
-    except json.JSONDecodeError as exc:
-        raise ValueError(f'provenance: malformed JSON: {exc.msg}') from exc
+    provenance = None
+    if sidecar.exists():
+        try:
+            provenance = json.loads(sidecar.read_text(encoding='utf-8'))
+        except json.JSONDecodeError as exc:
+            raise ValueError(f'provenance: malformed JSON: {exc.msg}') from exc
+        if not isinstance(provenance, dict):
+            raise ValueError('provenance: expected a JSON object')
     tables = {}
     for kind in TABLE_COLUMNS:
         path = data_dir / f'{kind}_properties.csv'
