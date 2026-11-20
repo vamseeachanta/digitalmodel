@@ -373,4 +373,4 @@ def test_conversion_requires_matching_source_metadata(tmp_path, monkeypatch, rev
     if revision is None:
         assert error.value.reason == 'page_missing'
     else:
-        assert error.value.reason.startswith('frontmatter_mismatch:revision')
+        assert error.value.reason == "frontmatter_mismatch:revision:'1995'!='2008'"
