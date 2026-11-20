@@ -38,7 +38,7 @@ from digitalmodel.asset_integrity.assessment.pitting import (
 )
 
 DATA = Path(__file__).parent / "test_data" / "real_inspection"
-REAL_GRID = DATA / "ut_grid_RJ-101-boxend_worstzone_fullres.csv"
+REAL_GRID = DATA / "ut_grid_scan-a_window_fullres.csv"
 
 NOMINAL = 0.500  # inches, synthetic grids
 
@@ -393,7 +393,7 @@ class TestRealFixtureIntegration:
 
     def test_assess_real_scan_as_pitting(self, real_grid):
         component = FFSComponent(
-            component_id="RJ-101-boxend",
+            component_id="scan-a",
             design_code="B31.8",
             nominal_od_in=NOMINAL_OD_REAL,
             nominal_wt_in=NOMINAL_WT_REAL,
@@ -430,7 +430,7 @@ class TestRealFixtureIntegration:
         # below the pit-count floor — so its default classification is
         # unchanged by the pitting heuristic.
         grid = GridParser.from_csv(
-            str(DATA / "ut_grid_RJ-103-pinend_ds8.csv"), input_units="mm"
+            str(DATA / "ut_grid_scan-c_ds8.csv"), input_units="mm"
         )
         route = FFSRouter.classify(
             grid, nominal_od_in=NOMINAL_OD_REAL, nominal_wt_in=NOMINAL_WT_REAL
