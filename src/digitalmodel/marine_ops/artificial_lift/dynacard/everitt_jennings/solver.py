@@ -249,6 +249,64 @@ def _section_cuts(taper_lengths: np.ndarray) -> np.ndarray:
     return cuts
 
 
+def max_stable_intervals(
+    rods: RodString,
+    strokes_per_minute: float,
+    n_nodes: int = DEFAULT_NUM_NODES,
+) -> int:
+    """Largest number of card intervals per stroke the depth march can carry.
+
+    Stability of the march (derived here; SPE 18189 states no limit). Without
+    damping, one step of :func:`_march` inside a taper is
+
+        u[i+1, j] = 2 u[i, j] - u[i-1, j] + r^2 (u[i, j+1] - 2 u[i, j] + u[i, j-1]),
+        r^2 = (rho A / EA) (dx / dt)^2 = (dx / (c dt))^2,   c = sqrt(E / rho).
+
+    A periodic mode ``exp(i theta j)`` grows by ``g`` per depth step, where
+    ``g + 1/g = 2 - 4 r^2 sin^2(theta / 2)``; ``|g| = 1`` for every ``theta``
+    only when ``r <= 1``. This is the Courant-Friedrichs-Lewy condition
+    (Courant, Friedrichs and Lewy, Math. Ann. 100, 1928) with depth as the
+    marching axis: the time step must be no shorter than the time a stress
+    wave takes to cross one depth cell, ``dt >= dx / c``, in every taper, so
+    the slowest taper governs. Above the limit the shortest-period content
+    grows by up to ``|g|^(n_nodes - 2)`` over the march to the pump; the
+    result can stay finite and so pass a finite-value check. The upward march
+    in ``card_generators`` is the algebraic inverse on the same grid
+    (``g -> 1/g``) and has the same limit. The bound is a frozen-coefficient
+    analysis of the undamped stencil within each taper; the damping term and
+    the mixed coefficients of taper-interface rows are not part of it.
+
+    Args:
+        rods: The tapered rod string.
+        strokes_per_minute: Pumping speed; one stroke is ``60 / spm`` s.
+        n_nodes: Spatial nodes down the string, as passed to
+            :func:`build_simulation`.
+
+    Returns:
+        ``floor(T c_min / dx)`` with ``T`` the stroke period and
+        ``dx = L / (n_nodes - 1)``. A card with ``N + 1`` samples has ``N``
+        intervals and is stable when ``N`` does not exceed this value.
+
+    Raises:
+        ValueError: If the speed is not finite and positive or ``n_nodes`` is
+            not an integer of at least 2.
+    """
+    if not np.isfinite(strokes_per_minute) or strokes_per_minute <= 0:
+        raise ValueError(
+            f"strokes_per_minute must be finite and positive; got {strokes_per_minute}"
+        )
+    if (
+        isinstance(n_nodes, bool)
+        or not isinstance(n_nodes, (int, np.integer))
+        or n_nodes < 2
+    ):
+        raise ValueError(f"n_nodes must be an integer of at least 2; got {n_nodes}")
+    period = 60.0 / strokes_per_minute
+    dx = rods.total_length / (n_nodes - 1)
+    slowest = float(np.min(np.sqrt(rods.moduli / rods.densities)))
+    return int(np.floor(period * slowest / dx))
+
+
 def build_simulation(
     position: np.ndarray,
     load: np.ndarray,
@@ -288,8 +346,9 @@ def build_simulation(
         A populated :class:`Simulation`.
 
     Raises:
-        ValueError: If the card arrays disagree in length or the speed is
-            non-positive.
+        ValueError: If the card arrays disagree in length, the speed is
+            non-positive, or the card has more intervals per stroke than
+            :func:`max_stable_intervals` allows for this string and grid.
     """
     position = np.asarray(position, dtype=np.float64)
     load = np.asarray(load, dtype=np.float64)
@@ -338,6 +397,23 @@ def build_simulation(
     sim.dt = sim.t[1] - sim.t[0]
     sim.x = np.linspace(0.0, sim.rod_length, sim.n_x)
     sim.dx = sim.x[1] - sim.x[0]
+
+    # Refuse a sampling the depth march cannot carry (see max_stable_intervals)
+    # before anything is marched.
+    intervals = sim.n_t - 1
+    limit = max_stable_intervals(rods, strokes_per_minute, n_nodes)
+    if intervals > limit:
+        crossing = sim.dx / float(np.min(sim.wave_speed))
+        raise ValueError(
+            f"card sampling is too fine for this rod string: {intervals} "
+            f"intervals per stroke at {strokes_per_minute:g} strokes/min give a "
+            f"{sim.dt * 1e3:.5g} ms time step, shorter than the "
+            f"{crossing * 1e3:.5g} ms a stress wave takes to cross one of the "
+            f"{n_nodes - 1} depth cells in the slowest taper (Courant number "
+            f"{crossing / sim.dt:.6g} > 1). The depth march is unstable above "
+            f"this limit. Resample the card to at most {limit} intervals per "
+            "stroke, or use more depth nodes."
+        )
 
     # Exact buoyant weight remaining below every node. Integrating section
     # overlap avoids counting a full terminal grid cell at the pump.
