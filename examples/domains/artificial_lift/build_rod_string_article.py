@@ -41,7 +41,7 @@ LIBRARY_DATE = "19 Nov 2026"
 PROMPT_COMMIT = "796e99f91fbf9f47ab6fa8b0c3e21c4a72961088"
 # Commit that holds the detail pages the article links; its reusable-prompts page names PROMPT_COMMIT.
 # Empty: the article page is not written.
-DETAIL_COMMIT = "ea7a571d034152dc470925cc446b4a79f05f88de"
+DETAIL_COMMIT = "08d31dcce98d1739553bf7d9cc4963a7df0f67f4"
 REVISION = "Revision 3, 20 Nov 2026"
 # Series title: each installment adds to "Dynamometer card" (part 1: "Dynamometer card analysis: ...").
 ARTICLE_TITLE = "Dynamometer card: through the rod string"
