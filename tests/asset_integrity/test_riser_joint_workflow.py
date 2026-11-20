@@ -25,15 +25,15 @@ def run_report(tmp_path):
 def test_public_report_uses_neutral_inspection_metadata(tmp_path):
     result = run_report(tmp_path)
     provenance = result["provenance"]
-    assert provenance["inspection_epoch"] == "baseline inspection"
+    assert provenance["inspection_epoch"] == "inspection date withheld"
     statement = provenance["anonymization_statement"]
-    assert "anonymized baseline inspection excerpts" in statement
+    assert "anonymized inspection excerpts" in statement
     report = Path(result["report_html"]).read_text(encoding="utf-8")
     title = re.search(r"<title>(.*?)</title>", report).group(1)
     date = re.search(r"<strong>Date:</strong> (.*?)</p>", report).group(1)
-    assert title == "FFS Assessment Report — Riser fleet — baseline inspection"
-    assert date == "baseline inspection"
-    assert "anonymized baseline inspection excerpts" in report
+    assert title == "FFS Assessment Report — Riser fleet — inspection date withheld"
+    assert date == "inspection date withheld"
+    assert "anonymized inspection excerpts" in report
     record = (
         ROOT
         / "docs/domains/asset-integrity"
@@ -42,7 +42,7 @@ def test_public_report_uses_neutral_inspection_metadata(tmp_path):
     fixture_paragraph = record.split("The example references ", 1)[1].split("\n\n", 1)[
         0
     ]
-    assert "anonymized baseline inspection excerpts" in fixture_paragraph
+    assert "anonymized inspection excerpts" in fixture_paragraph
     for metadata in (statement, title, date, fixture_paragraph):
         assert not re.search(r"\b(?:19|20)\d{2}\b", metadata)
 

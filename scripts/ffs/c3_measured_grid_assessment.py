@@ -4,9 +4,10 @@
 """Run the corroded-pipeline article chain on a measured UT C-scan grid.
 
 Article: "Fitness for service of corroded pipelines: strength and remaining
-useful life (RUL)", revision 6. The measured grid is the anonymized worst-zone
-scan published in ``tests/asset_integrity/test_data/real_inspection`` (see its
-README for provenance). The assessment calls the same function that rates the
+useful life (RUL)", revision 6. The measured grid is the anonymized
+full-resolution window of scan A in
+``tests/asset_integrity/test_data/real_inspection`` (see its README for
+provenance). The assessment calls the same function that rates the
 synthetic Section A in ``scripts/reporting/build_pipeline_ffs_report.py``
 (``evaluate_section``), so both sections go through one chain.
 
@@ -50,12 +51,13 @@ MM_PER_IN = 25.4
 PSI_PER_MPA = 145.0377
 GRID = Path(
     "tests/asset_integrity/test_data/real_inspection/"
-    "ut_grid_RJ-101-boxend_worstzone_fullres.csv"
+    "ut_grid_scan-a_window_fullres.csv"
 )
 BUILDER = Path("scripts/reporting/build_pipeline_ffs_report.py")
 
-# Pipe and scan, from the fixture README: 21.25 in OD x 0.875 in nominal wall,
-# X-80; 64 circumferential stations; 4 mm axial pitch at full resolution.
+# Pipe and scan: exact nominal dimensions of the scanned section (the fixture
+# README gives them rounded), grade X80; 64 circumferential stations; 4 mm
+# axial pitch at full resolution.
 NOMINAL_OD_IN = 21.25
 NOMINAL_WT_IN = 0.875
 GRADE = "X80"
@@ -65,7 +67,7 @@ CIRC_STATIONS = 64
 # the 64 stations are equally spaced round the full circumference;
 DESIGN_PRESSURE_PSI = 2400.0  # about half the rating before loss, as Section A
 AXIAL_STRESS_PSI = 10000.0  # copied from Section A
-RATE_MM_PER_YR = 0.253  # this scan's rate in the campaign results register
+RATE_MM_PER_YR = 0.253  # this scan's rate in the fixture's results register
 SENSITIVITY = [0.5, 1.0, 2.0]
 INTERVAL_FRACTION = 0.5
 FLAW_LOSS = 0.10

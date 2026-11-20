@@ -55,7 +55,7 @@ the executable anchors supply that comparison. No licensed source table is copie
 
 Four scan assessments are returned with start/end envelopes, measured minimum
 wall, collapse-limited water depth and one placement assessment per scan.
-RJ-101 has two grids representing the same Box End scan: neither is counted as
+Scan A has two grids representing the same scan: neither is counted as
 an additional fleet joint. Roll-up uses the Main register's 26 distinct joint IDs;
 fit plus repair equals 26 for each of four campaign horizons. Campaign-end
 lengths shall not exceed corresponding start lengths. Hashes shall match the
@@ -67,10 +67,10 @@ rows are rejected before group-by, rather than silently dropped. Numeric practic
 zone margins, default weld Charpy energy, bending assumption and collapse factor
 are shown in the report basis table.
 
-The example references the existing anonymized baseline inspection excerpts in
+The example references the existing anonymized inspection excerpts in
 `tests/asset_integrity/test_data/real_inspection/`; it makes no copies. Their
 README documents removal of operator, contractor, rig, well, personnel, project,
-timestamps and serial identifiers, replacement with synthetic RJ IDs, rounding
+timestamps and serial identifiers, replacement with synthetic joint IDs, rounding
 and axial downsampling. Private originals remain off this public repository;
 this workflow neither accesses nor republishes them. Public fixture use is
 limited to the existing excerpts authorized for this demonstration.
@@ -79,10 +79,10 @@ limited to the existing excerpts authorized for this demonstration.
 
 | Grid | Measured minimum (mm) | Collapse depth limit (ft) | Placement |
 |---|---:|---:|---|
-| RJ-101 Box End ds8 | 15.024 | 2133.7 | REPAIR: below half of 5000 ft campaign depth |
-| RJ-101 Box End full resolution | 15.024 | 2133.7 | REPAIR: below half of 5000 ft campaign depth |
-| RJ-102 Box End ds8 | 15.348 | 2265.4 | REPAIR: below half of 5000 ft campaign depth |
-| RJ-103 Pin End ds8 | 16.549 | 2791.3 | RESTRICTED: above half-depth threshold, below 5000 ft |
+| Scan A ds8 | 15.024 | 2133.7 | REPAIR: below half of 5000 ft campaign depth |
+| Scan A full resolution | 15.024 | 2133.7 | REPAIR: below half of 5000 ft campaign depth |
+| Scan B ds8 | 15.348 | 2265.4 | REPAIR: below half of 5000 ft campaign depth |
+| Scan C ds8 | 16.549 | 2791.3 | RESTRICTED: above half-depth threshold, below 5000 ft |
 
 Table 3. Regenerated collapse/placement outputs use the fully evacuated head basis.
 
@@ -90,7 +90,7 @@ The four-grid registry tests pin measured minimum after mm/in conversion to
 1e-12 in and rounded depth to 0.05 ft. The minima refer only to the retained
 measured stations. The unrounded collapse depths are 2133.699867, 2265.424402
 and 2791.315171 ft, respectively. The governing joint lives are 3.46, 8.70 and
-30.73 yr for RJ-101, RJ-102 and RJ-103. A lower-life sibling-row regression
+30.73 yr for scans A, B and C (register joints RJ-101, RJ-102 and RJ-103). A lower-life sibling-row regression
 requires every placement assessment to use the joint-minimum life. For the
 3,000 psi comparison case, all three base-metal methods also pin a strict
 campaign-end envelope reduction; the demonstration's low-pressure caps do not

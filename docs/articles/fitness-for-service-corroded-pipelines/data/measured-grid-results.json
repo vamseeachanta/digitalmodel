@@ -1,5 +1,5 @@
 {
- "grid_file": "tests/asset_integrity/test_data/real_inspection/ut_grid_RJ-101-boxend_worstzone_fullres.csv",
+ "grid_file": "tests/asset_integrity/test_data/real_inspection/ut_grid_scan-a_window_fullres.csv",
  "grid_sha256": "8cebda694d656eb0e799a6abd4e49ec6c0f93287cc8d48cf7d288d02fc6c8764",
  "grid_shape": [
   500,

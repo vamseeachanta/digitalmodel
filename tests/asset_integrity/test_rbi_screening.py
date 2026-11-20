@@ -35,7 +35,7 @@ from digitalmodel.asset_integrity.rbi_screening import (
 DATA = Path(__file__).parent / "test_data" / "real_inspection"
 PARAMS = RBIParameters()
 
-# REGRESSION-ANCHOR: RBI screening of the real GML results register (142 scans)
+# REGRESSION-ANCHOR: RBI screening of the real GML results register (every row)
 # with default practice parameters and default consequence class "C".
 # Update deliberately only (parameter or register changes).
 ANCHOR_BAND_COUNTS_C = {"LOW": 18, "MEDIUM": 79, "MEDIUM-HIGH": 45, "HIGH": 0}
@@ -292,7 +292,7 @@ def test_register_ranking_sorted_most_critical_first(register):
     ranked = rbi_rank_register(register)
     scores = ranked["risk_score"].tolist()
     assert scores == sorted(scores, reverse=True)
-    # the shortest-life joint (RJ-101 box end, ~3.5 yr) ranks in the top rows
+    # the shortest-life joint (RJ-101) ranks in the top rows
     assert "RJ-101" in ranked.head(3)["joint_id"].tolist()
 
 

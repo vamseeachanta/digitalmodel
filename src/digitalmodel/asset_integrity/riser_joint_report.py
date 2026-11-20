@@ -223,7 +223,7 @@ def _rollup_sections(result):
     return [
         "<h2>Fleet roll-up</h2>",
         f"<p>{result['rollup']['n_joints']} unique Main joints. "
-        "Two RJ-101 grids are separate scan assessments, not additional inventory.</p>",
+        "The two scan A grids are separate scan assessments, not additional inventory.</p>",
         _table(
             [
                 "Campaign",

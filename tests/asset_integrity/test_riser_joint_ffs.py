@@ -30,7 +30,7 @@ from digitalmodel.asset_integrity.riser_joint_ffs import (
 
 DATA = Path(__file__).parent / "test_data" / "real_inspection"
 
-# The real fleet's main-tube geometry.
+# Nominal geometry of the inspected section.
 OD, WT, GRADE, P_DESIGN = 21.25, 0.875, "X80", 500.0
 
 
@@ -222,5 +222,5 @@ def test_fleet_rollup_on_real_register():
     assert fits == sorted(fits, reverse=True)
     assert all(x["fit_joints"] + x["repair_joints"] == 26 for x in c)
     assert all(x["high_fatigue_qualified"] <= x["fit_joints"] for x in c)
-    # the real fleet has repairs by campaign 1 (worst joint: 3.46 yr < 3x margin)
+    # the register has repairs by campaign 1 (worst joint: 3.46 yr < 3x margin)
     assert c[0]["high_fatigue_qualified"] < 26

@@ -1,7 +1,7 @@
 """Anonymized real riser-inspection fixtures exercise the canonical FFS chain (#1293).
 
-The grids are unmodified UT C-scan measurements (mm) from a real drilling-riser
-baseline inspection; the registers are the campaign's per-scan GML results and the
+The grids are unmodified UT C-scan measurements (mm) from a real riser
+inspection; the registers are the per-scan GML results of that inspection and the
 weld flaw-register schema. See test_data/real_inspection/README.md for provenance.
 """
 
@@ -23,10 +23,10 @@ NOMINAL_OD_IN = 21.25
 NOMINAL_WT_IN = 0.875  # 22.225 mm
 
 GRIDS = {
-    "severe_ds8": ("ut_grid_RJ-101-boxend_ds8.csv", 375),
-    "severe_worstzone": ("ut_grid_RJ-101-boxend_worstzone_fullres.csv", 500),
-    "moderate_ds8": ("ut_grid_RJ-102-boxend_ds8.csv", 407),
-    "mild_ds8": ("ut_grid_RJ-103-pinend_ds8.csv", 375),
+    "severe_ds8": ("ut_grid_scan-a_ds8.csv", 375),
+    "severe_worstzone": ("ut_grid_scan-a_window_fullres.csv", 500),
+    "moderate_ds8": ("ut_grid_scan-b_ds8.csv", 407),
+    "mild_ds8": ("ut_grid_scan-c_ds8.csv", 375),
 }
 
 
@@ -46,7 +46,7 @@ def test_grid_parses_to_physical_thickness(name):
 
 def test_severe_worstzone_runs_canonical_ffs_chain():
     component = FFSComponent(
-        component_id="RJ-101-boxend",
+        component_id="scan-a",
         design_code="B31.8",
         nominal_od_in=NOMINAL_OD_IN,
         nominal_wt_in=NOMINAL_WT_IN,
@@ -56,7 +56,7 @@ def test_severe_worstzone_runs_canonical_ffs_chain():
     )
     result = assess_component(
         component,
-        str(DATA / "ut_grid_RJ-101-boxend_worstzone_fullres.csv"),
+        str(DATA / "ut_grid_scan-a_window_fullres.csv"),
         input_units="mm",
     )
     # PITTING joined the routing set in #1269 — this scan's isolated sharp

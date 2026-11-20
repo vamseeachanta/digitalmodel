@@ -9,7 +9,7 @@ PYTHONPATH=src uv run python -c 'from digitalmodel.engine import engine; engine(
 The registered offline workflow reads four existing anonymized C-scan grids in
 place, plus the GML register and its provenance README. It returns start/end
 acceptance envelopes, measured-minimum-wall collapse limits, four scan placement
-assessments and a life-based roll-up of 26 unique Main joints. The two RJ-101
+assessments and a life-based roll-up of 26 unique Main joints. The two scan A
 grids do not add an inventory joint. No licensed tables or private originals
 are required at runtime.
 

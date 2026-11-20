@@ -28,7 +28,7 @@ _OUT = _REPO / "docs" / "api" / "ffs" / "riser-joint-acceptance-explorer.html"
 _FIX = _REPO / "tests" / "asset_integrity" / "test_data" / "real_inspection"
 
 MM = 25.4
-OD, WT, GRADE = 21.25, 0.875, "X80"  # the real fleet's main tube
+OD, WT, GRADE = 21.25, 0.875, "X80"  # nominal size of the inspected sections
 
 PRESSURES = [500.0, 1500.0, 3000.0]
 RATES_MM = [0.08, 0.12, 0.25]        # mm/yr — span of the real register
@@ -36,9 +36,9 @@ DURATIONS = [0.0, 1.0, 3.0, 5.0]
 
 # the three fixture joints: measured min wall (mm) from the committed grids
 JOINTS = {
-    "RJ-101 (severe)": {"wt_min_mm": 15.02, "scan": "Box End"},
-    "RJ-102 (moderate)": {"wt_min_mm": 15.11, "scan": "Box End"},
-    "RJ-103 (mild)": {"wt_min_mm": 15.42, "scan": "Pin End"},
+    "RJ-101 (severe)": {"wt_min_mm": 15.02, "scan": "scan A"},
+    "RJ-102 (moderate)": {"wt_min_mm": 15.11, "scan": "scan B"},
+    "RJ-103 (mild)": {"wt_min_mm": 15.42, "scan": "scan C"},
 }
 
 
@@ -144,7 +144,7 @@ _TEMPLATE = """<!DOCTYPE html>
 </head>
 <body>
 <h1>Riser-Joint Flaw-Acceptance Explorer</h1>
-<p class="sub">Level-1 acceptance chart for a marine drilling-riser main tube
+<p class="sub">Level-1 acceptance chart for a riser tube
 (__GEOM__) — maximum acceptable surface-flaw <b>length vs depth</b>: base metal
 from the validated Modified B31G remaining-strength engine, welds from the
 BS 7910 Option-1 failure-assessment diagram, with practice depth caps and a
@@ -278,7 +278,7 @@ draw();
 def main() -> None:
     tables = build_tables()
     geom = (f"{tables['geometry']['od_in']}\" OD × {tables['geometry']['wt_in']}\" WT "
-            f"{tables['geometry']['grade']}, the real inspected fleet")
+            f"{tables['geometry']['grade']}, nominal size of the inspected sections")
     html = _TEMPLATE.replace("__DATA__", json.dumps(tables, separators=(",", ":")))
     html = html.replace("__GEOM__", geom)
     _OUT.write_text(html, encoding="utf-8")
