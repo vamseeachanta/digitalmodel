@@ -139,6 +139,22 @@ class FeatureExtractor:
         )
 
     @staticmethod
+    def extract_shape_vector(card: CardData) -> np.ndarray:
+        """Return 16 normalised projections; reject missing or degenerate shape."""
+        axes = [np.asarray(axis, dtype=float) for axis in (card.position, card.load)]
+        if (any(a.ndim != 1 for a in axes) or len(axes[0]) != len(axes[1])
+                or len(axes[0]) < 4 or not all(np.all(np.isfinite(a)) for a in axes)):
+            raise ValueError("A finite shape requires at least four paired points")
+        if any(np.ptp(a) < 1e-10 for a in axes):
+            raise ValueError("A shape requires nondegenerate position and load spans")
+        return FeatureExtractor.extract_bezerra_projections(card)
+
+    @staticmethod
+    def shape_feature_names() -> list[str]:
+        """Names matching :meth:`extract_shape_vector`, in order."""
+        return [f"bezerra_{i}" for i in range(16)]
+
+    @staticmethod
     def classifier_feature_names(n_bins: int = 8) -> list[str]:
         """Names matching :meth:`extract_classifier_vector`, in order."""
         return [f"bezerra_{i}" for i in range(2 * n_bins)] + [
