@@ -130,6 +130,53 @@ def baseline_manager():
     return PerformanceBaselineManager()
 
 
+MATRIX_SIZES = (100, 200, 300)
+# The 300 x 300 draw of this seed has |det| above the float64 maximum.
+DET_OVERFLOW_SEED = 2353
+
+
+def _matrix_operations(rng):
+    """Product, eigenvalues and determinant of standard-normal draws from ``rng``.
+
+    The determinant is taken with ``slogdet``, the same LU factorisation as
+    ``det``. For a 300 x 300 standard-normal matrix, ln|det| is about 704 with
+    a standard deviation of about 2, against the float64 limit of 709.8, so
+    ``det`` overflows on some draws and the warning fails the run.
+    """
+    results = []
+    for size in MATRIX_SIZES:
+        A = rng.randn(size, size)
+        B = rng.randn(size, size)
+
+        C = np.dot(A, B)
+        eigenvals = np.linalg.eigvals(A)
+        sign, log_abs_det = np.linalg.slogdet(A)
+
+        results.append({
+            'size': size,
+            'product_shape': C.shape,
+            'determinant_sign': sign,
+            'log_abs_determinant': log_abs_det,
+            'max_eigenval': np.max(np.real(eigenvals))
+        })
+    return results
+
+
+def test_matrix_operations_survive_a_draw_whose_determinant_overflows():
+    rng = np.random.RandomState(DET_OVERFLOW_SEED)
+    for size in MATRIX_SIZES:
+        A = rng.randn(size, size)
+        rng.randn(size, size)
+    with pytest.warns(RuntimeWarning, match="overflow"):
+        np.linalg.det(A)
+
+    results = _matrix_operations(np.random.RandomState(DET_OVERFLOW_SEED))
+
+    assert [row['size'] for row in results] == list(MATRIX_SIZES)
+    assert all(np.isfinite(row['log_abs_determinant']) for row in results)
+    assert all(row['determinant_sign'] in (-1.0, 1.0) for row in results)
+
+
 class TestPerformanceBaselines:
     """Test performance baselines for critical operations."""
 
@@ -351,27 +398,8 @@ class TestPerformanceBaselines:
         """Test matrix operations performance baseline."""
 
         def matrix_operations():
-            """Matrix operations."""
-            sizes = [100, 200, 300]
-            results = []
-
-            for size in sizes:
-                # Create matrices
-                A = np.random.randn(size, size)
-                B = np.random.randn(size, size)
-
-                # Matrix operations
-                C = np.dot(A, B)
-                eigenvals = np.linalg.eigvals(A)
-                det_A = np.linalg.det(A)
-
-                results.append({
-                    'size': size,
-                    'determinant': det_A,
-                    'max_eigenval': np.max(np.real(eigenvals))
-                })
-
-            return len(results)
+            """Matrix operations on a fixed draw."""
+            return len(_matrix_operations(np.random.RandomState(0)))
 
         # Measure performance
         import psutil
