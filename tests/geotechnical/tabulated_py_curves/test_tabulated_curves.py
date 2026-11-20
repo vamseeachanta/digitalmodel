@@ -182,3 +182,41 @@ def test_spring_table_mirrors_the_sign_of_zero_resistance():
     points = symmetric_spring_points(curve, SpringGeometry(1.0, 1.0), sensitivity_ratio=-1.0)
     assert [point.force_n for point in points] == [0, 0, 0]
     assert [copysign(1, point.force_n) for point in points] == [-1, 1, 1]
+
+
+def test_fractional_pressure_preserves_integral_force_through_quantization():
+    from fractions import Fraction
+    from digitalmodel.geotechnical.tabulated_py_curves import (
+        SpringGeometry, force_from_pressure, round_force_up,
+    )
+
+    # (7/100) Pa * 10 m * 10 m = 7 N exactly, on a 1 N boundary.
+    force_n = force_from_pressure(Fraction(7, 100), SpringGeometry(10, 10))
+    assert force_n == 7
+    assert round_force_up(force_n, 1) == 7
+
+
+def test_fractional_sensitivity_preserves_both_signed_ordinates():
+    from fractions import Fraction
+    from digitalmodel.geotechnical.tabulated_py_curves import (
+        PressureCurve, SpringGeometry, symmetric_spring_points,
+    )
+
+    # 1 + s = 2**-54; multiplying by 2**54 Pa on unit area gives 1 N.
+    curve = PressureCurve(1, (0, 1), (0, 2**54))
+    points = symmetric_spring_points(
+        curve, SpringGeometry(1, 1), sensitivity_ratio=-1 + Fraction(1, 2**54),
+    )
+    assert [point.force_n for point in points] == [-1, 0, 1]
+
+
+@pytest.mark.parametrize("length_m", [1, 1.0])
+def test_integer_line_load_preserves_the_quantization_boundary(length_m):
+    from digitalmodel.geotechnical.tabulated_py_curves import (
+        force_from_line_resistance, round_force_up,
+    )
+
+    # A unit length leaves the force one newton above a 2**53 N quantum.
+    force_n = force_from_line_resistance(2**53 + 1, length_m)
+    assert force_n == 2**53 + 1
+    assert round_force_up(force_n, 2**53) == 2**54

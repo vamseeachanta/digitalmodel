@@ -46,7 +46,7 @@ line-resistance helpers identified above.
 2. Provide interpolate_force and interpolate_depth on bounded tables and a common
    displacement grid, retaining query ratios through knot selection and weighting.
 3. Convert declared ordinates with force_from_pressure, pressure_from_force and
-   force_from_line_resistance; preserve integral pressure products for quantization.
+   force_from_line_resistance; preserve integral force products for quantization.
 4. Use round_force_up for caller-supplied quanta and symmetric_spring_points for
    odd tables, applying sensitivity before the final force conversion.
 5. Validate with independent arithmetic, exact boundary brackets and rejection
@@ -168,8 +168,8 @@ class SpringGeometry:
 
 
 def _pressure_force_product(pressure_pa: float, geometry: SpringGeometry) -> Fraction:
-    pressure_pa = _finite(pressure_pa, "pressure_pa")
-    return (Fraction(pressure_pa) * Fraction(geometry.diameter_m)
+    _finite(pressure_pa, "pressure_pa")
+    return (_exact_fraction(pressure_pa) * Fraction(geometry.diameter_m)
             * Fraction(geometry.tributary_length_m))
 
 
@@ -183,6 +183,7 @@ def _float_force(product: Fraction) -> float:
 def force_from_pressure(pressure_pa: float, geometry: SpringGeometry) -> int | float:
     """F = pressure * diameter * tributary length (N), using the exact area.
 
+    The validated original pressure ratio is multiplied by the stored dimensions.
     Integral products return int, including products of float inputs, and remain
     exact for subsequent force quantization. Non-integral products are rounded
     once to float, so later quantization can select fewer quanta than the exact
@@ -198,18 +199,23 @@ def force_from_pressure(pressure_pa: float, geometry: SpringGeometry) -> int | f
 
 def force_from_line_resistance(
     line_resistance_n_per_m: float, integration_length_m: float
-) -> float:
+) -> int | float:
     """F = line resistance * declared integration length (N).
 
-    The caller supplies the appropriate integration length.
+    The caller supplies the appropriate integration length. Validated original
+    ratios are multiplied exactly. Integral products return int, including with
+    float lengths; non-integral products are rounded once to float, with the
+    same subsequent quantization limits as force_from_pressure.
     """
-    line_resistance_n_per_m = _finite(line_resistance_n_per_m, "line_resistance_n_per_m")
-    integration_length_m = _finite(integration_length_m, "integration_length_m")
+    _finite(line_resistance_n_per_m, "line_resistance_n_per_m")
+    _finite(integration_length_m, "integration_length_m")
     if integration_length_m == 0:
         raise ValueError("integration_length_m must be positive")
-    result = line_resistance_n_per_m * integration_length_m
-    _finite(result, "computed force_n")
-    return result
+    product = (_exact_fraction(line_resistance_n_per_m)
+               * _exact_fraction(integration_length_m))
+    if product.denominator == 1:
+        return _finite(product.numerator, "computed force_n")
+    return _float_force(product)
 
 
 def pressure_from_force(force_n: float, geometry: SpringGeometry) -> float:
@@ -340,12 +346,13 @@ def symmetric_spring_points(
 
     The caller declares dimensionless sensitivity_ratio s (a fraction, not %).
     Requires a supplied (0, 0); no extrapolation is appended.
-    Sensitivity scales the exact force product before the final float conversion.
+    The validated original sensitivity ratio forms the multiplier exactly;
+    it scales the exact force product before the final float conversion.
     """
-    sensitivity_ratio = _finite(sensitivity_ratio, "sensitivity_ratio", minimum=-1.0)
+    _finite(sensitivity_ratio, "sensitivity_ratio", minimum=-1.0)
     if curve.displacement_m[0] != 0 or curve.pressure_pa[0] != 0:
         raise ValueError("a symmetric spring requires an explicit (0, 0) origin")
-    factor = 1 + Fraction(sensitivity_ratio)
+    factor = 1 + _exact_fraction(sensitivity_ratio)
     positive = tuple(
         SpringPoint(y, _float_force(_pressure_force_product(p, geometry) * factor))
         for y, p in zip(curve.displacement_m[1:], curve.pressure_pa[1:])
