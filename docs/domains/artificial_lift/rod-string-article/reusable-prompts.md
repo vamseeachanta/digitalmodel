@@ -1,6 +1,6 @@
 # Reusable prompts: rod string article
 
-Rod string article ("Rod string mechanics: what stretch, load and damping do to the dynamometer card"), revision 2, 19 Nov 2026. This page holds in full what Appendix D of the article summarises.
+Rod string article ("Dynamometer card: through the rod string"), revision 3, 20 Nov 2026. This page holds in full what Appendix D of the article summarises.
 
 This prompt lets your team rebuild the article's rod string results from public code and data, check them against the published values, and then run the same steps on a well of your own: the stretch of each taper, the stress at the top of each taper and its Goodman loading, the effect of damping and the sampling limit. To have a study of your own rod string done for you instead, see below.
 

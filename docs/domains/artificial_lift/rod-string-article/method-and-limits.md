@@ -1,6 +1,6 @@
 # Method and its limits
 
-Rod string article ("Rod string mechanics: what stretch, load and damping do to the dynamometer card"), revision 2, 19 Nov 2026. This page holds in full what Appendix C of the article summarises. `examples/domains/artificial_lift/build_rod_string_article.py` writes it from `results.json`; the results come from the library at [a26efaa4](https://github.com/vamseeachanta/digitalmodel/tree/a26efaa413c962105cdd49ce6b5122b5d0ab0b58/) (version of 19 Nov 2026).
+Rod string article ("Dynamometer card: through the rod string"), revision 3, 20 Nov 2026. This page holds in full what Appendix C of the article summarises. `examples/domains/artificial_lift/build_rod_string_article.py` writes it from `results.json`; the results come from the library at [a26efaa4](https://github.com/vamseeachanta/digitalmodel/tree/a26efaa413c962105cdd49ce6b5122b5d0ab0b58/) (version of 19 Nov 2026).
 
 Purpose:
 

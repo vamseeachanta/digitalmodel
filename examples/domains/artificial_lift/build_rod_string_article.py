@@ -42,8 +42,9 @@ PROMPT_COMMIT = "796e99f91fbf9f47ab6fa8b0c3e21c4a72961088"
 # Commit that holds the detail pages the article links; its reusable-prompts page names PROMPT_COMMIT.
 # Empty: the article page is not written.
 DETAIL_COMMIT = "ea7a571d034152dc470925cc446b4a79f05f88de"
-REVISION = "Revision 2, 19 Nov 2026"
-ARTICLE_TITLE = "Rod string mechanics: what stretch, load and damping do to the dynamometer card"
+REVISION = "Revision 3, 20 Nov 2026"
+# Series title: each installment adds to "Dynamometer card" (part 1: "Dynamometer card analysis: ...").
+ARTICLE_TITLE = "Dynamometer card: through the rod string"
 OPENING_CARD = FOLDER / "opening-card.png"  # 1200 x 627 link-preview image (og:image)
 
 DAMPING_SCALES = (0.0, 0.5, 1.0, 2.0, 5.0, 10.0)
@@ -67,6 +68,7 @@ PAGES = {
 CSV_FILES = {
     "cards": FOLDER / "figure-1-cards-at-depth.csv",
     "profile": FOLDER / "figure-2-3-depth-profile.csv",
+    "stackup": FOLDER / "figure-3-rod-stack-up.csv",
     "damping": FOLDER / "figure-4-damping-cards.csv",
     "sensitivity": FOLDER / "sensitivity.csv",
 }
@@ -406,14 +408,16 @@ def fmt_tick(v: float) -> str:
 
 
 def chart(series, *, width, height, label, x_title, y_title, y_down=False, hlines=(), closed=False,
-          x_floor=None):
-    """Lines or closed loops on one linear pair of axes; every series and marker carries a hover title."""
+          x_floor=None, left=64, extra=None):
+    """Lines or closed loops on one linear pair of axes; every series and marker carries a hover title.
+
+    extra(py, top, ph): optional SVG drawn left of the y axis on the same y scale (the Figure 3 stack-up)."""
     xs = [x for s in series for x in s["x"]]
     ys = [y for s in series for y in s["y"]]
     x_low = min(xs) if x_floor is None else min(x_floor, min(xs))
     xt = ticks(x_low, max(xs), 5)
     yt = ticks(min(0.0, min(ys)), max(ys), 5)
-    left, right, top, bottom = 64, 16, 12, 42
+    right, top, bottom = 16, 12, 42
     pw, ph = width - left - right, height - top - bottom
 
     def px(x):
@@ -435,8 +439,10 @@ def chart(series, *, width, height, label, x_title, y_title, y_down=False, hline
     out.append(f'<line x1="{left}" x2="{left}" y1="{top}" y2="{top + ph}" class="axis"/>')
     out.append(f'<text x="{left + pw / 2:.1f}" y="{height - 6}" class="axis-title" text-anchor="middle">'
                f'{esc(x_title)}</text>')
-    out.append(f'<text transform="translate(14 {top + ph / 2:.1f}) rotate(-90)" class="axis-title" '
-               f'text-anchor="middle">{esc(y_title)}</text>')
+    out.append(f'<text transform="translate({left - 50 if extra else 14} {top + ph / 2:.1f}) rotate(-90)" '
+               f'class="axis-title" text-anchor="middle">{esc(y_title)}</text>')
+    if extra:
+        out.extend(extra(py, top, ph))
     for y, text in hlines:
         out.append(f'<line x1="{left}" x2="{left + pw}" y1="{py(y):.1f}" y2="{py(y):.1f}" class="marker"/>')
         out.append(f'<text x="{left + pw - 4}" y="{py(y) - 5:.1f}" class="direct" text-anchor="end">{esc(text)}</text>')
@@ -517,6 +523,8 @@ def facts(r: dict) -> dict:
         "zero_diff": num(math.ceil(zero_diff * 1000) / 1000, 3),
         "ten_nrmse": num(ten["pump_card_change_nrmse_pct"], 1),
         "ten_max": num(abs(ten["max_pump_load_lbf"] / k["max_pump_load_lbf"] - 1) * 100, 2),
+        # Peak stress at the top of the 3/4 in rods with ten times the damping, against the estimate's.
+        "ten_sig": num(abs(ten["peak_stress_top_taper2_psi"] / k["peak_stress_top_taper2_psi"] - 1) * 100, 2),
         "ten_fill": num(ten["fillage_pct"], 1), "fill": num(k["fillage_pct"], 1),
         "ten_min": num(ten["min_pump_load_lbf"], 0), "min_pump": num(k["min_pump_load_lbf"], 0),
         "ten_area": num((1 - ten["pump_card_area_ft_lbf"] / k["pump_card_area_ft_lbf"]) * 100, 1),
@@ -558,6 +566,30 @@ def sci(v: float) -> str:
     return f"{v / 10 ** e:.1f} × 10<sup>{e}</sup>".replace("-", "−")
 
 
+def stack_up(r: dict) -> list:
+    """The rod string section by section, surface first: the stack-up behind Figure 3."""
+    k = r["key_results"]
+    top = 0.0
+    out = []
+    for i, (rod, g) in enumerate(zip(r["well"]["rod_string"], r["goodman"])):
+        out.append({
+            "section": i + 1, "diameter_in": rod["diameter_in"], "grade": g["grade"],
+            "top_ft": top, "bottom_ft": top + rod["length_ft"], "length_ft": rod["length_ft"],
+            "weight_lb_ft": rod["weight_lb_ft"], "area_in2": rod["area_in2"], "modulus_psi": rod["modulus_psi"],
+            "minimum_tensile_psi": g["minimum_tensile_psi"],
+            "weight_in_air_lb": rod["weight_lb_ft"] * rod["length_ft"],
+            "static_stretch_in": k["static_stretch_by_taper_in"][i],
+            "peak_stress_top_psi": g["ours"]["max_psi"], "min_stress_top_psi": g["ours"]["min_psi"],
+            "goodman_loading_top_pct": g["ours"]["loading_pct"],
+        })
+        top += rod["length_ft"]
+    return out
+
+
+def rod_name(d: float) -> str:
+    return {0.625: "5/8", 0.75: "3/4", 0.875: "7/8", 1.0: "1", 1.125: "1-1/8"}.get(round(d, 4), num(d, 3))
+
+
 def revision_lower() -> str:
     """'revision 2, 19 Nov 2026': only the first letter is lowered."""
     return REVISION[0].lower() + REVISION[1:]
@@ -588,7 +620,11 @@ def csv_outputs(r: dict) -> dict:
             damp.append([scale, i, x, y])
     sens = [[row["input"], row["step_pct"], *row["factors"].values()] for row in r["sensitivity"]]
     first = r["sensitivity"][0]["factors"].keys()
+    stack = stack_up(r)
+    stack_cols = list(stack[0])
+    stack_rows = [[round(v, 4) if isinstance(v, float) else v for v in row.values()] for row in stack]
     return {
+        CSV_FILES["stackup"]: csv_text(stack_cols, stack_rows),
         CSV_FILES["cards"]: csv_text(["card", "depth_ft", "sample", "position_in", "load_lbf"], rows),
         CSV_FILES["profile"]: csv_text(["depth_ft", "stroke_in", "static_stroke_in", "max_load_lbf",
                                         "min_load_lbf", "max_stress_psi", "min_stress_psi",
@@ -678,22 +714,74 @@ def figure_stress(f) -> str:
                 f"Minimum stress at the polished rod: {sig4(k['min_stress_top_taper1_psi'])} psi"),
                (k["min_stress_top_taper2_psi"], joint,
                 f"Minimum stress at the top of the 3/4 in rods: {sig4(k['min_stress_top_taper2_psi'])} psi")]
+    stack = stack_up(f["r"])
+    rod_end = stack[-1]["bottom_ft"]
+
+    def section_tip(sec):
+        return (f"{rod_name(sec['diameter_in'])} in rods, Grade {sec['grade']}: {num(sec['top_ft'])} to "
+                f"{num(sec['bottom_ft'])} ft, {sec['weight_lb_ft']} lb/ft, area {sig4(sec['area_in2'])} in², modulus "
+                f"{num(sec['modulus_psi'])} psi; at the top, peak stress {sig4(sec['peak_stress_top_psi'])} psi and "
+                f"about {num(sec['goodman_loading_top_pct'])} % of the allowable stress range")
+
+    def strip(py, top, ph):
+        """The stack-up drawn to depth left of the depth axis: bar width to scale with the rod diameter."""
+        out, cx = [], 24
+        for sec in stack:
+            w = sec["diameter_in"] * 26
+            y0, y1 = py(sec["top_ft"]), py(sec["bottom_ft"])
+            out.append(f'<rect x="{cx - w / 2:.1f}" y="{y0:.1f}" width="{w:.1f}" height="{y1 - y0:.1f}" fill="{NAVY}" '
+                       f'class="rod"><title>{esc(section_tip(sec))}</title></rect>')
+            lines = [f"{rod_name(sec['diameter_in'])} in, Grade {sec['grade']}",
+                     f"{num(sec['top_ft'])} to {num(sec['bottom_ft'])} ft",
+                     f"{sec['weight_lb_ft']} lb/ft", f"{sig4(sec['area_in2'])} in²"]
+            for j, text in enumerate(lines):
+                out.append(f'<text x="{cx + 20}" y="{y0 + 16 + 14 * j:.1f}" class="direct">{esc(text)}</text>')
+        yb = py(rod_end)
+        out.append(f'<rect x="{cx - 7}" y="{yb:.1f}" width="14" height="10" fill="{TEAL}"><title>'
+                   f'{esc(f"Pump end of the listed rods, {num(rod_end)} ft")}</title></rect>')
+        out.append(f'<text x="{cx + 20}" y="{yb + 10:.1f}" class="direct">Pump end, {num(rod_end)} ft</text>')
+        return out
+
     svg = chart([{"x": smax, "y": depth, "colour": ORANGE, "name": "Peak stress over the stroke", "hover": hov_max},
                  {"x": smin, "y": depth, "colour": BLUE, "name": "Minimum stress over the stroke", "hover": hov_min}],
-                width=720, height=380, y_down=True, label="Rod stress against depth", x_title="Rod stress (psi)",
-                y_title="Depth (ft)", hlines=[(joint, f"Taper joint, {f['joint_ft']} ft")], x_floor=0)
-    return ("<figure id=\"figure-3\">" + svg
+                width=760, height=380, y_down=True, label="Rod string stack-up and rod stress against depth",
+                x_title="Rod stress (psi)", y_title="Depth (ft)",
+                hlines=[(joint, f"Taper joint, {f['joint_ft']} ft")], x_floor=0, left=250, extra=strip)
+    heads = "".join(f"<th>{rod_name(sec['diameter_in'])} in rods, section {sec['section']}</th>" for sec in stack)
+    rows = [
+        ("Depth, top to bottom (ft)", lambda s: f"{num(s['top_ft'])} to {num(s['bottom_ft'])}"),
+        ("Length (ft)", lambda s: num(s["length_ft"])),
+        ("Rod diameter (in)", lambda s: num(s["diameter_in"], 3)),
+        ("Grade; minimum tensile strength (psi)", lambda s: f"{s['grade']}; {num(s['minimum_tensile_psi'])}"),
+        ("Weight in air (lb/ft)", lambda s: f"{s['weight_lb_ft']}"),
+        ("Weight in air of the section (lb)", lambda s: num(s["weight_in_air_lb"])),
+        ("Body area (in²)", lambda s: sig4(s["area_in2"])),
+        ("Modulus of elasticity (psi)", lambda s: num(s["modulus_psi"])),
+        ("Static stretch under the fluid load (in)", lambda s: num(s["static_stretch_in"], 1)),
+        ("Peak; minimum stress at the top (psi)",
+         lambda s: f"{sig4(s['peak_stress_top_psi'])}; {sig4(s['min_stress_top_psi'])}"),
+        ("Goodman loading at the top (%)", lambda s: num(s["goodman_loading_top_pct"])),
+    ]
+    body_rows = "".join(f"<tr><th scope=\"row\">{esc(name)}</th>" + "".join(f"<td>{esc(fn(sec))}</td>" for sec in stack)
+                        + "</tr>" for name, fn in rows)
+    table = (f'<table class="stack"><thead><tr><th>Rod string, surface first</th>{heads}</tr></thead>'
+             f"<tbody>{body_rows}</tbody></table>")
+    return ("<figure id=\"figure-3\">" + table + svg
             + legend([("Peak stress over the stroke", ORANGE, False), ("Minimum stress over the stroke", BLUE, False)])
             + caption([
+                "Stack-up: the rod data of the well record, surface first, drawn to depth left of the chart with the "
+                "bar width to scale with the rod diameter; body area πd²/4; static stretch under the fluid load as in "
+                "Figure 2; stress and Goodman loading at the top of each section (Appendix A).",
                 "Stress is the rod load at each depth over the rod body area; the grid point at the taper joint "
                 "is averaged between its neighbours by the solver, and the stress at the joint is interpolated "
                 f"to {f['joint_ft']} ft.",
                 f"The well record's own calculation gives {f['rec_sig2']} psi peak and {f['rec_min2']} psi minimum at "
                 f"the top of the 3/4 in rods, about {f['rec_dpsi']} psi above these values (Appendix A).",
-                f"Data: <a href=\"{blob(DETAIL_COMMIT, CSV_FILES['profile'])}\">figure-2-3-depth-profile.csv</a>."],
+                f"Data: <a href=\"{blob(DETAIL_COMMIT, CSV_FILES['stackup'])}\">figure-3-rod-stack-up.csv</a> and "
+                f"<a href=\"{blob(DETAIL_COMMIT, CSV_FILES['profile'])}\">figure-2-3-depth-profile.csv</a>."],
                 f"Figure 3. The peak stress is highest at the top of the 3/4 in rods, {f['sig_up']} % above the polished "
-                "rod: rod stress against depth. Point at a marker at the polished rod or the taper joint to show its "
-                "stress.")
+                "rod: the rod string stack-up and rod stress against depth. Point at a rod section to show its "
+                "properties, or at a marker at the polished rod or the taper joint to show its stress.")
             + "</figure>")
 
 
@@ -730,7 +818,7 @@ def figure_damping(f) -> str:
 
 
 INFOGRAPHIC = [
-    ("Objective", "See what the rod string does to the surface card, and how the pump card is recovered from it."),
+    ("Objective", "The impact of rod string on the surface card."),
     ("Starting point", "Between the surface card and the pump sit thousands of feet of rods that stretch, carry "
                        "stress waves and lose energy to the fluid on every stroke."),
     ("What we did", "Followed the stroke, load and stress down the rods of a public example well with the wave "
@@ -791,8 +879,8 @@ def body(f) -> str:
         f"the pump ({f['Sp']} in); the 3/4 in rods give {f['st2_share']} % of it.</li>"
         f"<li>The top of the 3/4 in rods is the most stressed point: {f['sig2']} psi peak, {f['sig_up']} % above "
         f"the polished rod, using about {f['load2']} % of the Grade {f['grade']} allowable stress range.</li>"
-        f"<li>Damping hardly changes this pump card: ten times the estimate moves it by {f['ten_nrmse']} % of its "
-        "load range.</li>"
+        f"<li>Damping hardly changes this pump card and does not change the rod stress: ten times the estimate "
+        f"moves the card by {f['ten_nrmse']} % of its load range and the peak stress by {f['ten_sig']} %.</li>"
         f"<li>A 1 % larger rod diameter lowers the maximum pump load by about {f['p_diam']} %, and a 1 % load-cell "
         f"gain error raises it by about {f['p_gain']} % (Appendix A).</li></ul>",
         '<h2 id="stroke">Where the stroke goes</h2>',
@@ -806,7 +894,8 @@ def body(f) -> str:
         "the gap is the rods' motion, which the static formula leaves out.</p>",
         '<h2 id="stress">Load and stress down the rods</h2>',
         "<p>Each foot of rod carries the load below it, so the load falls with depth; the stress is that load over "
-        "the rod's area. Figure 3 shows the stress over the stroke at every depth.</p>",
+        "the rod's area. Figure 3 sets the rod string's stack-up, section by section, beside the stress over the "
+        "stroke at every depth.</p>",
         figure_stress(f),
         f"<p>The peak load falls from {f['PPRL']} lbf at the polished rod to {f['joint_max']} lbf at the taper "
         f"joint, but there it acts on the smaller 3/4 in rods, so the peak stress steps up {f['joint_step']} % to "
@@ -820,9 +909,13 @@ def body(f) -> str:
         f"on the calculation. The library's estimate, from the drag of the rods and couplings in the tubing, takes "
         f"{f['damp_share']} % of the work per stroke. Figure 4 shows the pump card at three damping levels.</p>",
         figure_damping(f),
-        f"<p>Ten times the damping raises the bottom of the card from {f['min_pump']} lbf to {f['ten_min']} lbf; "
-        f"the maximum pump load changes by {f['ten_max']} % and the fillage from {f['fill']} % to "
-        f"{f['ten_fill']} %.</p>",
+        f"<p>Ten times the damping raises the bottom of the pump card from {f['min_pump']} lbf to {f['ten_min']} "
+        f"lbf, but the top of the card, which sets the rod stress, hardly moves: the maximum pump load changes by "
+        f"{f['ten_max']} % and the peak stress at the top of the 3/4 in rods by {f['ten_sig']} %. For this well the "
+        "damping estimate does not change the rod stress check, so it need not be refined for that check; the rod "
+        "data and the load-cell calibration matter more, since a 1 % error in the rod diameter or the load-cell "
+        f"gain moves the maximum pump load by about {f['p_diam']} % or {f['p_gain']} % (Appendix A). Damping shows "
+        f"in the bottom of the card and the fillage, which moves from {f['fill']} % to {f['ten_fill']} %.</p>",
         '<h2 id="method">How the pump card is recovered</h2>',
         f"<p>The finite-difference method marches the damped wave equation down the rods, one grid point at a "
         f"time, from the measured position and load at the polished rod [2]. It is stable only while a stress "
@@ -890,8 +983,9 @@ def appendices(f) -> str:
                  f"With no damping the pump card's area equals the surface card's within {f['zero_diff']} %; the "
                  f"estimated damping takes {f['damp_share']} % of the work per stroke.",
                  f"For this well, across a ten-fold range of damping, the maximum pump load changes by "
-                 f"{f['ten_max']} % and the stroke by {f['ten_stroke']} in; the damping changes the card's area and "
-                 "the bottom of the card.",
+                 f"{f['ten_max']} %, the peak stress at the top of the 3/4 in rods by {f['ten_sig']} % and the stroke "
+                 f"by {f['ten_stroke']} in, so the damping does not change the rod stress check; it changes the "
+                 "card's area and the bottom of the card.",
                  "The estimate scales with the assumed viscosity, which is not calibrated; a heavier oil or a "
                  "measured pump card can change this conclusion."],
              "damping", "Damping study in full"),
@@ -946,6 +1040,10 @@ figure.infographic{border:1px solid var(--line);border-radius:6px;overflow:hidde
 .ig-text{margin:2px 0 0;font-size:17px;color:var(--navy)}
 .ig-source{margin:0;padding:8px 14px;font-size:12px;color:var(--muted)}
 .signoff{font:12px system-ui,sans-serif;color:var(--muted)}
+table.stack{border-collapse:collapse;width:100%%;font:13px/1.4 system-ui,sans-serif;margin:0 0 10px}
+table.stack th,table.stack td{border-bottom:1px solid var(--line);padding:4px 8px;text-align:left;vertical-align:top}
+table.stack thead th{color:var(--navy);border-bottom:2px solid var(--navy)}table.stack tbody th{font-weight:400;color:var(--ink2)}
+.chart .rod{opacity:.85}.chart .rod:hover{opacity:1}
 ol.refs{font-size:14px}
 @media print{.contents{display:none}.page{display:block}}
 """ % (NAVY, TEAL)
@@ -1014,6 +1112,7 @@ def page_readme(f) -> str:
         "- [results.json](results.json): every saved result, written by `--refresh`.",
         "- [figure-1-cards-at-depth.csv](figure-1-cards-at-depth.csv): Figure 1.",
         "- [figure-2-3-depth-profile.csv](figure-2-3-depth-profile.csv): Figures 2 and 3.",
+        "- [figure-3-rod-stack-up.csv](figure-3-rod-stack-up.csv): Figure 3, the rod string stack-up.",
         "- [figure-4-damping-cards.csv](figure-4-damping-cards.csv): Figure 4.",
         "- [sensitivity.csv](sensitivity.csv): sensitivity factors.",
         "- [opening-card.png](opening-card.png): the article's 1200 x 627 link-preview image; its inset draws the "
@@ -1161,7 +1260,8 @@ def page_damping(f) -> str:
         rows.append([f"{m['scale']:g}", num(m["max_pump_load_lbf"]), num(m["min_pump_load_lbf"]),
                      num(m["fillage_pct"], 2), num(m["fluid_load_lbf"]), num(m["pump_card_area_ft_lbf"]),
                      num(m["damping_share_pct"], 2), num(m["pump_card_change_nrmse_pct"], 2),
-                     num(m["dynamic_remainder_in"], 2)])
+                     num(m["dynamic_remainder_in"], 2),
+                     num(abs(m["peak_stress_top_taper2_psi"] / f["k"]["peak_stress_top_taper2_psi"] - 1) * 100, 3)])
     est = f["r"]["settings"]["estimated_damping_per_s"]
     rec = f["r"]["record_well"]["damping_per_s"]
     return page_head("Damping", "Appendix B", [
@@ -1171,8 +1271,10 @@ def page_damping(f) -> str:
         f"- With no damping the pump card's area equals the surface card's within {f['zero_diff']} %: the energy "
         "put in at the polished rod reaches the pump, an energy check on the calculation.",
         f"- The estimated damping takes {f['damp_share']} % of the {f['A_surf']} ft-lbf of work per stroke.",
-        f"- For this well, across a ten-fold range of damping, the maximum pump load changes by {f['ten_max']} % "
-        f"and the stroke by {f['ten_stroke']} in; the damping changes the card's area and raises the bottom of the card.",
+        f"- For this well, across a ten-fold range of damping, the maximum pump load changes by {f['ten_max']} %, "
+        f"the peak stress at the top of the 3/4 in rods by {f['ten_sig']} % and the stroke by {f['ten_stroke']} in: "
+        "the top of the card, which sets the rod stress, hardly moves, so the damping does not change the rod "
+        "stress check. The damping changes the card's area and raises the bottom of the card.",
         f"- The gap between the wave-equation stroke and the static-stretch stroke at the pump is {f['dyn0']} in "
         f"with no damping and {f['dyn2']} in with the estimate: the rods' motion makes it, not the damping.",
         "", "## The estimate", "",
@@ -1193,9 +1295,11 @@ def page_damping(f) -> str:
         "", "## Damping sweep", "",
         md_table(["Damping scale", "Maximum pump load (lbf)", "Minimum pump load (lbf)", "Fillage (%)",
                   "Fluid load (lbf)", "Pump card area (ft-lbf)", "Damping share (%)",
-                  "Change of pump card (% of load range)", "Stroke gap to static stretch (in)"], rows), "",
+                  "Change of pump card (% of load range)", "Stroke gap to static stretch (in)",
+                  "Change of peak stress, top of 3/4 in rods (%)"], rows), "",
         "Table 1. Pump card against damping scale; 1 is the estimate. Change of pump card: root-mean-square load "
-        "difference from the estimate's card, over its load range.", "",
+        "difference from the estimate's card, over its load range. Change of peak stress: against the estimate's "
+        f"{f['sig2']} psi.", "",
         "- Data: [figure-4-damping-cards.csv](figure-4-damping-cards.csv) (scales 0, 1 and 10) and "
         "[results.json](results.json).", ""])
 

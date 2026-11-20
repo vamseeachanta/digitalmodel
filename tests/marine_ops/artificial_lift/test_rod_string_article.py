@@ -72,6 +72,28 @@ def test_energy_check_with_no_damping():
     assert base["damping_share_pct"] == pytest.approx(KEY["damping_share_pct"], abs=1e-6)
 
 
+def test_damping_moves_the_bottom_of_the_card_not_the_peak_stress():
+    sweep = {m["scale"]: m for m in RESULTS["damping_sweep"]}
+    base, ten = sweep[1.0], sweep[10.0]
+    # Bottom of the pump card: 81.96 lbf -> 213.12 lbf with ten times the damping.
+    assert (base["min_pump_load_lbf"], ten["min_pump_load_lbf"]) == pytest.approx((81.96, 213.12), abs=0.01)
+    # Top of the card: 4,660.54 -> 4,644.76 lbf, 15.77 / 4,660.54 = 0.34 %.
+    assert abs(ten["max_pump_load_lbf"] / base["max_pump_load_lbf"] - 1) * 100 == pytest.approx(0.34, abs=0.005)
+    # Peak stress at the top of the 3/4 in rods: 21,573.79 -> 21,561.90 psi, 11.89 / 21,573.79 = 0.055 %.
+    assert abs(ten["peak_stress_top_taper2_psi"] / base["peak_stress_top_taper2_psi"] - 1) * 100 == pytest.approx(
+        0.055, abs=0.001)
+    # The polished rod load is the measured surface card, so damping cannot change it.
+    assert ten["peak_load_polished_rod_lbf"] == base["peak_load_polished_rod_lbf"]
+
+
+def test_stack_up_matches_the_well_record():
+    stack = _builder().stack_up(RESULTS)
+    assert [(s["top_ft"], s["bottom_ft"]) for s in stack] == [(0.0, 1400.0), (1400.0, 4750.0)]
+    # Weight in air: 2.224 lb/ft * 1,400 ft = 3,113.6 lb; 1.634 lb/ft * 3,350 ft = 5,473.9 lb.
+    assert [s["weight_in_air_lb"] for s in stack] == pytest.approx([3113.6, 5473.9], abs=0.01)
+    assert [s["grade"] for s in stack] == ["D", "D"]
+
+
 def test_courant_limit_hand_value_and_demonstration():
     g = RESULTS["grid"]
     # Hand: dx = 1,447.8 m / 199 = 7.2754 m; c = sqrt(2.10290e11 Pa / 8,531.3 kg/m^3) = 4,964.8 m/s;
