@@ -29,8 +29,9 @@ inferred. All inputs are finite, nonnegative magnitudes except signed spring
 points and sensitivity >= -1. Stored scalars retain supplied ratios as built-in
 integers, floats or Fractions. Validation requires a finite binary64 conversion;
 tiny nonzero ratios remain nonzero, so they cannot supply an implicit origin.
-Computed integral results remain integers; non-integral outputs round once to
-float and can underflow. Quantization uses the exact input ratio; converting
+Interpolation retains flat ordinates and nonzero results that would round to zero.
+Computed integral results remain integers; other non-integral outputs round once
+to float and can underflow. Quantization uses the exact input ratio; converting
 units before quantization can change the selected quantum at a boundary.
 
 Related code
@@ -145,18 +146,24 @@ def _linear(x: _Scalar, axis: tuple[_Scalar, ...], values: tuple[_Scalar, ...]) 
     if axis[high] == x:
         return values[high]
     low = high - 1
+    if values[low] == values[high]:
+        return values[low]
     # Measure both distances directly so the smaller weight survives near a knot.
     from_low = x - Fraction(axis[low])
     from_high = Fraction(axis[high]) - x
     weighted_sum = from_high * Fraction(values[low]) + from_low * Fraction(values[high])
-    return _rounded_result(weighted_sum / (from_low + from_high), "interpolated ordinate")
+    exact = weighted_sum / (from_low + from_high)
+    result = _rounded_result(exact, "interpolated ordinate")
+    # A positive ordinate must not become an inferred zero-pressure origin.
+    return exact if exact and result == 0 else result
 
 
 def interpolate_force(curve: ForceCurve, displacement_m: _Scalar) -> _Scalar:
     """F = F0 + (y-y0)*(F1-F0)/(y1-y0), within supplied displacements.
 
-    Extrapolation raises ValueError; force reduction is retained. Knots return
-    the stored ratio; computed integral results remain integers, others round
+    Extrapolation raises ValueError; force reduction is retained. Knots and flat
+    intervals return the stored ratio. Computed integral results remain integers;
+    nonzero results that would round to zero retain their ratio, others round
     once to float.
     """
     return _linear(displacement_m, curve.displacement_m, curve.force_n)
@@ -310,7 +317,9 @@ def interpolate_depth(
     Missing grid points require displacement interpolation before this call.
     Out-of-range depths raise ValueError, including above/below a single curve.
     The returned depth label retains the supplied ratio, as do stored ordinates.
-    Integral interpolated pressures remain integers; others round once to float.
+    Flat intervals retain the stored pressure ratio. Integral results remain
+    integers; nonzero results that would round to zero retain their ratio,
+    others round once to float.
     """
     if not curves:
         raise ValueError("at least one pressure curve is required")

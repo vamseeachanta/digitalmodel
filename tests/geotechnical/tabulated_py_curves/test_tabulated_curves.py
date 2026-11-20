@@ -281,3 +281,36 @@ def test_inverse_conversion_divides_the_original_force_ratio(case):
         "integral_pressure": (2**53 + 1, 1, 2**53 + 1),
     }[case]
     assert pressure_from_force(force_n, SpringGeometry(area_m2, 1)) == expected_pa
+
+
+@pytest.mark.parametrize("coordinate", [0, 1, 2])
+def test_flat_fractional_force_retains_one_quantum_between_knots(coordinate):
+    from fractions import Fraction
+    from digitalmodel.geotechnical.tabulated_py_curves import round_force_up
+
+    force_n = Fraction(7, 100)
+    curve = ForceCurve(0, (0, 2), (force_n, force_n))
+    result = interpolate_force(curve, coordinate)
+    # Binary64 0.07 lies above 7/100, so it is the upper float for one quantum.
+    expected_n = float(force_n)
+    assert Fraction(expected_n) > force_n
+    assert round_force_up(result, force_n) == expected_n
+    assert result == force_n
+
+
+@pytest.mark.parametrize("depth_m", [0, 1, 2])
+def test_identical_pressure_tables_retain_the_spring_quantum(depth_m):
+    from fractions import Fraction
+    from digitalmodel.geotechnical.tabulated_py_curves import (
+        PressureCurve, SpringGeometry, interpolate_depth, round_force_up,
+        symmetric_spring_points,
+    )
+
+    pressure_pa = Fraction(7, 100)
+    curves = tuple(PressureCurve(z, (0, 1), (0, pressure_pa)) for z in (0, 2))
+    result = interpolate_depth(curves, depth_m)
+    points = symmetric_spring_points(result, SpringGeometry(10, 10))
+    # At every depth: (7/100) Pa * 100 square metres = 7 N, or seven quanta.
+    assert round_force_up(points[-1].force_n, 1) == 7
+    assert points[-1].force_n == 7
+    assert result.pressure_pa[-1] == pressure_pa

@@ -320,3 +320,21 @@ def test_stored_scalars_preserve_the_supplied_ratio(scalar):
         geometry.diameter_m, geometry.tributary_length_m,
         point.displacement_m, point.force_n,
     ))
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_interpolated_nonzero_origin_below_float_range_is_rejected(reverse):
+    pressures = (Fraction(1, 2**1077), Fraction(1, 2**1076))
+    if reverse:
+        pressures = pressures[::-1]
+    curves = tuple(PressureCurve(z, (0, 1), (p, 1))
+                   for z, p in zip((0, 2), pressures))
+    geometry = SpringGeometry(1, 1)
+    for curve in curves:
+        with pytest.raises(ValueError, match="origin"):
+            symmetric_spring_points(curve, geometry)
+    result = interpolate_depth(curves, 1)
+    # The mean is 3 * 2**-1078 Pa: positive even below binary64 storage range.
+    with pytest.raises(ValueError, match="origin"):
+        symmetric_spring_points(result, geometry)
+    assert result.pressure_pa[0] == Fraction(3, 2**1078)
