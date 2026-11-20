@@ -37,6 +37,24 @@ line resistance (N/m), reject decreasing resistance, and hold end curves outside
 the tabulated depth range. This module retains softening, raises for out-of-range
 depths instead of holding end curves, and uses a pressure basis (Pa).
 
+Implementation plan
+-------------------
+This scoped plan covers the separate pressure-basis module alongside the
+existing line-resistance helpers identified above.
+1. Validate immutable ForceCurve, PressureCurve, SpringGeometry and SpringPoint
+   inputs, preserving supplied softening and requiring explicit units and origin.
+2. Provide interpolate_force and interpolate_depth on bounded tables and a common
+   displacement grid, retaining query ratios through knot selection and weighting.
+3. Convert declared ordinates with force_from_pressure, pressure_from_force and
+   force_from_line_resistance; preserve integral pressure products for quantization.
+4. Use round_force_up for caller-supplied quanta and symmetric_spring_points for
+   odd tables, applying sensitivity before the final force conversion.
+5. Validate with independent arithmetic, exact boundary brackets and rejection
+   cases in tests/geotechnical/tabulated_py_curves/test_tabulated_curves.py and
+   tests/geotechnical/tabulated_py_curves/test_validation.py.
+Soil-law generation, empirical calibration, site data and licensed solver
+execution are outside this scope. No governing standard coefficient is supplied.
+
 Standards and provenance
 ------------------------
 No standard-derived constant is introduced by this module.
@@ -108,7 +126,9 @@ class ForceCurve:
 
 
 def _linear(x: float, axis: tuple[float, ...], values: tuple[float, ...]) -> float:
-    x = _finite(x, "interpolation coordinate")
+    _finite(x, "interpolation coordinate")
+    # Retain the query ratio through bounds checks, knot selection and weights.
+    x = _exact_fraction(x)
     if x < axis[0] or x > axis[-1]:
         raise ValueError("interpolation coordinate is outside the supplied range")
     high = bisect_left(axis, x)
@@ -116,9 +136,8 @@ def _linear(x: float, axis: tuple[float, ...], values: tuple[float, ...]) -> flo
         return values[high]
     low = high - 1
     # Measure both distances directly so the smaller weight survives near a knot.
-    coordinate = Fraction(x)
-    from_low = coordinate - Fraction(axis[low])
-    from_high = Fraction(axis[high]) - coordinate
+    from_low = x - Fraction(axis[low])
+    from_high = Fraction(axis[high]) - x
     weighted_sum = from_high * Fraction(values[low]) + from_low * Fraction(values[high])
     return float(weighted_sum / (from_low + from_high))
 
@@ -148,14 +167,28 @@ class SpringGeometry:
             object.__setattr__(self, name, value)
 
 
-def force_from_pressure(pressure_pa: float, geometry: SpringGeometry) -> float:
-    """F = pressure * diameter * tributary length (N), using the exact area."""
+def _pressure_force_product(pressure_pa: float, geometry: SpringGeometry) -> Fraction:
     pressure_pa = _finite(pressure_pa, "pressure_pa")
-    area = Fraction(geometry.diameter_m) * Fraction(geometry.tributary_length_m)
+    return (Fraction(pressure_pa) * Fraction(geometry.diameter_m)
+            * Fraction(geometry.tributary_length_m))
+
+
+def _float_force(product: Fraction) -> float:
     try:
-        return float(Fraction(pressure_pa) * area)
+        return float(product)
     except OverflowError as error:
         raise ValueError("computed force_n is not finite") from error
+
+
+def force_from_pressure(pressure_pa: float, geometry: SpringGeometry) -> int | float:
+    """F = pressure * diameter * tributary length (N), using the exact area.
+
+    Integral products remain exact for subsequent force quantization.
+    """
+    product = _pressure_force_product(pressure_pa, geometry)
+    if product.denominator == 1:
+        return _finite(product.numerator, "computed force_n")
+    return _float_force(product)
 
 
 def force_from_line_resistance(
@@ -300,12 +333,14 @@ def symmetric_spring_points(
 
     The caller declares dimensionless sensitivity_ratio s (a fraction, not %).
     Requires a supplied (0, 0); no extrapolation is appended.
+    Sensitivity scales the exact force product before the final float conversion.
     """
     sensitivity_ratio = _finite(sensitivity_ratio, "sensitivity_ratio", minimum=-1.0)
     if curve.displacement_m[0] != 0 or curve.pressure_pa[0] != 0:
         raise ValueError("a symmetric spring requires an explicit (0, 0) origin")
+    factor = 1 + Fraction(sensitivity_ratio)
     positive = tuple(
-        SpringPoint(y, force_from_pressure(p, geometry) * (1 + sensitivity_ratio))
+        SpringPoint(y, _float_force(_pressure_force_product(p, geometry) * factor))
         for y, p in zip(curve.displacement_m[1:], curve.pressure_pa[1:])
     )
     negative = tuple(SpringPoint(-p.displacement_m, -p.force_n) for p in reversed(positive))

@@ -35,6 +35,17 @@ def test_pressure_and_line_load_normalization_have_distinct_units():
     assert force_from_line_resistance(12000.0, 2.0) == 12000.0 * 2.0
 
 
+def test_integer_pressure_product_retains_the_quantization_boundary():
+    from digitalmodel.geotechnical.tabulated_py_curves import (
+        SpringGeometry, force_from_pressure, round_force_up,
+    )
+
+    # A unit area leaves the integer force one newton above one quantum.
+    force_n = force_from_pressure(2**53 + 1, SpringGeometry(1, 1))
+    assert force_n == 2**53 + 1
+    assert round_force_up(force_n, 2**53) == 2**54
+
+
 @pytest.mark.parametrize("exponent", [-600, 600])
 def test_pressure_conversion_preserves_force_over_unit_area(exponent):
     from digitalmodel.geotechnical.tabulated_py_curves import SpringGeometry, pressure_from_force
@@ -96,6 +107,21 @@ def test_spring_table_is_odd_and_scales_pressure_by_projected_area():
     )
 
 
+@pytest.mark.parametrize("sensitivity,expected_n", [(-0.5, 2**1023), (-1, 0)])
+def test_spring_sensitivity_scales_the_exact_product_before_conversion(sensitivity, expected_n):
+    from math import copysign
+    from digitalmodel.geotechnical.tabulated_py_curves import (
+        PressureCurve, SpringGeometry, symmetric_spring_points,
+    )
+
+    # The unscaled product is 2**1024; halving it or zeroing it is finite.
+    curve = PressureCurve(1, (0, 1), (0, 2**1023))
+    points = symmetric_spring_points(curve, SpringGeometry(2, 1), sensitivity_ratio=sensitivity)
+    assert [point.force_n for point in points] == [-expected_n, 0, expected_n]
+    if sensitivity == -1:
+        assert [copysign(1, point.force_n) for point in points] == [-1, 1, 1]
+
+
 @pytest.mark.parametrize("exponent", [-600, 600])
 def test_force_conversion_preserves_pressure_over_unit_area(exponent):
     from digitalmodel.geotechnical.tabulated_py_curves import SpringGeometry, force_from_pressure
@@ -119,13 +145,28 @@ def test_spring_table_preserves_pressure_over_unit_area(exponent):
     assert [point.force_n for point in points] == [-pressure_pa, 0, pressure_pa]
 
 
-@pytest.mark.parametrize("force_n,first_n,second_n", [
-    (1024, 1024.0000000000002, 1024.1000000000001),
-    (0.3, 0.30000000000000004, 0.4),
+@pytest.mark.parametrize("force_n,first_n,second_n,first_count,second_count", [
+    (1024, 1024.0000000000002, 1024.1000000000001, 10240, 10241),
+    (0.3, 0.30000000000000004, 0.4, 3, 4),
 ])
-def test_non_dyadic_quantization_can_advance_when_repeated(force_n, first_n, second_n):
+def test_non_dyadic_quantization_can_advance_when_repeated(
+    force_n, first_n, second_n, first_count, second_count,
+):
+    from fractions import Fraction
+    from math import inf, nextafter
     from digitalmodel.geotechnical.tabulated_py_curves import round_force_up
 
+    # Binary64 stores 0.1 as q = 3602879701896397 / 2**55.
+    # The inequalities (n-1)*q < F <= n*q select 10240, 10241, 3 and 4.
+    # Each exact n*q lies above the preceding float and at or below the
+    # expected float, proving that float is the least upper representation.
+    quantum = Fraction(3602879701896397, 2**55)
+    for original, expected, count in (
+        (force_n, first_n, first_count), (first_n, second_n, second_count),
+    ):
+        multiple = count * quantum
+        assert (count - 1) * quantum < Fraction(original) <= multiple
+        assert Fraction(nextafter(expected, -inf)) < multiple <= Fraction(expected)
     # Pin the documented limitation when a rounded float is stored and rounded again.
     assert round_force_up(force_n, 0.1) == first_n
     assert round_force_up(first_n, 0.1) == second_n

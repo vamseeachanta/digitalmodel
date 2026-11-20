@@ -70,6 +70,49 @@ def test_displacement_extrapolation_is_rejected(query):
         interpolate_force(ForceCurve(1.0, (0.0, 0.1), (0.0, 20.0)), query)
 
 
+@pytest.mark.parametrize("scalar", [
+    Fraction,
+    pytest.param(np.longdouble, marks=pytest.mark.skipif(
+        np.finfo(np.longdouble).nmant <= np.finfo(float).nmant,
+        reason="requires more significand bits than binary64",
+    )),
+])
+def test_force_interpolation_preserves_a_coordinate_between_adjacent_floats(scalar):
+    # The endpoints are 1 and 1 + 2**-52; their midpoint is 1 + 2**-53.
+    midpoint = scalar(1) + scalar(1) / 2**53
+    curve = ForceCurve(1, (1, 1 + 2**-52), (0, 100))
+    assert interpolate_force(curve, midpoint) == 50
+
+
+@pytest.mark.parametrize("scalar", [
+    Fraction,
+    pytest.param(np.longdouble, marks=pytest.mark.skipif(
+        np.finfo(np.longdouble).nmant <= np.finfo(float).nmant,
+        reason="requires more significand bits than binary64",
+    )),
+])
+def test_depth_interpolation_preserves_a_coordinate_between_adjacent_floats(scalar):
+    midpoint = scalar(1) + scalar(1) / 2**53
+    shallow = PressureCurve(1, (0, 1), (0, 0))
+    deep = PressureCurve(1 + 2**-52, (0, 1), (0, 100))
+    # Equal distances from 0 Pa and 100 Pa give 50 Pa on the common grid.
+    assert interpolate_depth((shallow, deep), midpoint).pressure_pa == (0, 50)
+
+
+@pytest.mark.parametrize("scalar", [
+    Fraction,
+    pytest.param(np.longdouble, marks=pytest.mark.skipif(
+        np.finfo(np.longdouble).nmant <= np.finfo(float).nmant,
+        reason="requires more significand bits than binary64",
+    )),
+])
+def test_single_depth_rejects_an_exact_coordinate_above_the_only_curve(scalar):
+    depth = scalar(1) + scalar(1) / 2**54
+    curve = PressureCurve(1, (0, 1), (0, 100))
+    with pytest.raises(ValueError, match="outside"):
+        interpolate_depth((curve,), depth)
+
+
 def test_depth_grid_and_order_must_be_unambiguous():
     first = PressureCurve(1.0, (0.0, 0.1), (0.0, 1000.0))
     other = PressureCurve(3.0, (0.0, 0.2), (0.0, 2000.0))
