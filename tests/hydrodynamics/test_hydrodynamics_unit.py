@@ -148,7 +148,8 @@ class TestWaveSpectra:
     def test_jonswap_spectrum(self):
         """Test JONSWAP spectrum generation"""
         generator = WaveSpectra()
-        omega, S = generator.jonswap(hs=3.5, tp=10.0, gamma=3.3)
+        # This test checks the legacy 0.02 to 2.0 rad/s grid.
+        omega, S = generator.jonswap(hs=3.5, tp=10.0, gamma=3.3, freq_max=2.0, n_points=100)
 
         assert len(omega) == 100
         assert len(S) == 100
@@ -163,7 +164,8 @@ class TestWaveSpectra:
     def test_pierson_moskowitz_spectrum(self):
         """Test Pierson-Moskowitz spectrum"""
         generator = WaveSpectra()
-        omega, S = generator.pierson_moskowitz(hs=3.0, tp=8.0)
+        # This test checks the legacy 0.02 to 2.0 rad/s grid.
+        omega, S = generator.pierson_moskowitz(hs=3.0, tp=8.0, freq_max=2.0, n_points=100)
 
         assert len(omega) == 100
         assert np.all(S >= 0)
@@ -171,7 +173,8 @@ class TestWaveSpectra:
     def test_bretschneider_spectrum(self):
         """Test Bretschneider spectrum"""
         generator = WaveSpectra()
-        omega, S = generator.bretschneider(hs=2.5, tp=7.0)
+        # This test checks the legacy 0.02 to 2.0 rad/s grid.
+        omega, S = generator.bretschneider(hs=2.5, tp=7.0, freq_max=2.0, n_points=100)
 
         assert len(omega) == 100
         assert np.all(S >= 0)
