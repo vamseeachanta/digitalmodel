@@ -1,0 +1,227 @@
+{
+ "grid_file": "tests/asset_integrity/test_data/real_inspection/ut_grid_RJ-101-boxend_worstzone_fullres.csv",
+ "grid_sha256": "8cebda694d656eb0e799a6abd4e49ec6c0f93287cc8d48cf7d288d02fc6c8764",
+ "grid_shape": [
+  500,
+  64
+ ],
+ "grid_readings": 29037,
+ "grid_blank_cells": 2963,
+ "grid_min_mm": 15.024,
+ "grid_max_mm": 25.991,
+ "grid_mean_mm": 21.916294038640352,
+ "nominal_wt_mm": 22.224999999999998,
+ "max_loss_pct": 32.400449943757025,
+ "cells_over_10pct_loss": 48,
+ "deepest_row_col": [
+  250,
+  61
+ ],
+ "window_rows": [
+  239,
+  258
+ ],
+ "window_cols": [
+  57,
+  63
+ ],
+ "window_shape": [
+  20,
+  7
+ ],
+ "window_length_mm": 76.0,
+ "window_width_mm": 158.96949701016476,
+ "window_blank_cells_filled": 21,
+ "window_above_nominal_set_to_nominal": 8,
+ "blank_fill_changes_no_result": true,
+ "rows_over_10pct_outside_window": [
+  304,
+  311,
+  312,
+  369,
+  370,
+  398
+ ],
+ "other_rows_min_mm": 17.184,
+ "assumptions": {
+  "design_pressure_psi": 2400.0,
+  "axial_stress_psi": 10000.0,
+  "corrosion_rate_mm_per_yr": 0.253,
+  "circumferential_pitch_mm": 26.494916168360792,
+  "smts_psi": 90600.0
+ },
+ "measured": {
+  "design_pressure_psi": 2400.0,
+  "design_pressure_mpa": 16.547421808260886,
+  "t_min_mm": 15.024,
+  "pressure_wall_mm": 11.244791666666666,
+  "uncorroded_rating_psi": 4743.529411764706,
+  "uncorroded_rating_mpa": 32.70549251515093,
+  "rsf": 0.9343248808539367,
+  "flaw_length_mm": 71.99999999999987,
+  "folias_factor": 1.171858442859044,
+  "local_loss_rating_psi": 4743.529411764706,
+  "local_loss_rating_mpa": 32.70549251515093,
+  "local_loss_rating_pct_design": 197.64705882352942,
+  "life_limit_wall_mm": 11.244791666666666,
+  "life_basis": "point-minimum pressure wall",
+  "life_search_status": null,
+  "remaining_life_yr": 14.937582345191041,
+  "interval_yr": 7.4687911725955205,
+  "life_sensitivity": [
+   {
+    "rate_mm_per_yr": 0.1265,
+    "life_yr": 29.875164690382082
+   },
+   {
+    "rate_mm_per_yr": 0.253,
+    "life_yr": 14.937582345191041
+   },
+   {
+    "rate_mm_per_yr": 0.506,
+    "life_yr": 7.4687911725955205
+   }
+  ],
+  "methods": [
+   {
+    "method": "B31G",
+    "failure_psi": 6958.814725460951,
+    "failure_mpa": 47.97935106155814,
+    "allowable_psi": 5006.3415291085985,
+    "allowable_mpa": 34.517518749322406,
+    "applicability_ok": true,
+    "flags": []
+   },
+   {
+    "method": "Modified B31G",
+    "failure_psi": 7079.715876827548,
+    "failure_mpa": 48.81293537354458,
+    "allowable_psi": 5093.320774696078,
+    "allowable_mpa": 35.11721969319755,
+    "applicability_ok": true,
+    "flags": []
+   },
+   {
+    "method": "RSTRENG",
+    "failure_psi": 7082.5579253733595,
+    "failure_mpa": 48.83253061358088,
+    "allowable_psi": 5095.3654139376695,
+    "allowable_mpa": 35.131316988187685,
+    "applicability_ok": true,
+    "flags": []
+   },
+   {
+    "method": "RSTRENG-2D",
+    "failure_psi": 7082.5579253733595,
+    "failure_mpa": 48.83253061358088,
+    "allowable_psi": 5095.3654139376695,
+    "allowable_mpa": 35.131316988187685,
+    "applicability_ok": true,
+    "flags": []
+   },
+   {
+    "method": "DNV-RP-F101",
+    "failure_psi": 7538.791009172152,
+    "failure_mpa": 51.97814781379015,
+    "allowable_psi": 4885.136573943555,
+    "allowable_mpa": 33.681839783336024,
+    "applicability_ok": true,
+    "flags": []
+   }
+  ],
+  "applicability": {
+   "ok": true,
+   "flags": [],
+   "notes": []
+  },
+  "decision": "accept",
+  "sufficiency_status": "SUFFICIENT"
+ },
+ "synthetic_section_a": {
+  "design_pressure_psi": 800.0,
+  "design_pressure_mpa": 5.5158072694202955,
+  "t_min_mm": 5.08,
+  "pressure_wall_mm": 6.512820512820512,
+  "uncorroded_rating_psi": 1560.0000000000002,
+  "uncorroded_rating_mpa": 10.755824175369577,
+  "rsf": 0.5896060058646886,
+  "flaw_length_mm": 152.39999999999998,
+  "folias_factor": 1.8657826892428444,
+  "local_loss_rating_psi": 1021.9837434987936,
+  "local_loss_rating_mpa": 7.046331702025015,
+  "local_loss_rating_pct_design": 127.7479679373492,
+  "life_limit_wall_mm": 3.6139144688721974,
+  "life_basis": "fixed-geometry reduced local-loss rating; lambda-range applicability only",
+  "life_search_status": "CROSSING",
+  "remaining_life_yr": 11.54398056006144,
+  "interval_yr": 5.77199028003072,
+  "life_sensitivity": [
+   {
+    "rate_mm_per_yr": 0.0635,
+    "life_yr": 23.08796112012288
+   },
+   {
+    "rate_mm_per_yr": 0.127,
+    "life_yr": 11.54398056006144
+   },
+   {
+    "rate_mm_per_yr": 0.254,
+    "life_yr": 5.77199028003072
+   }
+  ],
+  "methods": [
+   {
+    "method": "B31G",
+    "failure_psi": 1731.8594016044249,
+    "failure_mpa": 11.940753346229462,
+    "allowable_psi": 1245.9420155427517,
+    "allowable_mpa": 8.590470033258606,
+    "applicability_ok": true,
+    "flags": []
+   },
+   {
+    "method": "Modified B31G",
+    "failure_psi": 1681.873140460143,
+    "failure_mpa": 11.596110117990998,
+    "allowable_psi": 1209.9806765900312,
+    "allowable_mpa": 8.342525264741727,
+    "applicability_ok": true,
+    "flags": []
+   },
+   {
+    "method": "RSTRENG",
+    "failure_psi": 1969.1511688278003,
+    "failure_mpa": 13.576822914509815,
+    "allowable_psi": 1416.6555171423024,
+    "allowable_mpa": 9.767498499647349,
+    "applicability_ok": true,
+    "flags": []
+   },
+   {
+    "method": "RSTRENG-2D",
+    "failure_psi": 1969.1511688278003,
+    "failure_mpa": 13.576822914509815,
+    "allowable_psi": 1416.6555171423024,
+    "allowable_mpa": 9.767498499647349,
+    "applicability_ok": true,
+    "flags": []
+   },
+   {
+    "method": "DNV-RP-F101",
+    "failure_psi": 1797.3735821368452,
+    "failure_mpa": 12.39245783776801,
+    "allowable_psi": 1164.6980812246757,
+    "allowable_mpa": 8.03031267887367,
+    "applicability_ok": true,
+    "flags": []
+   }
+  ],
+  "applicability": {
+   "ok": true,
+   "flags": [],
+   "notes": []
+  },
+  "decision": "escalate",
+  "sufficiency_status": "ESCALATE"
+ }
+}
