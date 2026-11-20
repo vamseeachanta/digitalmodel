@@ -368,5 +368,9 @@ def test_conversion_requires_matching_source_metadata(tmp_path, monkeypatch, rev
             f'---\ncode_id: NIST-SP-811\npublisher: NIST\nrevision: {revision}\n---\n',
             encoding='utf-8', newline='\n',
         )
-    with pytest.raises(CitationResolutionError, match='NIST-SP-811'):
+    with pytest.raises(CitationResolutionError, match='NIST-SP-811') as error:
         compute_tension_balance(TensionInput(8000, 100, 10))
+    if revision is None:
+        assert error.value.reason == 'page_missing'
+    else:
+        assert error.value.reason.startswith('frontmatter_mismatch:revision')
