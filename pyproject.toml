@@ -306,6 +306,7 @@ digitalmodel = [
     "py.typed",
     "process_piping/basis/wikis/*.md",
     "riser_study/*.schema.json",
+    "drilling_riser/wikis/engineering-standards/wiki/standards/nist-sp-811.md",
     "base_configs/**/*.yml",
     "base_configs/**/*.deck",
     "hydrodynamics/aqwa/docs/damping-basis.md",
