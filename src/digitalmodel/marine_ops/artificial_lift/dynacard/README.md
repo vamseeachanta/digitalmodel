@@ -382,3 +382,7 @@ card provided; callers selecting the diagnostic path use
 `classify_with_context`. Older stored results and comparison solvers without
 a diagnostic card retain their explicit downhole-card path. Default report
 disclosures retain their existing behavior and do not qualify field accuracy.
+
+## Dynacard article and reusable prompts
+
+The article "Dynamometer card analysis: from the surface card to the pump card and a diagnosis" applies this module to a public example well and to ten pump conditions of the public diagnostic plate. Its detail pages, one per appendix, are listed in [the article folder](../../../../../docs/domains/artificial_lift/dynacard-article/README.md). The [reusable prompts](../../../../../docs/domains/artificial_lift/dynacard-article/reusable-prompts.md) rebuild the analysis with an assistant and run it on a card of your own.

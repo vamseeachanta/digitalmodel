@@ -13,6 +13,9 @@ plate shapes do not establish field performance.
 | Revision | Date | What changed and why |
 |---|---|---|
 | Initial | 2026-10-19 | Added overall scores, an offline command and a worked example to make the missing field evidence explicit. |
+| 2 | 2026-11-12 | Linked the reproducible plate consistency score and stated its training dependence. |
+
+Table 1. Revision record.
 
 ## Evidence available
 
@@ -58,6 +61,8 @@ The input uses the existing labelled-set schema:
 | `cards` | Ordered paired `position` and `load` samples, external `label`, and `provenance` |
 | `provenance` | `source`, `labeller`, ISO `date`, `licence`, `kind: real`, and `acquisition` |
 | Digitised graphics | `acquisition: digitised_graphic` also requires `publication`, `figure_or_page`, and `digitising_method` |
+
+Table 2. Required labelled-set fields and acquisition evidence.
 
 Recorded cards use `acquisition: recorded`. A label is evidence only when its
 source supports that diagnosis; the loader cannot authenticate declarations.
@@ -116,6 +121,8 @@ uses invented labels and predictions, not field observations:
 | Third | GAS_LOCK | GAS_LOCK | yes |
 | Fourth | GAS_LOCK | NORMAL | no |
 
+Table 3. Invented four-card example; no field observations are represented.
+
 There are two correct of four: **50.0 %** accuracy. Choose `z = 2` as an
 arithmetic input, with coverage computed from the normal CDF. Then `d = 2`,
 `centre = 1/2`, and `radius = sqrt(1/8)`. The interval is **14.6–85.4 %**.
@@ -129,6 +136,17 @@ PYTHONPATH=src python examples/domains/artificial_lift/dynacard_benchmark_demo.p
 Independent test docstrings derive the expected values from these counts and
 the published formula. Transport fixtures that simulate a recorded input are
 explicitly invented and are not a committed field corpus.
+
+## Public plate classifier consistency
+
+The [recorded plate classifier score](plate-classifier-score.md) reports the
+separate shape-only model and the shipped model at four ASSUMED physical scales.
+The shape-only result is 5/8 literal labels and 6/10 including two ASSUMED
+mechanism crosswalks. Wilson 95 % intervals are 30.6–86.3 % and 31.3–83.2 %,
+respectively. The plate constrains the synthetic generators and is therefore
+not independent of training. Pump-card interpretation and physical scales are
+ASSUMED; this consistency check does not establish field accuracy. Independently
+labelled, dimensioned field-card accuracy remains `NOT_EVALUATED`.
 
 ## Limits and way forward
 
