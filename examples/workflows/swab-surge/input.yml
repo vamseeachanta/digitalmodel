@@ -1,4 +1,5 @@
 basename: swab_surge
+# Synthetic screening example. Section, trip speed and pressure limits are illustrative.
 
 # Swab/surge tripping-pressure screen (issue #1036). Closed-form, license-free:
 #   uv run python -m digitalmodel examples/workflows/swab-surge/input.yml

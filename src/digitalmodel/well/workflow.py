@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -134,42 +135,68 @@ def run_swab_surge(cfg: dict[str, Any]) -> dict[str, Any]:
     section = params["section"]
     trip = params.get("trip", {})
 
+    numeric_section = {
+        key: float(section[key])
+        for key in (
+            "pipe_od", "pipe_id", "hole_diameter", "mud_weight", "tvd",
+            "plastic_viscosity", "yield_point",
+        )
+    }
+    numeric_section["clinging_constant"] = float(section.get("clinging_constant", 0.45))
+    trip_speed = float(trip.get("trip_speed_ft_min", 60.0))
+    if not all(math.isfinite(value) for value in (*numeric_section.values(), trip_speed)):
+        raise ValueError("Swab/surge section and trip inputs must be finite.")
+
     calc = SwabSurge(
-        pipe_od=float(section["pipe_od"]),
-        pipe_id=float(section["pipe_id"]),
-        hole_diameter=float(section["hole_diameter"]),
-        mud_weight=float(section["mud_weight"]),
-        tvd=float(section["tvd"]),
-        plastic_viscosity=float(section["plastic_viscosity"]),
-        yield_point=float(section["yield_point"]),
-        clinging_constant=float(section.get("clinging_constant", 0.45)),
+        **numeric_section,
         pipe_config=section.get("pipe_config", "closed"),
     )
 
-    trip_speed = float(trip.get("trip_speed_ft_min", 60.0))
     evaluated = calc.evaluate(trip_speed).as_dict()
+    swab = evaluated["swab_emw_ppg"]
+    surge = evaluated["surge_emw_ppg"]
+    if not all(math.isfinite(value) for value in (trip_speed, swab, surge)):
+        raise ValueError("Swab/surge evaluation requires finite trip speed and mud weights.")
 
     result: dict[str, Any] = {"at_trip_speed": evaluated}
     window = params.get("window")
-    if window is not None:
-        limit = calc.max_safe_trip_speed(
-            pore_pressure_emw_ppg=float(window["pore_pressure_emw_ppg"]),
-            fracture_emw_ppg=float(window["fracture_emw_ppg"]),
-        )
+    if (
+        window is None
+        or window.get("pore_pressure_emw_ppg") is None
+        or window.get("fracture_emw_ppg") is None
+    ):
+        status = "warning"
+        reason = "Pressure window not evaluated because both limits are required."
+    else:
+        pore = float(window["pore_pressure_emw_ppg"])
+        fracture = float(window["fracture_emw_ppg"])
+        if not all(math.isfinite(value) for value in (pore, fracture)):
+            raise ValueError("Pressure-window comparisons require finite mud weights.")
+        if pore >= fracture:
+            raise ValueError("The pore-pressure limit must be below the fracture limit.")
+
+        limit = calc.max_safe_trip_speed(pore, fracture)
         result["safe_trip_speed"] = limit.as_dict()
-        result["kick_at_trip_speed"] = (
-            evaluated["swab_emw_ppg"] < float(window["pore_pressure_emw_ppg"])
-        )
-        result["loss_at_trip_speed"] = (
-            evaluated["surge_emw_ppg"] > float(window["fracture_emw_ppg"])
-        )
+        result["kick_at_trip_speed"] = swab < pore
+        result["loss_at_trip_speed"] = surge > fracture
+        violations = []
+        if result["kick_at_trip_speed"]:
+            violations.append("Swab mud weight is below the pore-pressure limit (kick risk).")
+        if result["loss_at_trip_speed"]:
+            violations.append("Surge mud weight is above the fracture limit (loss risk).")
+        status = "fail" if violations else "pass"
+        reason = " ".join(violations) or "Both mud weights are within the pressure window."
 
     summary = {
         "calculation": "swab_surge",
+        "screening_status": status,
+        "screening_reason": reason,
         "section": dict(section),
         "trip": dict(trip),
         "result": result,
     }
+    # Validate echoed inputs too, before the writer creates the output directory.
+    json.dumps(summary, allow_nan=False)
     summary["summary_json"] = str(
         _write_summary(
             cfg,
@@ -179,6 +206,8 @@ def run_swab_surge(cfg: dict[str, Any]) -> dict[str, Any]:
             "swab_surge_summary.json",
         )
     )
+    cfg["screening_status"] = status
+    cfg["screening_reason"] = reason
     cfg["swab_surge"] = {**params, "result": result, "summary": summary}
     return cfg
 

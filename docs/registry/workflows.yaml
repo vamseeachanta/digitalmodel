@@ -1422,3 +1422,11 @@ workflows:
       - examples/workflows/flange-analysis/results/flange_analysis/flange_analysis_report.html
     test: tests/workflows/test_durable_workflows.py::test_workflow_registry[flange-analysis]
     runtime: offline
+  - id: swab-surge
+    basename: swab_surge
+    title: Swab and surge pressure-window screening at the specified trip speed
+    input: examples/workflows/swab-surge/input.yml
+    outputs:
+      - examples/workflows/swab-surge/results/swab_surge/swab_surge_summary.json
+    test: tests/workflows/test_durable_workflows.py::test_workflow_registry[swab-surge]
+    runtime: offline
