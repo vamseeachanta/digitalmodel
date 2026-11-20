@@ -392,6 +392,7 @@ def test_cli_uses_utf8_even_with_an_ascii_locale(tmp_path):
 def test_ci_subsea_command_collects_the_report_suite():
     """Read the effective workflow command and retain every direct gate."""
     document = load_gates(ROOT / ".claude/quality-gates.yaml")
+    assert "tests-subsea" in document["gates"]
     for name, gate in document["gates"].items():
         if "command" not in gate:
             continue
