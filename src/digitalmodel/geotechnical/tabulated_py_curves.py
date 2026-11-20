@@ -29,7 +29,8 @@ inferred. All inputs are finite, nonnegative magnitudes except signed spring
 points and sensitivity >= -1. Stored scalars retain supplied ratios as built-in
 integers, floats or Fractions. Validation requires a finite binary64 conversion;
 tiny nonzero ratios remain nonzero, so they cannot supply an implicit origin.
-Interpolation retains flat ordinates and nonzero results that would round to zero.
+Interpolation retains flat ordinates and exact results when rounding would escape
+the stored endpoint bounds or turn a nonzero ordinate into zero.
 Computed integral results remain integers; other non-integral outputs round once
 to float and can underflow. Quantization uses the exact input ratio; converting
 units before quantization can change the selected quantum at a boundary.
@@ -154,8 +155,12 @@ def _linear(x: _Scalar, axis: tuple[_Scalar, ...], values: tuple[_Scalar, ...]) 
     weighted_sum = from_high * Fraction(values[low]) + from_low * Fraction(values[high])
     exact = weighted_sum / (from_low + from_high)
     result = _rounded_result(exact, "interpolated ordinate")
-    # A positive ordinate must not become an inferred zero-pressure origin.
-    return exact if exact and result == 0 else result
+    # Preserve the convex bounds of the supplied ordinates, including rational
+    # endpoints that lie between floats. Also retain a nonzero origin ordinate.
+    lower, upper = sorted((values[low], values[high]))
+    if result < lower or result > upper or (exact and result == 0):
+        return exact
+    return result
 
 
 def interpolate_force(curve: ForceCurve, displacement_m: _Scalar) -> _Scalar:
@@ -163,8 +168,8 @@ def interpolate_force(curve: ForceCurve, displacement_m: _Scalar) -> _Scalar:
 
     Extrapolation raises ValueError; force reduction is retained. Knots and flat
     intervals return the stored ratio. Computed integral results remain integers;
-    nonzero results that would round to zero retain their ratio, others round
-    once to float.
+    results that would round outside the stored endpoint bounds or from nonzero
+    to zero retain their ratio. Other results round once to float.
     """
     return _linear(displacement_m, curve.displacement_m, curve.force_n)
 
@@ -318,8 +323,8 @@ def interpolate_depth(
     Out-of-range depths raise ValueError, including above/below a single curve.
     The returned depth label retains the supplied ratio, as do stored ordinates.
     Flat intervals retain the stored pressure ratio. Integral results remain
-    integers; nonzero results that would round to zero retain their ratio,
-    others round once to float.
+    integers; results that would round outside the stored endpoint bounds or
+    from nonzero to zero retain their ratio. Other results round once to float.
     """
     if not curves:
         raise ValueError("at least one pressure curve is required")

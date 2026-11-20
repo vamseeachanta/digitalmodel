@@ -314,3 +314,43 @@ def test_identical_pressure_tables_retain_the_spring_quantum(depth_m):
     assert round_force_up(points[-1].force_n, 1) == 7
     assert points[-1].force_n == 7
     assert result.pressure_pa[-1] == pressure_pa
+
+
+@pytest.mark.parametrize("falling", [False, True])
+def test_nonflat_force_interpolation_stays_within_exact_endpoints(falling):
+    from fractions import Fraction
+    from math import nextafter
+    from digitalmodel.geotechnical.tabulated_py_curves import round_force_up
+
+    lower, upper = Fraction(69, 1000), Fraction(7, 100)
+    ordinates = (upper, lower) if falling else (lower, upper)
+    curve = ForceCurve(0, (0, 1), ordinates)
+    query = nextafter(0.0, 1.0) if falling else nextafter(1.0, 0.0)
+    result = interpolate_force(curve, query)
+    # Every exact convex combination lies in [69/1000, 7/100] N. All positive
+    # values in this interval require exactly one quantum of 7/100 N.
+    assert lower <= result <= upper
+    for force_n in (*ordinates, result):
+        assert round_force_up(force_n, upper) == float(upper)
+
+
+@pytest.mark.parametrize("falling", [False, True])
+def test_nonflat_depth_interpolation_retains_the_endpoint_spring_quantum(falling):
+    from fractions import Fraction
+    from math import nextafter
+    from digitalmodel.geotechnical.tabulated_py_curves import (
+        PressureCurve, SpringGeometry, interpolate_depth, round_force_up,
+        symmetric_spring_points,
+    )
+
+    lower, upper = Fraction(69, 1000), Fraction(7, 100)
+    ordinates = (upper, lower) if falling else (lower, upper)
+    curves = tuple(PressureCurve(z, (0, 1), (0, p)) for z, p in enumerate(ordinates))
+    query = nextafter(0.0, 1.0) if falling else nextafter(1.0, 0.0)
+    result = interpolate_depth(curves, query)
+    # The bounded pressure times 100 square metres lies in [6.9, 7] N,
+    # requiring seven 1 N quanta at both depths and throughout the interval.
+    assert lower <= result.pressure_pa[-1] <= upper
+    for curve in (*curves, result):
+        points = symmetric_spring_points(curve, SpringGeometry(10, 10))
+        assert round_force_up(points[-1].force_n, 1) == 7
