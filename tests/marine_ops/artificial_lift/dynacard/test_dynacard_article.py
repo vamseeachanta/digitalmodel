@@ -172,7 +172,9 @@ def test_examples_section_title_and_joined_view(page):
     body = _body(page)
     headings = [_visible(h) for h in re.findall(r"<h2[^>]*>(.*?)</h2>", body, flags=re.S)]
     assert "Ten worked examples" not in headings
-    assert any(h.startswith("Ten pump conditions") for h in headings)
+    # Maintainer review of revision 4.3 (20 Nov 2026), notes 4 and 6: the two section headings.
+    assert "Pump condition diagnostics from surface cards" in headings
+    assert "Run the analysis on measured cards" in headings
     rows = re.findall(r'<tr[^>]+data-example="(\d+)"', body)
     assert rows == [str(i) for i in range(1, 11)]
     panels = re.findall(r'<section class="example-panel"[^>]+id="example-(\d+)"', body)
@@ -231,7 +233,12 @@ def test_closing_invitation_ends_the_body(page):
 
 def test_body_is_short_and_page_shorter_than_revision_2(page):
     # Readable part: the body prose without its figures and references, 250 to 800 words.
-    prose = re.sub(r"<figure.*?</figure>", " ", _body(page), flags=re.S)
+    # The well-life background (maintainer review of revision 4.3, note 2: about 150 to 200 words plus the
+    # schematic) is counted on its own, so the bound below still holds the rest of the readable part.
+    background = re.search(r'<section id="well-life".*?</section>', _body(page), flags=re.S).group(0)
+    background_words = len(_visible(re.sub(r"<figure.*?</figure>", " ", background, flags=re.S)).split())
+    assert 140 <= background_words <= 210, background_words
+    prose = re.sub(r"<figure.*?</figure>", " ", _body(page).replace(background, " "), flags=re.S)
     prose = prose[:prose.index('id="references"')]
     words = len(_visible(prose).split())
     # Revision 4.1 adds the review-gate clauses (shutdown card, tagging-up caveat, terms at first use):
@@ -406,3 +413,44 @@ def test_plate_reference_by_author_year_and_title(page):
 def test_close_split_reading_is_called_uncertain(page):
     panel = re.search(r'id="example-3".*?</section>', page, flags=re.S).group(0)
     assert "The two highest classes are close" in _visible(panel)
+
+
+def test_objective_row_is_the_maintainer_wording(page):
+    block = re.search(r'<figure id="objective".*?</figure>', page, flags=re.S).group(0)
+    row = re.search(r'<th scope="row">Objective</th><td>(.*?)</td>', block).group(1)
+    assert row == "Screen rod pump from the surface card measured at the top of the well."
+
+
+def test_well_life_background_and_schematic(page):
+    body = _body(page)
+    section = re.search(r'<section id="well-life".*?</section>', body, flags=re.S).group(0)
+    assert body.index("</div>", body.index('<div class="opening">')) < body.index(section)
+    assert body.index(section) < body.index("Based on public data, the surface card of an example well")
+    svg = re.search(r"<svg.*?</svg>", section, flags=re.S).group(0)
+    for method in ("Rod pump", "Electric submersible pump", "Gas lift", "Progressing cavity pump",
+                   "Plunger lift", "Hydraulic pump", "This article"):
+        assert method in svg, method
+    assert "<image" not in svg and "data:" not in svg
+    caption = _visible(re.search(r"<figcaption>(.*?)</figcaption>", section, flags=re.S).group(1))
+    assert not re.search(r"\d", caption), "the schematic carries no data"
+    assert "The rest of the article works with the rod pump" in _visible(section)
+
+
+def test_every_panel_shows_the_ideal_cards_beside_the_condition(page):
+    ideal = json.loads((FOLDER / "ideal-card.json").read_text(encoding="utf-8"))
+    for i in range(1, 11):
+        panel = re.search(rf'id="example-{i}".*?</section>', page, flags=re.S).group(0)
+        assert panel.count("<svg") == 2
+        assert "Ideal pump, for comparison" in panel and "<title>Ideal pump card</title>" in panel
+    notes = _visible(re.search(r'<figure id="figure-2".*?</figure>', page, flags=re.S).group(0))
+    assert "textbook ideal pump card" in notes
+    assert f"fillage of {ideal['analysis']['fillage_pct']:.0f} %" in notes
+    assert f"fluid load of {ideal['analysis']['fluid_load_lbf']:,.0f} lbf" in notes
+
+
+def test_ideal_card_is_the_model_output(builder):
+    pytest.importorskip("xlrd")
+    pytest.importorskip("digitalmodel.marine_ops.artificial_lift.dynacard.worked_examples")
+    saved = json.loads((FOLDER / "ideal-card.json").read_text(encoding="utf-8"))
+    fresh = json.loads(json.dumps(builder.refresh_ideal(ROOT)))
+    assert fresh == saved

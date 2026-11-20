@@ -6,7 +6,11 @@ Inputs, all saved in this repository:
 - docs/domains/artificial_lift/dynacard-examples/results.json: the ten worked examples;
 - docs/apps/dynacard/reproduction.json: browser application against the module;
 - docs/domains/artificial_lift/dynacard-article/article-inputs.json: the example well's
-  cards, inputs and shape reading, written by ``--refresh`` from the report analysis.
+  cards, inputs and shape reading, written by ``--refresh`` from the report analysis;
+- docs/domains/artificial_lift/dynacard-article/ideal-card.json: the textbook ideal pump card
+  and its surface card on the worked-example well, written by ``--ideal`` (needs the solver).
+
+The well-life schematic is drawn by well_life_schematic.py beside this file.
 
 Outputs: the article page, the Figure 1 data, and the Markdown detail pages that the
 article's appendices summarise and link (README, example well, numerical methods, ten
@@ -17,13 +21,14 @@ JavaScript every example panel is shown; the inline script adds the hover view, 
 DEFAULT_EXAMPLE and marks the selected row.
 
 Usage (from the repository root):
-    PYTHONPATH=src python examples/domains/artificial_lift/build_dynacard_article.py [--refresh] [--check]
+    PYTHONPATH=src python examples/domains/artificial_lift/build_dynacard_article.py [--refresh] [--ideal] [--check]
 """
 from __future__ import annotations
 
 import argparse
 import csv
 import html
+import importlib.util
 import io
 import json
 import math
@@ -34,6 +39,7 @@ ROOT = Path(__file__).resolve().parents[3]
 FOLDER = Path("docs/domains/artificial_lift/dynacard-article")
 ARTICLE = FOLDER / "dynacard-article.html"
 INPUTS = FOLDER / "article-inputs.json"
+IDEAL = FOLDER / "ideal-card.json"
 CARDS_CSV = FOLDER / "figure-1-cards.csv"
 REPORT = Path("examples/report-evals/dynacard-pump-card/results.json")
 EXAMPLES = Path("docs/domains/artificial_lift/dynacard-examples/results.json")
@@ -71,9 +77,9 @@ DEFAULT_EXAMPLE = 3
 # Two highest class probabilities closer than this are reported as an uncertain reading.
 CLOSE_SPLIT = 0.10
 
-REVISION = "Revision 4.3, 19 Nov 2026"
-# The detail pages name the article revision they were published with; r4.2 and r4.3 change only the
-# article opening, so the pinned pages (DETAIL_COMMIT) keep their revision 4.1 wording.
+REVISION = "Revision 4.4, 20 Nov 2026"
+# The detail pages name the article revision they were published with; r4.2 to r4.4 change only the
+# article page, so the pinned pages (DETAIL_COMMIT) keep their revision 4.1 wording.
 REVISION_SHORT = "revision 4.1 of 18 Nov 2026"
 CLOSING = ("If you have run your own analysis, see a way to improve this one, or have an idea "
            "for a future issue, write to support@aceengineer.com. We read every reply and "
@@ -130,6 +136,70 @@ def refresh_inputs(root: Path) -> dict:
                             for h in result["shape_hypothesis"]["top_three"]],
         "plate_score": result["shape_hypothesis"]["plate_score"],
     }
+
+
+IDEAL_BASIS = (
+    "Textbook ideal pump card: a full pump with no leakage, the valves opening and closing at the ends of "
+    "the stroke, so the plunger carries the full fluid load on the upstroke and none on the downstroke. It is "
+    "drawn as a rectangle, sampled and scaled exactly as the ten plate shapes (same stroke, load range and "
+    "sampling), on the same example well, then lifted to a surface card with the same forward rod model and "
+    "analysed like the ten examples."
+)
+
+
+def refresh_ideal(root: Path) -> dict:
+    """Run the textbook ideal pump card through the worked-example model (needs the solver)."""
+    from types import SimpleNamespace  # noqa: PLC0415
+
+    from digitalmodel.marine_ops.artificial_lift.dynacard import worked_examples as we  # noqa: PLC0415
+    from digitalmodel.marine_ops.artificial_lift.dynacard.benchmark.plate_scoring import (  # noqa: PLC0415
+        prepare_plate_card)
+    from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (  # noqa: PLC0415
+        surface_card_from_pump_card)
+    from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import (  # noqa: PLC0415
+        MODEL_PATH, SHAPE_MODEL_PATH, read_model_bytes)
+    from digitalmodel.marine_ops.artificial_lift.dynacard.models import DynacardAnalysisContext  # noqa: PLC0415
+    from digitalmodel.marine_ops.artificial_lift.dynacard.solver import DynacardWorkflow  # noqa: PLC0415
+
+    stroke, scale = 40.0, we.fluid_load_scale_lbf()  # the worked examples' stroke and load range
+    rectangle = SimpleNamespace(ordinate="load", position=(0.0, 0.0, 1.0, 1.0), values=(0.0, 1.0, 1.0, 0.0))
+    pump = prepare_plate_card(rectangle, samples=100, stroke_in=stroke, load_range_lbf=scale)
+    ctx = DynacardAnalysisContext(**we.example_well(), surface_card=pump)
+    ctx.surface_card = we.published_surface_card(surface_card_from_pump_card(pump, ctx))
+    models = {key: json.loads(read_model_bytes(path))
+              for key, path in (("shipped", MODEL_PATH), ("shape_only", SHAPE_MODEL_PATH))}
+    workflow = DynacardWorkflow(ctx)
+    workflow.diagnostics = we._PinnedDiagnostics(models["shipped"])
+    result = workflow.run_full_analysis()
+    shape = we._shape_diagnosis(result.downhole_card, models["shape_only"])
+    source_shape = we._shape_diagnosis(pump, models["shape_only"])
+
+    def card(c):
+        return {"position": [round(float(v), 4) for v in c.position],
+                "load": [round(float(v), 2) for v in c.load]}
+
+    return {
+        "source": "examples/domains/artificial_lift/build_dynacard_article.py --ideal",
+        "basis": IDEAL_BASIS,
+        "stroke_in": stroke, "load_range_lbf": round(scale, 6),
+        "pump_card": card(pump), "surface_card": card(ctx.surface_card),
+        "computed_pump_card": card(result.downhole_card),
+        "analysis": {"fillage_pct": round(result.fillage.fillage, 6),
+                     "fluid_load_lbf": round(result.fluid_load.fluid_load, 6)},
+        "shape_only": {"classification": shape["classification"], "confidence": round(shape["confidence"], 6)},
+        "source_shape_only": {"classification": source_shape["classification"],
+                              "confidence": round(source_shape["confidence"], 6)},
+        "round_trip_load_nrmse_pct": round(we._round_trip(result.downhole_card, pump)["load_nrmse_pct"], 6),
+    }
+
+
+def well_life_svg() -> str:
+    """The shared well-life schematic, rod pump marked."""
+    path = Path(__file__).with_name("well_life_schematic.py")
+    spec = importlib.util.spec_from_file_location("well_life_schematic", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.well_life_svg("Rod pump")
 
 
 def figure_csv(inputs: dict) -> str:
@@ -231,10 +301,14 @@ def fmt_tick(v: float) -> str:
     return f"{v:,.0f}" if abs(v - round(v)) < 1e-9 else f"{v:g}"
 
 
-def loop_svg(series, *, width, height, label, x_title, y_title) -> str:
-    """Closed load-position loops on one linear, to-scale pair of axes."""
-    xs = [x for s in series for x in s["x"]]
-    ys = [y for s in series for y in s["y"]]
+def loop_svg(series, *, width, height, label, x_title, y_title, extent=None) -> str:
+    """Closed load-position loops on one linear, to-scale pair of axes.
+
+    ``extent``: further series whose points only widen the axes, so two charts can share one scale.
+    """
+    span = list(series) + list(extent or [])
+    xs = [x for s in span for x in s["x"]]
+    ys = [y for s in span for y in s["y"]]
     xt = ticks(min(0.0, min(xs)), max(xs), 5)
     y_low = min(0.0, min(ys))
     if -y_low < 0.03 * (max(ys) - y_low):  # a few lbf below zero does not need a tick below it
@@ -282,7 +356,7 @@ def load_sources(root: Path) -> dict:
     def read(path):
         return json.loads((root / path).read_text(encoding="utf-8"))
     return {"report": read(REPORT), "examples": read(EXAMPLES),
-            "reproduction": read(REPRODUCTION), "inputs": read(INPUTS)}
+            "reproduction": read(REPRODUCTION), "inputs": read(INPUTS), "ideal": read(IDEAL)}
 
 
 def facts(src: dict) -> dict:
@@ -319,7 +393,7 @@ def facts(src: dict) -> dict:
                               for r in records),
         "rod_length": sum(r["length_ft"] for r in rods),
         "unused_capacity": report["gross_displacement_bbl_day"] - report["pump_displacement_bbl_day"],
-        "basis": src["examples"]["basis"], "inputs": inputs,
+        "basis": src["examples"]["basis"], "inputs": inputs, "ideal": src["ideal"],
     }
 
 
@@ -350,19 +424,26 @@ def figure_one(f) -> str:
             + '</figure>')
 
 
-def example_panel(rec) -> str:
+def example_panel(rec, ideal) -> str:
     a = rec["analysis"]
     shape = rec["diagnosis"]["shape_only"]
     probs = sorted(shape["probabilities"].items(), key=lambda kv: -kv[1])[:3]
     sx, sy = rec["surface_card"]["position"], rec["surface_card"]["load"]
     cx, cy = shifted(rec["computed_pump_card"], "position", "load")
     gx, gy = shifted(rec["source_pump_card"], "position", "load")
-    svg = loop_svg(
-        [{"x": sx, "y": sy, "cls": "card-surface", "name": "Surface card"},
-         {"x": gx, "y": gy, "cls": "card-plate", "name": "Plate shape"},
-         {"x": cx, "y": cy, "cls": "card-pump", "name": "Pump card, computed"}],
-        width=420, height=280, label=f"Example {rec['index']}, {rec['english_gloss']}: cards",
-        x_title="Position (in)", y_title="Load (lbf)")
+    ix, iy = ideal["surface_card"]["position"], ideal["surface_card"]["load"]
+    jx, jy = shifted(ideal["pump_card"], "position", "load")
+    actual = [{"x": sx, "y": sy, "cls": "card-surface", "name": "Surface card"},
+              {"x": gx, "y": gy, "cls": "card-plate", "name": "Plate shape"},
+              {"x": cx, "y": cy, "cls": "card-pump", "name": "Pump card, computed"}]
+    ideal_series = [{"x": ix, "y": iy, "cls": "card-surface", "name": "Ideal surface card"},
+                    {"x": jx, "y": jy, "cls": "card-pump", "name": "Ideal pump card"}]
+    svg_ideal = loop_svg(ideal_series, width=420, height=230, extent=actual,
+                         label=f"Example {rec['index']}: ideal surface and pump cards, same well and scale",
+                         x_title="Position (in)", y_title="Load (lbf)")
+    svg = loop_svg(actual, width=420, height=230, extent=ideal_series,
+                   label=f"Example {rec['index']}, {rec['english_gloss']}: cards",
+                   x_title="Position (in)", y_title="Load (lbf)")
     name = PLAIN[shape["classification"]]
     agrees = shape["classification"] == rec["crosswalk_mode"]
     reading = (f"The shape model reads {name} ({pct_score(shape['confidence'])}), which matches the plate label."
@@ -380,9 +461,11 @@ def example_panel(rec) -> str:
     return (f'<section class="example-panel" id="example-{rec["index"]}">'
             f'<h3>Example {rec["index"]}: {esc(rec["english_gloss"])}</h3>'
             f'<p class="select-note">Example {rec["index"]} is selected in the table. '
-            f'Select another row to show its cards and reading.</p>{svg}'
+            f'Select another row to show its cards and reading.</p>'
+            f'<p class="chart-label">Ideal pump, for comparison</p>{svg_ideal}'
+            f'<p class="chart-label">{esc(rec["english_gloss"])}</p>{svg}'
             '<div class="legend small"><span class="key k-surface"></span>Surface card'
-            '<span class="key k-plate"></span>Plate shape<span class="key k-pump"></span>Pump card, computed</div>'
+            '<span class="key k-pump"></span>Pump card<span class="key k-plate"></span>Plate shape</div>'
             f'<div class="probs" aria-label="Shape model, three highest classes">{bars}</div><ul>'
             f'<li>Round trip through the same rod model: {rec["round_trip"]["load_nrmse_pct"]:.1f} % (root mean square) of the load range.</li>'
             f'<li>Fillage reads {a["fillage_pct"]:.1f} % and fluid load {a["fluid_load_lbf"]:,.0f} lbf.</li>'
@@ -404,20 +487,30 @@ def examples_view(f) -> str:
     table = ('<div class="table-wrap"><table class="examples"><thead><tr><th>No.</th><th>Condition (plate label)</th>'
              '<th>Model reading</th><th>Match</th><th>Fillage (%)</th><th>Fluid load (lbf)</th>'
              '</tr></thead><tbody>' + "".join(rows) + '</tbody></table></div>')
-    panels = "".join(example_panel(rec) for rec in f["records"])
+    ideal = f["ideal"]
+    panels = "".join(example_panel(rec, ideal) for rec in f["records"])
     readme = blob(APP_COMMIT, "docs/domains/artificial_lift/dynacard-examples/README.md")
     default = next(r for r in f["records"] if r["index"] == DEFAULT_EXAMPLE)
     notes = [
         (f'Example {DEFAULT_EXAMPLE}, {esc(default["english_gloss"].lower())}, is selected when the page opens. '
          'Pointing at a row also selects it; the arrow keys move between rows.', True),
-        ('Each panel shows the surface card (blue), the plate shape (grey) and the computed pump card '
-         "(orange), with the shape model's three highest classes.", False),
+        ('Each panel shows the ideal cards above the cards of the selected condition: the surface card (blue), '
+         "the plate shape (grey) and the computed pump card (orange), with the shape model's three highest "
+         'classes. Both charts in a panel share one scale.', False),
+        ('Ideal cards: a textbook ideal pump card, a full pump with no leakage whose valves open and close at the '
+         'ends of the stroke, is drawn as a rectangle, scaled to the same stroke and load as the plate shapes and '
+         'lifted to its surface card with the same rod model. It is the same for all ten conditions, because all '
+         'ten use the same well, stroke and load.', False),
+        (f'Run through the same analysis, the ideal card reads a fillage of {ideal["analysis"]["fillage_pct"]:.0f} % '
+         f'and a fluid load of {ideal["analysis"]["fluid_load_lbf"]:,.0f} lbf, and the shape model reads it as '
+         f'{PLAIN[ideal["shape_only"]["classification"]]} ({pct_score(ideal["shape_only"]["confidence"])}).', False),
         ('Match "yes, assumed": the plate label is matched by assumption to a model class of another name.', False),
         ('Fillage and fluid load come from reference shapes scaled to an assumed stroke and load, so they show the '
          'method, not a well; for rod parting they have no physical meaning.', False),
         (f'Data: one CSV per example in the <a href="{readme}">worked examples</a>, version of {APP_VERSION_DATE}.', False),
     ]
-    title = (f'Figure 2. Ten reference card shapes, scaled and run through the analysis: the shape model names '
+    title = (f'Figure 2. Ten reference card shapes, scaled and run through the analysis, each beside the ideal '
+             f'card: the shape model names '
              f'{f["matches"]} of 10'
              '<span class="js-only">. Select a row in the table to show that example</span>.')
     return (f'<figure id="figure-2" data-default="{DEFAULT_EXAMPLE}">'
@@ -431,10 +524,29 @@ def contents(sections) -> str:
     return f'<nav class="contents" aria-label="Contents"><p>Contents</p><ol>{items}</ol></nav>'
 
 
+def well_life() -> str:
+    """Background for readers new to artificial lift: the life of a well, then back to the rod pump."""
+    return ('<section id="well-life" class="well-life">'
+            '<p>Some background, for readers who want it. A new well often flows on its own: the reservoir pressure '
+            'pushes oil, water and gas up the tubing to the surface. As the well produces, the reservoir pressure '
+            'declines, until it can no longer lift the fluid to the surface. The well then needs artificial lift, a '
+            'pump or injected gas that adds the energy the reservoir no longer supplies.</p>'
+            '<p>The main artificial lift methods are the rod pump, the electric submersible pump, gas lift, the '
+            'progressing cavity pump, plunger lift and the hydraulic pump; each suits different rates, depths and '
+            'well conditions. In a rod pump, a pumping unit at the '
+            'surface strokes a string of steel rods, and the rods drive a plunger pump at the bottom of the well. '
+            'The surface card records the load on that rod string over each stroke.</p>'
+            f'<figure id="well-life-schematic">{well_life_svg()}'
+            '<figcaption><p class="fig-title"><b>Life of a well, schematic: natural flow, reservoir pressure '
+            'decline and artificial lift. This article deals with the rod pump.</b></p></figcaption></figure>'
+            '<p>That is the background. The rest of the article works with the rod pump.</p>'
+            '</section>')
+
+
 def objective_block(f, r) -> str:
     """The objective at a glance, as plain text (owner, r4.2 review, 19 Nov 2026: text, not a picture)."""
     rows = [
-        ("Objective", "Screen a rod pump from the office, from the surface card measured at the top of the well."),
+        ("Objective", "Screen rod pump from the surface card measured at the top of the well."),
         ("Inputs", "The surface card: the load on the polished rod against its position, over one stroke. "
                    "The well's rod and pump data: rod sizes and lengths, pump depth, plunger size and pumping speed."),
         ("Method", "<ol><li>Model the rod string with the wave equation [1], [2] to remove its weight, stretch and "
@@ -481,6 +593,7 @@ def body(f) -> str:
 <li><a href="#appendix-d">Reusable prompt</a> to try a public example well or perform own data custom investigations.</li>
 </ul>
 </div>
+{well_life()}
 <p>Based on public data, the surface card of an example well and the pump card computed from it are shown in Figure 1.</p>
 <ul>
 <li>The blue loop is the surface card, measured at the top of the rod string.</li>
@@ -498,7 +611,7 @@ def body(f) -> str:
 <li>The shape model, a classifier that gives each of {f['class_count']} pump conditions a class probability from the card's shape, reads this card as {top['label'].lower()}{GLOSS.get(top['label'].lower(), '')}. The same model missed {top['label'].lower()} in its own ten-example test (Example {f['top_example']}, Figure 2), so this is a weak hypothesis to check at the well. It is independent of the fillage, which comes from the valve points on the pump card, not from the card's shape.</li>
 </ul>
 <p>Two numerical methods are available for the pump card: a finite-difference method [2] and a frequency-domain method [1]. On this well their pump cards differ by {r['gibbs_default_load_nrmse_pct']:.2f} % (root mean square) of the load range, the span from the smallest to the largest load on the card, so for this problem the two methods are equivalent. Appendices A and B give the example well and the comparison.</p>
-<h2 id="ten-conditions">Ten pump conditions read from their surface cards</h2>
+<h2 id="ten-conditions">Pump condition diagnostics from surface cards</h2>
 <p>Based on public data, ten common pump conditions are run through the same analysis. Each surface card is built from one of the ten labelled card shapes of a public diagnostic plate [3], taken as a pump card by assumption, at an assumed stroke and load, so the cards illustrate shapes rather than field wells. They are shown in Figure 2.</p>
 <ul>
 <li>A round trip through the same rod model recovers every pump card within {f['nrmse_min']:.1f} to {f['nrmse_max']:.1f} % (root mean square) of its load range: a self-consistency check, not a validation.</li>
@@ -507,7 +620,7 @@ def body(f) -> str:
 </ul>
 {examples_view(f)}
 <p>How the ten examples are built, and the full values, are given in Appendix C.</p>
-<h2 id="own-card">Run the analysis on your own card</h2>
+<h2 id="own-card">Run the analysis on measured cards</h2>
 <p>The same analysis runs in a web page in the <a href="{app}">digitalmodel library</a> (version of {APP_VERSION_DATE}); it needs no installation and no network once its files are on disk. Load a surface card with the well's rod and pump data, and the page draws the pump card and reads fillage, fluid load and the model readings. Its guide gives the file format.</p>
 <p><a href="{report_md}">Read the full study</a> (version of 12 Nov 2026)</p>
 <p>To try it out or adapt the analysis, see <a href="#appendix-d">reusable prompt</a>.</p>
@@ -863,6 +976,8 @@ figure.objective th{width:7em}figure.objective ol{margin:0;padding-left:18px}
 .card-surface{stroke:var(--blue);stroke-width:2}.card-pump{stroke:var(--orange);stroke-width:2.2}
 .card-plate{stroke:var(--grey);stroke-width:11;stroke-opacity:.55}
 .legend{font:13px system-ui,sans-serif;color:var(--ink2);margin-top:4px}.legend.small{font-size:12px}
+#figure-1 .legend{text-align:center;font-size:16px;margin-top:8px}#figure-1 .key{width:28px;border-top-width:4px}
+.chart-label{font:600 12px system-ui,sans-serif;color:var(--ink2);margin:10px 0 2px}
 .key{display:inline-block;width:18px;height:0;border-top:3px solid;vertical-align:middle;margin:0 6px 0 12px}
 .key:first-child{margin-left:0}.k-surface{border-color:var(--blue)}.k-pump{border-color:var(--orange)}.k-plate{border-color:var(--grey);border-top-width:6px;opacity:.6}
 table{border-collapse:collapse;width:100%%;font:13px/1.4 system-ui,sans-serif}
@@ -913,8 +1028,8 @@ if(rows.length){show(first||rows[0].getAttribute('data-example'));}
 
 def build_html(root: Path = ROOT) -> str:
     f = facts(load_sources(root))
-    sections = [("key-conclusions", "Key conclusions"), ("ten-conditions", "Ten pump conditions"),
-                ("own-card", "Run the analysis on your own card"), ("references", "References"),
+    sections = [("key-conclusions", "Key conclusions"), ("ten-conditions", "Pump condition diagnostics"),
+                ("own-card", "Run the analysis on measured cards"), ("references", "References"),
                 ("appendix-a", "A Example well"), ("appendix-b", "B Two numerical methods"),
                 ("appendix-c", "C Ten examples"), ("appendix-d", "D Reusable prompts")]
     csp = ("default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; "
@@ -940,6 +1055,8 @@ def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--refresh", action="store_true",
                         help="rerun the report analysis and rewrite article-inputs.json (needs the solver)")
+    parser.add_argument("--ideal", action="store_true",
+                        help="rerun the ideal card through the worked-example model and rewrite ideal-card.json (needs the solver)")
     parser.add_argument("--check", action="store_true", help="compare outputs without writing")
     args = parser.parse_args(argv)
     outputs = {}
@@ -949,6 +1066,10 @@ def main(argv=None) -> int:
         if not args.check:
             (ROOT / INPUTS).parent.mkdir(parents=True, exist_ok=True)
             (ROOT / INPUTS).write_text(outputs[INPUTS], encoding="utf-8", newline="\n")
+    if args.ideal:
+        outputs[IDEAL] = json.dumps(refresh_ideal(ROOT), indent=1, ensure_ascii=False) + "\n"
+        if not args.check:
+            (ROOT / IDEAL).write_text(outputs[IDEAL], encoding="utf-8", newline="\n")
     inputs = json.loads((ROOT / INPUTS).read_text(encoding="utf-8"))
     outputs[CARDS_CSV] = figure_csv(inputs)
     outputs[ARTICLE] = build_html(ROOT)
