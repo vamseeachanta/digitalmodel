@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Geotechnical dataset discovery</title>
+</head>
+<body>
+  <main>
+    <h1>Geotechnical dataset discovery</h1>
+    <p>The database exposes source-linked discovery metadata. The initial
+      <code>usgs-cpt</code> record references S11 and remains
+      <code>metadata_only</code>; engineering input readiness is not established.</p>
+    <h2>Revision history</h2>
+    <table>
+      <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+      <tbody><tr><td>1</td><td>2026-11-16</td><td>Dataset lookup and its evidence
+        limits are documented to separate discovery from design input.</td></tr></tbody>
+    </table>
+    <p>Table 1. Document revisions.</p>
+    <h2>Lookup</h2>
+    <pre><code>from digitalmodel.geotechnical.database import load_database
+
+record = load_database().datasets["usgs-cpt"]
+print(record.source.citation, record.source.reuse_terms)
+print(record.access_route, record.readiness)</code></pre>
+    <p>Records and the dataset mapping are immutable. Unknown IDs raise
+      <code>KeyError</code>. Older files without a datasets section return an
+      empty mapping; a present section requires a list of validated records.</p>
+    <h2>Evidence and limits</h2>
+    <p>The metadata basis is the research note dated 2026-10-12, sections 4 and 6,
+      in issue #1205. The access route identifies the
+      <a href="https://doi.org/10.5066/P13M3WVY">public CPT release</a>.
+      Citation and reuse terms remain owned by the existing S11 source record.
+      Its retrieval and rights statements are historical; no fresh retrieval or
+      rights verification is claimed.</p>
+    <p>The note describes sounding and index CSV files plus legacy text archives.
+      Size is recorded as <q>not stated</q>; omitted size descriptions remain
+      <code>None</code>. Source bytes and their digests are absent. No download,
+      measured values, unit conversion or profile ingestion is performed.</p>
+    <p>Linking any source preserves its stated terms and read status, including
+      unresolved terms. Independent source-file retention, digest checks, rights
+      review, units and engineering applicability are required before numerical
+      use. Soil units, methods and foundation integration remain later work.</p>
+  </main>
+</body>
+</html>
