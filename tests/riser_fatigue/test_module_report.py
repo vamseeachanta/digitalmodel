@@ -393,6 +393,7 @@ def test_ci_subsea_command_collects_the_report_suite():
     """Read the effective workflow command and retain every direct gate."""
     document = load_gates(ROOT / ".claude/quality-gates.yaml")
     assert "tests-subsea" in document["gates"]
+    assert "command" in document["gates"]["tests-subsea"], "tests-subsea must have a command"
     for name, gate in document["gates"].items():
         if "command" not in gate:
             continue
@@ -401,6 +402,15 @@ def test_ci_subsea_command_collects_the_report_suite():
         assert command[:len(original)] == original
         if name == "tests-subsea":
             assert "tests/riser_fatigue/" in command
+
+
+def test_ci_subsea_selector_rejects_a_missing_command(monkeypatch):
+    """A commandless subsea gate must not bypass the fatigue path assertion."""
+    document = load_gates(ROOT / ".claude/quality-gates.yaml")
+    del document["gates"]["tests-subsea"]["command"]
+    monkeypatch.setattr(sys.modules[__name__], "load_gates", lambda path: document)
+    with pytest.raises(AssertionError, match="tests-subsea"):
+        test_ci_subsea_command_collects_the_report_suite()
 
 
 def test_report_sources_include_the_deterministic_power_module():
