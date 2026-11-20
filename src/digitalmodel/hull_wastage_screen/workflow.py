@@ -1,10 +1,12 @@
 """Durable offline workflow and HTML hull-structure wastage analysis."""
+from copy import deepcopy
 from datetime import date
 from html import escape
 import json
 from pathlib import Path
 
 from .screen import assess
+from .tm_csv import read_elements_csv
 
 
 def _details(value, field="", ratios=False):
@@ -59,6 +61,14 @@ def _report(result):
     )
 
 
+def _config_directory(cfg):
+    if cfg.get("_config_dir_path"):
+        return Path(cfg["_config_dir_path"])
+    if cfg.get("_config_file_path"):
+        return Path(cfg["_config_file_path"]).parent
+    return Path.cwd()
+
+
 def router(cfg):
     """Assess in memory and write the numeric record and escaped HTML analysis.
 
@@ -66,16 +76,22 @@ def router(cfg):
     previous output directories; this router produces an initial issue only.
     """
     block = cfg["hull_wastage_screen"]
+    ingestion = None
+    if "elements_csv" in block:
+        if "elements" in block:
+            raise ValueError("Supply either elements or elements_csv, never both")
+        imported = read_elements_csv(block["elements_csv"], block.get("rule_family"),
+                                     base_dir=_config_directory(cfg))
+        cfg = deepcopy(cfg)
+        block = cfg["hull_wastage_screen"]
+        block["elements"] = imported["elements"]
+        ingestion = imported["provenance"]
     result = assess(block)
+    if ingestion is not None:
+        result["ingestion"] = ingestion
     output = Path(block.get("output_dir", "results"))
     if not output.is_absolute():
-        if cfg.get("_config_dir_path"):
-            config_dir = Path(cfg["_config_dir_path"])
-        elif cfg.get("_config_file_path"):
-            config_dir = Path(cfg["_config_file_path"]).parent
-        else:
-            config_dir = Path.cwd()
-        output = config_dir / output
+        output = _config_directory(cfg) / output
     output.mkdir(parents=True, exist_ok=True)
     # Fail before overwriting any retained analysis or revision history.
     paths = [output / "hull-wastage.json", output / "hull-wastage.html"]
