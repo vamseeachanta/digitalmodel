@@ -351,7 +351,11 @@ def test_consumer_revalidates_tension_citation_from_package(tmp_path, monkeypatc
     (tmp_path / 'wikis').mkdir()
     monkeypatch.setenv('LLM_WIKI_PATH', str(tmp_path))
     balance = compute_tension_balance(TensionInput(8000, 100, 10))
-    validate_citation(balance.citations[0], repo_root=riser_properties.PACKAGED_CITATION_ROOT)
+    citation = balance.citations[0]
+    with pytest.raises(CitationResolutionError) as error:
+        validate_citation(citation)
+    assert error.value.reason == 'page_missing'
+    validate_citation(citation, repo_root=riser_properties.PACKAGED_CITATION_ROOT)
 
 
 @pytest.mark.parametrize('revision', [None, '1995'])
@@ -362,7 +366,7 @@ def test_conversion_requires_matching_source_metadata(tmp_path, monkeypatch, rev
         page.parent.mkdir(parents=True)
         page.write_text(
             f'---\ncode_id: NIST-SP-811\npublisher: NIST\nrevision: {revision}\n---\n',
-            encoding='utf-8',
+            encoding='utf-8', newline='\n',
         )
     with pytest.raises(CitationResolutionError, match='NIST-SP-811'):
         compute_tension_balance(TensionInput(8000, 100, 10))
