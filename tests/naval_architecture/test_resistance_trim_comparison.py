@@ -3,6 +3,7 @@
 from dataclasses import FrozenInstanceError
 from decimal import Decimal
 import math
+from numbers import Real
 from types import SimpleNamespace
 
 import numpy as np
@@ -170,6 +171,24 @@ def test_duck_typed_float32_total_does_not_erase_split_residual():
     )
     assert not component_split_consistent(forces, absolute_tolerance_kn=0)
     assert component_split_consistent(forces, absolute_tolerance_kn=0.000001)
+
+
+def test_duck_typed_real_total_is_converted_before_arithmetic():
+    class ArithmeticRejectingReal(float):
+        def __sub__(self, other):
+            raise AssertionError("Convert the real scalar before arithmetic")
+
+        __add__ = __radd__ = __rsub__ = __sub__
+        __mul__ = __rmul__ = __truediv__ = __rtruediv__ = __sub__
+
+    total = ArithmeticRejectingReal(420)
+    assert isinstance(total, Real)
+    forces = SimpleNamespace(total_kn=total, viscous_kn=260, pressure_kn=160)
+    assert component_split_consistent(forces, absolute_tolerance_kn=0)
+    # 420 - (260 + 161) = -1 kN: preserve a nonzero residual after conversion.
+    forces.pressure_kn = 161
+    assert not component_split_consistent(forces, absolute_tolerance_kn=0)
+    assert component_split_consistent(forces, absolute_tolerance_kn=1)
 
 
 def test_single_row_is_its_own_reference():
