@@ -1,0 +1,26 @@
+basename: mooring_chain_degradation
+mooring_chain_degradation:
+  component_id: demonstration-chain
+  inspection:
+    nominal_diameter_mm: 100.0
+    application: mobile_offshore_drilling_unit
+    grade: R3
+    stud_attachment: mechanical_and_other_end_fillet_weld
+    min_area_ratio: 0.8
+    max_diameter_loss_fraction: 0.08
+    operator_limit_reference: Synthetic arithmetic example only
+    readings:
+      - location_id: bend
+        region: bend
+        diameter_a_mm: 96.0
+        diameter_b_mm: 98.0
+        uncertainty_mm: 1.0
+    uniform_loss_confirmed: true
+    perpendicular_readings_confirmed: true
+    coverage_confirmed: true
+    visual:
+      crack: false
+      loose_stud: false
+      missing_stud: false
+      geometry_anomaly: false
+      pitting: false
