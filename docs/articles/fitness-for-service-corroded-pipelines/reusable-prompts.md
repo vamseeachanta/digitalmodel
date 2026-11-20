@@ -1,17 +1,61 @@
 # Reusable prompts
 
-Article: "Fitness for service of corroded pipelines: strength and remaining useful life (RUL)", The Deckhand Chronicles, revision 5 of 19 Nov 2026. This page holds in full what Appendix B of the article summarises.
+Article: "Fitness for service of corroded pipelines: strength and remaining useful life (RUL)", The Deckhand Chronicles, revision 6 of 20 Nov 2026. This page holds in full what Appendix B of the article summarises.
 
-This prompt reruns the published assessment from its pinned data set, and checks the Section A pressures and life projections against the published values.
+The first prompt reruns the measured-scan assessment from its pinned data set, and checks its pressures and life projections against the published values. The second does the same for the synthetic grid, Section A, the comparison case. The third adapts the assessment to your own readings.
 
 ## What you need to run this
 
-- Data required: none; the worked-example inputs are in our public code repository. Git, uv and Python 3.11. Allow about 3.5 GB of disk and about 10 minutes.
+- Data required: none; the measured scan and the worked-example inputs are in the public digitalmodel repository. Git, uv and Python 3.11. Allow about 3.5 GB of disk and about 10 minutes.
 - Data required to adapt: wall readings with their positions, pipe dimensions and material, design pressure, loads, and a corrosion rate, ideally from repeat inspection.
 - Paid or behind an account: nothing to run it. The cited standards are paid documents; the code needs no copy of them.
 - Changes over time: nothing for the result; the code and inputs are fixed at one commit. Python package versions can change: only plotly is pinned, so record the versions you get (uv pip freeze).
 
-## Reproduce the published result
+## Reproduce the measured-scan result
+
+Give this prompt to your assistant:
+
+```text
+Use https://github.com/vamseeachanta/digitalmodel at the full pinned commit
+48924dd48b5e53db0f177cc012a899cf0a00f91d. Use Python 3.11 and uv.
+1. Install as in step 1 of the synthetic-grid prompt below, but check out
+   48924dd48b5e53db0f177cc012a899cf0a00f91d.
+2. The exact entry point is scripts/ffs/c3_measured_grid_assessment.py. It
+   reads the anonymized scan
+   tests/asset_integrity/test_data/real_inspection/ut_grid_RJ-101-boxend_worstzone_fullres.csv
+   (no header; 500 rows at a 4 mm axial pitch by 64 circumferential
+   positions; wall thickness in mm; blank cells are unmeasured). Read
+   README.md in that folder for its provenance. The script calls
+   evaluate_section from scripts/reporting/build_pipeline_ffs_report.py,
+   the function that rates Section A. Preserve these files.
+   Pipe: outside diameter 21.25 in, nominal wall 0.875 in, X80 (SMYS
+   80,000 psi, tensile strength 90,600 psi). Assumed: design pressure
+   2,400 psi, axial stress 10,000 psi, ASME B31.8 design factor 0.72,
+   allowable remaining strength factor 0.90, corrosion rate 0.253 mm/year
+   (from the campaign register) with half-rate and double-rate cases.
+3. In PowerShell, set $env:PYTHONPATH='src', then run:
+   .venv/Scripts/python.exe scripts/ffs/c3_measured_grid_assessment.py --out check
+   On POSIX use PYTHONPATH=src .venv/bin/python with the same arguments.
+4. Compare check/measured-grid-results.json and check/measured-grid-window.csv
+   with the committed files in
+   docs/articles/fitness-for-service-corroded-pipelines/data (no numerical
+   change). Save them and the console log; then delete the clone and venv.
+Check: 29,037 readings, 2,963 blank; thinnest 15.024 mm, a 32.4 % loss;
+patch rows 239 to 258 and columns 57 to 63 (from 0), 20 by 7 cells; 21
+blank cells filled and 8 above-nominal cells set to nominal, and
+blank_fill_changes_no_result true; strength factor 0.9343 over 72.00 mm
+against 0.90; rating before loss and local-loss rating both 4,744 psi
+[32.71 MPa], 197.6 % of 2,400 psi; allowable pressures in order B31G,
+Modified B31G, RSTRENG, RSTRENG-2D, DNV-RP-F101: 5,006, 5,093, 5,095,
+5,095, 4,885 psi; failure pressures: 6,959, 7,080, 7,083, 7,083,
+7,539 psi; allowable spread 4.3 % above the lowest; rating 2.9 % below
+the lowest allowable. Life-limit wall 0.4427 in [11.245 mm]; at rates
+0.1265, 0.253 and 0.506 mm/year, lives are 29.88, 14.94 and 7.469 years
+(shown as 29.9, 14.9 and 7.5). The same run reproduces the Section A values
+below. Values agree to 4 significant figures.
+```
+
+## Reproduce the synthetic-grid result
 
 Give this prompt to your assistant:
 
@@ -68,7 +112,11 @@ circumferential positions; inspection dates and measurement uncertainty;
 pipe outside diameter, nominal wall, material strengths, design code and
 edition, location class and design factor; design pressure and loads; and
 a corrosion rate, ideally from repeat inspections.
-Reproduce the published worked example first. Then copy
+Reproduce the published measured-scan result first. If my readings are a
+scanned grid, copy scripts/ffs/c3_measured_grid_assessment.py, point it at
+my scan and replace its pipe data, assumptions and rate with mine; keep its
+patch selection, its above-nominal and blank-cell treatment, and the check
+that the blank-cell fill changes no result, and report each. Otherwise copy
 examples/workflows/pipeline-corroded-defect-screen/synthetic.yml, replace
 its pipe data, grid (rows of readings at the axial positions) and rates
 with mine, keeping the field names and units, and point the assessment
@@ -82,4 +130,6 @@ Where a step needs a paid standard I do not hold, cite the standard and
 Part from the article and mark it "to be checked".
 ```
 
-Public data set: our corroded-pipeline worked example in digitalmodel, published by AceEngineer, MIT licence, worked-example readings, retrieved 12 Nov 2026 at commit 09089a121a16069c4b657d1a320a630a23ab1dd5. <https://github.com/vamseeachanta/digitalmodel/tree/09089a121a16069c4b657d1a320a630a23ab1dd5/examples/workflows/pipeline-ffs-assessment>
+Public data set, measured scan: anonymized drilling-riser ultrasonic scan in digitalmodel, published by AceEngineer, MIT licence, measured readings, retrieved 20 Nov 2026 at commit 48924dd48b5e53db0f177cc012a899cf0a00f91d. <https://github.com/vamseeachanta/digitalmodel/tree/48924dd48b5e53db0f177cc012a899cf0a00f91d/tests/asset_integrity/test_data/real_inspection>
+
+Public data set, synthetic grid: the AceEngineer corroded-pipeline worked example in digitalmodel, published by AceEngineer, MIT licence, worked-example readings, retrieved 12 Nov 2026 at commit 09089a121a16069c4b657d1a320a630a23ab1dd5. <https://github.com/vamseeachanta/digitalmodel/tree/09089a121a16069c4b657d1a320a630a23ab1dd5/examples/workflows/pipeline-ffs-assessment>
