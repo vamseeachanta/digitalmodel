@@ -17,9 +17,9 @@ Give this prompt to your assistant:
 
 ```text
 Use https://github.com/vamseeachanta/digitalmodel at the full pinned commit
-0de1ab65c45262740c6ae4132431a0c2c19fa711. Use Python 3.11 and uv.
+05612b6cb9ceeeb642c41511446e98455bc2c90d. Use Python 3.11 and uv.
 1. Install as in step 1 of the synthetic-grid prompt below, but check out
-   0de1ab65c45262740c6ae4132431a0c2c19fa711.
+   05612b6cb9ceeeb642c41511446e98455bc2c90d.
 2. The exact entry point is scripts/ffs/c3_measured_grid_assessment.py. It
    reads the anonymized scan
    tests/asset_integrity/test_data/real_inspection/ut_grid_scan-a_window_fullres.csv
@@ -132,6 +132,6 @@ Where a step needs a paid standard I do not hold, cite the standard and
 Part from the article and mark it "to be checked".
 ```
 
-Public data set, measured scan: anonymized riser ultrasonic scan in digitalmodel, published by AceEngineer, MIT licence, measured readings, retrieved 20 Nov 2026 at commit 0de1ab65c45262740c6ae4132431a0c2c19fa711. <https://github.com/vamseeachanta/digitalmodel/tree/0de1ab65c45262740c6ae4132431a0c2c19fa711/tests/asset_integrity/test_data/real_inspection>
+Public data set, measured scan: anonymized riser ultrasonic scan in digitalmodel, published by AceEngineer, MIT licence, measured readings, retrieved 20 Nov 2026 at commit 05612b6cb9ceeeb642c41511446e98455bc2c90d. <https://github.com/vamseeachanta/digitalmodel/tree/05612b6cb9ceeeb642c41511446e98455bc2c90d/tests/asset_integrity/test_data/real_inspection>
 
 Public data set, synthetic grid: the AceEngineer corroded-pipeline worked example in digitalmodel, published by AceEngineer, MIT licence, worked-example readings, retrieved 12 Nov 2026 at commit 09089a121a16069c4b657d1a320a630a23ab1dd5. <https://github.com/vamseeachanta/digitalmodel/tree/09089a121a16069c4b657d1a320a630a23ab1dd5/examples/workflows/pipeline-ffs-assessment>
