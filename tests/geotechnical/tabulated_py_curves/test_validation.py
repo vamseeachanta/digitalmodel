@@ -295,3 +295,28 @@ def test_extended_precision_storage_remains_finite_after_conversion(operation, c
         stored = getattr(point, coordinate)
         assert type(stored) is float
         assert np.isfinite(stored)
+
+
+@pytest.mark.parametrize("coordinate,ordinate", [(True, False), (False, True), (True, True)])
+def test_spring_rejects_nonzero_origin_inputs_below_float_range(coordinate, ordinate):
+    tiny = Fraction(1, 2**1075)
+    with pytest.raises(ValueError, match="origin"):
+        curve = PressureCurve(1, (tiny if coordinate else 0, 1), (tiny if ordinate else 0, 1))
+        symmetric_spring_points(curve, SpringGeometry(1, 1))
+
+
+@pytest.mark.parametrize("scalar", [Fraction, np.longdouble])
+def test_stored_scalars_preserve_the_supplied_ratio(scalar):
+    supplied = scalar(1) / scalar(10)
+    curve = ForceCurve(supplied, (0, supplied), (0, supplied))
+    pressure = PressureCurve(supplied, (0, supplied), (0, supplied))
+    geometry = SpringGeometry(supplied, supplied)
+    point = SpringPoint(supplied, supplied)
+    expected = (supplied if isinstance(supplied, Fraction)
+                else Fraction(*supplied.as_integer_ratio()))
+    assert all(Fraction(value) == expected for value in (
+        curve.depth_m, curve.displacement_m[-1], curve.force_n[-1],
+        pressure.depth_m, pressure.displacement_m[-1], pressure.pressure_pa[-1],
+        geometry.diameter_m, geometry.tributary_length_m,
+        point.displacement_m, point.force_n,
+    ))

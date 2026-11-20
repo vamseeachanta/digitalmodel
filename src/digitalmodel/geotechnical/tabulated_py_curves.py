@@ -26,8 +26,12 @@ interpolate_depth require the same displacement grid. symmetric_spring_points
 multiplies pressure by diameter, tributary length and (1+sensitivity_ratio).
 No missing origin, out-of-range displacement/depth or endpoint extension is
 inferred. All inputs are finite, nonnegative magnitudes except signed spring
-points and sensitivity >= -1. Quantization uses the exact binary input ratio;
-converting units before quantization can change the selected quantum at a boundary.
+points and sensitivity >= -1. Stored scalars retain supplied ratios as built-in
+integers, floats or Fractions. Validation requires a finite binary64 conversion;
+tiny nonzero ratios remain nonzero, so they cannot supply an implicit origin.
+Computed integral results remain integers; non-integral outputs round once to
+float and can underflow. Quantization uses the exact input ratio; converting
+units before quantization can change the selected quantum at a boundary.
 
 Related code
 ------------
@@ -75,9 +79,11 @@ from fractions import Fraction
 from math import ceil, inf, isfinite, nextafter
 from numbers import Integral, Rational, Real
 
+_Scalar = int | float | Fraction
 
-def _finite(value: float, name: str, *, minimum: float = 0.0) -> int | float:
-    """Validate a scalar and normalize it before fixed-width arithmetic can occur."""
+
+def _finite(value: _Scalar, name: str, *, minimum: float = 0.0) -> _Scalar:
+    """Validate range and normalize a scalar without changing its exact ratio."""
     message = f"{name} must be finite and >= {minimum}"
     if isinstance(value, bool) or not isinstance(value, Real) or value < minimum:
         raise ValueError(message)
@@ -87,10 +93,14 @@ def _finite(value: float, name: str, *, minimum: float = 0.0) -> int | float:
             raise ValueError(message)
     except OverflowError as error:
         raise ValueError(message) from error
+    if not isinstance(value, (Integral, float)):
+        exact = _exact_fraction(value)
+        if exact != normalized:
+            return exact.numerator if exact.denominator == 1 else exact
     return normalized
 
 
-def _axis(values: tuple[float, ...]) -> None:
+def _axis(values: tuple[_Scalar, ...]) -> None:
     if len(values) < 2:
         raise ValueError("displacement_m requires at least two points")
     for value in values:
@@ -107,9 +117,9 @@ class ForceCurve:
     A supplied curve need not start at the origin; no missing origin is inferred.
     """
 
-    depth_m: float
-    displacement_m: tuple[float, ...]
-    force_n: tuple[float, ...]
+    depth_m: _Scalar
+    displacement_m: tuple[_Scalar, ...]
+    force_n: tuple[_Scalar, ...]
 
     def __post_init__(self) -> None:
         """Validate the displacement axis and its force ordinates."""
@@ -125,7 +135,7 @@ class ForceCurve:
             raise ValueError("force_n and displacement_m lengths must agree")
 
 
-def _linear(x: float, axis: tuple[float, ...], values: tuple[float, ...]) -> float:
+def _linear(x: _Scalar, axis: tuple[_Scalar, ...], values: tuple[_Scalar, ...]) -> _Scalar:
     _finite(x, "interpolation coordinate")
     # Retain the query ratio through bounds checks, knot selection and weights.
     x = _exact_fraction(x)
@@ -139,13 +149,15 @@ def _linear(x: float, axis: tuple[float, ...], values: tuple[float, ...]) -> flo
     from_low = x - Fraction(axis[low])
     from_high = Fraction(axis[high]) - x
     weighted_sum = from_high * Fraction(values[low]) + from_low * Fraction(values[high])
-    return float(weighted_sum / (from_low + from_high))
+    return _rounded_result(weighted_sum / (from_low + from_high), "interpolated ordinate")
 
 
-def interpolate_force(curve: ForceCurve, displacement_m: float) -> float:
+def interpolate_force(curve: ForceCurve, displacement_m: _Scalar) -> _Scalar:
     """F = F0 + (y-y0)*(F1-F0)/(y1-y0), within supplied displacements.
 
-    Extrapolation raises ValueError; force reduction is retained.
+    Extrapolation raises ValueError; force reduction is retained. Knots return
+    the stored ratio; computed integral results remain integers, others round
+    once to float.
     """
     return _linear(displacement_m, curve.displacement_m, curve.force_n)
 
@@ -154,8 +166,8 @@ def interpolate_force(curve: ForceCurve, displacement_m: float) -> float:
 class SpringGeometry:
     """Projected spring area is diameter_m * tributary_length_m, in m²."""
 
-    diameter_m: float
-    tributary_length_m: float
+    diameter_m: _Scalar
+    tributary_length_m: _Scalar
 
     def __post_init__(self) -> None:
         """Require finite, positive dimensions for the projected area."""
@@ -167,20 +179,23 @@ class SpringGeometry:
             object.__setattr__(self, name, value)
 
 
-def _pressure_force_product(pressure_pa: float, geometry: SpringGeometry) -> Fraction:
+def _pressure_force_product(pressure_pa: _Scalar, geometry: SpringGeometry) -> Fraction:
     _finite(pressure_pa, "pressure_pa")
     return (_exact_fraction(pressure_pa) * Fraction(geometry.diameter_m)
             * Fraction(geometry.tributary_length_m))
 
 
-def _float_force(product: Fraction) -> float:
+def _rounded_result(value: Fraction, name: str) -> int | float:
+    """Retain integral results and round non-integral results once to float."""
     try:
-        return float(product)
+        result = value.numerator if value.denominator == 1 else float(value)
     except OverflowError as error:
-        raise ValueError("computed force_n is not finite") from error
+        raise ValueError(f"{name} is not finite") from error
+    _finite(result, name)
+    return result
 
 
-def force_from_pressure(pressure_pa: float, geometry: SpringGeometry) -> int | float:
+def force_from_pressure(pressure_pa: _Scalar, geometry: SpringGeometry) -> int | float:
     """F = pressure * diameter * tributary length (N), using the exact area.
 
     The validated original pressure ratio is multiplied by the stored dimensions.
@@ -192,13 +207,11 @@ def force_from_pressure(pressure_pa: float, geometry: SpringGeometry) -> int | f
     requires two.
     """
     product = _pressure_force_product(pressure_pa, geometry)
-    if product.denominator == 1:
-        return _finite(product.numerator, "computed force_n")
-    return _float_force(product)
+    return _rounded_result(product, "computed force_n")
 
 
 def force_from_line_resistance(
-    line_resistance_n_per_m: float, integration_length_m: float
+    line_resistance_n_per_m: _Scalar, integration_length_m: _Scalar
 ) -> int | float:
     """F = line resistance * declared integration length (N).
 
@@ -213,22 +226,20 @@ def force_from_line_resistance(
         raise ValueError("integration_length_m must be positive")
     product = (_exact_fraction(line_resistance_n_per_m)
                * _exact_fraction(integration_length_m))
-    if product.denominator == 1:
-        return _finite(product.numerator, "computed force_n")
-    return _float_force(product)
+    return _rounded_result(product, "computed force_n")
 
 
-def pressure_from_force(force_n: float, geometry: SpringGeometry) -> float:
-    """Divide force by projected area and round the resulting pressure in Pa."""
-    force_n = _finite(force_n, "force_n")
+def pressure_from_force(force_n: _Scalar, geometry: SpringGeometry) -> int | float:
+    """Divide the original force ratio by exact projected area to obtain Pa.
+
+    Integral pressures remain integers; non-integral pressures round once to float.
+    """
+    _finite(force_n, "force_n")
     area = Fraction(geometry.diameter_m) * Fraction(geometry.tributary_length_m)
-    try:
-        return float(Fraction(force_n) / area)
-    except OverflowError as error:
-        raise ValueError("computed pressure_pa is not finite") from error
+    return _rounded_result(_exact_fraction(force_n) / area, "computed pressure_pa")
 
 
-def _exact_fraction(value: float) -> Fraction:
+def _exact_fraction(value: _Scalar) -> Fraction:
     if isinstance(value, Rational):
         # Fixed-width integer numerators must not enter Fraction arithmetic.
         return Fraction(int(value.numerator), int(value.denominator))
@@ -237,7 +248,7 @@ def _exact_fraction(value: float) -> Fraction:
     return Fraction(float(value))
 
 
-def round_force_up(force_n: float, quantum_n: float) -> float:
+def round_force_up(force_n: _Scalar, quantum_n: _Scalar) -> float:
     """Fq = ceil(F / quantum) * quantum, for nonnegative force magnitudes.
 
     The caller declares quantum_n; no precision or force conversion factor
@@ -272,9 +283,9 @@ class PressureCurve:
     Pressure is force divided by diameter and tributary length, not line load.
     """
 
-    depth_m: float
-    displacement_m: tuple[float, ...]
-    pressure_pa: tuple[float, ...]
+    depth_m: _Scalar
+    displacement_m: tuple[_Scalar, ...]
+    pressure_pa: tuple[_Scalar, ...]
 
     def __post_init__(self) -> None:
         """Validate the displacement axis and its pressure ordinates."""
@@ -291,15 +302,15 @@ class PressureCurve:
 
 
 def interpolate_depth(
-    curves: tuple[PressureCurve, ...], depth_m: float
+    curves: tuple[PressureCurve, ...], depth_m: _Scalar
 ) -> PressureCurve:
     """p(z) = p0 + (z-z0)*(p1-p0)/(z1-z0), on a common displacement grid.
 
     Curves must be ordered by strictly increasing depth.
     Missing grid points require displacement interpolation before this call.
     Out-of-range depths raise ValueError, including above/below a single curve.
-    The returned depth label is stored as int or float and can round to an input
-    depth even when exact-query interpolation gives different pressures.
+    The returned depth label retains the supplied ratio, as do stored ordinates.
+    Integral interpolated pressures remain integers; others round once to float.
     """
     if not curves:
         raise ValueError("at least one pressure curve is required")
@@ -323,8 +334,8 @@ class SpringPoint:
     The solver applies its own restoring-force sign convention.
     """
 
-    displacement_m: float
-    force_n: float
+    displacement_m: _Scalar
+    force_n: _Scalar
 
     def __post_init__(self) -> None:
         """Validate the signs of both inputs before storing their normalized values."""
@@ -340,22 +351,28 @@ def symmetric_spring_points(
     curve: PressureCurve,
     geometry: SpringGeometry,
     *,
-    sensitivity_ratio: float = 0.0,
+    sensitivity_ratio: _Scalar = 0.0,
 ) -> tuple[SpringPoint, ...]:
     """F(±y) = ±p(y)*diameter*length*(1+s), with one origin point.
 
     The caller declares dimensionless sensitivity_ratio s (a fraction, not %).
     Requires a supplied (0, 0); no extrapolation is appended.
     The validated original sensitivity ratio forms the multiplier exactly;
-    it scales the exact force product before the final float conversion.
+    it scales the exact force product before the final result conversion.
+    Integral forces remain integers; non-integral forces round once to float.
     """
     _finite(sensitivity_ratio, "sensitivity_ratio", minimum=-1.0)
     if curve.displacement_m[0] != 0 or curve.pressure_pa[0] != 0:
         raise ValueError("a symmetric spring requires an explicit (0, 0) origin")
     factor = 1 + _exact_fraction(sensitivity_ratio)
     positive = tuple(
-        SpringPoint(y, _float_force(_pressure_force_product(p, geometry) * factor))
+        SpringPoint(y, _rounded_result(_pressure_force_product(p, geometry) * factor,
+                                      "computed force_n"))
         for y, p in zip(curve.displacement_m[1:], curve.pressure_pa[1:])
     )
-    negative = tuple(SpringPoint(-p.displacement_m, -p.force_n) for p in reversed(positive))
+    # Retain mirrored negative zero even when the exact integral force is zero.
+    negative = tuple(
+        SpringPoint(-p.displacement_m, -p.force_n if p.force_n else -0.0)
+        for p in reversed(positive)
+    )
     return negative + (SpringPoint(0.0, 0.0),) + positive

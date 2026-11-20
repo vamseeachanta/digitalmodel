@@ -220,3 +220,64 @@ def test_integer_line_load_preserves_the_quantization_boundary(length_m):
     force_n = force_from_line_resistance(2**53 + 1, length_m)
     assert force_n == 2**53 + 1
     assert round_force_up(force_n, 2**53) == 2**54
+
+
+def test_pressure_ratio_survives_curve_storage_and_spring_construction():
+    from fractions import Fraction
+    from digitalmodel.geotechnical.tabulated_py_curves import (
+        PressureCurve, SpringGeometry, force_from_pressure, round_force_up,
+        symmetric_spring_points,
+    )
+
+    # Both routes represent (7/100) Pa * 10 m * 10 m = 7 N exactly.
+    pressure_pa = Fraction(7, 100)
+    geometry = SpringGeometry(10, 10)
+    direct_n = force_from_pressure(pressure_pa, geometry)
+    curve = PressureCurve(1, (0, 1), (0, pressure_pa))
+    points = symmetric_spring_points(curve, geometry)
+    assert curve.pressure_pa[-1] == pressure_pa
+    assert direct_n == points[-1].force_n == 7
+    assert points[0].force_n == -7
+    assert round_force_up(direct_n, 1) == round_force_up(points[-1].force_n, 1) == 7
+
+
+@pytest.mark.parametrize("coordinate", [0, 1, 2])
+def test_constant_integral_force_retains_quantization_at_and_between_knots(coordinate):
+    from digitalmodel.geotechnical.tabulated_py_curves import round_force_up
+
+    force_n = 2**53 + 1
+    curve = ForceCurve(1, (0, 2), (force_n, force_n))
+    result = interpolate_force(curve, coordinate)
+    assert result == force_n
+    assert round_force_up(result, 2**53) == 2**54
+
+
+@pytest.mark.parametrize("depth_m", [0, 1, 2])
+def test_constant_integral_pressure_retains_quantization_between_depths(depth_m):
+    from digitalmodel.geotechnical.tabulated_py_curves import (
+        PressureCurve, SpringGeometry, force_from_pressure, interpolate_depth,
+        round_force_up, symmetric_spring_points,
+    )
+
+    pressure_pa = 2**53 + 1
+    curves = tuple(PressureCurve(z, (0, 1), (0, pressure_pa)) for z in (0, 2))
+    result = interpolate_depth(curves, depth_m)
+    assert result.pressure_pa[-1] == pressure_pa
+    geometry = SpringGeometry(1, 1)
+    force_n = force_from_pressure(result.pressure_pa[-1], geometry)
+    points = symmetric_spring_points(result, geometry)
+    assert force_n == points[-1].force_n == pressure_pa
+    assert round_force_up(points[-1].force_n, 2**53) == 2**54
+
+
+@pytest.mark.parametrize("case", ["subnormal_force", "ordinary_ratio", "integral_pressure"])
+def test_inverse_conversion_divides_the_original_force_ratio(case):
+    from fractions import Fraction
+    from digitalmodel.geotechnical.tabulated_py_curves import SpringGeometry, pressure_from_force
+
+    force_n, area_m2, expected_pa = {
+        "subnormal_force": (Fraction(1, 2**1075), 2.0**-1022, 2.0**-53),
+        "ordinary_ratio": (Fraction(3, 5), 3, float(Fraction(1, 5))),
+        "integral_pressure": (2**53 + 1, 1, 2**53 + 1),
+    }[case]
+    assert pressure_from_force(force_n, SpringGeometry(area_m2, 1)) == expected_pa
