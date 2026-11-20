@@ -1,0 +1,725 @@
+"""Tests for the local pull-request gate (scripts/ci/local_gate.py).
+
+No test here reaches the network, a remote host or the GitHub API. Setup
+commands and clocks use fakes; process cleanup and URL expansion use local subprocesses.
+"""
+
+from __future__ import annotations
+
+import argparse
+import importlib.util
+import json
+import os
+import shlex
+import signal
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[2]
+SHA = "a" * 40
+TIP = "b" * 40
+
+
+def _load():
+    spec = importlib.util.spec_from_file_location("local_gate", ROOT / "scripts/ci/local_gate.py")
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    sys.modules["local_gate"] = module
+    spec.loader.exec_module(module)
+    return module
+
+
+gate = _load()
+PLAN = {
+    "harness": "pytest tests/scripts/test_run_shard.py",
+    "gates": {
+        "tests-contracts": "pytest tests/contracts/",
+        "tests-subsea": "pytest tests/subsea/",
+        "tests-orcaflex": "pytest tests/orcaflex/",
+        "tests-specialized": "pytest tests/specialized/",
+    },
+}
+
+
+def _matrix(*domains: str) -> dict:
+    return {"include": [{"domain": d, "runner": "x"} for d in domains]}
+
+
+class Clock:
+    def __init__(self) -> None:
+        self.now = 0.0
+
+    def __call__(self) -> float:
+        return self.now
+
+
+def test_detector_compares_the_base_tip_with_the_merged_tree() -> None:
+    merged = "e" * 40
+    command = gate.detect_command(TIP, merged)
+    assert command[command.index("--base") + 1] == TIP
+    assert command[command.index("--head") + 1] == merged
+    assert SHA not in command
+    assert "detect_touched_domains.py" in command[1] and "touched" in command
+
+
+def test_stop_request_ends_running_modules_and_starts_no_other(monkeypatch, tmp_path: Path) -> None:
+    killed: list[str] = []
+
+    class Proc:
+        pid = 123456789
+
+        def kill(self) -> None:
+            killed.append("kill")
+
+    def no_group(pid, sig):
+        raise ProcessLookupError
+
+    monkeypatch.setattr(gate.os, "killpg", no_group, raising=False)
+    monkeypatch.setattr(gate, "LIVE", {Proc()})
+    try:
+        gate.request_stop(15, None)
+        assert killed == ["kill"]
+        result = gate.run_module(gate.Module("m", ["one"]), tmp_path, {}, tmp_path, deadline=1e12,
+                                 module_timeout=50.0, shell=lambda *a: pytest.fail("no start after a stop"))
+        assert result.status == "not-run"
+        assert gate.summarize([result], 1, TIP)[0] == "failure"
+    finally:
+        gate.STOP.clear()
+
+
+def test_plan_always_has_lint_and_harness() -> None:
+    modules = gate.plan_modules(_matrix(), PLAN, TIP, "/scratch")
+    assert [m.name for m in modules] == ["lint", "ci-harness"]
+    assert any("check_text_encoding.py" in c and TIP in c for c in modules[0].commands)
+    assert any("check-engineering-register.py" in c for c in modules[0].commands)
+    assert modules[1].commands == [PLAN["harness"]]
+    for suite in ("tests/scripts/test_check_text_encoding.py", "tests/repo_structure"):
+        command = next(c for c in modules[0].commands if suite in c)
+        assert "python -m pytest" in command
+        assert "--with pyyaml" in command and "--with pytest" in command
+        assert "--basetemp=" in command and "-p no:cacheprovider" in command
+    assert any("--with ruff==0.15.1" in c and "test_check_text_encoding.py" in c
+               for c in modules[0].commands)
+    assert any("--with pytest-asyncio" in c and "tests/repo_structure" in c
+               for c in modules[0].commands)
+
+
+def test_plan_mirrors_workflow_special_cases() -> None:
+    modules = {m.name: m for m in gate.plan_modules(
+        _matrix("contracts", "subsea", "orcaflex", "specialized"), PLAN, TIP, "/scratch")}
+    assert "tests/riser_fatigue/ tests/riser_bom/" in modules["subsea"].commands[-1]
+    assert modules["subsea"].commands[-1].endswith(
+        "--junitxml=reports/junit-subsea.xml -o junit_family=xunit2")
+    assert any("prettier@4.0.0-alpha.8" in c for c in modules["contracts"].commands)
+    assert "SOURCE_LOCATORS_PRETTIER=" in modules["contracts"].commands[-1]
+    assert "run_shard.py" in " ".join(modules["orcaflex"].commands)
+    assert "tests/geotechnical" in modules["specialized"].commands[-1]
+
+
+def test_touched_domain_without_command_is_an_error() -> None:
+    with pytest.raises(gate.GateError, match="no gate command"):
+        gate.plan_modules(_matrix("structural"), PLAN, TIP, "/scratch")
+
+
+def test_hostile_domain_name_is_refused() -> None:
+    with pytest.raises(gate.GateError, match="unexpected domain"):
+        gate.plan_modules(_matrix("x; rm -rf /"), PLAN, TIP, "/scratch")
+
+
+def test_module_stops_at_first_failing_command(tmp_path: Path) -> None:
+    seen: list[str] = []
+
+    def shell(command, cwd, env, log, timeout):
+        seen.append(command)
+        return 1 if command == "two" else 0
+
+    result = gate.run_module(gate.Module("m", ["one", "two", "three"]), tmp_path, {}, tmp_path,
+                             deadline=100.0, module_timeout=50.0, shell=shell, clock=Clock())
+    assert (result.status, result.code, seen) == ("fail", 1, ["one", "two"])
+
+
+def test_module_past_budget_is_not_run(tmp_path: Path) -> None:
+    clock = Clock()
+    clock.now = 200.0
+    result = gate.run_module(gate.Module("m", ["one"]), tmp_path, {}, tmp_path, deadline=100.0,
+                             module_timeout=50.0, shell=lambda *a: 0, clock=clock)
+    assert result.status == "not-run"
+
+
+def test_module_timeout_is_capped_by_budget_and_reported(tmp_path: Path) -> None:
+    limits: list[float] = []
+
+    def shell(command, cwd, env, log, timeout):
+        limits.append(timeout)
+        return 124
+
+    result = gate.run_module(gate.Module("m", ["one"]), tmp_path, {}, tmp_path, deadline=30.0,
+                             module_timeout=900.0, shell=shell, clock=Clock())
+    assert limits == [30.0]
+    assert result.status == "timeout"
+
+
+def test_summary_success_requires_every_module() -> None:
+    passed = [gate.Result("lint", "pass", 3, 0), gate.Result("contracts", "pass", 9, 0)]
+    state, text = gate.summarize(passed, 12.4, TIP)
+    assert state == "success"
+    assert text == f"base {TIP}: 2/2 modules passed in 12 s (lint, contracts)"
+    for status in ("fail", "timeout", "not-run"):
+        state, text = gate.summarize(passed + [gate.Result("subsea", status)], 20, TIP)
+        assert state == "failure"
+        assert f"subsea ({status})" in text
+    assert gate.summarize([], 0, TIP)[0] == "error"
+
+
+def test_summary_fits_the_status_description_limit() -> None:
+    many = [gate.Result(f"domain-number-{i}", "fail") for i in range(40)]
+    # Independent literal for the documented local compatibility policy.
+    assert gate.DESCRIPTION_LIMIT == 140
+    assert len(gate.summarize(many, 1, TIP)[1]) <= 140
+
+
+@pytest.mark.parametrize("status", ["pass", "fail"])
+def test_summary_always_names_the_full_tested_base_first(status: str) -> None:
+    many = [gate.Result(f"domain-number-{i}", status) for i in range(40)]
+    assert gate.summarize(many, 1, TIP)[1].startswith(f"base {TIP}: ")
+
+
+@pytest.mark.parametrize("status", ["pass", "fail"])
+def test_summary_lists_complete_modules_with_an_omission_count(status: str) -> None:
+    names = ["lint", "ci-harness", "hydrodynamics", "hydrodynamics-other",
+             "orcaflex-solver", "subsea"]
+    results = [gate.Result(name, status) for name in names]
+    # The old 140-character slice ends exactly after "orcaflex" on success,
+    # incorrectly naming a different domain from the executed orcaflex-solver.
+    state, text = gate.summarize(results, 12345, TIP)
+    assert len(text) <= 140
+    if status == "pass":
+        assert state == "success"
+        assert text == (f"base {TIP}: 6/6 modules passed in 12345 s "
+                        "(lint, ci-harness, hydrodynamics, hydrodynamics-other; +2 more)")
+    else:
+        assert state == "failure"
+        assert text == (f"base {TIP}: 0/6 modules passed in 12345 s; not passed: "
+                        "lint (fail), ci-harness (fail); +4 more")
+
+
+def test_run_modules_keeps_plan_order() -> None:
+    modules = [gate.Module(str(i), []) for i in range(8)]
+    results = gate.run_modules(modules, 3, lambda m: gate.Result(m.name, "pass"))
+    assert [r.name for r in results] == [str(i) for i in range(8)]
+
+
+def test_post_status_targets_the_exact_commit() -> None:
+    calls: list[list[str]] = []
+    gate.post_status("o/r", SHA, "success", "x" * 500, run=lambda cmd: calls.append(cmd))
+    cmd = calls[0]
+    assert f"repos/o/r/statuses/{SHA}" in cmd
+    assert "context=local-gate" in cmd and "state=success" in cmd
+    assert f"description={'x' * 140}" in cmd
+
+
+@pytest.mark.parametrize("bad", ["abc", "A" * 40, "a" * 39])
+def test_short_or_malformed_sha_is_rejected(bad: str, tmp_path: Path) -> None:
+    with pytest.raises(SystemExit):
+        gate.parse_args(["--pr", "1", "--sha", bad, "--work-root", str(tmp_path)])
+
+
+def _main(monkeypatch, tmp_path: Path, outcome, argv_extra=()):
+    posts: list[tuple] = []
+    monkeypatch.setattr(gate, "post_status", lambda repo, sha, state, text: posts.append((sha, state, text)))
+    monkeypatch.setattr(gate, "remove_tree", lambda root, wt: None)
+
+    def fake_gate(args: argparse.Namespace, run_dir: Path, worktree: Path):
+        if isinstance(outcome, Exception):
+            raise outcome
+        return outcome
+
+    monkeypatch.setattr(gate, "gate", fake_gate)
+    code = gate.main(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository",
+                      "--work-root", str(tmp_path), *argv_extra])
+    return code, posts
+
+
+def test_main_posts_success_and_writes_result(monkeypatch, tmp_path: Path) -> None:
+    code, posts = _main(monkeypatch, tmp_path, ("success", "ok", [gate.Result("lint", "pass", 1, 0)]))
+    assert code == 0 and posts == [(SHA, "success", "ok")]
+    result = json.loads(next((tmp_path / "runs").glob("*/result.json")).read_text(encoding="utf-8"))
+    assert result["state"] == "success" and result["modules"][0]["name"] == "lint"
+
+
+def test_main_failure_returns_nonzero(monkeypatch, tmp_path: Path) -> None:
+    code, posts = _main(monkeypatch, tmp_path, ("failure", "1/2", []))
+    assert code == 1 and posts[0][1] == "failure"
+
+
+def test_main_host_problem_posts_error_never_success(monkeypatch, tmp_path: Path) -> None:
+    code, posts = _main(monkeypatch, tmp_path, gate.GateError("work volume has 3 GB free"))
+    assert code == 2 and posts[0][1] == "error" and "3 GB" in posts[0][2]
+
+
+def test_main_merge_conflict_posts_failure(monkeypatch, tmp_path: Path) -> None:
+    code, posts = _main(monkeypatch, tmp_path, gate.MergeConflict("head does not merge into base"))
+    assert code == 1 and posts[0][1] == "failure"
+
+
+def test_main_stale_head_posts_nothing(monkeypatch, tmp_path: Path) -> None:
+    code, posts = _main(monkeypatch, tmp_path, gate.StaleHead("moved"))
+    assert code == 3 and posts == []
+
+
+def test_main_no_post_flag(monkeypatch, tmp_path: Path) -> None:
+    code, posts = _main(monkeypatch, tmp_path, ("success", "ok", []), ["--no-post"])
+    assert code == 0 and posts == []
+
+
+def test_gate_refuses_low_disk_before_any_fetch(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(gate, "free_gb", lambda path: 5.0)
+    monkeypatch.setattr(gate, "pull_request", lambda *a, **kw: pytest.fail("no API call below the floor"))
+    args = gate.parse_args(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository",
+                            "--work-root", str(tmp_path)])
+    with pytest.raises(gate.GateError, match="work root volume has 5 GB free, below the 20 GB floor"):
+        gate.gate(args, tmp_path / "run", tmp_path / "wt")
+
+
+@pytest.mark.parametrize("info, error", [
+    ({"head": "c" * 40, "head_repo": "fixture/repository", "base": "main", "state": "open"}, "StaleHead"),
+    ({"head": SHA, "head_repo": "fixture/repository", "base": "main", "state": "closed"}, "StaleHead"),
+    ({"head": SHA, "head_repo": "other/fork", "base": "main", "state": "open"}, "GateError"),
+])
+def test_gate_refuses_moved_closed_and_fork_heads(monkeypatch, tmp_path: Path, info, error) -> None:
+    monkeypatch.setattr(gate, "free_gb", lambda path: 500.0)
+    monkeypatch.setattr(gate, "pull_request", lambda *a, **kw: info)
+    monkeypatch.setattr(gate, "prepare_tree", lambda *a, **kw: pytest.fail("no checkout for a refused head"))
+    args = gate.parse_args(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository",
+                            "--work-root", str(tmp_path)])
+    with pytest.raises(gate.GateError) as caught:
+        gate.gate(args, tmp_path / "run", tmp_path / "wt")
+    assert type(caught.value).__name__ == error
+
+
+def _running(pid: int) -> bool:
+    try:
+        # An orphan zombie has exited; only an executing descendant is a leak.
+        return Path(f"/proc/{pid}/stat").read_text(encoding="utf-8").split()[2] != "Z"
+    except FileNotFoundError:
+        return False
+
+
+def _stubborn_child_command(pidfile: Path) -> str:
+    child = (
+        "import os, signal, time; "
+        "signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+        f"open({str(pidfile)!r}, 'w', encoding='utf-8').write(str(os.getpid())); "
+        "time.sleep(60)"
+    )
+    leader = (
+        "import subprocess, sys, time; "
+        f"subprocess.Popen([sys.executable, '-c', {child!r}]); "
+        "time.sleep(60)"
+    )
+    return shlex.join([sys.executable, "-c", leader])
+
+
+POSIX_GROUPS = pytest.mark.skipif(
+    not hasattr(os, "killpg"), reason="process groups and their signals are POSIX; the gate runs on Linux")
+
+
+@POSIX_GROUPS
+def test_shell_timeout_kills_descendant_after_leader_exits(tmp_path: Path) -> None:
+    pidfile = tmp_path / "child.pid"
+    pid = None
+    try:
+        code = gate.run_shell(_stubborn_child_command(pidfile), tmp_path, dict(os.environ),
+                              tmp_path / "shell.log", timeout=1.0)
+        pid = int(pidfile.read_text(encoding="utf-8"))
+        until = time.monotonic() + 1.0
+        while _running(pid) and time.monotonic() < until:
+            time.sleep(0.01)
+        assert code == 124
+        assert not _running(pid), "TERM-ignoring descendant survived the timeout"
+    finally:
+        if pid is None and pidfile.exists():
+            pid = int(pidfile.read_text(encoding="utf-8"))
+        if pid is not None and _running(pid):
+            os.kill(pid, signal.SIGKILL)
+
+
+@POSIX_GROUPS
+def test_capture_timeout_kills_descendant_and_closes_pipes(tmp_path: Path) -> None:
+    pidfile = tmp_path / "capture-child.pid"
+    pid = None
+    try:
+        with pytest.raises(gate.GateError, match="timed out"):
+            gate.capture(["bash", "-c", _stubborn_child_command(pidfile)], timeout=1.0)
+        pid = int(pidfile.read_text(encoding="utf-8"))
+        until = time.monotonic() + 1.0
+        while _running(pid) and time.monotonic() < until:
+            time.sleep(0.01)
+        assert not _running(pid)
+    finally:
+        if pid is None and pidfile.exists():
+            pid = int(pidfile.read_text(encoding="utf-8"))
+        if pid is not None and _running(pid):
+            os.kill(pid, signal.SIGKILL)
+
+
+def test_deadline_runner_recomputes_budget_before_every_helper() -> None:
+    clock = Clock()
+    limits = []
+
+    def capture(cmd, **kwargs):
+        limits.append(kwargs["timeout"])
+        clock.now += 4.0
+        return subprocess.CompletedProcess(cmd, 0, "ok", "")
+
+    run = gate.deadline_runner(10.0, run=capture, clock=clock)
+    for _ in range(2):
+        assert run(["helper"]).stdout == "ok"
+    with pytest.raises(gate.GateError, match="budget expired during helper"):
+        run(["last-helper"])
+    with pytest.raises(gate.GateError, match="budget expired before helper"):
+        run(["must-not-start"])
+    assert limits == [10.0, 6.0, 2.0]
+
+
+@pytest.mark.parametrize("expire_at", ["api", "clone", "fetch", "merge", "detect", "reader", "checkout"])
+def test_setup_and_checkout_helpers_obey_overall_deadline(monkeypatch, tmp_path: Path,
+                                                         expire_at: str) -> None:
+    clock = Clock()
+    seen = []
+    expired = False
+
+    def capture(cmd, **kwargs):
+        nonlocal expired
+        assert not expired, "another helper launched after budget expiration"
+        assert 0 < kwargs["timeout"] <= 100.0
+        if cmd[0] == "gh":
+            phase = "api"
+            stdout = json.dumps({"head": SHA, "head_repo": "fixture/repository",
+                                 "base": "main", "state": "open"})
+        elif "clone" in cmd:
+            phase, stdout = "clone", ""
+        elif "fetch" in cmd:
+            phase, stdout = "fetch", ""
+        elif "merge" in cmd:
+            phase, stdout = "merge", ""
+        elif "scripts/ci/detect_touched_domains.py" in cmd:
+            phase, stdout = "detect", json.dumps(_matrix())
+        elif gate.PLAN_READER in cmd:
+            phase, stdout = "reader", json.dumps(PLAN)
+        elif "worktree" in cmd and "add" in cmd and str(tmp_path / "wt" / "plan") not in cmd:
+            phase, stdout = "checkout", ""
+        else:
+            phase = "other"
+            stdout = SHA if "refs/local-gate/pr-7" in cmd else TIP
+        seen.append(phase)
+        if phase == expire_at:
+            expired = True
+            clock.now = 101.0
+        return subprocess.CompletedProcess(cmd, 0, stdout, "")
+
+    request = gate.pull_request
+
+    def pull_request(repo, number, run=capture):
+        return request(repo, number, run=run)
+
+    monkeypatch.setattr(gate, "pull_request", pull_request)
+    monkeypatch.setattr(gate, "capture", capture)
+    monkeypatch.setattr(gate.time, "monotonic", clock)
+    monkeypatch.setattr(gate, "free_gb", lambda path: 500.0)
+    # Serialize test fixtures so the fake clock cannot race another checkout.
+    args = gate.parse_args(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository",
+                            "--work-root", str(tmp_path), "--jobs", "1", "--budget-seconds", "100"])
+    if expire_at == "checkout":
+        # The budget ran out in a module's own checkout: that module and the ones still
+        # queued are not run, the result is a failure, and nothing further is launched.
+        state, _description, results = gate.gate(args, tmp_path / "run", tmp_path / "wt")
+        assert state == "failure"
+        assert results and {result.status for result in results} == {"not-run"}
+    else:
+        with pytest.raises(gate.GateError, match="budget expired"):
+            gate.gate(args, tmp_path / "run", tmp_path / "wt")
+    assert expire_at in seen
+
+
+@pytest.mark.parametrize("inherited", [None, "other/repository"])
+def test_gate_supplies_repository_for_dependency_url_expansion(monkeypatch, tmp_path: Path,
+                                                              inherited: str | None) -> None:
+    if inherited is None:
+        monkeypatch.delenv("GITHUB_REPOSITORY", raising=False)
+    else:
+        monkeypatch.setenv("GITHUB_REPOSITORY", inherited)
+    monkeypatch.setattr(gate, "free_gb", lambda path: 500.0)
+    monkeypatch.setattr(gate, "pull_request", lambda *a, **kw: {
+        "head": SHA, "head_repo": "fixture/repository", "base": "main", "state": "open"})
+    monkeypatch.setattr(gate, "prepare_tree", lambda *a, **kw: TIP)
+
+    def capture(cmd, **kwargs):
+        if "scripts/ci/detect_touched_domains.py" in cmd:
+            stdout = json.dumps(_matrix())
+        elif gate.PLAN_READER in cmd:
+            stdout = json.dumps(PLAN)
+        else:
+            stdout = TIP
+        return subprocess.CompletedProcess(cmd, 0, stdout, "")
+
+    monkeypatch.setattr(gate, "capture", capture)
+    seen = []
+
+    def module(module, tree, env, logs, deadline, module_timeout):
+        expanded = tmp_path / f"{module.name}.url"
+        command = ('printf %s "git+https://github.com/${GITHUB_REPOSITORY%/*}/assetutilities.git@main"'
+                   f" > {shlex.quote(str(expanded))}")
+        assert gate.run_shell(command, tmp_path, env, logs / f"{module.name}.log", 5.0) == 0
+        assert expanded.read_text(encoding="utf-8") == (
+            "git+https://github.com/fixture/assetutilities.git@main")
+        seen.append(module.name)
+        return gate.Result(module.name, "pass", 0.0, 0)
+
+    monkeypatch.setattr(gate, "run_module", module)
+    args = gate.parse_args(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository",
+                            "--work-root", str(tmp_path), "--jobs", "1"])
+    state, _, _ = gate.gate(args, tmp_path / "run", tmp_path / "wt")
+    assert state == "success" and seen == ["lint", "ci-harness"]
+
+
+def test_repository_default_uses_runtime_environment(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("GITHUB_REPOSITORY", "fixture/repository")
+    args = gate.parse_args(["--pr", "7", "--sha", SHA, "--work-root", str(tmp_path)])
+    assert args.repo == "fixture/repository"
+
+
+def test_repository_must_be_provided_when_environment_is_absent(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.delenv("GITHUB_REPOSITORY", raising=False)
+    with pytest.raises(SystemExit):
+        gate.parse_args(["--pr", "7", "--sha", SHA, "--work-root", str(tmp_path)])
+
+
+def test_prepare_tree_uses_existing_git_identity(tmp_path: Path) -> None:
+    calls = []
+
+    def capture(cmd, **kwargs):
+        calls.append(cmd)
+        stdout = SHA if "refs/local-gate/pr-7" in cmd else TIP
+        return subprocess.CompletedProcess(cmd, 0, stdout, "")
+
+    args = gate.parse_args(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository",
+                            "--work-root", str(tmp_path)])
+    tree = tmp_path / "tree"
+    assert gate.prepare_tree(args, "main", tree, run=capture) == TIP
+    merge = next(cmd for cmd in calls if "merge" in cmd)
+    # Git obtains identity from its normal runtime configuration and environment.
+    assert merge == ["git", "-C", str(tree), "merge", "--no-ff", "--no-edit", SHA]
+
+
+@pytest.mark.parametrize("unmerged", ["conflicted.txt\n", ""])
+def test_prepare_tree_classifies_failed_merge(tmp_path: Path, unmerged: str) -> None:
+    calls = []
+    stderr = "Committer identity unknown"
+
+    def capture(cmd, **kwargs):
+        calls.append(cmd)
+        if "merge" in cmd:
+            assert kwargs["check"] is False
+            return subprocess.CompletedProcess(cmd, 128, "", stderr)
+        stdout = unmerged if "diff" in cmd else SHA if "refs/local-gate/pr-7" in cmd else TIP
+        return subprocess.CompletedProcess(cmd, 0, stdout, "")
+
+    args = gate.parse_args(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository",
+                            "--work-root", str(tmp_path)])
+    tree = tmp_path / "tree"
+    expected = gate.MergeConflict if unmerged else gate.GateError
+    with pytest.raises(expected) as caught:
+        gate.prepare_tree(args, "main", tree, run=capture)
+    assert type(caught.value) is expected
+    assert ["git", "-C", str(tree), "diff", "--name-only", "--diff-filter=U"] in calls
+    if unmerged:
+        assert str(caught.value) == f"head does not merge into base {TIP[:8]}"
+    else:
+        assert str(caught.value) == f"merge exited 128: {stderr}"
+
+
+# --- review at 46eeff4b ------------------------------------------------------
+
+BINDINGS = {"GIT_DIR": "/elsewhere/.git", "GIT_WORK_TREE": "/elsewhere", "GIT_INDEX_FILE": "/elsewhere/index",
+            "GIT_OBJECT_DIRECTORY": "/elsewhere/objects", "GIT_COMMON_DIR": "/elsewhere/common",
+            "GIT_NAMESPACE": "other", "GIT_ALTERNATE_OBJECT_DIRECTORIES": "/elsewhere/alt",
+            "GIT_PREFIX": "sub/"}
+SHOW_GIT_ENV = "import json, os; print(json.dumps(sorted(k for k in os.environ if k.startswith('GIT_'))))"
+
+
+def test_helpers_do_not_inherit_repository_bindings(monkeypatch) -> None:
+    """A caller inside a Git hook or worktree exports bindings that override ``git -C``."""
+    for name, value in BINDINGS.items():
+        monkeypatch.setenv(name, value)
+    monkeypatch.setenv("GIT_TERMINAL_PROMPT", "0")
+    for env in (None, {**os.environ, **BINDINGS}):
+        seen = set(json.loads(gate.capture([sys.executable, "-c", SHOW_GIT_ENV], env=env).stdout))
+        assert "GIT_TERMINAL_PROMPT" in seen, "settings that bind no repository are kept"
+        assert not seen & set(BINDINGS)
+
+
+@pytest.mark.skipif(not hasattr(os, "killpg"), reason="module commands run through bash process groups")
+def test_module_commands_do_not_inherit_repository_bindings(tmp_path: Path) -> None:
+    log = tmp_path / "m.log"
+    command = shlex.join([sys.executable, "-c", SHOW_GIT_ENV])
+    assert gate.run_shell(command, tmp_path, {**os.environ, **BINDINGS}, log, timeout=30.0) == 0
+    seen = set(json.loads(log.read_text(encoding="utf-8").strip().splitlines()[-1]))
+    assert not seen & set(BINDINGS)
+
+
+def test_gate_environment_drops_repository_bindings(monkeypatch) -> None:
+    for name, value in BINDINGS.items():
+        monkeypatch.setenv(name, value)
+    cleaned = gate.unbound_env()
+    assert not set(BINDINGS) & set(cleaned)
+    assert cleaned["PATH"] == os.environ["PATH"]
+
+
+def test_stop_during_the_last_command_is_not_a_pass(tmp_path: Path) -> None:
+    """A stop that arrives while a command starts must not leave the module passed."""
+    def shell(command, cwd, env, log, timeout):
+        gate.STOP.set()  # the signal lands after the stop check and before registration
+        return 0
+
+    try:
+        result = gate.run_module(gate.Module("m", ["one"]), tmp_path, {}, tmp_path, deadline=100.0,
+                                 module_timeout=50.0, shell=shell, clock=Clock())
+        assert (result.status, result.code) == ("fail", 143)
+    finally:
+        gate.STOP.clear()
+
+
+def test_a_stopped_run_never_reports_success() -> None:
+    passed = [gate.Result("lint", "pass", 1.0, 0), gate.Result("contracts", "pass", 2.0, 0)]
+    state, text = gate.summarize(passed, 3, TIP, stopped=True)
+    assert state == "failure"
+    assert text.startswith(f"base {TIP}: stopped before completion")
+    assert gate.summarize(passed, 3, TIP)[0] == "success"
+
+
+def test_process_started_after_a_stop_is_ended_at_once(monkeypatch, tmp_path: Path) -> None:
+    """The stop handler cannot see a process that registers after it ran; the starter must."""
+    ended: list[int] = []
+
+    class Proc:
+        pid = 4242
+
+        def wait(self, timeout=None):
+            return -9 if ended else 0
+
+    monkeypatch.setattr(gate.subprocess, "Popen", lambda *a, **k: Proc())
+    monkeypatch.setattr(gate, "stop_group", lambda proc: ended.append(proc.pid))
+    gate.STOP.set()
+    try:
+        code = gate.run_shell("true", tmp_path, {}, tmp_path / "m.log", timeout=5.0)
+    finally:
+        gate.STOP.clear()
+    assert ended == [4242]
+    assert code != 0
+
+
+def test_queued_module_after_the_budget_is_not_run_not_an_error() -> None:
+    """Checkout for a queued module must not turn an exhausted budget into a gate error."""
+    clock = Clock()
+    clock.now = 200.0
+    result = gate.run_queued(gate.Module("late", ["one"]), 100.0,
+                             lambda module: pytest.fail("no checkout after the budget"), clock=clock)
+    assert (result.name, result.status) == ("late", "not-run")
+    done = [gate.Result("first", "pass", 100.0, 0), result]
+    assert gate.summarize(done, 200, TIP)[0] == "failure"
+
+
+def test_budget_expiring_during_checkout_keeps_the_other_results() -> None:
+    clock = Clock()
+
+    def body(module):
+        clock.now = 150.0
+        raise gate.GateError("overall budget expired during helper")
+
+    result = gate.run_queued(gate.Module("late", ["one"]), 100.0, body, clock=clock)
+    assert result.status == "not-run"
+
+    def broken(module):
+        raise gate.GateError("git worktree add exited 128")
+
+    assert gate.run_queued(gate.Module("m", ["one"]), 100.0, broken, clock=Clock()).status == "fail"
+
+
+# --- disk location rule ------------------------------------------------------
+
+@pytest.fixture(autouse=True)
+def _data_volume(monkeypatch):
+    """Test folders sit on the system volume; the rule itself is tested below."""
+    monkeypatch.setattr(gate, "on_root_volume", lambda path: False)
+    monkeypatch.setattr(gate, "free_gb", lambda path: 500.0)
+
+
+def _args(tmp_path: Path, *extra: str):
+    return gate.parse_args(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository",
+                            "--work-root", str(tmp_path), *extra])
+
+
+def test_work_root_on_the_root_volume_is_refused_before_anything_is_written(monkeypatch, tmp_path: Path) -> None:
+    work = tmp_path / "work"
+    work.mkdir()
+    monkeypatch.setattr(gate, "on_root_volume", lambda path: True)
+    monkeypatch.setattr(gate, "free_gb", lambda path: 500.0)
+    monkeypatch.setattr(gate, "pull_request", lambda *a, **kw: pytest.fail("no API call"))
+    posted: list[str] = []
+    monkeypatch.setattr(gate, "post_status", lambda repo, sha, state, text, **kw: posted.append(state))
+    code = gate.main(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository", "--work-root", str(work)])
+    assert code == gate.EXIT_ERROR and posted == ["error"]
+    assert list(work.iterdir()) == [], "nothing may be written to a refused volume"
+
+
+def test_cache_on_the_root_volume_is_refused(monkeypatch, tmp_path: Path) -> None:
+    cache = tmp_path / "elsewhere" / "cache"
+    monkeypatch.setattr(gate, "on_root_volume", lambda path: Path(path) == cache)
+    monkeypatch.setattr(gate, "free_gb", lambda path: 500.0)
+    with pytest.raises(gate.GateError, match="cache folder .* root volume"):
+        gate.check_volumes(_args(tmp_path, "--cache-dir", str(cache)))
+
+
+def test_root_volume_needs_an_explicit_flag(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setattr(gate, "on_root_volume", lambda path: True)
+    monkeypatch.setattr(gate, "free_gb", lambda path: 500.0)
+    gate.check_volumes(_args(tmp_path, "--allow-root-volume"))
+
+
+def test_each_volume_is_checked_for_free_space(monkeypatch, tmp_path: Path) -> None:
+    cache = tmp_path / "cache"
+    monkeypatch.setattr(gate, "free_gb", lambda path: 5.0 if Path(path) == cache else 500.0)
+    with pytest.raises(gate.GateError, match="cache folder volume has 5 GB free, below the 20 GB floor"):
+        gate.check_volumes(_args(tmp_path, "--cache-dir", str(cache)))
+
+
+def test_folders_come_from_the_environment_when_not_given(monkeypatch, tmp_path: Path) -> None:
+    monkeypatch.setenv("LOCAL_GATE_WORK_ROOT", str(tmp_path / "w"))
+    monkeypatch.setenv("LOCAL_GATE_CACHE_DIR", str(tmp_path / "c"))
+    args = gate.parse_args(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository"])
+    assert (args.work_root, args.cache_dir) == (tmp_path / "w", tmp_path / "c")
+    monkeypatch.delenv("LOCAL_GATE_CACHE_DIR")
+    args = gate.parse_args(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository"])
+    assert args.cache_dir == tmp_path / "w" / "uv-cache"
+    monkeypatch.delenv("LOCAL_GATE_WORK_ROOT")
+    with pytest.raises(SystemExit):
+        gate.parse_args(["--pr", "7", "--sha", SHA, "--repo", "fixture/repository"])
+
+
+def test_module_queued_when_the_volume_falls_below_the_floor_is_not_run() -> None:
+    """Caches grow while modules run; a module is not started into a volume below the floor."""
+    result = gate.run_queued(gate.Module("late", ["one"]), 100.0,
+                             lambda module: pytest.fail("no checkout below the floor"),
+                             clock=Clock(), has_room=lambda: False)
+    assert result.status == "not-run"
+
+
+def test_root_volume_probe_uses_the_nearest_existing_folder(tmp_path: Path) -> None:
+    real = _load().on_root_volume  # a fresh copy: the fixture replaced the shared one
+    assert real(tmp_path / "not" / "created" / "yet") == real(tmp_path)
+    assert real(Path(os.path.abspath(os.sep))) is True

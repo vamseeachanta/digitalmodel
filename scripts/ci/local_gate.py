@@ -1,0 +1,614 @@
+#!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
+"""Run the pull-request gates on a local host and post a ``local-gate`` commit status.
+
+The gate tests the same tree the hosted workflows test: the pull-request head
+merged into the current base tip. It then runs the static checks, the CI harness
+tests and only the domain shards that ``detect_touched_domains.py`` selects,
+module by module, in parallel, inside a time budget.
+
+The result is fail-closed. ``success`` is posted only when every planned module
+ran and returned 0. A failed, timed-out or unstarted module posts ``failure``;
+a host problem (low disk, fetch, detection) posts ``error``. A head that moved
+posts nothing, because the requested commit is no longer the pull-request head.
+
+Only same-repository pull requests are accepted: the gate executes repository
+code, exactly as the self-hosted workflow jobs do. See ``docs/ci/local-gate.md``.
+"""
+
+from __future__ import annotations
+
+import argparse
+import concurrent.futures
+import dataclasses
+import datetime as dt
+import json
+import os
+import re
+import shlex
+import shutil
+import signal
+import subprocess
+import sys
+import threading
+import time
+from pathlib import Path
+from typing import Callable
+
+CONTEXT = "local-gate"
+# Local compatibility policy, not a documented numeric API bound. The API asks
+# for a short description: https://docs.github.com/en/rest/commits/statuses#create-a-commit-status
+DESCRIPTION_LIMIT = 140
+HARNESS_JOB = "ci-harness-tests"
+HARNESS_STEP = "Run harness tests"
+DOMAIN_WORKFLOW = ".github/workflows/quality-gates-by-domain.yml"
+GATES_FILE = ".claude/quality-gates.yaml"
+EXIT_PASS, EXIT_FAIL, EXIT_ERROR, EXIT_STALE = 0, 1, 2, 3
+
+# Reads the shard commands and the harness command from the tree under test, so
+# the local gate cannot drift from the workflow definitions it mirrors.
+PLAN_READER = r"""
+import json, sys, yaml
+gates = yaml.safe_load(open(sys.argv[1], encoding="utf-8"))["gates"]
+workflow = yaml.safe_load(open(sys.argv[2], encoding="utf-8"))
+steps = workflow["jobs"][sys.argv[3]]["steps"]
+harness = next(s["run"] for s in steps if s.get("name") == sys.argv[4])
+commands = {k: v["command"] for k, v in gates.items() if isinstance(v, dict) and v.get("command")}
+print(json.dumps({"gates": commands, "harness": harness}))
+"""
+
+
+class GateError(Exception):
+    """A host or setup problem: the gate result is ``error``, never ``success``."""
+
+
+@dataclasses.dataclass
+class Module:
+    """One independently reported unit: a list of shell commands run in order."""
+
+    name: str
+    commands: list[str]
+
+
+@dataclasses.dataclass
+class Result:
+    """Outcome of one module. ``status`` is pass, fail, timeout or not-run."""
+
+    name: str
+    status: str
+    seconds: float = 0.0
+    code: int | None = None
+
+
+Runner = Callable[..., "subprocess.CompletedProcess[str]"]
+LIVE: set[subprocess.Popen] = set()
+STOP = threading.Event()
+
+
+def request_stop(signum: int, frame: object) -> None:
+    """On SIGTERM or SIGINT end the running modules and start no further one.
+
+    The run then finishes through its normal path: the stopped modules count as
+    not passed, the checkouts are removed and the result is ``failure``.
+    """
+    STOP.set()
+    for proc in list(LIVE):
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except (ProcessLookupError, PermissionError, AttributeError):
+            proc.kill()
+
+
+def detect_command(tip: str, merged: str) -> list[str]:
+    """Detector call for the change the merge makes on the base: base tip against the merged tree.
+
+    The hosted pull-request job passes the pull-request head here. For a head that is behind the
+    base, that two-commit comparison also lists everything the base gained since the fork point,
+    so one unrelated source merge on the base selects every shard for every open pull request.
+    The merged tree differs from the base tip by the pull request's own change only.
+    """
+    return ["python", "scripts/ci/detect_touched_domains.py", "--mode", "touched", "--base", tip,
+            "--head", merged, "--domains-file", "tests/DOMAINS.md", "--output-format", "json-matrix"]
+
+
+# Variables that bind Git to a repository, index or object store. Git exports them to hooks
+# and some tools set them; each one overrides ``git -C <dir>`` and the working directory, so
+# an inherited value would point the gate's fetch, worktree and cleanup at the caller's repository.
+GIT_BINDINGS = frozenset({
+    "GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_OBJECT_DIRECTORY",
+    "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_COMMON_DIR", "GIT_NAMESPACE", "GIT_PREFIX",
+    "GIT_QUARANTINE_PATH", "GIT_SHALLOW_FILE", "GIT_GRAFT_FILE", "GIT_REPLACE_REF_BASE",
+    "GIT_CEILING_DIRECTORIES", "GIT_DISCOVERY_ACROSS_FILESYSTEM",
+})
+
+
+def unbound_env(env: dict[str, str] | None = None) -> dict[str, str]:
+    """A copy of ``env`` (default: this process's) without Git repository bindings."""
+    source = os.environ if env is None else env
+    return {name: value for name, value in source.items() if name not in GIT_BINDINGS}
+
+
+def capture(cmd: list[str], cwd: Path | None = None, env: dict[str, str] | None = None,
+            check: bool = True, timeout: float = 60.0) -> subprocess.CompletedProcess[str]:
+    """Capture a bounded helper; terminate its whole process group on timeout."""
+    if timeout <= 0:
+        raise GateError("overall budget expired before helper could start")
+    proc = subprocess.Popen(cmd, cwd=cwd, env=unbound_env(env), stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, text=True, encoding="utf-8",
+                            errors="replace", start_new_session=True)
+    try:
+        stdout, stderr = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired as exc:
+        stop_group(proc)
+        proc.communicate(timeout=1.0)
+        raise GateError(f"{' '.join(cmd[:3])} timed out") from exc
+    done = subprocess.CompletedProcess(cmd, proc.returncode, stdout, stderr)
+    if check and done.returncode != 0:
+        tail = (done.stderr or done.stdout).strip()[-300:]
+        raise GateError(f"{' '.join(cmd[:3])} exited {done.returncode}: {tail}")
+    return done
+
+
+def deadline_runner(deadline: float, run: Runner | None = None,
+                    clock: Callable[[], float] | None = None) -> Runner:
+    """Give every setup/helper subprocess only the remaining overall budget."""
+    run = capture if run is None else run
+    clock = time.monotonic if clock is None else clock
+
+    def bounded(cmd: list[str], **kwargs) -> subprocess.CompletedProcess[str]:
+        remaining = deadline - clock()
+        if remaining <= 0:
+            raise GateError("overall budget expired before helper could start")
+        done = run(cmd, timeout=remaining, **kwargs)
+        if clock() >= deadline:
+            raise GateError("overall budget expired during helper")
+        return done
+
+    return bounded
+
+
+def stop_group(proc: subprocess.Popen) -> None:
+    """Send TERM, wait at most one second, then kill the whole group."""
+    try:
+        os.killpg(proc.pid, signal.SIGTERM)
+    except ProcessLookupError:
+        pass
+    try:
+        proc.wait(timeout=1.0)
+    except subprocess.TimeoutExpired:
+        pass
+    finally:
+        # wait() observes only the leader. Descendants can ignore TERM and keep
+        # running (or retain capture pipes) after that leader has been reaped.
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        proc.wait(timeout=1.0)
+
+
+def run_shell(command: str, cwd: Path, env: dict[str, str], log: Path, timeout: float) -> int:
+    """Run one shell command in its own process group; 124 means timed out."""
+    with log.open("a", encoding="utf-8") as handle:
+        handle.write(f"\n$ {command}\n")
+        handle.flush()
+        proc = subprocess.Popen(["bash", "-c", command], cwd=cwd, env=unbound_env(env), stdout=handle,
+                                stderr=subprocess.STDOUT, start_new_session=True)
+        LIVE.add(proc)
+        try:
+            # request_stop() sets STOP and then ends what LIVE holds. A process registered
+            # after that pass is not seen there; it is registered before this check, so one
+            # of the two always ends it.
+            if STOP.is_set():
+                stop_group(proc)
+                return 143
+            return proc.wait(timeout=max(timeout, 0.1))
+        except subprocess.TimeoutExpired:
+            stop_group(proc)
+            return 124
+        finally:
+            LIVE.discard(proc)
+
+
+def nearest_existing(path: Path) -> Path:
+    """``path``, or its closest parent that exists (the volume a new folder would land on)."""
+    probe = Path(os.path.abspath(path))
+    while not probe.exists() and probe != probe.parent:
+        probe = probe.parent
+    return probe
+
+
+def free_gb(path: Path) -> float:
+    """Free space on the volume holding ``path``."""
+    return shutil.disk_usage(nearest_existing(path)).free / 1024 ** 3
+
+
+def on_root_volume(path: Path) -> bool:
+    """Whether ``path`` is on the volume that holds the root file system."""
+    return os.stat(nearest_existing(path)).st_dev == os.stat(os.path.abspath(os.sep)).st_dev
+
+
+def check_volumes(args: argparse.Namespace) -> None:
+    """Refuse a work root or cache on the root volume, or on a volume below the free-space floor.
+
+    A full run writes tens of gigabytes of package cache and several checkouts with their
+    environments. On the root volume that growth takes the host's own free space, so the
+    root volume is refused unless ``--allow-root-volume`` is given.
+    """
+    for label, path in (("work root", args.work_root), ("cache folder", args.cache_dir)):
+        if not args.allow_root_volume and on_root_volume(path):
+            raise GateError(f"{label} is on the root volume; use a data volume or pass --allow-root-volume")
+        available = free_gb(path)
+        if available < args.min_free_gb:
+            raise GateError(f"{label} volume has {available:.0f} GB free, "
+                            f"below the {args.min_free_gb:.0f} GB floor")
+
+
+def plan_modules(matrix: dict, plan: dict, tip: str, scratch: str) -> list[Module]:
+    """Translate the detector matrix into runnable modules, mirroring the workflow.
+
+    A touched domain without a gate command raises: an unknown shard can never
+    be skipped silently.
+    """
+    lint = Module("lint", [
+        "uv run --no-project --with ruff==0.15.1 python scripts/ci/check_text_encoding.py "
+        f"--base {shlex.quote(tip)}",
+        "uv run --no-project python scripts/enforcement/check-report-provenance.py",
+        "uv run --no-project --with pyyaml python scripts/maintenance/verify_repo_structure.py "
+        "--repo . --config config/repo_structure.yml",
+        "uv run --no-project python scripts/enforcement/check-engineering-register.py "
+        f"--diff {shlex.quote(tip)}",
+    ])
+    lint.commands.extend([
+        "uv run --no-project --with pytest --with pyyaml --with ruff==0.15.1 python -m pytest "
+        "tests/scripts/test_check_text_encoding.py -q -rA -p no:cacheprovider "
+        f"--basetemp={shlex.quote(scratch + '/text-encoding-tests')}",
+        "uv run --no-project --with pytest --with pytest-asyncio --with pyyaml python -m pytest "
+        "tests/repo_structure -q -rA -p no:cacheprovider "
+        f"--basetemp={shlex.quote(scratch + '/repo-structure-tests')}",
+    ])
+    modules = [lint, Module("ci-harness", [plan["harness"]])]
+    for entry in matrix.get("include", []):
+        domain = entry["domain"]
+        if not re.fullmatch(r"[A-Za-z0-9_.-]+", domain):
+            raise GateError(f"unexpected domain name: {domain!r}")
+        command = plan["gates"].get(f"tests-{domain}")
+        if not command:
+            raise GateError(f"no gate command for touched domain {domain}")
+        junit = f"reports/junit-{domain}.xml"
+        suffix = f" --junitxml={junit} -o junit_family=xunit2"
+        commands = ["mkdir -p reports"]
+        if domain == "subsea":
+            command += " tests/riser_fatigue/ tests/riser_bom/"
+        if domain == "contracts":
+            prefix = f"{scratch}/source-locators-formatter"
+            commands.append(
+                f"npm install --prefix {shlex.quote(prefix)} --cache {shlex.quote(scratch + '/npm-cache')} "
+                "--no-save --no-package-lock --no-audit --no-fund prettier@4.0.0-alpha.8")
+            command = (f"SOURCE_LOCATORS_PRETTIER={shlex.quote(prefix + '/node_modules/.bin/prettier')} "
+                       + command)
+        if domain in ("solver-smoke", "specialized"):
+            commands.append("dpkg -s libglu1-mesa >/dev/null")
+        if domain == "orcaflex":
+            register = f"{scratch}/flaky-register.yml"
+            commands.append(f"python3 scripts/ci/ci_baseline.py register --out {shlex.quote(register)}")
+            command = ("uv run --no-sources --with pyyaml==6.0.2 python scripts/ci/run_shard.py "
+                       f"--register {shlex.quote(register)} --mode report --shard orcaflex "
+                       f"--junit {junit} --max-retry-ids 20 -- {command}")
+        commands.append(command + suffix)
+        if domain == "specialized":
+            commands.append(
+                "PYTHONPATH=src uv run --no-sources --with-editable '.[test]' --with 'xslope==1.0.3' "
+                "--with 'gmsh>=4.15' python -m pytest tests/geotechnical -q -rA -p no:cacheprovider")
+        modules.append(Module(domain, commands))
+    return modules
+
+
+def run_module(module: Module, cwd: Path, env: dict[str, str], logs: Path, deadline: float,
+               module_timeout: float, shell: Callable[..., int] = run_shell,
+               clock: Callable[[], float] = time.monotonic) -> Result:
+    """Run one module unless the budget is already spent."""
+    started = clock()
+    if started >= deadline or STOP.is_set():
+        return Result(module.name, "not-run")
+    limit = started + module_timeout
+    for command in module.commands:
+        if STOP.is_set():
+            return Result(module.name, "fail", clock() - started, 143)
+        remaining = min(limit, deadline) - clock()
+        if remaining <= 0:
+            return Result(module.name, "timeout", clock() - started, 124)
+        code = shell(command, cwd, env, logs / f"{module.name}.log", remaining)
+        if STOP.is_set():  # the command may have been ended by the stop, or have missed it
+            return Result(module.name, "fail", clock() - started, 143)
+        if code != 0:
+            status = "timeout" if code == 124 else "fail"
+            return Result(module.name, status, clock() - started, code)
+    return Result(module.name, "pass", clock() - started, 0)
+
+
+def run_queued(module: Module, deadline: float, body: Callable[[Module], Result],
+               clock: Callable[[], float] | None = None,
+               has_room: Callable[[], bool] | None = None) -> Result:
+    """Run ``body`` (checkout, commands, cleanup) for a module that has waited for a worker.
+
+    A module whose turn comes after the budget or after a stop is ``not-run``. A helper that
+    fails during its checkout fails that module only, so the results of the modules that did
+    run are kept and the gate reports ``failure``, not ``error``.
+    """
+    clock = time.monotonic if clock is None else clock
+    if clock() >= deadline or STOP.is_set():
+        return Result(module.name, "not-run")
+    if has_room is not None and not has_room():
+        # The cache and the checkouts grow during a run; the floor is checked again per module.
+        print(f"local-gate: {module.name} not run: a volume is below the free-space floor", flush=True)
+        return Result(module.name, "not-run")
+    try:
+        return body(module)
+    except GateError as exc:
+        print(f"local-gate: {module.name} could not run: {exc}", flush=True)
+        return Result(module.name, "not-run" if clock() >= deadline else "fail")
+
+
+def run_modules(modules: list[Module], jobs: int, run_one: Callable[[Module], Result]) -> list[Result]:
+    """Run modules in parallel within the job cap, keeping plan order in the result."""
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, jobs)) as pool:
+        return list(pool.map(run_one, modules))
+
+
+def describe_modules(prefix: str, names: list[str], suffix: str = "") -> str:
+    """Fit complete module entries, marking how many the description omits."""
+    text = prefix + ", ".join(names) + suffix
+    if len(text) <= DESCRIPTION_LIMIT:
+        return text
+    listed: list[str] = []
+    for index, name in enumerate(names):
+        candidate = ", ".join([*listed, name])
+        remaining = len(names) - index - 1
+        marker = f"; +{remaining} more" if remaining else ""
+        if len(prefix + candidate + marker + suffix) > DESCRIPTION_LIMIT:
+            break
+        listed.append(name)
+    detail = ", ".join(listed) + "; " if listed else ""
+    return prefix + detail + f"+{len(names) - len(listed)} more" + suffix
+
+
+def summarize(results: list[Result], seconds: float, tip: str, stopped: bool = False) -> tuple[str, str]:
+    """Return the commit-status state and a description within the local cap.
+
+    The description starts with the full base commit the head was merged into,
+    so a merge step can require a result for the base tip it is about to merge into.
+    """
+    bad = [r for r in results if r.status != "pass"]
+    total = len(results)
+    if not results:
+        return "error", "no module was planned"
+    if stopped:  # whatever the modules report, a stopped run is not a complete one
+        text = f"base {tip}: stopped before completion; {total - len(bad)}/{total} modules had passed"
+        return "failure", text[:DESCRIPTION_LIMIT]
+    if not bad:
+        prefix = f"base {tip}: {total}/{total} modules passed in {seconds:.0f} s ("
+        return "success", describe_modules(prefix, [r.name for r in results], ")")
+    prefix = f"base {tip}: {total - len(bad)}/{total} modules passed in {seconds:.0f} s; not passed: "
+    return "failure", describe_modules(prefix, [f"{r.name} ({r.status})" for r in bad])
+
+
+def post_status(repo: str, sha: str, state: str, description: str, run: Runner = capture) -> None:
+    """Post the commit status; a failed post is an error for the caller."""
+    run(["gh", "api", "-X", "POST", f"repos/{repo}/statuses/{sha}", "-f", f"state={state}",
+         "-f", f"context={CONTEXT}", "-f", f"description={description[:DESCRIPTION_LIMIT]}"])
+
+
+def pull_request(repo: str, number: int, run: Runner = capture) -> dict:
+    """Read the head, base and origin of the pull request."""
+    out = run(["gh", "api", f"repos/{repo}/pulls/{number}", "--jq",
+               "{head: .head.sha, head_repo: .head.repo.full_name, base: .base.ref, state: .state}"])
+    return dict(json.loads(out.stdout))
+
+
+def prepare_tree(args: argparse.Namespace, base: str, worktree: Path, run: Runner = capture) -> str:
+    """Fetch into the gate's own mirror and build the merged tree; return the base tip."""
+    mirror = args.work_root / "mirror.git"
+    url = f"https://github.com/{args.repo}.git"
+    if not mirror.exists():
+        # A complete clone, as the workflows use (fetch-depth: 0): citation and pin tests read
+        # old revisions, and a partial clone would fetch each missing object over the network.
+        run(["git", "clone", "--quiet", "--bare", url, str(mirror)])
+    git = ["git", "-C", str(mirror)]
+    run(git + ["fetch", "--quiet", "--no-tags", url,
+               f"+refs/heads/{base}:refs/local-gate/base",
+               f"+refs/pull/{args.pr}/head:refs/local-gate/pr-{args.pr}"])
+    fetched = run(git + ["rev-parse", f"refs/local-gate/pr-{args.pr}"]).stdout.strip()
+    if fetched != args.sha:
+        raise StaleHead(f"fetched head {fetched[:8]} is not the requested {args.sha[:8]}")
+    tip = run(git + ["rev-parse", "refs/local-gate/base"]).stdout.strip()
+    run(git + ["worktree", "prune"])
+    run(git + ["worktree", "add", "--quiet", "--detach", str(worktree), tip])
+    merge = run(["git", "-C", str(worktree), "merge", "--no-ff", "--no-edit", args.sha],
+                check=False)
+    if merge.returncode != 0:
+        unmerged = run(["git", "-C", str(worktree), "diff", "--name-only", "--diff-filter=U"])
+        if unmerged.stdout.strip():
+            raise MergeConflict(f"head does not merge into base {tip[:8]}")
+        raise GateError(f"merge exited {merge.returncode}: {merge.stderr.strip()[-300:]}")
+    return tip
+
+
+class StaleHead(GateError):
+    """The requested commit is not the pull-request head."""
+
+
+class MergeConflict(GateError):
+    """The head conflicts with the current base tip."""
+
+
+def remove_tree(work_root: Path, tree_root: Path) -> None:
+    """Remove only the worktrees this run created (one per module, under ``tree_root``)."""
+    mirror = work_root / "mirror.git"
+    if tree_root.is_dir():
+        for child in tree_root.iterdir():
+            capture(["git", "-C", str(mirror), "worktree", "remove", "--force", str(child)], check=False)
+        shutil.rmtree(tree_root, ignore_errors=True)
+    capture(["git", "-C", str(mirror), "worktree", "prune"], check=False)
+
+
+def parse_args(argv: list[str]) -> argparse.Namespace:
+    """Parse and validate the command line."""
+    parser = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
+    parser.add_argument("--pr", type=int, required=True)
+    parser.add_argument("--sha", required=True, help="full 40-character head commit")
+    parser.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY"),
+                        help="owner/name; defaults to GITHUB_REPOSITORY")
+    parser.add_argument("--work-root", type=Path, default=os.environ.get("LOCAL_GATE_WORK_ROOT"),
+                        help="folder for the mirror, checkouts and run logs, on a data volume; "
+                             "defaults to LOCAL_GATE_WORK_ROOT")
+    parser.add_argument("--cache-dir", type=Path, default=os.environ.get("LOCAL_GATE_CACHE_DIR"),
+                        help="package cache folder, on a data volume; defaults to LOCAL_GATE_CACHE_DIR, "
+                             "else <work-root>/uv-cache")
+    parser.add_argument("--allow-root-volume", action="store_true",
+                        help="accept a work root or cache on the volume of the root file system")
+    parser.add_argument("--jobs", type=int, default=4, help="modules run in parallel")
+    parser.add_argument("--budget-seconds", type=int, default=3600)
+    parser.add_argument("--module-timeout", type=int, default=1500)
+    parser.add_argument("--min-free-gb", type=float, default=20.0,
+                        help="refuse to start, and start no further module, when the work-root or "
+                             "cache volume has less free space")
+    parser.add_argument("--python", default="3.11",
+                        help="version or interpreter path; give the path of the interpreter the hosted jobs use")
+    parser.add_argument("--no-post", action="store_true", help="run and report, post no status")
+    parser.add_argument("--keep", action="store_true", help="keep the worktree for inspection")
+    args = parser.parse_args(argv)
+    if args.work_root is None:
+        parser.error("provide --work-root or set LOCAL_GATE_WORK_ROOT")
+    args.work_root = Path(args.work_root)
+    args.cache_dir = Path(args.cache_dir) if args.cache_dir else args.work_root / "uv-cache"
+    if not re.fullmatch(r"[0-9a-f]{40}", args.sha):
+        parser.error("--sha must be a full lower-case commit id")
+    if not args.repo or not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", args.repo):
+        parser.error("provide --repo owner/name or set GITHUB_REPOSITORY")
+    if args.pr <= 0 or args.jobs <= 0 or args.budget_seconds <= 0 or args.module_timeout <= 0:
+        parser.error("--pr, --jobs, --budget-seconds and --module-timeout must be positive")
+    return args
+
+
+def gate(args: argparse.Namespace, run_dir: Path, tree_root: Path) -> tuple[str, str, list[Result]]:
+    """Run the whole gate; return state, description and module results.
+
+    Every module gets its own checkout of the merged commit, as every hosted job
+    does: a file one shard writes into the tree cannot change another shard's result.
+    """
+    started = time.monotonic()
+    deadline = started + args.budget_seconds
+    check_volumes(args)
+    run = deadline_runner(deadline)
+    info = pull_request(args.repo, args.pr, run=run)
+    if info["head"] != args.sha or info["state"] != "open":
+        raise StaleHead(f"pull request head is {str(info['head'])[:8]} ({info['state']})")
+    if info["head_repo"] != args.repo:
+        raise GateError("pull request comes from another repository; local gate refused")
+    if not re.fullmatch(r"[A-Za-z0-9._/-]{1,100}", info["base"]):
+        raise GateError("unexpected base branch name")
+    worktree = tree_root / "plan"
+    tip = prepare_tree(args, info["base"], worktree, run=run)
+    merged = run(["git", "-C", str(worktree), "rev-parse", "HEAD"]).stdout.strip()
+    mirror = args.work_root / "mirror.git"
+
+    scratch = run_dir / "scratch"
+    logs = run_dir / "logs"
+    scratch.mkdir(parents=True)
+    logs.mkdir()
+    env = unbound_env()
+    env.update(UV_CACHE_DIR=str(args.cache_dir),
+               UV_PYTHON_INSTALL_DIR=str(args.work_root / "uv-python"),
+               UV_PYTHON=args.python, PYTHONDONTWRITEBYTECODE="1", TMPDIR=str(scratch),
+               GITHUB_BASE_REF=info["base"], GITHUB_SHA=args.sha, GITHUB_REPOSITORY=args.repo)
+    # Prefer an interpreter installed on the host over a downloaded standalone build: the
+    # standalone 3.11 build lacks fcntl.F_SEAL_WRITE, which tests/workflows needs.
+    env.setdefault("UV_PYTHON_PREFERENCE", "system")
+    uv = ["uv", "run", "--no-sources"]
+    detect = run(uv + detect_command(tip, merged), cwd=worktree, env=env)
+    matrix = json.loads(detect.stdout.strip().splitlines()[-1])
+    reader = run(uv + ["--with", "pyyaml==6.0.2", "python", "-c", PLAN_READER, GATES_FILE,
+                       DOMAIN_WORKFLOW, HARNESS_JOB, HARNESS_STEP], cwd=worktree, env=env)
+    plan = json.loads(reader.stdout.strip().splitlines()[-1])
+    modules = plan_modules(matrix, plan, tip, str(scratch))
+    print(f"local-gate: {len(modules)} modules: {', '.join(m.name for m in modules)}", flush=True)
+
+    def run_one(module: Module) -> Result:
+        tree = tree_root / module.name
+        added = run(["git", "-C", str(mirror), "worktree", "add", "--quiet", "--detach",
+                     str(tree), merged], check=False)
+        if added.returncode != 0:
+            print(f"local-gate: {module.name} checkout failed", flush=True)
+            return Result(module.name, "fail", 0.0, added.returncode)
+        try:
+            result = run_module(module, tree, env, logs, deadline, args.module_timeout)
+        finally:
+            if not args.keep:  # disk in use is bounded by --jobs checkouts, not by the module count
+                capture(["git", "-C", str(mirror), "worktree", "remove", "--force", str(tree)],
+                        check=False, timeout=300.0)
+                shutil.rmtree(tree, ignore_errors=True)
+        print(f"local-gate: {result.name} {result.status} in {result.seconds:.0f} s", flush=True)
+        return result
+
+    def has_room() -> bool:
+        return min(free_gb(args.work_root), free_gb(args.cache_dir)) >= args.min_free_gb
+
+    results = run_modules(modules, args.jobs,
+                          lambda module: run_queued(module, deadline, run_one, has_room=has_room))
+    shutil.rmtree(scratch, ignore_errors=True)
+    state, description = summarize(results, time.monotonic() - started, tip, stopped=STOP.is_set())
+    return state, description, results
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Run the gate, post the status and return 0 only for ``success``."""
+    args = parse_args(sys.argv[1:] if argv is None else argv)
+    args.work_root = args.work_root.resolve()
+    tag = f"pr-{args.pr}-{args.sha[:8]}"
+    stamp = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    run_dir = args.work_root / "runs" / f"{tag}-{stamp}"
+    worktree = args.work_root / "wt" / tag
+    results: list[Result] = []
+    created = False
+    STOP.clear()
+    for signum in (signal.SIGTERM, signal.SIGINT):
+        signal.signal(signum, request_stop)
+    try:
+        if not args.work_root.is_dir():
+            raise GateError("work root does not exist")
+        check_volumes(args)  # before the first write
+        (args.work_root / "wt").mkdir(exist_ok=True)
+        if worktree.exists():
+            raise GateError("a gate run for this head is already present")
+        run_dir.mkdir(parents=True)
+        created = True
+        state, description, results = gate(args, run_dir, worktree)
+    except StaleHead as exc:
+        print(f"local-gate: stale, nothing posted: {exc}", flush=True)
+        return EXIT_STALE
+    except MergeConflict as exc:
+        state, description = "failure", str(exc)
+    except (GateError, OSError, ValueError, KeyError, StopIteration) as exc:
+        state, description = "error", f"gate could not run: {exc}"[:DESCRIPTION_LIMIT]
+    finally:
+        if created and not args.keep:
+            remove_tree(args.work_root, worktree)
+    if run_dir.is_dir():
+        payload = {"pr": args.pr, "sha": args.sha, "state": state, "description": description,
+                   "modules": [dataclasses.asdict(r) for r in results]}
+        (run_dir / "result.json").write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    print(f"local-gate: {state}: {description}", flush=True)
+    if not args.no_post:
+        try:
+            post_status(args.repo, args.sha, state, description)
+        except GateError as exc:
+            print(f"local-gate: status post failed: {exc}", flush=True)
+            return EXIT_ERROR
+    return {"success": EXIT_PASS, "failure": EXIT_FAIL}.get(state, EXIT_ERROR)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
