@@ -29,10 +29,12 @@ stations (NaN).
 ## Registers
 
 - `gml_results_register.csv`: per-scan API 579 general metal loss results from the
-  same inspection, one row per scan, keyed by synthetic joint ID, component and
-  scan location: minimum life (yr), corrosion rate (mm/yr), measured average wall
-  (mm), **minimum required wall** (mm, collapse-limit allowable, constant per
-  component) and averaging length (mm).
+  same inspection, one row per scan, keyed by synthetic joint ID (J01 to J28),
+  component (Line A is the main tube; Lines B, C and D are auxiliary lines) and
+  scan location (End 1 and End 2 are the two ends of a joint): minimum life
+  (yr), corrosion rate (mm/yr), measured average wall (mm), **minimum required
+  wall** (mm, collapse-limit allowable, constant per component) and averaging
+  length (mm).
 - `flaw_register.csv`: weld flaw-register schema with three populated example
   rows (length and depth in mm; type = ext/emb/int; string zones).
 

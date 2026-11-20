@@ -27,15 +27,15 @@ riser_joint_ffs:
     register_csv: ../../../tests/asset_integrity/test_data/real_inspection/gml_results_register.csv
     provenance_readme: ../../../tests/asset_integrity/test_data/real_inspection/README.md
     scans:
-      - joint_id: RJ-101
-        scan_location: Box End
+      - joint_id: J01
+        scan_location: End 1
         grid_csv: ../../../tests/asset_integrity/test_data/real_inspection/ut_grid_scan-a_ds8.csv
-      - joint_id: RJ-101
-        scan_location: Box End
+      - joint_id: J01
+        scan_location: End 1
         grid_csv: ../../../tests/asset_integrity/test_data/real_inspection/ut_grid_scan-a_window_fullres.csv
-      - joint_id: RJ-102
-        scan_location: Box End
+      - joint_id: J02
+        scan_location: End 1
         grid_csv: ../../../tests/asset_integrity/test_data/real_inspection/ut_grid_scan-b_ds8.csv
-      - joint_id: RJ-103
-        scan_location: Pin End
+      - joint_id: J03
+        scan_location: End 2
         grid_csv: ../../../tests/asset_integrity/test_data/real_inspection/ut_grid_scan-c_ds8.csv

@@ -71,12 +71,12 @@ def test_severe_worstzone_runs_canonical_ffs_chain():
 def test_gml_results_register_schema_and_ordering():
     reg = pd.read_csv(DATA / "gml_results_register.csv")
     assert len(reg) == 142
-    assert set(reg["component"]) == {"Main", "Choke", "Kill", "MB"}
-    assert reg["joint_id"].str.match(r"RJ-\d+").all()
-    # severity ordering of the three grid joints (box/pin scans picked per README)
-    main = reg[reg["component"] == "Main"]
-    severe = main[(main["joint_id"] == "RJ-101") & (main["scan_location"] == "Box End")]
-    mild = main[(main["joint_id"] == "RJ-103") & (main["scan_location"] == "Pin End")]
+    assert set(reg["component"]) == {"Line A", "Line B", "Line C", "Line D"}
+    assert reg["joint_id"].str.fullmatch(r"J\d{2}").all()
+    # severity ordering of the three grid joints (joint-end scans picked per README)
+    main = reg[reg["component"] == "Line A"]
+    severe = main[(main["joint_id"] == "J01") & (main["scan_location"] == "End 1")]
+    mild = main[(main["joint_id"] == "J03") & (main["scan_location"] == "End 2")]
     assert severe["min_life_years"].min() < 5.0
     assert mild["min_life_years"].min() > 25.0
     # required-minimum WT is a constant collapse limit per component

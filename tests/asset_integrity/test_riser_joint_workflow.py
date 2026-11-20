@@ -151,7 +151,7 @@ def test_invalid_campaign_basis_is_rejected(tmp_path, field, value):
 
 def test_unmatched_scan_is_rejected(tmp_path):
     cfg = yaml.safe_load(EXAMPLE.read_text())
-    cfg["riser_joint_ffs"]["report"]["scans"][0]["joint_id"] = "RJ-missing"
+    cfg["riser_joint_ffs"]["report"]["scans"][0]["joint_id"] = "J-missing"
     cfg["Analysis"] = {
         "result_folder": str(tmp_path),
         "analysis_root_folder": str(EXAMPLE.parent),
@@ -175,7 +175,7 @@ def test_unselected_register_rows_cannot_inflate_fleet(tmp_path, field, value):
     cfg = yaml.safe_load(EXAMPLE.read_text())
     spec = cfg["riser_joint_ffs"]["report"]
     register = pd.read_csv(EXAMPLE.parent / spec["register_csv"])
-    assert register.iloc[0]["joint_id"] == "RJ-108"  # not one of the four grids
+    assert register.iloc[0]["joint_id"] == "J08"  # not one of the four grids
     register.loc[0, field] = value
     path = tmp_path / "register.csv"
     register.to_csv(path, index=False)
@@ -184,7 +184,7 @@ def test_unselected_register_rows_cannot_inflate_fleet(tmp_path, field, value):
         "result_folder": str(tmp_path),
         "analysis_root_folder": str(EXAMPLE.parent),
     }
-    with pytest.raises(ValueError, match="Main register"):
+    with pytest.raises(ValueError, match="Line A register"):
         RiserJointFFSWorkflow().router(cfg)
     assert not (tmp_path / "riser-joint-ffs.html").exists()
 
@@ -196,7 +196,7 @@ def test_placement_uses_worst_joint_life_and_governing_measured_scan(tmp_path):
     spec = cfg["riser_joint_ffs"]["report"]
     register = pd.read_csv(EXAMPLE.parent / spec["register_csv"])
     row = (
-        register[(register.component == "Main") & (register.joint_id == "RJ-101")]
+        register[(register.component == "Line A") & (register.joint_id == "J01")]
         .iloc[0]
         .copy()
     )
@@ -211,10 +211,10 @@ def test_placement_uses_worst_joint_life_and_governing_measured_scan(tmp_path):
         "analysis_root_folder": str(EXAMPLE.parent),
     }
     result = RiserJointFFSWorkflow().router(cfg)["riser_joint_ffs"]
-    scan_placements = [p for p in result["placements"] if p["joint_id"] == "RJ-101"]
+    scan_placements = [p for p in result["placements"] if p["joint_id"] == "J01"]
     assert all(p["min_life_years"] == 0.1 for p in scan_placements)
     assert all(p["verdict"] == "REPAIR" for p in scan_placements)
-    governing = next(p for p in result["joint_governing"] if p["joint_id"] == "RJ-101")
+    governing = next(p for p in result["joint_governing"] if p["joint_id"] == "J01")
     assert governing["acceptable_depth_ft"] == min(
         p["acceptable_depth_ft"] for p in scan_placements
     )

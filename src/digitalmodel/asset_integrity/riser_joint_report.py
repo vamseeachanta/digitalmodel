@@ -19,6 +19,7 @@ from .riser_joint_ffs import (
     COLLAPSE_DESIGN_FACTOR,
     DEFAULT_WELD_CVN_JOULES,
     DEPTH_CAP_WELD,
+    MAIN_LINE_COMPONENT,
     MM_PER_IN,
     SEAWATER_PSI_PER_FT,
     ZONE_FATIGUE_MARGIN,
@@ -40,7 +41,8 @@ LIMITS = (
     "membrane stress, zero bending and the engine's default Charpy correlation; "
     "measured weld toughness and fatigue flaw growth are not established. "
     "Placement uses measured minimum wall at the time of inspection and register "
-    "minimum Main life across all scans of each joint with practice zone margins; "
+    "minimum main-tube (Line A) life across all scans of each joint with practice "
+    "zone margins; "
     "it is not a fatigue-life calculation. Envelopes use the matching scan's rate. "
     "Unmeasured cells are excluded, so minimum wall is limited to measured stations. "
     "Axially downsampled grids do not establish full-resolution minima; the joint "
@@ -94,18 +96,20 @@ def _envelopes(spec, rate):
 
 def _scan_result(scan, spec, grid, register):
     rows = register[
-        (register["component"] == "Main")
+        (register["component"] == MAIN_LINE_COMPONENT)
         & (register["joint_id"] == scan["joint_id"])
         & (register["scan_location"] == scan["scan_location"])
     ]
     if len(rows) != 1:
-        raise ValueError("scan requires exactly one matching Main register row")
+        raise ValueError(
+            f"scan requires exactly one matching {MAIN_LINE_COMPONENT} register row"
+        )
     row = rows.iloc[0]
     rate = float(row["corrosion_rate_mm_per_year"]) / MM_PER_IN
     scan_life = float(row["min_life_years"])
     life = float(
         register[
-            (register["component"] == "Main")
+            (register["component"] == MAIN_LINE_COMPONENT)
             & (register["joint_id"] == scan["joint_id"])
         ]["min_life_years"].min()
     )
@@ -222,7 +226,7 @@ def _placement_sections(placements, title):
 def _rollup_sections(result):
     return [
         "<h2>Fleet roll-up</h2>",
-        f"<p>{result['rollup']['n_joints']} unique Main joints. "
+        f"<p>{result['rollup']['n_joints']} unique {MAIN_LINE_COMPONENT} joints. "
         "The two scan A grids are separate scan assessments, not additional inventory.</p>",
         _table(
             [
@@ -354,7 +358,7 @@ def run_report(spec, analysis):
 
 
 def _validate_register(register):
-    main = register[register["component"] == "Main"]
+    main = register[register["component"] == MAIN_LINE_COMPONENT]
     life = pd.to_numeric(main["min_life_years"], errors="coerce")
     ids = main["joint_id"]
     if (
@@ -365,7 +369,8 @@ def _validate_register(register):
         or ids.astype(str).str.strip().eq("").any()
     ):
         raise ValueError(
-            "Main register requires joint IDs and finite nonnegative life for every row"
+            f"{MAIN_LINE_COMPONENT} register requires joint IDs and finite nonnegative "
+            "life for every row"
         )
 
 

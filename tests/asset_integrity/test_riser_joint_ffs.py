@@ -188,11 +188,11 @@ def _register():
 
 def test_place_severe_vs_mild_joint():
     reg = _register()
-    main = reg[reg["component"] == "Main"].groupby("joint_id")["min_life_years"].min()
+    main = reg[reg["component"] == "Line A"].groupby("joint_id")["min_life_years"].min()
     kw = dict(od_in=OD, grade=GRADE, campaign_water_depth_ft=5_000.0,
               campaign_years=3.0)
-    severe = place_joint("RJ-101", main["RJ-101"], 15.02 / 25.4, **kw)
-    mild = place_joint("RJ-103", main["RJ-103"], 21.0 / 25.4, **kw)
+    severe = place_joint("J01", main["J01"], 15.02 / 25.4, **kw)
+    mild = place_joint("J03", main["J03"], 21.0 / 25.4, **kw)
     # severe joint: life fits only mid, but its thinnest wall is not
     # collapse-qualified even at 50% campaign depth -> repair
     assert severe.eligible_zones == []
@@ -204,7 +204,7 @@ def test_place_severe_vs_mild_joint():
 
 
 def test_degraded_joint_restricted_to_mid_string():
-    p = place_joint("RJ-x", min_life_years=4.0, wt_min_in=WT,
+    p = place_joint("J-x", min_life_years=4.0, wt_min_in=WT,
                     od_in=OD, grade=GRADE,
                     campaign_water_depth_ft=5_000.0, campaign_years=3.0)
     assert p.verdict == "ACCEPT"
@@ -212,7 +212,7 @@ def test_degraded_joint_restricted_to_mid_string():
 
 
 def test_fleet_rollup_on_real_register():
-    roll = fleet_rollup(_register(), component="Main",
+    roll = fleet_rollup(_register(), component="Line A",
                         campaign_years=3.0, n_campaigns=4)
     assert roll["n_joints"] == 26
     c = roll["campaigns"]

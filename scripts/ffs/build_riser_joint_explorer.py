@@ -17,6 +17,7 @@ from pathlib import Path
 import pandas as pd
 
 from digitalmodel.asset_integrity.riser_joint_ffs import (
+    MAIN_LINE_COMPONENT,
     acceptable_water_depth_ft,
     fleet_rollup,
     level1_flaw_envelope,
@@ -36,9 +37,9 @@ DURATIONS = [0.0, 1.0, 3.0, 5.0]
 
 # the three fixture joints: measured min wall (mm) from the committed grids
 JOINTS = {
-    "RJ-101 (severe)": {"wt_min_mm": 15.02, "scan": "scan A"},
-    "RJ-102 (moderate)": {"wt_min_mm": 15.11, "scan": "scan B"},
-    "RJ-103 (mild)": {"wt_min_mm": 15.42, "scan": "scan C"},
+    "J01 (severe)": {"wt_min_mm": 15.02, "scan": "scan A"},
+    "J02 (moderate)": {"wt_min_mm": 15.11, "scan": "scan B"},
+    "J03 (mild)": {"wt_min_mm": 15.42, "scan": "scan C"},
 }
 
 
@@ -67,7 +68,7 @@ def build_tables() -> dict:
     }
 
     register = pd.read_csv(_FIX / "gml_results_register.csv")
-    main_life = (register[register["component"] == "Main"]
+    main_life = (register[register["component"] == MAIN_LINE_COMPONENT]
                  .groupby("joint_id")["min_life_years"].min())
 
     placements = {}
@@ -93,8 +94,8 @@ def build_tables() -> dict:
         for r in flaws.itertuples()
     ]
 
-    roll = fleet_rollup(register, component="Main", campaign_years=3.0,
-                        n_campaigns=4)
+    roll = fleet_rollup(register, component=MAIN_LINE_COMPONENT,
+                        campaign_years=3.0, n_campaigns=4)
     return {
         "geometry": {"od_in": OD, "wt_in": WT, "wt_mm": round(WT * MM, 3),
                      "grade": GRADE},
