@@ -58,9 +58,45 @@ sources:
   publisher: ASME
   year: '2005'
   url: https://doi.org/10.1115/OMAE2005-67523
-  checked: '2026-11-13'
+  checked: '2026-11-16'
   status: located_not_read
-  basis: 'DOI open returned: URL is not accessible via this tool; abstract not read'
+  basis: 'Historical 2026-11-13 result: DOI open returned URL is not accessible via this tool; abstract not read. Rechecked 2026-11-16: DOI redirected to ASME challenge, HTTP 403; no content read there. S8 records a separate public metadata read.'
+- id: S8
+  title: 'HotPipe JIP: Design Guidelines for HP/HT Pipelines'
+  publisher: ASME via Crossref publisher-deposited metadata
+  year: '2005'
+  url: https://api.crossref.org/works/10.1115/OMAE2005-67523
+  checked: '2026-11-16'
+  status: read
+  program: HOTPIPE
+  basis: 'HTTP 200; message.title, message.publisher, message.published and message.abstract. Abstract explicitly names the joint industry program; scope covers pipe capacity, buckling response, mitigation and structural design guideline development. Full paper not read.'
+- id: S9
+  title: POSIT pipe-soil interaction repository search (source title unavailable)
+  publisher: The University of Western Australia research repository
+  year: unknown
+  url: https://research-repository.uwa.edu.au/en/searchAll/?search=POSIT%20pipe-soil%20interaction
+  checked: '2026-11-16'
+  status: located_not_read
+  basis: 'Exact-acronym search with pipe-soil interaction terms; redirected to searchAll/index and returned HTTP 403 challenge. No program record read; access controls not worked around.'
+- id: S10
+  title: POSIT pipe-soil interaction joint-industry metadata search
+  publisher: Crossref
+  year: unknown
+  url: https://api.crossref.org/works?query.bibliographic=POSIT%20pipe-soil%20interaction%20joint%20industry%20project&rows=3
+  checked: '2026-11-16'
+  status: located_not_read
+  basis: 'HTTP 200; inspected message.items title and available abstract for the first three records. None explicitly named POSIT; no item-specific evidence established. Search record only, not a verified program source.'
+follow_up:
+  checked: '2026-11-16'
+  items:
+  - item: HOTPIPE
+    attempts: [S7, S8]
+    result: read
+    reason: HOTPIPE scope is supported by the deposited abstract only.
+  - item: POSIT
+    attempts: [S9, S10]
+    result: unresolved
+    reason: POSIT identity remains unresolved.
 coverage:
   papers:
   - {item: P1, pass: first, evidence: [P1], location: {section: 3. Key state-of-the-art papers (2024 onwards), row: 0}}
@@ -82,6 +118,7 @@ coverage:
   - {item: ABAQUS, pass: second, evidence: [S6], location: {section: 2. Tool matrix updates, row: 1}}
   jips:
   - {item: SAFEBUCK, pass: first, evidence: [P17, P19], location: {section: 6. Joint-industry project landscape, row: 0}}
+  - {item: HOTPIPE, pass: second, evidence: [S8], location: {section: 3. JIP landscape updates, row: 0}}
   convergence:
   - {item: Converging, pass: first, evidence: [P3], location: {section: 2. Method convergence versus divergence, row: 0}}
   - {item: Diverging or unresolved, pass: first, evidence: [P1], location: {section: 2. Method convergence versus divergence, row: 0}}

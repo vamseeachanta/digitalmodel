@@ -31,19 +31,26 @@ TEXT_FIELDS = {
 ROW_FIELDS = TEXT_FIELDS | {"path", "sha256", "status", "existing_tests", "limitations"}
 
 
-@pytest.fixture(autouse=True)
-def offline_only(monkeypatch):
-    original = builtins.__import__
+NATIVE_MODULES = frozenset({"OrcFxAPI", "_winapi"})
+
+
+def _refuse_native(delegate):
+    """Wrap an import function so that NATIVE_MODULES are refused before delegating."""
 
     def import_offline(name, *args, **kwargs):
-        if name.split(".")[0] in {"OrcFxAPI", "_winapi"}:
+        if name.split(".")[0] in NATIVE_MODULES:
             raise AssertionError("native import forbidden")
-        return original(name, *args, **kwargs)
+        return delegate(name, *args, **kwargs)
 
+    return import_offline
+
+
+@pytest.fixture(autouse=True)
+def offline_only(monkeypatch):
     def no_network(*args, **kwargs):
         raise AssertionError("network forbidden")
 
-    monkeypatch.setattr(builtins, "__import__", import_offline)
+    monkeypatch.setattr(builtins, "__import__", _refuse_native(builtins.__import__))
     monkeypatch.setattr(socket, "create_connection", no_network)
     monkeypatch.setattr(socket.socket, "connect", no_network)
     monkeypatch.setattr(socket.socket, "connect_ex", no_network)
@@ -217,8 +224,22 @@ def test_report_has_bounded_contract_and_local_evidence():
 def test_offline_guards_reject_network_and_native_import():
     with pytest.raises(AssertionError, match="network forbidden"):
         socket.create_connection(("invalid", 1))
+    # The autouse fixture installed this module's guard, and an import
+    # statement goes through it.
+    assert builtins.__import__.__qualname__ == "_refuse_native.<locals>.import_offline"
     with pytest.raises(AssertionError, match="native import forbidden"):
-        __import__("OrcFxAPI")
+        import _winapi  # noqa: F401
+    # Every refused name, the licensed module included, is proven on the same
+    # guard with a delegate that never imports: a broken guard fails here and
+    # cannot load the native module.
+    delegated = []
+    guard = _refuse_native(lambda name, *args, **kwargs: delegated.append(name))
+    for root in ("OrcFxAPI", "_winapi"):
+        for name in (root, f"{root}.sub"):
+            with pytest.raises(AssertionError, match="native import forbidden"):
+                guard(name)
+    guard("json")
+    assert delegated == ["json"]
 
 
 @pytest.mark.parametrize("key", sorted(ROW_FIELDS))
