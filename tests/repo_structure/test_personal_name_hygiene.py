@@ -4,6 +4,7 @@
 """Prevent personal references in tracked text without disclosing the word."""
 
 import codecs
+import functools
 import hashlib
 import os
 import re
@@ -17,6 +18,12 @@ PERSONAL_NAME_DIGEST = (
     "229198ac50189365a5dd6412995ab24b4126c777fd69673153f92a0b1ba46882"
 )
 RULE = "personal-name-hygiene"
+
+
+@functools.lru_cache(maxsize=1 << 16)
+def word_digest(word):
+    """Hash one case-folded word; common words recur across the tracked tree."""
+    return hashlib.sha256(word.casefold().encode("utf-8")).hexdigest()
 
 
 def contains_personal_name(data, forbidden_digest=PERSONAL_NAME_DIGEST):
@@ -35,8 +42,7 @@ def contains_personal_name(data, forbidden_digest=PERSONAL_NAME_DIGEST):
             return False
         text = data.decode("utf-8", errors="replace")
     return any(
-        hashlib.sha256(word.casefold().encode("utf-8")).hexdigest() == forbidden_digest
-        for word in re.findall(r"\w+", text)
+        word_digest(word) == forbidden_digest for word in set(re.findall(r"\w+", text))
     )
 
 
