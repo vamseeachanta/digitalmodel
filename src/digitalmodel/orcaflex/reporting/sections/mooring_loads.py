@@ -1,18 +1,19 @@
 """Section 6: Mooring loads — fairlead tensions and watch circle."""
 from __future__ import annotations
-import json
+
+from ._common import lines
 
 
 def build_mooring_loads(model, config) -> str:
     """Build mooring loads section HTML."""
     import OrcFxAPI
 
-    lines = [o for o in model.objects if isinstance(o, OrcFxAPI.Line)]
-    if not lines:
+    line_objs = lines(model)
+    if not line_objs:
         return "<p>No mooring lines found in model.</p>"
 
     rows_html = []
-    for line in lines:
+    for line in line_objs:
         try:
             static_t = line.StaticResult("Effective Tension", OrcFxAPI.oeEndA)
             try:

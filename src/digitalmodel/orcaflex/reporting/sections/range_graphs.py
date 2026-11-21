@@ -1,20 +1,19 @@
 """Section 4: Range graphs — arclength vs min/max envelope heatmaps."""
 from __future__ import annotations
-import json
+
+from ._common import lines, plotly_chart
 
 
 def build_range_graphs(model, config) -> str:
     """Build range graph section HTML with Plotly charts."""
-    import OrcFxAPI
-
-    lines = [o for o in model.objects if isinstance(o, OrcFxAPI.Line)]
-    if not lines:
+    line_objs = lines(model)
+    if not line_objs:
         return "<p>No line objects found for range graph extraction.</p>"
 
     charts = []
     chart_id = 0
 
-    for line in lines[:4]:  # max 4 lines
+    for line in line_objs[:4]:  # max 4 lines
         for variable, unit in [("Effective Tension", "kN"), ("Bend Moment", "kN.m")]:
             try:
                 rg = line.RangeGraph(variable)
@@ -46,12 +45,7 @@ def build_range_graphs(model, config) -> str:
                     "height": 250,
                     "legend": {"orientation": "h"},
                 }
-                charts.append(
-                    f'<div id="{div_id}" style="width:100%;margin-bottom:1rem;"></div>\n'
-                    f'<script>Plotly.newPlot("{div_id}", '
-                    f'{json.dumps(traces)}, {json.dumps(layout)}, '
-                    f'{{responsive:true, displayModeBar:false}});</script>'
-                )
+                charts.append(plotly_chart(div_id, traces, layout))
             except Exception:
                 pass
 
