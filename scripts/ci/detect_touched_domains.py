@@ -46,6 +46,9 @@ FULL_MATRIX_PATHS = {
     # Every shard installs from the lockfile. The full sweep no longer runs on a
     # merge, so a dependency update selects the full matrix here.
     "uv.lock",
+    # The engine dispatches every analysis. The shard closure requires the full
+    # matrix for it, whatever a read trace reports (tests/scripts/test_closure_selection.py).
+    "src/digitalmodel/engine.py",
 }
 DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("src/digitalmodel/process_piping/", ("asset-integrity",)),

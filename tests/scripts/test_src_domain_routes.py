@@ -52,7 +52,7 @@ def write_table(path: Path, routes: dict, unrouted: dict | None = None) -> Path:
 TABLE_ROWS = {
     "src/digitalmodel/solvers/": ["orcaflex", "smoke", "subsea"],
     "src/digitalmodel/solvers/orcaflex/": ["orcaflex", "subsea"],
-    "src/digitalmodel/engine.py": ["misc"],
+    "src/digitalmodel/units.py": ["misc"],
 }
 UNROUTED_ROWS = {
     "src/digitalmodel/infrastructure/": "shared core: every shard reads it",
@@ -71,7 +71,7 @@ NAMES = ("orcaflex", "smoke", "subsea", "misc", "other")
     ("src/digitalmodel/solvers/__init__.py", {"orcaflex", "smoke", "subsea"}),
     # A subfolder added after the trace has no row of its own and takes the group row.
     ("src/digitalmodel/solvers/added_later/x.py", {"orcaflex", "smoke", "subsea"}),
-    ("src/digitalmodel/engine.py", {"misc"}),
+    ("src/digitalmodel/units.py", {"misc"}),
     # Listed as unrouted: no route.
     ("src/digitalmodel/infrastructure/utils/x.py", None),
     ("src/digitalmodel/solvers/unread/x.py", None),
@@ -122,7 +122,7 @@ def test_routed_source_change_selects_only_its_readers(detector, tmp_path) -> No
 
 
 def test_routed_changes_are_unioned_with_test_changes(detector, tmp_path) -> None:
-    changed = ["src/digitalmodel/engine.py", "src/digitalmodel/solvers/orcaflex/x.py",
+    changed = ["src/digitalmodel/units.py", "src/digitalmodel/solvers/orcaflex/x.py",
                "tests/other/test_x.py"]
     assert selected(detector, tmp_path, changed) == {"misc", "orcaflex", "subsea", "other"}
 
