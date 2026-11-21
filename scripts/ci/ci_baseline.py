@@ -45,9 +45,9 @@ def junit_id(case: ElementTree.Element) -> str:
     """Rebuild pytest node ids from xunit2 module and class attributes."""
     name = case.get("name", "")
     classname = case.get("classname", "")
-    file = case.get("file", "")
+    file = case.get("file", "").replace("\\", "/")
     if not classname and name.endswith(".py"):
-        return name
+        return name.replace("\\", "/")
     error = case.find("error")
     if not classname and error is not None and error.get("message") == "collection failure":
         if not name or not all(part.isidentifier() for part in name.split(".")):
