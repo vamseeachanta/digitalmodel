@@ -31,9 +31,8 @@ def _record(name: str, vessel_type: str, **dims) -> Record:
     )
 
 
-@pytest.fixture
-def fleet(monkeypatch):
-    records = [
+def _fleet_records() -> list[Record]:
+    return [
         _record(
             "Test FPSO", "FPSO", loa_m=258, beam_m=46, draft_m=14, displacement_t=160000
         ),
@@ -51,12 +50,25 @@ def fleet(monkeypatch):
             "No Draft Barge", "barge", loa_m=100, beam_m=30
         ),  # missing draft -> skip
     ]
-    monkeypatch.setattr(fleet_decks, "iter_fleet_records", lambda scopes=None: records)
-    return records
 
 
-def test_generate_fleet_decks_builds_and_skips(tmp_path: Path, fleet):
-    result = fleet_decks.generate_fleet_decks(tmp_path, target_panels=120)
+@pytest.fixture(scope="module")
+def built_fleet(tmp_path_factory):
+    """Build the synthetic fleet once for the tests that only read the result.
+
+    Meshing the three hulls takes about a minute per build. The readers below
+    do not modify the decks, and each writes its own batch file to its own
+    temporary folder.
+    """
+    records = _fleet_records()
+    out_dir = tmp_path_factory.mktemp("fleet")
+    with pytest.MonkeyPatch.context() as patch:
+        patch.setattr(fleet_decks, "iter_fleet_records", lambda scopes=None: records)
+        return fleet_decks.generate_fleet_decks(out_dir, target_panels=120)
+
+
+def test_generate_fleet_decks_builds_and_skips(built_fleet):
+    result = built_fleet
 
     # Four complete records = three meshed + one placeholder; one lacks draft.
     assert result.n_built == 4
@@ -72,7 +84,7 @@ def test_generate_fleet_decks_builds_and_skips(tmp_path: Path, fleet):
             assert deck.deck_path.is_file()
         assert (deck.deck_path.parent / "manifest.json").is_file()
 
-    index = json.loads((tmp_path / "index.json").read_text(encoding="utf-8"))
+    index = json.loads((result.out_dir / "index.json").read_text(encoding="utf-8"))
     assert index["n_built"] == 4
     assert index["n_placeholder"] == 1
     assert index["n_skipped"] == 1
@@ -149,8 +161,8 @@ def test_demo_index_distinguishes_generated_and_placeholder_decks(
     assert "Run each <vessel>.yml" not in output
 
 
-def test_emit_batch_config_excludes_placeholder_and_parses(tmp_path: Path, fleet):
-    result = fleet_decks.generate_fleet_decks(tmp_path, target_panels=120)
+def test_emit_batch_config_excludes_placeholder_and_parses(tmp_path: Path, built_fleet):
+    result = built_fleet
     cfg_path = fleet_decks.emit_orcawave_batch_config(result, tmp_path / "batch.yml")
 
     raw = yaml.safe_load(cfg_path.read_text(encoding="utf-8"))
@@ -178,8 +190,8 @@ def test_emit_batch_config_excludes_placeholder_and_parses(tmp_path: Path, fleet
         assert spec.frequencies is not None and spec.wave_headings is not None
 
 
-def test_emit_batch_config_can_include_placeholder(tmp_path: Path, fleet):
-    result = fleet_decks.generate_fleet_decks(tmp_path, target_panels=120)
+def test_emit_batch_config_can_include_placeholder(tmp_path: Path, built_fleet):
+    result = built_fleet
     cfg_path = fleet_decks.emit_orcawave_batch_config(
         result, tmp_path / "batch_all.yml", include_placeholder=True
     )
