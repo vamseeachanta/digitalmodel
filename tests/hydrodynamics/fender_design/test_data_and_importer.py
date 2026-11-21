@@ -169,3 +169,50 @@ def test_case_loader_refuses_mixed_bases(tmp_path):
     assert res.perf_basis["GEN-PN-4"] == "GEA"
     assert catalogue_bases(DATA / "illustrative_fenders.csv") == {}   # no column: nothing to check
     check_one_basis(res.catalogue, {})
+
+
+def test_size_summary_agrees_with_the_catalogue_index():
+    """Guide revision 6: the database by vendor, then type, then size. The public summary holds
+    no rated value, and its row counts are those of the catalogue index, type by type."""
+    import csv
+    from collections import Counter
+    data = Path(__file__).resolve().parents[3] / "data" / "fender_design"
+    with (data / "catalogue_size_summary.csv").open(newline="", encoding="utf-8") as fh:
+        summary = list(csv.DictReader(fh))
+    assert set(summary[0]) == {"vendor", "fender_type", "rows", "size_measure", "rows_with_size",
+                               "smallest_size_mm", "largest_size_mm", "source_ids", "accessed_on"}
+    index: Counter = Counter()
+    with (data / "catalogue_index.csv").open(newline="", encoding="utf-8") as fh:
+        for r in csv.DictReader(fh):
+            for part in r["fender_types"].split(";"):
+                name, _, n = part.strip().rpartition(" ")
+                index[(r["vendor"], name)] += int(n)
+    assert Counter({(r["vendor"], r["fender_type"]): int(r["rows"]) for r in summary}) == index
+    # hand count of the index rows column: 286 + 286 + 195 + 18 + 68 + 52 + 36 + 1542 + 1920 + 32 + 113
+    # + 43 + 1 + 60 = 4652
+    assert sum(int(r["rows"]) for r in summary) == 4652
+    for r in summary:
+        assert r["size_measure"] in ("height", "diameter")
+        if r["largest_size_mm"]:
+            assert int(r["smallest_size_mm"]) <= int(r["largest_size_mm"])
+
+
+def test_size_summary_from_vendor_tables(tmp_path):
+    """The importer groups by vendor, type and size measure: two cone rows of 300 and 500 mm and
+    one pneumatic row of 1,000 mm give two groups (hand values)."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location(
+        "import_vendor_tables", Path(__file__).resolve().parents[3] / "scripts" / "fender_design" / "import_vendor_tables.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    (tmp_path / "solid_rubber.csv").write_text(
+        "vendor,fender_type,height_mm,source_id,accessed_on\nExample Co,cone,300,SRC-x,2026-01-01\n"
+        "Example Co,cone,500,SRC-x,2026-01-02\n", encoding="utf-8", newline="\n")
+    (tmp_path / "floating.csv").write_text(
+        "vendor,fender_type,diameter_mm,source_id,accessed_on\nExample Co,pneumatic,1000,SRC-y,2026-01-01\n",
+        encoding="utf-8", newline="\n")
+    rows = mod.size_summary(tmp_path)
+    assert [(r["fender_type"], r["rows"], r["size_measure"], r["smallest_size_mm"], r["largest_size_mm"])
+            for r in rows] == [("cone", 2, "height", "300", "500"), ("pneumatic", 1, "diameter", "1000", "1000")]
+    assert rows[0]["accessed_on"] == "2026-01-02" and rows[0]["source_ids"] == "SRC-x"
+

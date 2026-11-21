@@ -74,7 +74,7 @@ def test_report_generated_for_every_method(tmp_path, method):
     common = fd.eccentricity(_generic_result(method).ship, _generic_result(method).berth)
     assert f"C_b {common['cb']:.3f}, K {common['k_m']:.2f} m, R {common['r_m']:.2f} m" in md
     assert f"C_e {common['ce']:.3f}" in md
-    # the summary energy and the Table 5 caption are those of the selected method
+    # the summary energy and the Table 7 caption are those of the selected method
     sel = _generic_result(method).selected
     label = fd.METHODS[method].label
     assert sel.label == label and data["design_energy_knm"] == pytest.approx(sel.design_energy_knm)
@@ -85,7 +85,7 @@ def test_report_generated_for_every_method(tmp_path, method):
                f"{fender_study._f(sel.normal_energy_knm)} kNm).")
     assert summary in md
     assert "PIANC 2002 design energy" not in md
-    assert (f"Table 5 – One-at-a-time sensitivity of the design energy by the selected method,\n"
+    assert (f"Table 7 – One-at-a-time sensitivity of the design energy by the selected method,\n"
             f"{label}, for the generic case.") in md
     assert "(PIANC 2002, generic case)" not in md
     # every embedded image exists; the sweep charts are exactly those generated
@@ -102,18 +102,24 @@ def test_report_generated_for_every_method(tmp_path, method):
     assert len(numbers) == len(targets)
     # ... and in the order they appear (gate P3 at 2b6bb8a0: Figures 2 and 3 came before 1)
     assert numbers == list(range(1, len(numbers) + 1))
-    # the methods chart is the one numbered 3
-    assert "Figure 3 – Utilisation of the base fender by method" in md
-    # Table 5: no e-notation and no bare "-" unit (gate P3 at 2b6bb8a0)
+    # the methods chart is the one numbered 5 (guide revision 6: Figures 1 and 2 are the summary and the codes)
+    assert "Figure 5 – Utilisation of the base fender by method" in md
+    assert "Figure 1 – What the guide holds" in md and "Figure 2 – Governing bodies and codes" in md
+    # the HTML page draws every chart from its data; the Markdown keeps the static image
+    page = (out / "r.html").read_text(encoding="utf-8")
+    assert page.count('<figure class="ifig"') == len(targets) and 'src="charts/' not in page.split("<noscript>")[0]
+    assert page.count('data-spec="') >= len(made) * 2 and "<script>" in page
+    assert "**" not in md                                   # no bold: only table header rows stand apart
+    # Table 7: no e-notation and no bare "-" unit (gate P3 at 2b6bb8a0)
     lines = md.splitlines()
-    head = next(i for i, ln in enumerate(lines) if ln.startswith("| Input | Base | Credible range"))
+    head = next(i for i, ln in enumerate(lines) if ln.startswith("| Input | Group | Base | Credible range"))
     sweep_rows = list(itertools.takewhile(lambda ln: ln.startswith("| "), lines[head + 2:]))
     assert len(sweep_rows) == len(data["sweeps"])
     for ln in sweep_rows:
         assert not re.search(r"\d[eE][+-]\d", ln), ln
         assert not re.search(r"\d -( |\|)", ln), ln
     # assumptions in one table, each marked
-    assert "Table 10 – Assumed values" in md
+    assert "Table 14 – Assumed values" in md
     assert md.count("ASSUMED - to be confirmed") >= 5
 
 
@@ -134,12 +140,20 @@ def test_sweep_figures_follow_the_method(method):
     res = _generic_result(method)
     made = {f"sweep_{s.parameter}": f"sweep_{s.parameter}.png" for s in res.sweeps}
     v = fender_study.sweep_figure_values(res, made)
-    embedded = re.findall(r"\(charts/sweep_(\w+)\.png\)", v["sweep_figures"])
-    assert tuple(embedded) == EXPECTED_SWEEP_CHARTS[method]
+    # guide revision 6: project and design sensitivities first, then the sizes figure, then the
+    # operational uncertainties; every generated chart is embedded once
+    design = re.findall(r"\(charts/sweep_(\w+)\.png\)", v["sweep_figures_design"])
+    oper = re.findall(r"\(charts/sweep_(\w+)\.png\)", v["sweep_figures_oper"])
+    assert all(fender_study.sweep_group(x) == "design" for x in design)
+    assert all(fender_study.sweep_group(x) == "operational" for x in oper)
+    assert sorted(design + oper) == sorted(EXPECTED_SWEEP_CHARTS[method])
+    assert set(design) == set(EXPECTED_SWEEP_CHARTS[method]) & {"factor", "cs", "cc"}
     first = fender_study.FIRST_SWEEP_FIGURE
-    numbers = [int(n) for n in re.findall(r"^Figure (\d+) –", v["sweep_figures"], flags=re.M)]
-    assert numbers == list(range(first, first + len(embedded)))
-    assert v["fig_sizes"] == str(first + len(embedded))
+    d_numbers = [int(n) for n in re.findall(r"^Figure (\d+) –", v["sweep_figures_design"], flags=re.M)]
+    o_numbers = [int(n) for n in re.findall(r"^Figure (\d+) –", v["sweep_figures_oper"], flags=re.M)]
+    assert d_numbers == list(range(first, first + len(design)))
+    assert v["fig_sizes"] == str(first + len(design))
+    assert o_numbers == list(range(first + len(design) + 1, first + len(design) + 1 + len(oper)))
     # a chart that was not written is not embedded
     del made["sweep_displacement_t"]
     v = fender_study.sweep_figure_values(res, made)
@@ -222,32 +236,46 @@ def test_generic_report_states_the_failed_checks_and_the_solved_crossing(tmp_pat
     flat = " ".join(md.split())
     # summary: the energy and hull-pressure failures and the reaction margin of the base fender;
     # energy at the 10 % pneumatic tolerance (TFADM p. 76), with the 0 % GEA verdict beside it
-    assert ("energy utilisation 1.081 against 1.0 at the 10 % pneumatic energy tolerance (**not met**; "
+    assert ("energy utilisation 1.081 against 1.0 at the 10 % pneumatic energy tolerance (not met; "
             "0.973, met, at the 0 % of SFT p. 26") in flat
-    assert "design hull pressure 231 kPa against the 200 kPa limit (**not met**, 15.5 % over)" in flat
+    assert "design hull pressure 231 kPa against the 200 kPa limit (not met, 15.5 % over)" in flat
     # margins to three significant figures (5 / 1,600 = 0.3125 %; 60 / 1,600 = 3.75 %)
     assert "design reaction 1,595 kN against the 1,600 kN limit (met, margin 0.313 %)" in flat
     assert "design reaction 1,540 kN, margin 3.75 %, hull pressure 198 kPa, margin 1.00 %" in flat
-    # revision 5, with the verdict change stated
-    assert md.startswith("# Fender design") and "revision 5)" in md.splitlines()[0]
+    # revision 6: the guide; the verdict change of revision 5 is in the revision notes
+    assert md.splitlines()[0] == "# Fender design guide (revision 6)"
+    assert "Universal workbook" not in md and "workbook" not in md.split("## Appendix C.")[0]
     assert "Revision 5 changes a verdict of revision 4" in flat
-    # Table 3: the UFC base sits on the Cg step at the quarter point; both sides are given
+    # Table 4: the UFC base sits on the Cg step at the quarter point; both sides are given
     assert ("UFC 4-152-01 (2017 C1): the base sits on a coefficient step; first contact 1 mm nearer "
             "midships gives 846.9 kNm (+9.6 %)") in flat
     # part-load reaction on the nominal curve (TFADM p. 76), tolerance once
     assert "read at the energy per fender over the rated energy" in flat
-    assert "The base fender therefore **fails** the energy and hull pressure checks" in flat
-    # the size statement agrees with Table 7: only the foam fender meets every check
+    assert "The base fender therefore fails the energy and hull pressure checks" in flat
+    # the size statement agrees with Table 9: only the foam fender meets every check
     assert "only GEN-FM-6 meets every check" in flat
-    assert "| GEN-FM-6 | 1,000 | 900 | 0.756 | 1,400 | 1,540 | 198 | yes | yes | yes |" in md
-    assert "| GEN-PN-4 (base) | 700 | 630 | 1.081 |" in md
-    # Section 3.6 records the conflict with both verdicts; Table 10 carries the choice
-    assert "1.081 at 10 % (**not met**) and 0.973 at 0 % (met); this build takes 10 %" in flat
+    # Table 9, with the change from the base fender in percent: 900 / 630 = +42.9 %,
+    # 0.7565 / 1.0807 = -30.0 %, 1,540 / 1,595 = -3.4 % (hand values; the base row reads 0)
+    assert "| GEN-FM-6 | 1,000 | 900 | 0.756 | 1,400 | 1,540 | 198 | yes | yes | yes | +43 | −30 | −3 |" in md
+    assert "| GEN-PN-4 (base) | 700 | 630 | 1.081 | 1,450 | 1,595 | 231 | no | yes | no | 0 | 0 | 0 |" in md
+    # method sensitivity (Table 10): 1,272.5 / 574.3 = +122 % from the lowest to the highest method
+    assert "is 122 % above the lowest" in flat and "Table 10 – Method sensitivity" in md
+    # Section 7 groups: project and design, operational, method
+    for h in ("### 7.2 Project and design sensitivities", "#### 7.2.2 Neighbouring fender sizes",
+              "### 7.3 Operational uncertainties", "### 7.4 Method sensitivity", "## 8. Insights from analyses",
+              "## Appendix A. Verification", "## 2. Governing bodies and codes"):
+        assert h in md, h
+    assert md.index("## Appendix A. Verification") > md.index("## 10. Sources")
+    # the database by vendor (Table 6): 4,652 rows in 6 vendors; Trelleborg 1,920 + 32 + 113 = 2,065 rows
+    assert "(4,652 rows, 6 vendors, 26 fender types)" in flat
+    assert "| Trelleborg Marine and Infrastructure | 2,065 |" in md
+    # Section 4.6 records the conflict with both verdicts; Table 14 carries the choice
+    assert "1.081 at 10 % (not met) and 0.973 at 0 % (met); this build takes 10 %" in flat
     assert "| Pneumatic energy tolerance 0.10 |" in md
     assert "foam tolerances" not in md                  # foam 0.10 is the printed value, not assumed
-    # Section 3.4 states the keel-clearance condition of the solid-quay C_c
+    # Section 4.4 states the keel-clearance condition of the solid-quay C_c
     assert "0.9 when KC/D is below 0.15 and 1.0 when KC/D is 0.15 or more" in flat
-    # Table 5: displacement with separators, water depth solved in closed form
+    # Table 7: displacement with separators, water depth solved in closed form
     assert "| 60,000 t |" in md and "55,520 t" in md
     assert "16.09 m" in md
     assert "closed form: keel-clearance Cm 1.61933" in flat

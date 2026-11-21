@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fender design study: charts, results JSON, workbook and report from a case.
+"""Fender design study: charts, results JSON, workbook and guide from a case.
 
 Writes, into ``--out``:
 
@@ -8,9 +8,10 @@ Writes, into ``--out``:
   sizes, and (with ``--database``) the database coverage chart;
 * ``results.json``: every number the report quotes;
 * ``<stem>.xlsx``: the universal workbook (:mod:`build_fender_workbook`);
-* ``<stem>.md`` and ``<stem>.html`` when ``--template`` is given: the report
+* ``<stem>.md`` and ``<stem>.html`` when ``--template`` is given: the guide
   rendered from a markdown template whose ``{{name}}`` fields are filled from
-  the results.
+  the results. The Markdown keeps a static image for every figure; the HTML
+  page draws each chart from its data (:mod:`fender_interactive`).
 
 Usage::
 
@@ -35,6 +36,7 @@ from digitalmodel.hydrodynamics import fender_design as fd
 from build_fender_workbook import build_workbook
 from fender_case import compute, load_case, size_basis
 import fender_charts as fc
+import fender_interactive as fi
 
 SWEEP_TITLES = {
     "velocity_m_s": "Berthing velocity",
@@ -58,8 +60,17 @@ SWEEP_FIGURES = {
     "cc": ("Cc", "Berth configuration factor C_c."),
     "factor": ("Factor", "Abnormal (or partial) energy factor."),
 }
-#: Report figure number of the first sweep chart (after the tornado, Figure 5).
-FIRST_SWEEP_FIGURE = 6
+#: Report figure number of the first sweep chart (after the ranking chart, Figure 8).
+FIRST_SWEEP_FIGURE = 9
+
+#: Sensitivity group of each swept input (guide revision 6). Project and design sensitivities
+#: are choices of the design; every other swept input is an operational uncertainty.
+SWEEP_GROUPS = {"factor": "design", "cs": "design", "cc": "design"}
+GROUP_NAMES = {"design": "Project and design", "operational": "Operational"}
+
+
+def sweep_group(parameter: str) -> str:
+    return SWEEP_GROUPS.get(parameter, "operational")
 
 #: The two printed energy tolerances of a pneumatic fender, which conflict:
 #: (tolerance, where printed). The case chooses; the generic case takes
@@ -71,7 +82,7 @@ PNEUMATIC_ENERGY_TOLERANCES = (
 
 #: Performance tolerance on reaction and energy printed in the TFADM p. 76
 #: table, for the catalogue types it names; a case tolerance that differs is
-#: listed in Table 10 as assumed.
+#: listed in Table 14 as assumed.
 TFADM_P76_TOLERANCE = {"pneumatic": 0.10, "foam": 0.10, "cylindrical": 0.10}
 
 
@@ -152,20 +163,18 @@ def method_chart(res, path: Path, fender_label: str) -> Path:
         "Base fender utilisation by method (same ship and berth)", note=note)
 
 
-def charts(res, out: Path, fender_label: str, db_counts=None) -> dict[str, str]:
-    cdir = out / "charts"
-    made = {}
-    n = res.case["design"].get("fenders_in_contact", 1)
-    made["methods"] = method_chart(res, cdir / "methods.png", fender_label).name
-    # Cm against keel clearance for the ship's draught and beam
+def cm_series(res):
+    """Added mass against keel clearance over draught for the ship's draught and beam:
+    (series of (name, KC/D values, Cm values), base KC/D)."""
     s = res.ship
     ratios = [0.02 + 0.01 * i for i in range(99)]
-    def cm_series(fn):
+
+    def over(fn):
         return [fn(s.draft_m * (1 + r)) for r in ratios]
     series = [
-        ("PIANC 2002 / ROM / WG211 (keel clearance)", ratios, cm_series(lambda d: fd.added_mass_factor(s, d, "pianc2002"))),
-        ("Vasco Costa 1 + 2T/B (BS 6349, IS 4651)", ratios, cm_series(lambda d: fd.added_mass_factor(s, d, "vasco_costa"))),
-        ("Ueda 1 + pi T/(2 Cb B) (Japan)", ratios, cm_series(lambda d: fd.added_mass_factor(s, d, "ueda"))),
+        ("PIANC 2002 / ROM / WG211 (keel clearance)", ratios, over(lambda d: fd.added_mass_factor(s, d, "pianc2002"))),
+        ("Vasco Costa 1 + 2T/B (BS 6349, IS 4651)", ratios, over(lambda d: fd.added_mass_factor(s, d, "vasco_costa"))),
+        ("Ueda 1 + pi T/(2 Cb B) (Japan)", ratios, over(lambda d: fd.added_mass_factor(s, d, "ueda"))),
     ]
     ufc = next((r for r in res.methods if r.method == "ufc"), None)
     if ufc is not None:
@@ -174,20 +183,49 @@ def charts(res, out: Path, fender_label: str, db_counts=None) -> dict[str, str]:
         cbf = ufc.geometry["ufc_f_cb"]
         what = "berthing coeff." if res.fcase.ufc_f_basis == "berthing_coefficient" else "block coeff."
         series.append((f"UFC 4-152-01 surface vessel (Cb in F: {what} {cbf:.3f})", ratios,
-                       cm_series(lambda d: fd.ufc_added_mass(s, d, cbf))))
-    kcd = (res.berth.water_depth_m - s.draft_m) / s.draft_m
-    made["cm"] = fc.line_family_chart(
-        series, cdir / "cm_methods.png", "Added mass factor Cm against keel clearance",
-        "keel clearance / draught KC/D (-)", "Cm (-)",
-        marker=(kcd, fd.added_mass_factor(s, res.berth.water_depth_m, "pianc2002"), f"base KC/D {kcd:.3f}"),
-        note=f"Ship T {s.draft_m:g} m, B {s.beam_m:g} m, Cb {s.cb:.3f}.").name
-    # velocity by method against size
+                       over(lambda d: fd.ufc_added_mass(s, d, cbf))))
+    return series, (res.berth.water_depth_m - s.draft_m) / s.draft_m
+
+
+def velocity_series():
+    """Design berthing velocity against ship size by method: (name, sizes, velocities)."""
     sizes = [1_000 * (500 ** (i / 80)) for i in range(81)]
     vser = [(f"Brolsma {c} ({fd.BROLSMA_CONDITIONS[c]})", sizes, [fd.brolsma_velocity(x, c) for x in sizes]) for c in "abcde"]
     rs = [x for x in sizes if x >= 2_000]
     vser.append(("ROM 2.0-11 moderate, tugs (digitized)", rs, [fd.rom_velocity(x, "moderate") for x in rs]))
     us = [x for x in sizes if 1_016.1 <= x <= 101_604]
     vser.append(("UFC 4-152-01 moderate (digitized)", us, [fd.ufc_velocity(x, "moderate") for x in us]))
+    return vser
+
+
+def size_rows(res) -> list[dict]:
+    """Neighbouring sizes, smallest capacity first, with the change from the base fender in percent."""
+    base = next(c for c in res.size_checks if c.is_base)
+    rows = [dict(label=c.fender_id, is_base=c.is_base, energy_knm=c.capacity_knm, reaction_kn=c.reaction_kn,
+                 utilisation=c.utilisation,
+                 energy_change_pct=(c.capacity_knm / base.capacity_knm - 1.0) * 100.0,
+                 reaction_change_pct=(c.reaction_kn / base.reaction_kn - 1.0) * 100.0,
+                 utilisation_change_pct=(c.utilisation / base.utilisation - 1.0) * 100.0)
+            for c in res.size_checks]
+    rows.sort(key=lambda r: r["energy_knm"])
+    return rows
+
+
+def charts(res, out: Path, fender_label: str, db_counts=None, size_summary=None) -> dict[str, str]:
+    cdir = out / "charts"
+    made = {}
+    n = res.case["design"].get("fenders_in_contact", 1)
+    made["methods"] = method_chart(res, cdir / "methods.png", fender_label).name
+    # Cm against keel clearance for the ship's draught and beam
+    s = res.ship
+    series, kcd = cm_series(res)
+    made["cm"] = fc.line_family_chart(
+        series, cdir / "cm_methods.png", "Added mass factor Cm against keel clearance",
+        "keel clearance / draught KC/D (-)", "Cm (-)",
+        marker=(kcd, fd.added_mass_factor(s, res.berth.water_depth_m, "pianc2002"), f"base KC/D {kcd:.3f}"),
+        note=f"Ship T {s.draft_m:g} m, B {s.beam_m:g} m, Cb {s.cb:.3f}.").name
+    # velocity by method against size
+    vser = velocity_series()
     size0 = s.dwt_t or s.displacement_t
     made["velocity"] = fc.line_family_chart(
         vser, cdir / "velocity_methods.png", "Design berthing velocity against ship size",
@@ -201,18 +239,15 @@ def charts(res, out: Path, fender_label: str, db_counts=None) -> dict[str, str]:
                                        "Which inputs move the design energy most (one at a time)",
                                        res.selected.design_energy_knm).name
     if res.size_checks:
-        base = next(c for c in res.size_checks if c.is_base)
-        rows = [dict(label=c.fender_id, is_base=c.is_base, energy_knm=c.capacity_knm, reaction_kn=c.reaction_kn,
-                     energy_change_pct=(c.capacity_knm / base.capacity_knm - 1.0) * 100.0,
-                     reaction_change_pct=(c.reaction_kn / base.reaction_kn - 1.0) * 100.0)
-                for c in res.size_checks]
-        rows.sort(key=lambda r: r["energy_knm"])
+        rows = size_rows(res)
         made["sizes"] = fc.size_comparison_chart(
             rows, cdir / "sizes.png", "Neighbouring fender sizes against the base",
             res.selected.design_energy_knm / n, res.case["design"].get("reaction_limit_kn"),
             basis_note=size_basis(res)).name
     if db_counts:
         made["database"] = database_chart(db_counts, cdir / "database_coverage.png")
+    if size_summary:
+        made["database_sizes"] = database_size_chart(size_summary, cdir / "database_sizes.png")
     return made
 
 
@@ -334,10 +369,10 @@ def tables(res) -> dict[str, str]:
         [[r.label, f"{r.velocity_m_s.source}: {r.velocity_m_s.note}", f"{r.cm.source}: {r.cm.note}",
           f"{r.factor.source}: {r.factor.note}"] for r in res.methods])
     t["sweep_table"] = md_table(
-        ["Input", "Base", "Credible range", "Basis", "Design energy change at range ends",
+        ["Input", "Group", "Base", "Credible range", "Basis", "Design energy change at range ends",
          "Utilisation at range ends", "Value at utilisation 1",
          f"Reaction x {res.reaction_factor:.2f} at range ends (kN)", "Value at reaction limit"],
-        [[s.label, f"{_g(s.base_value)}{_unit(s.unit)}",
+        [[s.label, GROUP_NAMES[sweep_group(s.parameter)], f"{_g(s.base_value)}{_unit(s.unit)}",
           f"{_g(s.range_low)} to {_g(s.range_high)}{_unit(s.unit)}", s.range_basis,
           f"{s.change_pct(s.range_low):+.0f} % / {s.change_pct(s.range_high):+.0f} %",
           f"{_util(s.at(s.range_low).utilisation)} / {_util(s.at(s.range_high).utilisation)}",
@@ -354,20 +389,27 @@ def tables(res) -> dict[str, str]:
     t["tornado_table"] = md_table(
         ["Rank", "Input", "Span of design energy (percentage points)"],
         [[i, b.label, f"{b.span_pct:.0f}"] for i, b in enumerate(res.bars, start=1)])
+    t.update(method_sensitivity(res))
     if res.size_checks:
         d = res.case["design"]
         r_lim, p_lim = d.get("reaction_limit_kn"), d.get("hull_pressure_limit_kpa")
+
+        base_c = next(c for c in res.size_checks if c.is_base)
 
         def yn(x):
             return "-" if x is None else ("yes" if x else "**no**")
         t["sizes_table"] = md_table(
             ["Fender", "Rated energy (kNm)", "Design capacity (kNm)", "Utilisation",
              "Rated reaction (kN)", "Design reaction (kN)", "Design hull pressure (kPa)",
-             "Energy", f"Reaction <= {_f(r_lim, 0)} kN", f"Pressure <= {_f(p_lim, 0)} kPa"],
+             "Energy", f"Reaction <= {_f(r_lim, 0)} kN", f"Pressure <= {_f(p_lim, 0)} kPa",
+             "Capacity against base (%)", "Utilisation against base (%)", "Reaction against base (%)"],
             [[c.fender_id + (" (base)" if c.is_base else ""), _f(c.rated_energy_knm, 0), _f(c.capacity_knm, 0),
               _util(c.utilisation), _f(c.rated_reaction_kn, 0), _f(c.reaction_kn, 0),
               _f(c.hull_pressure_kpa, 0), yn(c.meets_energy), yn(c.meets_reaction),
-              "**no** (no datum)" if c.pressure_missing else yn(c.meets_pressure)]
+              "**no** (no datum)" if c.pressure_missing else yn(c.meets_pressure),
+              _signed_pct((c.capacity_knm / base_c.capacity_knm - 1.0) * 100.0),
+              _signed_pct((c.utilisation / base_c.utilisation - 1.0) * 100.0),
+              _signed_pct((c.reaction_kn / base_c.reaction_kn - 1.0) * 100.0)]
              for c in res.size_checks])
         t["sizes_basis"] = size_basis(res)
     t["sources_table"] = md_table(
@@ -418,7 +460,7 @@ def base_step_notes(res, threshold: float = 0.01) -> list[str]:
 
 
 def _limit_cell(s) -> str:
-    """Table 5 value at utilisation 1: the solved value, or at a coefficient
+    """Table 7 value at utilisation 1: the solved value, or at a coefficient
     step the step with the utilisation on each side (no value gives 1)."""
     if s.limit_value() is None:
         return "-"
@@ -429,7 +471,7 @@ def _limit_cell(s) -> str:
 
 
 def crossing_note(res) -> str:
-    """How each value at utilisation 1 in Table 5 was solved, grouped by method of solution."""
+    """How each value at utilisation 1 in Table 7 was solved, grouped by method of solution."""
     groups: dict[str, list[str]] = {}
     for s in res.sweeps:
         if s.crossing_basis and s.limit_value() is not None:
@@ -456,7 +498,7 @@ def pneumatic_tolerance_readings(res) -> list[tuple[float, str, float]]:
 
 
 def pneumatic_tolerance_note(res) -> str:
-    """Section 3.6 sentence: the base fender's energy verdict under each reading."""
+    """Section 4.6 sentence: the base fender's energy verdict under each reading."""
     readings = pneumatic_tolerance_readings(res)
     if not readings:
         return "The base fender of this build is not pneumatic, so the conflict does not enter it."
@@ -498,13 +540,13 @@ def assumptions(res) -> list[tuple[str, str, str, str]]:
         ("ROM 2.0-11 return period T_R = 500 yr", "ROM accidental factor (T_R/500)^(1/20)", yes("rom" in used),
          "the table's reference period; no site return period is given"),
         *[(f"{t} tolerances: energy {v['energy_tolerance']:.2f}, reaction {v['reaction_tolerance']:.2f}",
-           "neighbouring sizes and the workbook Fenders sheet", "yes",
+           "neighbouring sizes", "yes",
            f"not the TFADM p. 76 value ({TFADM_P76_TOLERANCE[t]:.2f})" if t in TFADM_P76_TOLERANCE else
            "no tolerance printed for this type in TFADM p. 76")
           for t, v in by_type.items()
           if not (TFADM_P76_TOLERANCE.get(t) == v["energy_tolerance"] == v["reaction_tolerance"])],
         *[(f"Pneumatic energy tolerance {d.get('energy_tolerance', 0.10):.2f}",
-           "base fender capacity (Table 7; workbook ETOL)", "yes",
+           "base fender capacity (Table 9)", "yes",
            "the sources conflict: TFADM p. 76 ±10 %, SFT p. 26 0 % on GEA; "
            + ("10 % is taken (the lower capacity of the two); 0 % needs the supplier's GEA rating to ISO 17357-1. "
               if d.get("energy_tolerance", 0.10) >= 0.10 else "the GEA reading is taken. ")
@@ -545,7 +587,7 @@ def summary_values(res) -> dict[str, str]:
              + f" ({'met' if base.meets_energy else '**not met**'}"
              + "".join(f"; {_util(u)}, {'met' if u <= 1.0 else 'not met'}, at the {v * 100:.0f} % of {src}"
                        for v, src, u in alt)
-             + ("; Section 3.6)" if alt else ")")]
+             + ("; Section 4.6)" if alt else ")")]
     if r_lim is not None:
         margin = (r_lim - base.reaction_kn) / r_lim * 100.0
         parts.append(f"design reaction {_f(base.reaction_kn, 0)} kN against the {_f(r_lim, 0)} kN limit "
@@ -573,13 +615,13 @@ def summary_values(res) -> dict[str, str]:
             out.append(f"hull pressure {_f(c.hull_pressure_kpa, 0)} kPa, "
                        f"margin {_pct3((p_lim - c.hull_pressure_kpa) / p_lim * 100)} %")
         return ", ".join(out)
-    sizes = ("Of the neighbouring sizes in Table 7, "
+    sizes = ("Of the neighbouring sizes in Table 9, "
              + (("only " if len(ok) == 1 else "") + " and ".join(c.fender_id for c in ok)
                 + (" meets" if len(ok) == 1 else " meet") + " every check at the tolerances of its type ("
                 + "; ".join(f"{c.fender_id}: {margins(c)}" for c in ok) + ")"
                 if ok else "none meets every check either")
              + "; the fenders are illustrative, so this is not a selection.")
-    return dict(base_checks=f"Base fender {base.fender_id} (Table 7): " + "; ".join(parts) + ". " + verdict
+    return dict(base_checks=f"Base fender {base.fender_id} (Table 9): " + "; ".join(parts) + ". " + verdict
                 + " " + sizes)
 
 
@@ -654,36 +696,328 @@ def sweep_figure_values(res, made: dict[str, str], first: int = FIRST_SWEEP_FIGU
     ``sweep_figures`` embeds one figure per sweep chart generated for the
     selected method (``made`` from :func:`charts`), in sweep order and
     numbered from ``first``; a sweep the method does not admit has no chart
-    and no figure. ``fig_sizes`` is the number of the figure that follows.
+    and no figure. Revision 6 groups them: ``sweep_figures_design`` (project and
+    design sensitivities, numbered from ``first``), then the neighbouring-sizes
+    figure ``fig_sizes``, then ``sweep_figures_oper`` (operational
+    uncertainties). ``sweep_figures`` is both groups in that order.
     """
-    blocks = []
-    for s in res.sweeps:
-        name = made.get(f"sweep_{s.parameter}")
-        if name is None:
-            continue
-        alt, caption = SWEEP_FIGURES.get(s.parameter, (s.label, f"{s.label}."))
-        blocks.append(f"![{alt}](charts/{name})\n\nFigure {first + len(blocks)} – {caption}")
-    return dict(sweep_figures="\n\n".join(blocks) or "No sweep chart was generated for this method.",
-                fig_sizes=str(first + len(blocks)))
+    shown = [s for s in res.sweeps if made.get(f"sweep_{s.parameter}")]
+    design = [s for s in shown if sweep_group(s.parameter) == "design"]
+    oper = [s for s in shown if sweep_group(s.parameter) == "operational"]
+    fig_sizes = first + len(design)          # the neighbouring-sizes figure closes the design group
+
+    def blocks(group, start):
+        out = []
+        for i, s in enumerate(group):
+            alt, caption = SWEEP_FIGURES.get(s.parameter, (s.label, f"{s.label}."))
+            name = made[f"sweep_{s.parameter}"]
+            out.append(f"![{alt}](charts/{name})\n\nFigure {start + i} – {caption} {INTERACTIVE_NOTE}")
+        return out
+    d, o = blocks(design, first), blocks(oper, fig_sizes + 1)
+    none = "No input of this group is swept for this method."
+    return dict(sweep_figures_design="\n\n".join(d) or none, sweep_figures_oper="\n\n".join(o) or none,
+                sweep_figures="\n\n".join(d + o) or "No sweep chart was generated for this method.",
+                fig_sizes=str(fig_sizes))
 
 
-def render(template: Path, values: dict, out_md: Path, out_html: Path, title: str):
+def render(template: Path, values: dict, out_md: Path, out_html: Path, title: str, interactive: dict | None = None):
+    """Template to Markdown and to one HTML page. The Markdown keeps the static images; in the
+    HTML each image named in ``interactive`` (image file name -> figure HTML) is replaced by its
+    interactive figure. Bold is removed: only table header rows stand apart."""
     text = template.read_text(encoding="utf-8")
     missing = sorted(set(re.findall(r"\{\{(\w+)\}\}", text)) - set(values))
     if missing:
         raise KeyError(f"template fields without values: {missing}")
     text = re.sub(r"\{\{(\w+)\}\}", lambda m: str(values[m.group(1)]), text)
+    text = re.sub(r"\*\*(.+?)\*\*", r"\1", text)
     out_md.write_text(text, encoding="utf-8", newline="\n")
     import markdown
     body = markdown.markdown(text, extensions=["tables", "toc"])
+    interactive = interactive or {}
+
+    def swap(m):
+        alt, name = m.group(1), m.group(2)
+        return interactive.get(name, m.group(0)).replace("__ALT__", alt)
+    body = re.sub(r'<p><img alt="([^"]*)" src="charts/([^"]+)"\s*/?></p>', swap, body)
     css = ("body{font-family:Segoe UI,Helvetica,Arial,sans-serif;max-width:60rem;margin:2rem auto;padding:0 1rem;"
            "color:#0b0b0b;line-height:1.45}table{border-collapse:collapse;font-size:.85rem;margin:.6rem 0}"
            "th,td{border:1px solid #c3c2b7;padding:.25rem .45rem;text-align:left;vertical-align:top}"
            "th{background:#f0efec}img{max-width:100%;border:1px solid #e1e0d9}code{font-size:.85em}"
-           "h1,h2,h3{line-height:1.2}")
+           "h1,h2,h3{line-height:1.2}" + fi.CSS)
     out_html.write_text(
         f"<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>{title}</title>"
-        f"<style>{css}</style></head><body>{body}</body></html>", encoding="utf-8", newline="\n")
+        f"<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+        f"<style>{css}</style></head><body>{body}{fi.SCRIPT if interactive else ''}</body></html>",
+        encoding="utf-8", newline="\n")
+
+
+#: Closing words of a caption whose figure is interactive in the HTML page.
+INTERACTIVE_NOTE = "In the HTML page, hover gives each value with its unit."
+
+#: Main fender types of the size chart, in display order (others are in Table B.1).
+SIZE_CHART_TYPES = ("cone", "cell", "element", "arch", "v", "cylindrical", "pneumatic", "foam", "foam-filled",
+                    "hydropneumatic")
+
+
+def read_csv(path: Path) -> list[dict]:
+    """Rows of a public data file; an absent file gives no rows (the figure is then left out)."""
+    if not path.exists():
+        return []
+    with path.open(newline="", encoding="utf-8") as fh:
+        return list(csv.DictReader(fh))
+
+
+def _signed_pct(x: float, nd: int = 0) -> str:
+    """A percentage change with its sign and the true minus sign; the base reads 0."""
+    q = round(x, nd)
+    if q == 0:
+        return "0"
+    return f"{'+' if q > 0 else '−'}{abs(q):.{nd}f}"
+
+
+def _short_vendor(name: str) -> str:
+    return name.split(" Marine")[0].split(" Rubber")[0].split(" Industrial")[0].replace("Qingdao ", "")
+
+
+def method_sensitivity(res) -> dict[str, str]:
+    """Method (code) sensitivity: each method's design energy against the selected method, in percent."""
+    sel = res.selected
+    rows = sorted(res.methods, key=lambda r: r.design_energy_knm)
+    lo, hi = rows[0], rows[-1]
+    table = md_table(
+        ["Method", "Velocity (m/s)", "Design energy (kNm)", f"Against {sel.label} (%)", "Utilisation of the base fender"],
+        [[r.label + (" (selected)" if r.method == sel.method else "")
+          + (" (outside validity)" if fc.outside_validity(r) else ""),
+          f"{r.velocity_m_s.value:.3f}", _f(r.design_energy_knm),
+          _signed_pct((r.design_energy_knm / sel.design_energy_knm - 1.0) * 100.0),
+          _util(res.method_utilisation(r))] for r in rows])
+    return dict(method_sens_table=table,
+                spread_pct=f"{(hi.design_energy_knm / lo.design_energy_knm - 1.0) * 100.0:.0f}",
+                method_lo=lo.label, method_hi=hi.label, E_method_lo=_f(lo.design_energy_knm),
+                E_method_hi=_f(hi.design_energy_knm))
+
+
+def vendor_rows(summary: list[dict]) -> list[dict]:
+    """The database by vendor: rows, fender types, and the largest solid and floating sizes held."""
+    out: dict[str, dict] = {}
+    for r in summary:
+        v = out.setdefault(r["vendor"], dict(vendor=r["vendor"], rows=0, types=[], solid=None, floating=None))
+        v["rows"] += int(r["rows"])
+        v["types"].append(r["fender_type"])
+        if r["largest_size_mm"]:
+            key = "solid" if r["size_measure"] == "height" else "floating"
+            size = int(r["largest_size_mm"])
+            if v[key] is None or size > v[key][0]:
+                v[key] = (size, r["fender_type"])
+    return sorted(out.values(), key=lambda v: -v["rows"])
+
+
+def database_values(summary: list[dict]) -> dict[str, str]:
+    """Tables of the database by vendor (Table 6) and by vendor, type and size (Table B.1)."""
+    if not summary:
+        return dict(db_vendor_table="The size summary of the database was not available for this build.",
+                    db_size_table="Not available for this build.", db_vendors="0", db_types="0")
+
+    def cell(x):
+        return "-" if x is None else f"{x[0]:,} ({x[1]})"
+    vend = vendor_rows(summary)
+    t6 = md_table(["Vendor", "Rows", "Fender types", "Largest solid fender height (mm)",
+                   "Largest floating fender diameter (mm)"],
+                  [[v["vendor"], f"{v['rows']:,}", len(v["types"]), cell(v["solid"]), cell(v["floating"])] for v in vend])
+    tb = md_table(["Vendor", "Fender type", "Rows", "Size measure", "Smallest size (mm)", "Largest size (mm)"],
+                  [[r["vendor"], r["fender_type"], f"{int(r['rows']):,}", r["size_measure"],
+                    f"{int(r['smallest_size_mm']):,}" if r["smallest_size_mm"] else "-",
+                    f"{int(r['largest_size_mm']):,}" if r["largest_size_mm"] else "-"]
+                   for r in sorted(summary, key=lambda r: (r["vendor"], r["fender_type"]))])
+    return dict(db_vendor_table=t6, db_size_table=tb, db_vendors=str(len(vend)),
+                db_types=str(len({r["fender_type"] for r in summary})))
+
+
+def _size_grid(summary: list[dict]):
+    """Largest size (mm) by main fender type (categories) and vendor (series), with the row counts."""
+    vendors = [v["vendor"] for v in vendor_rows(summary)]
+    by = {(r["vendor"], r["fender_type"]): r for r in summary}
+    types = [t for t in SIZE_CHART_TYPES if any((v, t) in by for v in vendors)]
+    grid = {v: [int(by[(v, t)]["largest_size_mm"]) if (v, t) in by and by[(v, t)]["largest_size_mm"] else None
+                for t in types] for v in vendors}
+    notes = {v: [f"{by[(v, t)]['size_measure']}; {int(by[(v, t)]['rows']):,} rows; smallest "
+                 f"{int(by[(v, t)]['smallest_size_mm']):,} mm" if (v, t) in by and by[(v, t)]["largest_size_mm"] else ""
+                 for t in types] for v in vendors}
+    return vendors, types, grid, notes
+
+
+def database_size_chart(summary: list[dict], path):
+    """Largest size held by fender type and vendor (static image of the interactive Figure 6)."""
+    import matplotlib.pyplot as plt
+    vendors, types, grid, _ = _size_grid(summary)
+    fig, ax = fc._fig(1, height=3.8, width=8.5)
+    fc._style(ax)
+    w = 0.8 / len(vendors)
+    for j, v in enumerate(vendors):
+        xs = [i - 0.4 + w * (j + 0.5) for i, y in enumerate(grid[v]) if y is not None]
+        ax.bar(xs, [y for y in grid[v] if y is not None], width=w * 0.9, color=fc.SERIES[j % len(fc.SERIES)],
+               label=_short_vendor(v))
+    ax.set_xticks(range(len(types)))
+    ax.set_xticklabels(types, fontsize=7.5, color=fc.INK)
+    ax.set_ylabel("largest size held (mm)")
+    ax.set_ylim(0, max(y for v in vendors for y in grid[v] if y is not None) * 1.3)
+    ax.set_title("Largest fender size in the database by type and vendor", fontsize=9.5, loc="left")
+    ax.legend(fontsize=7, ncol=3, frameon=False, loc="upper left")
+    fig.savefig(path, dpi=160)
+    plt.close("all")
+    return Path(path).name
+
+
+def n_governing_bodies(bodies: list[dict]) -> int:
+    """Bodies that publish a code: two PIANC working groups count once, a published formula not at all."""
+    return len({b["governing_body"].split(" (")[0] for b in bodies if not b["governing_body"].startswith("Published formula")})
+
+
+def summary_figure_values(res, cnt, summary, bodies) -> dict:
+    """Values shown on Figure 1 (every one is a value of this build)."""
+    ms = method_sensitivity(res)
+    top = res.bars[0]
+    return dict(n_methods=len(res.methods), n_bodies=n_governing_bodies(bodies),
+                db_rows=f"{sum(cnt.values()):,}" if cnt else "0",
+                db_vendors=len(vendor_rows(summary)), db_types=len({r["fender_type"] for r in summary}),
+                selected=res.selected.label, e_design=_f(res.selected.design_energy_knm),
+                util=_util(res.selected.design_energy_knm / res.case["design"].get("fenders_in_contact", 1)
+                           / res.capacity_knm),
+                spread_pct=ms["spread_pct"], top_input=top.label.split(" (")[0], top_span=f"{top.span_pct:.0f}")
+
+
+def guide_values(res, cnt, summary, bodies, matrix, cdir: Path) -> dict[str, str]:
+    """Template values of guide revision 6 and the two schematics written beside the charts."""
+    v = database_values(summary)
+    v["bodies_table"] = md_table(
+        ["Governing body", "Region", "Code", "Edition", "Held as"],
+        [[b["governing_body"], b["region"], b["code"], b["edition"], b["held_as"]] for b in bodies]) if bodies else "Not available for this build."
+    v["n_bodies"] = str(n_governing_bodies(bodies))
+    sel_v = res.selected.velocity_m_s.value
+    pianc = next((r for r in res.methods if r.method == "pianc2002"), res.selected)
+    v["v_ratio_pct"] = f"{((0.15 / pianc.velocity_m_s.value) ** 2 - 1.0) * 100.0:.0f}"
+    v["interactive_note"] = INTERACTIVE_NOTE
+    v["top_span"] = f"{res.bars[0].span_pct:.0f}"
+    groups = {g: [s.label for s in res.sweeps if sweep_group(s.parameter) == g] for g in GROUP_NAMES}
+    v["design_inputs"] = "; ".join(groups["design"]) or "none for this method"
+    v["oper_inputs"] = "; ".join(groups["operational"]) or "none for this method"
+    cdir.mkdir(parents=True, exist_ok=True)
+    if bodies and matrix and summary:
+        (cdir / "guide_summary.svg").write_text(fi.summary_svg(summary_figure_values(res, cnt, summary, bodies)),
+                                                encoding="utf-8", newline="\n")
+        (cdir / "guide_codes.svg").write_text(fi.codes_svg(bodies, {m["method"]: m for m in matrix}),
+                                              encoding="utf-8", newline="\n")
+    return v
+
+
+def interactive_figures(res, made, fender_label, cnt, summary, bodies, matrix, cdir: Path) -> dict[str, str]:
+    """Image file name -> interactive figure for the HTML page, from the data the static charts plot."""
+    out: dict[str, str] = {}
+    n = res.case["design"].get("fenders_in_contact", 1)
+    s = res.ship
+    if (cdir / "guide_summary.svg").exists():
+        out["guide_summary.svg"] = fi.figure("fig-summary", [(cdir / "guide_summary.svg").read_text(encoding="utf-8")])
+        out["guide_codes.svg"] = fi.figure("fig-codes", [(cdir / "guide_codes.svg").read_text(encoding="utf-8")])
+    size0 = s.dwt_t or s.displacement_t
+    out[made["velocity"]] = fi.figure("fig-velocity", [fi.line(
+        "Design berthing velocity against ship size",
+        [(name, xs, ys, dict(hidden=name.startswith(("Brolsma d", "Brolsma e")))) for name, xs, ys in velocity_series()],
+        "Ship size (t): DWT for PIANC 2002; displacement for BS 6349-4, ROM and UFC (log scale)",
+        "Berthing velocity (m/s)", xname="Ship size", yname="Velocity", xunit="t", yunit="m/s", logx=True,
+        xticks=[1_000, 2_000, 5_000, 10_000, 20_000, 50_000, 100_000, 200_000, 500_000], xdec=0, xhover=0, yhover=3,
+        ymin=0, marks=[dict(x=size0, y=res.selected.velocity_m_s.value,
+                            label=f"selected {res.selected.velocity_m_s.value:.3f} m/s")],
+        alt="__ALT__")], f"charts/{made['velocity']}", "__ALT__")
+    cms, kcd = cm_series(res)
+    out[made["cm"]] = fi.figure("fig-cm", [fi.line(
+        "Added mass factor against keel clearance", cms, "Keel clearance / draught, KC/D (-)", "Added mass factor C_m (-)",
+        xname="KC/D", yname="C_m", xhover=2, yhover=3, ymin=1.0,
+        vlines=[dict(x=kcd)], keys=[dict(name=f"Base KC/D {kcd:.3f} (dotted line)", color=fi.MUTED, dash=True)],
+        alt="__ALT__")], f"charts/{made['cm']}", "__ALT__")
+    utils = [res.method_utilisation(r) for r in res.methods]
+    out[made["methods"]] = fi.figure("fig-methods", [fi.bars(
+        "Utilisation of the base fender by method",
+        [r.label.replace(" (", "|(", 1).replace(", ", ",|", 1) for r in res.methods],
+        [dict(name="Utilisation", values=utils,
+              colors=[fi.MUTED if fc.outside_validity(r) else fi.SERIES[0] for r in res.methods],
+              notes=[f"Design energy {_f(r.design_energy_knm)} kNm"
+                     + ("; outside the stated validity of a formula it uses" if fc.outside_validity(r) else "")
+                     for r in res.methods])],
+        "Energy per fender / capacity (-)", yname="Utilisation", hlines=[dict(y=1.0, label="limit 1.0")],
+        keys=[dict(name="Within the method's validity", color=fi.SERIES[0])]
+        + ([dict(name="Outside a formula's stated validity", color=fi.MUTED)]
+           if any(fc.outside_validity(r) for r in res.methods) else [])
+        + [dict(name="Limit 1.0 (dashed red line)", color=fi.LIMIT, dash=True)],
+        label_lines=3, vdec=2, yhover=3, alt="__ALT__")], f"charts/{made['methods']}", "__ALT__")
+    for sw in res.sweeps:
+        name = made.get(f"sweep_{sw.parameter}")
+        if name is None:
+            continue
+        xs = [p.value for p in sw.points]
+        band = [dict(x0=sw.range_low, x1=sw.range_high)]
+        u = "" if sw.unit in ("-", "") else f" {sw.unit}"
+        keys = [dict(name=f"Credible range {_g(sw.range_low)} to {_g(sw.range_high)}{u} (shaded)", color="#e8e7e1"),
+                dict(name=f"Base {_g(sw.base_value)}{u} (dotted line)", color=fi.MUTED, dash=True),
+                dict(name="Limit (dashed red line)", color=fi.LIMIT, dash=True)]
+        xlabel = f"{sw.label} ({sw.unit})"
+        energy = fi.line(f"(a) {SWEEP_TITLES.get(sw.parameter, sw.label)}: energy per fender",
+                         [("Energy per fender", xs, [p.energy_per_fender_knm for p in sw.points])],
+                         xlabel, "Energy per fender (kNm)", xname=sw.label, yname="Energy per fender", xunit=u.strip(),
+                         yunit="kNm", ymin=0, yhover=1, bands=band, vlines=[dict(x=sw.base_value)], keys=keys,
+                         hlines=[dict(y=sw.capacity_knm, label=f"energy capacity {sw.capacity_knm:,.0f} kNm ({fender_label})")],
+                         alt="__ALT__")
+        rf = getattr(sw, "reaction_factor", 1.0)
+        reaction = fi.line(f"(b) Reaction per fender" + ("" if rf == 1.0 else f" x {rf:.2f}"),
+                           [("Reaction per fender", xs, [p.reaction_kn for p in sw.points], dict(color=fi.SERIES[1]))],
+                           xlabel, "Reaction per fender (kN)", xname=sw.label, yname="Reaction per fender",
+                           xunit=u.strip(), yunit="kN", ymin=0, yhover=0, bands=band, vlines=[dict(x=sw.base_value)],
+                           hlines=([dict(y=sw.reaction_limit_kn, label=f"reaction limit {sw.reaction_limit_kn:,.0f} kN")]
+                                   if sw.reaction_limit_kn is not None else []), alt="__ALT__")
+        out[name] = fi.figure(f"fig-sweep-{sw.parameter.replace('_', '-')}", [energy, reaction], f"charts/{name}", "__ALT__")
+    out[made["tornado"]] = fi.figure("fig-ranking", [fi.ranges(
+        "Inputs ranked by the change of design energy over their credible ranges",
+        [dict(name=b.label, lo=b.low_change_pct, hi=b.high_change_pct,
+              tip=f"{GROUP_NAMES[sweep_group(getattr(b, 'parameter', ''))] if hasattr(b, 'parameter') else 'Input'}: "
+                  f"{_g(b.low_value)} gives {_signed_pct(b.low_change_pct)} %; "
+                  f"{_g(b.high_value)} gives {_signed_pct(b.high_change_pct)} %; span {b.span_pct:.0f} points")
+         for b in res.bars],
+        f"Change of design energy from the base {res.selected.design_energy_knm:,.0f} kNm (%)", alt="__ALT__")],
+        f"charts/{made['tornado']}", "__ALT__")
+    if res.size_checks and "sizes" in made:
+        rows = size_rows(res)
+        cats = [r["label"] + ("|(base)" if r["is_base"] else "") for r in rows]
+        hi = next(i for i, r in enumerate(rows) if r["is_base"])
+        r_lim = res.case["design"].get("reaction_limit_kn")
+        per = res.selected.design_energy_knm / n
+        cap = fi.bars("(a) Design energy capacity", cats,
+                      [dict(name="Design capacity", values=[r["energy_knm"] for r in rows],
+                            notes=[f"{_signed_pct(r['energy_change_pct'])} % against the base; utilisation "
+                                   f"{_util(r['utilisation'])} ({_signed_pct(r['utilisation_change_pct'])} %)" for r in rows])],
+                      "Design energy capacity (kNm)", yname="Design capacity", yunit="kNm", highlight=hi, label_lines=2,
+                      vdec=0, yhover=0, hlines=[dict(y=per, label=f"energy per fender {per:,.0f} kNm")], alt="__ALT__")
+        rea = fi.bars("(b) Design reaction at rated deflection", cats,
+                      [dict(name="Design reaction", color=fi.SERIES[1], values=[r["reaction_kn"] for r in rows],
+                            notes=[f"{_signed_pct(r['reaction_change_pct'])} % against the base" for r in rows])],
+                      "Design reaction (kN)", yname="Design reaction", yunit="kN", highlight=hi, label_lines=2, vdec=0,
+                      yhover=0, hlines=([dict(y=r_lim, label=f"reaction limit {r_lim:,.0f} kN")] if r_lim else []),
+                      alt="__ALT__")
+        out[made["sizes"]] = fi.figure("fig-sizes", [cap, rea], f"charts/{made['sizes']}", "__ALT__")
+    if cnt and "database" in made:
+        items = sorted(cnt.items(), key=lambda kv: -kv[1])
+        out[made["database"]] = fi.figure("fig-db-types", [fi.ranges(
+            "Rows in the fender database by fender type",
+            [dict(name=k, lo=0, hi=v, tip=f"{v:,} rows") for k, v in items], "Rows in the fender database (-)",
+            alt="__ALT__")], f"charts/{made['database']}", "__ALT__")
+    if summary and "database_sizes" in made:
+        vendors, types, grid, notes = _size_grid(summary)
+        out[made["database_sizes"]] = fi.figure("fig-db-sizes", [fi.bars(
+            "Largest fender size in the database by type and vendor",
+            [{"hydropneumatic": "hydro-|pneumatic", "foam-filled": "foam-|filled"}.get(x, x) for x in types],
+            [dict(name=_short_vendor(v), values=grid[v], notes=notes[v]) for v in vendors],
+            "Largest size held (mm)", yname="Largest size", yunit="mm", vdec=0, yhover=0, value_labels=False,
+            label_lines=2,
+            alt="__ALT__")], f"charts/{made['database_sizes']}", "__ALT__")
+    return out
 
 
 def main(argv=None) -> int:
@@ -693,6 +1027,8 @@ def main(argv=None) -> int:
     ap.add_argument("--catalogue", type=Path)
     ap.add_argument("--index", type=Path, default=Path(__file__).resolve().parents[3] / "data" / "fender_design" / "catalogue_index.csv",
                     help="catalogue index (row counts by type) for the coverage chart")
+    ap.add_argument("--data", type=Path, default=Path(__file__).resolve().parents[3] / "data" / "fender_design",
+                    help="public data folder: governing bodies, method matrix, size summary of the database")
     ap.add_argument("--template", type=Path)
     ap.add_argument("--stem", default="report")
     ap.add_argument("--fender-label", default=None)
@@ -707,7 +1043,9 @@ def main(argv=None) -> int:
     cnt = None
     if a.index and a.index.exists():
         cnt, n_rows, n_src = index_counts(a.index)
-    made = charts(res, a.out, label, cnt)
+    summary = read_csv(a.data / "catalogue_size_summary.csv")
+    bodies, matrix = read_csv(a.data / "governing_bodies.csv"), read_csv(a.data / "method_matrix.csv")
+    made = charts(res, a.out, label, cnt, summary)
     data = results_dict(res)
     data["charts"] = made
     data["ufc_f_basis"] = res.fcase.ufc_f_basis
@@ -750,10 +1088,12 @@ def main(argv=None) -> int:
         if cnt:
             values["db_rows"] = f"{n_rows:,}"
             values["db_sources"] = n_src
+        values.update(guide_values(res, cnt, summary, bodies, matrix, a.out / "charts"))
         if a.extra_values:
             values.update(json.loads(a.extra_values.read_text(encoding="utf-8")))
         render(a.template, values, a.out / f"{a.stem}.md", a.out / f"{a.stem}.html",
-               res.case.get("title", "Fender design report"))
+               res.case.get("report_title", "Fender design guide"),
+               interactive_figures(res, made, label, cnt, summary, bodies, matrix, a.out / "charts"))
     print(json.dumps({k: data[k] for k in ("selected", "design_energy_knm", "utilisation")}, default=str))
     return 0
 

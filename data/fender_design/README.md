@@ -1,13 +1,15 @@
 # Fender design database
 
 Public tables behind the fender design module
-(`digitalmodel.hydrodynamics.fender_design`, with `berthing_energy`), the universal
-workbook and the generic method report in `docs/reports/modules/fender_design/`.
+(`digitalmodel.hydrodynamics.fender_design`, with `berthing_energy`) and the fender design
+guide in `docs/reports/modules/fender_design/` (the benchmark workbook reads them too).
 
 | File | Holds |
 |---|---|
 | `database_schema.yaml` | Column, unit and meaning of every field of the fender database |
 | `catalogue_index.csv` | One row per manufacturer catalogue read: title, edition, URL, fender types and row counts, date read. No catalogue values |
+| `catalogue_size_summary.csv` | The catalogues by vendor, then fender type: row count and the smallest and largest size held (height of solid fenders, diameter of floating fenders, mm). Catalogue dimensions only, no rated value; written by `import_vendor_tables.py --size-summary` |
+| `governing_bodies.csv` | The governing body, region, code and edition behind each method, and how the text is held |
 | `sources.csv` | The method source register (`fender_design.SOURCES`): document, edition, clause, verification level, where it was read, note, date read (`accessed_on`) |
 | `method_matrix.csv` | What each method uses for velocity, Cm, Ce, Cs, Cc, design factor and fender capacity |
 | `illustrative_fenders.csv` | Fictional fender rows (`GEN-*`) in the selection layout, for tests and the generic example |

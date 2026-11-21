@@ -124,3 +124,38 @@ the module would not give. `N` is checked as a whole-valued number: a spreadshee
   factor 1, one fender, blank limits and override) equal the module per method and per
   fender; ships beyond a method's velocity table give `#N/A` in that method's row
   exactly where the module leaves the method out.
+
+## What the workbook holds
+
+This section was Section 6 of the fender design guide up to revision 5. The guide is written around the native calculation module; the workbook is kept for benchmarking against spreadsheet calculations, so its description is held here.
+
+`build_fender_workbook.py` writes an xlsx from a case file and a catalogue:
+
+- **Inputs:** the case values with their basis (yellow cells), including berth structure,
+  fender deflection, tugs, calls a year, continuous berth and an optional velocity override.
+  Below them, in red, the choices fixed at generation (method, Brolsma condition, condition
+  class, ship type, factor position or override, WG211 class, CoV_M and contact, the C_s and
+  C_c bases, the tolerances of fender types other than the base fender's, fender and curve):
+  these select table rows or constants, and changing one needs the workbook to be
+  regenerated.
+- **Calc:** C_b, K, R, φ, C_e (and the error form), KC/D, C_m by four methods, the UFC and
+  IS 4651 eccentricity, C_s, C_c and C_g by method, as live formulas.
+- **Velocity:** the Brolsma table and log-log interpolation at the DWT and displacement, and
+  the digitized UFC, ROM (with and without tugs) and EAU tables, live.
+- **Methods:** design energy by every method. Every coefficient that depends on an Inputs
+  value is a formula: velocity by size (or the override), C_m, C_e, C_s, C_c, C_g, the ROM
+  accidental factor (displacement, tugs, velocity, calls) and the WG211 frequency correction.
+  The flags column is written at generation.
+- **Fenders:** the catalogue with live capacity, utilisation, design reaction and checks
+  against the limits on Inputs.
+- **Sensitivity, Tornado, Sizes:** written by the generator, with charts, and marked in red
+  "regenerate after any input change".
+- **Sources:** the source register.
+
+The test suite recomputes the workbook's formulas and checks C_b, K, R, φ, C_e, every
+method's design energy and the fender utilisation against the module. It then changes ten
+inputs (displacement, DWT, depth, contact point, angle, structure, fender deflection, calls a
+year, tugs, continuous berth) so that each threshold is crossed, recomputes, and checks every
+method's velocity, C_m, C_e, C_s, C_c, factor and design energy against the module run on
+the changed case; and it checks that the velocity override cell drives every method (ROM
+factor 1.80 at 0.08 m/s).

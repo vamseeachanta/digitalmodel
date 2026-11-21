@@ -742,7 +742,8 @@
     "sweep_factor": "sweep_factor.png",
     "tornado": "tornado.png",
     "sizes": "sizes.png",
-    "database": "database_coverage.png"
+    "database": "database_coverage.png",
+    "database_sizes": "database_sizes.png"
   },
   "ufc_f_basis": "berthing_coefficient",
   "ufc_design_energy_knm_by_f_reading": {

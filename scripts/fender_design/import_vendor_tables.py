@@ -226,6 +226,37 @@ def catalogue_rows(rows: list[dict], perf_basis: str | None = None) -> list[dict
     return out
 
 
+SIZE_SUMMARY_COLUMNS = ("vendor", "fender_type", "rows", "size_measure", "rows_with_size", "smallest_size_mm",
+                        "largest_size_mm", "source_ids", "accessed_on")
+
+
+def size_summary(in_dir: Path) -> list[dict]:
+    """Coverage of the vendor tables by vendor, then fender type: row count and the smallest
+    and largest size held (height of a solid fender, diameter of a floating fender, mm).
+
+    Sizes are catalogue dimensions, not rated values; no energy, reaction or pressure is
+    written. The result is the public file ``data/fender_design/catalogue_size_summary.csv``.
+    """
+    groups: dict[tuple[str, str, str], dict] = {}
+    for name, column, measure in (("solid_rubber.csv", "height_mm", "height"), ("floating.csv", "diameter_mm", "diameter")):
+        for r in _read(in_dir / name):
+            g = groups.setdefault((r["vendor"], r["fender_type"], measure),
+                                  dict(rows=0, sizes=[], sources=set(), dates=set()))
+            g["rows"] += 1
+            g["sources"].add(r["source_id"])
+            g["dates"].add(r["accessed_on"])
+            if r[column].strip():
+                g["sizes"].append(float(r[column]))
+    out = []
+    for (vendor, kind, measure), g in sorted(groups.items()):
+        out.append(dict(
+            vendor=vendor, fender_type=kind, rows=g["rows"], size_measure=measure, rows_with_size=len(g["sizes"]),
+            smallest_size_mm=f"{min(g['sizes']):.0f}" if g["sizes"] else "",
+            largest_size_mm=f"{max(g['sizes']):.0f}" if g["sizes"] else "",
+            source_ids="; ".join(sorted(g["sources"])), accessed_on=max(g["dates"])))
+    return out
+
+
 def _write(path: Path, columns, rows) -> None:
     with path.open("w", newline="", encoding="utf-8") as fh:
         w = csv.DictWriter(fh, fieldnames=list(columns), lineterminator="\n")
@@ -239,7 +270,13 @@ def main(argv=None) -> int:
     ap.add_argument("--out", dest="out_dir", required=True, type=Path)
     ap.add_argument("--perf-basis", choices=PERF_BASES, default=None,
                     help="keep only solid-fender rows rated on this basis in the catalogue")
+    ap.add_argument("--size-summary", type=Path, default=None,
+                    help="also write the coverage by vendor, type and size (no rated values) to this CSV")
     args = ap.parse_args(argv)
+    if args.size_summary:
+        summary = size_summary(args.in_dir)
+        _write(args.size_summary, SIZE_SUMMARY_COLUMNS, summary)
+        print(f"size summary rows {len(summary)}")
     rows = convert(args.in_dir)
     cat = catalogue_rows(rows, args.perf_basis)
     args.out_dir.mkdir(parents=True, exist_ok=True)
