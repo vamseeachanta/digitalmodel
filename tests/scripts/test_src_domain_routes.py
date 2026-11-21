@@ -507,11 +507,23 @@ def test_unowned_test_selects_every_shard_even_in_a_mixed_change(detector, name)
 
 def test_replay_reads_subsea_operands_from_current_workflow(replay, monkeypatch):
     workflow = (ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(encoding="utf-8")
-    inputs = {
-        "fixture:tests/DOMAINS.md": "| subsea | `tests/subsea/` |",
-        "fixture:.claude/quality-gates.yaml": "gates: {tests-subsea: {command: pytest}}",
-        "fixture:.github/workflows/quality-gates-by-domain.yml": workflow,
-    }
-    monkeypatch.setattr(replay, "git", lambda command, spec: inputs[spec])
-    _, commands = replay.ownership("fixture")
-    assert commands["subsea"] == ({"tests/riser_fatigue/", "tests/riser_bom/"}, set())
+    gate = (ROOT / ".claude/quality-gates.yaml").read_text(encoding="utf-8")
+    bare_gate = "gates: {tests-subsea: {command: pytest}}"
+    # Wording of the workflow addition before #4165, pinned so the regex cannot drift silently.
+    historical = ('          if os.environ["GATE_NAME"] == "tests-subsea":\n'
+                  '              command += " tests/riser_fatigue/ tests/riser_bom/"\n')
+    revisions = {"subsea-workflow": (bare_gate, workflow), "subsea-current": (gate, workflow),
+                 "subsea-historical": (bare_gate, historical)}
+
+    def git(command, spec):
+        ref, path = spec.split(":", 1)
+        if path == "tests/DOMAINS.md":
+            return "| subsea | `tests/subsea/` |"
+        return revisions[ref][path == ".github/workflows/quality-gates-by-domain.yml"]
+
+    monkeypatch.setattr(replay, "git", git)
+    riser = {"tests/riser_fatigue/", "tests/riser_bom/"}
+    # The riser operands moved from the workflow into the gate command (#4165).
+    assert replay.ownership("subsea-workflow")[1]["subsea"][0] in (set(), riser)
+    assert riser <= replay.ownership("subsea-current")[1]["subsea"][0]
+    assert replay.ownership("subsea-historical")[1]["subsea"] == (riser, set())
