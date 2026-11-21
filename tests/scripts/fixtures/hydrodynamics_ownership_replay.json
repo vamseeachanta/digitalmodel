@@ -1,0 +1,43 @@
+{
+  "scope": "Local ownership replay for the first 50 first-parent commits ending at the merge base.",
+  "merge_base_sha": "c90ef11aa6bc77047215e753f5c3290c73e57635",
+  "reviewed_head_sha": "531046af84a1925cccef0a8b4a02b27bf20c7460",
+  "candidate_inputs_sha256_lf": {
+    "scripts/ci/detect_touched_domains.py": "bb401906dd63fb3f895f6ed32e98151037a5b3bb83a1d7eff14f662e47a6fac6",
+    "scripts/ci/replay_shard_selection.py": "25a64dd1b95fb03d8284232c49fc88d3ce89b427714d3a231c5a9226008308f0",
+    "scripts/ci/src_domain_routes.json": "17b5480fa82c494c23121d6e6722b17df5453946a5bc3efb4d68ec345b4a679e",
+    "tests/DOMAINS.md": "8f8ff3cedf4e1931f8fe885913c0aba61660a02f2429b70687f6d4459e925c9f"
+  },
+  "environment": "Windows, Python 3.14.6",
+  "merges_checked": 50,
+  "historical_merges_with_unowned_tests": 3,
+  "candidate_merges_with_unowned_tests": 0,
+  "merges_without_a_historical_operand_for_every_changed_test": 10,
+  "recovered_owner": "hydrodynamics-other",
+  "recovered_merges": [
+    {
+      "merge_sha": "d441c0783e67398fd0fed32018b27c83396694b5",
+      "first_parent_sha": "bc096bf55aa8a6f3f6a92b583efe2a79c07f12da",
+      "formerly_unowned_tests": [
+        "tests/hydrodynamics/test_propeller_rudder_review.py"
+      ]
+    },
+    {
+      "merge_sha": "3fb7767e8dfbf4635dbc4197fd70dc9dcafaec24",
+      "first_parent_sha": "558edd32564a0b2d67ea0ce1583c429fa10fb30c",
+      "formerly_unowned_tests": [
+        "tests/hydrodynamics/test_rectangular_buoy_inertia.py"
+      ]
+    },
+    {
+      "merge_sha": "7c7961ba541689886221af6712900230b568b8a5",
+      "first_parent_sha": "02377a0a3fa75bf8e85b8fe013f044d670b5fb63",
+      "formerly_unowned_tests": [
+        "tests/hydrodynamics/test_propeller_rudder_driveoff.py",
+        "tests/hydrodynamics/test_propeller_rudder_review.py"
+      ]
+    }
+  ],
+  "historical_job_outcomes": "UNKNOWN",
+  "paired_shard_gate_results": "UNKNOWN"
+}
