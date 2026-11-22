@@ -128,7 +128,7 @@ def test_tension_factors_are_required_inputs():
 @pytest.mark.parametrize("efficiency", [0.0, -0.1, 1.01, math.nan, True])
 def test_tensioner_efficiency_out_of_range_is_rejected(efficiency):
     with pytest.raises(ValueError):
-        replace(tension(), tensioner_efficiency=efficiency)
+        replace(tension(), tensioner_efficiency_ratio=efficiency)
 
 
 @pytest.mark.parametrize("factor", [0.99, math.inf, math.nan])

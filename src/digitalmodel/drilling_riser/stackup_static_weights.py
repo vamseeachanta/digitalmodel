@@ -146,7 +146,7 @@ class TensionInput:
     is unfactored; internal fluid includes auxiliary fluid. The displaced
     internal water term is distinct from exterior component displacement.
     The lower package is excluded from the tensioned string's weight sum.
-    ``tensioner_efficiency`` (Rf, in (0, 1]) and ``fleet_angle_factor``
+    ``tensioner_efficiency_ratio`` (Rf, in (0, 1]) and ``fleet_angle_factor``
     (>= 1) are required engineering inputs with no default: take both from
     rig data. Pass 1.0 explicitly only when the basis states unity.
     """
@@ -165,7 +165,7 @@ class TensionInput:
     recoil_overpull_n: float
     dynamic_tension_limit_n: float
     setting_fraction: float
-    tensioner_efficiency: float
+    tensioner_efficiency_ratio: float
     fleet_angle_factor: float
 
     def __post_init__(self) -> None:
@@ -185,9 +185,9 @@ class TensionInput:
                 raise ValueError(f"{name} must be an integer count")
         if not 0 <= self.failed_tensioner_count < self.tensioner_count:
             raise ValueError("require 0 <= failed_tensioner_count < tensioner_count")
-        _finite("tensioner_efficiency", self.tensioner_efficiency)
-        if not 0.0 < self.tensioner_efficiency <= 1.0:
-            raise ValueError("tensioner_efficiency must be in (0, 1]")
+        _finite("tensioner_efficiency_ratio", self.tensioner_efficiency_ratio)
+        if not 0.0 < self.tensioner_efficiency_ratio <= 1.0:
+            raise ValueError("tensioner_efficiency_ratio must be in (0, 1]")
         _finite("fleet_angle_factor", self.fleet_angle_factor, 1.0)
 
 
@@ -222,7 +222,7 @@ def minimum_tension(inputs: TensionInput) -> TensionResult:
     units in service); OPriser=Tring-Tsr; OPpackage=OPriser-Wpackage;
     OPextra=max(OPmin-OPpackage,0); Toverall=Tmin+(OPextra+OPrecoil)*ffa/Rf,
     the ring overpull terms grossed up by the same losses as the setting.
-    Maximum setting = DTL*setting_fraction. Rf (tensioner_efficiency) and
+    Maximum setting = DTL*setting_fraction. Rf (tensioner_efficiency_ratio) and
     ffa (fleet_angle_factor) are required inputs; no unity value is assumed.
     Source names API-RP-16Q; clause not stated in source.
     """
@@ -243,19 +243,19 @@ def minimum_tension(inputs: TensionInput) -> TensionResult:
     slip = mechanical + p.additional_supported_weight_n + fluid
     top = minimum_top_tension_16q(
         slip / 1000.0, n_units=p.tensioner_count,
-        n_fail=p.failed_tensioner_count, efficiency=p.tensioner_efficiency,
+        n_fail=p.failed_tensioner_count, efficiency=p.tensioner_efficiency_ratio,
         fleet_angle_factor=p.fleet_angle_factor,
     ) * 1000.0
     # Overpull is what the ring actually receives above the demand: the setting less the
     # tensioner losses (Rf) and the fleet-angle allowance, with every unit in service.
     # Taking Tmin - Tsr would count those losses as overpull (Codex P1 at 33b59c25).
-    delivered = top * p.tensioner_efficiency / p.fleet_angle_factor
+    delivered = top * p.tensioner_efficiency_ratio / p.fleet_angle_factor
     overpull = delivered - slip
     package = overpull - p.lower_package_submerged_weight_n
     additional = max(p.minimum_lower_package_overpull_n - package, 0.0)
     return TensionResult(
         steel, buoyancy, fluid, slip, top, overpull, package, additional,
-        top + (additional + p.recoil_overpull_n) * p.fleet_angle_factor / p.tensioner_efficiency,
+        top + (additional + p.recoil_overpull_n) * p.fleet_angle_factor / p.tensioner_efficiency_ratio,
         p.dynamic_tension_limit_n * p.setting_fraction,
     )
 

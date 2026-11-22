@@ -16,7 +16,7 @@ def test_failed_units_overpull_and_setting_limit():
         lower_package_submerged_weight_n=150000.0,
         minimum_lower_package_overpull_n=30000.0, recoil_overpull_n=10000.0,
         dynamic_tension_limit_n=1000000.0, setting_fraction=0.8,
-        tensioner_efficiency=1.0, fleet_angle_factor=1.0,
+        tensioner_efficiency_ratio=1.0, fleet_angle_factor=1.0,
     )
     result = minimum_tension(inputs)
     slip_n = 400000.0 * 1.04 + 20000.0 - 80000.0 * 0.9 + 300000.0 - 200000.0
@@ -57,7 +57,7 @@ def test_efficiency_below_unity_and_fleet_angle_raise_top_tension():
         lower_package_submerged_weight_n=150000.0,
         minimum_lower_package_overpull_n=30000.0, recoil_overpull_n=10000.0,
         dynamic_tension_limit_n=1000000.0, setting_fraction=0.8,
-        tensioner_efficiency=0.90, fleet_angle_factor=1.0,
+        tensioner_efficiency_ratio=0.90, fleet_angle_factor=1.0,
     )
     rf_only = minimum_tension(base)
     assert 464000.0 * 10.0 / (0.90 * 8.0) == pytest.approx(644444.44, abs=0.01)
@@ -89,7 +89,7 @@ def test_tensioner_losses_are_not_credited_as_overpull():
         lower_package_submerged_weight_n=0.0,
         minimum_lower_package_overpull_n=10000.0, recoil_overpull_n=0.0,
         dynamic_tension_limit_n=1000000.0, setting_fraction=1.0,
-        tensioner_efficiency=0.90, fleet_angle_factor=1.0,
+        tensioner_efficiency_ratio=0.90, fleet_angle_factor=1.0,
     ))
     assert result.minimum_top_tension_n == pytest.approx(100000.0)
     assert result.riser_overpull_n == pytest.approx(0.0, abs=1e-6)
