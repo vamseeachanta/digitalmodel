@@ -239,4 +239,19 @@ def test_inverse_moment_rejects_energy_at_zero_frequency():
     with pytest.raises(ValueError):
         ws.spectral_moment(w, np.array([1.0, 1.0, 0.0]), n=-1)
     stats = ws.spectrum_statistics(w, np.array([1.0, 2.0, 0.0]))  # peak away from 0
-    assert np.isnan(stats["m_minus1"]) and np.isfinite(stats["m0"])
+    assert np.isnan(stats["m_minus1"]) and np.isnan(stats["Te_s"])
+    assert np.isfinite(stats["m0"]) and np.isfinite(stats["Hs_m"])
+
+
+def test_masked_bins_stay_out_of_moments_and_power():
+    ws = WaveSpectra()
+    w = np.array([1.0, 2.0, 3.0, 4.0])
+    results = []
+    for hidden in (9999.0, -5.0, 0.0):
+        S = np.ma.array([1.0, hidden, 1.0, 1.0], mask=[0, 1, 0, 0])
+        results.append((ws.spectral_moment(w, S, n=0), ws.spectral_moment(w, S, n=1),
+                        ws.spectral_moment(w, S, n=-1), ws.wave_power(w, S)))
+    for other in results[1:]:
+        assert other == pytest.approx(results[0])
+    m0, m1, m_minus1, _ = results[0]
+    assert (m0, m1, m_minus1) == pytest.approx((1.0, 3.5, 0.5 / 3 + 0.5 / 4))

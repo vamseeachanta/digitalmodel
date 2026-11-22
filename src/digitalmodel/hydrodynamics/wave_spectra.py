@@ -329,18 +329,23 @@ class WaveSpectra:
         Returns:
             Spectral moment
         """
-        w = np.asarray(frequencies, dtype=float)  # integer grids allow negative orders
-        s = np.asarray(spectrum, dtype=float)
+        # Float so integer grids allow negative orders; a NumPy mask is kept, so masked
+        # bins stay out of the integral exactly as before.
+        masked = np.ma.isMaskedArray(frequencies) or np.ma.isMaskedArray(spectrum)
+        xp = np.ma if masked else np
+        w = xp.asarray(frequencies, dtype=float)
+        s = xp.asarray(spectrum, dtype=float)
         if n < 0:
             # omega**n is unbounded at omega <= 0: a bin with no energy adds nothing,
             # energy there makes the inverse moment undefined.
-            if np.any((w <= 0.0) & (s != 0.0)):
+            bad = (w <= 0.0) & (s != 0.0)
+            if np.any(np.ma.filled(bad, False)):
                 raise ValueError(
                     f"spectral moment of order {n} needs positive frequencies wherever the "
                     "spectrum is nonzero"
                 )
             with np.errstate(divide="ignore", invalid="ignore"):
-                integrand = np.where(s == 0.0, 0.0, w**n * s)
+                integrand = xp.where(s == 0.0, 0.0, w**n * s)
         else:
             integrand = w**n * s
         return float(_trapezoid(integrand, w))
@@ -448,6 +453,8 @@ class WaveSpectra:
 
         For omega^-5 tails, m4 and spectral_width depend on the upper cutoff;
         moments of order four and above do not converge as it tends to infinity.
+        When the spectrum has energy at omega <= 0, m_-1 is undefined: 'm_minus1'
+        and 'Te_s' are then NaN and the other statistics are still returned.
 
         Args:
             frequencies: Frequency array (rad/s)
