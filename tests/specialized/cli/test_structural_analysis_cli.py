@@ -3,16 +3,12 @@ ABOUTME: Integration tests for structural_analysis CLI
 ABOUTME: Tests stress calculations, buckling analysis, and capacity checks via CLI
 """
 
-import pytest
 import json
-from pathlib import Path
 
-pytest.importorskip(
-    "tests.cli.conftest",
-    reason="module tests.cli.conftest not available"
-)
 from digitalmodel.structural.structural_analysis.cli import cli
-from tests.cli.conftest import assert_cli_success, assert_cli_failure, assert_json_output, assert_output_contains
+from tests.specialized.cli.conftest import (
+    assert_cli_success, assert_cli_failure, assert_json_output, assert_output_contains,
+)
 
 
 class TestStressCommand:
