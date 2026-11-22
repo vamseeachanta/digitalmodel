@@ -1,12 +1,15 @@
 # OrcaFlex Reference Documentation
 
-> Converted from Orcina WebHelp: https://www.orcina.com/webhelp/OrcaFlex/
+> Conversions and short summaries from Orcina WebHelp: https://www.orcina.com/webhelp/OrcaFlex/
 
 
 ## Available Topics
 
 | File | Description |
 |------|-------------|
+| [environment.md](environment.md) | Environment overview (short summary) |
+| [environment-sea-data.md](environment-sea-data.md) | Sea settings (short summary) |
+| [environment-current-data.md](environment-current-data.md) | Current models (short summary) |
 | [general-data-statics.md](general-data-statics.md) | Statics solver configuration |
 | [general-data-dynamics.md](general-data-dynamics.md) | Dynamics solver configuration |
 | [general-data-logging.md](general-data-logging.md) | Logging and output configuration |
@@ -42,10 +45,7 @@ These pages could not be fetched. Run the script again or download manually:
 - Examples of setting data in YAML files (`text-data-files-examples`)
 - Automating YAML file generation (`text-data-files-automation`)
 - General model data properties (`general-data`)
-- Environment overview (`environment`)
-- Sea properties (density, viscosity, temperature) (`environment-sea-data`)
 - Wave configuration and types (`environment-wave-data`)
-- Current profiles and models (`environment-current-data`)
 - Seabed shape and soil models (`environment-seabed-data`)
 - Wind models and spectra (`environment-wind-data`)
 - Random wave spectrum parameters (`environment-random-waves`)

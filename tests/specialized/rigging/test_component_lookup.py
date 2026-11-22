@@ -161,3 +161,26 @@ def test_known_shackle_preserves_capacities_and_numeric_types(shackles, subcateg
     for key, value in expected.items():
         assert type(record[key]) is type(value)
     assert json.loads(json.dumps(record, allow_nan=False)) == expected
+
+
+@pytest.mark.parametrize("size,expected", [("3/16", 0.1875), ("1 3/16", 1.1875)])
+def test_shackle_fractional_size_uses_existing_converter(shackles, size, expected):
+    table = shackles.shackle_data["G2130"]
+    table["size_in"] = size
+    record = shackles.get_shackle({"subcategory": "G2130", "part_number": 202})
+    assert record["size_in"] == expected
+    assert record["wll_te"] == 25
+    assert table["size_in"].tolist() == [size, size]
+
+
+@pytest.mark.parametrize("size", [
+    "1-3/16", "1  3/16", "1/0", "invalid/size", "bad 3/16", "NaN/16",
+    "inf/1", "bad -1 3/16", "3/16 trailing", "1e999/1",
+    "9" * 400 + "/1",
+])
+def test_malformed_shackle_fraction_names_part_number(shackles, size):
+    table = shackles.shackle_data["G2130"]
+    table["size_in"] = size
+    with pytest.raises(ValueError, match=r"(?i)shackle.*part number.*202"):
+        shackles.get_shackle({"subcategory": "G2130", "part_number": 202})
+    assert table["size_in"].tolist() == [size, size]
