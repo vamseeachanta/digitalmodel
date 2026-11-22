@@ -1,0 +1,8 @@
+curve,deflection_pct,reaction_pct,energy_pct,source
+illustrative-pneumatic,0,0,0,fictional illustrative curve (shape only; not a manufacturer curve)
+illustrative-pneumatic,10,6,1,fictional illustrative curve (shape only; not a manufacturer curve)
+illustrative-pneumatic,20,15,6,fictional illustrative curve (shape only; not a manufacturer curve)
+illustrative-pneumatic,30,27,16,fictional illustrative curve (shape only; not a manufacturer curve)
+illustrative-pneumatic,40,44,33,fictional illustrative curve (shape only; not a manufacturer curve)
+illustrative-pneumatic,50,68,60,fictional illustrative curve (shape only; not a manufacturer curve)
+illustrative-pneumatic,60,100,100,fictional illustrative curve (shape only; not a manufacturer curve)

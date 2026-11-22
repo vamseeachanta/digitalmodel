@@ -1,0 +1,36 @@
+# Fender database schema (one row per published size and grade or pressure)
+#
+# Produced by scripts/fender_design/import_vendor_tables.py from vendor tables
+# that carry a citation per row. Vendor values are held privately; this file,
+# catalogue_index.csv and the illustrative rows are public.
+
+version: 1
+row: one published size x compound grade (solid) or size x initial pressure (floating)
+columns:
+  record_id: {type: str, meaning: "id of the row in the vendor table"}
+  family: {type: str, values: [solid, floating]}
+  fender_type: {type: str, values: [cone, cell, arch, element, v, cylindrical, d, square, pneumatic, foam, foam-filled, hydropneumatic, roller, shear, parallel-motion, other]}
+  vendor: {type: str}
+  product_line: {type: str}
+  size_designation: {type: str, meaning: "as printed"}
+  diameter_or_height_mm: {type: float, unit: mm, meaning: "height of a solid fender; diameter of a floating fender"}
+  length_mm: {type: float, unit: mm, meaning: "body length (floating, cylindrical, extruded); blank for cone and cell"}
+  grade_or_pressure: {type: str, meaning: "compound grade (solid) or initial pressure label (floating)"}
+  internal_pressure_kpa: {type: float, unit: kPa, meaning: "initial internal pressure of a pneumatic fender"}
+  rated_deflection_pct: {type: float, unit: "%", meaning: "deflection at rated energy (GEA for floating)"}
+  rated_energy_knm: {type: float, unit: kNm, meaning: "rated energy; GEA for floating fenders"}
+  rated_reaction_kn: {type: float, unit: kN, meaning: "reaction at rated deflection"}
+  hull_pressure_kpa: {type: float, unit: kPa, meaning: "hull pressure at rated deflection where published (floating)"}
+  basis: {type: str, values: [per-unit, per-m], meaning: "per-m rows are extruded or arch fenders quoted per metre"}
+  perf_basis: {type: str, values: [RPD, CV, GEA, ""], meaning: "RPD rated performance at the PIANC initial velocity; CV slow constant velocity; GEA guaranteed energy absorption (ISO 17357-1)"}
+  tolerance_pct: {type: float, unit: "%", meaning: "manufacturing tolerance as published"}
+  weight_kg: {type: float, unit: kg}
+  float_draft_mm: {type: float, unit: mm, meaning: "float level of a floating fender; not published in the catalogues read (blank)"}
+  test_standard: {type: str}
+  source_id: {type: str, meaning: "id in the vendor sources table"}
+  catalogue: {type: str, meaning: "catalogue title"}
+  catalogue_edition: {type: str}
+  page_or_table: {type: str}
+  value_method: {type: str, values: ["table", "read from chart: <method>", "derived: <formula>"]}
+  accessed_on: {type: date, meaning: "UTC date the catalogue was read"}
+selection_layout: "fender_catalogue.csv: berthing_energy.FENDER_CATALOGUE_COLUMNS; per-unit rated rows only"

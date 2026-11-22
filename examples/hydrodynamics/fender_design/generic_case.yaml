@@ -1,0 +1,64 @@
+# Generic fender design case for the method report and the universal workbook.
+# A Supramax-class bulk carrier in round numbers (not a real ship) at an open
+# (piled or floating) berth, with the fictional illustrative fender rows.
+title: Universal fender design workbook - generic Supramax-class example
+ship:
+  displacement_t: 60000.0      # at the berthing draught
+  dwt_t: 48000.0
+  lbp_m: 180.0
+  beam_m: 32.0
+  draft_m: 12.0                # draught at berthing, not moulded depth
+  ship_type: bulk
+  water_density_t_m3: 1.025
+berth:
+  water_depth_m: 14.0          # KC/D = 0.167
+  contact_x_from_bow_m: 45.0   # quarter point
+  berthing_angle_deg: 5.0
+  navigation: b                # difficult berthing, sheltered
+  structure: open
+  fender_deflection_m: 1.56    # 60 % of a 2.6 m pneumatic fender
+conditions:
+  condition: moderate         # WG211, ROM, UFC, EAU, IS 4651 class
+  tugs: true
+  berthings_per_year: 100
+  consequence_class: B
+  cov_m: high                 # ASSUMED - to be confirmed: a berth used by ships of widely varying displacement
+  multiple_contact: false
+  continuous_berth: true
+  ufc_f_basis: berthing_coefficient   # Cb in UFC F: printed wording (default) or block_coefficient
+  cs_basis: pianc2002          # Cs: PIANC WG33 (2002) 4.2.6 general value 1.0 (default); tfadm-2024: 0.9 at <= 0.15 m
+  cc_basis: pianc2002          # Cc: PIANC WG33 (2002) 4.2.7 values (default); sft-2026: SFT p. 20 table
+design:
+  method: pianc2002
+  factor_position: smallest    # Handymax-size bulk carrier (SFT p. 22 class reading)
+  fenders_in_contact: 1
+  base_fender_id: GEN-PN-4
+  energy_tolerance: 0.10       # pneumatic: sources conflict, the lower-capacity reading taken: TFADM p. 76 +/-10 % on energy; SFT p. 26 0 % on GEA (report 3.6)
+  reaction_tolerance: 0.10     # pneumatic +/-10 % (TFADM p. 76)
+  tolerances_by_type:          # other fender types in the catalogue
+    foam: {energy_tolerance: 0.10, reaction_tolerance: 0.10}   # foam +/-10 % on reaction and energy (TFADM p. 76)
+  angular_factor: 1.0
+  reaction_limit_kn: 1600.0    # illustrative structural limit
+  hull_pressure_limit_kpa: 200.0   # PIANC 2002 Table 4.4.1, bulk carriers
+  curve: illustrative-pneumatic
+  neighbour_ids: [GEN-PN-2, GEN-PN-3, GEN-PN-4, GEN-PN-5, GEN-FM-6]
+database:
+  catalogue: ../../../data/fender_design/illustrative_fenders.csv
+  curves: ../../../data/fender_design/illustrative_curves.csv
+basis:
+  M: generic round number
+  T: draught at berthing
+  DEPTH: generic; KC/D 0.167
+  X: quarter point (SFT p. 17 side berthing 20 to 35 % of length from the bow)
+  ALPHA: TFADM p. 22 side berthing 0 to 15 deg
+  RLIM: illustrative structural limit
+  PLIM: PIANC WG33 (2002) Table 4.4.1 (bulk carriers < 200 kN/m2)
+sweeps:
+  velocity_m_s: {low: 0.0537, high: 0.172, basis: "Brolsma conditions a to c at 48,000 DWT"}
+  displacement_t: {low: 45000.0, high: 66000.0, basis: "part-loaded to 10 % above the base"}
+  water_depth_m: {low: 12.6, high: 18.0, basis: "KC/D 0.05 to 0.5, the PIANC Cm range"}
+  contact_x_over_lbp: {low: 0.20, high: 0.35, basis: "SFT p. 17 side berthing contact 20 to 35 % from the bow"}
+  berthing_angle_deg: {low: 0.0, high: 10.0, basis: "TFADM p. 22 side berthing angles"}
+  cs: {low: 0.9, high: 1.0, basis: "PIANC WG33 (2002) 4.2.6, p. 21: 0.9 to 1.0 hard fenders and larger vessels, 1.0 soft"}
+  cc: {low: 0.9, high: 1.0, basis: "PIANC WG33 (2002) 4.2.7, p. 22: solid quay 0.9 to open berth 1.0"}
+  factor: {low: 1.25, high: 1.75, basis: "PIANC 2002 Table 4.2.5 bulk carriers, largest to smallest"}
