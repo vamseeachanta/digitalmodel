@@ -315,6 +315,7 @@ jobs:
             tests/workflows/test_durable_workflows.py \
             tests/workflows/test_ci_triggers.py \
             tests/workflows/test_sweep_parity.py \
+            tests/workflows/test_light_checkout.py \
             tests/riser_bom/test_ci.py \
             -q --tb=line
 
@@ -332,12 +333,32 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJSON(needs.detect-domains.outputs.matrix) }}
     steps:
+      - name: Choose checkout scope
+        id: checkout-scope
+        env:
+          SHARD: ${{ matrix.domain }}
+        run: |
+          # docs/domains holds about 1.3 GB of built HTML and solver files. Shards
+          # whose tests read no docs/domains path leave it out of the work tree and
+          # fetch file contents on demand. Every other shard, and any new one, keeps
+          # the full checkout. tests/workflows/test_light_checkout.py checks the list.
+          case "$SHARD" in
+            citations|field-development|infrastructure-core|misc)
+              echo "filter=blob:none" >> "$GITHUB_OUTPUT"
+              printf 'sparse-checkout<<EOF\n/*\n!/docs/domains/\nEOF\n' >> "$GITHUB_OUTPUT"
+              ;;
+          esac
+
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           # Citation checks read source and map revisions recorded in packs;
           # subsea also verifies a manifest pinned to an older commit.
           fetch-depth: 0
+          # Empty for a full shard, which leaves the checkout defaults in place.
+          filter: ${{ steps.checkout-scope.outputs.filter }}
+          sparse-checkout: ${{ steps.checkout-scope.outputs.sparse-checkout }}
+          sparse-checkout-cone-mode: false
           repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
