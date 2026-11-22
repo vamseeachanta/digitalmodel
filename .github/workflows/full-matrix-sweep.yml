@@ -5,9 +5,13 @@
 # green indefinitely. This workflow is the counterweight: it runs EVERY domain
 # shard, ignoring touched-domain detection entirely, on
 #
-#   * every push to `main`  -> main's green is earned, not assumed
-#   * a nightly cron        -> drift is caught within a day even without merges
+#   * a nightly cron        -> an untouched-but-broken shard is caught within a day
 #   * manual dispatch       -> on-demand "what is the true state of the matrix?"
+#
+# It no longer runs on every push to `main`: each merge then cost one full
+# matrix (133.8 runner-minutes in run 43824707679, 16 Nov 2026) on top of the touched-domain
+# run that `Quality Gates by Domain` already makes for the same push. A push
+# that changes shared source or dependencies still selects every shard there.
 #
 # Job names here are deliberately distinct from the PR-gating workflow's
 # (`sweep-tests-*` / `Full matrix sweep result` vs `tests-*` / `Domain test
@@ -16,8 +20,6 @@
 name: Full Matrix Sweep
 
 "on":
-  push:
-    branches: [main]
   schedule:
     - cron: "17 7 * * *"
   workflow_dispatch:
@@ -119,7 +121,7 @@ jobs:
           echo "SOURCE_LOCATORS_PRETTIER=$RUNNER_TEMP/source-locators-formatter/node_modules/.bin/prettier" >> "$GITHUB_ENV"
 
       - name: Install Gmsh runtime libraries
-        if: matrix.domain == 'solver-smoke'
+        if: matrix.domain == 'solver-smoke' || matrix.domain == 'specialized'
         run: dpkg -s libglu1-mesa >/dev/null 2>&1 || (sudo -n apt-get update -qq && sudo -n apt-get install -y -qq libglu1-mesa)
 
       - name: Create reports directory
@@ -136,10 +138,7 @@ jobs:
 
           with open(".claude/quality-gates.yaml", encoding="utf-8") as handle:
               gates = yaml.safe_load(handle)["gates"]
-          command = gates[os.environ["GATE_NAME"]]["command"]
-          if os.environ["GATE_NAME"] == "tests-subsea":
-              command += " tests/riser_bom/"
-          print(command)
+          print(gates[os.environ["GATE_NAME"]]["command"])
           PY
           )
           {
@@ -168,6 +167,10 @@ jobs:
           code=$?
           echo "code=$code" >> "$GITHUB_OUTPUT"
           exit "$code"
+
+      - name: Run geotechnical solver benchmarks
+        if: matrix.domain == 'specialized'
+        run: bash tests/geotechnical/run_solver_benchmarks.sh
 
       - name: Extract shard result
         if: always()

@@ -1,0 +1,152 @@
+{
+  "snapshot": {
+    "index.json": {
+      "runs": [
+        {
+          "id": 1,
+          "workflow": "sweep",
+          "run_attempt": 1
+        },
+        {
+          "id": 2,
+          "workflow": "sweep",
+          "run_attempt": 1
+        }
+      ]
+    },
+    "1.json": {
+      "jobs": [
+        {
+          "id": 11,
+          "name": "sweep-tests-one",
+          "conclusion": "success",
+          "started_at": "2026-11-17T00:00:00Z",
+          "completed_at": "2026-11-17T00:00:50Z",
+          "steps": [
+            {
+              "name": "Checkout code",
+              "started_at": "2026-11-17T00:00:00Z",
+              "completed_at": "2026-11-17T00:00:10Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run domain gate",
+              "started_at": "2026-11-17T00:00:20Z",
+              "completed_at": "2026-11-17T00:00:50Z",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    },
+    "1-phases.json": {
+      "11": {
+        "depth": 0
+      }
+    },
+    "2.json": {
+      "jobs": [
+        {
+          "id": 21,
+          "name": "sweep-tests-one",
+          "conclusion": "success",
+          "started_at": "2026-11-17T00:00:00Z",
+          "completed_at": "2026-11-17T00:00:50Z",
+          "steps": [
+            {
+              "name": "Checkout code",
+              "started_at": "2026-11-17T00:00:00Z",
+              "completed_at": "2026-11-17T00:00:20Z",
+              "conclusion": "success"
+            },
+            {
+              "name": "Run domain gate",
+              "started_at": "2026-11-17T00:00:20Z",
+              "completed_at": "2026-11-17T00:00:50Z",
+              "conclusion": "success"
+            }
+          ]
+        },
+        {
+          "id": 22,
+          "name": "sweep-tests-two",
+          "conclusion": "success",
+          "started_at": "2026-11-17T00:00:00Z",
+          "completed_at": "2026-11-17T00:00:50Z",
+          "steps": [
+            {
+              "name": "Checkout code",
+              "started_at": "2026-11-17T00:00:00Z",
+              "completed_at": null,
+              "conclusion": "success"
+            },
+            {
+              "name": "Run domain gate",
+              "started_at": "2026-11-17T00:00:20Z",
+              "completed_at": "2026-11-17T00:00:50Z",
+              "conclusion": "success"
+            }
+          ]
+        }
+      ]
+    },
+    "2-phases.json": {
+      "21": {
+        "depth": 0
+      },
+      "22": {
+        "depth": 0
+      }
+    }
+  },
+  "solver": [
+    "2026-11-18T12:00:00.1234567Z ##[group]Run pytest tests",
+    "2026-11-18T12:00:01.1234567Z ##[endgroup]",
+    "2026-11-18T12:00:02.1234567Z collected 999 items",
+    "2026-11-18T12:00:04.1234567Z 999 passed in 3.00s",
+    "2026-11-18T12:00:05.1234567Z ##[group]Run PYTHONPATH=src uv run --with xslope --with gmsh python -m pytest tests/geotechnical -q",
+    "2026-11-18T12:00:06.1234567Z ##[endgroup]",
+    "2026-11-18T12:00:07.1234567Z Resolved 18 packages in 65ms",
+    "2026-11-18T12:00:09.1234567Z Installed 18 packages in 464ms",
+    "2026-11-18T12:00:10.1234567Z ===================== test session starts =====================",
+    "2026-11-18T12:00:11.1234567Z collected 42 items",
+    "2026-11-18T12:00:20.1234567Z ========== 40 passed, 2 skipped in 10.51s ===========",
+    "2026-11-18T12:00:21.1234567Z ##[group]Run pytest tests/more",
+    "2026-11-18T12:00:22.1234567Z ##[endgroup]",
+    "2026-11-18T12:00:26.1234567Z 999 passed in 3.00s"
+  ],
+  "truncated": [
+    "2026-11-18T12:00:00Z ##[group]Run uv run --with xslope python -m pytest tests/geotechnical",
+    "2026-11-18T12:00:00Z ##[endgroup]",
+    "2026-11-18T12:00:01Z Downloading gmsh",
+    "2026-11-18T12:00:20Z ##[group]Run pytest tests",
+    "2026-11-18T12:00:21Z ##[endgroup]",
+    "2026-11-18T12:00:22Z Installed 9 packages in 10ms",
+    "2026-11-18T12:00:23Z collected 12 items",
+    "2026-11-18T12:00:24Z 12 passed in 0.12s"
+  ],
+  "domain": [
+    "2026-11-18T12:00:00.1234567Z ##[group]Run actions/checkout@v4",
+    "2026-11-18T12:00:00.1234567Z   fetch-depth: 0",
+    "2026-11-18T12:00:00.1234567Z ##[endgroup]",
+    "2026-11-18T12:00:02.1234567Z ##[group]Run set +e",
+    "2026-11-18T12:00:02.1234567Z uv run python -m pytest --junitxml=reports/j.xml",
+    "2026-11-18T12:00:03.1234567Z ##[endgroup]",
+    "2026-11-18T12:00:05.1234567Z Installed 10 packages in 1.2s",
+    "2026-11-18T12:00:06.1234567Z collected 4 items",
+    "2026-11-18T12:00:07.1234567Z tests/corrosion/test_a.py . [ 25%]",
+    "2026-11-18T12:00:08.1234567Z tests/geotechnical/test_a.py . [ 50%]",
+    "2026-11-18T12:00:10.1234567Z . [ 75%]",
+    "2026-11-18T12:00:11.1234567Z tests/gis/test_a.py . [100%]",
+    "2026-11-18T12:00:12.1234567Z 4 passed in 5.01s",
+    "2026-11-18T12:00:13.1234567Z ##[group]Run actions/upload-artifact@v4",
+    "2026-11-18T12:00:14.1234567Z 900 passed in 3.00s"
+  ],
+  "retry": [
+    "2026-11-18T12:00:01Z ##[group]Run uv run python -m pytest --junitxml=reports/j.xml",
+    "2026-11-18T12:00:02Z ##[endgroup]",
+    "2026-11-18T12:00:04Z Installed 9 packages in 1s",
+    "2026-11-18T12:00:10Z 1 failed, 19 passed in 5.24s",
+    "2026-11-18T12:00:12Z 1 passed in 1.24s"
+  ]
+}
