@@ -107,12 +107,24 @@ UNIT_SUFFIX_RE = re.compile(
     re.IGNORECASE,
 )
 
+# These quantities share a noun with forces or torques, but have different dimensions.
+_EXACT_QUANTITY_NAMES = (
+    "second_moment_m4", "polar_moment_m4", "line_load_n_per_m", "line_load_lbf_per_in",
+)
+_AREA_MOMENT_OR_LINE_LOAD = re.compile("|".join(_EXACT_QUANTITY_NAMES), re.IGNORECASE)
+
+
+def _has_unit(name: str) -> bool:
+    return bool(UNIT_SUFFIX_RE.search(name) or _AREA_MOMENT_OR_LINE_LOAD.fullmatch(name))
+
+
 #: Human-readable form of the accepted vocabulary, used in the failure message so
 #: the fix a developer is told to make matches what the scanner actually accepts.
 _ACCEPTED_SUFFIXES_MSG = (
     "SI: " + "/".join("_" + s for s in SI_SUFFIXES) + " | "
     "imperial: " + "/".join("_" + s for s in IMPERIAL_SUFFIXES) + " | "
-    "dimensionless: " + "/".join("_" + s for s in DIMENSIONLESS_SUFFIXES)
+    "dimensionless: " + "/".join("_" + s for s in DIMENSIONLESS_SUFFIXES) +
+    " | exact area moment and line load names: " + ", ".join(_EXACT_QUANTITY_NAMES)
 )
 
 #: Annotations that count as a bare-float context.
@@ -171,7 +183,7 @@ def _scan_tree(tree: ast.AST, relpath: str) -> set[tuple[str, str]]:
                 if not float_ctx and a.annotation is None:
                     # bare numeric default with no annotation
                     float_ctx = _is_numeric_const(default_map.get(name))
-                if float_ctx and not UNIT_SUFFIX_RE.search(name):
+                if float_ctx and not _has_unit(name):
                     offenders.add((relpath, name))
 
         elif isinstance(node, ast.ClassDef):
@@ -180,7 +192,7 @@ def _scan_tree(tree: ast.AST, relpath: str) -> set[tuple[str, str]]:
                     name = stmt.target.id
                     if not FORCE_NAME_RE.search(name):
                         continue
-                    if _is_float_annotation(stmt.annotation) and not UNIT_SUFFIX_RE.search(name):
+                    if _is_float_annotation(stmt.annotation) and not _has_unit(name):
                         offenders.add((relpath, name))
 
     return offenders
@@ -193,7 +205,7 @@ def scan_offenders(src_root: Path = _SRC_ROOT) -> set[tuple[str, str]]:
         pkg_dir = src_root / pkg
         for py in sorted(pkg_dir.rglob("*.py")):
             relpath = py.relative_to(src_root).as_posix()
-            tree = ast.parse(py.read_text(encoding="utf-8"), filename=str(py))
+            tree = ast.parse(py.read_text(encoding="utf-8"), filename=relpath)
             offenders |= _scan_tree(tree, relpath)
     return offenders
 
@@ -347,6 +359,26 @@ def test_scanner_accepts_imperial_and_dimensionless_names(name: str):
     assert _scan_tree(ast.parse(src), "<self-test>") == set()
 
 
+@pytest.mark.parametrize("name,expected_valid", [
+    ("second_moment_m4", True),
+    ("polar_moment_m4", True),
+    ("line_load_n_per_m", True),
+    ("line_load_lbf_per_in", True),
+    ("top_tension_m4", False),
+    ("top_tension_n_per_m", False),
+    ("top_tension_lbf_per_in", False),
+    ("line_load_m4", False),
+    ("polar_moment_n_per_m", False),
+    ("pipe_second_moment_m4", False),
+    ("riser_line_load_n_per_m", False),
+])
+def test_area_moment_and_line_load_units_match_the_quantity(name, expected_valid):
+    for source in (f"class Section:\n    {name}: float", f"def read(*, {name}: float): pass"):
+        offenders = _scan_tree(ast.parse(source), "<self-test>")
+        assert offenders == (set() if expected_valid else {("<self-test>", name)})
+    assert (name in _ACCEPTED_SUFFIXES_MSG) == expected_valid
+
+
 @pytest.mark.parametrize(
     "name", ["mooring_tension", "wind_force", "yaw_moment", "holding_capacity"]
 )
@@ -355,6 +387,17 @@ def test_widened_vocabulary_still_rejects_bare_names(name: str):
     with NO unit declaration at all is still an offender."""
     src = f"def f({name}: float) -> float:\n    return {name}\n"
     assert ("<self-test>", name) in _scan_tree(ast.parse(src), "<self-test>")
+
+
+def test_scanner_syntax_error_names_source_relative_file(tmp_path):
+    relative = "digitalmodel/drilling_riser/invalid.py"
+    source = tmp_path / relative
+    source.parent.mkdir(parents=True)
+    source.write_text("def broken(\n", encoding="utf-8", newline="\n")
+    with pytest.raises(SyntaxError) as error:
+        scan_offenders(tmp_path)
+    source_relative = error.value.filename == relative
+    assert source_relative, "Expected a source-relative filename with forward slashes"
 
 
 def test_no_new_unsuffixed_force_names():
