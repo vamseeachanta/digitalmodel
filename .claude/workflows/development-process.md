@@ -6,7 +6,6 @@
 - All features begin with a specification in `specs/` directory
 - Use specification templates from `specs/templates/`
 - Include acceptance criteria and technical requirements
-- Review and approve specifications before implementation
 
 ### 2. Design Phase
 - Review existing similar modules for patterns
@@ -84,7 +83,7 @@ twine upload dist/*
 - Test coverage (pytest)
 - Security scanning
 
-### Manual Review
+### Advisory Review
 - Specification compliance
 - Code review by domain expert
 - Integration testing
