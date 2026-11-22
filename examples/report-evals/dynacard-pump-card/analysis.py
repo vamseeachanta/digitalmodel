@@ -31,9 +31,9 @@ SOURCE_PINS = {
         'revision': '9680e7e1ac4a4c225b788e4308322cf87460af70',
         'sha256': PUBLIC_SHA256, 'git_blob': 'f07b8a26b93a13f317dbc446d64958158c31e0eb',
         'date': '2026-11-12'},
-    SCORE: {'revision': '91e9ad115c6994d4d2546b515ba0751efa782277',
+    SCORE: {'revision': 'a059f44b7c7a88225cec43963def342a3e515be2',
             'sha256': 'cb11b1fd0399285c3a795dacc2c1c2d0b2cdb38e3103f7bc2859ca79a480743d',
-            'git_blob': 'ba4404432ec57f4162129bc99bc7b363a50a7272', 'date': '2026-11-12'},
+            'git_blob': 'ba4404432ec57f4162129bc99bc7b363a50a7272', 'date': '2026-11-22'},
 }
 
 

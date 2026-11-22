@@ -1,0 +1,41 @@
+name: Dynacard pump-card report
+
+"on":
+  pull_request:
+    paths:
+      - '.github/workflows/dynacard-pump-card.yml'
+      - 'docs/domains/artificial_lift/dynacard-pump-card-report.md'
+      - 'examples/report-evals/dynacard-pump-card/**'
+      - 'examples/report-evals/evalkit.py'
+      - 'src/digitalmodel/marine_ops/artificial_lift/**'
+      - 'tests/marine_ops/artificial_lift/**'
+      - 'tests/report_evals/test_dynacard_*.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pump-card-report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: astral-sh/setup-uv@v5
+      - name: Check report figures and source revisions
+        env:
+          DYNACARD_REQUIRE_SOURCE_HISTORY: '1'
+          PYTHONPATH: src
+        run: >-
+          uv run --no-project --with pytest --with pytest-asyncio
+          --with 'numpy<2' --with 'pydantic>=2.7,<3' --with scipy
+          --with matplotlib --with pandas --with 'scikit-learn==1.3.2'
+          --with click --with openpyxl --with xlrd --with pyyaml
+          python -m pytest tests/report_evals/test_dynacard_report.py
+          tests/report_evals/test_dynacard_figure.py -q -rA -p no:cacheprovider

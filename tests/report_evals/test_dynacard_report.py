@@ -1,6 +1,8 @@
 """Public surface-to-pump worked report: reproducibility and reader inputs."""
 import importlib.util
 import json
+import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -9,6 +11,10 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 HERE = ROOT / 'examples/report-evals/dynacard-pump-card'
 FIXTURE = ROOT / 'tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json'
+REPOSITORY_SOURCES = (
+    FIXTURE.relative_to(ROOT).as_posix(),
+    'tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json',
+)
 
 
 def module(name):
@@ -30,9 +36,8 @@ def test_public_identity_matches_committed_fixture():
 
 
 @pytest.mark.parametrize('index', [0, 2])
-def test_repository_source_citation_matches_consumed_bytes(index, monkeypatch):
+def test_repository_source_citation_matches_consumed_bytes(index):
     import hashlib
-    import subprocess
     from urllib.parse import parse_qs, urljoin, urlsplit
     report = module('analysis')
     row = report.sources(ROOT, FIXTURE, True)[index]
@@ -42,13 +47,6 @@ def test_repository_source_citation_matches_consumed_bytes(index, monkeypatch):
     else:
         relative = url.path.partition('/contents/')[2]
         revision = parse_qs(url.query)['ref'][0]
-    # An exported or shallow checkout need not contain the cited commit.
-    # Permit only a history-independent hash of the consumed bytes.
-    run = subprocess.run
-    def without_history(command, **kwargs):
-        assert command[:2] == ['git', 'hash-object']
-        return run(command, **kwargs)
-    monkeypatch.setattr(subprocess, 'run', without_history)
     blob = subprocess.run(['git', 'hash-object', '--no-filters', '--stdin'], cwd=ROOT,
                           input=(ROOT / relative).read_bytes(), check=True,
                           capture_output=True).stdout.decode('ascii').strip()
@@ -61,13 +59,29 @@ def test_repository_source_citation_matches_consumed_bytes(index, monkeypatch):
     base = 'https://github.com/example/repository/blob/main/docs/domains/artificial_lift/report.md'
     assert urljoin(base, row['reader_url']) == (
         f'https://github.com/example/repository/blob/{revision}/{relative}')
-    assert row['date'] == '2026-11-12'
 
 
-@pytest.mark.parametrize('relative', [
-    'tests/marine_ops/artificial_lift/test_data/cleansed_well_001.json',
-    'tests/marine_ops/artificial_lift/dynacard/testdata/plate_classifier_score.json',
-])
+@pytest.mark.parametrize('relative', REPOSITORY_SOURCES)
+def test_repository_source_revision_matches_blob(relative):
+    pin = module('analysis').SOURCE_PINS[relative]
+    revision = pin['revision']
+    env = module('eval').evalkit.git_env()
+    commit = subprocess.run(['git', 'cat-file', '-e', f'{revision}^{{commit}}'],
+                            cwd=ROOT, env=env, capture_output=True)
+    if commit.returncode:
+        reason = f'Source commit {revision} for {relative} is unavailable in this checkout'
+        if os.environ.get('DYNACARD_REQUIRE_SOURCE_HISTORY') == '1':
+            pytest.fail(reason)
+        pytest.skip(reason)
+    blob = subprocess.check_output(['git', 'rev-parse', '--verify', f'{revision}:{relative}'],
+                                   cwd=ROOT, env=env, encoding='ascii').strip()
+    assert blob == pin['git_blob'], f'{relative} at {revision} differs from the recorded Git blob'
+    date = subprocess.check_output(['git', 'show', '-s', '--format=%cs', revision],
+                                   cwd=ROOT, env=env, encoding='ascii').strip()
+    assert date == pin['date']
+
+
+@pytest.mark.parametrize('relative', REPOSITORY_SOURCES)
 def test_repository_source_rejects_incorrect_blob_identity(monkeypatch, relative):
     report = module('analysis')
     pin = dict(report.SOURCE_PINS[relative], git_blob='0' * 40)
@@ -86,6 +100,8 @@ def test_source_table_uses_readable_links_and_dated_short_revisions():
         assert row['revision'] not in text.replace(row['reader_url'], '')
     assert sources[1]['date'] in text
     assert 'api.github.com' not in text
+    assert 'branch or tag name without a slash' in text
+    assert 'results.json' in text
 
 
 def test_manifest_retains_full_source_revisions_and_blob_ids(analysis):
