@@ -35,6 +35,7 @@ from .solver import (
     Survey,
     build_coefficients,
     build_simulation,
+    max_stable_intervals,
 )
 
 __all__ = [
@@ -49,6 +50,7 @@ __all__ = [
     "build_simulation",
     "estimate_damping_coeff",
     "estimate_damping_profile",
+    "max_stable_intervals",
     "rod_string_from_context",
     "solve_downhole_card",
     "survey_from_context",
