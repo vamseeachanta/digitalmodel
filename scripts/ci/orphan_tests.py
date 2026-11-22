@@ -25,7 +25,7 @@ OPAQUE_STEPS = {
     "pages": "50d2a08a6b213216900a",
     "parametric-atlas-drift": "dedd79cbd17f2dd5519a",
     "publish": "9f7edf6e4675003a16d6",
-    "quality-gates-by-domain": "073e961420a4a394571e",
+    "quality-gates-by-domain": "fca9372dd7ce4e36b1c2",
     "quality-gates": "6c54e8199a63b844a968",
     "repo-structure": "3b681ebd99f2e79b5ac7",
     "store-data-tests": "8c18f9916cd01e22f8ef",

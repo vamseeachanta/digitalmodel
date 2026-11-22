@@ -726,3 +726,268 @@ jobs:
             baseline-summary.md
           if-no-files-found: ignore
           retention-days: 14
+
+  # Fast gate in shadow (decision A3). Advisory: no job needs it except the
+  # agreement record below, and no required check names it. The test step
+  # records the verdict instead of failing, so a test failure does not turn the
+  # job red. The job can neither block nor pass a pull request.
+  # Selection: scripts/ci/fast_gate.py and tests/OWNERS.toml.
+  fast-gate-shadow:
+    name: "${{ (github.event.action == 'edited' && !github.event.changes.base) && 'Not run for a metadata edit - fast-gate (shadow)' || 'fast-gate (shadow)' }}"
+    # Skipped with the job it needs for drafts and for title or description edits.
+    needs: detect-domains
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Build and guard local pull request merge
+        id: build_merge
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BASE_REPOSITORY_URL: ${{ github.event.pull_request.base.repo.clone_url }}
+          HEAD_REPOSITORY_URL: ${{ github.event.pull_request.head.repo.clone_url }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
+          if [ "$(git rev-parse HEAD)" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Checkout does not match the pull request head"
+            exit 1
+          fi
+          base_ref="refs/remotes/base/${BASE_REF}"
+          if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+            git fetch --no-tags --depth=50 "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          else
+            git fetch --no-tags "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          fi
+          tip=$(git rev-parse "$base_ref")
+          for depth in 50 100 200; do
+            if git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+              break
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" != true ]; then
+              break
+            fi
+            git fetch --no-tags --deepen="$depth" "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            git fetch --no-tags --deepen="$depth" "$BASE_REPOSITORY_URL" "$tip"
+          done
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$BASE_REPOSITORY_URL" "$tip"
+            fi
+          fi
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            echo "::error::No merge base between the current base tip and pull request head"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --detach "$tip"
+          if ! git merge --no-ff --no-edit "$PR_HEAD_SHA"; then
+            echo "::error::Cannot merge the pull request head into the current base tip"
+            git merge --abort
+            exit 1
+          fi
+          tested=$(git rev-parse HEAD)
+          parent_text=$(git cat-file -p HEAD | sed -n '1,/^$/s/^parent //p' | tr '\n' ' ')
+          read -r -a parents <<< "$parent_text"
+          if [ "${#parents[@]}" -ne 2 ] || [ "${parents[0]:-missing}" != "$tip" ] || \
+             [ "${parents[1]:-missing}" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Local merge must have exactly the current tip and pull request head as parents"
+            exit 1
+          fi
+          tree=$(git rev-parse 'HEAD^{tree}')
+          printf 'tested=%s first_parent=%s second_parent=%s tip=%s event_base=%s tree=%s\n' \
+            "$tested" "${parents[0]}" "${parents[1]}" "$tip" "$EVENT_BASE_SHA" "$tree"
+          printf 'tip=%s\n' "$tip" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Python
+        if: github.event_name == 'pull_request'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install uv
+        if: github.event_name == 'pull_request'
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Select test files from tests/OWNERS.toml
+        id: select
+        if: github.event_name == 'pull_request'
+        env:
+          PR_BASE_SHA: ${{ steps.build_merge.outputs.tip }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          mkdir -p reports/fast-gate
+          uv run --no-project --with pyyaml==6.0.2 python scripts/ci/fast_gate.py select \
+            --base "$PR_BASE_SHA" --head "$PR_HEAD_SHA" --out reports/fast-gate/selection.json
+
+      - name: Set up Node for source locator formatter
+        if: steps.select.outputs.node == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Provision source locator formatter
+        if: steps.select.outputs.node == 'true'
+        run: |
+          npm install --prefix "$RUNNER_TEMP/source-locators-formatter" \
+            --cache "$RUNNER_TEMP/source-locators-npm-cache" \
+            --no-save --no-package-lock --no-audit --no-fund "prettier@4.0.0-alpha.8"
+          echo "SOURCE_LOCATORS_PRETTIER=$RUNNER_TEMP/source-locators-formatter/node_modules/.bin/prettier" >> "$GITHUB_ENV"
+
+      - name: Install Gmsh runtime libraries
+        if: steps.select.outputs.gmsh == 'true'
+        run: dpkg -s libglu1-mesa >/dev/null 2>&1 || (sudo -n apt-get update -qq && sudo -n apt-get install -y -qq libglu1-mesa)
+
+      - name: Run selected test files in one job
+        if: github.event_name == 'pull_request'
+        env:
+          EXTRAS: ${{ steps.select.outputs.extras }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          uv run --no-sources --with "assetutilities @ git+https://github.com/${GITHUB_REPOSITORY%/*}/assetutilities.git@main" \
+            --with-editable ".[${EXTRAS}]" python scripts/ci/fast_gate.py run \
+            --selection reports/fast-gate/selection.json \
+            --junit reports/fast-gate/junit.xml --out reports/fast-gate/result.json
+
+      - name: Upload fast gate result
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fast-gate-shadow
+          path: reports/fast-gate/
+          if-no-files-found: ignore
+          retention-days: 30
+
+  fast-gate-shadow-agreement:
+    name: "${{ (github.event.action == 'edited' && !github.event.changes.base) && 'Not run for a metadata edit - fast-gate (shadow) agreement' || 'fast-gate (shadow) agreement' }}"
+    # Records the fast gate's verdict beside the domain matrix's verdict for the same
+    # head. Advisory like the job above; nothing needs this job.
+    needs: [detect-domains, domain-tests, fast-gate-shadow]
+    if: ${{ always() && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && !(github.event.action == 'edited' && !github.event.changes.base) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout shadow tools
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name || github.repository }}
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          sparse-checkout: scripts/ci
+
+      - name: Build and guard local pull request merge
+        id: build_merge
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          BASE_REPOSITORY_URL: ${{ github.event.pull_request.base.repo.clone_url }}
+          HEAD_REPOSITORY_URL: ${{ github.event.pull_request.head.repo.clone_url }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          EVENT_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          git config gc.auto 0
+          git config maintenance.auto false
+          if [ "$(git rev-parse HEAD)" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Checkout does not match the pull request head"
+            exit 1
+          fi
+          base_ref="refs/remotes/base/${BASE_REF}"
+          if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+            git fetch --no-tags --depth=50 "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          else
+            git fetch --no-tags "$BASE_REPOSITORY_URL" "+refs/heads/${BASE_REF}:${base_ref}"
+          fi
+          tip=$(git rev-parse "$base_ref")
+          for depth in 50 100 200; do
+            if git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+              break
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" != true ]; then
+              break
+            fi
+            git fetch --no-tags --deepen="$depth" "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            git fetch --no-tags --deepen="$depth" "$BASE_REPOSITORY_URL" "$tip"
+          done
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$HEAD_REPOSITORY_URL" "$PR_HEAD_SHA"
+            fi
+            if [ "$(git rev-parse --is-shallow-repository)" = true ]; then
+              git fetch --no-tags --unshallow "$BASE_REPOSITORY_URL" "$tip"
+            fi
+          fi
+          if ! git merge-base "$tip" "$PR_HEAD_SHA" >/dev/null; then
+            echo "::error::No merge base between the current base tip and pull request head"
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout --detach "$tip"
+          if ! git merge --no-ff --no-edit "$PR_HEAD_SHA"; then
+            echo "::error::Cannot merge the pull request head into the current base tip"
+            git merge --abort
+            exit 1
+          fi
+          tested=$(git rev-parse HEAD)
+          parent_text=$(git cat-file -p HEAD | sed -n '1,/^$/s/^parent //p' | tr '\n' ' ')
+          read -r -a parents <<< "$parent_text"
+          if [ "${#parents[@]}" -ne 2 ] || [ "${parents[0]:-missing}" != "$tip" ] || \
+             [ "${parents[1]:-missing}" != "$PR_HEAD_SHA" ]; then
+            echo "::error::Local merge must have exactly the current tip and pull request head as parents"
+            exit 1
+          fi
+          tree=$(git rev-parse 'HEAD^{tree}')
+          printf 'tested=%s first_parent=%s second_parent=%s tip=%s event_base=%s tree=%s\n' \
+            "$tested" "${parents[0]}" "${parents[1]}" "$tip" "$EVENT_BASE_SHA" "$tree"
+          printf 'tip=%s\n' "$tip" >> "$GITHUB_OUTPUT"
+
+      - name: Download fast gate result
+        if: github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: fast-gate-shadow
+          path: fast-gate
+
+      - name: Record verdict agreement
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          FAST_RESULT: ${{ needs.fast-gate-shadow.result }}
+          MATRIX_RESULT: ${{ needs.domain-tests.result }}
+          HAS_DOMAINS: ${{ needs.detect-domains.outputs.has-domains }}
+          MATRIX: ${{ needs.detect-domains.outputs.matrix }}
+        run: |
+          python3 scripts/ci/fast_gate.py agree \
+            --selection fast-gate/selection.json --result fast-gate/result.json \
+            --event "$EVENT_NAME" --pull-request "$PR_NUMBER" --head-sha "$PR_HEAD_SHA" \
+            --run-id "$GITHUB_RUN_ID" --run-attempt "$GITHUB_RUN_ATTEMPT" \
+            --fast-result "$FAST_RESULT" --matrix-result "$MATRIX_RESULT" \
+            --has-domains "$HAS_DOMAINS" --matrix "$MATRIX" \
+            --out fast-gate/shadow-verdict.json --summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload verdict agreement
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fast-gate-shadow-verdict
+          path: fast-gate/shadow-verdict.json
+          if-no-files-found: ignore
+          retention-days: 30
