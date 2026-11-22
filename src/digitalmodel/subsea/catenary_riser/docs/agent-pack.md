@@ -139,10 +139,10 @@ Audit corrections (#2751); current function names supersede historical line entr
 
 | Location / symptom | Cause and disposition | Detection / tracking |
 | --- | --- | --- |
-| `cli.py:108`: Simple CLI catches all exceptions, prints an error and exits; this is an explicit failure, not a silent success [src/digitalmodel/subsea/catenary_riser/cli.py:L110-L112] | ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result. | `test_input_defaults.py::test_cli_errors_and_quarantine_do_not_replace_existing_output`; [input contracts](input-conditioning.html). |
-| `cli.py:165`: Weight CLI catches all exceptions and exits [src/digitalmodel/subsea/catenary_riser/cli.py:L164-L166] | ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result. | `test_input_defaults.py::test_cli_errors_and_quarantine_do_not_replace_existing_output`; [input contracts](input-conditioning.html). |
-| `cli.py:224`: Lazy-wave quarantine exception is converted to a CLI error [src/digitalmodel/subsea/catenary_riser/cli.py:L222-L223] | ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result. | `test_input_defaults.py::test_cli_errors_and_quarantine_do_not_replace_existing_output`; [input contracts](input-conditioning.html). |
-| `cli.py:251`: Outer lazy-wave CLI catches every exception and exits [src/digitalmodel/subsea/catenary_riser/cli.py:L249-L251] | ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result. | `test_input_defaults.py::test_cli_errors_and_quarantine_do_not_replace_existing_output`; [input contracts](input-conditioning.html). |
+| `cli.py:108`: Simple CLI catches all exceptions, prints an error and exits; this is an explicit failure, not a silent success [src/digitalmodel/subsea/catenary_riser/cli.py:L73-L74] | ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result. | `test_input_defaults.py::test_cli_errors_and_quarantine_do_not_replace_existing_output`; [input contracts](input-conditioning.html). |
+| `cli.py:165`: Weight CLI catches all exceptions and exits [src/digitalmodel/subsea/catenary_riser/cli.py:L127-L128] | ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result. | `test_input_defaults.py::test_cli_errors_and_quarantine_do_not_replace_existing_output`; [input contracts](input-conditioning.html). |
+| `cli.py:224`: Lazy-wave quarantine exception is converted to a CLI error [src/digitalmodel/subsea/catenary_riser/cli.py:L185-L186] | ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result. | `test_input_defaults.py::test_cli_errors_and_quarantine_do_not_replace_existing_output`; [input contracts](input-conditioning.html). |
+| `cli.py:251`: Outer lazy-wave CLI catches every exception and exits [src/digitalmodel/subsea/catenary_riser/cli.py:L212-L213] | ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result. | `test_input_defaults.py::test_cli_errors_and_quarantine_do_not_replace_existing_output`; [input contracts](input-conditioning.html). |
 | `models.py:159`: Steel-weight gravity is fixed inside a property [src/digitalmodel/subsea/catenary_riser/models.py:L214-L214] | All component weights use configuration gravity [m/s2]. Absent coatings have zero weight. Positive coating thickness requires density; zero-density coating still displaces fluid. | `test_input_conditioning.py::test_configured_gravity_and_calculator_override`; [input contracts](input-conditioning.html). |
 | `models.py:168`: Coating gravity is fixed; missing or false-valued inputs give zero coating weight [src/digitalmodel/subsea/catenary_riser/models.py:L223-L224] | All component weights use configuration gravity [m/s2]. Absent coatings have zero weight. Positive coating thickness requires density; zero-density coating still displaces fluid. | `test_input_conditioning.py::test_configured_gravity_and_calculator_override`; [input contracts](input-conditioning.html). |
 | `models.py:174`: Contents-weight gravity is fixed [src/digitalmodel/subsea/catenary_riser/models.py:L229-L229] | All component weights use configuration gravity [m/s2]. Absent coatings have zero weight. Positive coating thickness requires density; zero-density coating still displaces fluid. | `test_input_conditioning.py::test_configured_gravity_and_calculator_override`; [input contracts](input-conditioning.html). |
@@ -287,7 +287,7 @@ The exact Python regular expressions stored in each counted family's `search_sig
 | --- | --- |
 | Simple inverse methods | The two inverse methods are listed in section 3; the former nested tension evaluator has been removed. [src/digitalmodel/subsea/catenary_riser/simple_catenary.py:L185-L216] |
 | Effective-weight methods and properties | Weight bookkeeping rather than a second statics solver; buoyancy calculation and weight profile are helper inputs. [src/digitalmodel/subsea/catenary_riser/effective_weight.py:L42-L102] [src/digitalmodel/subsea/catenary_riser/models.py:L211-L250] [src/digitalmodel/subsea/catenary_riser/models.py:L340-L379] |
-| CLI functions, result/configuration classes, plots and report tables | Delegation, data holding or presentation; not further solvers. [src/digitalmodel/subsea/catenary_riser/cli.py:L62-L112] [src/digitalmodel/subsea/catenary_riser/models.py:L387-L490] [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L196-L336] |
+| CLI functions, result/configuration classes, plots and report tables | Delegation, data holding or presentation; not further solvers. [src/digitalmodel/subsea/catenary_riser/cli.py:L34-L74] [src/digitalmodel/subsea/catenary_riser/models.py:L387-L490] [src/digitalmodel/subsea/catenary_riser/legacy/catenaryMethods.py:L196-L336] |
 | Legacy extract/save/fatigue functions | Reading, serializing or preparing inputs for listed definitions. [src/digitalmodel/subsea/catenary_riser/legacy/extractData.py:L7-L81] [src/digitalmodel/subsea/catenary_riser/legacy/saveData.py:L14-L47] [src/digitalmodel/subsea/catenary_riser/legacy/getFatigueLoading.py:L25-L90] |
 | Legacy wave/current/wind helpers | Populate the listed model writer's data structures. [src/digitalmodel/subsea/catenary_riser/legacy/orcaflexModel.py:L413-L519] |
 | Module-level source references | Imports, explanatory text or orchestration, not separate solver launches. [src/digitalmodel/subsea/catenary_riser/legacy/catenary_riser.py:L19-L29] [src/digitalmodel/subsea/catenary_riser/__init__.py:L1-L6] |
@@ -1347,7 +1347,7 @@ The core interfaces, quarantine, independent static checks, legacy calculator an
 
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/README.md:L1-L241].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/__init__.py:L1-L88].
-- Package source/discovery: [src/digitalmodel/subsea/catenary_riser/cli.py:L1-L259].
+- Package source/discovery: [src/digitalmodel/subsea/catenary_riser/cli.py:L1-L222].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/effective_weight.py:L1-L102].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/lazy_wave.py:L1-L196].
 - Package source/discovery: [src/digitalmodel/subsea/catenary_riser/legacy/FEAmodel1.yml:L1-L114].
@@ -1389,7 +1389,7 @@ The offline test scope comprises the entire package test directory and the relat
 - [tests/subsea/catenary_riser/test_lazy_wave_quarantine.py:L4-L97].
 - [tests/subsea/catenary_riser/test_riser_report.py:L1-L181].
 - [tests/subsea/catenary_riser/test_static_reconciliation.py:L1-L178].
-- [tests/specialized/cli/test_catenary_riser_cli.py:L1-L642].
+- [tests/specialized/cli/test_catenary_riser_cli.py:L1-L661].
 - [tests/test_catenary_riser_summary.py:L1-L747].
 - [tests/test_catenary_module.py:L1-L190].
 - [tests/test_lazy_wave_catenary.py:L1-L387].
