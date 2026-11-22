@@ -5,7 +5,7 @@ Data acquisition, catalogue validation and migration utilities.
 ## Engineering catalogues
 
 The [engineering databases plan-lite](../../../docs/plans/engineering-databases-plan-lite.md)
-defines the fields, units, citation requirements and population batches for five
+defines the fields, units, citation requirements and population batches for six
 catalogues. Production files are empty; test values are invented fixtures.
 
 | Catalogue | Directory | Loader in `engineering_databases` |
@@ -15,6 +15,7 @@ catalogues. Production files are empty; test values are invented fixtures.
 | Structure properties | `data/riser_database/structure_properties` | `load_structure_properties(directory)` |
 | Soil stiffness | `data/soil_stiffness` | `load_soil_stiffness(directory)` |
 | Riser buoyancy modules | `data/riser_buoyancy` | `load_riser_buoyancy(directory)` |
+| Riser tensioners | `data/riser_tensioners` | `load_riser_tensioners(directory)` |
 
 Table 1. Catalogue entry points; directories are repository-relative.
 

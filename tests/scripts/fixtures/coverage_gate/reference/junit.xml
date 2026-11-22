@@ -1,0 +1,4 @@
+<testsuite tests="2" errors="0" failures="0" skipped="1">
+  <testcase classname="test_pair" name="test_one" time="1"></testcase>
+  <testcase classname="test_pair" name="test_two" time="1"><skipped message="optional"/></testcase>
+</testsuite>

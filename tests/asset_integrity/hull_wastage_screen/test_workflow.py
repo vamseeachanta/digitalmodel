@@ -10,9 +10,9 @@ from digitalmodel.hull_wastage_screen.workflow import router
 ROOT = Path(__file__).resolve().parents[3]
 
 
-@pytest.mark.parametrize("filename", ["test_screen.py", "test_workflow.py"])
+@pytest.mark.parametrize("filename", ["test_screen.py", "test_workflow.py", "test_tm_csv.py"])
 def test_focused_file_is_owned_and_in_ci_command(filename):
-    """Both focused files must belong to a domain and its executed command."""
+    """All focused files must belong to a domain and its executed command."""
     import shlex
     from scripts.ci.detect_touched_domains import (
         parse_domains, path_matches_root, touched_domains,
