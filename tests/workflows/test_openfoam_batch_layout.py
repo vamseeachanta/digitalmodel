@@ -185,8 +185,15 @@ def test_lock_heartbeat_refreshes_and_process_start_prevents_pid_reuse(tmp_path:
     lock = layout.run_dir / ".locks" / "run"
     with layout.lock("run", stale_seconds=1):
         first = json.loads((lock / "meta.json").read_text())
-        time.sleep(1.2)
-        second = json.loads((lock / "meta.json").read_text())
+        # The heartbeat thread runs on a 1 s interval; poll (bounded) for the
+        # refresh instead of assuming it ran within a fixed sleep.
+        deadline = time.monotonic() + 15
+        second = first
+        while time.monotonic() < deadline:
+            second = json.loads((lock / "meta.json").read_text())
+            if second["heartbeat_epoch"] > first["heartbeat_epoch"]:
+                break
+            time.sleep(0.05)
         assert second["heartbeat_epoch"] > first["heartbeat_epoch"]
     lock.mkdir()
     (lock / "meta.json").write_text(json.dumps({

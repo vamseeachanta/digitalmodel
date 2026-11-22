@@ -2523,10 +2523,10 @@ def riser_joint_report_run(tmp_path_factory):
 
 
 @pytest.mark.parametrize("grid_name,min_mm,depth_ft,verdict", [
-    ("ut_grid_RJ-101-boxend_ds8.csv", 15.024, 2133.7, "REPAIR"),
-    ("ut_grid_RJ-101-boxend_worstzone_fullres.csv", 15.024, 2133.7, "REPAIR"),
-    ("ut_grid_RJ-102-boxend_ds8.csv", 15.348, 2265.4, "REPAIR"),
-    ("ut_grid_RJ-103-pinend_ds8.csv", 16.549, 2791.3, "RESTRICTED"),
+    ("ut_grid_scan-a_ds8.csv", 15.024, 2133.7, "REPAIR"),
+    ("ut_grid_scan-a_window_fullres.csv", 15.024, 2133.7, "REPAIR"),
+    ("ut_grid_scan-b_ds8.csv", 15.348, 2265.4, "REPAIR"),
+    ("ut_grid_scan-c_ds8.csv", 16.549, 2791.3, "RESTRICTED"),
 ])
 def test_riser_joint_ffs_grid(riser_joint_report_run, grid_name, min_mm, depth_ft, verdict):
     import hashlib

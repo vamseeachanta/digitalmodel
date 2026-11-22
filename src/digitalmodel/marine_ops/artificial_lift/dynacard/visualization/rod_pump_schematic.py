@@ -320,7 +320,7 @@ def generate_rod_pump_schematic(output_path: Path) -> Path:
     output_path.parent.mkdir(parents=True, exist_ok=True)
     gen = RodPumpSchematicGenerator()
     svg_content = gen.render()
-    output_path.write_text(svg_content)
+    output_path.write_text(svg_content, encoding="utf-8")
     return output_path
 
 

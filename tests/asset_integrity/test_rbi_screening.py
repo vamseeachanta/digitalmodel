@@ -35,12 +35,12 @@ from digitalmodel.asset_integrity.rbi_screening import (
 DATA = Path(__file__).parent / "test_data" / "real_inspection"
 PARAMS = RBIParameters()
 
-# REGRESSION-ANCHOR: RBI screening of the real GML results register (142 scans)
+# REGRESSION-ANCHOR: RBI screening of the real GML results register (every row)
 # with default practice parameters and default consequence class "C".
 # Update deliberately only (parameter or register changes).
 ANCHOR_BAND_COUNTS_C = {"LOW": 18, "MEDIUM": 79, "MEDIUM-HIGH": 45, "HIGH": 0}
 ANCHOR_POF_COUNTS = {1: 18, 2: 66, 3: 13, 4: 36, 5: 9}
-ANCHOR_MIN_INTERVAL_YR = 1.4528  # half-life of the shortest-life scan (RJ-127)
+ANCHOR_MIN_INTERVAL_YR = 1.4528  # half-life of the shortest-life scan (J27)
 
 
 # ---------------------------------------------------------------- CoF mapping
@@ -292,8 +292,8 @@ def test_register_ranking_sorted_most_critical_first(register):
     ranked = rbi_rank_register(register)
     scores = ranked["risk_score"].tolist()
     assert scores == sorted(scores, reverse=True)
-    # the shortest-life joint (RJ-101 box end, ~3.5 yr) ranks in the top rows
-    assert "RJ-101" in ranked.head(3)["joint_id"].tolist()
+    # the shortest-life joint (J01) ranks in the top rows
+    assert "J01" in ranked.head(3)["joint_id"].tolist()
 
 
 def test_register_intervals_bounded_by_half_life_and_code_max(register):
@@ -312,9 +312,9 @@ def test_register_cof_overrides_shift_bands(register):
     assert high["band_counts"]["HIGH"] >= 1
     assert high["min_recommended_interval_yr"] <= low["min_recommended_interval_yr"]
     # per-joint override: bump one joint to class E, its rows move up
-    ranked = rbi_rank_register(register, cof_by_joint={"RJ-103": "E"})
-    rj103 = ranked[ranked["joint_id"] == "RJ-103"]
-    assert (rj103["cof_category"] == 5).all()
+    ranked = rbi_rank_register(register, cof_by_joint={"J03": "E"})
+    j03 = ranked[ranked["joint_id"] == "J03"]
+    assert (j03["cof_category"] == 5).all()
 
 
 def test_baseline_heuristics_constant_shape():

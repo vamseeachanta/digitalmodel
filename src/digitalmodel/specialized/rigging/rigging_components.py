@@ -1,9 +1,11 @@
 import io
 import math
+import re
 
 import pkgutil
 
 from assetutilities.common.data import ReadFromExcel
+from digitalmodel.asset_integrity.common.data import FromString
 from digitalmodel.solvers.fea_model.LineType_components import LineType
 from digitalmodel.solvers.fea_model.line_components import Line
 
@@ -174,6 +176,19 @@ class Shackles:
         if matches.empty:
             raise ValueError(f"Unknown shackle part number {cfg['part_number']!r}")
         shackle = matches.to_dict("records")[0]
+        size = shackle.get("size_in")
+        if isinstance(size, str) and "/" in size:
+            try:
+                if re.fullmatch(r"[+-]?[0-9]+(?: [0-9]+)?/[0-9]+", size) is None:
+                    raise ValueError("Expected a fraction or mixed number")
+                converted_size = FromString().convert_fraction_to_float(size)
+                if not math.isfinite(converted_size):
+                    raise ValueError("Expected a finite size")
+                shackle["size_in"] = converted_size
+            except (ValueError, ZeroDivisionError) as error:
+                raise ValueError(
+                    f"Invalid fractional size for shackle part number {cfg['part_number']!r}"
+                ) from error
         # Coerce numpy scalars to plain Python so downstream summaries stay
         # deterministic and serialise cleanly to JSON/YAML.
         shackle = {key: _to_number(value) for key, value in shackle.items()}

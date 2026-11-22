@@ -30,7 +30,7 @@ on:
       - "uv.lock"
       - ".github/workflows/gmsh-meshing-tests.yml"
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
     paths:
       - "src/digitalmodel/solvers/gmsh_meshing/**"
       - "src/digitalmodel/solvers/openfoam/**"
@@ -60,7 +60,8 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
+  # A title or description edit gets a group of its own, so its no-op run cancels nothing.
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}${{ (github.event.action == 'edited' && !github.event.changes.base) && format('-metadata-edit-{0}', github.run_id) || '' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -68,6 +69,11 @@ permissions:
 
 jobs:
   focused-tests:
+    name: "${{ (github.event.action == 'edited' && !github.event.changes.base) && 'Not run for a metadata edit - focused-tests' || 'focused-tests' }}"
+    # Draft pull requests wait: the gates start when the pull request is marked ready.
+    # A title or description edit ("edited" without a base change) runs no job. The job then
+    # takes another name, so its skipped check does not stand in for an earlier result.
+    if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.draft) && !(github.event.action == 'edited' && !github.event.changes.base) }}
     runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","x64"]') }}
     timeout-minutes: 20
     defaults:
