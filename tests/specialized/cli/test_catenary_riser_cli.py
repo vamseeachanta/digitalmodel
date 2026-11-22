@@ -15,9 +15,9 @@ from tests.specialized.cli.conftest import assert_cli_success, assert_cli_failur
 class TestSimpleCommand:
     """Tests for the 'simple' command"""
 
-    @patch('digitalmodel.subsea.catenary_riser.cli.SimpleCatenaryAnalyzer')
-    @patch('digitalmodel.subsea.catenary_riser.cli.get_material')
-    @patch('digitalmodel.subsea.catenary_riser.cli.get_fluid')
+    @patch('digitalmodel.subsea.catenary_riser.workflow.SimpleCatenaryAnalyzer')
+    @patch('digitalmodel.subsea.catenary_riser.workflow.get_material')
+    @patch('digitalmodel.subsea.catenary_riser.workflow.get_fluid')
     def test_basic_simple_catenary(self, mock_get_fluid, mock_get_material, mock_analyzer, cli_runner):
         """Test basic simple catenary riser analysis"""
         # Mock material and fluid
@@ -63,9 +63,9 @@ class TestSimpleCommand:
             'Suspended Length:'
         )
 
-    @patch('digitalmodel.subsea.catenary_riser.cli.SimpleCatenaryAnalyzer')
-    @patch('digitalmodel.subsea.catenary_riser.cli.get_material')
-    @patch('digitalmodel.subsea.catenary_riser.cli.get_fluid')
+    @patch('digitalmodel.subsea.catenary_riser.workflow.SimpleCatenaryAnalyzer')
+    @patch('digitalmodel.subsea.catenary_riser.workflow.get_material')
+    @patch('digitalmodel.subsea.catenary_riser.workflow.get_fluid')
     def test_simple_with_top_tension(self, mock_get_fluid, mock_get_material, mock_analyzer, cli_runner):
         """Test simple catenary with top tension specified instead of offset"""
         mock_material = MagicMock()
@@ -102,9 +102,9 @@ class TestSimpleCommand:
         assert 'Top Tension:' in result.output
         assert '620.00 kN' in result.output
 
-    @patch('digitalmodel.subsea.catenary_riser.cli.SimpleCatenaryAnalyzer')
-    @patch('digitalmodel.subsea.catenary_riser.cli.get_material')
-    @patch('digitalmodel.subsea.catenary_riser.cli.get_fluid')
+    @patch('digitalmodel.subsea.catenary_riser.workflow.SimpleCatenaryAnalyzer')
+    @patch('digitalmodel.subsea.catenary_riser.workflow.get_material')
+    @patch('digitalmodel.subsea.catenary_riser.workflow.get_fluid')
     def test_simple_with_coating(self, mock_get_fluid, mock_get_material, mock_analyzer, cli_runner):
         """Test simple catenary with coating parameters"""
         mock_material = MagicMock()
@@ -141,9 +141,9 @@ class TestSimpleCommand:
         assert_cli_success(result)
         assert 'Effective Weight:' in result.output
 
-    @patch('digitalmodel.subsea.catenary_riser.cli.SimpleCatenaryAnalyzer')
-    @patch('digitalmodel.subsea.catenary_riser.cli.get_material')
-    @patch('digitalmodel.subsea.catenary_riser.cli.get_fluid')
+    @patch('digitalmodel.subsea.catenary_riser.workflow.SimpleCatenaryAnalyzer')
+    @patch('digitalmodel.subsea.catenary_riser.workflow.get_material')
+    @patch('digitalmodel.subsea.catenary_riser.workflow.get_fluid')
     def test_simple_with_json_output(self, mock_get_fluid, mock_get_material, mock_analyzer, cli_runner, temp_output_dir):
         """Test simple catenary with JSON output"""
         mock_material = MagicMock()
@@ -191,7 +191,7 @@ class TestSimpleCommand:
         assert data['results']['horizontal_tension_N'] == 500000.0
         assert data['results']['top_tension_N'] == 650000.0
 
-    @patch('digitalmodel.subsea.catenary_riser.cli.SimpleCatenaryAnalyzer')
+    @patch('digitalmodel.subsea.catenary_riser.workflow.SimpleCatenaryAnalyzer')
     def test_simple_refuses_unconverged_output(self, mock_analyzer, cli_runner, temp_output_dir):
         """An unconverged analysis fails before creating an output file."""
         mock_analyzer.return_value.analyze_riser.return_value = MagicMock(converged=False)
@@ -205,8 +205,8 @@ class TestSimpleCommand:
         assert 'did not converge' in result.output
         assert not output_file.exists()
 
-    @patch('digitalmodel.subsea.catenary_riser.cli.get_material')
-    @patch('digitalmodel.subsea.catenary_riser.cli.get_fluid')
+    @patch('digitalmodel.subsea.catenary_riser.workflow.get_material')
+    @patch('digitalmodel.subsea.catenary_riser.workflow.get_fluid')
     def test_simple_with_different_materials(self, mock_get_fluid, mock_get_material, cli_runner):
         """Test simple catenary with different material (x70)"""
         mock_material = MagicMock()
@@ -228,8 +228,8 @@ class TestSimpleCommand:
         # Just verify material was requested
         mock_get_material.assert_called_with('x70')
 
-    @patch('digitalmodel.subsea.catenary_riser.cli.get_material')
-    @patch('digitalmodel.subsea.catenary_riser.cli.get_fluid')
+    @patch('digitalmodel.subsea.catenary_riser.workflow.get_material')
+    @patch('digitalmodel.subsea.catenary_riser.workflow.get_fluid')
     def test_simple_with_different_fluids(self, mock_get_fluid, mock_get_material, cli_runner):
         """Test simple catenary with different internal fluid"""
         mock_material = MagicMock()
