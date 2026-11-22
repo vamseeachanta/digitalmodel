@@ -481,3 +481,49 @@ def test_replay_distinguishes_declared_roots_from_gate_operands(replay, monkeypa
     monkeypatch.setattr(replay, "ownership", lambda ref: (declared, commands))
     paths = ["tests/parametric/test_refresh.py", "tests/solver/test_smoke.py", "tests/test_loose.py"]
     assert replay.changed_owners(paths, "parent", "merge") == ([shard], [paths[2]], [paths[0]])
+
+
+@pytest.mark.parametrize("name", [
+    "test_propeller_rudder_driveoff.py", "test_propeller_rudder_review.py",
+    "test_rectangular_buoy_inertia.py",
+])
+def test_candidate_owns_historical_hydrodynamics_test(detector, replay, monkeypatch, name):
+    domains = detector.parse_domains(ROOT / "tests/DOMAINS.md")
+    path = f"tests/hydrodynamics/{name}"
+    assert [d.name for d in detector.touched_domains([path], domains)] == ["hydrodynamics-other"]
+    # Neither historical revision had a matching declaration or gate operand.
+    monkeypatch.setattr(replay, "ownership", lambda ref: ({}, {}))
+    assert replay.changed_owners([path], "parent", "merge", domains) == (
+        ["hydrodynamics-other"], [], [path])
+
+
+@pytest.mark.parametrize("name", ["test_new.py", "new_test.py", "conftest.py"])
+def test_unowned_test_selects_every_shard_even_in_a_mixed_change(detector, name):
+    domains = domains_of(detector, "alpha", "beta")
+    path = f"tests/new/{name}"
+    for changes in ([path], ["tests/alpha/test_first.py", path]):
+        assert detector.touched_domains(changes, domains) == domains
+
+
+def test_replay_reads_subsea_operands_from_current_workflow(replay, monkeypatch):
+    workflow = (ROOT / ".github/workflows/quality-gates-by-domain.yml").read_text(encoding="utf-8")
+    gate = (ROOT / ".claude/quality-gates.yaml").read_text(encoding="utf-8")
+    bare_gate = "gates: {tests-subsea: {command: pytest}}"
+    # Wording of the workflow addition before #4165, pinned so the regex cannot drift silently.
+    historical = ('          if os.environ["GATE_NAME"] == "tests-subsea":\n'
+                  '              command += " tests/riser_fatigue/ tests/riser_bom/"\n')
+    revisions = {"subsea-workflow": (bare_gate, workflow), "subsea-current": (gate, workflow),
+                 "subsea-historical": (bare_gate, historical)}
+
+    def git(command, spec):
+        ref, path = spec.split(":", 1)
+        if path == "tests/DOMAINS.md":
+            return "| subsea | `tests/subsea/` |"
+        return revisions[ref][path == ".github/workflows/quality-gates-by-domain.yml"]
+
+    monkeypatch.setattr(replay, "git", git)
+    riser = {"tests/riser_fatigue/", "tests/riser_bom/"}
+    # The riser operands moved from the workflow into the gate command (#4165).
+    assert replay.ownership("subsea-workflow")[1]["subsea"][0] in (set(), riser)
+    assert riser <= replay.ownership("subsea-current")[1]["subsea"][0]
+    assert replay.ownership("subsea-historical")[1]["subsea"] == (riser, set())
