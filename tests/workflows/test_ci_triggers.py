@@ -785,12 +785,27 @@ def test_light_jobs_run_on_hosted_runners_under_the_same_names(filename: str, jo
     assert job_state(filename, job_id, "code update")[0] == name
 
 
+PR_HOSTED_RUNS_ON = (
+    "${{ (github.event_name != 'pull_request' || "
+    "(github.event.pull_request.head.repo.full_name == github.repository && "
+    "vars.DM_PR_RUNNER == 'self-hosted')) && "
+    "fromJSON('[\"self-hosted\",\"Linux\"]') || 'ubuntu-latest' }}"
+)
+
+
 @pytest.mark.parametrize("filename,job_id", (
     ("quality-gates-by-domain.yml", "ci-harness-tests"),
     ("quality-gates.yml", "quality-gates"),
+    ("repo-structure.yml", "repo-structure"),
+    ("parametric-atlas-drift.yml", "atlas-drift"),
 ))
-def test_test_jobs_stay_on_self_hosted_runners(filename: str, job_id: str) -> None:
-    assert "self-hosted" in load_workflow(filename)["jobs"][job_id]["runs-on"]
+def test_pull_request_test_jobs_run_hosted_and_pushes_stay_self_hosted(filename: str, job_id: str) -> None:
+    """Pull requests queued for hours behind our runners; pushes keep our own runners.
+
+    Forks keep the hosted runner, and DM_PR_RUNNER=self-hosted routes
+    same-repository pull requests back to our runners.
+    """
+    assert load_workflow(filename)["jobs"][job_id]["runs-on"] == PR_HOSTED_RUNS_ON
 
 
 def test_domain_shards_keep_their_matrix_runner() -> None:

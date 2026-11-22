@@ -23,7 +23,10 @@ jobs:
     # No paths filter: a file added anywhere can break the structure contract.
     # Draft pull requests wait: the gates start when the pull request is marked ready.
     if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
+    # Pull requests run on a GitHub-hosted runner (the repository is public, so the minutes are free);
+    # pushes and schedules stay on our own runners. Setting the repository variable
+    # DM_PR_RUNNER to self-hosted routes same-repository pull requests back to them.
+    runs-on: ${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && vars.DM_PR_RUNNER == 'self-hosted')) && fromJSON('["self-hosted","Linux"]') || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v4
         with:
