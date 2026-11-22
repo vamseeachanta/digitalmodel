@@ -480,8 +480,12 @@ no-cache = false
 pre = false
 
 [tool.uv.sources]
-# Public pin: PyPI assetutilities 0.1.0 lacks workflow_api; 0.1.1 is on GitHub only.
-assetutilities = { git = "https://github.com/vamseeachanta/assetutilities", rev = "a283574dd00d6050c480d487c3d6f1c89c3d00e8" }
+# Public pin: PyPI assetutilities 0.1.0 lacks workflow_api, so assetutilities
+# comes from its GitHub repository, pinned to a release tag (fleet-ops#577).
+# Stand-in until tag v0.2.0 is pushed: assetutilities main ae61e91. Switch to
+#   assetutilities = { git = "https://github.com/vamseeachanta/assetutilities.git", tag = "v0.2.0" }
+# and run `uv lock --upgrade-package assetutilities` once the tag exists.
+assetutilities = { git = "https://github.com/vamseeachanta/assetutilities.git", rev = "ae61e9157ee54be2d28dbdee718eb7ae88201de2" }
 
 [tool.uv.workspace]
 members = []

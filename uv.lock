@@ -12,9 +12,6 @@ resolution-markers = [
     "python_full_version < '3.12' and sys_platform != 'win32'",
 ]
 
-[options]
-prerelease-mode = "if-necessary"
-
 [[package]]
 name = "aiofiles"
 version = "23.2.1"
@@ -207,7 +204,7 @@ wheels = [
 [[package]]
 name = "assetutilities"
 version = "0.1.1"
-source = { git = "https://github.com/vamseeachanta/assetutilities?rev=a283574dd00d6050c480d487c3d6f1c89c3d00e8#a283574dd00d6050c480d487c3d6f1c89c3d00e8" }
+source = { git = "https://github.com/vamseeachanta/assetutilities.git?rev=ae61e9157ee54be2d28dbdee718eb7ae88201de2#ae61e9157ee54be2d28dbdee718eb7ae88201de2" }
 dependencies = [
     { name = "beautifulsoup4" },
     { name = "build" },
@@ -1483,7 +1480,7 @@ docs = [
 requires-dist = [
     { name = "aiofiles", marker = "extra == 'async'", specifier = ">=23.0.0,<25.0.0" },
     { name = "aiohttp", marker = "extra == 'test'", specifier = ">=3.9.0,<4.0.0" },
-    { name = "assetutilities", git = "https://github.com/vamseeachanta/assetutilities?rev=a283574dd00d6050c480d487c3d6f1c89c3d00e8" },
+    { name = "assetutilities", git = "https://github.com/vamseeachanta/assetutilities.git?rev=ae61e9157ee54be2d28dbdee718eb7ae88201de2" },
     { name = "asyncpg", marker = "extra == 'async'", specifier = ">=0.29.0,<1.0.0" },
     { name = "bandit", marker = "extra == 'dev'", specifier = "==1.7.5" },
     { name = "beautifulsoup4", specifier = ">=4.13.0,<5.0.0" },
