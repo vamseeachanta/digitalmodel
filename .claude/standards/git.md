@@ -109,7 +109,7 @@ Brief description of changes
 git checkout -b feature/123_new_feature
 
 # Regular commits during development
-git add .
+git add -- <changed-paths>
 git commit -m "feat: Implement calculation module"
 
 # Update from main branch
@@ -122,23 +122,20 @@ git push -u origin feature/123_new_feature
 
 ### Fixing Conflicts
 ```bash
-# Update your branch
+# Update your pushed branch (merge, not rebase: no force-push)
 git fetch origin
-git rebase origin/master
+git merge origin/main
 
 # If conflicts occur
 # Fix conflicts in files
-git add <fixed-files>
-git rebase --continue
+git add -- <fixed-files>
+git commit
 ```
 
 ### Cleaning Up
 ```bash
-# Delete local branch
+# Delete local branch (remote branches are kept)
 git branch -d feature/123_new_feature
-
-# Delete remote branch
-git push origin --delete feature/123_new_feature
 
 # Prune deleted remote branches
 git remote prune origin
