@@ -629,6 +629,12 @@ def _rom_cc_formula(i):
             f'IF(STRUCTC="closed",0.9,1))')
 
 
+SELECTED_NOT_COMPARED_NOTE = (
+    "Selected method is not in the case's comparison list (design.methods): design energy and "
+    "capacity divisor are the module's values at generation, not live formulas. REGENERATE after "
+    "any input change, or add the selected method to design.methods.")
+
+
 def _methods(wb, res):
     ws = wb.create_sheet("Methods")
     cols = ["Method", "v (m/s)", "Cm", "Ce", "Cs", "Cc", "Other (Cg)", "Normal energy (kNm)", "Factor",
@@ -665,13 +671,20 @@ def _methods(wb, res):
     ws.cell(row=n, column=1, value="Selected method").font = HEAD
     ws.cell(row=n, column=2, value=res.selected.label)
     ws.cell(row=n + 1, column=1, value="Design energy, selected (kNm)").font = HEAD
-    ws.cell(row=n + 1, column=10, value=f"=J{sel_row}")
+    ws.cell(row=n + 3, column=1, value="Capacity divisor, selected (WG211 gamma_m)").font = HEAD
+    if sel_row is None:
+        # The case's comparison list (design.methods) excludes the selected method, so no
+        # Methods row holds it: write no formula, only the module's values at generation.
+        ws.cell(row=n + 1, column=10, value=res.selected.design_energy_knm)
+        ws.cell(row=n + 3, column=10, value=res.selected.capacity_divisor)
+        ws.cell(row=n + 1, column=12, value=SELECTED_NOT_COMPARED_NOTE)
+    else:
+        ws.cell(row=n + 1, column=10, value=f"=J{sel_row}")
+        ws.cell(row=n + 3, column=10, value=f"=K{sel_row}")
     _name(wb, "E_DESIGN", f"Methods!$J${n + 1}")
     ws.cell(row=n + 2, column=1, value="Energy per fender (kNm)").font = HEAD
     ws.cell(row=n + 2, column=10, value="=E_DESIGN/NC")
     _name(wb, "E_FENDER", f"Methods!$J${n + 2}")
-    ws.cell(row=n + 3, column=1, value="Capacity divisor, selected (WG211 gamma_m)").font = HEAD
-    ws.cell(row=n + 3, column=10, value=f"=K{sel_row}")
     _name(wb, "GAMMA_M", f"Methods!$J${n + 3}")
     if res.skipped:
         ws.cell(row=n + 5, column=1, value="Methods not evaluated for this case").font = HEAD

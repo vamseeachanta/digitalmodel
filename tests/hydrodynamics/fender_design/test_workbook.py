@@ -156,6 +156,31 @@ def test_workbook_from_a_block_coefficient_case_matches_the_module(tmp_path):
     assert vals[f"METHODS!J{row}"] == pytest.approx(ufc.design_energy_knm, rel=1e-9)
 
 
+def test_selected_method_outside_the_comparison_list_writes_no_formula(tmp_path):
+    from build_fender_workbook import SELECTED_NOT_COMPARED_NOTE
+
+    case = load_case(EXAMPLE / "generic_case.yaml")
+    case["design"]["methods"] = ["wg211"]
+    assert case["design"]["method"] == "pianc2002"
+    res = compute(case, citations="record")
+    assert [r.method for r in res.methods] == ["wg211"]
+    out = tmp_path / "excluded.xlsx"
+    build_workbook(res, out)
+    wb = openpyxl.load_workbook(out)
+    for ws in wb.worksheets:
+        for row in ws.iter_rows():
+            for c in row:
+                assert not (isinstance(c.value, str) and "None" in c.value
+                            and c.value.startswith("=")), f"{ws.title}!{c.coordinate}: {c.value}"
+    def named(name):
+        sheet, ref = list(wb.defined_names[name].destinations)[0]
+        return wb[sheet][ref.replace("$", "")]
+    e_design, gamma_m = named("E_DESIGN"), named("GAMMA_M")
+    assert e_design.value == pytest.approx(res.selected.design_energy_knm, rel=1e-12)
+    assert gamma_m.value == pytest.approx(res.selected.capacity_divisor, rel=1e-12)
+    assert wb["Methods"].cell(row=e_design.row, column=12).value == SELECTED_NOT_COMPARED_NOTE
+
+
 def test_fixed_choices_marked_for_regeneration(built):
     _, out = built
     wb = openpyxl.load_workbook(out)
