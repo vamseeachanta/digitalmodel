@@ -1,14 +1,15 @@
 """Section 3: Dynamic time series — Plotly line charts for key variables."""
 from __future__ import annotations
-import json
+
+from ._common import lines, plotly_chart, vessels
 
 
 def build_time_series(model, config) -> str:
     """Build time series section HTML with Plotly charts."""
     import OrcFxAPI
 
-    lines = [o for o in model.objects if isinstance(o, OrcFxAPI.Line)]
-    vessels = [o for o in model.objects if isinstance(o, OrcFxAPI.Vessel)]
+    line_objs = lines(model)
+    vessel_objs = vessels(model)
 
     charts = []
     chart_id = 0
@@ -26,15 +27,10 @@ def build_time_series(model, config) -> str:
             "margin": {"l": 50, "r": 20, "t": 40, "b": 40},
             "height": 250,
         }
-        return (
-            f'<div id="{div_id}" style="width:100%;margin-bottom:1rem;"></div>\n'
-            f'<script>Plotly.newPlot("{div_id}", '
-            f'[{json.dumps(trace)}], {json.dumps(layout)}, '
-            f'{{responsive:true, displayModeBar:false}});</script>'
-        )
+        return plotly_chart(div_id, [trace], layout)
 
     # Vessel DOF time series
-    for vessel in vessels[:2]:  # max 2 vessels
+    for vessel in vessel_objs[:2]:  # max 2 vessels
         for dof, label, unit in [("X", "Surge", "m"), ("Z", "Heave", "m"), ("Ry", "Pitch", "°")]:
             try:
                 th = vessel.TimeHistory(dof)
@@ -47,7 +43,7 @@ def build_time_series(model, config) -> str:
                 pass
 
     # Line end tension time series
-    for line in lines[:3]:  # max 3 lines
+    for line in line_objs[:3]:  # max 3 lines
         try:
             th = line.TimeHistory("Effective Tension", OrcFxAPI.oeEndA)
             t = list(model.SampleTimes())

@@ -1,0 +1,116 @@
+{
+  "basis": "Public OpenPile mathematical notes; no API edition compliance claim.",
+  "sources": [
+    {
+      "id": "openpile-notes",
+      "url": "https://openpile.readthedocs.io/en/latest/API.html",
+      "retrieved_at_utc": "2026-11-18T19:32:01.757065+00:00",
+      "http_status": 200,
+      "sha256": "dc11df0203d6cc485c8b1aa98b0a7840a55092c27cdeda35e40285fec2053b63",
+      "status": "validated: named sections and equations inspected",
+      "documentation_version": "1.0.3"
+    },
+    {
+      "id": "openpile-code",
+      "url": "https://openpile.readthedocs.io/en/latest/_modules/openpile/utils/py_curves.html",
+      "retrieved_at_utc": "2026-11-18T19:32:39.622527+00:00",
+      "http_status": 200,
+      "sha256": "8a9d2d7e1592d391710434cb4d1bb086e93d4de002a583013461a537fd26c386",
+      "status": "validated: implementation inspected to resolve notes ambiguity",
+      "documentation_version": "1.0.3"
+    }
+  ],
+  "engineering_relations": [
+    {
+      "functions": [
+        "clay_shallow_pressure_pa",
+        "clay_ultimate_pressure_pa",
+        "clay_capacity_crossover_depth_m"
+      ],
+      "source": "openpile-notes",
+      "anchor": "openpile.utils.py_curves.matlock_1970",
+      "section": "Ultimate resistance",
+      "qualification": "Shallow/deep minimum, coefficients 3 and 9; crossover derived by equating the two capacities. sigma = gamma*z for constant local unit weight.",
+      "test": "test_low_strength_capacity_crossover_is_not_cyclic_transition"
+    },
+    {
+      "functions": [
+        "clay_characteristic_displacement_m"
+      ],
+      "source": "openpile-notes",
+      "anchor": "openpile.utils.py_curves.matlock_1970",
+      "section": "Strain normalization",
+      "qualification": "Characteristic displacement multiplier 2.5.",
+      "test": "test_shared_units_convert_inches_to_metres"
+    },
+    {
+      "functions": [
+        "clay_transition_depth_m"
+      ],
+      "source": "openpile-notes",
+      "anchor": "openpile.utils.py_curves.matlock_1970",
+      "section": "Transition zone",
+      "qualification": "Cyclic transition is the capacity crossover floored at 2.5 diameters; the floor does not change ultimate capacity.",
+      "test": "test_low_strength_capacity_crossover_is_not_cyclic_transition"
+    },
+    {
+      "functions": [
+        "clay_resistance_fraction_one",
+        "clay_spring_curve"
+      ],
+      "source": "openpile-notes",
+      "anchor": "openpile.utils.py_curves.matlock_1970",
+      "section": "p-y formulation (static loading, Neq = 1); p-y formulation (cyclic loading, Neq > 1)",
+      "qualification": "Static normalization 0.5 and ratio limit 8. Cyclic peak at ratio 3, linear softening over 12 ratios to 15, residual 0.72 times the capped depth ratio. Every knot is evaluated on this backbone.",
+      "test": "test_low_strength_cyclic_backbone_uses_floored_transition"
+    },
+    {
+      "functions": [
+        "sand_ultimate_resistance_n_per_m"
+      ],
+      "source": "openpile-notes",
+      "anchor": "openpile.utils.py_curves.api_sand",
+      "section": "Ultimate resistance",
+      "qualification": "Shallow/deep minimum using caller-qualified C1, C2, C3; sigma = gamma*z. No reference coefficient table is embedded.",
+      "test": "test_sand_capacity_and_inverse_tanh"
+    },
+    {
+      "functions": [
+        "sand_loading_factor_one"
+      ],
+      "source": "openpile-notes",
+      "anchor": "openpile.utils.py_curves.api_sand",
+      "section": "Factor A",
+      "qualification": "Cyclic 0.9; static 3 minus 0.8 times depth/diameter, floored at 0.9.",
+      "test": "test_sand_capacity_and_inverse_tanh"
+    },
+    {
+      "functions": [
+        "sand_resistance_n_per_m",
+        "sand_displacement_m",
+        "sand_spring_curve"
+      ],
+      "source": "openpile-notes",
+      "anchor": "openpile.utils.py_curves.api_sand",
+      "section": "p-y formulation",
+      "qualification": "Tanh law and algebraic atanh inverse; inverse fraction is relative to A times ultimate resistance, in [0,1). Force uses tributary length.",
+      "test": "test_sand_numpy_integer_products_match_hand_calculation"
+    }
+  ],
+  "engineering_choices": [
+    "Exact cube root replaces the rounded 0.33 exponent. Cyclic initial response is capped at 0.72 to meet the documented peak continuously.",
+    "Public notes give the cyclic peak as 0.72; public code uses 0.7185 with exponent 0.33. This implementation follows the documented 0.72 peak and exact cube root, not byte-for-byte OpenPile outputs.",
+    "The shallow cyclic notes omit the exponent on the first branch; the public code applies the same exponent to shallow and deep branches. The implementation follows that common branch.",
+    "Generic layer interpolation, caller-supplied polynomial fits, knot locations and numerical convergence tails are engineering choices without a claimed standard clause. Tail forces are outside the physical backbone."
+  ],
+  "edition_clause_conformance": {
+    "status": "NOT_EVALUATED",
+    "public_bibliography": "OpenPile identifies API RP 2A-WSD, Twenty-First Edition, December 2000 for sand and API RP 2GEO/ISO 19901-4, First Edition, October 2014 for its API clay table.",
+    "limit": "The public notes do not validate the previous workbook clause numbers or the 2007 replacement clause. No licensed standard was accessed; exact edition and clause qualification remains a maintainer follow-up."
+  },
+  "limits": [
+    "Constant local soil properties; no layered-overburden integration.",
+    "No pile equilibrium solution, stiff-clay formulation or cyclic history evolution.",
+    "The public source URL is mutable; source byte digests identify the inspected responses."
+  ]
+}

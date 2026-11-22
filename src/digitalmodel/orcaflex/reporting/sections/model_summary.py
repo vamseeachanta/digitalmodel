@@ -1,48 +1,39 @@
 """Section 1: Model summary — object counts, environment, analysis type."""
 from __future__ import annotations
 
+from ._common import attr_text, buoys, deprecated_alias_getattr, kv_table, lines, vessels
 
-def _render_table(rows: list[tuple[str, str]]) -> str:
-    trs = "\n".join(
-        f"    <tr><td>{label}</td><td><strong>{value}</strong></td></tr>"
-        for label, value in rows
-    )
-    return f'<table class="ofx">\n{trs}\n</table>'
-
-
-def _safe_get(obj, attr: str, default: str = "N/A") -> str:
-    try:
-        return str(getattr(obj, attr))
-    except Exception:
-        return default
+# Deprecated: ``_render_table`` and ``_safe_get`` moved to ``_common`` as
+# ``kv_table`` and ``attr_text``; the old names still resolve, with a warning.
+__getattr__ = deprecated_alias_getattr(
+    __name__, {"_render_table": "kv_table", "_safe_get": "attr_text"}
+)
 
 
 def build_model_summary(model, config) -> str:
     """Build model summary section HTML."""
-    import OrcFxAPI
-
-    lines = [o for o in model.objects if isinstance(o, OrcFxAPI.Line)]
-    vessels = [o for o in model.objects if isinstance(o, OrcFxAPI.Vessel)]
-    buoys_3d = [o for o in model.objects if isinstance(o, OrcFxAPI.Buoy) and "3D" in type(o).__name__]
-    buoys_6d = [o for o in model.objects if isinstance(o, OrcFxAPI.Buoy) and "6D" in type(o).__name__]
+    line_objs = lines(model)
+    vessel_objs = vessels(model)
+    buoys_3d = buoys(model, "3D")
+    buoys_6d = buoys(model, "6D")
 
     general = model.general
     env = model.environment
 
     rows = [
         ("Simulation file", model.simulationFileName if hasattr(model, "simulationFileName") else "—"),
-        ("OrcaFlex version", _safe_get(general, "OrcaFlexVersion")),
-        ("Units", _safe_get(general, "UnitsSystem")),
-        ("Stages", _safe_get(general, "NumberOfStages")),
-        ("Water depth (m)", _safe_get(env, "WaterDepth")),
-        ("Water density (t/m³)", _safe_get(env, "Density")),
-        ("Wave type", _safe_get(env, "WaveType")),
-        ("Wave Hs (m)", _safe_get(env, "HsAtOrigin")),
-        ("Wave direction (°)", _safe_get(env, "WaveDirection")),
-        ("Lines", str(len(lines))),
-        ("Vessels", str(len(vessels))),
+        ("OrcaFlex version", attr_text(general, "OrcaFlexVersion")),
+        ("Units", attr_text(general, "UnitsSystem")),
+        ("Stages", attr_text(general, "NumberOfStages")),
+        ("Water depth (m)", attr_text(env, "WaterDepth")),
+        ("Water density (t/m³)", attr_text(env, "Density")),
+        ("Wave type", attr_text(env, "WaveType")),
+        ("Wave Hs (m)", attr_text(env, "HsAtOrigin")),
+        ("Wave direction (°)", attr_text(env, "WaveDirection")),
+        ("Lines", str(len(line_objs))),
+        ("Vessels", str(len(vessel_objs))),
         ("3D buoys", str(len(buoys_3d))),
         ("6D buoys", str(len(buoys_6d))),
     ]
 
-    return _render_table(rows)
+    return kv_table(rows)
