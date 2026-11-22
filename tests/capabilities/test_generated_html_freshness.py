@@ -206,8 +206,8 @@ def test_registry_has_reasoned_complete_ownership() -> None:
     outputs = checker.all_registered_outputs(checker.REPO)
 
     assert checker.validate_registry(checker.REPO) == []
-    assert len(checker.GENERATORS) == 28
-    assert len(outputs) == 34  # includes screening artifacts and the showcase sidecar
+    assert len(checker.GENERATORS) == 29
+    assert len(outputs) == 35  # includes screening artifacts and the showcase sidecar
     assert all(reason.strip() for reason in checker.PAGE_EXCLUSIONS.values())
     assert len(checker.PAGE_EXCLUSIONS) == 22
     assert len(checker.EXCLUDED_GENERATORS) == 9
@@ -562,3 +562,16 @@ def test_showcase_has_reproducible_generator_ownership():
     assert entry.outputs == ("docs/api/ffs/ffs-showcase.html",)
     assert entry.script in entry.inputs
     assert entry.outputs[0] not in checker.MANUAL_PAGES
+
+
+def test_readiness_shadow_regeneration(tmp_path, monkeypatch):
+    from scripts.ffs import build_ffs_readiness as builder
+
+    entry = next(e for e in checker.GENERATORS if e.script == "scripts/ffs/build_ffs_readiness.py")
+    registry = builder.yaml.safe_load((checker.REPO / builder.REGISTRY).read_text())
+    assert builder.evidence_targets(builder.oc.load(), registry) <= set(entry.inputs)
+    monkeypatch.setattr(checker, "GENERATORS", (entry,))
+    checker.prepare_shadow(checker.REPO, tmp_path)
+    checker.clear_generated_html(tmp_path, entry)
+    assert checker.run_generator(tmp_path, entry) is None
+    assert checker.compare_outputs(checker.REPO, tmp_path) == []

@@ -7,7 +7,7 @@ The seven-input inventory records 158 literal citation occurrences, three editio
 | Revision | Date | Change and reason |
 |---|---|---|
 | 1 | 2026-11-16 | Record the bounded citation evidence and unresolved applicability to support review. |
-| 2 | 2026-11-22 | Add E015–E017 and F004–F006 for the F201 combined-loading mentions added by #4066 (base `98e7ab4e9a5e09f84568852c8d31ebaab03572f4`); their lines locate that base. Earlier rows, lines and digests are unchanged. |
+| 2 | 2026-11-22 | Add the six occurrences introduced by #4066 (E015–E017, F004–F006): the OS-F201 (2010) combined-loading delegation and the F101 Eq. 5.9 collapse references. Historical OS-F201 labels are not counted as ST-F201 conflicts; the F101 references join M05 and M06. Line numbers of earlier rows still locate the recorded base. |
 
 ## Evidence and coverage
 
@@ -29,7 +29,7 @@ Register coverage is 28/36 unique designations (77.8%). Composite register label
 
 | ID | Observed evidence | Action and rationale |
 |---|---|---|
-| V01 | F201: A014 / E004 / F003 / F004 state 2021; G022 states 2018. | Deferred: compare the strength strategy and fatigue-factor applicability against their stated editions; unlike methods do not alone prove a calculation conflict. |
+| V01 | F201: A014 / E004 state 2021; G022 states 2018. | Deferred: compare the strength strategy and fatigue-factor applicability against their stated editions; unlike methods do not alone prove a calculation conflict. |
 | V02 | F101: A015 states 2021; G014 states 2017. | Deferred: establish the fatigue example's governing edition before reconciling its label with the strength register. |
 | V03 | C203: B023 records a 2016 VIV reference; G004 and other C203 entries cite 2011 curves. | Deferred: the VIV implementation is outside the fixed inputs; this is a documented reference difference, not a verified implementation conflict. |
 
@@ -49,8 +49,8 @@ Three differences remain unresolved. Historical OS-F201 (2010) mentions are not 
 | M02 | B: 8; abbreviated references and unresolved register rows. | Deferred: repeated narrative labels do not establish an implemented edition; retain the documented uncertainties. |
 | M03 | C: 11; RP 2RD strategy and RP 1111 analogies. | Deferred: obtain edition-specific RP method evidence; the register's RP year remains unverified. |
 | M04 | D: 9; STD 2RD strategy. | Deferred: confirm implemented method applicability before inheriting the register year. |
-| M05 | E: 14; F201 labels, F101 analogies and the F101 collapse reference. | Deferred: surrounding 2021 and historical 2010 mentions do not qualify every method. |
-| M06 | F: 2; ASME description and F101 collapse reference without their own year. | Deferred: primary metadata states 2019 elsewhere for ASME; confirm that inheritance is intended for the described check and obtain the F101 collapse edition. |
+| M05 | E: 14; F201 labels and F101 analogies, including the F101 Eq. 5.9 collapse references. | Deferred: surrounding 2021 and historical 2010 mentions do not qualify every method. |
+| M06 | F: 2; ASME description and the F101 Eq. 5.9 collapse reference without their own year. | Deferred: primary metadata states 2019 elsewhere; confirm that inheritance is intended for the described check. |
 | M07 | G: 19; fatigue, mooring and methodology references. | Deferred: obtain applicable document editions and method/condition evidence; do not infer them from other references in the example. |
 
 Each listed occurrence has a finding ID, deferred action and rationale in JSON. Null means no year at the literal occurrence, not necessarily an absent year elsewhere in its module. All 65 are retained without invented years.

@@ -114,6 +114,60 @@ flowchart LR
     p23 --> pages
     p24["docs/api/ffs/ffs-field-dashboard.html<br/>inline, no generator"]
     p24 --> pages
+    p58["docs/api/ffs/ffs-readiness.html<br/>registered generator"]
+    p58 --> pages
+    sp58["scripts/ffs/build_ffs_readiness.py<br/>src/digitalmodel/asset_integrity/__init__.py"]
+    sp58 --> p58
+    ip58_0["docs/api/ffs/ffs-readiness.html<br/>registered argument: output path"]
+    ip58_0 --> sp58
+    ip58_1["docs/domains/asset-integrity/b31g-validation-2026-06-27.md<br/>registered input"]
+    ip58_1 --> sp58
+    ip58_2["docs/domains/asset-integrity/dent-validation-2026-10-09.md<br/>registered input"]
+    ip58_2 --> sp58
+    ip58_3["docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md<br/>registered input"]
+    ip58_3 --> sp58
+    ip58_4["docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md<br/>registered input"]
+    ip58_4 --> sp58
+    ip58_5["docs/domains/asset-integrity/pitting-validation-2026-10-09.md<br/>registered input"]
+    ip58_5 --> sp58
+    ip58_6["docs/domains/asset-integrity/riser-joint-ffs-validation-2026-10-10.md<br/>registered input"]
+    ip58_6 --> sp58
+    ip58_7["docs/domains/circumferential-defect-validation-2026-06-29.md<br/>registered input"]
+    ip58_7 --> sp58
+    ip58_8["docs/domains/rstreng-2d-validation-2026-06-29.md<br/>registered input"]
+    ip58_8 --> sp58
+    ip58_9["docs/registry/workflows.yaml<br/>registered input"]
+    ip58_9 --> sp58
+    ip58_10["examples/workflows/api579-coverage-screen/input.yml<br/>registered input"]
+    ip58_10 --> sp58
+    ip58_11["examples/workflows/api579-dent-screen/input.yml<br/>registered input"]
+    ip58_11 --> sp58
+    ip58_12["examples/workflows/api579-pipe-ffs-b314/input.yml<br/>registered input"]
+    ip58_12 --> sp58
+    ip58_13["examples/workflows/api579-pitting-screen/input.yml<br/>registered input"]
+    ip58_13 --> sp58
+    ip58_14["examples/workflows/ffs-metal-loss/input.yml<br/>registered input"]
+    ip58_14 --> sp58
+    ip58_15["examples/workflows/inspection-planning/input.yml<br/>registered input"]
+    ip58_15 --> sp58
+    ip58_16["examples/workflows/pipeline-corroded-defect-screen/input.yml<br/>registered input"]
+    ip58_16 --> sp58
+    ip58_17["examples/workflows/plate-buckling/input.yml<br/>registered input"]
+    ip58_17 --> sp58
+    ip58_18["examples/workflows/riser-fatigue/input.yml<br/>registered input"]
+    ip58_18 --> sp58
+    ip58_19["examples/workflows/riser-joint-ffs/input.yml<br/>registered input"]
+    ip58_19 --> sp58
+    ip58_20["pyproject.toml<br/>registered input"]
+    ip58_20 --> sp58
+    ip58_21["scripts/ffs/build_ffs_readiness.py<br/>registered input"]
+    ip58_21 --> sp58
+    ip58_22["src/digitalmodel/asset_integrity/data/ffs_damage_mechanism_crosswalk.yml<br/>registered input"]
+    ip58_22 --> sp58
+    ip58_23["src/digitalmodel/asset_integrity/data/ffs_design_screen_catalog.yml<br/>registered input"]
+    ip58_23 --> sp58
+    ip58_24["src/digitalmodel/asset_integrity/data/ffs_offering_catalog.yml<br/>registered input"]
+    ip58_24 --> sp58
     p25["docs/api/ffs/ffs-showcase.html<br/>registered generator"]
     p25 --> pages
     sp25["examples/demos/asset_integrity/ffs_showcase.py<br/>src/digitalmodel/asset_integrity/assessment/__init__.py<br/>src/digitalmodel/asset_integrity/corroded_pipe.py<br/>src/digitalmodel/asset_integrity/dnv_rp_f101.py<br/>src/digitalmodel/structural/structural_analysis/models.py<br/>src/digitalmodel/structural/structural_analysis/plate_metal_loss_ffs.py"]

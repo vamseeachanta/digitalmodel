@@ -57,7 +57,7 @@
       "input_contract": "Export requires enabled Extreme or Fatigue analysis, an active SCR or SLWR riser and at least one load. Inactive branches raise before output. Missing type data raises FileNotFoundError; a partial SLWR file is not a usable model. Native evidence remains separate."
     },
     {
-      "claim": "`cli.py:108`: Simple CLI catches all exceptions, prints an error and exits; this is an explicit failure, not a silent success [src/digitalmodel/subsea/catenary_riser/cli.py:L110-L112]",
+      "claim": "`cli.py:108`: Simple CLI catches all exceptions, prints an error and exits; this is an explicit failure, not a silent success [src/digitalmodel/subsea/catenary_riser/cli.py:L73-L74]",
       "status": "TESTED",
       "reason": "Offline package-function contract only. ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result. No native model or engineering acceptance is established.",
       "tests": [
@@ -67,7 +67,7 @@
       "input_contract": "ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result."
     },
     {
-      "claim": "`cli.py:165`: Weight CLI catches all exceptions and exits [src/digitalmodel/subsea/catenary_riser/cli.py:L164-L166]",
+      "claim": "`cli.py:165`: Weight CLI catches all exceptions and exits [src/digitalmodel/subsea/catenary_riser/cli.py:L127-L128]",
       "status": "TESTED",
       "reason": "Offline package-function contract only. ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result. No native model or engineering acceptance is established.",
       "tests": [
@@ -77,7 +77,7 @@
       "input_contract": "ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result."
     },
     {
-      "claim": "`cli.py:224`: Lazy-wave quarantine exception is converted to a CLI error [src/digitalmodel/subsea/catenary_riser/cli.py:L222-L223]",
+      "claim": "`cli.py:224`: Lazy-wave quarantine exception is converted to a CLI error [src/digitalmodel/subsea/catenary_riser/cli.py:L185-L186]",
       "status": "TESTED",
       "reason": "Offline package-function contract only. ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result. No native model or engineering acceptance is established.",
       "tests": [
@@ -87,7 +87,7 @@
       "input_contract": "ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result."
     },
     {
-      "claim": "`cli.py:251`: Outer lazy-wave CLI catches every exception and exits [src/digitalmodel/subsea/catenary_riser/cli.py:L249-L251]",
+      "claim": "`cli.py:251`: Outer lazy-wave CLI catches every exception and exits [src/digitalmodel/subsea/catenary_riser/cli.py:L212-L213]",
       "status": "TESTED",
       "reason": "Offline package-function contract only. ValueError and OSError produce nonzero CLI exits. Invalid input and lazy-wave quarantine preserve existing output and produce no result. No native model or engineering acceptance is established.",
       "tests": [

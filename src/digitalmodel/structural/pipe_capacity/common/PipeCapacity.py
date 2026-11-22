@@ -4,7 +4,7 @@ import logging
 import math
 
 from digitalmodel.units import Q_
-from common.update_deep import update_deep_dictionary
+from digitalmodel.infrastructure.utils.update_deep import update_deep_dictionary
 
 
 class PipeCapacity:

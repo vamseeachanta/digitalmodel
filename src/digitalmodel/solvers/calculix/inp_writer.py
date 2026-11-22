@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 ABOUTME: CalculiX INP file writer — converts mesh data (nodes + elements) into
 Abaqus-format .inp files for CalculiX ccx solver.
@@ -11,6 +14,7 @@ from typing import Optional
 
 import numpy as np
 
+from .beam_connectivity import beam_connectivity, validate_beam_node_order
 from .beam_validation import validate_beam_sections
 
 # Element type mapping: gmsh name -> CalculiX type
@@ -53,9 +57,15 @@ class INPWriter:
 
     Mesh data uses 0-based indexing (gmsh convention). This writer converts
     all IDs to 1-based when writing the INP file (CalculiX convention).
+    ``beam_node_order`` defaults to "calculix" (start, midpoint, end). With
+    "gmsh", B32 rows (start, end, midpoint) are validated and reordered only
+    during serialization; caller arrays and other element types are unchanged.
     """
 
-    def __init__(self, nodes: np.ndarray, elements: dict):
+    def __init__(self, nodes: np.ndarray, elements: dict, *,
+                 beam_node_order: str = "calculix"):
+        validate_beam_node_order(beam_node_order)
+        self.beam_node_order = beam_node_order
         self.nodes = nodes
         self.elements = elements
         self._materials: list[dict] = []
@@ -314,7 +324,10 @@ class INPWriter:
             else:
                 elset = "EALL"
             lines.append(f"*ELEMENT, TYPE={ccx_type}, ELSET={elset}")
-            for row in data["connectivity"]:
+            connectivity = beam_connectivity(
+                data["connectivity"], ccx_type, self.beam_node_order, len(self.nodes),
+            )
+            for row in connectivity:
                 node_refs = ", ".join(str(int(n) + 1) for n in row)
                 lines.append(f"{elem_id}, {node_refs}")
                 elem_id += 1

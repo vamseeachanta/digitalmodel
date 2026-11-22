@@ -292,6 +292,33 @@ docs/reports/*
 !/docs/reports/modules/passing_ship/build_worked_example.py
 !/docs/reports/modules/passing_ship/README.md
 
+# Fender design generic method report: report, workbook, results and charts.
+!/docs/reports/modules/fender_design/
+/docs/reports/modules/fender_design/*
+!/docs/reports/modules/fender_design/fender-design-generic.md
+!/docs/reports/modules/fender_design/fender-design-generic.html
+!/docs/reports/modules/fender_design/fender-design-generic.xlsx
+!/docs/reports/modules/fender_design/results.json
+!/docs/reports/modules/fender_design/workbook-input-checks.md
+!/docs/reports/modules/fender_design/charts/
+/docs/reports/modules/fender_design/charts/*
+!/docs/reports/modules/fender_design/charts/cm_methods.png
+!/docs/reports/modules/fender_design/charts/database_coverage.png
+!/docs/reports/modules/fender_design/charts/database_sizes.png
+!/docs/reports/modules/fender_design/charts/guide_codes.svg
+!/docs/reports/modules/fender_design/charts/guide_summary.svg
+!/docs/reports/modules/fender_design/charts/methods.png
+!/docs/reports/modules/fender_design/charts/sizes.png
+!/docs/reports/modules/fender_design/charts/sweep_berthing_angle_deg.png
+!/docs/reports/modules/fender_design/charts/sweep_contact_x_over_lbp.png
+!/docs/reports/modules/fender_design/charts/sweep_cs.png
+!/docs/reports/modules/fender_design/charts/sweep_displacement_t.png
+!/docs/reports/modules/fender_design/charts/sweep_factor.png
+!/docs/reports/modules/fender_design/charts/sweep_velocity_m_s.png
+!/docs/reports/modules/fender_design/charts/sweep_water_depth_m.png
+!/docs/reports/modules/fender_design/charts/tornado.png
+!/docs/reports/modules/fender_design/charts/velocity_methods.png
+
 !/docs/reports/modules/pipe_capacity/
 /docs/reports/modules/pipe_capacity/*
 !/docs/reports/modules/pipe_capacity/build_worked_example.py

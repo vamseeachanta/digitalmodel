@@ -37,6 +37,33 @@ from digitalmodel.fatigue import (
     quick_frequency_domain_analysis
 )
 from digitalmodel.fatigue.counting_contract import NonConservativeCountingError
+# digitalmodel.fatigue resolves the names above lazily from these modules; importing
+# them here also keeps this file selected when structural/fatigue/ changes.
+from digitalmodel.structural.fatigue import analysis as structural_analysis
+from digitalmodel.structural.fatigue import damage_accumulation as structural_damage
+from digitalmodel.structural.fatigue import sn_curves as structural_sn_curves
+
+
+def test_package_reexports_are_the_structural_fatigue_objects():
+    """The lazy re-exports return the very objects defined in structural.fatigue."""
+    import digitalmodel.fatigue as package
+
+    sources = {
+        "FatigueAnalysisEngine": structural_analysis,
+        "FatigueAnalysisConfig": structural_analysis,
+        "MultislopeSNCurve": structural_analysis,
+        "quick_time_domain_analysis": structural_analysis,
+        "quick_frequency_domain_analysis": structural_analysis,
+        "StandardSNCurves": structural_sn_curves,
+        "get_dnv_curve": structural_sn_curves,
+        "LinearDamageAccumulation": structural_damage,
+    }
+    for name, module in sources.items():
+        assert getattr(package, name) is getattr(module, name)
+        assert name in package.__all__
+        assert name in dir(package)
+    with pytest.raises(AttributeError):
+        package.not_an_export  # noqa: B018
 
 # Issue #3839: `quick_time_domain_analysis` and `FatigueAnalysisEngine.analyze_time_series`
 # count cycles through `structural.fatigue.rainflow`, which extracts a maximum stress

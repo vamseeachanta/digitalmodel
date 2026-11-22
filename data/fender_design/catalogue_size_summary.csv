@@ -1,0 +1,41 @@
+vendor,fender_type,rows,size_measure,rows_with_size,smallest_size_mm,largest_size_mm,source_ids,accessed_on
+MAX Groups Marine,cell,68,height,68,400,3000,SRC-max-groups-02,2026-11-11
+MAX Groups Marine,cone,52,height,52,500,1800,SRC-max-groups-03,2026-11-11
+MAX Groups Marine,pneumatic,18,diameter,18,500,3300,SRC-max-groups-01,2026-11-11
+Nanjing Deers Industrial,pneumatic,36,diameter,36,500,4500,SRC-nanjing-deers-01,2026-11-11
+Qingdao Jerryborg Marine Machinery,cell,286,height,286,400,2500,SRC-jerryborg-02,2026-11-11
+Qingdao Jerryborg Marine Machinery,cone,338,height,338,500,1800,SRC-jerryborg-01; SRC-jerryborg-03,2026-11-11
+Qingdao Jerryborg Marine Machinery,cylindrical,44,height,44,150,2000,SRC-jerryborg-03,2026-11-11
+Qingdao Jerryborg Marine Machinery,foam-filled,19,diameter,19,300,3300,SRC-jerryborg-03,2026-11-11
+Qingdao Jerryborg Marine Machinery,pi (paired leg element),24,height,24,600,2500,SRC-jerryborg-03,2026-11-11
+Qingdao Jerryborg Marine Machinery,pneumatic,24,diameter,24,300,3300,SRC-jerryborg-03,2026-11-11
+Qingdao Jerryborg Marine Machinery,roller,30,height,30,600,2900,SRC-jerryborg-03,2026-11-11
+Qingdao Jerryborg Marine Machinery,wing,2,height,2,300,300,SRC-jerryborg-03,2026-11-11
+ShibataFenderTeam,cell,345,height,345,300,3000,SRC-shibatafenderteam-01,2026-11-11
+ShibataFenderTeam,cone,391,height,391,300,2000,SRC-shibatafenderteam-01,2026-11-11
+ShibataFenderTeam,cylindrical,30,height,30,100,2700,SRC-shibatafenderteam-01,2026-11-11
+ShibataFenderTeam,element,391,height,391,250,2000,SRC-shibatafenderteam-01,2026-11-11
+ShibataFenderTeam,foam,117,diameter,117,400,4200,SRC-shibatafenderteam-01,2026-11-11
+ShibataFenderTeam,foam-donut,63,diameter,63,900,4220,SRC-shibatafenderteam-01,2026-11-11
+ShibataFenderTeam,hydropneumatic,10,diameter,10,1700,3300,SRC-shibatafenderteam-01,2026-11-11
+ShibataFenderTeam,pneumatic,34,diameter,34,500,4500,SRC-shibatafenderteam-01,2026-11-11
+ShibataFenderTeam,v,161,height,161,250,1000,SRC-shibatafenderteam-01,2026-11-11
+Trelleborg Marine and Infrastructure,arch,378,height,378,150,1000,SRC-trelleborg-01,2026-11-11
+Trelleborg Marine and Infrastructure,cell,322,height,322,400,3000,SRC-trelleborg-01,2026-11-11
+Trelleborg Marine and Infrastructure,cf-composite,20,height,20,80,300,SRC-trelleborg-04,2026-11-11
+Trelleborg Marine and Infrastructure,cone,966,height,966,300,2500,SRC-trelleborg-01,2026-11-11
+Trelleborg Marine and Infrastructure,cylindrical,23,height,23,100,2700,SRC-trelleborg-04,2026-11-11
+Trelleborg Marine and Infrastructure,d,21,height,18,70,500,SRC-trelleborg-04,2026-11-11
+Trelleborg Marine and Infrastructure,element,253,height,253,300,1600,SRC-trelleborg-01,2026-11-11
+Trelleborg Marine and Infrastructure,fender-bar,10,height,10,150,300,SRC-trelleborg-04,2026-11-11
+Trelleborg Marine and Infrastructure,keyhole,4,height,4,200,350,SRC-trelleborg-04,2026-11-11
+Trelleborg Marine and Infrastructure,m,3,height,3,200,300,SRC-trelleborg-04,2026-11-11
+Trelleborg Marine and Infrastructure,parallel-motion,1,height,0,,,SRC-trelleborg-01,2026-11-11
+Trelleborg Marine and Infrastructure,pneumatic,32,diameter,32,500,6000,SRC-trelleborg-03,2026-11-11
+Trelleborg Marine and Infrastructure,shear,10,height,6,180,275,SRC-trelleborg-04,2026-11-11
+Trelleborg Marine and Infrastructure,square,19,height,15,100,500,SRC-trelleborg-04,2026-11-11
+Trelleborg Marine and Infrastructure,w,3,height,3,200,300,SRC-trelleborg-04,2026-11-11
+Yokohama Rubber,pneumatic,35,diameter,35,500,6000,SRC-yokohama-01; SRC-yokohama-02,2026-11-11
+Yokohama Rubber,pneumatic-fixed-air-block,60,diameter,60,600,3200,SRC-yokohama-03,2026-11-11
+Yokohama Rubber,pneumatic-low-pressure,2,diameter,2,2500,3300,SRC-yokohama-01,2026-11-11
+Yokohama Rubber,pneumatic-vertical,7,diameter,7,2000,4500,SRC-yokohama-01,2026-11-11

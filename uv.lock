@@ -1495,7 +1495,7 @@ requires-dist = [
     { name = "colorama", specifier = ">=0.4.6,<1.0.0" },
     { name = "coverage", marker = "extra == 'test'", specifier = "==7.3.2" },
     { name = "dash", marker = "extra == 'viz'", specifier = ">=3.1.0,<4.0.0" },
-    { name = "deepdiff", specifier = ">=6.7.0,<8.0.0" },
+    { name = "deepdiff", specifier = ">=6.7.0,<9.0.0" },
     { name = "earthengine-api", marker = "extra == 'gis-imagery'", specifier = ">=0.1.370,<1.0.0" },
     { name = "ezdxf", marker = "extra == 'drawings'", specifier = ">=1.3,<2" },
     { name = "ezdxf", marker = "extra == 'test'", specifier = ">=1.3,<2" },

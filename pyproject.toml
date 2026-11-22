@@ -34,7 +34,7 @@ dependencies = [
     "html5lib>=1.1,<2.0",
     "click>=8.0.0,<9.0.0",
     "colorama>=0.4.6,<1.0.0",
-    "deepdiff>=6.7.0,<8.0.0",
+    "deepdiff>=6.7.0,<9.0.0",
     "fastmcp>=2.12.4,<3.0.0",
     "flask>=3.0.0,<4.0.0",
     "flask-httpauth==4.8.1",
@@ -310,6 +310,9 @@ digitalmodel = [
     "base_configs/**/*.deck",
     "hydrodynamics/aqwa/docs/damping-basis.md",
     "data_systems/data/*.yml",
+    # Dynacard classifier artefacts read at inference (default and shape-only).
+    "marine_ops/artificial_lift/dynacard/data/*.json",
+    "marine_ops/artificial_lift/dynacard/data/*.json.gz",
     "data_systems/data/steel_shapes*.json",
     "data_systems/data/steel_shapes_provenance.yaml",
     "foam_system/data/*.yml",
