@@ -218,8 +218,10 @@ def minimum_tension(inputs: TensionInput) -> TensionResult:
     """Compute the source's static demand and lower-package overpull chain.
 
     Tsr=Ws*fwt+Wextra-Bn*fbt+Wfluid-Wwater;
-    Tmin=Tsr*N/(Rf*(N-n))*ffa; OPriser=Tmin-Tsr; OPpackage=OPriser-Wpackage;
-    OPextra=max(OPmin-OPpackage,0); Toverall=Tmin+OPextra+OPrecoil.
+    Tmin=Tsr*N/(Rf*(N-n))*ffa; Tring=Tmin*Rf/ffa (delivered at the slip ring with all
+    units in service); OPriser=Tring-Tsr; OPpackage=OPriser-Wpackage;
+    OPextra=max(OPmin-OPpackage,0); Toverall=Tmin+(OPextra+OPrecoil)*ffa/Rf,
+    the ring overpull terms grossed up by the same losses as the setting.
     Maximum setting = DTL*setting_fraction. Rf (tensioner_efficiency) and
     ffa (fleet_angle_factor) are required inputs; no unity value is assumed.
     Source names API-RP-16Q; clause not stated in source.
@@ -244,12 +246,16 @@ def minimum_tension(inputs: TensionInput) -> TensionResult:
         n_fail=p.failed_tensioner_count, efficiency=p.tensioner_efficiency,
         fleet_angle_factor=p.fleet_angle_factor,
     ) * 1000.0
-    overpull = top - slip
+    # Overpull is what the ring actually receives above the demand: the setting less the
+    # tensioner losses (Rf) and the fleet-angle allowance, with every unit in service.
+    # Taking Tmin - Tsr would count those losses as overpull (Codex P1 at 33b59c25).
+    delivered = top * p.tensioner_efficiency / p.fleet_angle_factor
+    overpull = delivered - slip
     package = overpull - p.lower_package_submerged_weight_n
     additional = max(p.minimum_lower_package_overpull_n - package, 0.0)
     return TensionResult(
         steel, buoyancy, fluid, slip, top, overpull, package, additional,
-        top + additional + p.recoil_overpull_n,
+        top + (additional + p.recoil_overpull_n) * p.fleet_angle_factor / p.tensioner_efficiency,
         p.dynamic_tension_limit_n * p.setting_fraction,
     )
 
