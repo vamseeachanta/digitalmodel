@@ -35,6 +35,9 @@ FULL_MATRIX_PATHS = {
     "conftest.py",
     "pytest.ini",
     PYPROJECT_PATH,
+    # Every shard installs from the lockfile. The full sweep no longer runs on a
+    # merge, so a dependency update selects the full matrix here.
+    "uv.lock",
 }
 DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("src/digitalmodel/process_piping/", ("asset-integrity",)),
@@ -53,6 +56,7 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     # where the folder is shared) and the excluded models' PROVENANCE.md files.
     ("data/riser_database/", ("subsea",)),
     ("data/riser_buoyancy/", ("subsea",)),
+    ("data/riser_tensioners/", ("subsea",)),
     ("data/line_pipe/", ("subsea",)),
     ("data/flexible_pipe/", ("subsea",)),
     ("data/soil_stiffness/", ("subsea",)),
@@ -64,6 +68,8 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("data/vessels/processed/drillship_basis.json", ("subsea",)),
     ("data/vessels/processed/metocean_criteria.csv", ("subsea",)),
     ("docs/domains/orcaflex/risers/", ("contracts", "subsea")),
+    ("docs/domains/orcaflex/library/line_types/", ("contracts", "subsea")),
+    ("docs/domains/orcaflex/library/buoy_types/", ("contracts", "subsea")),
     ("docs/domains/risers/riser-capability-inventory.md", ("contracts", "subsea")),
     ("docs/domains/risers/riser-input-database-register.md", ("contracts", "subsea")),
     ("docs/domains/risers/riser-input-database-register.json", ("contracts", "subsea")),
@@ -178,6 +184,17 @@ def git_changed_files(base: str, head: str) -> list[str]:
         capture_output=True,
     )
     return [path for path in result.stdout.split("\0") if path]
+
+
+def git_merge_base(base: str, head: str) -> str:
+    """Return the fork point of ``head`` from ``base``; raise when there is none."""
+    result = subprocess.run(
+        ["git", "merge-base", base, head],
+        check=True,
+        text=True,
+        capture_output=True,
+    )
+    return result.stdout.strip()
 
 
 def git_file_text(ref: str, path: str) -> str:
@@ -543,6 +560,18 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "'full' fails SAFE to the full matrix."
         ),
     )
+    parser.add_argument(
+        "--diff-from",
+        choices=("base", "merge-base"),
+        default="base",
+        help=(
+            "Start of the comparison. 'base' (default) compares --base with --head "
+            "directly, which is right for a push (before and after on one line of "
+            "history). 'merge-base' compares the fork point of --head from --base "
+            "with --head, so a pull request that is behind its base selects only "
+            "the shards its own change touches, not everything the base gained."
+        ),
+    )
     args = parser.parse_args(argv)
     if args.mode == "touched" and (not args.base or not args.head):
         parser.error("--mode touched requires --base and --head")
@@ -558,7 +587,13 @@ def main(argv: list[str] | None = None) -> int:
             selected = domains
         else:
             try:
-                changed = git_changed_files(args.base, args.head)
+                # The comparison start is separate from --base: record routes below
+                # are still read at the base tip, whose records the merged tree holds.
+                diff_start = args.base
+                if args.diff_from == "merge-base":
+                    # No common ancestor is handled like an unreachable base below.
+                    diff_start = git_merge_base(args.base, args.head)
+                changed = git_changed_files(diff_start, args.head)
             except subprocess.CalledProcessError:
                 # Base SHA unreachable: zero-SHA new branch or force-push pruned
                 # history. Fail SAFE to the full matrix when asked; otherwise let
@@ -570,7 +605,7 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 try:
                     pin_domains: dict[str, set[str]] = {}
-                    for ref in dict.fromkeys((args.base, args.head)):
+                    for ref in dict.fromkeys((args.base, diff_start, args.head)):
                         for path, names in git_pinned_domains(ref, domains).items():
                             pin_domains.setdefault(path, set()).update(names)
                 except (subprocess.CalledProcessError, OSError):
@@ -580,7 +615,7 @@ def main(argv: list[str] | None = None) -> int:
                     selected = touched_domains(
                         changed,
                         domains,
-                        args.base,
+                        diff_start,
                         args.head,
                         pinned_domains=pin_domains,
                     )

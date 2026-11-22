@@ -147,6 +147,9 @@ def derive(text, data):
                 row = rows[location['row']]
                 column = row[2] if key == 'tools' and e['pass'] == 'first' else row[0]
                 assert e['item'] in required and e['item'] in column
+                if key == 'jips' and e['pass'] == 'second':
+                    assert column == e['item']
+                    assert all(sources[sid].get('program') == e['item'] for sid in e['evidence'])
                 if key == 'contractors':
                     assert column.startswith(e['item'] + ':')
                 rows = [' | '.join(r) for r in rows]
@@ -192,6 +195,79 @@ def test_solitaire_verified_row_rejects_unsupported_figure(change):
 
 def test_status_table_bound_to_criteria_and_evidence():
     validate_status(*load())
+
+
+@pytest.fixture
+def complete_jip_record():
+    text, data = load()
+    data['coverage']['jips'] = [e for e in data['coverage']['jips'] if e['pass'] == 'first']
+    rows = []
+    for index, item in enumerate(('HOTPIPE', 'POSIT')):
+        sid = f'S{len(data["sources"]) + 1}'
+        data['sources'].append(dict(id=sid, title=f'{item} synthetic public record',
+                                    publisher='Example institution', year='unknown',
+                                    url=f'https://example.org/{item.lower()}', checked='2026-11-16',
+                                    status='read', program=item, basis='Synthetic scope paragraph'))
+        rows.append(f'| {item} | Synthetic scope for validator tests. | [{sid}] |')
+        data['coverage']['jips'].append(dict(item=item, evidence=[sid], **{'pass': 'second'},
+            location=dict(section='3. JIP landscape updates', row=index)))
+    old = section(section(text, '3. JIP landscape updates'), 'Verified', 3)
+    text = text.replace(old, '\n| JIP | Scope | Source |\n|---|---|---|\n' + '\n'.join(rows) + '\n')
+    old = next(line for line in text.splitlines() if line.startswith('| JIP landscape ('))
+    coverage = '; '.join(e['item'] + ' ' + ''.join(f'[{sid}]' for sid in e['evidence'])
+                         for e in data['coverage']['jips'])
+    text = text.replace(old, f'| {CRITERIA[3]} | {", ".join(REQUIRED[3])} | {coverage} | met | Synthetic complete record. |')
+    return text, data
+
+
+def test_complete_jip_record_requires_three_distinct_items(complete_jip_record):
+    text, data = complete_jip_record
+    validate_status(text, data)
+    assert derive(text, data)[3] == 'met'
+
+
+@pytest.mark.parametrize('mutation', ['unknown', 'unread', 'other-jip', 'unrelated-source',
+                                     'false-complete', 'duplicate'])
+def test_jip_promotion_rejects_invalid_evidence(complete_jip_record, mutation):
+    text, data = deepcopy(complete_jip_record)
+    entry = data['coverage']['jips'][-1]
+    source = data['sources'][-1]
+    if mutation == 'unknown':
+        text = text.replace(f'[{source["id"]}]', '[S99]')
+        entry['evidence'] = ['S99']
+    elif mutation == 'unread':
+        source['status'] = 'located_not_read'
+    elif mutation == 'other-jip':
+        text = text.replace('| POSIT | Synthetic scope', '| POSIT-related program | Synthetic scope')
+    elif mutation == 'unrelated-source':
+        source['program'] = 'HOTPIPE'
+    elif mutation == 'false-complete':
+        data['coverage']['jips'].pop()
+    else:
+        entry['item'] = 'HOTPIPE'
+    with pytest.raises(AssertionError):
+        validate_status(text, data)
+
+
+def test_jip_follow_up_records_bounded_search():
+    text, data = load()
+    follow_up = data['follow_up']
+    assert follow_up['checked'] == '2026-11-16'
+    assert [e['item'] for e in follow_up['items']] == ['HOTPIPE', 'POSIT']
+    block = section(text, '6. JIP follow-up')
+    sources = catalog(data)
+    for entry in follow_up['items']:
+        assert 1 <= len(entry['attempts']) <= 3
+        assert entry['result'] in {'read', 'unresolved'}
+        assert entry['item'] in block and entry['reason'] in block
+        assert set(entry['attempts']) <= set(source_ids(block))
+        for sid in entry['attempts']:
+            assert sources[sid]['checked'] == follow_up['checked']
+        covered = [e for e in data['coverage']['jips'] if e['item'] == entry['item']]
+        assert bool(covered) == (entry['result'] == 'read')
+        if covered:
+            assert set(covered[0]['evidence']) <= set(entry['attempts'])
+    validate_status(text, data)
 
 
 @pytest.mark.parametrize('default_encoding', ['cp1252', 'ascii'])

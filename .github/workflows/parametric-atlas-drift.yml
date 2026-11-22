@@ -12,12 +12,29 @@ name: Parametric atlas drift
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, edited]
+    types: [opened, synchronize, reopened, edited, ready_for_review]
+    # The atlas fingerprint covers the registry spec, the workflow input, the
+    # listed source files and the standards table, all under these paths. Pushes
+    # to main and develop stay unfiltered, so a missed path still shows on main.
+    paths:
+      - 'src/**'
+      - 'atlases/**'
+      - 'docs/registry/**'
+      - 'docs/plans/parametric-refresh/**'
+      - 'examples/workflows/**'
+      - 'config/**'
+      - 'tests/parametric/**'
+      - 'tests/conftest.py'
+      - 'pytest.ini'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/parametric-atlas-drift.yml'
   push:
     branches: [main, develop]
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
+  # A title or description edit gets a group of its own, so its no-op run cancels nothing.
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}${{ (github.event.action == 'edited' && !github.event.changes.base) && format('-metadata-edit-{0}', github.run_id) || '' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -25,7 +42,11 @@ permissions:
 
 jobs:
   atlas-drift:
-    name: Atlas staleness check
+    name: "${{ (github.event.action == 'edited' && !github.event.changes.base) && 'Not run for a metadata edit - Atlas staleness check' || 'Atlas staleness check' }}"
+    # Draft pull requests wait: the gates start when the pull request is marked ready.
+    # A title or description edit ("edited" without a base change) runs no job. The job then
+    # takes another name, so its skipped check does not stand in for an earlier result.
+    if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.draft) && !(github.event.action == 'edited' && !github.event.changes.base) }}
     runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - &atlas-checkout
@@ -125,7 +146,10 @@ jobs:
         run: python -m digitalmodel.parametric.refresh
 
   parametric-tests:
-    name: Parametric package tests
+    name: "${{ (github.event.action == 'edited' && !github.event.changes.base) && 'Not run for a metadata edit - Parametric package tests' || 'Parametric package tests' }}"
+    # A title or description edit ("edited" without a base change) runs no job. The job then
+    # takes another name, so its skipped check does not stand in for an earlier result.
+    if: ${{ !(github.event.action == 'edited' && !github.event.changes.base) }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code with full history

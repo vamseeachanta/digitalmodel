@@ -18,7 +18,7 @@ def register():
     """Hand basis: min(10, 4) = 4 for A; B = 12, C = 0, D = 6 years."""
     return pd.DataFrame(
         {
-            "component": ["Main"] * 5,
+            "component": ["Line A"] * 5,
             "joint_id": ["A", "A", "B", "C", "D"],
             "min_life_years": [10.0, 4.0, 12.0, 0.0, 6.0],
         }
@@ -36,7 +36,7 @@ def test_every_contributing_life_is_validated(register, joint_id, life):
     register = pd.DataFrame(
         [
             *register.to_dict("records"),
-            {"component": "Main", "joint_id": joint_id, "min_life_years": life},
+            {"component": "Line A", "joint_id": joint_id, "min_life_years": life},
         ]
     )
     with pytest.raises(ValueError, match="finite nonnegative life for every row"):
@@ -60,7 +60,7 @@ def test_temporal_life_columns_are_rejected(dtype, life):
     """Dates and durations are not numeric years, even when time counts are >= 0."""
     register = pd.DataFrame(
         {
-            "component": ["Main"],
+            "component": ["Line A"],
             "joint_id": ["A"],
             "min_life_years": pd.Series([life], dtype=dtype),
         }
@@ -99,7 +99,7 @@ def test_valid_totals_and_boundaries_are_preserved(register, numeric_text):
         min_high_fatigue_joints=3,
     )
     assert result == {
-        "component": "Main",
+        "component": "Line A",
         "n_joints": 4,
         "campaign_years": 2.0,
         "min_high_fatigue_joints": 3,
@@ -133,7 +133,7 @@ def test_valid_totals_and_boundaries_are_preserved(register, numeric_text):
     pd.testing.assert_frame_equal(register, original)
 
 
-@pytest.mark.parametrize("component", ["Main", "Auxiliary"])
+@pytest.mark.parametrize("component", ["Line A", "Auxiliary"])
 def test_only_selected_component_contributes(register, component):
     """The same four-joint hand basis applies; invalid other rows contribute none."""
     register["component"] = component

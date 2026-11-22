@@ -108,6 +108,7 @@ Table 1. Capability status by riser type.
 | Flexible pipe | `data/flexible_pipe/data.json` | 0 | empty (schema and citation contract only) | citation_id per row resolved in sources.yml |
 | Structural sections | `data/riser_database/structure_properties/data.json` | 0 | empty (schema and citation contract only) | citation_id per row resolved in sources.yml |
 | Buoyancy modules | `data/riser_buoyancy/data.json` | 0 | empty (schema and citation contract only) | citation_id per row resolved in sources.yml |
+| Tensioners | `data/riser_tensioners/data.json` | 0 | empty (schema and citation contract only) | citation_id per row resolved in sources.yml |
 | Soil | `data/soil_stiffness/data.json` | 0 | empty (schema and citation contract only) | citation_id per row resolved in sources.yml |
 | Soil | `data/geotechnical/geotech_database.yaml` | - | format not counted | source_id, locator and licence per row |
 | S-N curves, stress concentration and design fatigue factors | `data/riser_database/material_sn_scf_dff.csv` | 3 | populated | code_id and wiki_path columns |
