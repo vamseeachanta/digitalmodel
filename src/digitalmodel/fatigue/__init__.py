@@ -77,20 +77,35 @@ from .environmental_correction import (
 
 # Re-exports from digitalmodel.structural.fatigue for the migration-test
 # convenience API (see tests/structural/fatigue/test_fatigue_migration.py).
-from digitalmodel.structural.fatigue.analysis import (
-    FatigueAnalysisEngine,
-    FatigueAnalysisConfig,
-    MultislopeSNCurve,
-    quick_time_domain_analysis,
-    quick_frequency_domain_analysis,
-)
-from digitalmodel.structural.fatigue.sn_curves import (
-    StandardSNCurves,
-    get_dnv_curve,
-)
-from digitalmodel.structural.fatigue.damage_accumulation import (
-    LinearDamageAccumulation,
-)
+# They resolve on first access (PEP 562), not at import: loading this package
+# no longer loads digitalmodel.structural.fatigue, so the static import graph
+# that selects tests stops routing every importer of digitalmodel.fatigue to
+# the structural fatigue tests (docs/ci/import-hubs-2026-11-22.md).
+_STRUCTURAL_FATIGUE_EXPORTS = {
+    "FatigueAnalysisEngine": "analysis",
+    "FatigueAnalysisConfig": "analysis",
+    "MultislopeSNCurve": "analysis",
+    "quick_time_domain_analysis": "analysis",
+    "quick_frequency_domain_analysis": "analysis",
+    "StandardSNCurves": "sn_curves",
+    "get_dnv_curve": "sn_curves",
+    "LinearDamageAccumulation": "damage_accumulation",
+}
+
+
+def __getattr__(name):
+    module = _STRUCTURAL_FATIGUE_EXPORTS.get(name)
+    if module is None:
+        raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+    from importlib import import_module
+
+    value = getattr(import_module(f"digitalmodel.structural.fatigue.{module}"), name)
+    globals()[name] = value  # later lookups bypass __getattr__
+    return value
+
+
+def __dir__():
+    return sorted(set(globals()) | set(_STRUCTURAL_FATIGUE_EXPORTS))
 
 __all__ = [
     # Original modules
