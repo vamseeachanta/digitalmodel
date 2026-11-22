@@ -152,6 +152,8 @@ class WaveParameters:
     Wave spectrum parameters for sea state definition
 
     Supports multiple spectrum types with their characteristic parameters.
+    Frequency defaults are resolved once at construction; changing peak_period
+    later does not re-resolve freq_max or n_frequencies.
     """
     spectrum_type: WaveSpectrumType
     significant_height: float  # Hs (m)
@@ -162,8 +164,8 @@ class WaveParameters:
 
     # Frequency range for spectrum generation
     freq_min: float = 0.02  # rad/s
-    freq_max: float = 2.0   # rad/s
-    n_frequencies: int = 100
+    freq_max: Optional[float] = None  # rad/s; default 15 x peak frequency
+    n_frequencies: Optional[int] = None  # 200, or 100 with explicit freq_max
 
     # Ochi-Hubble bimodal parameters
     hs_swell: Optional[float] = None
@@ -177,6 +179,11 @@ class WaveParameters:
             raise ValueError("Peak period must be positive")
         if self.gamma <= 0:
             raise ValueError("Gamma must be positive")
+        from .wave_spectra import default_frequency_grid
+
+        self.freq_max, self.n_frequencies = default_frequency_grid(
+            self.peak_period, self.freq_max, self.n_frequencies
+        )
         if self.freq_min >= self.freq_max:
             raise ValueError("freq_min must be less than freq_max")
 
