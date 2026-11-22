@@ -386,16 +386,29 @@ def main(argv: list[str]) -> int:
               f"(operator); not auto-regenerated: {stale_libs}")
 
     if apply and stale_ids:
+        remaining_stale = []
         try:
             for wid in stale_ids:
                 print(f"refreshing {wid} ...")
                 reason = _rebuild_atlas(wid)
                 if reason is not None:
                     validation_failures.append((wid, reason))
+                else:
+                    status = refresh_status(wid)
+                    if status["stale"]:
+                        remaining_stale.append(wid)
+                        location = Path(os.path.relpath(DEFAULT_ATLAS_ROOT, REPO_ROOT))
+                        if "basename" in status:
+                            location /= status["basename"]
+                        if "atlas_id" in status:
+                            location /= status["atlas_id"]
+                        print(f"  ERROR: {wid} still stale after rebuild at {location.as_posix()} "
+                              f"({status['reason']}); stored={status['stored']} "
+                              f"current={status['current']}")
         finally:
             for wid, reason in validation_failures:
                 print(f"  WARNING: {wid} {reason}")
-        stale_ids = []  # attempted; validation failures take precedence
+        stale_ids = remaining_stale
 
     if not stale_ids and not stale_libs and not validation_failures:
         print("all atlases current")

@@ -1,0 +1,84 @@
+schema_version: 1
+families:
+  - id: operability-grid
+    status: pending
+    workflow: orcaflex-run-batch
+    vessel_id: null
+    base_input: null
+    axes:
+      - {name: heading, unit: deg}
+      - {name: hs, unit: m}
+      - {name: tp, unit: s}
+    variants: {source: factorial}
+    grid: null
+    batch_size: null
+    outputs: [Per-case response summaries and run identifiers]
+    consumer: Operability envelopes and weather-window assessment
+    prerequisites:
+      - {issue: 1554, reason: Verify batch workflow and eligible base inputs}
+      - {issue: 1556, reason: Review the operability consumer contract}
+    unresolved:
+      vessel_id: Vessel eligibility and input rights require review
+      base_input: No reviewed base input is assigned
+      grid: Heading and sea-state limits require a reviewed basis
+      batch_size: Mini-run sizing requires runtime and resource evidence
+  - id: frequency-mesh
+    status: pending
+    workflow: orcawave-diffraction-solve
+    vessel_id: null
+    base_input: null
+    axes:
+      - {name: frequency, unit: rad/s}
+      - {name: mesh_density, unit: panels}
+    variants: {source: yaml_matrix}
+    grid: null
+    batch_size: null
+    outputs: [Hydrodynamic response and convergence summaries]
+    consumer: Frequency-grid and mesh-convergence assessment
+    prerequisites:
+      - {issue: 612, reason: Review convergence inputs and comparison criteria}
+      - {issue: 1555, reason: Verify thread-count wiring against the selected workflow}
+    unresolved:
+      vessel_id: Vessel eligibility and input rights require review
+      base_input: No reviewed mesh and diffraction input is assigned
+      grid: Frequency convention and mesh refinements require a reviewed basis
+      batch_size: Mini-run sizing requires runtime and resource evidence
+  - id: roll-damping
+    status: pending
+    workflow: orcawave-diffraction-solve
+    vessel_id: null
+    base_input: null
+    axes:
+      - {name: damping_ratio, unit: "1"}
+    variants: {source: range}
+    grid: null
+    batch_size: null
+    outputs: [Roll response sensitivity summaries]
+    consumer: Roll-damping sensitivity band assessment
+    prerequisites:
+      - {issue: 1538, reason: Review damping basis and response provenance}
+    unresolved:
+      vessel_id: Vessel eligibility and input rights require review
+      base_input: No reviewed damping model is assigned
+      grid: Damping-ratio bounds and increments require a reviewed basis
+      batch_size: Mini-run sizing requires runtime and resource evidence
+  - id: coupled-roll
+    status: pending
+    workflow: coupled-roll-study
+    vessel_id: null
+    base_input: null
+    axes:
+      - {name: roll_period, unit: s}
+      - {name: fill_level, unit: "1"}
+    variants: {source: factorial}
+    grid: null
+    batch_size: null
+    outputs: [Coupled roll response and inventory summaries]
+    consumer: Vessel-specific roll response versus fill level
+    prerequisites:
+      - {issue: 1528, reason: Establish a reviewed coupled roll model and workflow}
+    unresolved:
+      vessel_id: Vessel eligibility and input rights require review
+      base_input: The coupled roll model remains unreviewed; coupled-roll-study is proposed and unregistered
+      grid: Roll-period and fill-fraction ranges require a reviewed basis
+      batch_size: Mini-run sizing requires runtime and resource evidence

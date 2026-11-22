@@ -8,22 +8,27 @@
 #   1. Every run reports its own scope -- how many shards ran, how many did not,
 #      and which -- in the "Detect touched test domains" and "Domain test
 #      aggregate" job summaries.
-#   2. `.github/workflows/full-matrix-sweep.yml` runs EVERY shard on every push
-#      to `main` and nightly, under its own distinct check names. The nightly
+#   2. `.github/workflows/full-matrix-sweep.yml` runs EVERY shard nightly and
+#      on manual dispatch, under its own distinct check names. A push to `main`
+#      runs the touched domains here. The nightly
 #      cron formerly lived here; it moved there so that a full-sweep failure is
 #      never posted under the same check names as the gated pull-request lane.
 name: Quality Gates by Domain
 
 "on":
   pull_request:
-    # All edits rerun gates: filtering jobs to base edits could mask failures with skips.
-    types: [opened, synchronize, reopened, edited]
+    # "edited" is the only event sent for a base change, which changes the tree
+    # under test, so it starts the gates. It also fires on every title or
+    # description edit; no gate reads either, and for those every job below is
+    # skipped under another name (docs/ci/rerun-rules.md, R2).
+    types: [opened, synchronize, reopened, edited, ready_for_review]
   push:
     branches: [main, develop]
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}
+  # A title or description edit gets a group of its own, so its no-op run cancels nothing.
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || format('run-{0}', github.run_id) }}${{ (github.event.action == 'edited' && !github.event.changes.base) && format('-metadata-edit-{0}', github.run_id) || '' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
@@ -32,8 +37,14 @@ permissions:
 
 jobs:
   detect-domains:
-    name: Detect touched test domains
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
+    name: "${{ (github.event.action == 'edited' && !github.event.changes.base) && 'Not run for a metadata edit - Detect touched test domains' || 'Detect touched test domains' }}"
+    # Draft pull requests wait: detection is skipped, so every job that needs it is
+    # skipped too, and the gates start when the pull request is marked ready.
+    # A title or description edit ("edited" without a base change) runs no job. The job then
+    # takes another name, so its skipped check does not stand in for an earlier result.
+    if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.draft) && !(github.event.action == 'edited' && !github.event.changes.base) }}
+    # Light job on a hosted runner: it only selects shards, and on the self-hosted pool it queued behind them.
+    runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.detect.outputs.matrix }}
       has-domains: ${{ steps.detect.outputs.has_domains }}
@@ -138,8 +149,13 @@ jobs:
           PUSH_AFTER_SHA: ${{ github.event.after }}
         run: |
           if [ "$EVENT_NAME" = "pull_request" ]; then
+            # Compare from the fork point. Comparing the base tip with the head
+            # directly also lists everything the base gained since the fork, so
+            # one source merge on the base dispatched every shard for every
+            # pull request behind it. The jobs still test the merged tree.
             matrix=$(uv run --no-sources python scripts/ci/detect_touched_domains.py \
               --mode touched \
+              --diff-from merge-base \
               --base "$PR_BASE_SHA" \
               --head "$PR_HEAD_SHA" \
               --domains-file tests/DOMAINS.md \
@@ -188,7 +204,9 @@ jobs:
           uv run --no-sources python scripts/ci/report_shard_scope.py
 
   ci-harness-tests:
-    name: CI harness and compliance tests
+    name: "${{ (github.event.action == 'edited' && !github.event.changes.base) && 'Not run for a metadata edit - CI harness and compliance tests' || 'CI harness and compliance tests' }}"
+    # For a title or description edit this job is skipped with the job it needs, and
+    # takes another name so that its skipped check replaces no earlier result.
     needs: detect-domains
     runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
@@ -285,12 +303,18 @@ jobs:
             tests/docs/test_implementation_map.py \
             tests/docs/test_implementation_map_search.py \
             tests/scripts/test_ci_baseline.py \
+            tests/scripts/test_step_timings.py \
+            tests/scripts/test_coverage_gate.py \
+            tests/scripts/test_closure_selection.py \
+            tests/scripts/test_orphan_tests.py \
             tests/scripts/test_run_shard.py \
+            tests/scripts/test_trust_report.py \
             tests/contracts/test_flaky_register_schema.py \
             tests/contracts/test_vba_credit.py \
             tests/workflows/automation/test_quality_gates.py \
             tests/workflows/test_durable_workflows.py \
             tests/workflows/test_ci_triggers.py \
+            tests/workflows/test_sweep_parity.py \
             tests/riser_bom/test_ci.py \
             -q --tb=line
 
@@ -298,8 +322,10 @@ jobs:
         run: uv run --no-sources python scripts/generate_implementation_map.py
 
   domain-tests:
-    name: tests-${{ matrix.domain }}
+    name: "${{ (github.event.action == 'edited' && !github.event.changes.base) && 'Not run for a metadata edit - tests' || format('tests-{0}', matrix.domain) }}"
     needs: detect-domains
+    # For a title or description edit this job is skipped with the job it needs, and
+    # takes another name so that its skipped check replaces no earlier result.
     if: needs.detect-domains.outputs.has-domains == 'true'
     runs-on: ${{ matrix.runner }}
     strategy:
@@ -425,10 +451,7 @@ jobs:
 
           with open(".claude/quality-gates.yaml", encoding="utf-8") as handle:
               gates = yaml.safe_load(handle)["gates"]
-          command = gates[os.environ["GATE_NAME"]]["command"]
-          if os.environ["GATE_NAME"] == "tests-subsea":
-              command += " tests/riser_fatigue/ tests/riser_bom/"
-          print(command)
+          print(gates[os.environ["GATE_NAME"]]["command"])
           PY
           )
           {
@@ -460,10 +483,7 @@ jobs:
 
       - name: Run geotechnical solver benchmarks
         if: matrix.domain == 'specialized'
-        run: >-
-          PYTHONPATH=src uv run --no-sources --with-editable '.[test]'
-          --with 'xslope==1.0.3' --with 'gmsh>=4.15'
-          python -m pytest tests/geotechnical -q -rA -p no:cacheprovider
+        run: bash tests/geotechnical/run_solver_benchmarks.sh
 
       - name: Extract shard result
         if: always()
@@ -491,10 +511,13 @@ jobs:
           retention-days: 30
 
   domain-tests-required:
-    name: Domain test aggregate
+    name: "${{ (github.event.action == 'edited' && !github.event.changes.base) && 'Not run for a metadata edit - Domain test aggregate' || 'Domain test aggregate' }}"
     needs: [detect-domains, ci-harness-tests, domain-tests]
-    if: always()
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
+    # A title or description edit ("edited" without a base change) runs no job. The job then
+    # takes another name, so its skipped check does not stand in for an earlier result.
+    if: ${{ always() && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && !(github.event.action == 'edited' && !github.event.changes.base) }}
+    # Light job on a hosted runner: it reads the results of the jobs above.
+    runs-on: ubuntu-latest
     steps:
       - name: Report scope of this result
         # States what this check actually covered, so a green aggregate cannot be
@@ -521,7 +544,7 @@ jobs:
             {
               echo "A pass here means **${SELECTED_COUNT:-?} of ${TOTAL_COUNT:-?} shards**"
               echo "passed. The other ${SKIPPED_COUNT:-?} were not executed by this run;"
-              echo "they run in full on every push to \`main\` and nightly via the"
+              echo "every shard runs nightly and on manual dispatch in the"
               echo "\`Full Matrix Sweep\` workflow."
               echo
               echo "Not run: \`${SKIPPED_DOMAINS}\`"

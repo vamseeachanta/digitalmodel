@@ -8,7 +8,9 @@ from USNA EN400 Chapter 1.
 """
 from __future__ import annotations
 
+import math
 import warnings
+from numbers import Real
 from pathlib import Path
 from typing import Optional
 
@@ -123,3 +125,41 @@ def interpolate_water_density(
             return rho0 + (temp_f - t0) / (t1 - t0) * (rho1 - rho0)
 
     raise ValueError(f"Temperature {temp_f}°F out of table range")
+
+
+def _validate_strain_length(value: float, name: str) -> None:
+    """Validate one length for the engineering-strain helper only."""
+    if isinstance(value, bool) or not isinstance(value, Real):
+        raise TypeError(f"{name} must be a real scalar, not a boolean")
+    if not math.isfinite(value):
+        raise ValueError(f"{name} must be finite")
+
+
+def engineering_strain(original_length_ft: float, elongation_ft: float) -> float:
+    """Return signed dimensionless engineering strain, elongation / original length.
+
+    Both lengths are finite real scalars in feet. Negative elongation denotes
+    compression; zero denotes no change. Validation applies only to this helper;
+    the older helpers retain their permissive behavior.
+
+    Source: USNA EN400, Principles of Ship Performance, Summer 2020,
+    section 5.2.2, printed p. 5-4 (PDF p. 195), Example 5.2.
+    https://www.usna.edu/NAOE/_files/documents/Courses/EN400/EN400_Course_Notes,_Summer_2020.pdf
+    This length ratio is not a material acceptance criterion or an allowable.
+
+    Args:
+        original_length_ft: Strictly positive original length in feet.
+        elongation_ft: Signed change in length in feet.
+
+    Returns:
+        Signed engineering strain in ft/ft (dimensionless).
+
+    Raises:
+        TypeError: Either length is a boolean or is not a real scalar.
+        ValueError: Either length is nonfinite or original length is nonpositive.
+    """
+    _validate_strain_length(original_length_ft, "original_length_ft")
+    _validate_strain_length(elongation_ft, "elongation_ft")
+    if original_length_ft <= 0:
+        raise ValueError("original_length_ft must be strictly positive")
+    return float(elongation_ft / original_length_ft)

@@ -32,6 +32,7 @@ if ORCAWAVE_AVAILABLE:
 
 from digitalmodel.hydrodynamics.diffraction.comparison_framework import compare_diffraction_results
 from digitalmodel.hydrodynamics.diffraction.batch_processor import process_batch_from_config_file
+from digitalmodel.hydrodynamics.diffraction.export_contract import format_export
 
 
 def _display_verdict(verdict: str) -> str:
@@ -55,8 +56,9 @@ def _echo_validation_block(result) -> None:
         click.echo(f"  OWR        : {owr}")
     if result.data_file is not None:
         click.echo(f"  Data file  : {result.data_file}")
-    click.echo(f"  XLSX       : {result.xlsx_path or '(deferred)'}")
-    click.echo(f"  Report     : {result.report_path or '(none)'}")
+    exports = result.export_dispositions
+    click.echo(f"  XLSX       : {format_export(exports['xlsx'])}")
+    click.echo(f"  Report     : {format_export(exports['report'])}")
     verdict = result.validation_verdict
     color = {
         "PASS": "green",

@@ -30,6 +30,12 @@ imports no solver adapter and executes no solver. It is a standalone Python-modu
 workflow; the general engine and the retired chatbot route are not used.
 The callable interfaces are `screen_member(item)` and `screen_campaign(config)`.
 
+Registry discovery: [workflows.yaml](../../registry/workflows.yaml) lists
+`jacket-damaged-member-screen` version 1 as `experimental`, `latest: false`,
+and `runtime: standalone`. The [example guide](../../../examples/workflows/jacket-damaged-member-screen/README.md)
+gives the registered invocation and its JSON/HTML output paths. Registration
+does not establish engineering acceptance or general-engine dispatch.
+
 All example inputs are synthetic demonstrations, not measurements. The example
 contains three independently assessed members; its results are not a combined
 platform resistance calculation.

@@ -335,6 +335,12 @@ modules:
     owner_wiki: docs/domains/README.md
     key_tests: [tests/naval_architecture/]
     operator_map_row: docs/maps/digitalmodel-operator-map.md#naval_architecture
+  - module: riser_reporting
+    entry_point: src/digitalmodel/riser_reporting/
+    maturity: beta
+    owner_wiki: docs/domains/risers/riser-fatigue-report-view.md
+    key_tests: [tests/reporting/test_riser_fatigue_view.py]
+    operator_map_row: docs/maps/digitalmodel-operator-map.md#riser_reporting
   - module: reporting
     entry_point: src/digitalmodel/reporting/
     maturity: beta

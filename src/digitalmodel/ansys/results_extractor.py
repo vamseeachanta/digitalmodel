@@ -576,26 +576,14 @@ class ResultsExtractor:
         Raises
         ------
         ValueError
-            If the token count is odd, or a value is not numeric. A malformed
-            digest must fail loudly: it is the artifact a golden comparison
-            reads, so a silent partial parse would compare against nothing.
+            If the digest is empty, has incomplete or blank fields, repeats a
+            label ignoring case, or contains a number outside the bounded
+            decimal grammar. Original label spelling is retained; required
+            engineering fields and units remain the consumer's responsibility.
         """
-        tokens = [t.strip() for t in csv_text.strip().replace("\n", ",").split(",")]
-        tokens = [t for t in tokens if t]
-        if len(tokens) % 2 != 0:
-            raise ValueError(
-                f"digest has an odd token count ({len(tokens)}); "
-                "expected flat label,value pairs"
-            )
-        out: dict[str, float] = {}
-        for label, value in zip(tokens[0::2], tokens[1::2]):
-            try:
-                out[label] = float(value)
-            except ValueError as exc:
-                raise ValueError(
-                    f"digest field {label!r} has non-numeric value {value!r}"
-                ) from exc
-        return out
+        from digitalmodel.ansys.analysis_evidence import parse_digest
+
+        return {label: float(value) for label, value in parse_digest(csv_text, set()).items()}
 
     def export_results(
         self, summary: "ResultSummary", format: str = "json"

@@ -102,6 +102,90 @@ def test_bollard_label_discloses_unvalidated_primary_limit(example):
     assert "primary mathematical limit" in example["CAPTION"]
 
 
+@pytest.mark.parametrize("speed,shaft_speed,regime,statuses", [
+    (6.173328, 2.0, "ahead", (
+        "illustrative_arithmetic", "illustrative_arithmetic",
+        "illustrative_arithmetic", "illustrative_arithmetic",
+    )),
+    (6.173328, 0.0, "engine_off", (
+        "model_assumed_zero", "model_assumed_zero",
+        "freestream_only_approximation", "freestream_only_approximation",
+    )),
+    (6.173328, 0.75, "braking", (
+        "omitted_missing_four_quadrant_basis", "omitted_missing_four_quadrant_basis",
+        "freestream_only_approximation", "freestream_only_approximation",
+    )),
+    (0.0, 2.0, "bollard", (
+        "illustrative_arithmetic", "unvalidated_mathematical_limit",
+        "not_evaluated", "unvalidated_mathematical_limit",
+    )),
+])
+def test_csv_statuses_distinguish_omitted_approximate_and_zero(
+    example, speed, shaft_speed, regime, statuses,
+):
+    """Each reported quantity shall carry its evaluation basis per regime."""
+    point = pr.driveoff_sweep(speed, [shaft_speed], 20.0, VESSEL, RUDDER)[0]
+    row = example["_csv_row"](point)
+    assert row["regime"] == regime
+    fields = ("thrust_status", "primary_status", "fallback_status", "slipstream_status")
+    assert tuple(row[field] for field in fields) == statuses
+    if regime == "engine_off":
+        assert row["T"] == row["primary_F_sway_N"] == 0.0
+    elif regime == "braking":
+        assert row["T"] is row["primary_F_sway_N"] is None
+    elif regime == "bollard":
+        assert row["fallback_F_sway_N"] is None
+        assert row["primary_F_sway_N"] != 0.0
+
+
+def test_statuses_survive_csv_export_and_are_disclosed_on_plots(
+    example, tmp_path, monkeypatch,
+):
+    """CSV consumers and both plot captions shall receive the evaluation basis."""
+    from matplotlib.figure import Figure
+
+    captions = []
+    savefig = Figure.savefig
+
+    def capture(figure, filename, *args, **kwargs):
+        captions.append("\n".join(text.get_text() for text in figure.texts))
+        return savefig(figure, filename, *args, **kwargs)
+
+    monkeypatch.setattr(Figure, "savefig", capture)
+    manifest = example["main"](output_dir=tmp_path)
+    with manifest["csv"].open(encoding="utf-8", newline="") as stream:
+        rows = list(csv.DictReader(stream))
+    assert rows[0]["thrust_status"] == "model_assumed_zero"
+    assert rows[0]["T"] == "0.0"
+    for row in rows[1:4]:
+        assert row["thrust_status"] == "omitted_missing_four_quadrant_basis"
+        assert row["primary_status"] == "omitted_missing_four_quadrant_basis"
+        assert row["T"] == row["primary_F_sway_N"] == ""
+    assert rows[-1]["slipstream_status"] == "illustrative_arithmetic"
+    assert len(captions) == 2
+    for caption in captions:
+        for phrase in ("CSV statuses", "model-assumed zero", "freestream-only",
+                       "illustrative arithmetic", "slipstream limit unvalidated"):
+            assert phrase in caption
+
+
+def test_example_acceptance_matrix_matches_status_columns(example):
+    """The documented regime matrix shall match the exported status contract."""
+    text = (ROOT / "docs/domains/hydrodynamics/propeller-rudder-method-selection.md").read_text(
+        encoding="utf-8",
+    )
+    assert "### Example acceptance matrix" in text
+    for speed, shaft_speed in ((6.173328, 2.0), (6.173328, 0.0),
+                               (6.173328, 0.75), (0.0, 2.0)):
+        point = pr.driveoff_sweep(speed, [shaft_speed], 20.0, VESSEL, RUDDER)[0]
+        row = example["_csv_row"](point)
+        matrix_row = next(line for line in text.splitlines()
+                          if line.startswith(f"| `{point.regime}` |"))
+        cells = [cell.strip().strip("`") for cell in matrix_row.split("|")[1:-1]]
+        assert cells == [point.regime, row["thrust_status"], row["primary_status"],
+                         row["fallback_status"], row["slipstream_status"]]
+
+
 def test_method_selection_indexes_current_driveoff_tests_and_limits():
     text = (ROOT / "docs/domains/hydrodynamics/propeller-rudder-method-selection.md").read_text(
         encoding="utf-8",

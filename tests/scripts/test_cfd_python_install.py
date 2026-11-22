@@ -6,6 +6,8 @@ import subprocess
 import tomllib
 from pathlib import Path
 
+import yaml
+
 
 ROOT = Path(__file__).resolve().parents[2]
 PYPROJECT = ROOT / "pyproject.toml"
@@ -20,7 +22,8 @@ OPENMPI_VERSION = "4.1.6-7ubuntu2"
 INSTALLER_SHA256 = "f7fa288327e936b5a85e3e4a0b29bf039c06d214916f39400b830b63a3310b5b"
 ASSETUTILITIES_COMMIT = "993f1b5ddc90b56ecf531bedb1b84f5efe096700"
 ASSETUTILITIES_TREE = "5f7434fcb3a348a7e04bf9de228e6ce2c49a87cb"
-ACTIONLINT_COMMIT = "914e7df21a07ef503a81201c76d2b11c789d3fca"
+ACTIONLINT_VERSION = "1.7.12"
+ACTIONLINT_SHA256 = "8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8"
 
 
 def _read(path: Path) -> str:
@@ -160,14 +163,41 @@ def test_gmsh_workflow_pins_sibling_and_validation_tools() -> None:
     assert workflow.count('"examples/cfd/synthetic_l_tank/input.yml"') == 2
     assert workflow.count('"docs/api/cfd/synthetic-l-tank-smoke.json"') == 2
     assert (
-        "go install github.com/rhysd/actionlint/cmd/actionlint@"
-        f"{ACTIONLINT_COMMIT}" in workflow
-    )
-    assert '"$(go env GOPATH)/bin/actionlint"' in workflow
-    assert (
         "python -m digitalmodel.solvers.openfoam.smoke_evidence "
         "docs/api/cfd/synthetic-l-tank-smoke.json" in workflow
     )
+
+
+def test_gmsh_workflow_verifies_actionlint_release_before_use() -> None:
+    workflow = yaml.safe_load(_read(WORKFLOW))
+    steps = workflow["jobs"]["focused-tests"]["steps"]
+    install = next(step for step in steps if step["name"] == "Install pinned actionlint")
+    lint = next(step for step in steps if step["name"] == "Lint workflow syntax")
+
+    assert install["env"]["ACTIONLINT_VERSION"] == ACTIONLINT_VERSION
+    assert install["env"]["ACTIONLINT_SHA256"] == ACTIONLINT_SHA256
+    script = install["run"]
+    assert "set -euo pipefail" in script
+    assert 'archive="actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"' in script
+    assert 'dir="$RUNNER_TEMP/actionlint"' in script
+    download = 'curl -fsSL --retry 3 -o "$dir/$archive"'
+    release = (
+        "https://github.com/rhysd/actionlint/releases/download/"
+        "v${ACTIONLINT_VERSION}/${archive}"
+    )
+    checksum = 'echo "${ACTIONLINT_SHA256}  $dir/$archive" | sha256sum -c -'
+    extract = 'tar -xzf "$dir/$archive" -C "$dir" actionlint'
+    execute = '"$dir/actionlint" -version'
+    assert release in script
+    assert script.index(download) < script.index(checksum)
+    assert script.index(checksum) < script.index(extract) < script.index(execute)
+    assert lint["run"].strip() == (
+        '"$RUNNER_TEMP/actionlint/actionlint" .github/workflows/gmsh-meshing-tests.yml'
+    )
+    assert steps.index(install) < steps.index(lint)
+    for command in (script, lint["run"]):
+        assert "go install" not in command
+        assert "go env" not in command
 
 
 def test_solver_quality_gate_installs_cfd_runtime() -> None:

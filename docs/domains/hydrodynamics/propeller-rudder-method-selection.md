@@ -322,6 +322,47 @@ wrong moment sign for an aft rudder with unsigned x_R: the physical relation is
 N = -x_R * F_sway. Correcting the underlying models and their existing registry
 expectations remains separate work; the example exports surge and sway only.
 
+### Example acceptance matrix
+
+The following reporting contract applies to `examples/propeller_rudder_driveoff.py`
+only. It supersedes the earlier requirement to export braking loads and numeric
+yaw in this example. CSV status columns shall identify the evaluation basis
+without replacing omitted cells with zero. Existing numeric columns, labels,
+`yaw_status` and primary braking gaps in the plots shall remain unchanged.
+
+| Regime | `thrust_status` | `primary_status` | `fallback_status` | `slipstream_status` |
+|--------|-----------------|------------------|-------------------|---------------------|
+| `ahead` | `illustrative_arithmetic` | `illustrative_arithmetic` | `illustrative_arithmetic` | `illustrative_arithmetic` |
+| `engine_off` | `model_assumed_zero` | `model_assumed_zero` | `freestream_only_approximation` | `freestream_only_approximation` |
+| `braking` | `omitted_missing_four_quadrant_basis` | `omitted_missing_four_quadrant_basis` | `freestream_only_approximation` | `freestream_only_approximation` |
+| `bollard` | `illustrative_arithmetic` | `unvalidated_mathematical_limit` | `not_evaluated` | `unvalidated_mathematical_limit` |
+
+Table 1. Evaluation basis for thrust, primary increment, fallback total force and axial slipstream.
+
+- `illustrative_arithmetic` identifies a computed value using the unsourced
+  illustrative polynomial; it does not establish a source-qualified prediction.
+- `model_assumed_zero` identifies the engine-off thrust and primary increment
+  imposed by the model. These are neither measured zeros nor locked/free-wheeling
+  propeller predictions.
+- `omitted_missing_four_quadrant_basis` identifies blank braking thrust and primary
+  force cells. No braking propeller load is inferred from those omissions.
+- `freestream_only_approximation` identifies engine-off/braking fallback force and
+  axial velocity computed without propeller drag or windmilling effects.
+- `unvalidated_mathematical_limit` identifies the bollard primary increment and
+  axial slipstream limit; finite arithmetic does not establish validated loading.
+- `not_evaluated` identifies the absent bollard fallback force, rather than zero.
+
+Both plots shall disclose these status semantics in their caption. The force
+curves shall retain the distinction between an interaction increment and a total
+force, with braking primary points absent. The CSV shall retain `yaw_status`;
+numeric yaw columns are omitted.
+
+The parent study remains incomplete: locked and free-wheeling treatment,
+source-qualified four-quadrant braking loads, corrected yaw and source-qualified
+full-envelope validation remain open. This example contract does not establish
+those results or complete the literature and implementation acceptance criteria
+for the full operating envelope.
+
 Tests (counts will vary as regression coverage grows):
 
 - `tests/test_propeller_rudder_interaction.py`
