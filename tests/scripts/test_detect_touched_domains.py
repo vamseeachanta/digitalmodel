@@ -360,7 +360,7 @@ def test_no_domain_changes_output_empty_matrix(tmp_path: Path) -> None:
     )
     init_repo(tmp_path)
     changed_paths = (
-        tmp_path / "scripts" / "ci" / "detect_touched_domains.py",
+        tmp_path / ".github" / "workflows" / "quality-gates.yml",
         tmp_path
         / "tests"
         / "marine_ops"
@@ -1225,7 +1225,7 @@ def test_base_only_pin_still_routes_after_removal(tmp_path: Path) -> None:
 def test_pinned_no_domain_path_selects_contracts() -> None:
     detector = load_detector_module()
     domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
-    path = "scripts/ci/detect_touched_domains.py"
+    path = ".github/workflows/quality-gates.yml"
     assert detector.is_no_domain_path(path)
     selected = detector.touched_domains([path], domains, pinned_paths={path})
     assert {d.name for d in selected} == {"contracts"}

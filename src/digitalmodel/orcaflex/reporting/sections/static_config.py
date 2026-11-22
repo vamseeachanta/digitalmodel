@@ -1,25 +1,23 @@
 """Section 2: Static configuration — line profile summary table."""
 from __future__ import annotations
 
+from ._common import deprecated_alias_getattr, kv_table, lines, vessels
 
-def _render_table(rows: list[tuple[str, str]]) -> str:
-    trs = "\n".join(
-        f"    <tr><td>{label}</td><td><strong>{value}</strong></td></tr>"
-        for label, value in rows
-    )
-    return f'<table class="ofx">\n{trs}\n</table>'
+# Deprecated: ``_render_table`` moved to ``_common.kv_table``; the old name
+# still resolves, with a warning.
+__getattr__ = deprecated_alias_getattr(__name__, {"_render_table": "kv_table"})
 
 
 def build_static_config(model, config) -> str:
     """Build static configuration section HTML."""
     import OrcFxAPI
 
-    lines = [o for o in model.objects if isinstance(o, OrcFxAPI.Line)]
-    if not lines:
+    line_objs = lines(model)
+    if not line_objs:
         return "<p>No line objects found in model.</p>"
 
     parts = []
-    for line in lines:
+    for line in line_objs:
         try:
             top_t = line.StaticResult("Effective Tension", OrcFxAPI.oeEndA)
             bot_t = line.StaticResult("Effective Tension", OrcFxAPI.oeEndB)
@@ -36,12 +34,11 @@ def build_static_config(model, config) -> str:
                 ("Bottom position X (m)", f"{bot_x:.2f}"),
                 ("Bottom position Z (m)", f"{bot_z:.2f}"),
             ]
-            parts.append(_render_table(rows))
+            parts.append(kv_table(rows))
         except Exception as exc:
             parts.append(f"<p>Error extracting static results for '{line.name}': {exc}</p>")
 
-    vessels = [o for o in model.objects if isinstance(o, OrcFxAPI.Vessel)]
-    for vessel in vessels:
+    for vessel in vessels(model):
         try:
             vx = vessel.StaticResult("X")
             vy = vessel.StaticResult("Y")
@@ -52,7 +49,7 @@ def build_static_config(model, config) -> str:
                 ("Static Y (m)", f"{vy:.3f}"),
                 ("Static Z (m)", f"{vz:.3f}"),
             ]
-            parts.append(_render_table(rows))
+            parts.append(kv_table(rows))
         except Exception as exc:
             parts.append(f"<p>Error extracting vessel static for '{vessel.name}': {exc}</p>")
 

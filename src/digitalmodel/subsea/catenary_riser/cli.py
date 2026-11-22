@@ -15,12 +15,13 @@ from . import (
     RiserConfiguration,
     BuoyancyModule,
     LazyWaveConfiguration,
-    SimpleCatenaryAnalyzer,
     EffectiveWeightCalculator,
     LazyWaveAnalyzer,
     get_material,
     get_fluid,
 )
+
+from .workflow import SimpleCatenaryRequest, analyze_simple
 
 
 @click.group()
@@ -47,56 +48,14 @@ def simple_catenary(diameter, thickness, length, water_depth, offset, material,
     """Analyze simple catenary riser configuration"""
 
     try:
-        # Create riser configuration
-        mat = get_material(material)
-        fluid = get_fluid(internal_fluid)
-
-        riser = RiserConfiguration(
-            name="Riser1",
-            outer_diameter=diameter,
-            wall_thickness=thickness,
-            length=length,
-            material=mat,
-            internal_fluid=fluid,
-            water_depth=water_depth,
-            horizontal_offset=offset,
-            coating_thickness=coating_thickness,
-            coating_density=coating_density,
-        )
-
-        # Analyze
-        analyzer = SimpleCatenaryAnalyzer()
-        if top_tension is not None:
-            result = analyzer.analyze_riser(riser, top_tension=top_tension)
-        else:
-            result = analyzer.analyze_riser(riser, water_depth=water_depth,
-                                          horizontal_offset=offset)
-
-        if not result.converged:
-            raise ValueError("catenary did not converge or exceeds available length")
-
-        # Output
-        output_data = {
-            'configuration': {
-                'diameter': diameter,
-                'thickness': thickness,
-                'length': length,
-                'water_depth': water_depth,
-                'material': material,
-                'internal_fluid': internal_fluid,
-            },
-            'results': {
-                'converged': result.converged,
-                'horizontal_tension_N': round(result.horizontal_tension, 2),
-                'top_tension_N': round(result.top_tension, 2),
-                'touchdown_tension_N': round(result.touchdown_tension, 2),
-                'top_angle_deg': round(result.top_angle, 2),
-                'arc_length_m': round(result.arc_length, 2),
-                'grounded_length_m': round(result.grounded_length, 2),
-                'effective_weight_N_per_m': round(result.effective_weight, 2),
-                'catenary_parameter_m': round(result.catenary_parameter, 2),
-            }
-        }
+        outcome = analyze_simple(SimpleCatenaryRequest(
+            diameter=diameter, thickness=thickness, length=length,
+            water_depth=water_depth, offset=offset, material=material,
+            internal_fluid=internal_fluid, top_tension=top_tension,
+            coating_thickness=coating_thickness, coating_density=coating_density,
+        ))
+        result = outcome.result
+        output_data = outcome.presentation
 
         click.echo("\n=== Simple Catenary Riser Analysis ===\n")
         click.echo(f"Effective Weight:     {result.effective_weight:.2f} N/m")

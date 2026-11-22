@@ -22,7 +22,15 @@ SHA256_RE = re.compile(r"[0-9a-fA-F]{64}")
 MAX_MANIFEST_BYTES = 5 * 1024 * 1024
 PYPROJECT_PATH = "pyproject.toml"
 FULL_MATRIX_PREFIXES = ("src/digitalmodel/",)
+# Measured routes for source packages: which shards read each folder while they
+# run. Written by scripts/ci/derive_src_routes.py from a read trace; a source
+# path with no row here keeps the full matrix.
+SRC_ROUTES_PATH = "scripts/ci/src_domain_routes.json"
+SRC_ROUTES_FILE = Path(__file__).resolve().with_name("src_domain_routes.json")
+SrcRoutes = dict[str, "tuple[str, ...] | None"]
 FULL_MATRIX_PATHS = {
+    # A change to the table changes which shards later changes run.
+    SRC_ROUTES_PATH,
     ".claude/quality-gates.yaml",
     "tests/DOMAINS.md",
     "tests/conftest.py",
@@ -38,6 +46,9 @@ FULL_MATRIX_PATHS = {
     # Every shard installs from the lockfile. The full sweep no longer runs on a
     # merge, so a dependency update selects the full matrix here.
     "uv.lock",
+    # The engine dispatches every analysis. The shard closure requires the full
+    # matrix for it, whatever a read trace reports (tests/scripts/test_closure_selection.py).
+    "src/digitalmodel/engine.py",
 }
 DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
     ("src/digitalmodel/process_piping/", ("asset-integrity",)),
@@ -45,6 +56,11 @@ DOMAIN_PATHS: tuple[tuple[str, tuple[str, ...]], ...] = (
         "src/digitalmodel/infrastructure/utils/pipe_friction.py",
         ("asset-integrity", "field-development"),
     ),
+    # The workflows gate collects tests/scripts/ and tests/workflows/, including
+    # readers of these CI files outside the dedicated harness.
+    (".github/workflows/quality-gates-by-domain.yml", ("workflows",)),
+    ("scripts/ci/detect_touched_domains.py", ("workflows",)),
+    ("scripts/ci/replay_shard_selection.py", ("workflows",)),
     ("scripts/enforcement/", ("workflows",)),
     ("data/bha_database/", ("subsea",)),
     ("data/bha_standards/", ("subsea",)),
@@ -126,10 +142,7 @@ NO_DOMAIN_PATHS = (
     # These paths are covered by CI harness tests or repo-wide
     # quality gates instead of the domain matrix.
     ".github/workflows/quality-gates.yml",
-    ".github/workflows/quality-gates-by-domain.yml",
-    "scripts/ci/detect_touched_domains.py",
     "src/digitalmodel/workflows/automation/quality_gates.py",
-    "tests/scripts/test_detect_touched_domains.py",
     "tests/workflows/automation/test_quality_gates.py",
     "tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py",
 )
@@ -328,12 +341,70 @@ def git_pinned_domains(ref: str, domains: list[Domain]) -> dict[str, set[str]]:
     return routes
 
 
+def is_exact_full_matrix_path(path: str) -> bool:
+    """Identify the single files that always require every shard."""
+    return (path[2:] if path.startswith("./") else path) in FULL_MATRIX_PATHS
+
+
 def is_full_matrix_trigger(path: str) -> bool:
     """Identify changes that require every shard."""
     normalized = path[2:] if path.startswith("./") else path
     return normalized in FULL_MATRIX_PATHS or any(
         normalized.startswith(prefix) for prefix in FULL_MATRIX_PREFIXES
     )
+
+
+def load_src_routes(path: Path = SRC_ROUTES_FILE) -> SrcRoutes:
+    """Read the measured source routes; a missing or malformed table routes nothing.
+
+    A unit listed under ``unrouted`` maps to ``None``: it is known and keeps the
+    full matrix, so a routed parent folder does not apply to it.
+    """
+    prefix = FULL_MATRIX_PREFIXES[0]
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+        routes, unrouted = payload["routes"], payload.get("unrouted", {})
+        if not isinstance(routes, dict) or not isinstance(unrouted, dict):
+            return {}
+        table: SrcRoutes = {key: None for key in unrouted}
+        for key, names in routes.items():
+            if (not isinstance(names, list) or not names
+                    or not all(isinstance(name, str) for name in names)):
+                return {}
+            table[key] = tuple(names)
+        if not all(isinstance(key, str) and key.startswith(prefix) for key in table):
+            return {}
+        return table
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return {}
+
+
+def src_route_names(path: str, routes: SrcRoutes, known: set[str]) -> set[str] | None:
+    """Return the shards that read a source path, or ``None`` when it has no route.
+
+    The deepest listed unit decides: ``<package>/<subfolder>/`` before
+    ``<package>/``, and a top-level module by its file name. ``None`` means the
+    caller keeps the full matrix: the unit is unlisted, listed as unrouted, or
+    its row names a shard the domains file does not have.
+    """
+    normalized = path[2:] if path.startswith("./") else path
+    prefix = FULL_MATRIX_PREFIXES[0]
+    if not normalized.startswith(prefix):
+        return None
+    parts = normalized[len(prefix):].split("/")
+    if len(parts) == 1:
+        candidates = [prefix + parts[0]]
+    else:
+        candidates = [f"{prefix}{parts[0]}/"]
+        if len(parts) > 2:
+            candidates.insert(0, f"{prefix}{parts[0]}/{parts[1]}/")
+    for candidate in candidates:
+        if candidate in routes:
+            names = routes[candidate]
+            if names is None or not set(names) <= known:
+                return None
+            return set(names)
+    return None
 
 
 def package_data_domains_for_item(item: str) -> set[str]:
@@ -493,9 +564,11 @@ def touched_domains(
     head: str | None = None,
     pinned_paths: set[str] | None = None,
     pinned_domains: dict[str, set[str]] | None = None,
+    src_routes: SrcRoutes | None = None,
 ) -> list[Domain]:
     """Select the union of shards affected by changed paths."""
     selected_names: set[str] = set()
+    known_names = {domain.name for domain in domains}
     for path in changed_files:
         if pinned_domains:
             selected_names.update(pinned_domains.get(normalize_root(path), set()))
@@ -519,6 +592,11 @@ def touched_domains(
         if domain_names:
             selected_names.update(domain_names)
             continue
+        if src_routes and not is_exact_full_matrix_path(path):
+            routed_names = src_route_names(path, src_routes, known_names)
+            if routed_names is not None:
+                selected_names.update(routed_names)
+                continue
         if is_full_matrix_trigger(path):
             return domains
 
@@ -572,6 +650,16 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
             "the shards its own change touches, not everything the base gained."
         ),
     )
+    parser.add_argument(
+        "--src-routes",
+        type=Path,
+        default=SRC_ROUTES_FILE,
+        help=(
+            "Measured source routes (default: the table beside this script). A "
+            "missing or malformed file routes nothing: every source change keeps "
+            "the full matrix."
+        ),
+    )
     args = parser.parse_args(argv)
     if args.mode == "touched" and (not args.base or not args.head):
         parser.error("--mode touched requires --base and --head")
@@ -618,6 +706,7 @@ def main(argv: list[str] | None = None) -> int:
                         diff_start,
                         args.head,
                         pinned_domains=pin_domains,
+                        src_routes=load_src_routes(args.src_routes),
                     )
     except Exception as exc:
         print(f"detect_touched_domains.py: {exc}", file=sys.stderr)

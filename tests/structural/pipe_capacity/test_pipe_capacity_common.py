@@ -21,22 +21,9 @@ Engineering values: 10.75in OD x 0.5in WT X65 steel pipe (typical subsea pipelin
 
 import copy
 import math
-import sys
-import os
 import pytest
 
-# Ensure common and custom packages are importable
-sys.path.insert(0, os.path.join(
-    os.path.dirname(__file__), '..', '..', '..', 'src', 'digitalmodel', 'infrastructure'
-))
-
-from common.update_deep import update_deep_dictionary
-
-# Now import the module under test directly by manipulating sys.path
-# so the 'from common.update_deep import ...' inside PipeCapacity.py resolves
-sys.path.insert(0, os.path.join(
-    os.path.dirname(__file__), '..', '..', '..', 'src'
-))
+from digitalmodel.infrastructure.utils.update_deep import update_deep_dictionary
 
 from digitalmodel.structural.pipe_capacity.common.PipeCapacity import (
     PipeCapacity,
