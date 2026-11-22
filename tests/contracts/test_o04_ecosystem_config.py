@@ -20,7 +20,11 @@ def test_matrix_artifacts_are_unique():
         (ROOT / ".github/workflows/quality-gates.yml").read_text()
     )
     job = workflow["jobs"]["quality-gates"]
-    assert job["strategy"]["matrix"]["python-version"] == ["3.11", "3.12"]
+    # Pushes to main and develop run both interpreters; pull requests run 3.11.
+    assert job["strategy"]["matrix"]["python-version"] == (
+        "${{ fromJSON(github.event_name == 'pull_request' && "
+        """'["3.11"]' || '["3.11", "3.12"]') }}"""
+    )
     for step in job["steps"]:
         if step.get("uses", "").startswith("actions/upload-artifact@"):
             assert "matrix.python-version" in step["with"]["name"]
@@ -33,12 +37,19 @@ def test_required_quality_gate_context_fails_closed():
     matches = [
         job
         for job in workflow["jobs"].values()
-        if job.get("name") == "Run Quality Gates"
+        if str(job.get("name")).endswith("|| 'Run Quality Gates' }}")
     ]
     assert len(matches) == 1
     job = matches[0]
     assert job["needs"] == "quality-gates"
-    assert job["if"] == "always()"
+    # always() keeps the context fail-closed; drafts are skipped until ready. A title or
+    # description edit runs no job, and the job then reports under another name
+    # (tests/workflows/test_ci_triggers.py evaluates both for every event).
+    assert job["if"] == (
+        "${{ always() && (github.event_name != 'pull_request' || "
+        "!github.event.pull_request.draft) && "
+        "!(github.event.action == 'edited' && !github.event.changes.base) }}"
+    )
     assert "strategy" not in job
     assert "continue-on-error" not in job
     assert job["permissions"] == {}

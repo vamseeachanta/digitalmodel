@@ -4,6 +4,8 @@ import json
 import math
 from pathlib import Path, PureWindowsPath
 
+from digitalmodel.ansys.analysis_evidence import parse_digest as parse_evidence_digest
+
 
 def number(value):
     assert isinstance(value, (float, int)) and not isinstance(value, bool)
@@ -37,15 +39,13 @@ def _unique_object(pairs):
 
 
 def parse_digest(text):
-    tokens = text.strip().replace("\n", ",").split(",")
-    tokens = [token.strip() for token in tokens if token.strip()]
-    assert tokens and len(tokens) % 2 == 0, "incomplete digest"
-    result = {}
-    for label, raw in zip(tokens[::2], tokens[1::2]):
-        label = label.strip().lower()
-        assert label not in result, f"duplicate digest key {label}"
-        result[label] = number(float(raw))
-    return result
+    """Validate all pairs before returning finite values with lowercase keys."""
+    # Required engineering fields remain the consumer's responsibility.
+    try:
+        values = parse_evidence_digest(text, set())
+    except ValueError as error:
+        raise AssertionError(str(error)) from error
+    return {label.lower(): number(float(raw)) for label, raw in values.items()}
 
 
 def load_golden(case_dir):

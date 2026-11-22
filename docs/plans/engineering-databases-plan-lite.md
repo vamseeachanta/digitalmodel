@@ -2,9 +2,9 @@
 
 ## Summary
 
-Five catalogues will separate reusable engineering inputs from calculation code:
-line pipe, flexible pipe, structural section properties, pipe-soil stiffness
-and riser buoyancy modules.
+Six catalogues will separate reusable engineering inputs from calculation code:
+line pipe, flexible pipe, structural section properties, pipe-soil stiffness,
+riser buoyancy modules and tensioners.
 The initial delivery will contain schemas, empty production files, citation
 contracts and validated loaders. Invented test fixtures will exercise the
 contracts; engineering values will require a later source and suitability review.
@@ -16,6 +16,7 @@ contracts; engineering values will require a later source and suitability review
 | 1 | 2026-10-26 | Define catalogue boundaries, units and citation checks before population. |
 | 2 | 2026-10-26 | Specify citation URI validation, the numerical precision basis, soil interpretation limits and validation-error handling. |
 | 3 | 2026-11-13 | Add the empty riser buoyancy catalogue, signed force convention and explicit engineering-check dispatch (#3953). |
+| 4 | 2026-11-16 | Add the empty tensioner catalogue with finite positive capacity and stroke, nullable count and shared citation validation (#3953). |
 
 Table 1. Plan issue history.
 
@@ -92,13 +93,14 @@ from digitalmodel.data_systems.engineering_databases import (
     load_structure_properties,
     load_soil_stiffness,
     load_riser_buoyancy,
+    load_riser_tensioners,
 )
 
 rows = load_line_pipe("data/line_pipe")
 rows = load_database("soil_stiffness", "data/soil_stiffness")
 ```
 
-All six functions will accept an explicit catalogue directory. The five named
+All seven functions will accept an explicit catalogue directory. The six named
 wrappers will select the matching schema. The directory will supply the reviewed
 schema together with its data; schema changes will require review alongside data
 changes. Successful reads will return a list of row dictionaries with a resolved
@@ -270,8 +272,33 @@ are never sources. Invented `synthetic_fixture` citations require matching
 The catalogue establishes structure and declared provenance only. Product
 performance and engineering suitability are not established; qualified source
 values and application conditions are unavailable in this empty delivery.
-Coatings and vortex-induced vibration suppression, joints and tensioners remain
+Coatings and vortex-induced vibration suppression and joints remain
 later slices of #3953; population and consumer adapters are outside this slice.
+
+## Riser tensioners
+
+Directory: `data/riser_tensioners`; API: `load_riser_tensioners(directory)`.
+Production `records` and `citations` remain empty in this slice of #3953.
+
+| Fields | Units | Validation |
+| --- | --- | --- |
+| `kind` | text | `wireline`, `direct_acting` or `telescopic_joint`. |
+| `capacity_n` | N | Positive finite cited capacity. |
+| `stroke_m` | m | Positive finite cited stroke. |
+| `count_typical` | 1 (dimensionless) | Null when unknown; otherwise a positive integer. |
+
+Table 8. Tensioner row fields in addition to shared metadata.
+
+All fields are required; unknown fields, nonfinite values, numeric strings and
+booleans are rejected. Units are exact; no conversion or default count is supplied.
+Capacity and stroke bounds are catalogue admission choices, not product criteria;
+a cited zero-stroke category would require a schema review. No cross-field
+geometry relationship or operating condition is inferred.
+Permitted source classes are mill or manufacturer catalogues, public papers or
+theses, public agency reports and publishable generic design bases, subject to
+the shared source and reuse review. Standards are never sources. Synthetic
+fixtures require matching status and explicit opt-in. Product performance and
+engineering suitability remain unestablished; coatings and joints are later slices.
 
 ## Numerical validation basis
 

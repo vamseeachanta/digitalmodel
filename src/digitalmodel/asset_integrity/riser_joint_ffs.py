@@ -68,6 +68,10 @@ COLLAPSE_DESIGN_FACTOR = 0.70
 MM_PER_IN = 25.4
 PSI_PER_MPA = 145.038
 
+# Register component label of the riser main tube. The fixture register labels
+# the main tube and the auxiliary lines neutrally as Line A to Line D.
+MAIN_LINE_COMPONENT = "Line A"
+
 #: Default weld-metal Charpy energy (J) when neither ``weld_k_mat`` nor
 #: ``weld_cvn_joules`` is supplied: 27 J is the classic minimum impact
 #: requirement of line-pipe / offshore structural specs, run through the
@@ -359,7 +363,7 @@ def place_joint(
 def fleet_rollup(
     register: pd.DataFrame,
     *,
-    component: str = "Main",
+    component: str = MAIN_LINE_COMPONENT,
     campaign_years: float = 3.0,
     n_campaigns: int = 4,
     min_high_fatigue_joints: int = 12,
