@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 """Durable workflow: J-lay and reel-lay pipelay screening (offline).
 
 Routes a ``basename: pipelay`` input through the analytical pipelay
@@ -37,6 +39,7 @@ from digitalmodel.orcaflex.pipelay_analysis import (
     calculate_stinger_radius,
 )
 from digitalmodel.pipelay.validation import OUTPUT_DEFAULTS, validate_settings
+from digitalmodel.pipelay.evidence import write_evidence_manifest
 
 
 def _operability(operability_cfg: Dict[str, Any], *, welding_required=False) -> Dict[str, Any]:
@@ -167,6 +170,9 @@ def router(cfg: dict) -> dict:
             "Use 'J-Lay' or 'Reel-Lay'."
         )
 
+    # Preserve validation errors, then capture input before cfg is mutated.
+    input_bytes = json.dumps(cfg, sort_keys=True, allow_nan=False).encode("utf-8")
+
     # Minimum stinger radius is a useful reference for any method.
     result["min_stinger_radius_m"] = round(
         calculate_stinger_radius(
@@ -179,6 +185,7 @@ def router(cfg: dict) -> dict:
     result['applied_defaults'].update({f'outputs.{key}': value
         for key, value in OUTPUT_DEFAULTS.items() if key not in settings.get('outputs', {})})
     summary_path = _write_summary(cfg, settings.get("outputs", {}), result)
+    write_evidence_manifest(summary_path, input_bytes)
     result["summary_json"] = str(summary_path)
 
     cfg["pipelay"] = {**settings, **result}
@@ -194,5 +201,5 @@ def _write_summary(cfg: dict, output_cfg: dict, payload: Dict[str, Any]) -> Path
         directory = Path(cfg.get("_config_dir_path", Path.cwd())) / directory
     directory.mkdir(parents=True, exist_ok=True)
     summary_path = directory / output_cfg.get("summary_json", "pipelay_summary.json")
-    summary_path.write_text(text, encoding="utf-8")
+    summary_path.write_text(text, encoding="utf-8", newline="\n")
     return summary_path

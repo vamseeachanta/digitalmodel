@@ -15,7 +15,7 @@ loader refuses a table whose fingerprint drifted.
 
 | Table | Route | Content |
 |---|---|---|
-| `config_catalog` | public | Riser configuration envelopes seeded from `examples/riser_input/*.yml` (5) + `config/pipe/*riser*.yml` (22, explicit list). Depth/position for the pipe configs derive from the FILENAME (`<n>ft` → m × 0.3048); OD/WT are inches → mm × 25.4. A missing token yields an empty cell — never guessed. |
+| `config_catalog` | public | 42 configurations: 5 `examples/riser_input/*.yml` + 22 explicit `config/pipe` files + 1 lift reference + 14 public examples. Pipe filename depth uses ft → m × 0.3048; pipe OD/WT use inches → mm × 25.4. Missing evidence yields an empty cell. |
 | `standards_crosswalk` | public | Clause **identifiers** + `wiki_path` only: `api-std-2rd` (there is no `api-rp-2rd` — API reclassified RP 2RD as STD 2RD), `api-rp-16q`, `dnv-os-f201`, `dnv-rp-c203`. `registry_revision` mirrors llm-wiki `data/standards-registry.json` verbatim. |
 | `material_sn_scf_dff` | public | References into `fatigue/sn_curves.py` vocabulary (plain detail-category letters + environment — the REAL riser fatigue consumer, used by `riser_fatigue/workflow.py` and `touchdown.py`; NOT the composite ids of `sn_library_api`). `scf_ref`/`dff_ref` name getters. |
 
@@ -54,12 +54,21 @@ get_riser_scf().value                  # 1.0  — DNV-RP-C203 methodology (neutr
 get_tension_weight_factor().value      # 1.05 — API RP 16Q (1st Ed. 1993) §3.3, f_wt
 get_buoyancy_tension_factor().value    # 0.96 — API RP 16Q (1st Ed. 1993) §3.3, f_bt
 get_riser_dff(override=3.0)            # user override wins; note records both values
-riser_citations()                      # {dff, scf, f_wt, f_bt}; {} + RuntimeWarning standalone
+riser_citations()                      # {dff, scf, f_wt, f_bt, von_mises_df}; standalone may return {}
 ```
 
 Direct getter calls are **fail-closed** (`CitationResolutionError` carrying the
-`code_id`); only the consumer helper degrades in standalone/`pip install` mode
-(one-shot `RuntimeWarning`) — same contract as the mooring pilot. Values match
+`code_id`). The consumer helper returns an empty mapping with a one-shot
+`RuntimeWarning` only when discovery exhausts every wiki route with
+`resolver_unconfigured:`. With an explicit `repo_root` or a resolved wiki,
+missing pages, missing identity metadata and mismatched revisions raise
+`CitationResolutionError`. Invalid `LLM_WIKI_PATH` or
+`DIGITALMODEL_REPO_ROOT` configuration also raises.
+An earlier standalone warning does not suppress later configured-wiki errors.
+The boundary is covered by `tests/riser_database/test_citations.py`; expected
+errors follow `citations/schema.py` and `citations/resolver.py`, independently
+of any engineering value. Issue 2166 tracks this failure boundary.
+Values match
 the riser literals (`touchdown.py` `dff=10.0`, `scf=1.0`; `stackup.py`
 `F_WT_DEFAULT=1.05`, `F_BT_DEFAULT=0.96`) so the #1246 wiring has day-one
 parity. `riser_fatigue/workflow.py` resolves DFF through `resolve_dff()`:
@@ -84,7 +93,8 @@ likewise carries no standards attribution (generic formula, project default).
 
 * **Layer A** (always runs, public CI included): regex structural checks —
   absolute paths, e-mail addresses, URLs — over every loaded public row and
-  the raw data files. Patterns are generic and public-safe.
+  the raw data files. Patterns are generic and contain no private identifiers
+  or licensed values.
 * **Layer B** (in-context): every public row matched against the PRIVATE
   workspace-hub `.legal-deny-list.yaml` with case/separator normalization.
   Skips loudly when workspace-hub is absent.
@@ -177,7 +187,9 @@ an empty band, never a guessed one.
 `from_component_counts`, or caller/wiki-side records via `from_records`) with
 fail-closed aggregates — notably `gross_submerged_weight_and_uplift()`, which
 REFUSES to degrade to net weight when a buoyed joint lacks uplift data
-(non-conservative for the factored 16Q split). `minimum_top_tension_16q`
+(net weight would understate the required tension by combining gross steel
+weight and buoyancy uplift before their separate factors are applied under
+API RP 16Q, 1st Ed. 1993, §3.3). `minimum_top_tension_16q`
 applies the tensioner-system factor N/(Rf·(N−n)) and fleet-angle allowance to
 a minimum slip-ring tension; `check_rig_capability` evaluates the demand
 against a `rig_riser_interface` row (wireline rigs count wires, direct-acting
@@ -266,3 +278,47 @@ coverage, and populates `EnvelopeResult.dynamic_provenance` with the STUB marker
 + disclaimer so a dynamically-amplified verdict never leaves unlabeled. The
 `_provenance` surfacing of the solver block was extended for all library atlases
 (also closes the same gap for the OrcaFlex/diffraction libraries).
+
+## Public example catalogue ([issue 3955](https://github.com/vamseeachanta/digitalmodel/issues/3955))
+
+The fourteen `orcaflex_public_example` rows describe the primary named line and
+its bare section, selected explicitly in `sources.yml:public_example_configs`.
+Auxiliary lines and buoyed sections are excluded.
+Types are `catenary`, `lazy_wave`, `steep_wave`, `pliant_wave`, `lazy_s`, `steep_s`,
+`pliant_s`, `tower_jumper`, `drilling` and `running_bop`. Each master and its
+general, environment, line-type and line includes supply cited dimensions.
+SI lengths are metres; User/ft lengths use `ft_to_m` and `m_to_mm` from the spec.
+Only `Homogeneous pipe` establishes wall thickness as `(OD-ID)/2`; `General`
+wall thickness is not established, even if a nominal ID is present.
+
+| Example | Depth (m) | OD (mm) | Wall (mm) |
+|---|---:|---:|---:|
+| A01 catenary | 100 | 355.6 | not established |
+| A03 tower jumper, flat zero-slope seabed | 1350 | 381.4 | not established |
+| A05 semisub | 1999.488 | 231.775 | 25.400 |
+| A05 spar | 1798.32 | 219.075 | 19.050 |
+| A05 FPSO | 899.16 | 304.8 | 25.400 |
+| B01 drilling | 1020 | 650 | 25.000 |
+
+Table 1. Source readings before CSV rounding. Independent YAML readings test
+serialization within 0.005 m depth and 0.0005 mm OD/wall, with no relative tolerance;
+these bounds qualify serialization only. The CSV retains `%g` (semisub: `1999.49`).
+These rows are catalogue references, not qualified engineering inputs. Models in
+`docs/domains/orcaflex/risers/` are excluded: `PROVENANCE.md` records origin as
+not stated. Fourteen elevation sketches remain a separate documentation slice.
+
+## Reproduce
+
+```bash
+PYTHONPATH=src uv run python scripts/riser_database/build_tables.py
+PYTHONPATH=src uv run python scripts/riser_capability/build_riser_inventory.py
+PYTHONPATH=src uv run python scripts/riser_database/build_tables.py --check
+PYTHONPATH=src uv run python scripts/riser_capability/build_riser_inventory.py --check
+PYTHONPATH=src uv run python -m pytest tests/riser_database/ tests/riser_capability/ -q -rs -m "not solver"
+```
+
+## Run-it-yourself prompt
+
+Regenerate the public example catalogue and inventory, run both drift checks and
+the non-solver suites above, and compare dimensions with independent YAML readings.
+Report unknown wall thickness as not established; perform no licensed solver runs.

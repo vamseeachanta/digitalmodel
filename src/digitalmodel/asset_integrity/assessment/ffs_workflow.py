@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Thin engine router exposing the Phase-1 FFS coordinator (assess_component)
 # ABOUTME: under the engine basename "ffs" (workspace-hub#3285). kind: in_memory.
 """Engine route for the canonical FFS metal-loss coordinator.
@@ -45,6 +48,7 @@ class FFSWorkflow:
             grid,
             input_units=ffs_cfg.get("input_units", "in"),
             force_type=ffs_cfg.get("force_type"),
+            row_spacing_in=ffs_cfg.get("row_spacing_in"),
             repair_context=ffs_cfg.get("repair_context"),
         )
 

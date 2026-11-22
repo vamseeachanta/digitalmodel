@@ -57,12 +57,17 @@ from digitalmodel.hydrodynamics.diffraction.diffraction_units import (
     rad_per_s_to_period_s,
     tonnes_to_kg,
 )
+from digitalmodel.hydrodynamics.diffraction.export_contract import (
+    ExportDisposition,
+    describe_exports,
+)
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 from digitalmodel.hydrodynamics.diffraction.mesh_packaging import (
     copy_spec_meshes,
     iter_mesh_references,
     package_spec_meshes,
 )
+from digitalmodel.hydrodynamics.diffraction.mesh_preflight import write_preflight_reports
 from digitalmodel.hydrodynamics.diffraction.orcawave_backend import OrcaWaveBackend
 from digitalmodel.hydrodynamics.diffraction.output_schemas import (
     ADDED_MASS_UNITS,
@@ -207,8 +212,9 @@ class RunResult:
 
     Output contract (#611): explicit result paths replace the previous
     ``log_file = .owr`` overload. ``owr_path`` / ``data_file`` populate for real
-    when OrcaWave produces them; ``xlsx_path`` / ``report_path`` are reserved for
-    a later exporter/report phase and remain ``None`` here (locked decision D2).
+    when OrcaWave produces them. Automatic XLSX/report production is deferred;
+    ``export_dispositions`` describes the current compatible path fields as
+    ``NOT_PRODUCED`` or ``PATH_RECORDED_UNVERIFIED``, without checking files.
 
     Validation contract (#625): ``validation_verdict`` defaults to ``"SKIPPED"``
     and uses canonical strings ``PASS``/``WARNING``/``FAIL``/``ERROR``/``SKIPPED``
@@ -220,6 +226,7 @@ class RunResult:
     modular_files: list[Path] = field(default_factory=list)
     output_dir: Path | None = None
     mesh_files: list[Path] = field(default_factory=list)
+    preflight_reports: list[dict] = field(default_factory=list)
     log_file: Path | None = None
     stdout: str = ""
     stderr: str = ""
@@ -244,6 +251,11 @@ class RunResult:
     orcf_api_version: str | None = None
     thread_count: int | None = None
     assumption_ledger: "AssumptionLedger | None" = None
+
+    @property
+    def export_dispositions(self) -> dict[str, ExportDisposition]:
+        """Describe current XLSX/report paths without claiming export success."""
+        return describe_exports(self.xlsx_path, self.report_path)
 
 
 # Owner resource policy (dm#1553/#1555): one OrcaWave solve may use ~90% of the
@@ -411,6 +423,10 @@ class OrcaWaveRunner:
             spec_to_generate, output_dir
         )
         self._result.input_file = input_file
+        self._result.preflight_reports = [
+            dict(report) for report in self._backend.preflight_reports
+        ]
+        write_preflight_reports(self._result.preflight_reports, output_dir)
         self._result.modular_files = modular_files
 
         # Validate mesh references
@@ -826,11 +842,17 @@ class OrcaWaveRunner:
         """Best-effort hydrostatics extraction; None if unavailable."""
         try:
             hs = diffraction.hydrostaticResults[0]
-            restoring = np.asarray(hs["restoringMatrix"], dtype=float)
+            # OrcaWave WebHelp, Data: Model, Units and Results: Hydrostatics
+            # (online edition accessed 2026-10-25): native SI uses tonnes/kN;
+            # the shared schema uses kg/N. All restoring blocks contain one
+            # force factor (F/L, F/rad, FL/L, FL/rad), so kN -> N scales the
+            # entire matrix by 1000; metre and radian factors stay unchanged.
+            # Multiply out of place to preserve the native result array.
+            restoring = np.asarray(hs["restoringMatrix"], dtype=float) * 1000.0
             return HydrostaticResults(
                 vessel_name=vessel_name,
                 displacement_volume=float(hs["volume"]),
-                mass=float(hs["mass"]),
+                mass=tonnes_to_kg(float(hs["mass"])),
                 centre_of_gravity=list(np.asarray(hs["centreOfMass"], dtype=float)),
                 centre_of_buoyancy=list(
                     np.asarray(hs["centreOfBuoyancy"], dtype=float)

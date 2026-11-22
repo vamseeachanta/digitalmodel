@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ doc.title }}</title>
+{% if plotlyjs %}<script>{{ plotlyjs|safe }}</script>{% endif %}
+<style>
+:root{color-scheme:light;--ink:#183449;--report-accent:#137e8a;--muted:#516573;--line:#d3dfe4}
+*{box-sizing:border-box}body{margin:0;color:var(--ink);background:#edf2f4;font:16px/1.65 Georgia,serif}
+header{background:var(--ink);color:white;padding:58px max(6vw,24px);border-bottom:8px solid var(--report-accent)}
+h1{max-width:1100px;font:600 clamp(28px,3.5vw,46px)/1.2 Georgia,serif;margin:0}
+.layout{display:grid;grid-template-columns:220px minmax(0,1fr);max-width:1440px;margin:auto;background:white}
+nav{padding:32px 22px;font:14px/1.8 sans-serif;border-right:1px solid var(--line)}
+nav ol{padding-left:18px}nav a{color:var(--ink);text-decoration:none}nav a:hover{text-decoration:underline}
+main{padding:24px 42px 70px;min-width:0}section{padding:20px 0;border-bottom:1px solid var(--line)}
+h2{font:600 27px/1.3 Georgia,serif;margin:12px 0 22px}h3{font:600 20px/1.4 Georgia,serif;margin-top:26px}
+.prose h2{font-size:21px}.prose strong{color:#085965}p{max-width:86ch}
+.table-wrap{overflow-x:auto;margin:24px 0}table{border-collapse:collapse;width:100%;font:13px/1.5 sans-serif}
+th{background:var(--ink);color:white;text-align:left;padding:11px 9px}td{padding:9px;border-bottom:1px solid var(--line);vertical-align:top}
+tbody tr:nth-child(even){background:#f2f7f8}caption{caption-side:bottom;text-align:left;color:var(--muted);padding:9px 0;font-size:13px}
+figure{margin:26px 0}svg,img{display:block;max-width:100%;height:auto}figcaption{color:var(--muted);font:13px/1.6 sans-serif;margin-top:10px}
+.source{font:13px/1.5 sans-serif;color:var(--muted)}
+@media(max-width:900px){.layout{display:block}nav{border-bottom:1px solid var(--line);border-right:0}nav ol{columns:2}main{padding:16px 20px}}
+@media print{body{background:white;font-size:10pt}header{padding:24px;background:white;color:var(--ink)}h1{font-size:25pt}.layout{display:block}nav{display:none}main{padding:0}figure{break-inside:avoid}h2,h3{break-after:avoid}table{font-size:8pt}th,td{padding:5px}thead{display:table-header-group}}
+</style>
+</head>
+<body>
+<header><h1>{{ doc.title }}</h1>
+<p>Document {{ doc.number }} | Revision {{ doc.revision }}{% if doc.date %} | {{ doc.date }}{% endif %}</p>
+{% if doc.assessment_label or doc.prepared_by or doc.checked_by or doc.approved_by %}<div id="document-control">{% if doc.assessment_label %}<p>{{ doc.assessment_label }}</p>{% endif %}
+{% if doc.prepared_by or doc.checked_by or doc.approved_by %}<p>{% if doc.prepared_by %}Prepared: {{ doc.prepared_by }}{% endif %}{% if doc.checked_by %}{% if doc.prepared_by %} | {% endif %}Checked: {{ doc.checked_by }}{% endif %}{% if doc.approved_by %}{% if doc.prepared_by or doc.checked_by %} | {% endif %}Approved: {{ doc.approved_by }}{% endif %}</p>{% endif %}</div>{% endif %}
+</header>
+<div class="layout">
+<nav aria-label="Contents"><ol>
+{% for section in sections %}<li><a href="#{{ section.key }}">{{ section.title }}</a></li>{% endfor %}
+{% for section in appendices %}<li><a href="#{{ section.key }}">{{ section.title }}</a></li>{% endfor %}
+</ol></nav>
+<main>
+{% macro blocks(section, section_number) %}
+{% set count = namespace(table=0, figure=0) %}
+{% for block in section.blocks %}
+{% if block.kind == 'text' %}<div class="prose">{{ block.markdown|md }}</div>
+{% elif block.kind == 'table' %}
+{% set count.table = count.table + 1 %}
+<div class="table-wrap"><table{% if block.title == 'Assumptions' %} id="assumptions"{% endif %}>
+<caption>Table {{ section_number }}.{{ count.table }}. {{ block.title }}</caption>
+<thead><tr>{% for column in block.columns %}<th scope="col">{{ column }}</th>{% endfor %}</tr>
+{% if block.units %}<tr>{% for unit in block.units %}<th scope="col">{{ unit }}</th>{% endfor %}</tr>{% endif %}</thead>
+<tbody>{% for row in block.rows %}<tr>{% for cell in row %}<td>{{ cell|cell }}</td>{% endfor %}</tr>{% endfor %}</tbody>
+</table>{% if block.source %}<p class="source">Source: {{ block.source }}</p>{% endif %}</div>
+{% elif block.kind == 'figure' %}
+{% set count.figure = count.figure + 1 %}
+<figure id="{{ block.figure_id }}">
+{% if block.svg is not none %}{{ block.svg|safe }}
+{% elif block.plotly is not none %}{{ figure_html[block.figure_id]|safe }}
+{% else %}<img src="{{ figure_html[block.figure_id] }}" alt="{{ block.title }}">{% endif %}
+<figcaption>Figure {{ section_number }}.{{ count.figure }}. {{ block.title }}. {{ block.caption }}</figcaption>
+</figure>
+{% elif block.kind == 'status' %}<p>{{ block.label }}: {{ block.status }}. {{ block.governing_case or '' }} {{ block.detail }}</p>
+{% endif %}
+{% endfor %}
+{% endmacro %}
+{% for section in sections %}
+<section id="{{ section.key }}"><h2>{{ loop.index }}. {{ section.title }}</h2>
+{% if section.subtitle %}<p>{{ section.subtitle }}</p>{% endif %}
+{{ blocks(section, loop.index) }}</section>
+{% if loop.first and doc.revision_history %}<div id="revision-history"><h3>Revision history</h3>
+<table><caption>Revision history</caption><thead><tr><th scope="col">Revision</th><th scope="col">Date</th><th scope="col">What changed and why</th></tr></thead>
+<tbody>{% for row in doc.revision_history %}<tr><td>{{ row.rev }}</td><td>{{ row.date }}</td><td>{{ row.description }}</td></tr>{% endfor %}</tbody>
+</table></div>{% endif %}
+{% endfor %}
+{% for section in appendices %}
+<section id="{{ section.key }}"><h2>{{ section.title }}</h2>{{ blocks(section, letters[loop.index0]) }}</section>
+{% endfor %}
+</main></div>
+</body>
+</html>

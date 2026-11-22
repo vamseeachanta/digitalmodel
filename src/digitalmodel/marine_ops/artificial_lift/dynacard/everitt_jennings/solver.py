@@ -66,6 +66,8 @@ except ImportError:  # pragma: no cover
 
 
 DEFAULT_NUM_NODES = 100
+# The periodic time stencil includes a duplicated endpoint and neighbours.
+MIN_CARD_SAMPLES = 4
 DEFAULT_SAVGOL_WINDOW = 21
 DEFAULT_SAVGOL_ORDER = 5
 STEEL_MODULUS_PA = 2.07e11
@@ -296,9 +298,9 @@ def build_simulation(
             f"position ({len(position)}) and load ({len(load)}) must have "
             "the same number of samples"
         )
-    if len(position) < 4:
+    if len(position) < MIN_CARD_SAMPLES:
         raise ValueError(
-            f"card needs at least 4 samples to march; got {len(position)}"
+            f"card needs at least {MIN_CARD_SAMPLES} samples to march; got {len(position)}"
         )
     if strokes_per_minute <= 0:
         raise ValueError(f"strokes_per_minute must be positive; got {strokes_per_minute}")
@@ -574,6 +576,10 @@ class DownholeCard:
     simulation: Optional[Simulation] = None
     solver_flags: list[str] = field(default_factory=list)
     max_inclination_deg: Optional[float] = None
+    # Unfiltered F = EA du/dx, with the same backward strain stencil at
+    # every cyclic sample. See _full_load and the forward-model boundary in
+    # card_generators.py. The historical filtered load remains unchanged.
+    diagnostic_load: Optional[np.ndarray] = None
 
     @property
     def stroke(self) -> float:
@@ -699,6 +705,18 @@ class EverittJenningsSolver:
             coeff.d_phi, coeff.d_psi, muteg,
         )
 
+        # Training uses unsmoothed pump cards. Polynomial filtering removes
+        # their diagnostic detail (SciPy savgol_filter API, Parameters:
+        # window_length/polyorder). Preserve strain before that operation.
+        # F = EA*strain: OpenStax University Physics vol. 1 (2016), sec. 12.3,
+        # eqs. 12.34-12.36; see the linked source in the package README.
+        # Unlike _march's special first sample, use the same stencil around
+        # the entire closed cycle, matching the forward model's boundary.
+        diagnostic_load = (coeff.moduli[-1] * coeff.areas[-1] / sim.dx) * (
+            u[-1] - u[-2]
+        )
+        diagnostic_load[-1] = diagnostic_load[0]
+
         if self.smooth_window and self.smooth_window > self.smooth_order:
             window = min(self.smooth_window, len(dh_load))
             if window % 2 == 0:
@@ -739,4 +757,5 @@ class EverittJenningsSolver:
             simulation=sim,
             solver_flags=flags,
             max_inclination_deg=maximum,
+            diagnostic_load=diagnostic_load,
         )

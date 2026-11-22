@@ -158,6 +158,14 @@ def _add_source_issues(result, source_issues, filename):
 class OrcaFlexYAMLValidator:
     """Validates OrcaFlex YAML files for structural correctness."""
 
+    def __init__(self, *, strict_profile: bool = False) -> None:
+        """Optionally require unique string keys and preflight input shapes.
+
+        Native numeric names and repeated directives fall outside that profile.
+        Existing callers retain the default compatibility checks.
+        """
+        self.strict_profile = strict_profile
+
     def validate_file(self, path: Path) -> ValidationResult:
         """Validate a single YAML file.
 
@@ -191,6 +199,7 @@ class OrcaFlexYAMLValidator:
         try:
             source_issues, halt = inspect_source(
                 raw_text, VALID_TOP_LEVEL_SECTIONS, INVALID_PROPERTIES,
+                strict_profile=self.strict_profile,
             )
             if halt:
                 _add_source_issues(result, source_issues, filename)
@@ -760,16 +769,17 @@ class OrcaFlexYAMLValidator:
                 self._check_invalid_properties_recursive(item, result, filename)
 
 
-def validate_orcaflex_yaml(path: Path) -> ValidationResult:
+def validate_orcaflex_yaml(path: Path, *, strict_profile: bool = False) -> ValidationResult:
     """Convenience function to validate an OrcaFlex YAML file or directory.
 
     Args:
         path: Path to a YAML file or directory of YAML files.
+        strict_profile: Require unique string keys and strict input shapes.
 
     Returns:
         ValidationResult with issues found.
     """
-    validator = OrcaFlexYAMLValidator()
+    validator = OrcaFlexYAMLValidator(strict_profile=strict_profile)
     if path.is_dir():
         return validator.validate_directory(path)
     return validator.validate_file(path)

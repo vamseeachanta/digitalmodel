@@ -1,12 +1,12 @@
 {
   "CardDetails": {
-    "ID": 6679658,
+    "ID": 204,
     "Api14": "API-CLEANSED-004",
     "CardType": "Current",
     "WellName": "Well-D",
-    "CardTimeStamp": "2021-03-30T20:35:48",
-    "CreatedTimeStamp": "2021-03-30T20:36:54.257000",
-    "UpdatedTimeStamp": "2021-03-31T04:24:06.640000",
+    "CardTimeStamp": "2018-03-26T20:35:48",
+    "CreatedTimeStamp": "2018-03-26T20:36:54.257000",
+    "UpdatedTimeStamp": "2018-03-27T04:24:06.640000",
     "CalculationMethod": "Ready",
     "CalculationMethodReason": "Lift capacity analysis failed: 24hr Average SPM for Lift Capacity calculation is NULL; RunMode: On-demand"
   },
@@ -34,7 +34,7 @@
     "CasingLiquidGradient": null
   },
   "WellTestData": {
-    "WellTestDate": "2021-01-26",
+    "WellTestDate": "2018-01-22",
     "OilRate": 6.78000020980835,
     "GasRate": 0.0,
     "WaterRate": 304.1600036621094,
@@ -45,7 +45,7 @@
     "ApiNo14": "API-CLEANSED-004",
     "Rods": [
       {
-        "InstallId": 52421,
+        "InstallId": 1004,
         "RID": 1,
         "Manufacturer": "API",
         "Grade": "D",
@@ -71,7 +71,7 @@
         "RodStressSigmaA": null
       },
       {
-        "InstallId": 52421,
+        "InstallId": 1004,
         "RID": 2,
         "Manufacturer": "API",
         "Grade": "D",
@@ -97,7 +97,7 @@
         "RodStressSigmaA": null
       },
       {
-        "InstallId": 52421,
+        "InstallId": 1004,
         "RID": 3,
         "Manufacturer": "API",
         "Grade": "D",
@@ -123,7 +123,7 @@
         "RodStressSigmaA": null
       },
       {
-        "InstallId": 52421,
+        "InstallId": 1004,
         "RID": 4,
         "Manufacturer": "API",
         "Grade": "K",
@@ -150,12 +150,12 @@
       }
     ],
     "Pump": {
-      "InstallId": 52421,
+      "InstallId": 1004,
       "Depth": 4838.0,
       "Diameter": 2.0
     },
     "SurfaceUnit": {
-      "InstallId": 52421,
+      "InstallId": 1004,
       "Description": null,
       "PumpingUnitManufacturer": "L",
       "PumpingUnitGeometry": "M",
@@ -195,13 +195,13 @@
   },
   "dynaoutputData": {
     "SurfaceUnit": {
-      "InstallId": 52421,
+      "InstallId": 1004,
       "GearBoxStressTorque": null,
       "BeamStress": null
     },
     "Rods": [
       {
-        "InstallId": 52421,
+        "InstallId": 1004,
         "RodStress": null,
         "RodStressMax": null,
         "RodStressMin": null,
@@ -209,7 +209,7 @@
         "DampingCoefficient": 0.0
       },
       {
-        "InstallId": 52421,
+        "InstallId": 1004,
         "RodStress": null,
         "RodStressMax": null,
         "RodStressMin": null,
@@ -217,7 +217,7 @@
         "DampingCoefficient": 0.0
       },
       {
-        "InstallId": 52421,
+        "InstallId": 1004,
         "RodStress": null,
         "RodStressMax": null,
         "RodStressMin": null,
@@ -225,7 +225,7 @@
         "DampingCoefficient": 0.0
       },
       {
-        "InstallId": 52421,
+        "InstallId": 1004,
         "RodStress": null,
         "RodStressMax": null,
         "RodStressMin": null,

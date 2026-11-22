@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 # ABOUTME: Tests for API 579-1 Part 6 pitting assessment (assessment/pitting.py)
 # ABOUTME: — characterization, Level 1 screen, equivalent-LTA Level 2, routing.
 """Pitting assessment tests (#1269).
@@ -35,7 +38,7 @@ from digitalmodel.asset_integrity.assessment.pitting import (
 )
 
 DATA = Path(__file__).parent / "test_data" / "real_inspection"
-REAL_GRID = DATA / "ut_grid_RJ-101-boxend_worstzone_fullres.csv"
+REAL_GRID = DATA / "ut_grid_scan-a_window_fullres.csv"
 
 NOMINAL = 0.500  # inches, synthetic grids
 
@@ -172,10 +175,10 @@ class TestLevel1Screen:
         r = screen_pitting_level1(char, t_min_in=0.35, fca_in=0.10)
         assert r["verdict"] == "FAIL_LEVEL_1"
 
-    def test_no_pits_accepts(self):
+    def test_no_pits_is_not_evaluated(self):
         char = characterize_pit_field(_grid(), NOMINAL)
         r = screen_pitting_level1(char, t_min_in=0.45)
-        assert r["verdict"] == "ACCEPT"
+        assert r["verdict"] == "NOT_EVALUATED"
 
 
 # ===========================================================================
@@ -221,13 +224,13 @@ class TestLevel2EquivalentLTA:
         extended = {(3, 5): 0.30, (14, 10): 0.30, (27, 20): 0.30}
         assert self._l2(extended)["rsf"] <= self._l2(compact)["rsf"]
 
-    def test_no_pits_gives_unity_rsf(self):
+    def test_no_pits_has_no_pitting_rsf(self):
         char = characterize_pit_field(_grid(), NOMINAL)
         r = assess_pitting_level2_equivalent_lta(
             char, nominal_od_in=self.OD, nominal_wt_in=NOMINAL, t_min_in=self.TMIN
         )
-        assert r["rsf"] == 1.0
-        assert r["verdict"] == "ACCEPT"
+        assert np.isnan(r["rsf"])
+        assert r["verdict"] == "NOT_EVALUATED"
         assert r["equivalent_lta"] is None
 
     def test_one_call_convenience(self):
@@ -390,7 +393,7 @@ class TestRealFixtureIntegration:
 
     def test_assess_real_scan_as_pitting(self, real_grid):
         component = FFSComponent(
-            component_id="RJ-101-boxend",
+            component_id="scan-a",
             design_code="B31.8",
             nominal_od_in=NOMINAL_OD_REAL,
             nominal_wt_in=NOMINAL_WT_REAL,
@@ -427,7 +430,7 @@ class TestRealFixtureIntegration:
         # below the pit-count floor — so its default classification is
         # unchanged by the pitting heuristic.
         grid = GridParser.from_csv(
-            str(DATA / "ut_grid_RJ-103-pinend_ds8.csv"), input_units="mm"
+            str(DATA / "ut_grid_scan-c_ds8.csv"), input_units="mm"
         )
         route = FFSRouter.classify(
             grid, nominal_od_in=NOMINAL_OD_REAL, nominal_wt_in=NOMINAL_WT_REAL

@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "measured_utc": "2026-10-20T15:10:06+00:00",
+  "units": {
+    "stress": "MPa",
+    "length": "mm",
+    "force": "N"
+  },
+  "versions": {
+    "MYSTRAN": "19.0.0 (JUN 28 2026)",
+    "pyNastran": "1.4.1",
+    "comparison_python": "3.12.3",
+    "test_python": "3.11.15",
+    "pytest": "9.1.1"
+  },
+  "solver_sha256": "80e74493a172d7bcd0aed309927e200f4adbd1aaa830e8da114bddc4eea9a26b",
+  "basis": "QUADAXIS=SPLITD, local tensor rotated to global XY; mean of opposite fibre stresses",
+  "cases": {
+    "le1_8x24": {
+      "elements": 192,
+      "seconds": 0.264,
+      "fe0": {
+        "read_errors": 0,
+        "unresolved_references": 0,
+        "unsupported_cards": 0
+      },
+      "fe1": {
+        "fatal_messages": 0,
+        "warnings": [],
+        "completed": true
+      },
+      "native_sha256": {
+        "le1_8x24.ERR": "7f79b477a7ff22a5d8aa7e68cc2922194aba0164395ad9743b0332f00cd978e6",
+        "le1_8x24.bdf": "321d6c054eff57cb204224544b38f03da790f8ecee0015d44857cfa5796e48fa",
+        "le1_8x24.OP2": "d99ed89521a99aef77afee5aca3c028ef4580359bdf33e11116714c5f776f873",
+        "le1_8x24.F06": "40121bc775d5ab1b3065c8956a95d0d3a7988a8eaf6e814f2d3e9ad3ade87bf9",
+        "console.txt": "d95aa82895627ee39309c4280da41903b1ea3aa8cf1c09c9be41b36236ba031b"
+      },
+      "verdict": "FAIL",
+      "value_MPa": 82.09159363914443,
+      "reference_MPa": 92.7,
+      "difference_pct": -11.443804057017873,
+      "band_pct": 5.0
+    },
+    "le1_16x48": {
+      "elements": 768,
+      "seconds": 0.84,
+      "fe0": {
+        "read_errors": 0,
+        "unresolved_references": 0,
+        "unsupported_cards": 0
+      },
+      "fe1": {
+        "fatal_messages": 0,
+        "warnings": [],
+        "completed": true
+      },
+      "native_sha256": {
+        "le1_16x48.ERR": "a59e8d2c8453b7fd24e5981db65612f5492b2a0a749c71171acc0b1d365ed252",
+        "le1_16x48.bdf": "4ce6633fcdefe95bd3afeeafd98c0ace88de0206ffa63ba8aec8e68b697d672c",
+        "le1_16x48.OP2": "ad3c828d8149159bcc76dcf46eb86d622af91fdca9b5c7105b0b54657b3b36cb",
+        "le1_16x48.F06": "64a158c47de9a371c0b7c789cc82d8efd452c0e2d73bdcf1f0d5ab61d1244cbf",
+        "console.txt": "2f8895915dbb6e996f85bfdd3c4f7aca22f4b9f1c54c2273abc8274eb8f9a6c0"
+      },
+      "verdict": "PASS",
+      "value_MPa": 88.65045371958664,
+      "reference_MPa": 92.7,
+      "difference_pct": -4.368442589442682,
+      "band_pct": 5.0
+    },
+    "le1_32x96": {
+      "elements": 3072,
+      "seconds": 3.141,
+      "fe0": {
+        "read_errors": 0,
+        "unresolved_references": 0,
+        "unsupported_cards": 0
+      },
+      "fe1": {
+        "fatal_messages": 0,
+        "warnings": [],
+        "completed": true
+      },
+      "native_sha256": {
+        "le1_32x96.ERR": "f72b9755c405a1fe89eebf4ead318f97b1f866a9603d544dfb26bf647c844975",
+        "le1_32x96.OP2": "ebf517f7b718dcad9873f33915b612efda5de6a87d41a51234b142e3c404b7f9",
+        "le1_32x96.F06": "a48f19b87d6371d01246c8f46c1ac733b07127c88341d864b64be27151f45270",
+        "le1_32x96.bdf": "a1783bf3cb6759ef5578b3d818069c50b9121b53d9b0152f406b72da32ce687b",
+        "console.txt": "4f6a8b6b7ed23e88d0a654ca98e3fc44b32382fa60a360b98fdb2860494df695"
+      },
+      "verdict": "PASS",
+      "value_MPa": 91.35423251215651,
+      "reference_MPa": 92.7,
+      "difference_pct": -1.4517448628300849,
+      "band_pct": 5.0
+    },
+    "patch": {
+      "elements": 5,
+      "seconds": 0.091,
+      "fe0": {
+        "read_errors": 0,
+        "unresolved_references": 0,
+        "unsupported_cards": 0
+      },
+      "fe1": {
+        "fatal_messages": 0,
+        "warnings": [],
+        "completed": true
+      },
+      "native_sha256": {
+        "patch.F06": "44d379cc11d95d541c34195265be6b8f4fbcd17c806fdffe727d399c484c41a9",
+        "patch.ERR": "ea606536320bc57d75a2f95a154aeec66519ba466fbfe07aab631a050c7d1dbe",
+        "patch.bdf": "23bbc1cc8f5d32366038acc0d1d2bb38d291f98fb583133c85fff01c0b2d146d",
+        "console.txt": "2da2c64f5c68b04aedf04f1c90c3a107d3bf6a41076859f0f507b1580c750ac6",
+        "patch.OP2": "4730d1b42f93de9266d6f8f0dabbb87988b9e3399298dc1f205be7b45dc8fb0f"
+      },
+      "verdict": "PASS",
+      "expected_MPa": {
+        "sigma_xx_MPa": 299.99999999999994,
+        "sigma_yy_MPa": 299.99999999999994,
+        "tau_xy_MPa": 80.76923076923077
+      },
+      "worst_difference_pct": 0.00011566666667780134,
+      "band_pct": 0.1
+    }
+  },
+  "verification": {
+    "benchmark_tests": 22,
+    "structure_tests": 54,
+    "all_tests_passed": 76,
+    "selftest": "PASS",
+    "native_runs_attempted": 4,
+    "native_runs_completed": 4,
+    "fe0_cases_passed": 4,
+    "fe1_cases_passed": 4,
+    "fine_le1_verdict": "PASS",
+    "patch_verdict": "PASS",
+    "coarse_le1_verdict": "FAIL",
+    "second_provider_review": "pending before merging"
+  }
+}

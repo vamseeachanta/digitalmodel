@@ -36,7 +36,10 @@ def _matrix_samples(matrix_set: AddedMassSet | DampingSet) -> tuple[np.ndarray, 
     actual_frequencies = np.asarray([matrix.frequency for matrix in matrix_set.matrices])
     if not np.array_equal(actual_frequencies, frequencies):
         raise AbscissaOrderError("per-matrix frequencies must match the collection axis")
-    values = np.asarray([matrix.matrix for matrix in matrix_set.matrices], dtype=float)
+    try:
+        values = np.asarray([matrix.matrix for matrix in matrix_set.matrices], dtype=float)
+    except (TypeError, ValueError) as exc:
+        raise AbscissaOrderError("matrix samples must be numeric rectangular arrays") from exc
     if values.shape != (frequencies.size, 6, 6):
         raise AbscissaOrderError("each matrix sample must have shape (6, 6)")
     return frequencies, values

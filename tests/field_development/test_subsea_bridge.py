@@ -39,10 +39,10 @@ def research_data():
 
 
 @pytest.fixture
-def catalog(research_data):
+def catalog(research_data, tmp_path):
     """Create a catalog from the research data."""
     # Save to temp file for from_json loader
-    tmp = Path("/tmp/test_subseaiq.json")
+    tmp = tmp_path / "test_subseaiq.json"
     with open(tmp, "w") as f:
         json.dump(research_data, f)
     return SubseaFieldCatalog.from_json(str(tmp))

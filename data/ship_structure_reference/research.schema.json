@@ -2,47 +2,317 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Local ship structure source research, not solver qualification",
   "type": "object",
-  "required": ["schema_version", "observed_on", "status", "publication_allowed", "raw_sources_copied", "sources", "products", "sections", "type_coverage"],
+  "required": [
+    "schema_version",
+    "observed_on",
+    "status",
+    "publication_allowed",
+    "raw_sources_copied",
+    "sources",
+    "products",
+    "sections",
+    "type_coverage"
+  ],
   "properties": {
-    "schema_version": {"const": 1},
-    "observed_on": {"type": "string", "format": "date"},
-    "status": {"const": "internal_research_pending_source_rights"},
-    "publication_allowed": {"const": false},
-    "raw_sources_copied": {"const": false},
-    "sources": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/source"}},
-    "products": {"type": "array", "items": {"type": "object", "required": ["id", "family", "source_key", "dimension_kind"]}},
-    "sections": {"type": "array", "items": {"$ref": "#/$defs/section"}},
-    "type_coverage": {"type": "object"}
+    "schema_version": {
+      "const": 2
+    },
+    "observed_on": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "const": "internal_research_pending_source_rights"
+    },
+    "publication_allowed": {
+      "const": false
+    },
+    "raw_sources_copied": {
+      "const": false
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/source"
+      }
+    },
+    "products": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "family",
+          "source_key",
+          "dimension_kind"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "family": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "source_key": {
+            "type": "string",
+            "pattern": "\\S"
+          },
+          "dimension_kind": {
+            "enum": [
+              "supply_envelope",
+              "discrete_catalogue",
+              "project_geometry"
+            ]
+          }
+        }
+      }
+    },
+    "sections": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/section"
+      }
+    },
+    "type_coverage": {
+      "type": "object"
+    }
   },
   "$defs": {
-    "unknown": {"type": "object", "required": ["state", "reason"], "properties": {"state": {"const": "unknown"}, "reason": {"type": "string", "minLength": 1}}, "additionalProperties": false},
-    "source": {
-      "type": "object", "required": ["key", "catalog_source_id", "issuer", "url", "edition", "source_date", "locator", "coverage"],
+    "unknown": {
+      "type": "object",
+      "required": [
+        "state",
+        "reason"
+      ],
       "properties": {
-        "key": {"type": "string", "minLength": 1},
-        "catalog_source_id": {"type": ["string", "null"]},
-        "issuer": {"type": "string", "minLength": 1},
-        "url": {"type": "string", "format": "uri"},
-        "edition": {"oneOf": [{"type": "string", "minLength": 1}, {"$ref": "#/$defs/unknown"}]},
-        "source_date": {"oneOf": [{"type": "string", "minLength": 1}, {"$ref": "#/$defs/unknown"}]},
-        "locator": {"type": "string", "minLength": 1},
-        "coverage": {"type": "string", "minLength": 1}
+        "state": {
+          "const": "unknown"
+        },
+        "reason": {
+          "type": "string",
+          "pattern": "\\S"
+        }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": [
+        "key",
+        "catalog_source_id",
+        "issuer",
+        "url",
+        "edition",
+        "source_date",
+        "locator",
+        "coverage",
+        "retrieved_on",
+        "rights_status"
+      ],
+      "properties": {
+        "key": {
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "catalog_source_id": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "\\S"
+            },
+            {
+              "$ref": "#/$defs/unknown"
+            }
+          ]
+        },
+        "issuer": {
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri",
+          "pattern": "^https?://[^/\\s]+(/[^\\s]*)?$",
+          "$comment": "Bound HTTP(S) pointer syntax; the research validator also parses the authority to require a hostname and validate any port, independently of optional URI format support."
+        },
+        "edition": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "\\S"
+            },
+            {
+              "$ref": "#/$defs/unknown"
+            }
+          ]
+        },
+        "source_date": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "\\S"
+            },
+            {
+              "$ref": "#/$defs/unknown"
+            }
+          ]
+        },
+        "locator": {
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "coverage": {
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "retrieved_on": {
+          "type": "string",
+          "format": "date"
+        },
+        "rights_status": {
+          "enum": [
+            "unresolved",
+            "metadata_only",
+            "reuse_permitted"
+          ]
+        }
       }
     },
     "section": {
-      "type": "object", "required": ["id", "family", "source_key", "dimension_kind", "width_mm", "thickness_mm", "area_mm2", "Ix_mm4", "Iy_mm4", "Zx_mm3", "Zy_mm3", "J_mm4", "property_basis", "axes", "material_grade", "solver_eligibility"],
+      "type": "object",
+      "required": [
+        "id",
+        "family",
+        "source_key",
+        "dimension_kind",
+        "width_mm",
+        "thickness_mm",
+        "area_mm2",
+        "Ix_mm4",
+        "Iy_mm4",
+        "Zx_mm3",
+        "Zy_mm3",
+        "J_mm4",
+        "property_basis",
+        "axes",
+        "material_grade",
+        "solver_eligibility",
+        "units",
+        "delivery_condition"
+      ],
       "properties": {
-        "width_mm": {"type": "number", "exclusiveMinimum": 0},
-        "thickness_mm": {"type": "number", "exclusiveMinimum": 0},
-        "area_mm2": {"type": "number", "exclusiveMinimum": 0},
-        "Ix_mm4": {"type": "number", "exclusiveMinimum": 0},
-        "Iy_mm4": {"type": "number", "exclusiveMinimum": 0},
-        "Zx_mm3": {"type": "number", "exclusiveMinimum": 0},
-        "Zy_mm3": {"type": "number", "exclusiveMinimum": 0},
-        "J_mm4": {"type": "number", "exclusiveMinimum": 0},
-        "material_grade": {"$ref": "#/$defs/unknown"},
-        "solver_eligibility": {"enum": ["inapplicable_existing_panel_solver_has_no_bulb_geometry", "inapplicable_existing_angle_route_lacks_lateral_eccentricity_qualification"]}
+        "width_mm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "thickness_mm": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "area_mm2": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "Ix_mm4": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "Iy_mm4": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "Zx_mm3": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "Zy_mm3": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "J_mm4": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "material_grade": {
+          "$ref": "#/$defs/unknown"
+        },
+        "solver_eligibility": {
+          "enum": [
+            "inapplicable_existing_panel_solver_has_no_bulb_geometry",
+            "inapplicable_existing_angle_route_lacks_lateral_eccentricity_qualification"
+          ]
+        },
+        "id": {
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "family": {
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "source_key": {
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "dimension_kind": {
+          "enum": [
+            "supply_envelope",
+            "discrete_catalogue",
+            "project_geometry"
+          ]
+        },
+        "axes": {
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "property_basis": {
+          "type": "string",
+          "pattern": "\\S"
+        },
+        "delivery_condition": {
+          "oneOf": [
+            {
+              "type": "string",
+              "pattern": "\\S"
+            },
+            {
+              "$ref": "#/$defs/unknown"
+            }
+          ]
+        },
+        "units": {
+          "type": "object",
+          "required": [
+            "length",
+            "area",
+            "inertia",
+            "section_modulus",
+            "torsion"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "length": {
+              "const": "mm"
+            },
+            "area": {
+              "const": "mm2"
+            },
+            "inertia": {
+              "const": "mm4"
+            },
+            "section_modulus": {
+              "const": "mm3"
+            },
+            "torsion": {
+              "const": "mm4"
+            }
+          }
+        }
       }
     }
-  }
+  },
+  "$comment": "Authored staging contract for issue 2288; no engineering qualification. JSON Schema 2020-12 Validation (2022), sections 6 and 7. Version 2 requires explicit source vintage, rights, units and condition."
 }

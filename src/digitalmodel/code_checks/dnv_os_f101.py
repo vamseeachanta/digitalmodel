@@ -131,19 +131,45 @@ def local_buckling_lcc(
     -------
     LocalBucklingResult
         Combined-loading utilisation and pass/fail flag.
+
+    Raises
+    ------
+    ValueError
+        If a load or pressure is non-finite, a capacity or resistance factor
+        is not finite and positive, or the derived utilisation is non-finite.
     """
-    if moment_capacity <= 0.0 or axial_capacity <= 0.0 or pressure_capacity <= 0.0:
-        raise ValueError("capacities must be positive")
+    for name, value in (
+        ("design_moment", design_moment),
+        ("design_effective_tension", design_effective_tension),
+        ("pressure_internal", pressure_internal),
+        ("pressure_external", pressure_external),
+    ):
+        if not math.isfinite(value):
+            raise ValueError(f"{name} must be finite")
+    for name, value in (
+        ("moment_capacity", moment_capacity),
+        ("axial_capacity", axial_capacity),
+        ("pressure_capacity", pressure_capacity),
+        ("gamma_m", gamma_m),
+        ("gamma_sc", gamma_sc),
+    ):
+        if not math.isfinite(value) or value <= 0.0:
+            raise ValueError(f"{name} must be finite and positive")
 
-    g = gamma_m * gamma_sc
-    moment_term = g * abs(design_moment) / moment_capacity
-    tension_term = (g * design_effective_tension / axial_capacity) ** 2
-    group = (moment_term + tension_term) ** 2
+    try:
+        g = gamma_m * gamma_sc
+        moment_term = g * abs(design_moment) / moment_capacity
+        tension_term = (g * design_effective_tension / axial_capacity) ** 2
+        group = (moment_term + tension_term) ** 2
 
-    net = pressure_internal - pressure_external
-    pressure_term = (g * abs(net) / pressure_capacity) ** 2
+        net = pressure_internal - pressure_external
+        pressure_term = (g * abs(net) / pressure_capacity) ** 2
 
-    uf = group + pressure_term
+        uf = group + pressure_term
+    except OverflowError as exc:
+        raise ValueError("derived utilisation must be finite") from exc
+    if not math.isfinite(uf):
+        raise ValueError("derived utilisation must be finite")
     return LocalBucklingResult(utilisation=uf, passes=uf <= 1.0)
 
 
@@ -159,6 +185,9 @@ def local_buckling_lcc(
 #       (Pc - Pel)(Pc^2 - Pp^2) = Pc * Pel * Pp * f0 * D / t
 # with initial ovality f0 = (Dmax - Dmin)/D (>= 0.005 per code minimum).
 # Pc is taken as the relevant (smallest positive) real root.
+
+# Code minimum initial ovality f0 applied as a floor by collapse_pressure().
+MINIMUM_OVALITY = 0.005
 
 
 def elastic_collapse_pressure(
@@ -218,8 +247,8 @@ def collapse_pressure(
     float
         Characteristic collapse resistance Pc [pressure].
     """
-    if ovality < 0.005:
-        ovality = 0.005  # DNV code minimum imperfection
+    if ovality < MINIMUM_OVALITY:
+        ovality = MINIMUM_OVALITY  # DNV code minimum imperfection
 
     pel = elastic_collapse_pressure(diameter, t, youngs_modulus, poisson_ratio)
     pp = plastic_collapse_pressure(diameter, t, f_y, alpha_fab)

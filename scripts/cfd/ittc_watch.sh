@@ -38,6 +38,10 @@
 # watcher; if you arm it by hand, verify it yourself.
 set -euo pipefail
 
+# Issue 2027: only output modified strictly after this watcher armed is eligible.
+# Use the same clock and nanosecond units as Python's file stat below.
+WATCH_STARTED_NS="$(python3 -c 'import time; print(time.time_ns())')"
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=scripts/cfd/lib/cfd_chain.sh
 source "$SCRIPT_DIR/lib/cfd_chain.sh"
@@ -108,6 +112,7 @@ coef_file() {
 cfd_say "ITTC watcher armed for '$CASE_NAME': min_iter=$MIN_ITER window=$WINDOW x$WINDOWS spread<=${SPREAD_PCT}% drift<=${DRIFT_PCT}% hold=$HOLD"
 
 pass=0
+last_coef=""
 while true; do
   sleep "$POLL"
 
@@ -122,15 +127,29 @@ while true; do
   fi
 
   COEF="$(coef_file)"
-  [ -n "$COEF" ] && [ -f "$COEF" ] || { cfd_say "WAIT no coefficient file yet"; continue; }
+  [ -n "$COEF" ] && [ -f "$COEF" ] || { pass=0; cfd_say "WAIT no coefficient file yet"; continue; }
+  # Consecutive checks must refer to the same history, never span a restart.
+  if [ "$COEF" != "$last_coef" ]; then pass=0; fi
+  last_coef="$COEF"
 
-  line="$(python3 - "$COEF" "$MIN_ITER" "$WINDOW" "$WINDOWS" "$SPREAD_PCT" "$DRIFT_PCT" <<'PY'
+  line="$(python3 - "$COEF" "$MIN_ITER" "$WINDOW" "$WINDOWS" "$SPREAD_PCT" "$DRIFT_PCT" "$WATCH_STARTED_NS" <<'PY'
+import os
 import sys
 path, min_iter, win, nwin, spread_pct, drift_pct = sys.argv[1:7]
+armed_ns = int(sys.argv[7])
+try:
+    history = open(path, encoding="utf-8", errors="replace")
+except OSError:
+    print("WAIT coefficient-unavailable"); raise SystemExit
+# Inspect the opened file, not a pathname that may be replaced before reading.
+# Issue 2027's freshness requirement is strict: equal timestamps fail closed.
+if os.fstat(history.fileno()).st_mtime_ns <= armed_ns:
+    history.close()
+    print("WAIT stale-coefficient"); raise SystemExit
 min_iter, win, nwin = int(min_iter), int(win), int(nwin)
 spread_pct, drift_pct = float(spread_pct), float(drift_pct)
 rows = []
-for line in open(path, errors="replace"):
+for line in history:
     if line.startswith("#"):
         continue
     p = line.split()
@@ -140,6 +159,7 @@ for line in open(path, errors="replace"):
         rows.append((int(float(p[0])), abs(float(p[1]))))
     except ValueError:
         continue
+history.close()
 if not rows:
     print("WAIT no-rows"); raise SystemExit
 last = rows[-1][0]
@@ -164,7 +184,7 @@ PY
   # An empty verdict means the criterion produced nothing, which is not a
   # PASS and must not be read as one. `read` would exit non-zero on an empty
   # line and kill the watcher mid-run, so parse by expansion.
-  [ -n "$line" ] || { cfd_say "WAIT criterion produced no output"; continue; }
+  [ -n "$line" ] || { pass=0; cfd_say "WAIT criterion produced no output"; continue; }
   verdict="${line%% *}"
   msg="${line#* }"
 

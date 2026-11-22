@@ -84,10 +84,13 @@ class FeatureExtractor:
         ``extract_bezerra_projections`` normalises position *and* load to
         [0, 1], which is what makes it robust to units and to well-to-well
         amplitude differences -- and also what makes it blind to any mode
-        defined by absolute size. ``NORMAL`` (80-120 in), ``TUBING_MOVEMENT``
-        (130-180 in) and ``PLUNGER_UNDERTRAVEL`` (30-55 in) differ *only* in
-        stroke length, so under projections alone they are not merely hard to
-        tell apart, they are the same vector (dm#1884).
+        defined by absolute size. Historically, ``NORMAL`` (80-120 in),
+        ``TUBING_MOVEMENT`` (130-180 in) and ``PLUNGER_UNDERTRAVEL`` (30-55 in)
+        differed only in stroke length and gave the same projection vector
+        (dm#1884). These disjoint ranges are historical: current defaults share
+        a stroke draw, and undertravel defaults also duplicate NORMAL's noise.
+        Synthetic labelled datasets exclude undertravel and tubing movement
+        until a distinguishing matched-travel basis exists.
 
         Returns (3,): stroke length, load range, and enclosed card area, all
         in the card's own units. Trees split on raw magnitudes happily, and
@@ -176,7 +179,9 @@ class FeatureExtractor:
         # "not computed"; it previously meant that too, but silently, because the
         # metric returned a saturated 0.0 for cards it could not evaluate.
         if results.ideal_card is not None:
-            similarity = results.ideal_card.shape_similarity
+            # Keep the trained distance score separate from the signed report
+            # metric. Retraining on signed scores is tracked by issue #1864.
+            similarity = results.ideal_card.legacy_shape_feature
             if similarity is not None:
                 features[1] = np.clip(similarity, 0.0, 1.0)
 
@@ -199,8 +204,9 @@ class FeatureExtractor:
         if results.card_geometry is not None:
             geom = results.card_geometry
             denom = 2.0 * (geom.position_range + geom.load_range)
-            if denom > 0:
-                features[7] = geom.perimeter / denom
+            if denom > 0 and geom.legacy_perimeter_feature is not None:
+                # Frozen mixed-axis feature, never a physical perimeter.
+                features[7] = geom.legacy_perimeter_feature / denom
 
         # Feature 8: sinusoidal_buckling_detected
         if results.rod_buckling is not None:

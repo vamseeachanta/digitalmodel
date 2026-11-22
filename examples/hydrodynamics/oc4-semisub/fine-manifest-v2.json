@@ -1,0 +1,78 @@
+{
+  "schema_version": 2,
+  "level": "fine",
+  "inputs": {
+    "gravity_m_s2": 9.80665,
+    "depth_m": 1500,
+    "omega_max_rad_s": 3.5,
+    "panels_per_wavelength": 6,
+    "rule_status": "ASSUMED study criterion",
+    "max_span_m": 0.8383265196279277,
+    "mesh_size_m": 0.4,
+    "source_sha256": {
+      "generate_mesh.py": "c03fa5f83f0c77a0bd03f2514bf1dbe7cbd1ad4c7ac04a967675211cf588c23a",
+      "check_mesh.py": "0bc9c5e23cf7c119001701dd042ae5001b6e382cc0a4863fd722fe715da2ec1d"
+    },
+    "gmsh_version": "4.15.1"
+  },
+  "source_id": "nrel-iea-reference-turbines",
+  "owner": "digitalmodel",
+  "status": "OFFLINE_CHECKED_NATIVE_ACCEPTANCE_OPEN",
+  "artifacts": [
+    {
+      "file": "fine-hull-v2.gdf",
+      "kind": "hull",
+      "panels": 113471,
+      "sha256": "4d5030525628bd0465b46373554a5a055fd3ae1d48fadd8cb19e04fe29fbbcd4",
+      "bytes": 19448914,
+      "df3": {
+        "pass": true,
+        "panels": 113471,
+        "max_span_m": 0.5652673731212703,
+        "limit_m": 0.8383265196279277,
+        "oversized_panels": 0
+      }
+    },
+    {
+      "file": "fine-lid-v2.gdf",
+      "kind": "lid",
+      "panels": 5899,
+      "sha256": "82def380db0007132ef80306768e2e47b05c257789e67ac9bd99e9086fb92762",
+      "bytes": 974407,
+      "df3": {
+        "pass": true,
+        "panels": 5899,
+        "max_span_m": 0.5500257707041105,
+        "limit_m": 0.8383265196279277,
+        "oversized_panels": 0
+      }
+    }
+  ],
+  "lid_check": {
+    "pass": true,
+    "panels": 5899,
+    "area_m2": 379.65120770245215
+  },
+  "hydrostatics": {
+    "volume": 13907.068800885667,
+    "waterplane": 379.6512077024672,
+    "cob_x": -0.0032040119386758737,
+    "cob_y": 1.3564182890987022e-05,
+    "cob_z": -13.175148072210845,
+    "max_span": 0.5652673707376659,
+    "max_aspect": 2.07651857330721,
+    "crossings": 0.0,
+    "bad_edges": 0.0,
+    "degenerate": 0.0,
+    "above_water": 0.0
+  },
+  "source_header_normalisation": {
+    "transformation": "Standard licence header only; no geometry or numerical result is changed",
+    "verification_script": "scripts/enforcement/check_license_header_only.py",
+    "generation_source_sha256": {
+      "generate_mesh.py": "0d75ff5c199c2c938d62ed391ebab3403445ff18394f31affa8291ea876d9f7c",
+      "check_mesh.py": "c2ec3c948bcd10bb6b7e4d0261fc8dbf2a17d0f412be3cc40d058627a78c06cb"
+    },
+    "check": "PASS"
+  }
+}

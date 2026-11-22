@@ -194,7 +194,9 @@ def main():
         raise FileExistsError('Preserve prior review payload')
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(payload, indent=2, allow_nan=False), encoding='utf-8')
-    assert json.loads(args.output.read_text(encoding='utf-8')) == payload
+    # Python Language Reference, section 7.3: assert is omitted under -O.
+    if json.loads(args.output.read_text(encoding='utf-8')) != payload:
+        raise ValueError('Monitoring payload changed during export')
 
 
 if __name__ == '__main__':

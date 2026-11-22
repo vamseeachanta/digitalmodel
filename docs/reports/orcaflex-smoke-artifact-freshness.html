@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OrcaFlex smoke artifact freshness</title>
+  <style>
+    body { max-width: 62rem; margin: 2rem auto; padding: 0 1rem; color: #182331;
+      background: #fafbfd; font: 1rem/1.6 system-ui, sans-serif; }
+    h1, h2 { line-height: 1.2; color: #123753; }
+    table { border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #bdcbd5; padding: .6rem; text-align: left; }
+    th { background: #eaf1f6; }
+    caption { caption-side: bottom; text-align: left; padding-top: .5rem; }
+    code, pre { background: #edf2f6; }
+    pre { padding: 1rem; overflow-x: auto; }
+    a { color: #14568a; }
+  </style>
+</head>
+<body>
+  <h1>OrcaFlex smoke artifact freshness</h1>
+  <section>
+    <h2>Summary</h2>
+    <p>The existing finite-result, one-thread and simulation-readback checks are
+      extended to reject pre-existing <code>smoke.dat</code> or
+      <code>smoke.sim</code> entries before model construction. A failed save
+      cannot borrow an earlier simulation as current evidence. Previous files,
+      directories and symlinks are preserved. The affected result returns
+      <code>ok=false</code> and <code>stage=prepare</code>.</p>
+    <p>Freshness is a prerequisite for the save/reload proof in
+      <a href="https://github.com/vamseeachanta/digitalmodel/issues/2082">issue 2082</a>.
+      This change establishes offline contract behavior; native acceptance for
+      the changed source is <strong>NOT_EVALUATED</strong>.</p>
+  </section>
+  <section>
+    <h2>Revision history</h2>
+    <table>
+      <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+      <tbody><tr><td>Initial</td><td>2026-10-20</td><td>Artifact preflight and
+        synthetic examples are added because a previous saved simulation could
+        conceal a save that produced no new file.</td></tr></tbody>
+      <caption>Revision history for this artifact-freshness report.</caption>
+    </table>
+  </section>
+  <section>
+    <h2>Method and criterion</h2>
+    <p>The output directory is created if needed. Both reserved artifact names
+      are checked before the first model is constructed. Any existing entry,
+      including a dangling symlink, produces a structured failure. An unrelated
+      file does not prevent the probe. The caller shall retain exclusive
+      ownership of the directory throughout the probe; the preflight does not
+      provide locking against concurrent writers.</p>
+    <p>The existing criteria remain those of the
+      <a href="../plans/2026-09-10-issue-2082-orcaflex-smoke.html">bounded plan
+      dated 2026-09-10, Bounded design</a>: each model requests and reports one
+      thread, static tension is finite, dynamics complete with at least two
+      finite samples, and the saved simulation independently reloads with the
+      expected line, completed state and matching finite sample count. The
+      two-sample minimum is a smoke criterion, not a convergence limit.</p>
+    <p>The <a href="https://www.orcina.com/webhelp/OrcFxAPI/Content/html/Pythonreference,Model.htm">official
+      Model reference</a>, accessed 2026-10-20, defines the constructor's
+      <code>threadCount</code> parameter and the <code>threadCount</code>,
+      <code>simulationComplete</code> and <code>LoadSimulation</code> interfaces.
+      No new physical constants, coefficients or engineering acceptance limits
+      are introduced.</p>
+  </section>
+  <section>
+    <h2>Worked offline example</h2>
+    <p><a href="../../examples/solver_smoke/finite_readback.json">The input and
+      expected-answer fixture</a> contains chosen synthetic values. A fake API
+      supplies these results and writes synthetic artifacts. No physical
+      simulation is performed, and the values are not qualified engineering
+      inputs. The independent calculations are written in
+      <a href="../../tests/solvers/smoke/test_orcaflex_smoke_example.py">the
+      executable test docstring</a>.</p>
+    <table>
+      <thead><tr><th>Case</th><th>Static tension (kN)</th><th>Solve / reload
+        histories (kN)</th><th>Hand calculation and answer</th></tr></thead>
+      <tbody>
+        <tr><td>Minimum history</td><td>10.0</td><td>[0.0, 2.0] /
+          [0.0, 2.0]</td><td>Each history contains two finite samples;
+          min = 0.0 kN and max = 2.0 kN. The complete fake states and observed
+          thread counts satisfy the smoke criterion: ok=true.</td></tr>
+        <tr><td>Zero tension</td><td>0.0</td><td>[0.0, 0.0] /
+          [0.0, 0.0]</td><td>Both extrema equal 0.0 kN and both counts equal
+          two: ok=true. A finite zero does not mean missing data.</td></tr>
+        <tr><td>Short readback</td><td>10.0</td><td>[0.0, 2.0] /
+          [0.0]</td><td>The reload contains one sample, below the plan's
+          two-sample minimum: ok=false at load_simulation.</td></tr>
+      </tbody>
+      <caption>Synthetic inputs and independently calculated expected answers;
+        counts and extrema are reporting checks, not physical predictions.</caption>
+    </table>
+    <p>Run from the repository root with the repository's test dependencies:</p>
+    <pre><code>python -m pytest tests/solvers/smoke/test_orcaflex_smoke_example.py -q -p no:cacheprovider</code></pre>
+    <p>For the freshness counterexample, place a synthetic previous
+      <code>smoke.sim</code> in the selected directory and configure the fake save
+      to produce nothing. The earlier implementation returned
+      <code>ok=true</code> by reloading that file. The preflight now returns
+      <code>ok=false</code> at <code>prepare</code>, constructs no models and
+      preserves the previous bytes. Select a new output directory for the next
+      attempt; previous evidence need not be removed.</p>
+  </section>
+  <section>
+    <h2>Verification evidence</h2>
+    <p>Before the repair, the freshness tests produced nine failures and one
+      pass. After the repair, all ten freshness tests and all 42 existing
+      numerical, completion, thread-count and readback contract tests passed.
+      All three worked-example cases passed. Eight existing workflow and CLI
+      tests and both CI-registration tests passed.</p>
+    <p>The existing engine-dispatch test cannot complete in the isolated test
+      environment: <code>digitalmodel.engine</code> imports the unavailable
+      <code>assetutilities</code> dependency. The same test and import are present
+      on the base revision. That integration result is not established by the
+      passing probe tests.</p>
+    <p>The original native proof in the
+      <a href="orcaflex-smoke-proof-2082.html">earlier smoke report</a> concerns
+      earlier source. It is not native acceptance of this revision. A
+      second-provider review and native acceptance remain outstanding.</p>
+  </section>
+  <section>
+    <h2>Limits and way forward</h2>
+    <p>The freshness check changes reuse of the reserved filenames from overwrite
+      to failure. The existing CLI exit-code, workflow failure-reporting,
+      scratch-cleanup, AQWA dispatch and explicit host-disclosure contracts are
+      retained. Exact serialized numerical equality and engineering adequacy
+      remain outside the smoke criterion.</p>
+    <p>Other evidence writers may require the same freshness criterion; no audit
+      of those writers is established here. The related completeness audit is
+      tracked in
+      <a href="https://github.com/vamseeachanta/digitalmodel/issues/2085">issue 2085</a>.
+      Native acceptance of fresh output and rejection of reused output should
+      follow on an authorized installation before merge.</p>
+  </section>
+</body>
+</html>

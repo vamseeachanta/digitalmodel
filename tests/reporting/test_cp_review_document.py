@@ -42,7 +42,7 @@ def source() -> ReportSpec:
             title="Demand", columns=["Zone", "Current"], units=["-", "A"],
             rows=[["Submerged", 66.499]],
         )])],
-        provenance=Provenance().add("file", "input.yml", digest="sha256:abc"),
+        provenance=Provenance(code_edition="test", units_system="SI", validated_path="screening").add("file", "input.yml", digest="sha256:abc"),
     )
 
 

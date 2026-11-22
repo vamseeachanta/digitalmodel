@@ -56,7 +56,15 @@ def test_queue_releases_when_marker_appears(tmp_path: Path) -> None:
     _wait_for(tmp_path / "released.txt")
     launched = (tmp_path / "status" / "QUEUE_next_LAUNCHED").read_text()
     assert "pid=" in launched
-    assert "QUEUE next LAUNCHED" in (tmp_path / "next.log").read_text()
+    # The worker writes the LAUNCHED status file before appending the ledger
+    # line, so poll (bounded) for the line rather than reading it once.
+    ledger = tmp_path / "next.log"
+    deadline = time.monotonic() + 5.0
+    while time.monotonic() < deadline:
+        if "QUEUE next LAUNCHED" in ledger.read_text():
+            break
+        time.sleep(0.05)
+    assert "QUEUE next LAUNCHED" in ledger.read_text()
 
 
 def test_queue_cancel_kills_only_recorded_waiter(tmp_path: Path) -> None:

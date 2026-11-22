@@ -71,6 +71,37 @@ class Generator:
 
 GENERATORS = (
     Generator(
+        "scripts/capabilities/build_self_elevating_monitoring.py",
+        ("docs/api/hydro/self-elevating-monitoring.html",),
+        inputs=(
+            "pyproject.toml",
+            "scripts/capabilities/build_self_elevating_monitoring.py",
+            "scripts/capabilities/self_elevating_monitoring.html.template",
+            "src/digitalmodel/marine_ops/self_elevating_monitoring.py",
+        ),
+    ),
+    Generator(
+        "examples/demos/asset_integrity/ffs_showcase.py",
+        ("docs/api/ffs/ffs-showcase.html",),
+        inputs=("examples/demos/asset_integrity/ffs_showcase.py",),
+    ),
+    # The synthetic assessment and its digest manifest form one reproducible
+    # deliverable. Explicit inputs keep the shadow build independent of cwd.
+    Generator(
+        "scripts/reporting/build_pipeline_ffs_report.py",
+        ("docs/api/ffs/pipeline-ffs-assessment.html",
+         "docs/api/ffs/pipeline-ffs-assessment.manifest.json",
+         "docs/reports/pipeline-ffs-assessment.html",
+         "docs/reports/pipeline-ffs-assessment.manifest.json"),
+        inputs=(
+            "pyproject.toml",
+            "examples/workflows/pipeline-ffs-assessment/input.yml",
+            "examples/workflows/pipeline-ffs-assessment/assumptions.yml",
+            "examples/workflows/pipeline-corroded-defect-screen/synthetic.yml",
+            "examples/workflows/ffs-metal-loss/input.yml",
+        ),
+    ),
+    Generator(
         "scripts/capabilities/build_installation_heading_explorer.py",
         ("docs/api/installation/installation-heading-explorer.html",),
         inputs=(
@@ -126,6 +157,20 @@ GENERATORS = (
         "scripts/capabilities/build_sloshing_cfd_showcase.py",
         ("docs/api/cfd/sloshing-cfd-study.html",),
     ),
+    # Exact input/output digests and command are in the generated data record.
+    Generator(
+        "scripts/capabilities/build_generic_hull_screening.py",
+        ("docs/api/cfd/generic-hull-roll-screening.html",
+         "docs/api/cfd/data/generic_hull_roll_screening.json",
+         "tests/hydrodynamics/test_generic_hull_screening.py"),
+        inputs=("src/digitalmodel/hydrodynamics/utube_tank.py",),
+    ),
+    Generator(
+        "scripts/capabilities/build_dual_tank_sloshing_study.py",
+        ("docs/api/cfd/dual-tank-sloshing-cfd-study.html",),
+        inputs=("tests/hydrodynamics/test_utube_tank.py",
+                "docs/api/cfd/data/dual_tank_cfd_evidence.json"),
+    ),
     Generator(
         "scripts/capabilities/build_sloshing_explorer.py",
         ("docs/api/structural/sloshing-explorer.html",),
@@ -136,7 +181,8 @@ GENERATORS = (
     ),
     Generator(
         "scripts/capabilities/build_wall_thickness_3d_page.py",
-        ("docs/api/structural/wall-thickness-3d-explorer.html",),
+        ("docs/api/structural/wall-thickness-3d-explorer.html",
+         "docs/api/structural/wall-thickness-3d-explorer.json"),
         prerequisites=("scripts/capabilities/build_wall_thickness_3d.py",),
     ),
     Generator(
@@ -202,7 +248,10 @@ module.main()
 def discover_candidate_generators(repo: Path) -> set[str]:
     """Defense-in-depth scan for likely unregistered builders."""
     found = set()
-    for root in (repo / "scripts", repo / "docs" / "api"):
+    for root in (
+        repo / "scripts", repo / "docs" / "api",
+        repo / "examples" / "demos" / "asset_integrity",
+    ):
         for path in root.rglob("*.py"):
             text = path.read_text(encoding="utf-8", errors="ignore").casefold()
             # Avoid write API names: producers use helpers and exporters too.

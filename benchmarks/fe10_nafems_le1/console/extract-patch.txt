@@ -1,0 +1,3 @@
+COMMAND: python -I tools/extract_stresses.py --deck inputs/patch.bdf --f06 <native-output> --output results-patch.csv
+results-patch.csv: 5 global mid-surface centroid rows
+exit 0

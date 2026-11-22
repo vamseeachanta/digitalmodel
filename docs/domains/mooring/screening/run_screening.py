@@ -29,7 +29,7 @@ def digest(path: Path) -> str:
 def write_json(path: Path, value: dict) -> None:
     """Write deterministic JSON, rejecting non-finite results."""
     path.write_text(json.dumps(value, indent=2, sort_keys=True, allow_nan=False) + "\n",
-                    encoding="utf-8")
+                    encoding="utf-8", newline="\n")
 
 
 def solve_static(force_n: float, weight_n_m: float, depth_m: float) -> dict:

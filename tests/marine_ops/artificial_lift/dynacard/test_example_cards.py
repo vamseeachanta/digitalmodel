@@ -1,6 +1,7 @@
 # ABOUTME: Tests for the dynacard example-card library and its loader.
 # ABOUTME: Includes the synthetic re-classification drift guard.
 
+import numpy as np
 import pytest
 
 from digitalmodel.marine_ops.artificial_lift.dynacard.diagnostics import (
@@ -57,6 +58,36 @@ def test_measured_cards_have_context():
         assert c.meta.get("spm") and c.meta.get("stroke_in")
         # anonymized ids only - never a real well name
         assert c.id.startswith("field-well-")
+
+
+@pytest.mark.parametrize(
+    "current_arrays", [False, True], ids=["stored", "current-at-library-precision"]
+)
+def test_changed_stroke_examples_reproduce_or_declare_historical_basis(current_arrays):
+    from digitalmodel.marine_ops.artificial_lift.dynacard.card_generators import (
+        ALL_GENERATORS,
+    )
+
+    for card in load_example_cards(source="synthetic-verified"):
+        if card.phenomenon not in {"PLUNGER_UNDERTRAVEL", "TUBING_MOVEMENT"}:
+            continue
+        current = ALL_GENERATORS[card.phenomenon](seed=card.meta["seed"])
+        if current_arrays:
+            # Test published precision independently of the stored-model filter.
+            card = card.model_copy(update={
+                "position": [round(p, 2) for p in current.position],
+                "load": [round(v, 1) for v in current.load],
+                "meta": {"seed": card.meta["seed"]},
+            })
+        reproduces = np.array_equal(
+            card.position, [round(p, 2) for p in current.position]
+        ) and np.array_equal(card.load, [round(v, 1) for v in current.load])
+        if reproduces:
+            assert card.meta.get("generator_basis") != "historical-disjoint-stroke-ranges"
+            assert card.meta.get("seed_reproduces_current_generator", True) is True
+        else:
+            assert card.meta.get("generator_basis") == "historical-disjoint-stroke-ranges"
+            assert card.meta.get("seed_reproduces_current_generator") is False
 
 
 @pytest.mark.parametrize(

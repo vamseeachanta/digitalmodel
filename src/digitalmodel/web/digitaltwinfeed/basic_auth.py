@@ -10,6 +10,8 @@ import hmac
 import logging
 import os
 
+from digitalmodel.web.authentication import verify_environment_credentials
+
 _startup_checked = False
 
 
@@ -33,6 +35,11 @@ def basic_auth_password_for(username):
         return None
     matches = hmac.compare_digest(username.encode('utf-8'), configured.encode('utf-8'))
     return value if matches else None
+
+
+def basic_auth_verify_password(username, password):
+    """Verify both credentials against the live, nonblank environment values."""
+    return verify_environment_credentials(username, password, prefix="DIGITALTWINFEED")
 
 
 def warn_if_basic_auth_closed():

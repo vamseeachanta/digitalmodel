@@ -1,0 +1,253 @@
+{
+  "schema_version": 1,
+  "input_source": "examples/workflows/vessel-seakeeping/input.yml",
+  "input_sha256": "fc42a5a7c7d5601e4ca83d170ce34eeb43fe34fc84c773e018c417fc32e8debf",
+  "basis": {
+    "method": "Independent scalar hand calculation using Python standard-library math and explicit trapezoidal weights; no router, spectral engine, NumPy or SciPy is used.",
+    "equation_sources": [
+      "src/digitalmodel/hydrodynamics/wave_spectra.py:WaveSpectra.jonswap",
+      "src/digitalmodel/hydrodynamics/seakeeping.py:operability_analysis"
+    ],
+    "shape": "q(w) = w^(-5) exp[-1.25 (wp/w)^4] gamma^exp[-(w/wp-1)^2/(2 sigma^2)]; wp = 2 pi / Tp; gamma = 3.3; sigma = 0.07 for w <= wp, otherwise 0.09.",
+    "normalization": "The common multiplicative spectrum coefficient cancels: m0 = (Hs/4)^2 sum(weight * RAO^2 * q) / sum(weight * q).",
+    "amplitude": "Significant single amplitude = 2 sqrt(m0); criterion decision uses amplitude <= criterion.",
+    "operability": "Operability (%) = 100 sum(probability of operable states) / sum(probability of all states); pass when operability >= 95.0 %.",
+    "frequency_rad_s": [
+      0.3,
+      0.4,
+      0.5,
+      0.6,
+      0.7,
+      0.8,
+      0.9,
+      1.0,
+      1.1,
+      1.2
+    ],
+    "trapezoid_weights_rad_s": [
+      0.05,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.1,
+      0.05
+    ],
+    "rao_units": {
+      "heave": "m/m",
+      "roll": "deg/m",
+      "pitch": "deg/m"
+    },
+    "response_m0_units": {
+      "heave": "m^2",
+      "roll": "deg^2",
+      "pitch": "deg^2"
+    },
+    "scope": "Software arithmetic regression for the supplied discrete illustrative grid; physical accuracy, spectral convergence and external standard conformity are not established."
+  },
+  "intermediates": [
+    {
+      "hs_m": 1.5,
+      "tp_s": 8.0,
+      "shape_at_grid": [
+        1.2963176456874245e-23,
+        8.33313428098728e-07,
+        0.015853774720563693,
+        0.32896374464526873,
+        1.1731772034757244,
+        3.074767405450347,
+        1.1304714838219532,
+        0.6289318528574452,
+        0.448721356798566,
+        0.31950513384956825
+      ],
+      "shape_integral": 0.6960640222008081,
+      "rao_squared_shape_integral": {
+        "heave": 0.11036818532240907,
+        "roll": 3.144737011202027,
+        "pitch": 0.7089961131385918
+      },
+      "response_m0": {
+        "heave": 0.022297555348272612,
+        "roll": 0.6353275389842029,
+        "pitch": 0.14323765520142226
+      }
+    },
+    {
+      "hs_m": 2.5,
+      "tp_s": 10.0,
+      "shape_at_grid": [
+        1.4753826055966357e-08,
+        0.048381880861095246,
+        1.4413424581731054,
+        7.548228528678879,
+        4.511394492776418,
+        1.9193476954878084,
+        1.2584496346113745,
+        0.8229842781618996,
+        0.5435604588768109,
+        0.36583990710210823
+      ],
+      "shape_integral": 1.827660938855536,
+      "rao_squared_shape_integral": {
+        "heave": 0.8722010576101179,
+        "roll": 43.557625281387935,
+        "pitch": 3.8856573923155198
+      },
+      "response_m0": {
+        "heave": 0.18641506796238566,
+        "roll": 9.30954807525547,
+        "pitch": 0.830479486979518
+      }
+    },
+    {
+      "hs_m": 4.0,
+      "tp_s": 12.0,
+      "shape_at_grid": [
+        0.0037759339490208987,
+        2.4980684359000143,
+        18.78240801248227,
+        8.58451783027296,
+        4.027534140610619,
+        2.426242110170158,
+        1.4675662237253146,
+        0.9103267576403179,
+        0.5823281529240193,
+        0.3840754479700307
+      ],
+      "shape_integral": 3.94729173546852,
+      "rao_squared_shape_integral": {
+        "heave": 2.7469859267624974,
+        "roll": 193.56939138474306,
+        "pitch": 8.297460769351835
+      },
+      "response_m0": {
+        "heave": 0.6959166210288854,
+        "roll": 49.0385318230773,
+        "pitch": 2.1020642317350724
+      }
+    }
+  ],
+  "rows": [
+    {
+      "dof": "heave",
+      "unit": "m",
+      "hs": 1.5,
+      "tp": 8.0,
+      "probability": 0.4,
+      "significant_amplitude": 0.29864731941387057,
+      "criterion": 2.5,
+      "operable": true
+    },
+    {
+      "dof": "heave",
+      "unit": "m",
+      "hs": 2.5,
+      "tp": 10.0,
+      "probability": 0.4,
+      "significant_amplitude": 0.8635162255855663,
+      "criterion": 2.5,
+      "operable": true
+    },
+    {
+      "dof": "heave",
+      "unit": "m",
+      "hs": 4.0,
+      "tp": 12.0,
+      "probability": 0.2,
+      "significant_amplitude": 1.6684323432838208,
+      "criterion": 2.5,
+      "operable": true
+    },
+    {
+      "dof": "roll",
+      "unit": "deg",
+      "hs": 1.5,
+      "tp": 8.0,
+      "probability": 0.4,
+      "significant_amplitude": 1.5941487245350767,
+      "criterion": 4.0,
+      "operable": true
+    },
+    {
+      "dof": "roll",
+      "unit": "deg",
+      "hs": 2.5,
+      "tp": 10.0,
+      "probability": 0.4,
+      "significant_amplitude": 6.102310406806743,
+      "criterion": 4.0,
+      "operable": false
+    },
+    {
+      "dof": "roll",
+      "unit": "deg",
+      "hs": 4.0,
+      "tp": 12.0,
+      "probability": 0.2,
+      "significant_amplitude": 14.0055034644353,
+      "criterion": 4.0,
+      "operable": false
+    },
+    {
+      "dof": "pitch",
+      "unit": "deg",
+      "hs": 1.5,
+      "tp": 8.0,
+      "probability": 0.4,
+      "significant_amplitude": 0.7569350175581052,
+      "criterion": 3.0,
+      "operable": true
+    },
+    {
+      "dof": "pitch",
+      "unit": "deg",
+      "hs": 2.5,
+      "tp": 10.0,
+      "probability": 0.4,
+      "significant_amplitude": 1.8226129451746116,
+      "criterion": 3.0,
+      "operable": true
+    },
+    {
+      "dof": "pitch",
+      "unit": "deg",
+      "hs": 4.0,
+      "tp": 12.0,
+      "probability": 0.2,
+      "significant_amplitude": 2.8996994545884043,
+      "criterion": 3.0,
+      "operable": true
+    }
+  ],
+  "summary": [
+    {
+      "dof": "heave",
+      "unit": "m",
+      "criterion": 2.5,
+      "operability_pct": 100.0,
+      "required_operability_pct": 95.0,
+      "passes": true
+    },
+    {
+      "dof": "roll",
+      "unit": "deg",
+      "criterion": 4.0,
+      "operability_pct": 40.0,
+      "required_operability_pct": 95.0,
+      "passes": false
+    },
+    {
+      "dof": "pitch",
+      "unit": "deg",
+      "criterion": 3.0,
+      "operability_pct": 100.0,
+      "required_operability_pct": 95.0,
+      "passes": true
+    }
+  ],
+  "status": "fail"
+}

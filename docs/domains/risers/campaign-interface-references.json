@@ -1,0 +1,442 @@
+{
+  "source_revision": "6476218e8f5af3fa7d16c3dafc60b6a9084c6e6c",
+  "scope": "Public extraction top-level keys, fixed series keys, producer return maps and nested modal and fatigue fields; other nested W5 fields remain outside this inventory.",
+  "unit_basis": "Units describe the implementation contract, not verified solver settings or consumer units. See the cited source functions and w5_channels.UNITS.",
+  "external_consumer_completeness": "NOT_EVALUATED",
+  "campaign_qualification": "NOT_EVALUATED",
+  "private_readback": "NOT_EVALUATED",
+  "sidecar_entry_id": null,
+  "required_private_evidence": [
+    "entry_id",
+    "entry_revision",
+    "dataset_id",
+    "dataset_revision",
+    "dataset_digest",
+    "digest_scope",
+    "lesson_id",
+    "lesson_revision",
+    "lesson_digest",
+    "consumer_evidence_id",
+    "consumer_evidence_revision",
+    "consumer_evidence_digest",
+    "adapter_revision",
+    "consumer_revision",
+    "branch",
+    "field_path",
+    "consumption_status",
+    "units",
+    "derived_from",
+    "target_solver_version",
+    "intended_use",
+    "qualification_status",
+    "qualification_evidence",
+    "readback_revision",
+    "readback_digest",
+    "readback_status"
+  ],
+  "producers": {
+    "drilling_static": {
+      "source": "src/digitalmodel/drilling_riser/global_model/orcaflex_run.py",
+      "symbol": "static_responses",
+      "returns": [
+        {
+          "label": "static",
+          "units": {
+            "ufj_angle_deg": "deg",
+            "lfj_angle_deg": "deg",
+            "riser_von_mises_max_pa": "Pa",
+            "te_top_n": "N",
+            "te_bottom_n": "N"
+          },
+          "spreads": []
+        }
+      ]
+    },
+    "drilling_ends": {
+      "source": "src/digitalmodel/drilling_riser/global_model/orcaflex_run.py",
+      "symbol": "end_effective_tensions",
+      "returns": [
+        {
+          "label": "static",
+          "units": {
+            "riser_top_n": "N",
+            "riser_bottom_n": "N",
+            "stack_bottom_n": "N",
+            "riser_top_wall_n": "N",
+            "riser_bottom_wall_n": "N"
+          },
+          "spreads": []
+        }
+      ]
+    },
+    "drilling_dynamic": {
+      "source": "src/digitalmodel/drilling_riser/global_model/orcaflex_run.py",
+      "symbol": "governing_responses",
+      "returns": [
+        {
+          "label": "dynamic",
+          "units": {
+            "ufj_angle_max_deg": "deg",
+            "lfj_angle_max_deg": "deg",
+            "riser_von_mises_max_pa": "Pa",
+            "te_top_max_n": "N",
+            "te_top_min_n": "N",
+            "te_bottom_max_n": "N",
+            "te_bottom_min_n": "N"
+          },
+          "spreads": []
+        }
+      ]
+    },
+    "open_water_ends": {
+      "source": "src/digitalmodel/drilling_riser/global_model/orcaflex_run.py",
+      "symbol": "open_water_end_tensions",
+      "returns": [
+        {
+          "label": "static",
+          "units": {
+            "upper_top_n": "N",
+            "upper_bottom_n": "N",
+            "riser_top_n": "N",
+            "edp_bottom_n": "N",
+            "stack_bottom_n": "N",
+            "upper_top_wall_n": "N",
+            "edp_bottom_wall_n": "N"
+          },
+          "spreads": []
+        }
+      ]
+    },
+    "open_water_static": {
+      "source": "src/digitalmodel/drilling_riser/global_model/orcaflex_run.py",
+      "symbol": "open_water_static_responses",
+      "returns": [
+        {
+          "label": "static",
+          "units": {
+            "sj_base_bending_moment_nm": "N.m",
+            "riser_von_mises_max_pa": "Pa",
+            "frame_z_m": "m"
+          },
+          "spreads": [
+            "open_water_end_tensions"
+          ]
+        }
+      ]
+    },
+    "open_water_dynamic": {
+      "source": "src/digitalmodel/drilling_riser/global_model/orcaflex_run.py",
+      "symbol": "open_water_governing_responses",
+      "returns": [
+        {
+          "label": "dynamic",
+          "units": {
+            "te_top_max_n": "N",
+            "te_top_min_n": "N",
+            "te_edp_max_n": "N",
+            "te_edp_min_n": "N",
+            "sj_base_bending_moment_max_nm": "N.m",
+            "riser_von_mises_max_pa": "Pa",
+            "frame_z_max_m": "m",
+            "frame_z_min_m": "m"
+          },
+          "spreads": []
+        }
+      ]
+    },
+    "hang_off": {
+      "source": "src/digitalmodel/drilling_riser/global_model/w5_channels.py",
+      "symbol": "hang_off_summary",
+      "returns": [
+        {
+          "label": "static",
+          "units": {
+            "ufj_angle_deg": "deg",
+            "riser_bottom_angle_deg": "deg",
+            "riser_von_mises_max_pa": "Pa",
+            "top_load_n": "N",
+            "stroke_m": "m"
+          },
+          "spreads": []
+        },
+        {
+          "label": "dynamic",
+          "units": {
+            "ufj_angle_max_deg": "deg",
+            "riser_bottom_angle_max_deg": "deg",
+            "riser_von_mises_max_pa": "Pa",
+            "top_load_max_n": "N",
+            "top_load_min_n": "N",
+            "stroke_max_m": "m",
+            "stroke_min_m": "m",
+            "stroke_static_m": "m"
+          },
+          "spreads": []
+        }
+      ]
+    }
+  },
+  "adapters": {
+    "drilling": {
+      "source": "src/digitalmodel/drilling_riser/campaign.py",
+      "symbol": "RiserCampaignAdapter.extract",
+      "initializers": [
+        {
+          "call": "dict(orun.governing_responses(model, spec))"
+        },
+        {
+          "fields": [
+            "ring_z_m",
+            "w5"
+          ],
+          "spreads": [
+            "orun.end_effective_tensions",
+            "orun.static_responses"
+          ]
+        }
+      ],
+      "assigned": {
+        "series": [
+          "lfj_angle_deg",
+          "ring_z_m",
+          "te_bottom_kn",
+          "te_top_kn",
+          "ufj_angle_deg",
+          "vessel_x_m"
+        ],
+        "sample_count": null,
+        "w5": null,
+        "modes": null
+      },
+      "direct_returns": [
+        {
+          "fields": [
+            "w5"
+          ],
+          "spreads": [
+            "w5_channels.hang_off_summary"
+          ]
+        }
+      ],
+      "series_units": {
+        "lfj_angle_deg": "deg",
+        "ring_z_m": "m",
+        "te_bottom_kn": "kN",
+        "te_top_kn": "kN",
+        "ufj_angle_deg": "deg",
+        "vessel_x_m": "m"
+      }
+    },
+    "open_water": {
+      "source": "src/digitalmodel/drilling_riser/campaign.py",
+      "symbol": "RiserCampaignAdapter._extract_open_water",
+      "initializers": [
+        {
+          "call": "dict(orun.open_water_governing_responses(model, spec))"
+        },
+        {
+          "fields": [
+            "w5"
+          ],
+          "spreads": [
+            "orun.open_water_static_responses"
+          ]
+        }
+      ],
+      "assigned": {
+        "w5": null,
+        "series": [
+          "edp_z_m",
+          "frame_z_m",
+          "te_edp_kn",
+          "te_top_kn",
+          "vessel_x_m"
+        ],
+        "sample_count": null,
+        "modes": null
+      },
+      "direct_returns": [],
+      "series_units": {
+        "edp_z_m": "m",
+        "frame_z_m": "m",
+        "te_edp_kn": "kN",
+        "te_top_kn": "kN",
+        "vessel_x_m": "m"
+      }
+    }
+  },
+  "series_statistics": [
+    "max",
+    "mean",
+    "min",
+    "std"
+  ],
+  "branches": {
+    "drilling_statics": {
+      "condition": "Not open water; hang_off is None; analysis == statics; modes only when params.modal_modes is truthy",
+      "producer_returns": [
+        "drilling_static:static",
+        "drilling_ends:static"
+      ],
+      "additional_units": {
+        "w5": "structured; see w5_channels.UNITS",
+        "ring_z_m": "m",
+        "modes": "optional structured modal rows; period_s in s"
+      },
+      "consumer_evidence_ref": null,
+      "lesson_ref": null,
+      "status": "NOT_EVALUATED"
+    },
+    "drilling_dynamics": {
+      "condition": "Not open water; hang_off is None; analysis != statics; optional w5.fatigue when params.fatigue is truthy",
+      "producer_returns": [
+        "drilling_dynamic:dynamic"
+      ],
+      "additional_units": {
+        "w5": "structured; see w5_channels.UNITS",
+        "series": "structured; see adapters.drilling.series_units",
+        "sample_count": "count"
+      },
+      "consumer_evidence_ref": null,
+      "lesson_ref": null,
+      "status": "NOT_EVALUATED"
+    },
+    "open_water_statics": {
+      "condition": "Open water takes precedence over hang_off; analysis == statics; modes only when params.modal_modes is truthy",
+      "producer_returns": [
+        "open_water_ends:static",
+        "open_water_static:static"
+      ],
+      "additional_units": {
+        "w5": "structured; see w5_channels.UNITS",
+        "modes": "optional structured modal rows; period_s in s"
+      },
+      "consumer_evidence_ref": null,
+      "lesson_ref": null,
+      "status": "NOT_EVALUATED"
+    },
+    "open_water_dynamics": {
+      "condition": "Open water; analysis != statics; optional w5.fatigue when params.fatigue is truthy",
+      "producer_returns": [
+        "open_water_dynamic:dynamic"
+      ],
+      "additional_units": {
+        "w5": "structured; see w5_channels.UNITS",
+        "series": "structured; see adapters.open_water.series_units",
+        "sample_count": "count"
+      },
+      "consumer_evidence_ref": null,
+      "lesson_ref": null,
+      "status": "NOT_EVALUATED"
+    },
+    "hang_off_statics": {
+      "condition": "Not open water; hang_off is not None; analysis == statics; no modes or series added by adapter",
+      "producer_returns": [
+        "hang_off:static"
+      ],
+      "additional_units": {
+        "w5": "structured; see w5_channels.UNITS"
+      },
+      "consumer_evidence_ref": null,
+      "lesson_ref": null,
+      "status": "NOT_EVALUATED"
+    },
+    "hang_off_dynamics": {
+      "condition": "Not open water; hang_off is not None; analysis != statics; no modes, series or fatigue added by adapter",
+      "producer_returns": [
+        "hang_off:dynamic"
+      ],
+      "additional_units": {
+        "w5": "structured; see w5_channels.UNITS"
+      },
+      "consumer_evidence_ref": null,
+      "lesson_ref": null,
+      "status": "NOT_EVALUATED"
+    }
+  },
+  "nested_interfaces": {
+    "modes": {
+      "source": "src/digitalmodel/drilling_riser/global_model/orcaflex_run.py",
+      "source_revision": "84628b8cc2854af6883bfa6610b2133df7537803",
+      "symbols": [
+        "riser_modal_periods",
+        "_dof_shares"
+      ],
+      "conditions": "modes[] in drilling_statics and open_water_statics only when params.modal_modes is truthy; paired_mode_number exists only for a selected degenerate pair.",
+      "required_units": {
+        "mode_number": "count",
+        "period_s": "s",
+        "share_x": "dimensionless",
+        "share_y": "dimensionless",
+        "share_z": "dimensionless",
+        "classification": "text"
+      },
+      "conditional_units": {
+        "paired_mode_number": "count"
+      },
+      "limitations": "Rows contain selected transverse modes, not every system mode. Shares describe squared translational displacement on the selected line in global axes; they are not modal mass participation. An empty list does not establish absence of system modes. Selection thresholds are implementation behavior, not acceptance criteria.",
+      "consumer_evidence_ref": null,
+      "status": "NOT_EVALUATED"
+    },
+    "fatigue": {
+      "source": "src/digitalmodel/drilling_riser/global_model/fatigue_channels.py",
+      "source_revision": "84628b8cc2854af6883bfa6610b2133df7537803",
+      "symbols": [
+        "extract",
+        "half_cycle_histogram"
+      ],
+      "conditions": "w5.fatigue in drilling_dynamics and open_water_dynamics only when params.fatigue is truthy; absent from hang-off adapter returns.",
+      "stress_unit": "kPa",
+      "document_units": {
+        "variable": "text",
+        "radial_position": "text",
+        "thetas_deg": "array of deg",
+        "units": "unit label",
+        "counts": "counting convention text",
+        "counter": "implementation identifier text",
+        "binning": "bin convention text",
+        "stations": "array of station records",
+        "invariant_failures": "count",
+        "out_of_range": "count",
+        "orcaflex_invariant_failures": "count"
+      },
+      "station_units": {
+        "line": "object identifier text",
+        "arc_m": "m from End A",
+        "label": "station label text",
+        "points": "array of point records"
+      },
+      "histogram_units": {
+        "n_bins": "count",
+        "bin_width": "kPa",
+        "max_range": "kPa",
+        "half_cycles": "count",
+        "counts": "array of half-cycle counts",
+        "out_of_range": "count"
+      },
+      "point_addition_units": {
+        "orcaflex_max_range": "kPa",
+        "orcaflex_invariant_ok": "boolean",
+        "theta_deg": "deg",
+        "span": "kPa",
+        "mean_stress": "kPa",
+        "invariant_ok": "boolean"
+      },
+      "limitations": "Histogram fields and point additions share one point record. Document counts is descriptive text whereas point counts is an array. Diagnostics describe counting invariants, not fatigue damage, service life or acceptance. Solver-counter diagnostics are informational. Units reflect the producer declaration; solver settings and consumer conversions are unverified. Station labels and object identifiers are runtime data, not public evidence references.",
+      "consumer_evidence_ref": null,
+      "status": "NOT_EVALUATED"
+    },
+    "worked_example": {
+      "inputs": [
+        "modes[].period_s",
+        "w5.fatigue.stations[].points[].mean_stress"
+      ],
+      "method": "Resolve the modal row in required_units. Resolve the fatigue station point by combining histogram_units with point_addition_units. Read the implementation unit for each field; retain the pending evidence status.",
+      "answer": {
+        "modes[].period_s": "s",
+        "w5.fatigue.stations[].points[].mean_stress": "kPa"
+      },
+      "qualification": "NOT_EVALUATED"
+    }
+  }
+}

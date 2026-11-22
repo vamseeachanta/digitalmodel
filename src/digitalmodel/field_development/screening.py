@@ -409,11 +409,12 @@ _CORRELATION_NOTES = (
     "Erosional velocity: API RP 14E section 2.5a, Ve = C/sqrt(rho_m) "
     "(field units), C-factor from config.",
     "Pipe inner diameters: ASME B36.10M catalog " "(digitalmodel.materials.line_pipe).",
-    "Cable ampacity: IEC 60287-1-1 permissible-current equation reduced to "
+    "Cable ampacity: IEC 60287-1-1:2023, clause 4.2.1 (AC cables), reduced to "
     "its conductor-loss-only form with a lumped total thermal resistance. "
     "Screening grade — not a rated design.",
     "Voltage drop: dU = sqrt(3) I L (R' cos(phi) + X' sin(phi)) "
-    "(cf. IEC 60364-5-52 Annex G). Conductor constants per IEC 60228.",
+    "(IEC 60364-5-52:2009, Annex G, Voltage drop in consumers' installations). "
+    "Conductor constants per IEC 60228.",
 )
 
 
@@ -456,23 +457,42 @@ def _cable_section(cables: list[dict[str, Any]]) -> list[str]:
     lines = [
         "## Cable sizing screen",
         "",
-        "| Run | Load [kW] | U [V] | I [A] | Length [m] | Selected [mm2] "
-        "| Ampacity [A] | dU [%] | Result |",
+        "| Run | Load [kW] | U [V] | I [A] | Length [m] "
+        "| Selected / assessed [mm2] | Ampacity >= I [A] "
+        "| dU / limit [%] (dU <= limit) | Result |",
         "|---|---|---|---|---|---|---|---|---|",
     ]
     for cb in cables:
         sel = cb.get("selected")
-        if sel is not None:
+        assessed = sel
+        if assessed is None and "conductor_size_mm2" in cb:
+            assessed = next(
+                (
+                    row for row in cb["candidates"]
+                    if row["size_mm2"] == cb["conductor_size_mm2"]
+                ),
+                None,
+            )
+        verdict = _flag(cb["passes"])
+        if assessed is not None:
+            size = f"{assessed['size_mm2']:g}"
+            if sel is None:
+                size += " (assessed; not selected)"
             detail = (
-                f"{sel['size_mm2']:g} | {sel['ampacity_a']:.1f} | "
-                f"{sel['voltage_drop_pct']:.2f}"
+                f"{size} | {assessed['ampacity_a']:.3f} | "
+                f"{assessed['voltage_drop_pct']:.3f} / "
+                f"{cb['voltage_drop_limit_pct']:.3f}"
+            )
+            verdict += (
+                f" (ampacity {_flag(assessed['ampacity_ok'])}; "
+                f"voltage drop {_flag(assessed['voltage_drop_ok'])})"
             )
         else:
             detail = "none pass | - | -"
         lines.append(
             f"| {cb.get('id', '-')} | {cb['load_kw']:.1f} | "
-            f"{cb['line_voltage_v']:.0f} | {cb['current_a']:.1f} | "
-            f"{cb['length_m']:.1f} | {detail} | {_flag(cb['passes'])} |"
+            f"{cb['line_voltage_v']:.0f} | {cb['current_a']:.3f} | "
+            f"{cb['length_m']:.1f} | {detail} | {verdict} |"
         )
     lines.append("")
     return lines
@@ -489,6 +509,8 @@ def screening_report(results: dict[str, Any], path: str | Path) -> str:
     - ``flowlines``: list of :func:`flowline_diameter_sweep` dicts (with
       ``id`` keys, e.g. from :func:`sweep_layout_flowlines`);
     - ``cables``: list of :func:`size_cable` dicts (each may carry an ``id``).
+      A supplied ``conductor_size_mm2`` identifies the assessed candidate to
+      display even when it fails and ``selected`` remains ``None``.
 
     Deterministic by construction: no timestamps, fixed float formatting —
     identical inputs give byte-identical files. Returns the written path.
@@ -526,5 +548,5 @@ def screening_report(results: dict[str, Any], path: str | Path) -> str:
 
     dest = Path(path)
     dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_text("\n".join(lines), encoding="utf-8")
-    return str(dest)
+    dest.write_text("\n".join(lines), encoding="utf-8", newline="\n")
+    return dest.as_posix()

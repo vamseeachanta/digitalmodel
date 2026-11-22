@@ -4,7 +4,7 @@
 |---|---|
 | Module / repository | `riser_database` / `digitalmodel` |
 | Package | `src/digitalmodel/riser_database` |
-| Pack revision | 1, 2026-10-17 |
+| Pack revision | 2, 2026-10-19 |
 | Code revision | `1dba289c5dc1bc8dc82d72e4bfe02f8dcfc22c23` |
 | Analysis family | Reference-data calculations supporting OrcaFlex riser and mooring; routing family `EC` |
 | Quality role | Engineering calculations quality manager; independent provider required |
@@ -22,6 +22,15 @@ Registry maturity is `development`; the initial documentation's three-table and 
 Configuration envelopes, standards locators, material references, stack-up handles and rig-interface records are the supported data products; exact joint-by-joint source values remain outside the public stack-up row schema. [src/digitalmodel/riser_database/loader.py:L60-L141]
 
 No geometry applicability envelope, water-depth applicability envelope, solver version or engineering acceptance verdict is enforced by this loader: numeric cells are converted with `float`, and unknown keys raise instead of selecting a nearby record. [src/digitalmodel/riser_database/loader.py:L49-L57] [src/digitalmodel/riser_database/loader.py:L183-L214] [src/digitalmodel/riser_database/loader.py:L282-L289]
+
+### Revision history
+
+| Revision | Date | Change and reason |
+|---|---|---|
+| 1 | 2026-10-17 | Initial package inventory and gate evidence. |
+| 2 | 2026-10-19 | Route schema checks through loaded rows and replace G1 suite totals with asserted package output, addressing part of #2742. |
+
+The code pin above applies to the original inventory and line citations. Revision 2 names current test nodes explicitly; its inventory expectations use the public manifest at `6476218e`. Historical suite totals in section 10 do not qualify the revised G1 check or establish private-source reproducibility.
 
 ## 2. Inputs and outputs
 
@@ -101,7 +110,7 @@ AQG r0, sections 4–10, supplies the family gate requirements; `EC` records the
 | Gate | Applicability / observed status | Check IDs and boundary |
 |---|---|---|
 | G0 inputs | Applicable; package checks offline | RDB-01–RDB-07: table integrity, lookup coverage, conversion conventions, citation failure behavior and publication boundaries |
-| G1 imports/tests | Applicable; PASS in recorded code-pin module suite | RDB-08: 83 passed, 0 failed, 0 skipped; package imports and tests, no solver load |
+| G1 imports/tests | Applicable; public package-output regression | RDB-08: call `RiserDatabase.load()` and assert returned counts for every table; historical suite totals are separate evidence |
 | G2 hand calculation | Applicable; PASS offline at the code pin on 2026-10-17 | RDB-09: compare `RiserDatabase.config` output with exact SI unit conversions |
 | G3 short dynamics | NOT_APPLICABLE under EC | No package time-domain solver or dynamic response output; consumer obligations are in section 9. [src/digitalmodel/riser_database/loader.py:L60-L141] |
 | G4 diffraction | NOT_APPLICABLE to catalogue-only outputs; conditional when a consumer introduces newly computed vessel data | No vessel/mesh/RAO fields in these row types. [src/digitalmodel/riser_database/loader.py:L60-L141] |
@@ -110,20 +119,36 @@ AQG r0, sections 4–10, supplies the family gate requirements; `EC` records the
 | Check | Module-specific executable route | Numeric pass criterion and unit | Evidence / status / gate |
 |---|---|---|---|
 | RDB-01 | `tests/riser_database/test_loader.py`: load, absent root/table, modified hash, columns, duplicate key and cap cases | 0 unexpected successful loads in negative cases; 5 known tables; 0 missing row classes (counts) | Pytest outcomes; G0. [tests/riser_database/test_loader.py:L54-L58] [tests/riser_database/test_loader.py:L121-L185] |
-| RDB-02 | `test_schema.py`: exact headers, relative wiki locators, locator/free-text shapes; `test_stackup_rig.py`: vocabulary and joins | 0 schema mismatches; 0 unresolved nonempty rig joins (counts) | Pytest outcomes; G0. [tests/riser_database/test_schema.py:L62-L109] [tests/riser_database/test_stackup_rig.py:L118-L148] |
+| RDB-02 | `test_schema.py`: schema and content checks consume `RiserDatabase.load()` rows; `test_loaded_schema_rejects_added_column` supplies a re-fingerprinted extra column to each table; `test_stackup_rig.py`: vocabulary and joins | Exact declared columns; every added-column case raises `RiserDatabaseError` for the modified table; nonempty rig joins resolve | Pytest outcomes; G0. Current schema nodes: `test_config_catalog_columns_exact`, `test_standards_crosswalk_columns_exact`, `test_material_sn_scf_dff_columns_exact` and `test_loaded_schema_rejects_added_column`. [tests/riser_database/test_stackup_rig.py:L118-L148] |
 | RDB-03 | Four section-4 loader fixtures and `test_every_seed_file_has_a_row` | Missing seeds 0 records; relative conversion error ≤1e-6 (dimensionless) with absolute floor 1e-12 m or mm under `pytest.approx`; missing depth remains 1 `None` | Pytest outcomes; G0. [tests/riser_database/test_loader.py:L69-L103] |
 | RDB-04 | `test_citations.py`: missing-page, no-wiki, valid override, bundle-key, angle-kind and selection regressions | Direct missing-page exceptions 1 per call; bundle keys on success 5; standalone warnings 1; resolution <0.5 s; valid-override mismatches 0 (counts) | Pytest outcomes; does not test configured-wiki wrapper rejection; G0. [tests/riser_database/test_citations.py:L156-L195] [tests/riser_database/test_citations.py:L211-L222] [tests/riser_database/test_citations.py:L256-L281] |
 | RDB-05 | `test_code_editions.py` and `test_material_refs.py` | Edition-label discrepancies 0 in tested surfaces; unresolved curve/getter references 0 records | Pytest outcomes; no claim of licensed-text validation; G0. [tests/riser_database/test_code_editions.py:L48-L76] [tests/riser_database/test_code_editions.py:L99-L136] [tests/riser_database/test_material_refs.py:L22-L38] |
 | RDB-06 | `test_layer_a_public_rows_structurally_clean`, schema no-value-column test, stack-up de-identification tests | Structural findings 0; bare numeric cells in standards-reference tables 0; exact unit-bearing stack-up disclosures 0 (counts) | Shipped pytest checks; G0. [tests/riser_database/test_leak_gate.py:L48-L60] [tests/riser_database/test_schema.py:L112-L132] [tests/riser_database/test_stackup_rig.py:L179-L216] |
 | RDB-07 | Private registry reconciliation and provenance tests, when authorized reference data are present | Unmatched handle sets 0 records; provenance matches 0 findings | Availability-dependent; missing private data gives NOT_RUN, never PASS; G0. [tests/riser_database/test_stackup_rig.py:L237-L260] [tests/riser_database/test_provenance_tripwire.py:L241-L305] |
-| RDB-08 | Import the package through the existing `tests/riser_database` module suite | 83 tests passed; failures 0, skips 0 (counts), at the code pin | PASS in the recorded BASE and AFTER evidence in section 10; G1. [tests/riser_database/test_loader.py:L16-L24] [tests/riser_database/test_loader.py:L54-L185] |
+| RDB-08 | `tests/riser_database/test_schema.py::test_loaded_public_table_counts` calls `RiserDatabase.load()` and asserts every returned table count | Exact public inventory: configurations 28, crosswalk 5, materials 3, stack-ups 84, rigs 10; counts from `data/riser_database/manifest.yaml`, revision `6476218e`, `tables.*.rows` | Executable public regression; G1. No private reference is needed. Expected inventory is independent of the loader and recorded in the test docstring; private-context qualification remains separate. |
 | RDB-09 | Hand check `RiserDatabase.load().config("pipe_py_21OD_0875in_5000ft_upper_riser")`; existing node `tests/riser_database/test_loader.py::test_config_row_pipe_filename_derivation` asserts all three outputs | 5000 ft × 0.3048 = 1524.0 m; 21 in × 25.4 = 533.4 mm; 0.875 in × 25.4 = 22.225 mm. Require relative error ≤1e-6 for each output (dimensionless); the existing test also has an absolute floor of 1e-12 in each output unit | PASS: 1 passed, 0 failed, 0 skipped on 2026-10-17 at the code pin with Git-exact table bytes; G2. This checks returned converted data, not conversion arithmetic inside the loader; extraction is external. [tests/riser_database/test_loader.py:L78-L85] [src/digitalmodel/riser_database/loader.py:L267-L271] [scripts/riser_database/build_tables.py:L119-L145] |
 | RDB-10 | Package dynamics applicability audit | Dynamic response outputs 0; time-domain solve routes 0 (counts) | NOT_APPLICABLE under EC; consumer dynamics procedure moved to section 9. [src/digitalmodel/riser_database/loader.py:L60-L141] |
 | RDB-11 | Hand audit: match section-4 node IDs and statuses to the offline log and retain named exclusions | Missing case outcomes 0; missing citations 0; unlabelled skipped cases 0 (counts) | Pack self-check; downstream appendix/signatures NOT_RUN; G5. AQG r0, section 9, QA appendix. |
 
-RDB-08 and RDB-09 qualify the package import/test and conversion-output boundaries; RDB-10 records EC dynamics non-applicability. Package-only test success cannot clear a consuming analysis under AQG r0, sections 5–9; the proposed consumer procedures are retained in section 9.
+Current public evidence (2026-10-19): the module suite passes with private-reference cases skipped; the G1 inventory assertion and every added-column rejection case pass. Private-context qualification remains NOT_RUN. The source for inventory counts is the public manifest, revision `6476218e`, `tables.*.rows`.
+
+RDB-08 defines a public package-output check rather than accepting a suite total. RDB-02 now exercises loader schema validation, including deliberate added-column failures. Executable G5 evidence, private-source provenance and the other #2742 audit items remain open. RDB-09 covers the conversion-output boundary; RDB-10 records EC dynamics non-applicability. Package-only test success cannot clear a consuming analysis under AQG r0, sections 5–9; the proposed consumer procedures are retained in section 9.
 
 ## 6. Known failure modes and pitfalls
+
+Checkout hazard (#2677; update after the code pin): `core.autocrlf=true`
+can convert LF CSV bytes to CRLF and trigger a fingerprint mismatch before
+lookup. The `.gitattributes` rule `data/riser_database/** text eol=lf`
+keeps the tables and manifest in LF form across checkout settings, as defined
+by the [Git attributes manual, text and eol sections](https://git-scm.com/docs/gitattributes#_eol).
+The regression `tests/riser_database/test_checkout_eol.py` applies Git's
+checkout filters with `core.autocrlf=true`, `false` and `input`, compares the
+resulting table hashes with the manifest, and loads the converted database.
+Existing CRLF working copies need a fresh checkout of the database files;
+adding the rule does not rewrite files already on disk. Preserve the manifest
+digests when refreshing a checkout; do not regenerate them to accept conversion
+drift. This addresses checkout conversion without relaxing the loader's
+raw-byte integrity check.
 
 sweep: 37 found
 

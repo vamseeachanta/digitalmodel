@@ -109,7 +109,8 @@ class SpanOnsetScreening:
 
     def _reduced_velocity(self, fn: float) -> float:
         """Ur = (Uc + Uw) / (fn × D)."""
-        total_v = self._inp.current_velocity_ms + self._inp.wave_velocity_ms
+        wave_v = self._inp.wave_velocity_ms
+        total_v = self._inp.current_velocity_ms + (0.0 if wave_v is None else wave_v)
         return total_v / (fn * self._inp.od_m)
 
     # ------------------------------------------------------------------

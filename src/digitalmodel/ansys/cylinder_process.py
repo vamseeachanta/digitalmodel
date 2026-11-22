@@ -41,6 +41,8 @@ class WindowsSupervisor:
             try:
                 self.terminate()
             except Exception as cleanup:
+                if not isinstance(original, Exception):
+                    raise original from cleanup
                 raise OSError(f"{type(original).__name__}: {original}; "
                               f"cleanup {type(cleanup).__name__}: {cleanup}") from original
             raise

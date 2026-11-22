@@ -26,6 +26,8 @@ import numpy as np
 
 from .wave_spectra import WaveSpectra
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 def compute_response_spectrum(
     rao_amplitudes: np.ndarray,
@@ -73,12 +75,11 @@ def spectral_moments(
     if orders is None:
         orders = [0, 2, 4]
 
-    _trapz = np.trapezoid if hasattr(np, "trapezoid") else np.trapz
 
     result: Dict[int, float] = {}
     for n in orders:
         integrand = frequencies ** n * spectrum
-        result[n] = float(_trapz(integrand, frequencies))
+        result[n] = float(_trapezoid(integrand, frequencies))
     return result
 
 

@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Offshore technical safety screens</title>
+<style>
+body{font:16px/1.55 system-ui,sans-serif;max-width:900px;margin:2rem auto;padding:0 1rem;color:#182b36}
+pre{background:#eef2f4;padding:1rem;overflow:auto}code{font-size:.9em}
+aside{border-left:4px solid #a14820;padding:.5rem 1rem;background:#fff3ea}
+table{border-collapse:collapse;width:100%}td,th{border:1px solid #b5c3ca;padding:.5rem;text-align:left}
+caption{caption-side:bottom;text-align:left;padding:.5rem 0}
+</style>
+<h1>Offshore technical safety screens</h1>
+<aside>Screening only. The bundled 1996 criteria are superseded, unverified
+regression inputs and are refused unless <code>allow_test_criteria=True</code>
+is supplied. No current design values are bundled. A citation identifies a
+claimed source; it does not verify the value against that source.</aside>
+<h2>Ship-impact energy</h2>
+<p>The vessel's available kinetic energy is calculated as
+<code>E = 0.5 m (1 + C_a) v²</code>, where displacement mass is in kg, speed
+in m/s, added-mass coefficient is dimensionless and energy is in J before
+conversion to MJ. The coefficient requires its own citation and has no default.
+The target is assumed stationary. Absorbed energy, force, structural resistance,
+collision frequency and fatalities are not calculated.</p>
+<pre data-python>
+from digitalmodel.foam_system.sizing import Citation
+from digitalmodel.technical_safety import (
+    ShipImpactInputs, get_criteria, screen_ship_impact,
+    FireScenario, screen_fire_heat_load,
+)
+
+historical = get_criteria("s_dp_001_1996_rev2")
+vessel = ShipImpactInputs(
+    mass_kg=5_000_000.0, speed_m_s=2.0,
+    added_mass_coefficient=0.4,
+    added_mass_citation=Citation(
+        "Synthetic worked case", "example-1", "assumed added mass"),
+)
+impact = screen_ship_impact(vessel, historical, allow_test_criteria=True)
+# a = 2,000,000 kg; E = 0.5 * 7,000,000 * 4 = 14,000,000 J.
+assert impact.energy_mj == 14.0
+assert impact.margin_mj == 0.0
+assert impact.within_design_energy  # comparison only, not structural acceptance
+
+release = FireScenario(
+    inventory_kg=1000.0, release_rate_kg_s=2.0, phase="gas",
+    pressurised_release=True, liquid_pool_possible=False,
+    enclosure="open", ventilation="fuel_controlled",
+)
+fire, = screen_fire_heat_load(release, historical, allow_test_criteria=True)
+assert fire.fire_type == "jet"
+assert fire.heat_flux_kw_m2 == 250.0  # historical test input only
+</pre>
+<p><code>ShipImpactInputs.from_units</code> accepts explicit mass units
+<code>kg, tonne, lb, slug, long_ton, short_ton</code> and speed units
+<code>m/s, ft/s, knot</code>, using the shared Pint registry. The ambiguous
+unit <code>ton</code> and pound-force are refused. For 10,000 lb at 10 ft/s
+with C<sub>a</sub> = 0.2, the energy is 0.02528406605628288 MJ.</p>
+<p>The optional <code>impact_screen</code> argument of
+<code>assess_vessel_collision</code> retains this result. Missing QRA probability
+or consequence remains <code>NOT_EVALUATED</code>. Energy does not fill either
+input. The energy evidence is held on the result; the MAH CSV format does not
+serialize it.</p>
+<h2>Fire selection and fire-water credit</h2>
+<p>The scenario describes a sustained ignited release. Inventory and release
+rate must be finite and positive. Pressurised gas, liquid spray and two-phase
+releases select a jet case. Caller-established liquid accumulation adds a pool
+case. Mixed releases retain both cases. Pool ventilation control is required
+as an explicit input; a ventilation-controlled pool requires an enclosed area.
+No universal pressure, inventory or release-rate threshold is assumed.</p>
+<p>Each result retains the selected edition, citation, scenario and water
+evidence. Peak and average flux are separate inputs. No wall heat absorption,
+exposed area integration, fire duration or total power is inferred.</p>
+<p>Passing <code>FireWaterEvidence</code> requests credit. All its conditions
+default to false: directional spray coverage, coverage of every target surface,
+protected supply, prompt detection and activation, assured availability,
+scenario-specific demonstrated effectiveness, and an equipment/piping target.
+This is a module screening policy; verified NORSOK compliance is not established.
+General area deluge alone does not establish protection against an impinging
+jet. Primary partitions and load-bearing structure are excluded from credit.</p>
+<p>Credit selects a separately cited absolute reduced-average flux only when
+all conditions hold and <code>flux_basis="average"</code>. Any missing condition
+retains the unreduced load and is listed on the result. Peak flux is never
+reduced. Missing reduced criteria cause an error when credit would otherwise
+apply; no reduction factor is invented.</p>
+<h2>Supplying criteria</h2>
+<p><code>get_criteria(key, path)</code> reads an exact edition key from YAML.
+No latest-edition fallback or merging across editions occurs. The root contains
+<code>schema_version: 1</code> and an <code>editions</code> mapping. Every edition
+contains <code>standard</code>, <code>edition</code>, <code>status</code> and
+<code>values</code>. Use <code>status: project</code> for caller-supplied,
+independently checked governing inputs; that label does not authenticate them.
+Use <code>superseded</code> for historical regression inputs.</p>
+<p>Each value contains a positive finite <code>value</code>, a <code>unit</code>
+and a <code>citation</code> with nonblank <code>standard, edition, clause</code>
+and optional <code>note</code>. Citation standard and edition must match the
+selected header. Direct construction uses <code>CitedValue</code> and
+<code>EditionCriteria</code> with the same validation.</p>
+<table>
+<tr><th>Criterion key</th><th>Unit</th></tr>
+<tr><td>supply_vessel_collision_energy; riser_collision_energy</td><td>MJ</td></tr>
+<tr><td>jet_peak; jet_average; jet_water_average</td><td>kW/m2</td></tr>
+<tr><td>pool_fuel_controlled_peak; pool_fuel_controlled_average; pool_fuel_controlled_water_average</td><td>kW/m2</td></tr>
+<tr><td>pool_ventilation_controlled_peak; pool_ventilation_controlled_average; pool_ventilation_controlled_water_average</td><td>kW/m2</td></tr>
+<caption>Table 1. Supported criterion keys and required units. These are API fields, not a standard's heat-flux table.</caption>
+</table>
+<h2>Basis and limits</h2>
+<ul>
+<li><a href="https://www.offshorenorge.no/contentassets/9e11b988dccb4207acfd71c96832164a/risp-report-version-2-final---october-2023.pdf">RISP JIP report, version 2, October 2023</a>, part ST-16725-2 "Ship collision risk", section 3.4, p.11: collision-energy equation. Added mass remains a cited scenario input.</li>
+<li><a href="https://oeuk.org.uk/wp-content/uploads/2022/11/OEUK-Fire-and-Explosion-Guidelines-Issue-2.pdf">Fire and Explosion Guidance, issue 2, March 2018</a>, sections 2.10.1–2.10.2, 3.4.2.2 and 8.7.4: release modes and the need to establish water effectiveness and reliability.</li>
+<li><a href="https://www.nist.gov/pml/special-publication-811/nist-guide-si-appendix-b-conversion-factors/nist-guide-si-appendix-b8">NIST SP 811, 2008, appendix B.8</a>: unit-conversion basis.</li>
+<li>NORSOK S-DP-001 Rev. 2 (1996), 7.8, 8.1 and 11.3 step 3: the supplied historical regression values. A public primary copy of this edition was not verified. No private library was accessed and no original standard text or table is included.</li>
+</ul>
+<p>Current NORSOK S-001, N-003, DNV-RP-C204 and applicable API 521 criteria
+require licensed-source verification before design use. Pool and water-reduced
+flux values are not inferred from the historical jet peak. Blowdown, rupture,
+flare, move-off, pump redundancy, CFD and company standards are outside scope.
+Explorer and website integration in other repositories remain follow-up work.</p>
+</html>

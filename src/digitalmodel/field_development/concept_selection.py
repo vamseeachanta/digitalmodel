@@ -112,16 +112,6 @@ _DEPTH_LIMITS: dict[HostType, tuple[float, float]] = {
     HostType.DRY_TREE_UNIT:  (900.0,   2600.0),   # dry-tree FPU band (Spar/Semi overlap)
 }
 
-# Indicative CAPEX ranges (low_bn, high_bn) from GoM benchmarks
-_CAPEX_RANGES: dict[HostType, tuple[float, float]] = {
-    HostType.TLP:            (2.0,  6.0),
-    HostType.SPAR:           (3.0,  7.0),
-    HostType.SEMI:           (4.0, 10.0),
-    HostType.FPSO:           (5.0, 12.0),
-    HostType.SUBSEA_TIEBACK: (0.2,  1.2),
-    HostType.DRY_TREE_UNIT:  (3.5,  8.0),          # between Spar and Semi
-}
-
 # Reservoir size thresholds (MMbbl)
 _TIEBACK_MAX_RESERVOIR = 50.0    # below this → tieback preferred
 _TIEBACK_MARGINAL_RESERVOIR = 150.0
@@ -374,6 +364,9 @@ def concept_selection(
             f"fluid_type must be one of {sorted(_VALID_FLUID_TYPES)}, got {fluid_type!r}."
         )
 
+    # Import locally: the estimator imports HostType from this module.
+    from .capex_estimator import reference_capex_range
+
     # --- Score all host types ---
     # Iterate the legacy core set (5) so this API's contract is stable; W6's
     # concept_screening opts DRY_TREE_UNIT in via its own candidate list.
@@ -407,7 +400,7 @@ def concept_selection(
             ConceptOption(
                 host_type=host,
                 score=round(score, 2),
-                capex_estimate_usd_bn=_CAPEX_RANGES[host],
+                capex_estimate_usd_bn=reference_capex_range(host),
                 rationale=rationale,
             )
         )

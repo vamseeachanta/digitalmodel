@@ -176,6 +176,11 @@ def test_incomplete_new_root_attempt_is_not_overwritten(setup, monkeypatch):
     def reject(*args):
         raise ValueError('Existing run or extraction is not complete')
     monkeypatch.setattr(parallel.campaign, '_verify_run', reject)
+    # The real _execute loads the licensed solver API for the cases without a
+    # run directory. Keep the outcome the same on every host: no solver load.
+    def no_solver(*args):
+        raise ImportError('solver API is not loaded by this test')
+    monkeypatch.setattr(parallel.campaign, '_load_api', no_solver)
     result = run(setup)
     assert result['cases'][0]['status'] == 'FAILED'
     assert receipt.read_bytes() == before

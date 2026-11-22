@@ -74,7 +74,8 @@ def test_row09_emits_basefile_key_and_override_sections(tmp_path):
     doc = build_variation_document(base, overrides, out)
 
     assert "BaseFile" in doc
-    assert doc["LineTypes"] == [{"Name": "Chain_84mm_R4", "OD": 0.084}]
+    # Orcina, Variation models, Text data format: modify by object name.
+    assert doc["LineTypes"] == {"Chain_84mm_R4": {"OD": overrides["LineTypes"][0]["OD"]}}
     # A variation model composed with BaseFile carries no IncludeFile key.
     assert "IncludeFile" not in doc
 
@@ -336,7 +337,7 @@ def test_row12_no_yaml_anchors_in_written_output(tmp_path):
     assert "*id" not in text
     # The de-aliased document still parses, and still carries both copies.
     parsed = yaml.safe_load(text)
-    assert parsed["6DBuoys"][0]["Vertices"] == parsed["6DBuoys"][1]["Vertices"]
+    assert parsed["6DBuoys"]["Buoy_A"]["Vertices"] == parsed["6DBuoys"]["Buoy_B"]["Vertices"]
     assert len(parsed["LineTypes"]) == 2
 
 

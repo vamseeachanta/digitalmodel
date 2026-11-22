@@ -1,0 +1,162 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.15, pytest-9.1.1, pluggy-1.7.0
+[path removed]
+configfile: pytest.ini (WARNING: ignoring pytest config in pyproject.toml!)
+collected 13 items
+
+tests/solvers/mystran/test_fe10_benchmark.py FFFFFFFFFFFFF               [100%]
+
+=================================== FAILURES ===================================
+______________ test_committed_comparisons_match_record[le1_8x24] _______________
+tests/solvers/mystran/test_fe10_benchmark.py:31: in test_committed_comparisons_match_record
+    record = json.loads((PACKAGE / "record.json").read_text())
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1058: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1044: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[path removed]
+______________ test_committed_comparisons_match_record[le1_16x48] ______________
+tests/solvers/mystran/test_fe10_benchmark.py:31: in test_committed_comparisons_match_record
+    record = json.loads((PACKAGE / "record.json").read_text())
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1058: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1044: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[path removed]
+______________ test_committed_comparisons_match_record[le1_32x96] ______________
+tests/solvers/mystran/test_fe10_benchmark.py:31: in test_committed_comparisons_match_record
+    record = json.loads((PACKAGE / "record.json").read_text())
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1058: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1044: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[path removed]
+________________ test_committed_comparisons_match_record[patch] ________________
+tests/solvers/mystran/test_fe10_benchmark.py:31: in test_committed_comparisons_match_record
+    record = json.loads((PACKAGE / "record.json").read_text())
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1058: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1044: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[path removed]
+____ test_csv_has_each_element_once_and_mid_surface_metadata[le1_8x24-192] _____
+tests/solvers/mystran/test_fe10_benchmark.py:42: in test_csv_has_each_element_once_and_mid_surface_metadata
+    text = (PACKAGE / f"results-{case}.csv").read_text()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1058: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1044: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[path removed]
+____ test_csv_has_each_element_once_and_mid_surface_metadata[le1_16x48-768] ____
+tests/solvers/mystran/test_fe10_benchmark.py:42: in test_csv_has_each_element_once_and_mid_surface_metadata
+    text = (PACKAGE / f"results-{case}.csv").read_text()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1058: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1044: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[path removed]
+___ test_csv_has_each_element_once_and_mid_surface_metadata[le1_32x96-3072] ____
+tests/solvers/mystran/test_fe10_benchmark.py:42: in test_csv_has_each_element_once_and_mid_surface_metadata
+    text = (PACKAGE / f"results-{case}.csv").read_text()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1058: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1044: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[path removed]
+_______ test_csv_has_each_element_once_and_mid_surface_metadata[patch-5] _______
+tests/solvers/mystran/test_fe10_benchmark.py:42: in test_csv_has_each_element_once_and_mid_surface_metadata
+    text = (PACKAGE / f"results-{case}.csv").read_text()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1058: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1044: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[path removed]
+_____________________ test_perturbed_csv_fails[le1_32x96] ______________________
+tests/solvers/mystran/test_fe10_benchmark.py:54: in test_perturbed_csv_fails
+    source = (PACKAGE / f"results-{case}.csv").read_text()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1058: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1044: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[path removed]
+_______________________ test_perturbed_csv_fails[patch] ________________________
+tests/solvers/mystran/test_fe10_benchmark.py:54: in test_perturbed_csv_fails
+    source = (PACKAGE / f"results-{case}.csv").read_text()
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1058: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1044: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[path removed]
+___________________________ test_comparator_selftest ___________________________
+tests/solvers/mystran/test_fe10_benchmark.py:73: in test_comparator_selftest
+    assert result.returncode == 0, result.stdout
+E   AssertionError:
+E   assert 2 == 0
+[path removed]
+____________________ test_retained_artifacts_match_manifest ____________________
+tests/solvers/mystran/test_fe10_benchmark.py:78: in test_retained_artifacts_match_manifest
+    manifest = json.loads((PACKAGE / "manifest.json").read_text())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1058: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1044: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[path removed]
+______________________ test_decks_retain_received_digests ______________________
+tests/solvers/mystran/test_fe10_benchmark.py:89: in test_decks_retain_received_digests
+    manifest = json.loads((PACKAGE / "manifest.json").read_text())
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1058: in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+../../../.local/share/uv/python/cpython-3.11.15-linux-x86_64-gnu/lib/python3.11/pathlib.py:1044: in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+[path removed]
+=========================== short test summary info ============================
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_committed_comparisons_match_record[le1_8x24]
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_committed_comparisons_match_record[le1_16x48]
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_committed_comparisons_match_record[le1_32x96]
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_committed_comparisons_match_record[patch]
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_csv_has_each_element_once_and_mid_surface_metadata[le1_8x24-192]
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_csv_has_each_element_once_and_mid_surface_metadata[le1_16x48-768]
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_csv_has_each_element_once_and_mid_surface_metadata[le1_32x96-3072]
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_csv_has_each_element_once_and_mid_surface_metadata[patch-5]
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_perturbed_csv_fails[le1_32x96]
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_perturbed_csv_fails[patch]
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_comparator_selftest
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_retained_artifacts_match_manifest
+FAILED tests/solvers/mystran/test_fe10_benchmark.py::test_decks_retain_received_digests
+============================== 13 failed in 0.45s ==============================

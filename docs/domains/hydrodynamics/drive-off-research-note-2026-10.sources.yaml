@@ -1,0 +1,61 @@
+# Source IDs preserve the first note's order; no underlying paper opened here.
+schema_version: 1
+document: drive-off-research-note-2026-10.md
+issue: 162
+source_of_entries: research notes on the issue
+checked: ['2026-10-11', '2026-10-12']
+sources_read:
+- {"id": "R1", "citation": "ABS presentation to a regulator standards workshop, 8 May 2015 (14 slides)", "status": "read"}
+- {"id": "R2", "citation": "Thigpen, Boyer and Stewart, PSAM 14, 2018", "status": "read"}
+- {"id": "R3", "citation": "Liu, Chen, Ji and Fu, Mechanika 23(2), 2017, doi 10.5755/j01.mech.23.2.13780", "status": "read"}
+- {"id": "R4", "citation": "Bhalla and Cao, 2005 conference paper (abstract page only)", "status": "read"}
+- {"id": "R5", "citation": "Adamson, OGJ, 27 Nov 2006", "status": "read"}
+- {"id": "R6", "citation": "Sonawane, Koska and Campbell, Drilling Contractor, 15 Mar 2012", "status": "read"}
+- {"id": "R7", "citation": "Josefson and Dincal, 2014 (summary page only)", "status": "read"}
+- {"id": "R8", "citation": "Stewart Technology Associates riser analysis method page", "status": "read"}
+- {"id": "R9", "citation": "Olubitan et al., ESREL 2018 (repository record and abstract)", "status": "read"}
+- {"id": "R10", "citation": "IMCA M 269 catalogue page", "status": "read"}
+- {"id": "R11", "citation": "IMCA bulletin DPE 01/25", "status": "read"}
+- {"id": "R12", "citation": "regulator accident report of 2 Dec 2007", "status": "read"}
+- {"id": "R13", "citation": "regulator investigation report of the 5 Jul 2005 event (sections on disconnect, station-keeping guidelines, conclusions; not every page)", "status": "read"}
+- {"id": "R14", "citation": "Avram et al., Mining Revue 4/2015 (read, and found not to contain a drive-off method despite its abstract; excluded from conclusions).", "status": "read"}
+located_not_read:
+- {"id": "L1", "citation": "O'Sullivan, Soles and Dib, OMAE2004-51631", "status": "located_not_read"}
+- {"id": "L2", "citation": "Gjerde and Chen, OMAE2014-24614", "status": "located_not_read"}
+- {"id": "L3", "citation": "Chen, Moan and Verhoeven, Reliability Engineering and System Safety 93, 1072-1090, 2008", "status": "located_not_read"}
+- {"id": "L4", "citation": "Verhoeven, Chen and Moan, 2004 conference paper (file opened, text not extractable)", "status": "located_not_read"}
+- {"id": "L5", "citation": "Bakken and Olsen 2001", "status": "located_not_read"}
+- {"id": "L6", "citation": "Olsen 2001", "status": "located_not_read"}
+- {"id": "L7", "citation": "Jenman 1998", "status": "located_not_read"}
+- {"id": "L8", "citation": "Ambrose, Keener and Farr, OTC 15236", "status": "located_not_read"}
+- {"id": "L9", "citation": "Hansen and Royce 2011", "status": "located_not_read"}
+- {"id": "L10", "citation": "Donnarumma 2012 (repository certificate error)", "status": "located_not_read"}
+- {"id": "L11", "citation": "two NTNU master's theses on drilling risers on DP vessels and on drift-off in deep water (repository pages would not render)", "status": "located_not_read"}
+- {"id": "L12", "citation": "Lang, World Oil, Oct 2017 (paywall preview)", "status": "located_not_read"}
+- {"id": "L13", "citation": "MTS DP Operations Guidance Part 1 (file opened, text not extractable)", "status": "located_not_read"}
+- {"id": "L14", "citation": "MTS TECHOP ODP 12 and a coast guard DP policy letter (access refused)", "status": "located_not_read"}
+- {"id": "L15", "citation": "a 2021 Australian regulator document on loss of position (timed out).", "status": "located_not_read"}
+benchmark_values:
+- {"fixture_key": "inputs.vessel_mass", "value": 40800000.0, "unit": "kg", "printed": "4.08e7 kg"}
+- {"fixture_key": "reported_results.upper_flexjoint_angle_limit", "value": 12, "unit": "degrees", "printed": "upper 12 degrees"}
+- {"fixture_key": "reported_results.upper_flexjoint_limit_time", "value": 50, "unit": "s", "printed": "50 s"}
+- {"fixture_key": "reported_results.stroke_limit", "value": 9.905, "unit": "m", "printed": "stroke 9.905 m"}
+- {"fixture_key": "reported_results.wellhead_bending_moment_limit", "value": 7.8, "unit": "MN m", "printed": "wellhead bending moment 7.8 MN m"}
+code_mapping:
+- {"element": "3-DOF low-frequency model", "status": "absent"}
+- {"element": "Quadratic wind/current and mean drift", "status": "present", "path": "src/digitalmodel/drilling_riser/drift_off.py", "symbol": "environmental_force_n"}
+- {"element": "Thrust-time input per thruster", "status": "absent"}
+- {"element": "Söding/Brix rudder forces", "status": "present", "path": "src/digitalmodel/hydrodynamics/propeller_rudder.py", "symbol": "soding_forces"}
+- {"element": "Actuator-disk slipstream", "status": "present", "path": "src/digitalmodel/hydrodynamics/propeller_rudder.py", "symbol": "actuator_disk_velocity"}
+- {"element": "Actuator-disk flat-plate rudder forces", "status": "present", "path": "src/digitalmodel/hydrodynamics/propeller_rudder.py", "symbol": "ad_flat_plate_forces"}
+- {"element": "Riser top-force feedback", "status": "absent"}
+- {"element": "Quasi-static limit check", "status": "present", "path": "src/digitalmodel/drilling_riser/drift_off.py", "symbol": "watch_circle_limit"}
+- {"element": "Point of disconnect and red time", "status": "present", "path": "src/digitalmodel/drilling_riser/drift_off.py", "symbol": "drift_off_screen"}
+- {"element": "Yellow time", "status": "absent"}
+- {"element": "Screening qualification", "status": "present", "path": "src/digitalmodel/drilling_riser/drift_off.py", "symbol": "SCREENING_DISCLAIMER"}
+- {"element": "2017 worked example", "status": "present", "path": "tests/drilling_riser/test_drive_off_worked_example.py", "symbol": "test_reproduce_drive_off_worked_example"}
+- {"element": "Constructed drift-off benchmark", "status": "present", "path": "tests/drilling_riser/test_drift_off_constructed_benchmark.py", "symbol": "test_kinematics_constructed_benchmark_not_a_reproduction"}
+- {"element": "Force-balance illustration", "status": "present", "path": "examples/domains/hydrodynamics/drive_off_balance.py", "symbol": "simulate"}
+- {"element": "Force-balance illustration test", "status": "present", "path": "tests/hydrodynamics/test_drive_off_balance_example.py", "symbol": "test_drive_off_constant_force"}
+counts: {read: 14, located_not_read: 17, enumerated_read: 14, enumerated_located_not_read: 15}
+abs_timing_s: {point_of_disconnect: 257, red: 187, disconnect: 70}

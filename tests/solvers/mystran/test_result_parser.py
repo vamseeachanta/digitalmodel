@@ -211,3 +211,94 @@ class TestDiagnostics:
         pytest.importorskip("pyNastran")
         with pytest.raises(FileNotFoundError):
             parser.read_op2()
+
+
+# Source: captured MYSTRAN 19.0.0 fragments above (DISP_BLOCK, SPCF_BLOCK,
+# BAR_STRESS_BLOCK, HEX_STRESS_BLOCK, EPSILON_LINE, ERROR_LINE).
+# These are text-routing cases, not new engineering reference solutions.
+_INCOMPLETE_BLOCKS = [
+    "D I S P L A C E M E N T S\n",
+    "S P C   F O R C E S\n",
+    "E L E M E N T   S T R E S S E S\n",
+    BAR_STRESS_BLOCK,
+    HEX_STRESS_BLOCK.split("-------------")[0],
+]
+
+
+class TestBlockBoundaries:
+
+    @pytest.mark.parametrize("block", _INCOMPLETE_BLOCKS, ids=[
+        "empty-displacement", "empty-spc", "missing-stress-type", "bar", "unterminated-hex",
+    ])
+    @pytest.mark.parametrize("diagnostic", [ERROR_LINE, " *FATAL: incomplete output\n"])
+    def test_diagnostics_inside_consumed_blocks(self, tmp_path, block, diagnostic):
+        """Literal oracle: retain the diagnostic and epsilon token from the text.
+
+        Epsilon is copied from EPSILON_LINE, the captured 19.0.0 fragment;
+        no equilibrium calculation or acceptance threshold is asserted.
+        """
+        parser = MystranResultParser("job", tmp_path)
+        result = parser.parse_f06_text(block + diagnostic + EPSILON_LINE)
+        assert result["errors"] == [diagnostic.strip()]
+        assert result["epsilon"] == float("7.801759E-15")
+        assert parser.has_errors
+
+    @pytest.mark.parametrize("block", _INCOMPLETE_BLOCKS, ids=[
+        "empty-displacement", "empty-spc", "missing-stress-type", "bar", "unterminated-hex",
+    ])
+    @pytest.mark.parametrize("following, key", [
+        (DISP_BLOCK, "displacements"),
+        (SPCF_BLOCK, "spc_forces"),
+        (HEX_STRESS_BLOCK, "element_stresses"),
+    ])
+    def test_next_header_is_not_consumed(self, tmp_path, block, following, key):
+        """Expected maps come from literal captured rows, tested independently above.
+
+        Remove the subcase preamble to exercise a direct header transition.
+        For SPC forces, the hand sum has one row: T2 = -1000, R3 = -1000,
+        all other components zero (SPCF_BLOCK, captured MYSTRAN 19.0.0).
+        """
+        following = following[following.index({
+            "displacements": "D I S P L A C E M E N T S",
+            "spc_forces": "S P C   F O R C E S",
+            "element_stresses": "E L E M E N T   S T R E S S E S",
+        }[key]):]
+        parser = MystranResultParser("job", tmp_path)
+        result = parser.parse_f06_text(block + following)
+        if key == "displacements":
+            assert sorted(result[key]) == [1, 2, 3, 4, 5]
+            assert result[key][5]["t2"] == float("1.904770E-04")
+        elif key == "spc_forces":
+            assert sorted(result[key]) == [1]
+            assert parser.get_reaction_sum() == {
+                "t1": 0.0, "t2": -1000.0, "t3": 0.0,
+                "r1": 0.0, "r2": 0.0, "r3": -1000.0,
+            }
+        else:
+            assert sorted(result[key]["HEXA8"]) == [1, 2]
+            assert result[key]["HEXA8"][1]["center"]["von_mises"] == float("1.732051E+05")
+
+    @pytest.mark.parametrize("block", _INCOMPLETE_BLOCKS, ids=[
+        "empty-displacement", "empty-spc", "missing-stress-type", "bar", "unterminated-hex",
+    ])
+    def test_subcase_preamble_is_not_parsed_as_vector_data(self, tmp_path, block):
+        """Hand oracle: the subcase title resembles a vector row but is not data.
+
+        Integers are arbitrary text sentinels; only DISP_BLOCK's captured grids
+        are valid displacements. Subcase-separated result storage is unchanged.
+        """
+        text = block + "OUTPUT FOR SUBCASE 2\n99 0 1 2 3 4 5 6\n" + DISP_BLOCK
+        result = MystranResultParser("job", tmp_path).parse_f06_text(text)
+        assert sorted(result["displacements"]) == [1, 2, 3, 4, 5]
+        assert 99 not in result["spc_forces"]
+
+    def test_diagnostics_order_and_reset(self, tmp_path):
+        """Hand oracle: two messages in file order, then none in the next parse."""
+        parser = MystranResultParser("job", tmp_path)
+        fatal = "*FATAL: incomplete output"
+        result = parser.parse_f06_text(ERROR_LINE + BAR_STRESS_BLOCK + fatal + "\n" + EPSILON_LINE)
+        assert result["errors"] == [ERROR_LINE.strip(), fatal]
+        result = parser.parse_f06_text(DISP_BLOCK)
+        assert result["errors"] == []
+        assert result["epsilon"] is None
+        assert not parser.has_errors

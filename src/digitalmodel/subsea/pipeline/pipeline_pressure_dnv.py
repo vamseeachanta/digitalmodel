@@ -28,6 +28,16 @@ from digitalmodel.subsea.pipeline.pipeline_pressure import (
 )
 
 
+# DNV-ST-F101 (2021), System collapse: qualification remains unavailable.
+# These omissions apply even when the legacy numerical utilization passes.
+_COLLAPSE_NOT_EVALUATED = (
+    "fabrication_factor",
+    "strength_derating",
+    "ovality_and_thickness_basis",
+    "design_criterion_and_factors",
+)
+
+
 # ---------------------------------------------------------------------------
 # DNV-ST-F101: collapse pressure (characteristic)
 # ---------------------------------------------------------------------------
@@ -40,7 +50,20 @@ def dnv_collapse_pressure(
     E: float = _E_STEEL,
     nu: float = _NU_STEEL,
 ) -> float:
-    """Characteristic collapse pressure per DNV-ST-F101 Eq. (5.9).
+    """Solve the existing DNV-type collapse interaction equation.
+
+    Public equation source: EPRG, Deeper, Longer and Thicker: Challenges
+    for the Design of Subsea Pipelines (June 2022), section 3.1, Eq. (3):
+    https://www.eprg.net/fileadmin/EPRG_Dokumente/00222_Position_Paper_-_Final__EPRG__49__2_29_.pdf
+    Component coefficients and powers: TU Delft, Local Buckling and
+    Collapse of Thick Walled pipe (2016), Eqs. (3.9), (3.10):
+    https://repository.tudelft.nl/file/File_09e16762-ff32-49eb-bff8-85cffa889063
+
+    This numerical solution retains the existing plastic component model,
+    without fabrication or material-strength reduction factors. Legacy
+    ovality and elastic-property defaults are assumed, based on previous
+    experience; they are not qualified project inputs. This function alone
+    leaves compliance with DNV-ST-F101 (2021), System collapse, NOT_EVALUATED.
 
     Solved numerically from the cubic interaction equation::
 
@@ -60,25 +83,38 @@ def dnv_collapse_pressure(
 
     Returns:
         Characteristic collapse pressure p_c [MPa].
+
+    Raises:
+        ValueError: Inputs are nonfinite or outside the mathematical domain.
     """
+    values = (D, t, mat.SMYS, E, nu, f_0)
+    if not all(math.isfinite(value) for value in values):
+        raise ValueError("Collapse inputs must be finite")
+    if D <= 0.0 or not 0.0 < t < D / 2.0:
+        raise ValueError("Collapse geometry requires D > 0 and 0 < t < D/2")
+    if E <= 0.0 or mat.SMYS <= 0.0 or not -1.0 < nu < 1.0 or f_0 < 0.0:
+        raise ValueError("Collapse requires E, SMYS > 0, |nu| < 1 and f_0 >= 0")
+
+    # Component definitions: TU Delft (2016), Eqs. (3.9), (3.10), cited above.
     p_el = 2.0 * E * (t / D) ** 3 / (1.0 - nu ** 2)
     p_p = mat.SMYS * 2.0 * t / D
     coeff = p_el * p_p * f_0 * (D / t)
 
     if f_0 == 0.0 or coeff == 0.0:
-        return p_el * p_p / math.sqrt(p_el ** 2 + p_p ** 2)
+        return min(p_el, p_p)
 
     def _g(pc: float) -> float:
         return (pc - p_el) * (pc ** 2 - p_p ** 2) - pc * coeff
 
-    lo, hi = 0.0, max(p_el, p_p) * 1.5
-    if _g(lo) * _g(hi) > 0:
-        hi = max(p_el, p_p) * 3.0
-
-    tol = 1e-6 * max(p_el, p_p, 1.0)
-    for _ in range(300):
+    # EPRG (2022), Eq. (3): g(0)>0 and g(min(p_el,p_p))<0 for f_0>0.
+    # On this interval (p_el-p)*(p_p**2-p**2)/p decreases strictly,
+    # so it contains exactly one root. Larger roots are not collapse onset.
+    lo, hi = 0.0, min(p_el, p_p)
+    # Numerical budget only: 64 halvings reduce the original bracket by 2**-64,
+    # beyond binary64's 53-bit significand. Stop sooner on rounded stagnation.
+    for _ in range(64):
         mid = (lo + hi) / 2.0
-        if hi - lo < tol:
+        if mid == lo or mid == hi:
             return mid
         if _g(mid) > 0:
             lo = mid
@@ -102,7 +138,13 @@ def dnv_external_collapse_check(
     nu: float = _NU_STEEL,
     rho_sw: float = _RHO_SW,
 ) -> dict[str, object]:
-    """Check external hydrostatic pressure against DNV-ST-F101 collapse resistance.
+    """Screen external hydrostatic pressure using the legacy collapse model.
+
+    ``pass`` reports the arithmetic criterion below only. Complete compliance
+    with DNV-ST-F101 (2021), System collapse, is NOT_EVALUATED: fabrication,
+    strength derating, geometry basis and design factors are not qualified.
+    Defaults are assumed, based on previous experience; no standard-qualified
+    ovality, elastic properties or seawater density is inferred from them.
 
     Criterion (DNV-ST-F101 Section 5.4.4)::
 
@@ -121,7 +163,7 @@ def dnv_external_collapse_check(
 
     Returns:
         Dict with keys: ``pass``, ``utilization``, ``p_water``, ``p_c``,
-        ``p_allowable``.
+        ``p_allowable``, ``standard_compliance`` and ``not_evaluated``.
     """
     _validate_safety_class(safety_class)
     gsc = GAMMA_SC[safety_class]
@@ -137,6 +179,8 @@ def dnv_external_collapse_check(
         "p_water": p_water,
         "p_c": p_c,
         "p_allowable": p_allowable,
+        "standard_compliance": "NOT_EVALUATED",
+        "not_evaluated": _COLLAPSE_NOT_EVALUATED,
     }
 
 
@@ -223,8 +267,17 @@ def dnv_combined_loading_check(
     p_e: float,
     safety_class: str = "normal",
     f_0: float = 0.005,
+    *,
+    E: float = _E_STEEL,
+    nu: float = _NU_STEEL,
 ) -> dict[str, object]:
-    """Combined loading utilization per DNV-ST-F101 Section 5.4.3.
+    """Screen combined loading using the legacy interaction criterion.
+
+    ``pass`` reports numerical utilization only. The interaction criterion and
+    factors have not been qualified against DNV-ST-F101 (2021), Local buckling.
+    Standard compliance is NOT_EVALUATED even for a passing screen. Collapse
+    defaults are assumed, based on previous experience; supply elastic properties
+    explicitly to use the same input basis as the external-collapse screen.
 
     Interaction equation::
 
@@ -247,10 +300,13 @@ def dnv_combined_loading_check(
         p_e:           External (hydrostatic) pressure [MPa].
         safety_class:  One of ``"low"``, ``"normal"``, ``"high"``.
         f_0:           Pipe ovality for collapse calculation. Default 0.005.
+        E:             Young's modulus [MPa]; legacy assumed default.
+        nu:            Poisson's ratio; legacy assumed default.
 
     Returns:
         Dict with keys: ``pass``, ``utilization``, ``M_p``, ``S_p``,
-        ``p_c``, ``pressure_ratio``.
+        ``p_c``, ``pressure_ratio``, ``standard_compliance`` and
+        ``not_evaluated``.
     """
     _validate_safety_class(safety_class)
     gsc = GAMMA_SC[safety_class]
@@ -259,7 +315,7 @@ def dnv_combined_loading_check(
     M_p = smys_pa * (D - t) ** 2 * t
     S_p = smys_pa * math.pi * (D - t) * t
 
-    p_c = dnv_collapse_pressure(D=D, t=t, mat=mat, f_0=f_0)
+    p_c = dnv_collapse_pressure(D=D, t=t, mat=mat, f_0=f_0, E=E, nu=nu)
     pressure_ratio = (p_li - p_e) / p_c if p_c > 0.0 else 0.0
 
     if M_p > 0.0 and S_p > 0.0:
@@ -277,4 +333,6 @@ def dnv_combined_loading_check(
         "S_p": S_p,
         "p_c": p_c,
         "pressure_ratio": pressure_ratio,
+        "standard_compliance": "NOT_EVALUATED",
+        "not_evaluated": _COLLAPSE_NOT_EVALUATED,
     }

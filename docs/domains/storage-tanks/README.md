@@ -1,0 +1,156 @@
+# Tank and pressure vessel shell sizing
+
+The shell calculators and shared report adapters return arithmetic results,
+input provenance, tables and interactive thickness charts. The worked examples
+are synthetic and carry **NOT_EVALUATED** code qualification. A resolved source
+checks metadata; it does not authenticate a numeric value or approve a design.
+
+## Revision history
+
+| Revision | Date | Change and reason |
+| --- | --- | --- |
+| 00 | 2026-10-21 | Document the existing examples and separate applicability evidence so unresolved rules remain visible. |
+| 01 | 2026-10-21 | Align thickness precision and source evidence so small margins and missing applicability values remain visible. |
+| 02 | 2026-11-05 | Add edition-explicit defaults checked against the public standard copy, including the lowest-course floor exception. |
+
+## Worked examples
+
+- [Internal floating roof tank losses](ifrt.html): public AP-42 routine emissions,
+  seal/deck comparisons and a normal vent capacity comparison with explicit design inputs.
+- [Tank shell analysis](one-foot-worked-example.html): a 30 m diameter tank,
+  18 m liquid level, eight equal courses, specific gravity 1.0 and 1.5 mm CA.
+- [Pressure vessel shell analysis](pressure-vessel-example.html): shell and head
+  thickness, MAWP, hydrotest pressure and a pressure sweep with design point.
+- [Inputs and unrounded results](shell-thickness-examples.json): input echo,
+  course results, evidence gaps and report digests.
+- [API 650 Annex E seismic screen](api650-annex-e.md): 20 m tank, 10 m fill,
+  SUG II; base shear, moments, freeboard, anchorage ratio J and hoop demand.
+
+Both pages use the house reporting engine. Compact pages load Plotly from its
+public CDN; the default generator embeds it for offline use. Chart hover data
+pairs each requirement with its nominal wall and margin, including negative
+margins for insufficient vessel walls. Equal heights on either side of a course
+boundary keep their respective selected plates.
+
+## Method and sources
+
+API 650 5.6.3.2 is the equation locator supplied by issue #2958 (2026).
+The issue does not identify an edition and is not a qualified standard source.
+Explicit caller inputs remain supported. The optional helpers below supply
+method inputs, diameter-dependent floors and three material rows from a directly
+inspected historical edition. The plate catalogue remains a caller input.
+
+For each bottom-up course, the implemented equations are
+`td = c D max(H-a, 0) G / Sd + CA` and
+`tt = c D max(H-a, 0) / St`, using the design liquid level for both sizing cases.
+A separate test fill level affects only the applied-pressure graph. The selected
+plate is the first supplied plate at least as thick as the maximum of design,
+test and nominal floor requirements. Shell mass uses circumference times course
+height times nominal wall times the supplied density (thin-shell approximation).
+
+With the illustrative inputs recorded in the example, independent bottom-course
+arithmetic gives `4.9 * 30 * (18-0.3) / 150 + 1.5 = 18.846 mm`.
+Course 7 begins at `6 * 2.25 = 13.5 m` and gives
+`4.9 * 30 * (4.5-0.3) / 150 + 1.5 = 5.616 mm`.
+The hand and program design values agree to three decimal places:
+18.846 mm and 5.616 mm. These are arithmetic examples with assumed allowables,
+not a qualification of A36 or another plate grade. All unsourced scenario inputs
+are **assumed, based on previous experience**.
+
+The vessel adapter uses the existing ASMEThicknessCalc equations: UG-27(c)(1),
+UG-32(d)/(f) and UG-99. Their edition is unresolved in the inherited module.
+The test factor and test allowable are caller inputs. MAWP is the smaller of
+shell and head capacities. Hydrotest pressure is reported without a test-stress
+acceptance assessment. Existing regression tests show that MAWP, reinforcement
+and hydrotest each have one method definition and retain their hand values.
+
+## Evidence and material inputs
+
+Provide a Citation for each of the method, material, diameter limit (5.6.3.1)
+and nominal floor (5.6.1.1). The last two use the optional OneFootBasis fields
+`diameter_limit_citation` and `minimum_nominal_citation`; omitting either leaves
+that check NOT_EVALUATED even if a numeric value is supplied. Method and
+applicability citations must identify the same code, publisher and edition,
+including when the method citation is absent. Applicability citations without
+their numeric values are validated but omitted from the evidence sidecar; the
+affected report rows remain NOT_EVALUATED.
+Existing callers may continue to supply uncited illustrative inputs.
+
+| Requested plate grade | Design allowable | Test allowable | Required evidence |
+| --- | --- | --- | --- |
+| A36 | NOT_EVALUATED | NOT_EVALUATED | Applicable API 650 material table, edition, thickness and temperature range |
+| A283 C | NOT_EVALUATED | NOT_EVALUATED | Applicable API 650 material table, edition, thickness and temperature range |
+| A516 70 | NOT_EVALUATED | NOT_EVALUATED | Applicable API 650 material table, edition, thickness and temperature range |
+
+These USC grade names are not silently mapped to SI specifications. Supply their
+qualified values and applicability limits explicitly. For the limited SI defaults
+below, supply resolved citations and review the plate catalogue and density.
+A supplied diameter above its limit is refused with a reference to 5.6.4.
+
+## Edition-explicit defaults
+
+`api650_11th_basis(diameter_m)` and
+`api650_11th_material(grade, design_temperature_c=...)` are available from
+`digitalmodel.code_checks.storage_tanks`. Pass their results as `TankDesign.basis`
+and `TankDesign.material`; passing explicit `OneFootBasis` and
+`MaterialAllowables` continues to override these default selections.
+
+The source is [API 650, Welded Tanks for Oil Storage, eleventh edition
+(June 2007), Addendum 1 (November 2008), Addendum 2 (November 2009),
+Addendum 3 (August 2011), errata October 2011](https://law.resource.org/pub/us/cfr/ibr/002/api.650.2007.pdf).
+The cover and cited entries were inspected directly. The filename alone does
+not identify the incorporated addenda. This selection does not establish
+equivalence to any later edition.
+
+The method helper reads the SI equations in 5.6.3.2 and the diameter limit in
+5.6.3.1 (page 5-15). Nominal floors follow all four diameter bands in 5.6.1.1
+(page 5-12), with Note 4 applied only to the lowest shell course. A basis retains
+the diameter used for floor selection; construct a new basis if the diameter
+changes. Tables and plots show the floor for each course.
+
+The material helper covers only the SI Table 5-2a rows `A36M`, `A283M C` and
+`A516M 485` (page 5-13). It uses the shell-plate thickness caps in 4.2.2(a), (c)
+and (e) (page 4-2). Selected plates exceeding a cap are refused; unused thicker
+catalogue entries are allowed. The maximum design temperature is required and
+checked against 1.1.1 (page 1-1). The helper is for non-refrigerated service;
+Appendix M, low-temperature toughness, certification and other service
+eligibility checks are not established.
+
+For example, select the edition and SI specification explicitly:
+
+```python
+from digitalmodel.code_checks.storage_tanks import (
+    api650_11th_basis,
+    api650_11th_material,
+)
+
+basis = api650_11th_basis(diameter_m=30)
+material = api650_11th_material("A36M", design_temperature_c=20)
+```
+
+Each returned `source` carries the title, edition, addenda, errata, clause or
+table, page and public address. The defaults carry no inferred wiki `Citation`.
+They therefore retain **NOT_EVALUATED** status unless the existing resolver's
+method, material and applicability citation requirements are met. A resolved
+wiki record still does not authenticate numerical contents or approve a tank.
+The synthetic worked examples retain their supplied inputs and hand arithmetic.
+
+## Reproduce
+
+With the repository's declared reporting dependencies installed:
+
+```sh
+PYTHONPATH=src uv run python examples/code_checks/shell_thickness_reports.py --output REPORT_DIRECTORY
+```
+
+Use `--compact` to reproduce the checked-in distribution. The generator records
+SHA-256 digests of the rendered bytes and reads back each output. The example
+tests compare regenerated compact pages and the manifest byte for byte.
+
+## Limits and later slices
+
+Unresolved material and method qualification remains NOT_EVALUATED. The variable
+design point method, wind girders, roof, bottom, annular plates, seismic,
+settlement and full code compliance remain outside this shell sizing scope.
+The course geometry and selected wall data can inform subsequent settlement
+assessment, but neither linked settlement workflow is executed here.

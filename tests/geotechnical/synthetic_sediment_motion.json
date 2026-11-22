@@ -1,0 +1,62 @@
+{
+  "basis": "Synthetic positive arithmetic inputs only; no measured sediment data or design limits. Equations: USACE HEC-RAS 2D Sediment Technical Reference Manual v6.4.1 (2023), section 2.14.1 equation 132 and section 2.13.1 bed shear velocity definition after equation 111; public locator in critical_sediment_motion docstring.",
+  "hand_calculation": "Reference submerged unit weight: (2250-1000)*10 = 12500 N/m^3. Grain stress scale: 12500*0.004 = 50 Pa. Critical stress: 0.05*50 = 2.5 Pa. Friction velocity: sqrt(2.5/1000) = 0.05 m/s. Multiplying diameter by 4, density contrast by 9, gravity by 0.25 or Shields parameter by 4 multiplies stress by that factor and velocity by its square root. Multiplying water density by 4 at fixed density contrast preserves stress and halves velocity. All factors are synthetic choices for hand arithmetic.",
+  "reference_inputs": {
+    "sediment_d50_m": 0.004,
+    "sediment_density_kg_m3": 2250.0,
+    "water_density_kg_m3": 1000.0,
+    "critical_shields_parameter": 0.05,
+    "gravity_ms2": 10.0
+  },
+  "reference_case": {
+    "id": "reference",
+    "overrides": {},
+    "stress_pa": 2.5,
+    "velocity_ms": 0.05
+  },
+  "scaling_cases": [
+    {
+      "id": "grain-size",
+      "overrides": {"sediment_d50_m": 0.016},
+      "stress_pa": 10.0,
+      "velocity_ms": 0.1,
+      "stress_ratio": 4.0,
+      "velocity_ratio": 2.0
+    },
+    {
+      "id": "density-contrast",
+      "overrides": {"sediment_density_kg_m3": 12250.0},
+      "stress_pa": 22.5,
+      "velocity_ms": 0.15,
+      "stress_ratio": 9.0,
+      "velocity_ratio": 3.0
+    },
+    {
+      "id": "gravity",
+      "overrides": {"gravity_ms2": 2.5},
+      "stress_pa": 0.625,
+      "velocity_ms": 0.025,
+      "stress_ratio": 0.25,
+      "velocity_ratio": 0.5
+    },
+    {
+      "id": "supplied-shields",
+      "overrides": {"critical_shields_parameter": 0.2},
+      "stress_pa": 10.0,
+      "velocity_ms": 0.1,
+      "stress_ratio": 4.0,
+      "velocity_ratio": 2.0
+    },
+    {
+      "id": "water-density-fixed-contrast",
+      "overrides": {
+        "water_density_kg_m3": 4000.0,
+        "sediment_density_kg_m3": 5250.0
+      },
+      "stress_pa": 2.5,
+      "velocity_ms": 0.025,
+      "stress_ratio": 1.0,
+      "velocity_ratio": 0.5
+    }
+  ]
+}

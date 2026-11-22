@@ -2,13 +2,31 @@
 
 Hydrodynamic diffraction to local structural detail, as a stage-by-stage contract.
 
+## Summary
+
+This is a workflow definition, not a qualified engineering procedure. The
+[independent review](aqwa-to-structural-review.html) records corrected claims,
+source coverage and the evidence required before engineering use. A solver-free
+[worked example](../../../../examples/ansys/pressure-transfer/input.json) checks
+pressure-transfer resultants only; it does not validate the solver chain.
+
+## Revision history
+
+| Revision | Date | Change and reason |
+| --- | --- | --- |
+| Original | 2026-09-12 | The inherited workflow was preserved for independent review in commit `93cf3c927e08504db80fa23e9f1cbc08a6d6d3eb`. |
+| Review | 2026-10-20 | Unsupported limits are withdrawn, multiple-wave support is corrected and readiness is conditioned on retained evidence. |
+| Clarification | 2026-10-22 | The pressure-force citation states the outward-normal convention; equilibrium acceptance uses supplied criteria and unsupported mesh guidance is withdrawn. |
+
+Table R — Document revisions; the original remains available in Git history.
+
 | Field | Value |
 | --- | --- |
 | Workflow identifier | `aqwa-to-structural-submodel` |
 | Domain | Offshore and marine structural analysis |
 | Products consumed | Ansys AQWA (Hydrodynamic Diffraction), Ansys Mechanical (Static Structural), Ansys Workbench |
-| Release basis | Documented behaviour checked against Ansys release 2024 R2 / 2025 R1 help content |
-| Status | Definition issued; end-to-end validation against a physical or published comparator is **not established** (see §12) |
+| Release basis | Selected claims are checked against public Ansys 2024 R2 help; other releases are NOT_EVALUATED |
+| Status | Review draft; end-to-end validation against a physical or published comparator is **not established** (see §12) |
 
 Table 1 — Workflow identification. Caption below object per house style.
 
@@ -126,10 +144,9 @@ and independent of the structural mesh created later.
 
 ### 3.5 Decisions the analyst must make
 
-- **Panel size.** The panel mesh shall resolve the shortest wave of interest. A
-  panel edge length not exceeding one seventh of the shortest wavelength is a
-  commonly applied working rule; the governing requirement is convergence
-  demonstrated by refinement, not the rule of thumb. The defining maximum element
+- **Panel size.** The panel mesh shall resolve the shortest wave of interest.
+  No panel-size ratio is adopted without a release-specific source and a
+  convergence study. The defining maximum element
   size in AQWA is derived from the highest frequency requested, and the solve will
   report where the mesh does not satisfy it.
 - **Frequency grid.** The grid shall span the range over which the dominant load
@@ -158,7 +175,7 @@ and independent of the structural mesh created later.
 | --- | --- | --- |
 | Panel mesh too coarse for the highest frequency | Solver warning on defining maximum element size | Pressure field under-resolved; mapped structural load wrong in distribution and magnitude |
 | Irregular frequencies not suppressed | Narrow spikes in added mass, damping or pressure at isolated frequencies | A spurious frequency is selected as the design wave |
-| Roll damping not specified | Roll RAO peak unphysically large | Design wave amplitude from a roll-driven DLP is non-conservative (amplitude divided by an inflated RAO) |
+| Roll damping not specified | Roll RAO peak may be overstated | An inflated RAO denominator reduces the constructed design-wave amplitude; the structural consequence requires assessment |
 | Mass properties inconsistent with the structural model | None at this stage | Detected only at Stage 4, after the mapping cost has been incurred |
 | Waterline not closed / leaking panels | Solver warning or failed hydrostatic check | Displacement and pressure both wrong |
 | Density or gravity differs from the structural basis | None | Systematic pressure error carried silently to the structure |
@@ -168,7 +185,7 @@ Table 4 — Stage 1 failure modes.
 ### 3.7 Acceptance check — all shall pass before Stage 2
 
 1. Computed hydrostatic displacement agrees with the declared mass of the
-   condition to within 1 percent, and the computed centre of buoyancy is
+   condition to within a sourced, analysis-specific tolerance, and the computed centre of buoyancy is
    consistent with the declared centre of gravity such that the reported trim and
    heel at equilibrium are within the tolerance stated for the condition.
 2. The panel mesh satisfies the defining maximum element size for the highest
@@ -176,11 +193,11 @@ Table 4 — Stage 1 failure modes.
 3. Added mass and damping curves are smooth over the frequency grid; any isolated
    spike is identified as an irregular frequency and suppressed, or the affected
    frequency is excluded with justification.
-4. The dominant load parameter RAO peak is resolved by at least three grid points
-   across the peak, not straddled by two.
+4. The dominant load parameter RAO peak is resolved by a documented frequency-grid
+   refinement study; no universal count of points establishes peak resolution.
 5. A refinement comparison is recorded: the RAO of the governing dominant load
-   parameter changes by less than a stated tolerance — 5 percent is a commonly
-   applied acceptance band — between the working panel mesh and a refined mesh.
+   parameter changes by less than a sourced, analysis-specific tolerance between
+   the working panel mesh and a refined mesh. An absent criterion is NOT_EVALUATED.
 
 ---
 
@@ -241,6 +258,11 @@ load parameter divided by the peak value of that parameter's RAO:
 a_EDW = DLP_extreme / max( RAO_DLP(omega, beta) )
 ```
 
+This equation is retained as a proposed linear amplitude construction. The
+governing design-wave method, signed extreme, RAO amplitude convention and
+edition/clause are required inputs; their engineering applicability is
+NOT_EVALUATED here. No class-rule acceptance is inferred from the identity.
+
 where the maximum is taken over the frequency-heading grid, `DLP_extreme` is the
 most probable extreme value of the DLP for the specified return period and sea
 state, and `RAO_DLP` is the DLP response per unit wave amplitude. The units of
@@ -254,6 +276,10 @@ relation at that frequency and the analysis water depth:
 omega^2 = g * k * tanh(k * d)
 lambda  = 2 * pi / k
 ```
+
+Source basis: a governing wave-theory reference, edition and equation shall be
+provided for the analysis. No dispersion calculation or wave limit is qualified
+by this document; the missing source is recorded as NOT_EVALUATED in the review.
 
 reducing to `lambda = 2*pi*g / omega^2` in the deep-water limit. The wavelength
 shall be reported, because the ratio of wavelength to hull length is the physical
@@ -319,7 +345,7 @@ Table 6 — Stage 2 failure modes.
 
 1. For each design wave, the reconstructed DLP — the DLP RAO at the selected
    frequency and heading multiplied by the design wave amplitude — reproduces the
-   target extreme value to within 1 percent. This is an arithmetic identity by
+   target extreme value to within a sourced, analysis-specific tolerance. This is an arithmetic identity by
    construction, and a failure indicates a unit, sign or interpolation error.
 2. The wave steepness `H/lambda` of each design wave is computed and reported,
    and is within the limit of applicability of linear wave theory stated for the
@@ -405,33 +431,20 @@ second-order sum-frequency pressure on the wetted surface is not served by this
 transfer, and that limitation shall be stated in the report.
 
 **Only one Hydrodynamic Pressure object may be added to a Static Structural
-analysis.** Each design wave and each phase instant therefore requires its own
-Static Structural system. A load case matrix of *n* design waves is *n* Static
-Structural systems, and this drives the licence and scheduling position in §10.
+analysis.** This does not limit that object to one wave case. Ansys 2024 R2,
+*Aqwa User's Manual*, §8.1.4.1.3, documents multiple frequency/direction pairs and
+phase sequences as analysis steps in one system. The step-to-case record shall
+retain the frequency, direction, phase, amplitude and component selection.
 
-### 5.7 The silent-transfer setup error
+### 5.7 Transfer update sequence
 
-The hydrodynamic solve shall be started by updating the Hydrodynamic Diffraction
-**Solution cell from the project schematic**, with the Mechanical editor closed.
-
-Where the Hydrodynamic Diffraction analysis is solved from inside the AQWA
-Workbench editor only, the output files are **not transferred** to the Static
-Structural system. The hydrodynamic solve completes, the AQWA results are
-correct and viewable, and nothing indicates a fault — but the structural system
-has received no pressure data. This is the most consequential silent failure in
-the chain, because every downstream artefact is produced without error and is
-wrong.
-
-The required sequence is:
-
-1. A link exists in the project schematic between the Hydrodynamic Diffraction
-   system and the Static Structural system.
-2. The Mechanical editor is closed.
-3. The Hydrodynamic Diffraction Solution cell is updated from the project
-   schematic. This solves the diffraction analysis if required and transfers the
-   output files into the Static Structural solver files.
-4. Mechanical is then opened, and the Hydrodynamic Pressure object is configured
-   and generated.
+Ansys 2024 R2, *Aqwa User's Manual*, §8.1.3, requires a Solution-to-Setup link
+and an update of the upstream hydrodynamic Solution cell to transfer data files.
+An editor-only solve does not establish that this transfer occurred. After a
+subsequent upstream update, the downstream Setup cell is refreshed and the
+Hydrodynamic Pressure object is selected to use the new data. Pressure readback
+shall establish that the intended case was transferred. The earlier assertion
+that Mechanical must always be closed is not established by this source.
 
 ### 5.8 Decisions the analyst must make
 
@@ -453,28 +466,34 @@ The required sequence is:
 
 | Failure mode | Detection |
 | --- | --- |
-| Diffraction solved inside the AQWA editor only; nothing transferred | No pressure contour on the structural model after Generate; check the Solution cell update state |
+| Diffraction solved inside the AQWA editor only; downstream transfer not established | No pressure contour on the structural model after Generate; check the Solution cell update state |
 | Mapping method incompatible with the model content | Generate fails or reports an unmapped selection |
 | Dry or internal faces included in the wetted selection | Pressure contour extends above the waterline |
 | Second-order dependence assumed but not present in the mapped field | Not detectable from the result; shall be caught by review of the analysis basis |
-| More than one design wave attempted in one Static Structural system | Blocked by the one-object limit |
-| Mechanical open during the schematic update | Update does not transfer as expected |
+| Multiple wave cases mapped without a step-to-case record | Results cannot be bound to the intended frequency, direction and phase |
+| Upstream result changed without downstream refresh | Readback may still represent an earlier case |
 | Wave phase angle in the object not matching the Stage 2 phase | Pressure distribution inconsistent with the intended crest position |
 
 Table 8 — Stage 3 failure modes.
 
 ### 5.10 Acceptance check — all shall pass before Stage 4
 
-1. The pressure contour on the structural model is non-zero, continuous over the
-   wetted selection, and terminates at the intended waterline.
+1. The pressure contour has the expected magnitude, sign and spatial extent for
+   the selected components and instant. Zero pressure at a valid phase or location
+   is not itself a transfer failure. Unmapped faces are identified separately.
 2. The structure panel pressure reported in AQWA at the element centroids is
    compared against the mapped pressure in Mechanical at corresponding locations.
    Agreement within a stated tolerance shall be demonstrated; a sampled
-   comparison at a minimum of five locations distributed over the hull is
-   recommended, covering bow, stern, both sides and the bottom.
-3. The integrated vertical component of the mapped pressure over the wetted
-   surface is compared against the buoyancy-plus-wave vertical force from the
-   hydrodynamic solve at the same instant, and agrees within a stated tolerance.
+   comparison shall cover the governing pressure gradients and geometry, using
+   an analysis-specific sampling plan rather than an unsupported fixed count.
+3. All three force and all three moment components of the mapped pressure are
+   compared with the corresponding source pressure components at the same instant,
+   about the same origin and in the same frame. Hydrostatic, hydrostatic-varying,
+   incident, diffracted, radiated and internal components shall be reconciled before
+   comparison. Agreement requires supplied force and moment criteria; missing
+   criteria yield NOT_EVALUATED. Equal resultants do not establish equal pressure
+   distributions. The offline check in the worked example implements only this
+   necessary conservation comparison.
 4. The wave frequency, direction, phase angle and amplitude configured on the
    Hydrodynamic Pressure object are verified item-by-item against the Stage 2
    design wave record.
@@ -486,9 +505,10 @@ Table 8 — Stage 3 failure modes.
 ## 6. Stage 4 — Equilibrium and mass reconciliation
 
 ### 6.1 Purpose
-The mapped external pressure is a set of surface tractions in equilibrium with
-the *hydrodynamic* model's mass and inertia. The structural model carries its own
-mass, which in general differs. This stage establishes that the applied load set
+The mapped external pressure is one part of a load set that also includes
+gravity, inertia and other declared loads. Pressure alone is not generally
+self-equilibrated. The structural model carries its own mass, which in general
+differs from the hydrodynamic model. This stage establishes that the applied load set
 is in equilibrium to within an accepted residual, so that the boundary conditions
 of Stage 5 carry no load that physically belongs on the structure.
 
@@ -504,13 +524,13 @@ of Stage 5 carry no load that physically belongs on the structure.
 - Residual unbalanced force and moment in the three global directions.
 
 ### 6.4 Ansys mechanism
-The load transfer compares the structural mass properties to the hydrodynamic
-model properties as part of the mapping. Where the two disagree, correction is
-applied by adding point masses to the structural model, positioned and sized such
-that the corrected total mass, centre of gravity and inertia tensor of the
-structural model match those of the hydrodynamic model. Residual imbalance is
-carried by inertia relief or by a soft restraint set whose reactions are then
-checked.
+The add-on can compare structural mass properties with hydrodynamic properties
+and can apply accelerations, depending on its mass/inertia-check settings
+(Ansys 2024 R2, *Aqwa User's Manual*, §8.1.4.1.7 and §8.1.4.2). It is not
+established that it automatically creates corrective point masses. Any added
+mass distribution is an explicit modelling decision, recorded separately from
+the add-on's generated inertial loads. Restraints, fixed/free structure status,
+accelerations and reactions shall be reconciled before equilibrium is claimed.
 
 ### 6.5 The reconciliation
 
@@ -542,25 +562,22 @@ boundary conditions carry the balance. The basis adopted shall be stated.
 
 ### 6.6 Acceptance criterion — residual unbalanced force
 
-The applied hydrodynamic external pressure shall be in equilibrium with the other
-applied loads. The unbalanced force in each of the three global directions shall
-be computed for each load case and checked against the following criterion,
-expressed as a percentage of the displacement:
+The applied pressure, internal loads, gravity and inertial loads shall be
+reconciled in the same frame and at the same phase. The previously stated
+sea-condition limits are withdrawn: an identifiable edition and clause supporting
+those values is not in hand. No universal residual limit is adopted here.
 
-| Sea condition | Residual unbalanced force limit (% of displacement) |
+| Quantity | Required criterion input |
 | --- | --- |
-| Head seas | 1 |
-| Oblique seas | 2 |
-| Beam seas | 2 |
+| Force residual, each global axis (N) | Limit, denominator if normalized, governing document, edition and clause |
+| Moment residual, each global axis (N·m) | Limit, reference origin and governing criterion |
 
-Table 9 — Residual unbalanced force acceptance limits, per class-society Dynamic Loading Approach guidance.
+Table 9 — Required analysis-specific equilibrium criteria; absent inputs are NOT_EVALUATED.
 
-Residual forces within these limits may be balanced by adding suitably
-distributed inertial forces — inertia relief — before the structural solve is
-carried out. Residual forces exceeding these limits shall not be balanced by
-inertia relief; the source of the imbalance shall be found and corrected, because
-inertia relief applied to a large residual distributes a fictitious body force
-over the whole structure and contaminates the stress field everywhere.
+If a force residual is normalized by displacement weight, the denominator is
+mass times gravitational acceleration in consistent units, not mass alone.
+Inertia relief shall not be used to hide a pressure-transfer or load-definition
+error. Its applicability and the achieved residuals require independent review.
 
 ### 6.7 Decisions the analyst must make
 
@@ -584,7 +601,7 @@ over the whole structure and contaminates the stress field everywhere.
 | Point masses correct in total but wrongly located | Equilibrium check passes; local inertial load field wrong |
 | Inertia relief applied to a residual exceeding Table 9 | Fictitious body force distributed over the whole model; stress field contaminated with no visible symptom |
 | Restraint set over-stiff | Residual absorbed as restraint reaction; local stress concentration at the restraint reported as a structural result |
-| Displacement basis inconsistent between the two models | Percentage criterion evaluated against the wrong denominator |
+| Displacement basis inconsistent between the two models | A normalized residual uses the wrong denominator; missing Table 9 criterion inputs yield NOT_EVALUATED |
 
 Table 10 — Stage 4 failure modes.
 
@@ -593,12 +610,15 @@ Table 10 — Stage 4 failure modes.
 1. The mass, centre of gravity and inertia tensor of the corrected structural
    model are reported alongside the hydrodynamic values, and the differences are
    within the tolerance stated for the analysis.
-2. The residual unbalanced force in each of the three global directions satisfies
-   Table 9 for the applicable sea condition.
-3. The residual unbalanced moment about each of the three global axes is reported.
-   Where the governing standard states a moment criterion, it is applied; where it
-   does not, the moment residual shall be reported and its structural significance
-   assessed rather than omitted.
+2. The residual unbalanced force in each of the three global directions is
+   reported and compared against the analysis-specific limits supplied under
+   Table 9, including the governing document, edition and clause and any
+   normalization denominator. Missing inputs yield NOT_EVALUATED and prevent
+   acceptance of this stage.
+3. The residual unbalanced moment about each of the three global axes is reported
+   about the Table 9 reference origin and compared against its supplied governing
+   criterion. Missing limits, reference origin or governing criterion yield
+   NOT_EVALUATED and prevent acceptance of this stage.
 4. Where a restraint set is used, the reactions at every restraint are reported
    and are consistent with item 2.
 5. Where inertia relief is used, the relief accelerations are reported and are
@@ -627,7 +647,8 @@ will be taken, and against which global acceptance criteria are checked.
   elements are used.
 - Reaction set at all restraints.
 - Result file retained in a form suitable for cut-boundary interpolation at
-  Stage 6.
+  Stage 6. For the MAPDL procedure, both the coarse-model result and database
+  files are required (Ansys 2024 R2, *Advanced Analysis Guide*, §7.2.1).
 
 ### 7.4 Ansys mechanism
 Static Structural analysis system solved through the Mechanical APDL solver.
@@ -646,16 +667,18 @@ Table 11 — Element selection for the global model.
 The mesh density of the global model shall be sufficient to resolve the global
 load path and to provide a well-converged displacement field at the intended
 submodel cut boundary. It is not required to resolve local stress concentrations,
-which is the function of Stage 6. A commonly applied basis for a stiffened-hull
-global model is one element between stiffeners; the governing requirement is the
-convergence of the cut-boundary displacement field, which shall be demonstrated
-rather than assumed.
+which is the function of Stage 6. The previously stated fixed element count
+between stiffeners is withdrawn because a supporting governing source is absent.
+Mesh adequacy requires demonstrated convergence of the cut-boundary displacement
+field against a stated analysis-specific criterion.
 
 ### 7.6 Boundary conditions
 
-The mapped load set is, after Stage 4, self-equilibrated to within the Table 9
-residual. The boundary condition set therefore exists to remove rigid-body
-motion, not to carry load. Two admissible treatments:
+The restraint basis shall match the hydrodynamic structure's fixed/free status
+(Ansys 2024 R2, *Aqwa User's Manual*, §8.1.4.1.3). For a freely floating
+structure, the mapped load set is reconciled with gravity and inertia under
+Stage 4, and restraints remove rigid-body motion rather than represent external
+supports. Two candidate treatments for that floating case are:
 
 - **Inertia relief.** Rigid-body motion is removed by the relief formulation and
   no external restraint carries load. This is the treatment consistent with a
@@ -665,10 +688,11 @@ motion, not to carry load. Two admissible treatments:
   no more. The reactions at these points shall be small per Table 9 and shall be
   reported.
 
-A restraint set that over-constrains the model — for example a fully fixed edge —
-shall not be used, because it carries load that physically belongs in the
-structure, redistributes the stress field, and produces a spurious concentration
-that may be mistaken for a structural finding.
+For the floating case, an artificial fixed edge would change the load path and
+requires correction. For a physically fixed structure, supports and their
+reactions are part of the intended load path and shall not be removed through a
+floating-body restraint assumption. Reaction criteria shall distinguish the
+intended support loads from numerical imbalance.
 
 ### 7.7 Solver selection
 The sparse direct solver is the default and is recommended for models of the size
@@ -701,8 +725,10 @@ Table 12 — Stage 5 failure modes.
 
 1. The solve completes with no pivot, element-formulation or convergence warnings
    outstanding, or each outstanding warning is assessed and recorded as benign.
-2. Total reaction in each global direction equals the applied load resultant to
-   within the numerical tolerance of the solve, and satisfies Table 9.
+2. The signed sum of support reactions, applied loads and generated inertial loads
+   is checked for all force and moment components, about a common origin, against
+   the criteria supplied under Table 9. A transfer-only resultant comparison does
+   not establish this structural equilibrium check.
 3. The deformed shape is inspected and is consistent with the design wave
    mechanism — for example a hogging deflection for a hogging vertical bending
    moment design wave. A deformed shape inconsistent with the DLP indicates a
@@ -727,7 +753,8 @@ interpolated from the global result onto its cut boundary, resolving stress
 concentrations that the global mesh cannot represent.
 
 ### 8.2 Inputs
-- Global result file from Stage 5, retained with the displacement field.
+- Global result file from Stage 5, retained with the displacement field, and the
+  corresponding coarse-model database for the MAPDL interpolation route.
 - Fine-mesh local model, geometrically coincident with the corresponding region of
   the global model in the same coordinate system.
 - The cut-boundary face or edge set on the local model.
@@ -770,11 +797,8 @@ translation on the solid cut face.
   extraction — that specification governs and shall be applied exactly, because
   the allowable stress is calibrated to that mesh.
 - **Mesh transition.** The transition from the cut-boundary mesh density to the
-  hot-spot density shall be graded, not abrupt. A commonly applied basis is a
-  size ratio not exceeding 2 between adjacent element layers, with at least three
-  transition layers between the cut boundary and the region of interest. Abrupt
-  transition introduces a numerical artefact whose magnitude is not distinguishable
-  from a real stress concentration.
+  hot-spot density shall be assessed by a mesh study. No universal adjacent-size
+  ratio or number of transition layers is adopted without a governing source.
 - **Element order.** Quadratic elements are recommended in the region of interest;
   linear elements under-predict stress gradients at a given mesh density.
 - **Re-application of direct loads.** Any load acting within the submodel
@@ -806,16 +830,13 @@ therefore be placed far enough from the region of interest that the local detail
 does not influence the response at the boundary. The following checks establish
 this, and the first two are the operative ones:
 
-1. **Cut-boundary result comparison.** The displacement and stress computed by the
-   submodel at the cut boundary are compared against the global model results at
-   the same locations. Close agreement demonstrates that the local refinement has
-   not disturbed the boundary, and therefore that the imposed displacements remain
-   valid. Material disagreement demonstrates the opposite: the cut boundary is
-   inside the zone of influence of the local detail, and shall be moved outward.
-   This check shall be performed for every submodel. A stress agreement within 5
-   percent at the cut boundary is a commonly applied working band; the governing
-   requirement is that the disagreement be small relative to the margin on the
-   local result.
+1. **Cut-boundary result comparison.** Recovered stresses along the cut boundary
+   are compared with coarse-model stresses at corresponding locations, with an
+   analysis-specific criterion (Ansys 2024 R2, *Advanced Analysis Guide*, §7.2.5).
+   Agreement of imposed boundary displacements checks application of the
+   constraints; it cannot independently establish boundary adequacy. No universal
+   stress agreement percentage is adopted. Boundary relocation and a separate
+   fine-model comparison provide additional evidence.
 2. **Cut-boundary relocation test.** The submodel is re-solved with the cut
    boundary moved outward by a stated distance. Where the stress at the region of
    interest changes by less than a stated tolerance, the original boundary
@@ -823,10 +844,9 @@ this, and the first two are the operative ones:
    was too close and the enlarged model governs. This test shall be performed at
    least once per class of detail, and is recommended for every submodel whose
    result governs a design decision.
-3. **Distance rule of thumb.** The cut boundary should be at least two to three
-   times the characteristic dimension of the local detail away from the region of
-   interest. This is a starting position for the mesh, not an acceptance criterion;
-   checks 1 and 2 are what establish adequacy.
+3. **Initial boundary position.** The location is an analysis input. A fixed
+   multiple of the detail dimension does not establish boundary adequacy; the
+   stress comparison and relocation checks govern.
 
 ### 8.8 Failure modes
 
@@ -914,11 +934,9 @@ standard that sets the allowable, and the resulting utilisation and disposition.
 
 | Location | Load case | Stress measure | Computed (MPa) | Allowable (MPa) | Criterion source | Utilisation (—) | Disposition |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Bracket toe, transverse frame | EDW-01 sagging VBM | von Mises, unaveraged | 268 | 315 | Governing standard, cl. X.Y, 0.9·σ_y | 0.85 | Acceptable against cl. X.Y |
-| Plate field, midship bottom | EDW-01 sagging VBM | Membrane, averaged | 141 | 189 | Governing standard, cl. X.Z, 0.6·σ_y | 0.75 | Acceptable against cl. X.Z |
-| Weld toe, longitudinal termination | EDW-03 lateral acceleration | Hot-spot, t/2–3t/2 extrapolation | 212 | Fatigue class D, S-N check | Governing standard, fatigue annex | — | Fatigue check required; static criterion not applicable |
+| Required location | Required case | Required stress measure | Not calculated | Required input | Required title, edition and clause | Not calculated | NOT_EVALUATED until results and criteria are supplied |
 
-Table 14 — Result reporting format. Values shown are illustrative and carry no project meaning.
+Table 14 — Result reporting format; no illustrative allowable or material factor is adopted.
 
 The disposition "acceptable" shall never appear without the criterion that makes
 it so. A bare verdict is not a conclusion.
@@ -953,41 +971,17 @@ Table 15 — Stage 7 failure modes.
 
 ## 10. Licence and compute
 
-The chain consumes **one AQWA solve seat and one Mechanical seat**. These are
-consumed at different stages, but the chain as a whole is bounded by whichever is
-scarcer.
+Entitlement, concurrency and compute sizing are deployment inputs and are not
+established here. They shall be checked before a native run is scheduled. The
+one-object restriction does not imply one structural system per wave (§5.6).
+No local licence inventory is a portable property of this workflow.
 
-The practice holds a **single usable Mechanical seat at the current release**.
-The consequences are operational and shall be planned for:
+| Resource | Required evidence before native execution |
+| --- | --- |
+| Solver and add-on availability | Applicable release, entitlement and permitted concurrency |
+| Compute and storage | Model size, measured elapsed time, peak memory and retained-output plan |
 
-1. **The chain serialises.** Two design waves cannot be solved concurrently. A
-   load case matrix of *n* design waves is *n* sequential Static Structural
-   solves, because §5.6 permits only one Hydrodynamic Pressure object per Static
-   Structural analysis.
-2. **Submodels also serialise** against the same seat, and each submodel requires
-   the global result to be present. The critical path is therefore
-   `AQWA solve -> n x (map + solve) -> m x submodel solve`, fully serial in the
-   Mechanical seat.
-3. **Seat contention with unrelated work is real.** Any other analysis requiring
-   Mechanical blocks this chain and is blocked by it. Runs shall be scheduled, and
-   a long global solve shall not be started without the seat being reserved for its
-   expected duration.
-4. **Schedule estimation shall be based on the serial path**, not on the sum of
-   solve times assuming parallelism.
-5. Interactive use of Mechanical for model building also holds the seat. Model
-   preparation and production solving compete for the same resource, and
-   separating them in time is recommended.
-
-Compute sizing is model-dependent and is **not established** in this document. A
-sizing basis shall be recorded from the first production run of each model class:
-degrees of freedom, wall-clock solve time, peak memory, and scratch disk consumed.
-
-| Resource | Quantity held | Consequence |
-| --- | --- | --- |
-| AQWA solve seat | 1 | Diffraction solves serialise |
-| Mechanical seat | 1 usable at the current release | Mapping, global solves and submodel solves all serialise against one another and against unrelated Mechanical work |
-
-Table 16 — Licence position and its scheduling consequence.
+Table 16 — Execution prerequisites; availability is NOT_EVALUATED by this review.
 
 ---
 
@@ -1009,14 +1003,14 @@ The consequence is that **the Stage 3 transfer is the automation boundary of thi
 chain**. Stages 5, 6 and 7 are MAPDL-side and are scriptable through PyMAPDL once
 the load exists; Stages 1 to 3 are not.
 
-Two routes exist for a headless chain, and one of the two shall be selected before
-any automation is built:
+Two candidate routes are retained for evaluation. Neither is qualified for an
+unattended chain by this document:
 
 ### Route A — Workbench journaling or PyMechanical
-Workbench journaling and PyMechanical drive the Workbench and Mechanical object
-models, and therefore can reach the Hydrodynamic Pressure object and the project
-schematic update. This route preserves the Workbench chain exactly as defined in
-Stages 1 to 3, including the §5.7 update sequence.
+Workbench journaling and PyMechanical have different application scopes. A
+Mechanical session alone does not establish control of the Workbench project
+schematic. The proposed route needs separate, release-specific evidence for the
+schematic update, pressure generation, case changes and load readback.
 
 Reported behaviour is that updating a Hydrodynamic Pressure object through
 scripting depends on the Mechanical application processing the change to set the
@@ -1032,11 +1026,11 @@ and writes structural load cases in a file format the structural solver reads.
 AqwaWave is driven by a configuration file that defines the structural model
 selection, the hydrodynamic model selection, the output format and the load case
 selection, and the surrounding steps are file-based and deck-driven. This route
-does not involve the Mechanical object model at any point and is therefore
-**CLI-drivable end to end**.
+is proposed as an alternative to the Mechanical object model. A supported,
+release-specific unattended invocation is NOT_EVALUATED here.
 
-Route B is the route to select where unattended batch operation over a large load
-case matrix is the requirement. The precise command-line invocation, exit codes
+Route B is a candidate where unattended batch operation over a large load
+case matrix is required. The precise command-line invocation, exit codes
 and the full set of configuration-file directives at the current release are
 **not established in this document** and shall be confirmed against the release
 documentation before the route is built.
@@ -1044,14 +1038,13 @@ documentation before the route is built.
 | Route | Reaches Hydrodynamic Pressure object | Headless | Status |
 | --- | --- | --- | --- |
 | PyMAPDL | No — object is outside the MAPDL object model | n/a | Excluded for Stages 1–3 |
-| Workbench journaling / PyMechanical | Yes | Yes, with application session | Viable; batch robustness not established |
-| AqwaWave neutral file | Not applicable — bypasses the object | Yes | Fully CLI-driven; release-specific details to be confirmed |
+| Workbench journaling / PyMechanical | Proposed; application scopes differ | NOT_EVALUATED | Supported API, schematic control and repeated-case readback required |
+| AqwaWave neutral file | Proposed alternative | NOT_EVALUATED | Invocation, exit status, formats and mapping evidence required |
 
 Table 17 — Automation routes for the diffraction-to-structure transfer.
 
-A hybrid is admissible and is recommended as the first implementation: Stages 1
-to 3 driven by Route A or Route B, and Stages 5 to 7 driven by PyMAPDL against
-the resulting load cases.
+A hybrid is a proposal for later implementation. No route is selected or promoted
+until its automation interface and pressure-transfer evidence are reviewed.
 
 ---
 
@@ -1116,11 +1109,10 @@ independent check at Stage 5 acceptance item 4.
 
 ---
 
-## 12A. Restrictions verified after first drafting
+## 12A. Additional restrictions retained for review
 
-The five restrictions below were confirmed against Ansys documentation after this
-document was first written. Each constrains the chain materially, and each is
-absent from the stage sections above.
+The original claims below require release-specific evidence. Their individual
+dispositions appear in §13; the section title does not establish verification.
 
 ### 12A.1 Moonpool pressures exist only on the frequency-domain route
 
@@ -1139,18 +1131,16 @@ an assumption, or the omission declared. No single-run answer exists.
 
 For a time-domain Hydrodynamic Response source the pressure mapping option is
 set automatically to Interpolated; Direct is unavailable. The time-domain route
-is therefore both less complete (12A.1) and less accurate in mapping than the
-frequency-domain route. Selection between the two shall record which of the two
-losses the analysis accepts.
+requires a separate review of pressure components and mapping error; relative
+accuracy is not established by the method name alone.
 
 ### 12A.3 Diffraction pressures act on the mean wetted surface only
 
 Pressures from a Hydrodynamic Diffraction analysis are computed under the mean
 wetted surface. The wave surface shape is not reproduced in the pressure
 distribution, and the field scales strictly linearly with wave amplitude. For an
-extreme design wave this is the dominant modelling error of the whole chain —
-larger than any mapping or mesh effect — because the wetted surface above the
-mean waterline is not represented at all.
+extreme design wave the treatment of the wetted surface may affect the result;
+its magnitude relative to mapping or mesh error is not established here.
 
 Every report from this chain shall state that the pressure field is linear and
 defined on the mean wetted surface, and shall say what treatment, if any, was
@@ -1165,12 +1155,12 @@ a solve is sound.
 
 ### 12A.4 A shell-to-solid cut-boundary file requires two read operations
 
-The file written for shell-to-solid submodeling contains two command blocks — the
-nodal rotations and the displacement values — separated by an end-of-file marker
-and a block label. Reading it once applies rotations without displacements, or
-the reverse, and the submodel then solves without error against a wrong boundary
-condition. **Two separate read operations are required.** This is a silent
-failure: nothing in the solve reports it.
+The file written for shell-to-solid submodeling contains separate command blocks
+for nodal rotations and displacement values, separated by an end-of-file marker
+and a block label. The documented command-file procedure requires separate reads
+in the specified processor context (Ansys 2024 R2, *Advanced Analysis Guide*,
+§7.4). Reading only the first block does not apply the complete constraint set.
+Whether a particular incomplete input produces a solver warning is NOT_EVALUATED.
 
 Related constraint: shell-to-solid submodeling is not supported where the coarse
 shell model uses section offsets. A coarse model built with offset sections must
@@ -1200,26 +1190,33 @@ explicit and the transferred constraint set can be inspected.
 
 ## 13. Register of claims and their verification status
 
+SOURCE_CHECKED means that the cited public documentation supports the stated
+capability for that release; it does not mean that a native run was performed.
+NOT_EVALUATED means that evidence required for the stated use is absent.
+CORRECTED identifies a defect in the preserved text. Source records, access dates
+and content digests are retained in
+[the source manifest](aqwa-to-structural-sources.json).
+
 | Claim | Status | Basis |
 | --- | --- | --- |
-| Direct method evaluates pressure at each selected structural node from diffracting panel source strengths; permits solid outer surfaces and multi-structure; cannot map onto line bodies | Verified | Ansys help, Importing Hydrodynamic Diffraction Pressures and Loads to Mechanical |
-| Interpolated method interpolates from element-centred hydrodynamic pressures; permits line bodies; cannot map onto solid outer surfaces or multi-structure | Verified | As above |
-| Second-order pressure terms on diffracting panels are not calculated; line body loads do include a second-order viscous drag component | Verified, quoted | As above |
-| Only one Hydrodynamic Pressure object may be added to a Static Structural analysis | Verified, quoted | As above |
-| Solving the diffraction analysis from inside the AQWA editor only does not transfer output files to the Static Structural system; the Solution cell shall be updated from the project schematic with Mechanical closed | Verified | Ansys Learning Forum guidance on Aqwa-to-Mechanical pressure mapping |
-| Residual unbalanced force limits of 1 percent of displacement in head seas and 2 percent in oblique and beam seas; residual may be balanced by distributed inertial forces | Verified | Class-society Dynamic Loading Approach guidance notes |
-| Equivalent design wave amplitude equals the DLP extreme divided by the peak DLP RAO, at the frequency and heading of that peak | Verified | Class-society design wave guidance and published EDW literature |
-| Accompanying pressure is the field acting simultaneously with the DLP peak, not the pressure field's own maximum | Consistent with the DLA accompanying-load concept; exact wording not quoted from a single source | Inferred from DLA method description |
-| Cut-boundary interpolation transfers global degree-of-freedom values onto submodel boundary nodes; nodes outside the global mesh are extrapolated, which can induce error | Verified | Ansys help, Using Submodeling |
-| Shell-to-solid submodel cut-boundary nodes are projected onto the nearest element in the shell plane and interpolated there | Verified | Ansys help, Shell-to-Solid Submodels |
-| Submodeling rests on Saint-Venant's principle, and validity is established by comparing cut-boundary results between global and submodel | Verified as principle; the 5 percent band is a working practice figure, not a documented Ansys criterion | Ansys help and practitioner guidance |
-| PyMAPDL cannot drive AQWA | Not established as a documented statement; asserted from the architecture — PyMAPDL is a client to the MAPDL solver and AQWA is a separate solver | Reasoned |
-| PyMAPDL cannot drive the Hydrodynamic Pressure object because that object lives in Mechanical's object model | Not established as a documented statement; supported by reported behaviour that updating the object through scripting requires Mechanical to process the object and solution states | Reasoned, with forum-reported behaviour |
-| AqwaWave is driven by a configuration file and the route is file-based end to end | Verified in outline; the full current-release command-line interface is not established | AQWA documentation and applied-usage descriptions |
-| Panel edge length not exceeding one seventh of the shortest wavelength | Working rule of thumb, not a documented Ansys requirement; the documented control is the defining maximum element size derived from the highest requested frequency | Practitioner practice |
-| Mesh transition size ratio not exceeding 2, minimum three transition layers, cut boundary at two to three times the detail dimension | Working practice figures, not documented criteria | Practitioner practice |
-| Compute sizing for this chain | Not established | To be recorded from first production runs |
-| End-to-end validation of this chain | Not established | See §12 |
+| Direct and Interpolated mapping restrictions | SOURCE_CHECKED | Ansys 2024 R2, Aqwa User's Manual, §8.1.4.1.4; native mapping remains NOT_EVALUATED |
+| First-order panel pressure and viscous line-load distinction | SOURCE_CHECKED | Same section; component selections shall match across comparisons |
+| One object requires one structural system per wave | CORRECTED | §8.1.4.1.3 supports multiple wave cases and phases in one system |
+| Schematic update and refresh sequence | SOURCE_CHECKED | §8.1.3; a mandatory closed-editor condition is NOT_EVALUATED |
+| Automatic corrective point-mass creation | CORRECTED | §8.1.4.1.7 and §8.1.4.2 describe mass checks and accelerations, not that claimed correction |
+| Sea-condition residual percentages | NOT_EVALUATED | Identifiable governing edition and clause absent; values withdrawn |
+| EDW selection, dispersion and physical wave limits | NOT_EVALUATED | Governing method and equation sources required before engineering use |
+| Simultaneous accompanying field | Proposed consistency requirement | Source components, phase convention and phase origin shall be declared; §8.1.4.2 warns of interacting-structure phase-reference offsets |
+| Degree-of-freedom interpolation and reapplication of interior loads | SOURCE_CHECKED | Ansys 2024 R2, Advanced Analysis Guide, §7.2.3–§7.2.4 |
+| Shell-to-solid projection and two-block file read | SOURCE_CHECKED | Advanced Analysis Guide, §7.4; native command execution remains NOT_EVALUATED |
+| Boundary adequacy from matching imposed displacements alone | CORRECTED | §7.2.5 calls for recovered-result comparison; displacement agreement alone is circular |
+| PyMAPDL direct control of the pressure-import object | NOT_EVALUATED | Architecture-based assertion; supported interface evidence absent |
+| Workbench/PyMechanical repeated-case automation | NOT_EVALUATED | Application scope, supported API and changed-load readback required |
+| AqwaWave unattended route | NOT_EVALUATED | Release-specific invocation, file formats and exit semantics absent |
+| Fixed panel, transition, sampling or boundary-distance rules | NOT_EVALUATED | No traceable acceptance source in hand; numerical rules withdrawn |
+| Time-domain mapping and moonpool exclusion | SOURCE_CHECKED | Aqwa User's Manual, §8.1.5 and §8.1.5.1.4; relative mapping accuracy is NOT_EVALUATED |
+| Compute sizing and entitlement | NOT_EVALUATED | Deployment-specific evidence required |
+| End-to-end validation | NOT_EVALUATED | Comparators and criteria in §12 remain to be executed |
 
 Table 18 — Verification status of the claims made in this document.
 
@@ -1227,25 +1224,24 @@ Table 18 — Verification status of the claims made in this document.
 
 ## 14. References
 
-Source documents are cited by title rather than by local path. The applicable
-edition shall be confirmed at the time of use.
+The following public sources were opened for this review. The source manifest
+records their response digests and retrieval times. Other releases require a new
+review; bibliographic titles alone do not establish access or support a claim.
 
-- Ansys AQWA User's Manual, current release — Hydrodynamic Diffraction, results,
-  and the Mechanical extensions.
-- Ansys AQWA Theory Manual, current release — diffraction-radiation formulation
-  and pressure recovery.
-- Ansys Help, *Importing Hydrodynamic Diffraction Pressures and Loads to
-  Mechanical* — mapping methods, restrictions, second-order limitation, one-object
-  limit.
-- Ansys Help, *Importing Time Domain Hydrodynamic Response Pressures and Loads to
-  Mechanical* — the time-domain counterpart to Stage 3, outside the scope of this
-  workflow.
-- Ansys Mechanical User's Guide, *Submodeling* and *Shell-to-Solid Submodels*.
-- Ansys Mechanical APDL Advanced Analysis Guide, *Using Submodeling*.
-- Class-society Guidance Notes on the Dynamic Loading Approach, applicable to the
-  structure type — dominant load parameters, equivalent design wave construction,
-  load balance and residual unbalanced force criteria.
-- Class-society Guidance Notes on selecting the design wave by long-term
-  stochastic method — extreme value basis, phase angle and crest position.
-- The governing structural design standard for the analysis, identified by title,
-  edition and clause in the analysis report.
+- Ansys, *Aqwa User's Manual*, 2024 R2,
+  [§8.1.3, workflow setup](https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/wb_aqwa/aqwa_extensions_hydro_pressure_workflow.html),
+  [§8.1.4, diffraction pressure import](https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/wb_aqwa/aqwa_extensions_hydro_pressure_import.html),
+  [§8.1.5, time-domain pressure import](https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/wb_aqwa/aqwa_extensions_hydro_td_pressure_import.html).
+- Ansys, *Advanced Analysis Guide*, 2024 R2,
+  [§7.2, Using Submodeling](https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_adv/Hlp_G_ADV4_2.html),
+  [§7.4, Shell-to-Solid Submodels](https://ansyshelp.ansys.com/public/Views/Secured/corp/v242/en/ans_adv/Hlp_G_ADV4_4.html).
+- University of Texas at Austin, [*Fluid Mechanics*, Aerodynamic Forces](https://farside.ph.utexas.edu/teaching/336L/Fluidhtml/node128.html),
+  2016, equation 9.70: the pressure force is the negative surface integral of
+  pressure times the outward unit normal. This supports the sign convention for
+  declared planar patches, not hydrodynamic qualification.
+- OpenStax, [*University Physics Volume 1*, §10.6](https://openstax.org/books/university-physics-volume-1/pages/10-6-torque),
+  2016, equations 10.22 and 10.24: moments and their summation about one origin.
+
+The governing class-rule method, wave-theory basis, structural standard and
+analysis-specific acceptance criteria remain required inputs. No value from an
+unopened or licensed publication is adopted by this review.

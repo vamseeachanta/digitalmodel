@@ -1,6 +1,6 @@
 """
 Excel Collation Reader for OrcaFlex Dashboard
-Reads wlng_dm_fsts*.xlsx files to extract configuration and file patterns
+Reads *dm_fsts*.xlsx files to extract configuration and file patterns
 """
 
 import os
@@ -28,8 +28,8 @@ class ExcelCollationReader:
         self.last_refresh = None
         
     def find_collation_files(self) -> List[Path]:
-        """Find all wlng_dm_fsts*.xlsx files in the collated directory"""
-        pattern = "wlng_dm_fsts*.xlsx"
+        """Find all *dm_fsts*.xlsx files in the collated directory"""
+        pattern = "*dm_fsts*.xlsx"
         files = []
         
         if self.collated_path.exists():
@@ -41,7 +41,7 @@ class ExcelCollationReader:
     
     def parse_filename_pattern(self, filename: str) -> Dict[str, str]:
         """Extract metadata from Excel filename"""
-        # Pattern: WLNG_dm_fsts_lngc_fsts_l015_hwl_125km3_l100_pb.xlsx
+        # Pattern: <project>_dm_fsts_<config>_fsts_l015_hwl_125km3_l100_pb.xlsx
         # Components: prefix_vessel1_vessel2_loading_tide_capacity_loading2_berthing
         
         name = Path(filename).stem.upper()

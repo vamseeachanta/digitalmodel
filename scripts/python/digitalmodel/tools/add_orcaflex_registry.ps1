@@ -3,7 +3,7 @@
 
 # dummy entry for firefox. works when i run this as an admin in powershell. 
 
-# reg add HKEY_LOCAL_MACHINE\SOFTWARE\Mozilla\Firefox\TaskBarID /v siva-dummy /t REG_MULTI_SZ  /d dobbey
+# reg add HKEY_LOCAL_MACHINE\SOFTWARE\Mozilla\Firefox\TaskBarID /v maintainer-dummy /t REG_MULTI_SZ  /d dobbey
 
 # hex values
 # 10 - 0x0000000a

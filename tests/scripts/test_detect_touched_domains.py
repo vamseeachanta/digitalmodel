@@ -3,6 +3,7 @@
 
 import importlib.util
 import json
+import posixpath
 import re
 import shlex
 import subprocess
@@ -13,6 +14,8 @@ from pathlib import Path
 import yaml
 import pytest
 
+from tests.scripts._pytest_selection import pytest_selects_target
+
 
 SCRIPT = Path(__file__).resolve().parents[2] / "scripts/ci/detect_touched_domains.py"
 
@@ -20,6 +23,9 @@ SCRIPT = Path(__file__).resolve().parents[2] / "scripts/ci/detect_touched_domain
 @pytest.mark.parametrize(
     ("path", "expected"),
     [
+        ("src/digitalmodel/process_piping/pressure.py", {"asset-integrity"}),
+        ("tests/process_piping/test_pressure.py", {"asset-integrity"}),
+        ("src/digitalmodel/infrastructure/utils/pipe_friction.py", {"asset-integrity", "field-development"}),
         ("docs/registry/module-routing.yaml", {"asset-integrity", "contracts", "workflows", "subsea"}),
         ("docs/maps/example.md", {"contracts"}),
         ("src/digitalmodel/solvers/orcaflex/docs/agent-pack.md",
@@ -58,6 +64,109 @@ def test_shared_skew_basis_routes(path: str, expected: set[str]) -> None:
     domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
     selected = {domain.name for domain in detector.touched_domains([path], domains)}
     assert selected == expected
+
+
+def assert_corrosion_gate_coverage(gate: dict, pytestconfig: pytest.Config) -> None:
+    """Require folder registration and reject argv-level path exclusions."""
+    root = "tests/corrosion"
+    assert gate["enabled"] is True
+    assert gate["domain"] == "specialized"
+    assert gate["failure_action"] == "block"
+    assert root in {posixpath.normpath(item) for item in gate["test_roots"]}
+    assert pytest_selects_target(
+        pytestconfig, gate["command"], root,
+        (path.as_posix() for path in Path(root).rglob("test_*.py")),
+        require_explicit_target=True,
+    )
+
+
+@pytest.mark.parametrize("field,value", [
+    ("enabled", False), ("failure_action", "warn"),
+    ("failure_action", "report"), ("failure_action", None),
+])
+def test_corrosion_guard_rejects_nonblocking_metadata(field, value, pytestconfig):
+    gate = {
+        "enabled": True, "domain": "specialized", "failure_action": "block",
+        "test_roots": ["tests/corrosion/"],
+        "command": "python -m pytest tests/corrosion/",
+    }
+    gate[field] = value
+    with pytest.raises(AssertionError):
+        assert_corrosion_gate_coverage(gate, pytestconfig)
+
+
+def test_corrosion_ci_coverage(pytestconfig: pytest.Config) -> None:
+    gates = yaml.safe_load(
+        Path(".claude/quality-gates.yaml").read_text(encoding="utf-8")
+    )["gates"]
+    assert_corrosion_gate_coverage(gates["tests-specialized"], pytestconfig)
+
+
+@pytest.mark.parametrize("field", ["test_roots", "command"])
+@pytest.mark.parametrize("replacement", [None, "tests/corrosion_extra/"])
+def test_corrosion_ci_coverage_guard_rejects_missing_folder(
+    field: str, replacement: str | None, pytestconfig: pytest.Config,
+) -> None:
+    """Calibrate metadata and command omissions, including a near-match root."""
+    gates = yaml.safe_load(
+        Path(".claude/quality-gates.yaml").read_text(encoding="utf-8")
+    )["gates"]
+    gate = gates["tests-specialized"]
+    # Start from a complete registration to isolate the mutation under test.
+    gate["test_roots"] = ["tests/corrosion/"]
+    gate["command"] = "python -m pytest tests/corrosion/"
+    if field == "test_roots":
+        gate[field] = [replacement] if replacement else []
+    else:
+        gate[field] = "python -m pytest" + (f" {replacement}" if replacement else "")
+    with pytest.raises(AssertionError):
+        assert_corrosion_gate_coverage(gate, pytestconfig)
+
+
+@pytest.mark.parametrize("command", [
+    "python -m pytest tests/specialized/ --ignore tests/corrosion/",
+    "python -m pytest tests/corrosion/ --ignore=tests/corrosion/",
+    "python -m pytest tests/corrosion/ --ignore-glob tests/*",
+    "python -m pytest tests/corrosion/ --deselect tests/corrosion/test_module_report.py",
+    "python -m pytest tests/specialized/ --confcutdir tests/corrosion/",
+    "python -m pytest tests/specialized/ --rootdir tests/corrosion/",
+    "python -m pytest tests/corrosion/ --ignore tests/./corrosion/",
+    "python -m pytest tests/corrosion/ --ignore-glob=*.py",
+    "python -m pytest tests/corrosion/ --ignore-glob=tests/c*/test_*.py",
+])
+def test_corrosion_ci_coverage_guard_rejects_exclusions(
+    command: str, pytestconfig: pytest.Config,
+) -> None:
+    gate = {
+        "enabled": True, "domain": "specialized", "failure_action": "block",
+        "test_roots": ["tests/corrosion/"], "command": command,
+    }
+    with pytest.raises(AssertionError):
+        assert_corrosion_gate_coverage(gate, pytestconfig)
+
+
+@pytest.mark.parametrize("changed_path", [
+    "tests/corrosion/test_galvanic_screening.py",
+    "tests/corrosion/test_module_report.py",
+    "scripts/corrosion/build_module_report.py",
+    "docs/reports/modules/corrosion/changes.json",
+    "docs/reports/modules/corrosion/report.html",
+])
+def test_corrosion_inputs_select_specialized(changed_path: str) -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(Path("tests/DOMAINS.md"))
+    selected = detector.touched_domains([changed_path], domains)
+    assert [domain.name for domain in selected] == ["specialized"]
+
+
+def test_corrosion_source_keeps_full_matrix() -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(Path("tests/DOMAINS.md"))
+    selected = detector.touched_domains(
+        ["src/digitalmodel/corrosion/galvanic_screening.py"], domains
+    )
+    assert selected == domains
+    assert "specialized" in {domain.name for domain in selected}
 
 
 def run_detector(
@@ -835,20 +944,15 @@ def test_package_document_without_pyyaml_selects_full_matrix(tmp_path: Path) -> 
     ]
 
 
-def registry_reader_shards(root: Path, detector) -> dict[str, set[str]]:
+def registry_reader_shards(root: Path, detector, pytestconfig) -> dict[str, set[str]]:
     """Resolve registry references that are covered by actual gate commands."""
     domains = detector.parse_domains(root / "tests/DOMAINS.md")
     gates = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text())["gates"]
-    executed = {
-        token.split("::", 1)[0]
+    commands = [
+        gate["command"]
         for gate in gates.values()
-        for token in shlex.split(gate.get("command", ""))
-        if token.startswith("tests/")
-    }
-    executed = {
-        item.rstrip("/") + "/" if (root / item).is_dir() else item
-        for item in executed
-    }
+        if "pytest" in shlex.split(gate.get("command", ""))
+    ]
     references = re.compile(
         r"""docs/registry|module-routing|workflows\.yaml|['"]docs['"]\s*/\s*['"]registry['"]"""
     )
@@ -857,7 +961,8 @@ def registry_reader_shards(root: Path, detector) -> dict[str, set[str]]:
         relative = path.relative_to(root).as_posix()
         if not references.search(path.read_text(encoding="utf-8")):
             continue
-        if not any(detector.path_matches_root(relative, item) for item in executed):
+        if not any(pytest_selects_target(pytestconfig, command, relative, [relative])
+                   for command in commands):
             continue
         owners = {
             domain.name for domain in domains for test_root in domain.roots
@@ -874,10 +979,10 @@ def assert_registry_readers_routed(readers: dict[str, set[str]], routed: set[str
         assert owners <= routed, f"{reader}: missing {sorted(owners - routed)}"
 
 
-def test_registry_route_covers_gate_readers() -> None:
+def test_registry_route_covers_gate_readers(pytestconfig) -> None:
     """Check registry readers; roots run by no gate command are not asserted."""
     detector = load_detector_module()
-    readers = registry_reader_shards(SCRIPT.parents[2], detector)
+    readers = registry_reader_shards(SCRIPT.parents[2], detector, pytestconfig)
     assert readers
     routed = detector.mapped_domain_names("docs/registry/workflows.yaml")
     assert_registry_readers_routed(readers, routed)
@@ -891,7 +996,7 @@ def test_registry_route_covers_gate_readers() -> None:
     'ROOT / "module-routing.yaml"',
 ])
 def test_registry_reader_guard_detects_missing_shard(
-    tmp_path: Path, reference: str, gate_root: str,
+    tmp_path: Path, reference: str, gate_root: str, pytestconfig,
 ) -> None:
     """Calibrate each spelling against a reader outside the current route."""
     detector = load_detector_module()
@@ -906,11 +1011,37 @@ def test_registry_reader_guard_detects_missing_shard(
     reader = tests / "structural/test_registry_reader.py"
     reader.parent.mkdir()
     reader.write_text(f"REGISTRY = {reference}\n")
-    readers = registry_reader_shards(tmp_path, detector)
+    readers = registry_reader_shards(tmp_path, detector, pytestconfig)
     assert readers == {"tests/structural/test_registry_reader.py": {"structural"}}
     routed = detector.mapped_domain_names("docs/registry/workflows.yaml")
     with pytest.raises(AssertionError, match="missing.*structural"):
         assert_registry_readers_routed(readers, routed)
+
+
+@pytest.mark.parametrize("args,selected", [
+    ("tests/structural/ --ignore tests/unrelated/", True),
+    ("tests/unrelated/ --ignore tests/structural/", False),
+    ("tests/unrelated/ --rootdir tests/structural/", False),
+    ("tests/structural/ --ignore-glob=*.py", False),
+    ("tests/structural/ --deselect=tests/structural/test_reader.py::test_required", False),
+])
+def test_registry_reader_execution_uses_positional_selection(
+    tmp_path, args, selected, pytestconfig,
+):
+    # Issue 3449: only a complete positional selection executes this reader.
+    tests = tmp_path / "tests"
+    tests.mkdir()
+    write_domains(tests / "DOMAINS.md")
+    gate_dir = tmp_path / ".claude"
+    gate_dir.mkdir()
+    (gate_dir / "quality-gates.yaml").write_text(
+        f"gates:\n  tests-structural:\n    command: python -m pytest {args}\n"
+    )
+    reader = tests / "structural/test_reader.py"
+    reader.parent.mkdir()
+    reader.write_text('REGISTRY = "docs/registry/extra.yaml"\n')
+    readers = registry_reader_shards(tmp_path, load_detector_module(), pytestconfig)
+    assert readers == ({"tests/structural/test_reader.py": {"structural"}} if selected else {})
 
 
 # Record pins add contract coverage without replacing existing domain routes.
@@ -1137,7 +1268,7 @@ def test_real_manifest_pins_exist_and_select_contracts(monkeypatch: pytest.Monke
         and (Path(path).name.startswith("test_") or path.endswith("_test.py"))
     }
     for manifest, pins in records.items():
-        folder = str(Path(manifest).parent) if "/" in manifest else manifest
+        folder = Path(manifest).parent.as_posix() if "/" in manifest else manifest
         owning_tests = [path for path, text in readers.items() if folder in text]
         expected = {"contracts"}
         for test in owning_tests:
@@ -1376,7 +1507,7 @@ def test_record_reader_routes_union_base_and_head(tmp_path: Path) -> None:
     assert set(result.stdout.splitlines()) == {"contracts", "citations"}
 
 
-def test_bha_database_owned_and_executed_by_subsea():
+def test_bha_database_owned_and_executed_by_subsea(pytestconfig):
     """Ownership alone must not leave the acceptance suite unexecuted."""
     root = SCRIPT.parents[2]
     detector = load_detector_module()
@@ -1392,5 +1523,244 @@ def test_bha_database_owned_and_executed_by_subsea():
     subsea = next(domain for domain in domains if domain.name == "subsea")
     assert "tests/bha_database/" in subsea.roots
     gates = yaml.safe_load((root / ".claude/quality-gates.yaml").read_text())["gates"]
-    assert "tests/bha_database/" in shlex.split(gates["tests-subsea"]["command"])
+    target = "tests/bha_database/"
+    assert pytest_selects_target(
+        pytestconfig, gates["tests-subsea"]["command"], target,
+        (path.relative_to(root).as_posix() for path in (root / target).rglob("test_*.py")),
+        require_explicit_target=True,
+    )
     assert "tests/bha_database/" in gates["tests-subsea"]["test_roots"]
+
+
+@pytest.mark.parametrize("path", [
+    "data/riser_database/riser_stackup.csv",
+    "data/riser_database/config_catalog.csv",
+    "data/riser_database/rig_riser_interface.csv",
+    "data/riser_database/structure_properties/data.json",
+    "data/riser_database/material_sn_scf_dff.csv",
+    "data/riser_database/standards_crosswalk.csv",
+    "data/riser_database/new_catalogue.csv",
+    "data/line_pipe/data.json",
+    "data/flexible_pipe/data.json",
+    "data/soil_stiffness/data.json",
+    "data/geotechnical/geotech_database.yaml",
+    "data/fatigue/sn_curves.yaml",
+    "data/rao_database.parquet",
+    "data/vessels/processed/metocean_criteria.csv",
+    "docs/domains/orcaflex/risers/production/PROVENANCE.md",
+    "docs/domains/orcaflex/risers/drilling/PROVENANCE.md",
+])
+def test_riser_inventory_inputs_select_subsea(path: str) -> None:
+    detector = load_detector_module()
+    domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
+    selected = {d.name for d in detector.touched_domains([path], domains)}
+    assert "subsea" in selected
+
+
+def test_riser_inventory_database_paths_are_all_routed() -> None:
+    import yaml
+
+    detector = load_detector_module()
+    root = SCRIPT.parents[2]
+    inventory = yaml.safe_load(
+        (root / "data/riser_capability/riser_types.yml").read_text(encoding="utf-8")
+    )
+    paths = [row["path"] for row in inventory["databases"]]
+    paths += [f"{item}/PROVENANCE.md" for item in inventory["excluded_model_folders"]["paths"]]
+    domains = detector.parse_domains(root / "tests/DOMAINS.md")
+    unrouted = [
+        path for path in paths
+        if "subsea" not in {d.name for d in detector.touched_domains([path], domains)}
+    ]
+    assert unrouted == []
+
+
+def _repo_with_pull_request_behind_base(tmp_path: Path) -> tuple[Path, str, str]:
+    """A pull request that edits one citations test while the base gains a structural test
+    and a shared source file after the fork point. Returns the domains file, base tip and head."""
+    domains_file = tmp_path / "DOMAINS.md"
+    write_domains(domains_file)
+    init_repo(tmp_path)
+    citation = tmp_path / "tests" / "citations" / "test_registry.py"
+    citation.parent.mkdir(parents=True)
+    citation.write_text("def test_old():\n    assert True\n")
+    commit_all(tmp_path, "fork point")
+    trunk = subprocess.check_output(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=tmp_path, text=True
+    ).strip()
+
+    subprocess.run(["git", "checkout", "-q", "-b", "pull-request"], cwd=tmp_path, check=True)
+    citation.write_text("def test_new():\n    assert True\n")
+    head = commit_all(tmp_path, "pull request change")
+
+    subprocess.run(["git", "checkout", "-q", trunk], cwd=tmp_path, check=True)
+    structural = tmp_path / "tests" / "structural" / "test_beam.py"
+    structural.parent.mkdir(parents=True)
+    structural.write_text("def test_beam():\n    assert True\n")
+    shared = tmp_path / "src" / "digitalmodel" / "common" / "shared.py"
+    shared.parent.mkdir(parents=True)
+    shared.write_text("VALUE = 1\n")
+    tip = commit_all(tmp_path, "unrelated merge on the base")
+    return domains_file, tip, head
+
+
+def test_two_commit_diff_counts_base_changes_for_a_pull_request_behind_base(tmp_path: Path) -> None:
+    """The default comparison is unchanged: it lists what the base gained since the fork
+    point as touched, so a shared source file on the base selects every shard."""
+    domains_file, tip, head = _repo_with_pull_request_behind_base(tmp_path)
+
+    result = run_detector(
+        tmp_path, domains_file, "--mode", "touched", "--base", tip, "--head", head,
+        "--output-format", "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == ["asset-integrity", "citations", "structural", "workflows"]
+
+
+def test_merge_base_diff_selects_only_the_pull_request_change(tmp_path: Path) -> None:
+    domains_file, tip, head = _repo_with_pull_request_behind_base(tmp_path)
+
+    result = run_detector(
+        tmp_path, domains_file, "--mode", "touched", "--base", tip, "--head", head,
+        "--diff-from", "merge-base", "--output-format", "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == ["citations"]
+
+
+def test_merge_base_diff_keeps_full_matrix_for_a_pull_request_source_change(tmp_path: Path) -> None:
+    domains_file, tip, head = _repo_with_pull_request_behind_base(tmp_path)
+    subprocess.run(["git", "checkout", "-q", head], cwd=tmp_path, check=True)
+    shared = tmp_path / "src" / "digitalmodel" / "common" / "other.py"
+    shared.parent.mkdir(parents=True, exist_ok=True)
+    shared.write_text("VALUE = 2\n")
+    head = commit_all(tmp_path, "pull request touches shared source")
+
+    result = run_detector(
+        tmp_path, domains_file, "--mode", "touched", "--base", tip, "--head", head,
+        "--diff-from", "merge-base", "--output-format", "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == ["asset-integrity", "citations", "structural", "workflows"]
+
+
+def test_merge_base_diff_equals_two_commit_diff_when_head_is_up_to_date(tmp_path: Path) -> None:
+    domains_file, base, head = _repo_with_single_domain_change(tmp_path)
+    outputs = [
+        run_detector(tmp_path, domains_file, "--mode", "touched", "--base", base, "--head", head,
+                     *extra, "--output-format", "list").stdout.splitlines()
+        for extra in ((), ("--diff-from", "merge-base"))
+    ]
+    assert outputs == [["citations"], ["citations"]]
+
+
+def _unrelated_head(tmp_path: Path) -> tuple[Path, str, str]:
+    domains_file, base, _head = _repo_with_single_domain_change(tmp_path)
+    subprocess.run(["git", "checkout", "-q", "--orphan", "unrelated"], cwd=tmp_path, check=True)
+    (tmp_path / "tests" / "citations" / "test_registry.py").write_text("def test_other():\n    assert True\n")
+    head = commit_all(tmp_path, "no common ancestor")
+    return domains_file, base, head
+
+
+def test_merge_base_diff_without_common_ancestor_errors_by_default(tmp_path: Path) -> None:
+    domains_file, base, head = _unrelated_head(tmp_path)
+
+    result = run_detector(
+        tmp_path, domains_file, "--mode", "touched", "--base", base, "--head", head,
+        "--diff-from", "merge-base", "--output-format", "list",
+    )
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+
+
+def test_merge_base_diff_without_common_ancestor_can_fall_back_to_full(tmp_path: Path) -> None:
+    domains_file, base, head = _unrelated_head(tmp_path)
+
+    result = run_detector(
+        tmp_path, domains_file, "--mode", "touched", "--base", base, "--head", head,
+        "--diff-from", "merge-base", "--on-missing-base", "full", "--output-format", "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == ["asset-integrity", "citations", "structural", "workflows"]
+
+
+def test_workflow_pull_request_arm_diffs_from_the_merge_base() -> None:
+    """Structural guard: only the pull-request arm asks for the merge-base comparison.
+    A push compares before and after on one line of history and keeps the default."""
+    text = Path(".github/workflows/quality-gates-by-domain.yml").read_text(encoding="utf-8")
+    start = text.index('if [ "$EVENT_NAME" = "pull_request" ]; then')
+    push = text.index('elif [ "$EVENT_NAME" = "push" ]; then')
+    end = text.index("has_domains=", push)
+    assert "--diff-from merge-base" in text[start:push]
+    assert "--diff-from" not in text[push:end]
+
+
+
+def _repo_where_base_gains_a_record_after_the_fork(tmp_path: Path) -> tuple[Path, str, str]:
+    """The pull request edits an input file. After the fork point the base gains a record
+    manifest that pins that input, and a structural test that reads the record."""
+    domains_file = tmp_path / "DOMAINS.md"
+    domains_file.write_text(
+        "# Test Domains\n\n"
+        "| Domain | Test roots | Purpose/deps/notes |\n"
+        "| --- | --- | --- |\n"
+        "| citations | `tests/citations/` | Citation tests. |\n"
+        "| contracts | `tests/contracts/` | Record tests. |\n"
+        "| structural | `tests/structural/` | Structural tests. |\n"
+    )
+    init_repo(tmp_path)
+    data = tmp_path / "data" / "input.csv"
+    data.parent.mkdir(parents=True)
+    data.write_text("a,b\n1,2\n")
+    commit_all(tmp_path, "fork point")
+    trunk = subprocess.check_output(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=tmp_path, text=True
+    ).strip()
+
+    subprocess.run(["git", "checkout", "-q", "-b", "pull-request"], cwd=tmp_path, check=True)
+    data.write_text("a,b\n1,3\n")
+    head = commit_all(tmp_path, "pull request changes the input")
+
+    subprocess.run(["git", "checkout", "-q", trunk], cwd=tmp_path, check=True)
+    record = tmp_path / "records" / "manifest.json"
+    record.parent.mkdir(parents=True)
+    record.write_text(json.dumps({"data/input.csv": "a" * 64}))
+    reader = tmp_path / "tests" / "structural" / "test_record.py"
+    reader.parent.mkdir(parents=True)
+    reader.write_text('RECORD = "records/manifest.json"\n')
+    tip = commit_all(tmp_path, "base gains a record of the input")
+    return domains_file, tip, head
+
+
+def test_merge_base_diff_keeps_record_routes_from_the_base_tip(tmp_path: Path) -> None:
+    """The merged tree holds the base's record and the pull request's input, so the record's
+    readers must run although neither the fork point nor the head contains the record."""
+    domains_file, tip, head = _repo_where_base_gains_a_record_after_the_fork(tmp_path)
+    result = run_detector(
+        tmp_path, domains_file, "--mode", "touched", "--diff-from", "merge-base",
+        "--base", tip, "--head", head, "--output-format", "list",
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.split() == ["contracts", "structural"]
+
+
+def test_merge_base_diff_still_excludes_base_only_changes_with_records(tmp_path: Path) -> None:
+    """A pull request that does not touch the pinned input does not select the record's readers."""
+    domains_file, tip, head = _repo_where_base_gains_a_record_after_the_fork(tmp_path)
+    subprocess.run(["git", "checkout", "-q", head], cwd=tmp_path, check=True)
+    subprocess.run(["git", "checkout", "-q", "HEAD~1", "--", "data/input.csv"], cwd=tmp_path, check=True)
+    citation = tmp_path / "tests" / "citations" / "test_registry.py"
+    citation.parent.mkdir(parents=True)
+    citation.write_text("def test_new():\n    assert True\n")
+    other = commit_all(tmp_path, "pull request edits a citations test instead")
+    result = run_detector(
+        tmp_path, domains_file, "--mode", "touched", "--diff-from", "merge-base",
+        "--base", tip, "--head", other, "--output-format", "list",
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.split() == ["citations"]

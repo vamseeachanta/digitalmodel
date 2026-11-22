@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Campaign fixture portability</title>
+</head>
+<body>
+<main>
+  <h1>Campaign fixture portability</h1>
+  <h2>Summary</h2>
+  <p>The campaign compatibility tests resolve their tracked inputs from the
+  repository containing the test module. A relocated checkout and an unrelated
+  working directory therefore select that checkout's fixtures. The existing root
+  calculation is preserved; the regression checks use independent expected paths
+  and inspect the compatibility tests' missing-fixture skip conditions.</p>
+
+  <h2>Revision history</h2>
+  <table>
+    <thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+    <tbody><tr><td>Initial</td><td>2026-10-22</td><td>Document the fixture inputs,
+    path method and generation check so portability can be reproduced.</td></tr></tbody>
+  </table>
+  <p>Table 1. Revision history for this guide.</p>
+
+  <h2>Inputs and method</h2>
+  <p>The input is the resolved location of
+  <a href="../../../../tests/solvers/orcaflex/modular_generator/integration/test_campaign_integration.py">the campaign integration test module</a>.
+  Its repository-relative location is
+  <code>tests/solvers/orcaflex/modular_generator/integration/test_campaign_integration.py</code>.
+  Counting outward from the file gives the integration, modular_generator,
+  orcaflex, solvers and tests directories, then the repository root.
+  Consequently <code>Path(__file__).resolve().parents[5]</code> selects the root.
+  The index follows from that tracked directory layout, not an engineering
+  coefficient or acceptance limit.</p>
+  <p>Each fixture path is the root joined to its tracked relative path:</p>
+  <table>
+    <thead><tr><th>Input</th><th>Path relative to the repository</th></tr></thead>
+    <tbody>
+      <tr><td>Floating</td><td><a href="installation/floating/30in_pipeline/spec.yml"><code>docs/domains/orcaflex/pipeline/installation/floating/30in_pipeline/spec.yml</code></a></td></tr>
+      <tr><td>S-lay</td><td><a href="installation/s-lay/SB-SA/spec.yml"><code>docs/domains/orcaflex/pipeline/installation/s-lay/SB-SA/spec.yml</code></a></td></tr>
+    </tbody>
+  </table>
+  <p>Table 2. Tracked compatibility inputs; the fixture contents remain unchanged.</p>
+
+  <h2>Worked example</h2>
+  <p>Let <code>checkout</code> denote a temporary repository root. Place the test
+  module under its relative location above and create an empty placeholder at
+  <code>checkout / docs/domains/orcaflex/pipeline/installation/floating/30in_pipeline/spec.yml</code>.
+  Import the module with an unrelated working directory. The expected
+  <code>FLOATING_SPEC</code> is exactly that placeholder path, and the floating
+  compatibility test's <code>skipif</code> condition is <code>False</code>.
+  With the placeholder absent, the resolved path is unchanged and the condition
+  is <code>True</code>. The S-lay case follows the other literal path in Table 2.</p>
+  <p>The relocation test creates placeholders only to check paths and collection
+  conditions. The compatibility tests below use the actual tracked YAML inputs
+  to generate a master file, includes and parameters, then retain their existing
+  output assertions. No licensed solver is imported, queried or started.</p>
+  <p>From the repository root, with <code>TMPDIR</code> set to an external scratch
+  directory, the compatibility check is:</p>
+  <pre><code>uv run --no-project --with pytest --with pytest-asyncio --with pyyaml \
+  --with 'pydantic&gt;=2,&lt;3' --with loguru --with 'numpy&lt;2' --with scipy \
+  python -m pytest \
+  tests/solvers/orcaflex/modular_generator/integration/test_campaign_integration.py::TestBackwardCompatSingleRunFloating \
+  tests/solvers/orcaflex/modular_generator/integration/test_campaign_integration.py::TestBackwardCompatSingleRunSlay \
+  -q -rA -p no:cacheprovider --basetemp="$TMPDIR/campaign-example"</code></pre>
+  <p>Expected answer: both compatibility cases pass, with zero missing-fixture
+  skips when the tracked inputs are present. Use a fresh scratch subdirectory
+  for each invocation because pytest manages its base temporary directory.</p>
+
+  <h2>Scope and limits</h2>
+  <p>The fixture presence and relocation checks cover both inputs. Literal
+  expected paths prevent a wrong fixture declaration from defining its own test
+  expectation. Skip-predicate checks distinguish an available input from a
+  missing input. The complete module also checks campaign generation. These
+  checks establish path selection and generated-file behavior; solver execution
+  and engineering qualification remain outside their scope. Moving the test
+  module to a different directory depth requires updating root resolution.</p>
+  <h2>Sources</h2>
+  <p>The acceptance criteria are recorded in issue 2517, titled
+  <cite>test(orcaflex): resolve campaign fixtures relative to the repository</cite>.
+  The linked test module and tracked fixture locations provide the path basis.
+  No engineering equations, standards-derived constants or numerical acceptance
+  limits are introduced.</p>
+</main>
+</body>
+</html>

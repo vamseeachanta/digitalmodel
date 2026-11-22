@@ -35,16 +35,16 @@
   "header_replacements": "none; native JSON contains no runtime paths or host headers",
   "module_commit": "f60b9ad2bc6346d919bfa3707083e04bc585bb68",
   "numeric_bindings": 39,
-  "python_version": "3.11.14",
+  "python_version": "3.11.15",
   "record_inputs": {
     "README.template.md": "f584722f7ee82b6bdbeee81c0d133be0cfbc4aaf08380f99f8a68b8d7beb5f71",
     "basis.json": "4fc6cf3ec069b6f5d03fb6bf3a6e0a2a8935d46b388c45ef624e804081bb1be2",
-    "build_report.py": "8ae5a2a5fbcad566a5521c57a11f014e54ae676c32e73a0ced240560eb54d88c",
+    "build_report.py": "97e9903a4371874b48410ff1d1c43741da5dc8a7a82100421ce82103b5100f32",
     "comparison.template.md": "612d73a19a672510480f7d018e33e4aa4d004ff9b400a115d65df3b82b70dece",
     "criteria.json": "2ee2eb574303125f0c0c23f611b225dc1adf8e156ee183af651fef7e2d06f5fb",
     "execution.json": "4fadfc090938bff4863f41dab1d02f323891036751c7641ccae0dc68a9bc9bb3",
     "revisions.json": "e3e7e940329edf41ed64ba912abd9fcf043a24eb72f368ac9fb957fc6b6384b2",
-    "run_screening.py": "1c933a38712b3f0ad9285676f1b6f65f7dd2e6ad02612a09e5b845099cc14937"
+    "run_screening.py": "0a7a15e29ee958e103a12419045a8891e14200c7a611bb767634c67c544c6431"
   },
   "revision": "R3",
   "source_files": {

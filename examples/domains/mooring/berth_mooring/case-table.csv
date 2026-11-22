@@ -1,0 +1,13 @@
+name,speed_m_s,separation_m,wind,current,model,history,coupled_response,applied_load_wiring
+case_1_w0_c0,1,100,False,False,case_1_w0_c0.yml,case_1_w0_c0.csv,NOT_EVALUATED,NOT_EVALUATED
+case_1_w0_c1,1,100,False,True,case_1_w0_c1.yml,case_1_w0_c1.csv,NOT_EVALUATED,NOT_EVALUATED
+case_1_w1_c0,1,100,True,False,case_1_w1_c0.yml,case_1_w1_c0.csv,NOT_EVALUATED,NOT_EVALUATED
+case_1_w1_c1,1,100,True,True,case_1_w1_c1.yml,case_1_w1_c1.csv,NOT_EVALUATED,NOT_EVALUATED
+case_2_w0_c0,2,100,False,False,case_2_w0_c0.yml,case_2_w0_c0.csv,NOT_EVALUATED,NOT_EVALUATED
+case_2_w0_c1,2,100,False,True,case_2_w0_c1.yml,case_2_w0_c1.csv,NOT_EVALUATED,NOT_EVALUATED
+case_2_w1_c0,2,100,True,False,case_2_w1_c0.yml,case_2_w1_c0.csv,NOT_EVALUATED,NOT_EVALUATED
+case_2_w1_c1,2,100,True,True,case_2_w1_c1.yml,case_2_w1_c1.csv,NOT_EVALUATED,NOT_EVALUATED
+case_3_w0_c0,2,150,False,False,case_3_w0_c0.yml,case_3_w0_c0.csv,NOT_EVALUATED,NOT_EVALUATED
+case_3_w0_c1,2,150,False,True,case_3_w0_c1.yml,case_3_w0_c1.csv,NOT_EVALUATED,NOT_EVALUATED
+case_3_w1_c0,2,150,True,False,case_3_w1_c0.yml,case_3_w1_c0.csv,NOT_EVALUATED,NOT_EVALUATED
+case_3_w1_c1,2,150,True,True,case_3_w1_c1.yml,case_3_w1_c1.csv,NOT_EVALUATED,NOT_EVALUATED

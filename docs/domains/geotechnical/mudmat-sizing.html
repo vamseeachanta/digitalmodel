@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mudmat candidate sizing</title>
+<style>body{max-width:64rem;margin:2rem auto;padding:0 1rem;font:1rem/1.6 system-ui;color:#182c3b}pre{overflow:auto;background:#f1f4f6;padding:1rem}table{border-collapse:collapse}th,td{padding:.4rem;border:1px solid #bbb}</style></head>
+<body><main>
+<h1>Mudmat candidate sizing</h1>
+<p>The smallest supplied width that meets both allowable bearing and sliding demands is selected.
+This is a centred-unembedded-undrained screening operation, not complete foundation acceptance.</p>
+<h2>Revision history</h2>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>1</td><td>2026-11-13</td><td>Add finite-grid sizing to reuse the existing capacity calculator.</td></tr>
+<tr><td>2</td><td>2026-11-13</td><td>Clarify width containers and permitted factors to prevent misreading the screening inputs.</td></tr></tbody></table>
+<p>Table 1. Guide revision history.</p>
+<h2>Synthetic example</h2>
+<p>Widths and lengths are in m, loads and resistances in kN, shear strength and pressure in kPa,
+and submerged unit weight in kN/m³. Aspect ratio is length divided by width.
+The factor of safety is explicitly supplied and is not selected by the software.
+All values below are synthetic test inputs, not a design basis.</p>
+<pre><code class="language-python">from digitalmodel.geotechnical.mudmat_sizing import size_mudmat
+
+inputs = dict(aspect_ratio=1, vertical_load_kn=100, horizontal_load_kn=10,
+              undrained_shear_strength_kpa=10, submerged_unit_weight_kn_m3=8,
+              factor_of_safety=2)
+result = size_mudmat(width_candidates_m=[1, 2, 3], **inputs)
+assert result.status == "SELECTED" and result.selected.width_b_m == 2
+infeasible = size_mudmat(width_candidates_m=[1], **inputs)
+assert infeasible.status == "NO_CANDIDATE" and infeasible.selected is None
+</code></pre>
+<p>The 1 m square fails both demands. The 2 m square provides approximately 123.4 kN
+allowable vertical resistance and 20.0 kN allowable sliding resistance, exceeding the supplied
+100 kN and 10 kN demands. Every supplied width is evaluated, including those after selection.</p>
+<h2>Inputs and retained evidence</h2>
+<p>Widths shall be nonempty, positive, finite and strictly increasing. Aspect ratio shall be at least one.
+Supply widths as a list or tuple; NumPy arrays are not supported.
+Vertical demand, shear strength and factor shall be positive; horizontal demand and unit weight may be zero.
+Factors below one are permitted and can make allowable capacity exceed ultimate capacity; this is not design acceptance.
+Booleans, nonfinite values and unrepresentable geometry or capacities raise ValueError.
+Unsupported condition, embedment and moment keywords raise TypeError.
+Immutable results retain detached inputs, dimensions, the existing method description, ultimate and
+allowable capacities, the supplied factor and both comparison outcomes. Equality meets a demand.</p>
+<h2>Limits and way forward</h2>
+<p>Selection is restricted to the actual grid; a continuous or global optimum is not established.
+Embedment and moment are fixed at zero. The existing calculator supplies the numerical method unchanged.
+Drained and eccentric sizing, gravity-base overturning, load inclination, cyclic loading, settlement,
+the optional groundhog adapter and qualification against Brinch Hansen (1970) and DNV-RP-C212 examples
+remain outstanding under issue #264. Those checks require separate evidence before foundation acceptance.</p>
+</main></body></html>

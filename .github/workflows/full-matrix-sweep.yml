@@ -5,9 +5,13 @@
 # green indefinitely. This workflow is the counterweight: it runs EVERY domain
 # shard, ignoring touched-domain detection entirely, on
 #
-#   * every push to `main`  -> main's green is earned, not assumed
-#   * a nightly cron        -> drift is caught within a day even without merges
+#   * a nightly cron        -> an untouched-but-broken shard is caught within a day
 #   * manual dispatch       -> on-demand "what is the true state of the matrix?"
+#
+# It no longer runs on every push to `main`: each merge then cost one full
+# matrix (133.8 runner-minutes in run 43824707679, 16 Nov 2026) on top of the touched-domain
+# run that `Quality Gates by Domain` already makes for the same push. A push
+# that changes shared source or dependencies still selects every shard there.
 #
 # Job names here are deliberately distinct from the PR-gating workflow's
 # (`sweep-tests-*` / `Full matrix sweep result` vs `tests-*` / `Domain test
@@ -16,8 +20,6 @@
 name: Full Matrix Sweep
 
 "on":
-  push:
-    branches: [main]
   schedule:
     - cron: "17 7 * * *"
   workflow_dispatch:
@@ -34,7 +36,7 @@ concurrency:
 jobs:
   full-matrix:
     name: Build full shard matrix
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       total: ${{ steps.matrix.outputs.total }}
@@ -104,9 +106,23 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Set up Node for source locator formatter
+        if: matrix.domain == 'contracts'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Provision source locator formatter
+        if: matrix.domain == 'contracts'
+        run: |
+          npm install --prefix "$RUNNER_TEMP/source-locators-formatter" \
+            --cache "$RUNNER_TEMP/source-locators-npm-cache" \
+            --no-save --no-package-lock --no-audit --no-fund "prettier@4.0.0-alpha.8"
+          echo "SOURCE_LOCATORS_PRETTIER=$RUNNER_TEMP/source-locators-formatter/node_modules/.bin/prettier" >> "$GITHUB_ENV"
+
       - name: Install Gmsh runtime libraries
-        if: matrix.domain == 'solver-smoke'
-        run: sudo apt-get update -qq && sudo apt-get install -y -qq libglu1-mesa
+        if: matrix.domain == 'solver-smoke' || matrix.domain == 'specialized'
+        run: dpkg -s libglu1-mesa >/dev/null 2>&1 || (sudo -n apt-get update -qq && sudo -n apt-get install -y -qq libglu1-mesa)
 
       - name: Create reports directory
         run: mkdir -p reports
@@ -152,6 +168,10 @@ jobs:
           echo "code=$code" >> "$GITHUB_OUTPUT"
           exit "$code"
 
+      - name: Run geotechnical solver benchmarks
+        if: matrix.domain == 'specialized'
+        run: bash tests/geotechnical/run_solver_benchmarks.sh
+
       - name: Extract shard result
         if: always()
         env:
@@ -185,7 +205,7 @@ jobs:
       actions: read
       issues: write
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - name: Summarize shard results
         continue-on-error: true
@@ -211,6 +231,14 @@ jobs:
       - name: Checkout baseline tools
         if: github.ref == 'refs/heads/main'
         uses: actions/checkout@v4
+
+      # The self-hosted runner provides python3 but no `python`; the baseline
+      # step below needs an interpreter on PATH, as the other jobs provide.
+      - name: Set up Python
+        if: github.ref == 'refs/heads/main'
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
 
       - name: Download sweep results
         if: github.ref == 'refs/heads/main'

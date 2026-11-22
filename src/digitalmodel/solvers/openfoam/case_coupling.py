@@ -376,9 +376,12 @@ def _exchange_boundary_conditions(flow_rate: float) -> list[BoundaryCondition]:
     the pressure opening on ``outlet``, and held 600.000 m^3 exactly with it on
     ``top``. See ``docs/reports/issue-1528-outlet-vent/``.
 
-    ``top`` lies above the free surface for any fill fraction below 1.0, so this
-    needs no mesh-topology change. ``outlet`` is closed to a no-slip wall; it
-    still carries a ``U`` condition, which ``verify_coupling`` requires.
+    ``outlet`` is closed to a no-slip wall. The builder therefore emits wall
+    mesh topology and turbulence conditions there (#1979). Its name is retained
+    for existing probes and manifests. The pressure condition follows OpenFOAM
+    v2312 (2023), fixedFluxPressure, Description: compensate body forces while
+    matching the velocity flux. Vent wetting under roll requires separate
+    evaluation (#1980).
     """
     return [
         BoundaryCondition(
@@ -392,7 +395,7 @@ def _exchange_boundary_conditions(flow_rate: float) -> list[BoundaryCondition]:
             value="uniform 1", extra={"inletValue": "uniform 1"},
         ),
         BoundaryCondition("outlet", BoundaryType.NO_SLIP, "U"),
-        BoundaryCondition("outlet", BoundaryType.ZERO_GRADIENT, "p_rgh"),
+        BoundaryCondition("outlet", BoundaryType.FIXED_FLUX_PRESSURE, "p_rgh"),
         BoundaryCondition("outlet", BoundaryType.ZERO_GRADIENT, "alpha.water"),
         BoundaryCondition(
             "top", BoundaryType.PRESSURE_INLET_OUTLET_VELOCITY, "U",

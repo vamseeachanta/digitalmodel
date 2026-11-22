@@ -1,3 +1,6 @@
+# # Copyright (c) 2024 Digital Model Project
+# # Licensed under the MIT License. See LICENSE file for details.
+
 """
 Wang Paper Benchmark Tests for Passing Ship Force Calculator.
 
@@ -6,7 +9,7 @@ Validates the Python implementation against reference calculations from:
   or in a Narrow Channel." Journal of Ship Research, Vol. 19, No. 4.
 - MathCAD PDF: "Calculation of forces and moments from Wang.pdf"
 - MathCAD PDF: "Wang Paper calculations 3.pdf"
-- VBA reference: modPassingShip.bas (Nick Barczak, July 2016)
+- VBA reference: modPassingShip.bas (the original spreadsheet author, July 2016)
 
 Unit convention:
 - Reference data is in Imperial (ft, slug/ft³, lbf, ft-lbf)
@@ -17,6 +20,7 @@ See CONVENTIONS.md for sign convention and coordinate system documentation.
 """
 
 import math
+from pathlib import Path
 import numpy as np
 import pytest
 from assetutilities.units import TrackedQuantity
@@ -614,3 +618,18 @@ class TestVBACrossValidation:
         if expected_yaw_ft_lbf is not None:
             yaw_ft_lbf = _tq(result["yaw"], 'N * m').to('ft * lbf').magnitude
             assert abs(yaw_ft_lbf - expected_yaw_ft_lbf) / max(abs(expected_yaw_ft_lbf), 1.0) < 0.05
+
+
+@pytest.mark.parametrize("relative_path", [
+    "docs/api/hydro/passing-ship-benchmark.html",
+    "docs/domains/passing_ship/wang_benchmark/benchmark_report.html",
+    "src/digitalmodel/hydrodynamics/passing_ship/benchmark_report.py",
+    "tests/hydrodynamics/passing_ship/test_wang_paper_benchmark.py",
+    "tests/fixtures/test_vectors/hydrodynamics/passing_ship.yaml",
+])
+def test_vba_credit_uses_role_without_personal_name(relative_path):
+    """Preserve the role, module and date in each existing credit line."""
+    root = Path(__file__).resolve().parents[3]
+    text = (root / relative_path).read_text(encoding="utf-8").casefold()
+    credit = "modPassingShip.bas (the original spreadsheet author, July 2016)"
+    assert credit.casefold() in text

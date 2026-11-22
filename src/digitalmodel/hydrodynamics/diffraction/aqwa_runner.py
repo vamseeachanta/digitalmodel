@@ -40,6 +40,11 @@ from typing import TYPE_CHECKING, Any
 
 from pydantic import BaseModel, Field, field_validator
 
+from digitalmodel.hydrodynamics.diffraction.export_contract import (
+    ExportDisposition,
+    describe_exports,
+)
+from digitalmodel.hydrodynamics.diffraction.mesh_preflight import write_preflight_reports
 from digitalmodel.hydrodynamics.diffraction.aqwa_backend import AQWABackend
 from digitalmodel.hydrodynamics.diffraction.input_schemas import DiffractionSpec
 from digitalmodel.hydrodynamics.diffraction.output_schemas import DiffractionResults
@@ -150,8 +155,10 @@ class AQWARunResult:
 
     Output / validation contract (#611 / #625): mirrors OrcaWave ``RunResult``
     but keeps AQWA-specific ``lis_file`` / ``ah1_file`` and does *not* add a
-    generic ``owr_path`` (AQWA produces no ``.owr``). ``xlsx_path`` /
-    ``report_path`` are reserved for a later phase and stay ``None`` (D2).
+    generic ``owr_path`` (AQWA produces no ``.owr``). Automatic XLSX/report
+    production is deferred; ``export_dispositions`` describes the current
+    compatible path fields as ``NOT_PRODUCED`` or ``PATH_RECORDED_UNVERIFIED``,
+    without checking files.
     ``validation_verdict`` uses canonical strings and is never aliased to
     ``WARN`` in stored values (D3).
     """
@@ -160,6 +167,7 @@ class AQWARunResult:
     input_file: Path | None = None
     output_dir: Path | None = None
     mesh_files: list[Path] = field(default_factory=list)
+    preflight_reports: list[dict] = field(default_factory=list)
     log_file: Path | None = None
     lis_file: Path | None = None
     ah1_file: Path | None = None
@@ -180,6 +188,11 @@ class AQWARunResult:
     validation_report: dict[str, Any] | None = None
     diffraction_results: DiffractionResults | None = None
     assumption_ledger: "AssumptionLedger | None" = None
+
+    @property
+    def export_dispositions(self) -> dict[str, ExportDisposition]:
+        """Describe current XLSX/report paths without claiming export success."""
+        return describe_exports(self.xlsx_path, self.report_path)
 
 
 # ---------------------------------------------------------------------------
@@ -309,6 +322,10 @@ class AQWARunner:
         # Generate single .dat input file via AQWABackend
         input_file = self._generate_input_file(spec, output_dir, spec_dir=spec_dir)
         self._result.input_file = input_file
+        self._result.preflight_reports = [
+            dict(report) for report in self._backend.preflight_reports
+        ]
+        write_preflight_reports(self._result.preflight_reports, output_dir)
 
         # Copy mesh files
         if self._config.copy_mesh_files:

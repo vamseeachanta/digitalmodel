@@ -1,0 +1,13 @@
+{
+  "provenance": {
+    "origin": "synthetic",
+    "schema_version": "cmems-synthetic-v1",
+    "purpose": "offline-contract-exercise",
+    "third_party_data": false,
+    "units": {"significant_wave_height": "m", "peak_period": "s"}
+  },
+  "records": [
+    {"timestamp": "2024-01-01T00:00:00Z", "significant_wave_height": 0.5, "peak_period": 5.0},
+    {"timestamp": "2024-01-01T01:00:00Z", "significant_wave_height": 1.5, "peak_period": 7.0}
+  ]
+}

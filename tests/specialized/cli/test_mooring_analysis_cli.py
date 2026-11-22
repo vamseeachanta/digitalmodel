@@ -263,7 +263,7 @@ class TestDesignCommand:
     def test_basic_design_verification(self, mock_get_material, mock_designer, cli_runner):
         """Test basic mooring design verification"""
         # Mock material
-        mock_material = MagicMock()
+        mock_material = MagicMock(weight_water=100.0)
         mock_material.length = 500.0
         mock_get_material.return_value = mock_material
 
@@ -323,7 +323,7 @@ class TestDesignCommand:
     @patch('digitalmodel.subsea.mooring_analysis.cli.get_material')
     def test_design_with_different_system_types(self, mock_get_material, mock_designer, cli_runner):
         """Test design verification with CALM system"""
-        mock_material = MagicMock()
+        mock_material = MagicMock(weight_water=100.0)
         mock_material.length = 500.0
         mock_get_material.return_value = mock_material
 
@@ -372,7 +372,7 @@ class TestDesignCommand:
     @patch('digitalmodel.subsea.mooring_analysis.cli.get_material')
     def test_design_with_damaged_line_analysis(self, mock_get_material, mock_designer, cli_runner):
         """Test design verification including damaged line case"""
-        mock_material = MagicMock()
+        mock_material = MagicMock(weight_water=100.0)
         mock_material.length = 500.0
         mock_get_material.return_value = mock_material
 
@@ -436,7 +436,7 @@ class TestDesignCommand:
     @patch('digitalmodel.subsea.mooring_analysis.cli.get_material')
     def test_design_with_json_output(self, mock_get_material, mock_designer, cli_runner, temp_output_dir):
         """Test design verification with JSON output"""
-        mock_material = MagicMock()
+        mock_material = MagicMock(weight_water=100.0)
         mock_material.length = 500.0
         mock_get_material.return_value = mock_material
 
@@ -497,7 +497,7 @@ class TestDesignCommand:
     @patch('digitalmodel.subsea.mooring_analysis.cli.get_material')
     def test_design_with_different_material(self, mock_get_material, cli_runner):
         """Test design with different material specification"""
-        mock_material = MagicMock()
+        mock_material = MagicMock(weight_water=100.0)
         mock_material.length = 600.0
         mock_get_material.return_value = mock_material
 

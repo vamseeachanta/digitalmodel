@@ -102,7 +102,7 @@ class TestVesselTypeBuilder:
         builder = VesselTypeBuilder(slay_spec, ctx)
         result = builder.build()
         vt = result["VesselTypes"][0]
-        assert vt["Name"] == "Eclipse Type"
+        assert vt["Name"] == "VesselA Type"
 
     def test_vessel_type_length(self, slay_spec):
         ctx = BuilderContext()
@@ -115,7 +115,7 @@ class TestVesselTypeBuilder:
         ctx = BuilderContext()
         builder = VesselTypeBuilder(slay_spec, ctx)
         builder.build()
-        assert ctx.vessel_type_names == ["Eclipse Type"]
+        assert ctx.vessel_type_names == ["VesselA Type"]
 
 
 class TestVesselBuilder:
@@ -123,38 +123,38 @@ class TestVesselBuilder:
 
     def test_output_has_vessels_key(self, slay_spec):
         ctx = BuilderContext()
-        ctx.vessel_type_names = ["Eclipse Type"]
+        ctx.vessel_type_names = ["VesselA Type"]
         builder = VesselBuilder(slay_spec, ctx)
         result = builder.build()
         assert "Vessels" in result
 
     def test_vessel_name(self, slay_spec):
         ctx = BuilderContext()
-        ctx.vessel_type_names = ["Eclipse Type"]
+        ctx.vessel_type_names = ["VesselA Type"]
         builder = VesselBuilder(slay_spec, ctx)
         result = builder.build()
         vessel = result["Vessels"][0]
-        assert vessel["Name"] == "Eclipse"
+        assert vessel["Name"] == "VesselA"
 
     def test_vessel_type_reference(self, slay_spec):
         ctx = BuilderContext()
-        ctx.vessel_type_names = ["Eclipse Type"]
+        ctx.vessel_type_names = ["VesselA Type"]
         builder = VesselBuilder(slay_spec, ctx)
         result = builder.build()
         vessel = result["Vessels"][0]
-        assert vessel["VesselType"] == "Eclipse Type"
+        assert vessel["VesselType"] == "VesselA Type"
 
     def test_registers_vessel_name(self, slay_spec):
         ctx = BuilderContext()
-        ctx.vessel_type_names = ["Eclipse Type"]
+        ctx.vessel_type_names = ["VesselA Type"]
         builder = VesselBuilder(slay_spec, ctx)
         builder.build()
-        assert ctx.vessel_names == ["Eclipse"]
-        assert ctx.main_vessel_name == "Eclipse"
+        assert ctx.vessel_names == ["VesselA"]
+        assert ctx.main_vessel_name == "VesselA"
 
     def test_stinger_support_path(self, slay_spec):
         ctx = BuilderContext()
-        ctx.vessel_type_names = ["Eclipse Type"]
+        ctx.vessel_type_names = ["VesselA Type"]
         builder = VesselBuilder(slay_spec, ctx)
         result = builder.build()
         vessel = result["Vessels"][0]

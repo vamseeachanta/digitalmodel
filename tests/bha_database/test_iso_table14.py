@@ -149,3 +149,103 @@ def test_metadata_mutations_and_later_row(tmp_path):
         saved.write_text(yaml.safe_dump(data))
         with pytest.raises(BhaDatabaseError):
             iso_table14.load_table14(saved)
+
+
+def test_supplied_bevel_remains_pending():
+    """Issues #2716 and #2629 require a licensed printed-page comparison.
+
+    The existing numeric regression pins the supplied transcription of ISO
+    10424-1:2004, Table 14; it does not verify the disputed bevel value.
+    """
+    data = iso_table14.load_table14()
+    row = next(row for row in data['components']
+               if row['designation']['value'] == '6 5/8 REG')
+    cell = row['bevel_diameter']
+    assert cell['verification'] == 'pending'
+    assert 'licensed' in cell['verification_reason']
+    assert cell['verification_issue'] == '#2629'
+    assert data['pending_cells'] == [{
+        'component_id': row['component_id'],
+        'field': 'bevel_diameter',
+        'source_key': cell['source_key'],
+        'reason': cell['verification_reason'],
+        'issue': cell['verification_issue'],
+    }]
+
+
+def write_verification_case(tmp_path, **metadata):
+    """Attach synthetic status metadata to an otherwise unchanged table."""
+    data = yaml.safe_load(iso_table14.DEFAULT_PATH.read_text(encoding='utf-8'))
+    data['components'][0]['od'].update(metadata)
+    saved = tmp_path / 'rows.yml'
+    saved.write_text(yaml.safe_dump(data), encoding='utf-8')
+    return saved
+
+
+@pytest.mark.parametrize('status', ['unknown', '', 'PENDING', None, True, [], {}])
+def test_rejects_invalid_verification(tmp_path, status):
+    """The status vocabulary is specified by issue #2716, not a numeric limit."""
+    saved = write_verification_case(tmp_path, verification=status)
+    with pytest.raises(BhaDatabaseError, match='od verification'):
+        iso_table14.load_table14(saved)
+
+
+@pytest.mark.parametrize('key', ['verification_reason', 'verification_issue'])
+@pytest.mark.parametrize('value', [None, '', '   '])
+def test_pending_requires_context(tmp_path, key, value):
+    metadata = dict(verification='pending', verification_reason='Synthetic review',
+                    verification_issue='https://example.org/review')
+    metadata[key] = value
+    saved = write_verification_case(tmp_path, **metadata)
+    with pytest.raises(BhaDatabaseError, match=f'od {key}'):
+        iso_table14.load_table14(saved)
+
+
+@pytest.mark.parametrize('locator', [None, '', '   '])
+def test_verified_requires_comparison_locator(tmp_path, locator):
+    """A status alone cannot record the printed-page comparison in #2629."""
+    saved = write_verification_case(tmp_path, verification='verified',
+                                    verification_locator=locator)
+    with pytest.raises(BhaDatabaseError, match='od verification_locator'):
+        iso_table14.load_table14(saved)
+
+
+def test_verified_status_is_retained_without_clearing_other_pending_cells(tmp_path):
+    """Synthetic locator tests metadata handling, not source authenticity."""
+    saved = write_verification_case(tmp_path, verification='verified',
+                                    verification_locator='Synthetic printed-page locator')
+    data = iso_table14.load_table14(saved)
+    assert data['components'][0]['od']['verification'] == 'verified'
+    assert [cell['field'] for cell in data['pending_cells']] == ['bevel_diameter']
+    assert 'verification' not in data['components'][0]['id']
+
+
+def test_reports_all_pending_cells_and_recomputes_summary(tmp_path, monkeypatch):
+    saved = write_verification_case(
+        tmp_path, verification='pending', verification_reason='Synthetic review',
+        verification_issue='https://example.org/review')
+    raw = yaml.safe_load(saved.read_text(encoding='utf-8'))
+    raw['pending_cells'] = []  # A saved summary must not hide pending quantities.
+    saved.write_text(yaml.safe_dump(raw), encoding='utf-8')
+    monkeypatch.chdir(tmp_path)
+    data = iso_table14.load_table14(saved)
+    assert [(cell['component_id'], cell['field']) for cell in data['pending_cells']] == [
+        (raw['components'][0]['component_id'], 'od'),
+        (next(row['component_id'] for row in raw['components']
+              if row['designation']['value'] == '6 5/8 REG'), 'bevel_diameter'),
+    ]
+    data['pending_cells'].clear()
+    assert iso_table14.load_table14(saved)['pending_cells']
+
+
+def test_unmarked_table_does_not_imply_verified(tmp_path):
+    data = yaml.safe_load(iso_table14.DEFAULT_PATH.read_text(encoding='utf-8'))
+    for row in data['components']:
+        for field in FIELDS:
+            for key in ('verification', 'verification_reason', 'verification_issue'):
+                row[field].pop(key, None)
+    saved = tmp_path / 'rows.yml'
+    saved.write_text(yaml.safe_dump(data), encoding='utf-8')
+    loaded = iso_table14.load_table14(saved)
+    assert loaded['pending_cells'] == []
+    assert loaded['components'] == data['components']

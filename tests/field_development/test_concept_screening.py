@@ -158,6 +158,38 @@ class TestDeterminism:
 class TestAbsoluteCapexOverride:
     """Issue #877 — absolute-CAPEX override bypasses the fraction-of-base derivation."""
 
+    @pytest.mark.parametrize("bad", [float("nan"), float("inf"), -float("inf")],
+                             ids=["nan", "positive-infinity", "negative-infinity"])
+    @pytest.mark.parametrize("key", [HostType.SPAR, HostType.SPAR.value],
+                             ids=["enum-key", "string-key"])
+    @pytest.mark.parametrize("screen", [False, True],
+                             ids=["line-items", "screen-concepts"])
+    def test_nonfinite_capex_override_rejected(self, spec, params, bad, key, screen):
+        with pytest.raises(ValueError, match="capex_override"):
+            if screen:
+                screen_concepts(spec, capex_override={key: bad})
+            else:
+                capex_line_items(
+                    HostType.SPAR, spec, params, capex_override={key: bad}
+                )
+
+    @pytest.mark.parametrize("key", [HostType.SPAR, HostType.SPAR.value],
+                             ids=["enum-key", "string-key"])
+    def test_finite_override_preserves_supplied_total(self, spec, params, key):
+        # Synthetic caller data, USD bn: hand sum 5.0 + 1.25 = 6.25.
+        # The expected total is independent of the generic cost estimator.
+        override = {key: 6.25}
+        items = capex_line_items(HostType.SPAR, spec, params, capex_override=override)
+        assert items["total"] == 6.25
+        assert items["source"] == "absolute_override"
+
+        result = screen_concepts(spec, capex_override=override)
+        spar = next(row for row in result.ranked if row.host_type is HostType.SPAR)
+        assert spar.axes.capex_base_usd_bn == 6.25
+        assert spar.axes.capex_line_items_usd_bn["total"] == 6.25
+        assert spar.axes.capex_source == "absolute_override"
+        assert result == screen_concepts(spec, capex_override=override)
+
     def test_override_used_exactly(self, spec, params):
         # Override supplies the absolute total directly; no scaling, no uplifts.
         items = capex_line_items(

@@ -8,6 +8,8 @@ import numpy as np
 from typing import Tuple, Optional, Dict
 from .models import WaveParameters, WaveSpectrumType
 
+_trapezoid = getattr(np, "trapezoid", None) or np.trapz
+
 
 class WaveSpectra:
     """
@@ -281,9 +283,7 @@ class WaveSpectra:
             Spectral moment
         """
         integrand = frequencies**n * spectrum
-        if hasattr(np, "trapezoid"):
-            return float(np.trapezoid(integrand, frequencies))
-        return float(np.trapz(integrand, frequencies))
+        return float(_trapezoid(integrand, frequencies))
 
     def significant_height_from_spectrum(
         self,

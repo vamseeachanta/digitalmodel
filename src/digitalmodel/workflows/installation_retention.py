@@ -112,6 +112,29 @@ def _verify_csvs(run, context):
         raise ValueError(f"Unclassified CSV files: {sorted(actual - expected)}")
 
 
+def _excluded_files(run, represented):
+    """Inventory evidence omitted from this postprocessing-only archive.
+
+    Contract: issue 2141, excluded non-tabular input inventory audit case.
+    Hashes identify omitted evidence; they do not retain or qualify that evidence.
+    """
+    excluded = []
+    for path in sorted(run.rglob("*")):
+        if not path.resolve(strict=True).is_relative_to(run):
+            raise ValueError("Excluded source path escapes run")
+        relative = path.relative_to(run).as_posix()
+        if path.is_file() and relative not in represented:
+            excluded.append(dict(path=relative, bytes=path.stat().st_size,
+                                 sha256=sha256(path),
+                                 disposition="excluded_from_postprocessing_archive"))
+    return excluded
+
+
+def _represented_paths(audit):
+    return {item["path"] for key in ("files", "source_json", "source_csv")
+            for item in audit[key]}
+
+
 def audit_run(run_dir):
     """Verify every CSV and recognized JSON history/range against retained data."""
     run = Path(run_dir).resolve(strict=True)
@@ -149,12 +172,14 @@ def audit_run(run_dir):
     files = ["installation_traces/traces.npz", "installation_traces/metadata.json"]
     files += [f"extracted/range_{i:03d}.csv" for i in range(len(extraction["range_graphs"]))]
     files += [p.relative_to(run).as_posix() for p in (run / "results").glob("*") if p.suffix in {".json", ".csv"}]
-    return dict(time_csv_count=len(extraction["time_histories"]), range_csv_count=len(extraction["range_graphs"]),
+    audit = dict(time_csv_count=len(extraction["time_histories"]), range_csv_count=len(extraction["range_graphs"]),
                 json_time_series_count=context["json_time_series_count"], json_range_series_count=context["json_range_series_count"],
                 precision="exact float64 equality", npz_channels=len(metadata["channels"]),
                 samples=len(arrays["time"]), compact_records=records, source_json=sources,
                 source_csv=[dict(path=p.relative_to(run).as_posix(), bytes=p.stat().st_size, sha256=sha256(p)) for p in sorted(run.rglob("*.csv"))],
                 files=[dict(path=p, bytes=(run / p).stat().st_size, sha256=sha256(run / p)) for p in sorted(set(files))])
+    audit["excluded_files"] = _excluded_files(run, _represented_paths(audit))
+    return audit
 
 
 def _inside(root, relative):
@@ -195,7 +220,11 @@ def _copy_run(source, target, entry, audit):
 
 
 def create_archive(source_root, entries, target, allowed_parent):
-    """Copy to a new immutable-version directory; no source deletion or overwrite."""
+    """Create a partial postprocessing archive, with an incomplete marker on error.
+
+    This bundle omits native inputs and simulations and cannot establish rerun
+    completeness. Source files are neither deleted nor overwritten.
+    """
     source = Path(source_root).resolve(strict=True)
     target = Path(target).resolve()
     parent = Path(allowed_parent).resolve()
@@ -208,7 +237,11 @@ def create_archive(source_root, entries, target, allowed_parent):
         raise ValueError("Run inventory empty or duplicated")
     audits = [(entry, audit_run(path)) for entry, path in zip(entries, resolved)]
     target.mkdir(parents=True, exist_ok=False)
+    incomplete = target / ".incomplete"
+    with incomplete.open("x", encoding="utf-8") as stream:
+        stream.write("Postprocessing archive creation has not completed readback.\n")
     manifest = dict(version="lean-r1", owner="private digitalmodel-data", created_utc=datetime.now(timezone.utc).isoformat(),
+                    archive_kind="postprocessing_only", rerun_bundle_complete=False,
                     archive_root=str(target), source_root=str(source), backup_status="NOT_VERIFIED",
                     immutability="Version path refuses overwrite; integrity hashes verified. Not WORM storage.",
                     source_disposition="UNCHANGED; no native simulations or inputs removed", run_count=len(entries), runs=[], files=[])
@@ -216,10 +249,14 @@ def create_archive(source_root, entries, target, allowed_parent):
         manifest["files"].extend(_copy_run(source, target, entry, audit))
         manifest["runs"].append(dict(entry, coverage={k: v for k, v in audit.items() if k not in {"files", "compact_records"}},
                                     run_id=audit["compact_records"]["run.json"]["run_id"]))
+    for (entry, audit), run in zip(audits, resolved):
+        if _excluded_files(run, _represented_paths(audit)) != audit["excluded_files"]:
+            raise ValueError("Excluded source inventory changed after audit")
     manifest["bytes"] = sum(item["bytes"] for item in manifest["files"])
     path = target / "manifest.json"
     with path.open("x", encoding="utf-8") as stream:
         json.dump(manifest, stream, indent=2, allow_nan=False)
     if json.loads(path.read_text()) != manifest:
         raise ValueError("Manifest readback differs")
+    incomplete.unlink()
     return manifest

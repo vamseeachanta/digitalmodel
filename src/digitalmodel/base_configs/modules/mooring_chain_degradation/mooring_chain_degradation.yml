@@ -1,0 +1,10 @@
+basename: mooring_chain_degradation
+
+# Inspection evidence and operator limits must be supplied in the input file.
+mooring_chain_degradation: {}
+
+default:
+  log_level: DEBUG
+  config:
+    overwrite:
+      output: True

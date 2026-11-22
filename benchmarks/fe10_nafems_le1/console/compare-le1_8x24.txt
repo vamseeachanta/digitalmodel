@@ -1,0 +1,4 @@
+program: MYSTRAN 19.0.0; mesh le1_8x24 (8 radial x 24 hoop CQUAD4); FE10 band 5.0 % (fixed benchmark criteria)
+sigma_yy at D, extrapolated from elements 1 (x = 2075.9 mm) and 25 (x = 2232.0 mm): 82.09 MPa; published 92.7 MPa (NAFEMS, The Standard NAFEMS Benchmarks, TNSB Rev. 3 (1990), test LE1 elliptic membrane); difference -11.4 %  FAIL
+information: innermost centroid value 69.86 MPa (-24.6 % from the published value)
+SUMMARY FAIL: sigma_yy(D) within 11.5 % of the published value

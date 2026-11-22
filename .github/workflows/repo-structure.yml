@@ -2,9 +2,17 @@ name: Repository Structure
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
   push:
     branches: [main]
   workflow_dispatch:
+
+# Read-only checks can stop superseded runs within the same workflow/ref.
+# GitHub Actions workflow syntax, concurrency (unversioned):
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#concurrency
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -12,7 +20,10 @@ permissions:
 jobs:
   repo-structure:
     name: Repository structure contract
-    runs-on: ubuntu-latest
+    # No paths filter: a file added anywhere can break the structure contract.
+    # Draft pull requests wait: the gates start when the pull request is marked ready.
+    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
     steps:
       - uses: actions/checkout@v4
         with:

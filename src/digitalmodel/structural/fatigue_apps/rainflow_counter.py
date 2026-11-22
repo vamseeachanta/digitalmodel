@@ -1,3 +1,5 @@
+# Copyright (c) 2024 Digital Model Project
+# Licensed under the MIT License. See LICENSE file for details.
 #!/usr/bin/env python3
 """
 Rainflow Counting Algorithm for Fatigue Analysis
@@ -14,20 +16,10 @@ References:
 import numpy as np
 import pandas as pd
 from typing import Tuple, List, Optional, Dict, Any
-from dataclasses import dataclass
+from digitalmodel.structural.rainflow_cycles import RainflowCycle, count_reversals
 import logging
 
 logger = logging.getLogger(__name__)
-
-
-@dataclass
-class RainflowCycle:
-    """Represents a single rainflow cycle"""
-    range_value: float  # Stress/load range
-    mean_value: float   # Mean stress/load
-    count: float        # Cycle count (0.5 for half cycles, 1.0 for full)
-    start_index: int    # Starting index in time series
-    end_index: int      # Ending index in time series
 
 
 class RainflowCounter:
@@ -173,51 +165,7 @@ class RainflowCounter:
         Returns:
             List of identified cycles
         """
-        cycles = []
-        stack = []
-
-        for reversal, index in zip(reversals, indices):
-            stack.append((reversal, index))
-
-            while len(stack) >= 3:
-                new_range = abs(stack[-2][0] - stack[-1][0])
-                prior_range = abs(stack[-3][0] - stack[-2][0])
-
-                if new_range < prior_range:
-                    break
-
-                cycle_range = prior_range
-                if cycle_range > 0:
-                    cycles.append(RainflowCycle(
-                        range_value=cycle_range,
-                        mean_value=(stack[-3][0] + stack[-2][0]) / 2,
-                        count=0.5 if len(stack) == 3 else 1.0,
-                        start_index=stack[-3][1],
-                        end_index=stack[-2][1]
-                    ))
-
-                if len(stack) == 3:
-                    stack.pop(0)
-                else:
-                    last = stack.pop()
-                    stack.pop()
-                    stack.pop()
-                    stack.append(last)
-        
-        # Process remaining points in stack as half cycles
-        for i in range(len(stack) - 1):
-            cycle_range = abs(stack[i][0] - stack[i + 1][0])
-            if cycle_range == 0:
-                continue
-            cycles.append(RainflowCycle(
-                range_value=cycle_range,
-                mean_value=(stack[i][0] + stack[i + 1][0]) / 2,
-                count=0.5,
-                start_index=stack[i][1],
-                end_index=stack[i + 1][1]
-            ))
-        
-        return cycles
+        return count_reversals(reversals, indices)
     
     def _aggregate_cycles(self, cycles: List[RainflowCycle]) -> Tuple[np.ndarray, np.ndarray]:
         """

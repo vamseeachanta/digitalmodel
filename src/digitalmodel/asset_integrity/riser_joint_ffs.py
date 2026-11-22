@@ -68,6 +68,10 @@ COLLAPSE_DESIGN_FACTOR = 0.70
 MM_PER_IN = 25.4
 PSI_PER_MPA = 145.038
 
+# Register component label of the riser main tube. The fixture register labels
+# the main tube and the auxiliary lines neutrally as Line A to Line D.
+MAIN_LINE_COMPONENT = "Line A"
+
 #: Default weld-metal Charpy energy (J) when neither ``weld_k_mat`` nor
 #: ``weld_cvn_joules`` is supplied: 27 J is the classic minimum impact
 #: requirement of line-pipe / offshore structural specs, run through the
@@ -359,7 +363,7 @@ def place_joint(
 def fleet_rollup(
     register: pd.DataFrame,
     *,
-    component: str = "Main",
+    component: str = MAIN_LINE_COMPONENT,
     campaign_years: float = 3.0,
     n_campaigns: int = 4,
     min_high_fatigue_joints: int = 12,
@@ -372,10 +376,40 @@ def fleet_rollup(
     its worst scan.  Per campaign horizon N the joint is FIT if life covers
     N campaigns, HIGH-FATIGUE-QUALIFIED if it covers ``high_fatigue_margin``
     times that, else REPAIR (reason: fatigue/corrosion life).
+
+    Every row of the selected component must have a nonblank joint ID and
+    finite nonnegative life; otherwise raise ``ValueError`` before grouping.
+    Datetime and timedelta life columns are rejected. Numeric life strings
+    are converted before taking the minimum. Rows of other components do
+    not contribute. The input register is not modified.
     """
-    comp = register[register["component"] == component]
+    comp = register[register["component"] == component].copy()
     if comp.empty:
         raise ValueError(f"no rows for component '{component}'.")
+    life_dtype = comp["min_life_years"].dtype
+    # Temporal coercion produces time counts rather than numeric years.
+    if (
+        pd.api.types.is_datetime64_any_dtype(life_dtype)
+        or pd.api.types.is_timedelta64_dtype(life_dtype)
+    ):
+        raise ValueError(f"{component} register requires life in numeric years")
+    scan_life = pd.to_numeric(comp["min_life_years"], errors="coerce")
+    ids = comp["joint_id"]
+    # Issue #2334 (2026), follow-on scope: life must be finite and >= 0 for
+    # every contributing scan, including scans of the same joint. Validate
+    # before groupby can skip missing life or silently drop unidentified rows.
+    if (
+        scan_life.isna().any()
+        or not scan_life.map(math.isfinite).all()
+        or (scan_life < 0).any()
+        or ids.isna().any()
+        or ids.astype(str).str.strip().eq("").any()
+    ):
+        raise ValueError(
+            f"{component} register requires joint IDs and finite nonnegative "
+            "life for every row"
+        )
+    comp["min_life_years"] = scan_life
     life = comp.groupby("joint_id")["min_life_years"].min()
 
     campaigns = []

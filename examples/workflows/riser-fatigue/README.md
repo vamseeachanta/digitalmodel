@@ -29,3 +29,8 @@ uv run python -m digitalmodel examples/workflows/riser-fatigue/input.yml
 Expected outputs are written to `examples/workflows/riser-fatigue/results/`:
 the resolved result configuration `input.yml`, the per-bin damage CSV
 `input_riser_fatigue.csv`, and the per-segment summary `input_riser_fatigue_summary.csv`.
+
+Input controls and contribution exclusions follow the
+[fatigue evidence contract](../../../src/digitalmodel/riser_fatigue/docs/input-validation.md).
+Missing contributions require explicit applicability evidence; null controls,
+unknown histogram bins and unqualified zero loading raise an exception.

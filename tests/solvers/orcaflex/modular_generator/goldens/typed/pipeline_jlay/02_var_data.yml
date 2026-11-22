@@ -1,0 +1,6 @@
+VariableData:
+  Coatingsorlinings:
+  - Name: coating
+    LayerThickness, LayerMaterialDensity:
+    - - 0.003
+      - 0.95

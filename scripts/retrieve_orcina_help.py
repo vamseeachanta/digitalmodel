@@ -72,7 +72,13 @@ def load_github_topics(repository, revision, prefix, api=github_api):
 
 
 def chunk_sections(topic):
-    """Split Markdown headings while keeping fenced code inside its section."""
+    """Split ATX subsections while keeping fenced code inside its section.
+
+    Boundary syntax follows CommonMark 0.31.2 (2024), sections 4.2 and 4.5:
+    https://spec.commonmark.org/0.31.2/
+    This is a section locator, not a complete Markdown renderer; the document
+    title remains metadata and setext/container headings are not split.
+    """
     text = topic["text"]
     source = re.search(r"https://www\.orcina\.com/webhelp/[^\s)<>]*", text)
     if not source or not re.search(r"Orcina", text):
@@ -92,22 +98,34 @@ def chunk_sections(topic):
                              "attribution": "Orcina WebHelp"})
 
     for number, line in enumerate(lines, 1):
-        marker = re.match(r"^\s{0,3}(`{3,}|~{3,})", line)
-        if marker:
-            token = marker.group(1)
-            if fence is None:
-                fence = token
-            elif token[0] == fence[0] and len(token) >= len(fence):
-                fence = None
+        # CommonMark 0.31.2, §4.5: up to three spaces before a fence,
+        # at least three matching markers; only spaces/tabs after a closer.
+        marker = re.match(r"^ {0,3}(`{3,}|~{3,})(.*)$", line)
+        if fence is not None:
+            if marker:
+                token, tail = marker.groups()
+                if (token[0] == fence[0] and len(token) >= len(fence)
+                        and not tail.strip(" \t")):
+                    fence = None
             body.append(line)
             continue
-        match = re.match(r"^#{2,6}\s+(.+?)\s*#*\s*$", line) if fence is None else None
+        if marker and not (marker.group(1)[0] == "`" and "`" in marker.group(2)):
+            # §4.5 forbids backticks in a backtick fence's info string.
+            token = marker.group(1)
+            fence = token
+            body.append(line)
+            continue
+        # CommonMark 0.31.2, §4.2: headings allow up to three spaces;
+        # split levels two through six, retaining level one as topic metadata.
+        match = re.match(r"^ {0,3}#{2,6}(?=[ \t]|$)(.*)$", line)
         if match:
             # The introduction may consist only of the title and attribution.
             meaningful = [s for s in body if s.strip() and not s.startswith(("# ", ">"))]
             if meaningful:
                 append()
-            heading, start, body = match.group(1), number, []
+            # §4.2: a closing hash sequence needs preceding whitespace.
+            heading = re.sub(r"[ \t]+#+[ \t]*$", "", match.group(1)).strip(" \t")
+            start, body = number, []
         else:
             body.append(line)
     append()
