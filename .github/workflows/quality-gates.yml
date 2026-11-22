@@ -39,7 +39,10 @@ jobs:
     # A title or description edit ("edited" without a base change) runs no job. The job then
     # takes another name, so its skipped check does not stand in for an earlier result.
     if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.draft) && !(github.event.action == 'edited' && !github.event.changes.base) }}
-    runs-on: ${{ github.event.pull_request.head.repo.fork && 'ubuntu-latest' || fromJSON('["self-hosted","Linux"]') }}
+    # Pull requests run on a GitHub-hosted runner (the repository is public, so the minutes are free);
+    # pushes and schedules stay on our own runners. Setting the repository variable
+    # DM_PR_RUNNER to self-hosted routes same-repository pull requests back to them.
+    runs-on: ${{ (github.event_name != 'pull_request' || (github.event.pull_request.head.repo.full_name == github.repository && vars.DM_PR_RUNNER == 'self-hosted')) && fromJSON('["self-hosted","Linux"]') || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:

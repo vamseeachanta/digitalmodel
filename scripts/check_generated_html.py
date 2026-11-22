@@ -71,6 +71,37 @@ class Generator:
 
 GENERATORS = (
     Generator(
+        "scripts/ffs/build_ffs_readiness.py",
+        ("docs/api/ffs/ffs-readiness.html",),
+        arguments=("--output", "docs/api/ffs/ffs-readiness.html"),
+        inputs=(
+            "pyproject.toml",
+            "scripts/ffs/build_ffs_readiness.py",
+            "docs/domains/asset-integrity/b31g-validation-2026-06-27.md",
+            "docs/domains/asset-integrity/dent-validation-2026-10-09.md",
+            "docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md",
+            "docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md",
+            "docs/domains/asset-integrity/pitting-validation-2026-10-09.md",
+            "docs/domains/asset-integrity/riser-joint-ffs-validation-2026-10-10.md",
+            "docs/domains/circumferential-defect-validation-2026-06-29.md",
+            "docs/domains/rstreng-2d-validation-2026-06-29.md",
+            "docs/registry/workflows.yaml",
+            "examples/workflows/api579-coverage-screen/input.yml",
+            "examples/workflows/api579-dent-screen/input.yml",
+            "examples/workflows/api579-pipe-ffs-b314/input.yml",
+            "examples/workflows/api579-pitting-screen/input.yml",
+            "examples/workflows/ffs-metal-loss/input.yml",
+            "examples/workflows/inspection-planning/input.yml",
+            "examples/workflows/pipeline-corroded-defect-screen/input.yml",
+            "examples/workflows/plate-buckling/input.yml",
+            "examples/workflows/riser-fatigue/input.yml",
+            "examples/workflows/riser-joint-ffs/input.yml",
+            "src/digitalmodel/asset_integrity/data/ffs_offering_catalog.yml",
+            "src/digitalmodel/asset_integrity/data/ffs_design_screen_catalog.yml",
+            "src/digitalmodel/asset_integrity/data/ffs_damage_mechanism_crosswalk.yml",
+        ),
+    ),
+    Generator(
         "scripts/capabilities/build_self_elevating_monitoring.py",
         ("docs/api/hydro/self-elevating-monitoring.html",),
         inputs=(

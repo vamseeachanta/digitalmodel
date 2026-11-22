@@ -78,16 +78,18 @@ The correction does not establish a physical operating envelope or revalidate
 the stored classifier and its earlier calibration.
 """
 
+import gzip
 import json
 import os
 from pathlib import Path
 
 import numpy as np
 
-from .card_generators import generate_training_dataset
+from .card_generators import SYNTHETIC_LABEL_EXCLUSIONS, generate_training_dataset
 from .feature_extraction import FeatureExtractor
 
 _MODEL_PATH = Path(__file__).parent / "data" / "dynacard_classifier.json"
+_SHAPE_MODEL_PATH = Path(__file__).parent / "data" / "dynacard_shape_classifier.json.gz"
 
 
 def _extract_features_for_dataset(
@@ -127,8 +129,11 @@ def _export_model_to_json(
     scaling: dict,
     cv_accuracy: float,
     output_path: Path,
+    *,
+    feature_names: list[str] | None = None,
+    training_metadata: dict | None = None,
 ) -> None:
-    """Export a trained GradientBoostingClassifier to JSON.
+    """Export a trained GradientBoostingClassifier to JSON or deterministic gzip.
 
     Stores the full tree structure so the model can be loaded
     and evaluated without sklearn at runtime.
@@ -167,13 +172,20 @@ def _export_model_to_json(
         "training_metadata": {
             "n_features": int(estimators[0, 0].tree_.n_features),
             "cv_accuracy": float(cv_accuracy),
-            "feature_names": FeatureExtractor.classifier_feature_names(),
+            "feature_names": (FeatureExtractor.classifier_feature_names()
+                              if feature_names is None else feature_names),
+            **(training_metadata or {}),
         },
     }
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, "w") as f:
-        json.dump(model_dict, f, indent=2)
+    raw = json.dumps(model_dict, indent=2).encode("utf-8")
+    if output_path.suffix == ".gz":
+        with output_path.open("wb") as output:
+            with gzip.GzipFile(filename="", fileobj=output, mode="wb", mtime=0) as stream:
+                stream.write(raw)
+    else:
+        output_path.write_bytes(raw)
 
 
 def train_and_export(
@@ -235,6 +247,57 @@ def train_and_export(
         "n_classes": len(class_labels),
         "model_path": str(output_path),
         "file_size_bytes": file_size,
+    }
+
+
+def train_and_export_shape(
+    samples_per_mode: int = 300, output_path: Path = _SHAPE_MODEL_PATH,
+) -> dict:
+    """Train 16 shape projections; five-fold CV measures synthetic separation.
+
+    Fixed [0, 1] projection bounds avoid learning preprocessing from held-out
+    folds. Seeds, eligible labels and GradientBoosting settings match the
+    existing trainer. The plate constrains the generators, so neither CV nor
+    plate scoring establishes independent field accuracy.
+    """
+    import sklearn
+    from sklearn.ensemble import GradientBoostingClassifier
+    from sklearn.model_selection import cross_val_score
+
+    if (isinstance(samples_per_mode, bool) or not isinstance(samples_per_mode, int)
+            or samples_per_mode < 5):
+        raise ValueError("Five-fold CV requires at least five samples per mode")
+    cards, labels = generate_training_dataset(samples_per_mode=samples_per_mode)
+    X = np.array([FeatureExtractor.extract_shape_vector(card) for card in cards])
+    # Equal counts per mode give equal priors; the existing JSON evaluator's
+    # prior offset is then constant across classes and cancels in softmax.
+    scaling = {"min": np.zeros(16), "max": np.ones(16)}
+    clf = GradientBoostingClassifier(
+        n_estimators=100, max_depth=4, learning_rate=0.15,
+        subsample=0.8, random_state=42,
+    )
+    cv_scores = cross_val_score(clf, X, labels, cv=5, scoring="accuracy")
+    cv_accuracy = float(np.mean(cv_scores))
+    clf.fit(X, labels)
+    output_path = Path(output_path)
+    metadata = {
+        "cv_folds": 5, "cv_std": float(np.std(cv_scores)),
+        "cv_fold_accuracies": cv_scores.tolist(),
+        "samples_per_mode": samples_per_mode,
+        "excluded_labels": dict(SYNTHETIC_LABEL_EXCLUSIONS),
+        "sklearn_version": sklearn.__version__, "training_domain": "synthetic",
+        "scaling_basis": "Fixed [0, 1] normalised projection bounds",
+        "hyperparameters": clf.get_params(),
+    }
+    _export_model_to_json(
+        clf, clf.classes_.tolist(), scaling, cv_accuracy, output_path,
+        feature_names=FeatureExtractor.shape_feature_names(), training_metadata=metadata,
+    )
+    return {
+        "cv_accuracy": cv_accuracy, "cv_std": metadata["cv_std"],
+        "n_samples": len(cards), "n_features": X.shape[1],
+        "n_classes": len(clf.classes_), "model_path": str(output_path),
+        "file_size_bytes": output_path.stat().st_size,
     }
 
 

@@ -84,7 +84,13 @@ class StatisticalAnalysisService:
             confidence_level: Confidence level for significance testing
             
         Returns:
-            Dict containing correlation matrix, p-values, and significance flags
+            Dict containing correlation matrix, p-values, significance flags,
+            and reason_matrix. For finite inputs, fewer than three observations
+            makes every cell undefined (insufficient_observations). Otherwise,
+            exact constant columns give constant_left, constant_right or
+            both_constant reasons, including on the diagonal. Undefined cells
+            have None coefficients/p-values and False significance; defined
+            cells have None reasons. Nonfinite inputs are outside this contract.
         """
         try:
             # Validate input
@@ -98,14 +104,32 @@ class StatisticalAnalysisService:
             n_samples = len(numeric_data)
             columns = numeric_data.columns.tolist()
             
-            # Initialize result matrices
-            correlation_matrix = np.zeros((len(columns), len(columns)))
-            p_value_matrix = np.zeros((len(columns), len(columns)))
-            significance_matrix = np.zeros((len(columns), len(columns)), dtype=bool)
+            # Detect exact constants once; no scale-dependent tolerance is used.
+            constant_columns = [
+                bool(np.all(numeric_data[col] == numeric_data[col].iloc[0]))
+                for col in columns
+            ]
+            shape = (len(columns), len(columns))
+            correlation_matrix = np.full(shape, None, dtype=object)
+            p_value_matrix = np.full(shape, None, dtype=object)
+            significance_matrix = np.zeros(shape, dtype=bool)
+            reason_matrix = np.full(shape, None, dtype=object)
             
             # Calculate correlations
             for i, col1 in enumerate(columns):
                 for j, col2 in enumerate(columns):
+                    reason = None
+                    if n_samples < 3:
+                        reason = 'insufficient_observations'
+                    elif constant_columns[i] and constant_columns[j]:
+                        reason = 'both_constant'
+                    elif constant_columns[i]:
+                        reason = 'constant_left'
+                    elif constant_columns[j]:
+                        reason = 'constant_right'
+                    if reason is not None:
+                        reason_matrix[i, j] = reason
+                        continue
                     if i == j:
                         correlation_matrix[i, j] = 1.0
                         p_value_matrix[i, j] = 0.0
@@ -116,14 +140,15 @@ class StatisticalAnalysisService:
                         else:
                             corr, p_val = spearmanr(numeric_data[col1], numeric_data[col2])
                         
-                        correlation_matrix[i, j] = corr
-                        p_value_matrix[i, j] = p_val
+                        correlation_matrix[i, j] = float(corr)
+                        p_value_matrix[i, j] = float(p_val)
                         significance_matrix[i, j] = p_val < (1 - confidence_level)
             
             return {
                 'correlation_matrix': correlation_matrix.tolist(),
                 'p_value_matrix': p_value_matrix.tolist(),
                 'significance_matrix': significance_matrix.tolist(),
+                'reason_matrix': reason_matrix.tolist(),
                 'column_names': columns,
                 'method': method,
                 'n_samples': n_samples,
@@ -546,7 +571,9 @@ class StatisticalAnalysisService:
             title: Report title
             
         Returns:
-            Formatted statistical report
+            Formatted statistical report. The maximum absolute correlation
+            includes defined diagonals and excludes None cells. An entirely
+            undefined matrix gives a None maximum and an explicit reason.
         """
         try:
             report = {
@@ -560,8 +587,15 @@ class StatisticalAnalysisService:
             # Generate summary
             if 'correlation_matrix' in analysis_results:
                 corr_data = analysis_results['correlation_matrix']
-                max_corr = np.max(np.abs(np.array(corr_data)))
-                report['summary']['max_correlation'] = max_corr
+                defined_correlations = [
+                    value for row in corr_data for value in row if value is not None
+                ]
+                report['summary']['max_correlation'] = (
+                    float(np.max(np.abs(defined_correlations)))
+                    if defined_correlations else None
+                )
+                if not defined_correlations:
+                    report['summary']['max_correlation_reason'] = 'no_defined_correlations'
             
             if 'regression' in analysis_results:
                 reg_data = analysis_results['regression']

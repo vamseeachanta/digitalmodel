@@ -1,0 +1,45 @@
+# Fixture for tests/scripts/test_fast_gate.py: a small tests/OWNERS.toml.
+version = 1
+
+[shards.citations]
+tests = [
+  "tests/citations/test_registry.py",
+  "tests/citations/test_resolver.py",
+]
+extras = ["test"]
+
+[shards.contracts]
+tests = [
+  "tests/docs/test_routing.py",
+]
+extras = ["test"]
+
+[shards.marine-engineering]
+tests = [
+  "tests/marine_ops/fowt/test_basis.py",
+  "tests/marine_ops/fowt/test_mooring.py",
+]
+extras = ["fowt", "test"]
+
+[shards.subsea]
+tests = [
+  "tests/subsea/riser/test_joint.py",
+  "tests/subsea/test_catenary.py",
+]
+extras = ["test"]
+
+[sources."src/digitalmodel/citations/"]
+tests = [
+  "tests/citations/",
+]
+
+[sources."src/digitalmodel/subsea/riser/"]
+tests = [
+  "tests/marine_ops/fowt/test_mooring.py",
+  "tests/subsea/riser/test_joint.py",
+]
+
+[sources."src/digitalmodel/units.py"]
+tests = [
+  "tests/subsea/test_catenary.py",
+]

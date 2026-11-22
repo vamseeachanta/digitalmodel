@@ -1,0 +1,70 @@
+{
+  "workflow": {
+    "sha": "e598968e5a9b0333139f9a47f310f34942adb581",
+    "parent": "d61875fabbb62f118b8de14e11796ab52e978e1e",
+    "paths": [
+      ".github/workflows/quality-gates-by-domain.yml",
+      "scripts/ci/detect_touched_domains.py",
+      "tests/scripts/test_detect_touched_domains.py"
+    ],
+    "owners": [
+      "workflows"
+    ],
+    "runs": [
+      "44092150866",
+      "44092150939"
+    ],
+    "issues": [
+      "incomplete matrix in 44092150866",
+      "incomplete matrix in 44092150939"
+    ]
+  },
+  "capabilities": {
+    "sha": "0340b17b638bc582ac3f8462b6b7a7972ce5153b",
+    "parent": "6bf877cbcda40e0f6276c70ee155acd692cb0ea1",
+    "paths": [
+      "tests/capabilities/test_pore_pressure_explorer.py"
+    ],
+    "owners": [
+      "capabilities"
+    ],
+    "runs": [
+      "43592104628",
+      "43592104554"
+    ],
+    "issues": []
+  },
+  "subsea": [
+    {
+      "run": "43592104554",
+      "sha": "0340b17b638bc582ac3f8462b6b7a7972ce5153b",
+      "shard": "subsea",
+      "failed": [
+        "tests/riser_capability/test_database_register.py::test_counts_and_provenance_match_independent_sources",
+        "tests/riser_capability/test_database_register.py::test_deterministic_generation_and_read_only_check[docs/domains/risers/riser-input-database-register.json]",
+        "tests/riser_capability/test_database_register.py::test_deterministic_generation_and_read_only_check[docs/domains/risers/riser-input-database-register.md]"
+      ]
+    },
+    {
+      "run": "43587343348",
+      "sha": "6bf877cbcda40e0f6276c70ee155acd692cb0ea1",
+      "shard": "subsea",
+      "failed": [
+        "tests/riser_capability/test_database_register.py::test_counts_and_provenance_match_independent_sources",
+        "tests/riser_capability/test_database_register.py::test_deterministic_generation_and_read_only_check[docs/domains/risers/riser-input-database-register.json]",
+        "tests/riser_capability/test_database_register.py::test_deterministic_generation_and_read_only_check[docs/domains/risers/riser-input-database-register.md]"
+      ]
+    },
+    {
+      "run": "43594438903",
+      "sha": "bf2723b283acca7324f4b224b8fcac4e54faabbe",
+      "shard": "subsea",
+      "failed": [],
+      "confirmed_passes": [
+        "tests/riser_capability/test_database_register.py::test_counts_and_provenance_match_independent_sources",
+        "tests/riser_capability/test_database_register.py::test_deterministic_generation_and_read_only_check[docs/domains/risers/riser-input-database-register.json]",
+        "tests/riser_capability/test_database_register.py::test_deterministic_generation_and_read_only_check[docs/domains/risers/riser-input-database-register.md]"
+      ]
+    }
+  ]
+}

@@ -1,12 +1,13 @@
 # Riser standards citation audit
 
-The seven-input inventory records 152 literal citation occurrences, three edition-label differences and 62 occurrences without a local year. No normative calculation error or divergent threshold is established. Existing formulae, thresholds, labels and register entries are retained; unresolved editions require document-holder review before selecting a correction.
+The seven-input inventory records 158 literal citation occurrences, three edition-label differences and 65 occurrences without a local year. No normative calculation error or divergent threshold is established. Existing formulae, thresholds, labels and register entries are retained; unresolved editions require document-holder review before selecting a correction.
 
 ## Revision history
 
 | Revision | Date | Change and reason |
 |---|---|---|
 | 1 | 2026-11-16 | Record the bounded citation evidence and unresolved applicability to support review. |
+| 2 | 2026-11-22 | Add the six occurrences introduced by #4066 (E015–E017, F004–F006): the OS-F201 (2010) combined-loading delegation and the F101 Eq. 5.9 collapse references. Historical OS-F201 labels are not counted as ST-F201 conflicts; the F101 references join M05 and M06. Line numbers of earlier rows still locate the recorded base. |
 
 ## Evidence and coverage
 
@@ -48,11 +49,11 @@ Three differences remain unresolved. Historical OS-F201 (2010) mentions are not 
 | M02 | B: 8; abbreviated references and unresolved register rows. | Deferred: repeated narrative labels do not establish an implemented edition; retain the documented uncertainties. |
 | M03 | C: 11; RP 2RD strategy and RP 1111 analogies. | Deferred: obtain edition-specific RP method evidence; the register's RP year remains unverified. |
 | M04 | D: 9; STD 2RD strategy. | Deferred: confirm implemented method applicability before inheriting the register year. |
-| M05 | E: 12; F201 labels and F101 analogies. | Deferred: surrounding 2021 and historical 2010 mentions do not qualify every method. |
-| M06 | F: 1; ASME description without its own year. | Deferred: primary metadata states 2019 elsewhere; confirm that inheritance is intended for the described check. |
+| M05 | E: 14; F201 labels and F101 analogies, including the F101 Eq. 5.9 collapse references. | Deferred: surrounding 2021 and historical 2010 mentions do not qualify every method. |
+| M06 | F: 2; ASME description and the F101 Eq. 5.9 collapse reference without their own year. | Deferred: primary metadata states 2019 elsewhere; confirm that inheritance is intended for the described check. |
 | M07 | G: 19; fatigue, mooring and methodology references. | Deferred: obtain applicable document editions and method/condition evidence; do not infer them from other references in the example. |
 
-Each listed occurrence has a finding ID, deferred action and rationale in JSON. Null means no year at the literal occurrence, not necessarily an absent year elsewhere in its module. All 62 are retained without invented years.
+Each listed occurrence has a finding ID, deferred action and rationale in JSON. Null means no year at the literal occurrence, not necessarily an absent year elsewhere in its module. All 65 are retained without invented years.
 
 ## DIVERGENT THRESHOLD
 

@@ -16,7 +16,7 @@ basename: riser_screening
 riser_screening:
   label: deepwater_production_riser_21in
   code: API-STD-2RD
-  output_dir: results/riser_screening
+  output_dir: results
 
   geometry:
     outer_diameter: 0.5334        # m  (21 in)

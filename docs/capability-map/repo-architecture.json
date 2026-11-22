@@ -833,6 +833,51 @@
       ]
     },
     {
+      "node": "p58",
+      "path": "docs/api/ffs/ffs-readiness.html",
+      "group": "ffs",
+      "provenance": "registered generator",
+      "producer": "scripts/ffs/build_ffs_readiness.py",
+      "prerequisites": [],
+      "inputs": [
+        "docs/api/ffs/ffs-readiness.html",
+        "docs/domains/asset-integrity/b31g-validation-2026-06-27.md",
+        "docs/domains/asset-integrity/dent-validation-2026-10-09.md",
+        "docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md",
+        "docs/domains/asset-integrity/ffs-validation-record-2026-06-27.md",
+        "docs/domains/asset-integrity/pitting-validation-2026-10-09.md",
+        "docs/domains/asset-integrity/riser-joint-ffs-validation-2026-10-10.md",
+        "docs/domains/circumferential-defect-validation-2026-06-29.md",
+        "docs/domains/rstreng-2d-validation-2026-06-29.md",
+        "docs/registry/workflows.yaml",
+        "examples/workflows/api579-coverage-screen/input.yml",
+        "examples/workflows/api579-dent-screen/input.yml",
+        "examples/workflows/api579-pipe-ffs-b314/input.yml",
+        "examples/workflows/api579-pitting-screen/input.yml",
+        "examples/workflows/ffs-metal-loss/input.yml",
+        "examples/workflows/inspection-planning/input.yml",
+        "examples/workflows/pipeline-corroded-defect-screen/input.yml",
+        "examples/workflows/plate-buckling/input.yml",
+        "examples/workflows/riser-fatigue/input.yml",
+        "examples/workflows/riser-joint-ffs/input.yml",
+        "pyproject.toml",
+        "scripts/ffs/build_ffs_readiness.py",
+        "src/digitalmodel/asset_integrity/data/ffs_damage_mechanism_crosswalk.yml",
+        "src/digitalmodel/asset_integrity/data/ffs_design_screen_catalog.yml",
+        "src/digitalmodel/asset_integrity/data/ffs_offering_catalog.yml"
+      ],
+      "calculations": [
+        "src/digitalmodel/asset_integrity/__init__.py"
+      ],
+      "artifacts": [],
+      "limitation": "Upstream analysis not executed by this inventory.",
+      "execution": "page build from repository inputs; upstream solve NOT_EVALUATED",
+      "execution_evidence": "scripts/check_generated_html.py",
+      "evidence": [
+        "scripts/check_generated_html.py"
+      ]
+    },
+    {
       "node": "p25",
       "path": "docs/api/ffs/ffs-showcase.html",
       "group": "ffs",

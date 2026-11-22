@@ -1,4 +1,11 @@
-"""Content-addressed indexes for completed OpenFOAM artifact trees."""
+"""Content-addressed indexes for completed OpenFOAM artifact trees.
+
+Digest and value-validation APIs are portable. Filesystem entry points require
+no-follow directory descriptors: open/stat with dir_fd, stat without following
+symlinks, listdir with a descriptor, O_DIRECTORY and O_NOFOLLOW. Unsupported
+platforms raise ArtifactIndexError before inspecting paths; no fallback relaxes
+the descriptor walk's safety contract.
+"""
 
 from __future__ import annotations
 
@@ -24,13 +31,32 @@ ARTIFACT_KINDS = (
 )
 
 _TIME_NAME = re.compile(r"[0-9]+(?:\.[0-9]+)?(?:[eE][+-]?[0-9]+)?\Z")
-_DIRECTORY_FLAGS = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
-_FILE_FLAGS = os.O_RDONLY | os.O_NOFOLLOW
 _UINT64_MAX = (1 << 64) - 1
 
 
 class ArtifactIndexError(ValueError):
     """Raised when an artifact tree or index value is unsafe or unstable."""
+
+
+def descriptor_walk_supported() -> bool:
+    """Return whether the interpreter supports every required tree operation."""
+    return (
+        hasattr(os, "O_DIRECTORY")
+        and hasattr(os, "O_NOFOLLOW")
+        and os.open in getattr(os, "supports_dir_fd", ())
+        and os.stat in getattr(os, "supports_dir_fd", ())
+        and os.stat in getattr(os, "supports_follow_symlinks", ())
+        and os.listdir in getattr(os, "supports_fd", ())
+    )
+
+
+def _require_descriptor_walk() -> None:
+    if not descriptor_walk_supported():
+        raise ArtifactIndexError("safe descriptor-based artifact walks are unsupported")
+
+
+def _directory_flags() -> int:
+    return os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
 
 
 def _uint64(value: int, label: str) -> bytes:
@@ -183,7 +209,7 @@ def _stat_identity(value: os.stat_result) -> tuple[int, int, int, int, int]:
 
 
 def _hash_open_file(parent_fd: int, name: str, listed: os.stat_result) -> FileRecord:
-    descriptor = os.open(name, _FILE_FLAGS, dir_fd=parent_fd)
+    descriptor = os.open(name, os.O_RDONLY | os.O_NOFOLLOW, dir_fd=parent_fd)
     try:
         before = os.fstat(descriptor)
         if not stat.S_ISREG(before.st_mode) or _stat_identity(before) != _stat_identity(listed):
@@ -209,7 +235,7 @@ def _walk_directory(directory_fd: int, prefix: str) -> list[FileRecord]:
             record = _hash_open_file(directory_fd, name, listed)
             records.append(FileRecord(relative, record.size_bytes, record.sha256))
         elif stat.S_ISDIR(listed.st_mode):
-            child_fd = os.open(name, _DIRECTORY_FLAGS, dir_fd=directory_fd)
+            child_fd = os.open(name, _directory_flags(), dir_fd=directory_fd)
             try:
                 if _stat_identity(os.fstat(child_fd)) != _stat_identity(listed):
                     raise ArtifactIndexError(f"directory changed before walk: {relative}")
@@ -223,8 +249,9 @@ def _walk_directory(directory_fd: int, prefix: str) -> list[FileRecord]:
 
 def snapshot_tree(root: Path) -> list[FileRecord]:
     """Snapshot a tree through no-follow descriptors and hash opened files."""
+    _require_descriptor_walk()
     try:
-        root_fd = os.open(root, _DIRECTORY_FLAGS)
+        root_fd = os.open(root, _directory_flags())
         try:
             records = _walk_directory(root_fd, "")
         finally:
@@ -236,6 +263,7 @@ def snapshot_tree(root: Path) -> list[FileRecord]:
 
 def verify_unchanged(root: Path, expected: Sequence[FileRecord]) -> None:
     """Require an exact second snapshot, including paths and content digests."""
+    _require_descriptor_walk()
     if snapshot_tree(root) != sorted(expected, key=lambda item: item.path.encode("utf-8")):
         raise ArtifactIndexError("artifact tree changed after snapshot")
 
@@ -252,7 +280,7 @@ def _candidate_has_files(case_root: Path, relative: str) -> bool:
 
 def _time_roots(case_root: Path) -> list[str]:
     try:
-        root_fd = os.open(case_root, _DIRECTORY_FLAGS)
+        root_fd = os.open(case_root, _directory_flags())
         try:
             names = os.listdir(root_fd)
             entries = [(name, os.stat(name, dir_fd=root_fd, follow_symlinks=False)) for name in names]
@@ -272,6 +300,7 @@ def _time_roots(case_root: Path) -> list[str]:
 
 def select_roots(case_root: Path) -> dict[str, list[str]]:
     """Select disjoint, nonempty completed artifact roots below a case."""
+    _require_descriptor_walk()
     candidates = {
         "mesh_tree": ["constant/polyMesh"],
         "field_tree": _time_roots(case_root),
@@ -337,6 +366,7 @@ def build_index(
     generation_id: str,
 ) -> dict[str, ArtifactRecord]:
     """Build one record per present kind; field roots use comma-joined names."""
+    _require_descriptor_walk()
     identities = (
         run_identity_sha256,
         input_sha256,
