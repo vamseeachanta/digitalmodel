@@ -1,0 +1,5 @@
+<testsuite tests="3" errors="1" failures="1" skipped="1">
+  <testcase classname="test_pair" name="test_one" time="1"><failure message="assert 0"/></testcase>
+  <testcase classname="test_pair" name="test_one" time="0"><error message="failed on teardown with &quot;RuntimeError: teardown&quot;"/></testcase>
+  <testcase classname="test_pair" name="test_two" time="1"><skipped message="optional"/></testcase>
+</testsuite>
