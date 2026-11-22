@@ -41,8 +41,11 @@ the units; `_1`, fractions and integer counts are dimensionless.
 The existing `section.cross_sectional_area`, `stackup.minimum_slip_ring_tension`
 and `assembly.minimum_top_tension_16q` functions are reused. All applicable
 factors are passed explicitly. The source omits mechanical-efficiency and
-fleet-angle reductions; this implementation supplies unity to the existing
-chain. It does not adopt that chain's other default assumptions.
+fleet-angle reductions. This implementation makes the tensioner efficiency Rf
+(in (0, 1]) and the fleet-angle factor (>= 1) required inputs with no default,
+because unity is not conservative: at Rf = 0.90 the minimum top tension rises
+by 11.1 %. Take both from rig data. The module does not adopt the existing
+chain's other default assumptions.
 
 Inputs are SI. Convert customary units at the calling boundary with the shared
 registry in `digitalmodel.units` (pint).

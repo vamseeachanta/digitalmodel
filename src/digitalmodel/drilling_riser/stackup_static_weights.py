@@ -146,6 +146,9 @@ class TensionInput:
     is unfactored; internal fluid includes auxiliary fluid. The displaced
     internal water term is distinct from exterior component displacement.
     The lower package is excluded from the tensioned string's weight sum.
+    ``tensioner_efficiency`` (Rf, in (0, 1]) and ``fleet_angle_factor``
+    (>= 1) are required engineering inputs with no default: take both from
+    rig data. Pass 1.0 explicitly only when the basis states unity.
     """
 
     flooded_steel_weight_n: float
@@ -162,6 +165,8 @@ class TensionInput:
     recoil_overpull_n: float
     dynamic_tension_limit_n: float
     setting_fraction: float
+    tensioner_efficiency: float
+    fleet_angle_factor: float
 
     def __post_init__(self) -> None:
         for name in ("flooded_steel_weight_n", "buoyancy_uplift_n",
@@ -180,6 +185,10 @@ class TensionInput:
                 raise ValueError(f"{name} must be an integer count")
         if not 0 <= self.failed_tensioner_count < self.tensioner_count:
             raise ValueError("require 0 <= failed_tensioner_count < tensioner_count")
+        _finite("tensioner_efficiency", self.tensioner_efficiency)
+        if not 0.0 < self.tensioner_efficiency <= 1.0:
+            raise ValueError("tensioner_efficiency must be in (0, 1]")
+        _finite("fleet_angle_factor", self.fleet_angle_factor, 1.0)
 
 
 @dataclass(frozen=True)
@@ -209,10 +218,10 @@ def minimum_tension(inputs: TensionInput) -> TensionResult:
     """Compute the source's static demand and lower-package overpull chain.
 
     Tsr=Ws*fwt+Wextra-Bn*fbt+Wfluid-Wwater;
-    Tmin=Tsr*N/(N-n); OPriser=Tmin-Tsr; OPpackage=OPriser-Wpackage;
+    Tmin=Tsr*N/(Rf*(N-n))*ffa; OPriser=Tmin-Tsr; OPpackage=OPriser-Wpackage;
     OPextra=max(OPmin-OPpackage,0); Toverall=Tmin+OPextra+OPrecoil.
-    Maximum setting = DTL*setting_fraction. Mechanical efficiency and fleet
-    angle reduction are omitted as in the source, using explicit unity factors.
+    Maximum setting = DTL*setting_fraction. Rf (tensioner_efficiency) and
+    ffa (fleet_angle_factor) are required inputs; no unity value is assumed.
     Source names API-RP-16Q; clause not stated in source.
     """
     from digitalmodel.drilling_riser.assembly import minimum_top_tension_16q
@@ -232,7 +241,8 @@ def minimum_tension(inputs: TensionInput) -> TensionResult:
     slip = mechanical + p.additional_supported_weight_n + fluid
     top = minimum_top_tension_16q(
         slip / 1000.0, n_units=p.tensioner_count,
-        n_fail=p.failed_tensioner_count, efficiency=1.0, fleet_angle_factor=1.0,
+        n_fail=p.failed_tensioner_count, efficiency=p.tensioner_efficiency,
+        fleet_angle_factor=p.fleet_angle_factor,
     ) * 1000.0
     overpull = top - slip
     package = overpull - p.lower_package_submerged_weight_n

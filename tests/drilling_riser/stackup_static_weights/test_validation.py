@@ -17,7 +17,7 @@ def section():
 
 def tension():
     return TensionInput(200000.0, 1.0, 0.0, 50000.0, 1.0,
-        100000.0, 100000.0, 8, 0, 0.0, 0.0, 0.0, 500000.0, 1.0)
+        100000.0, 100000.0, 8, 0, 0.0, 0.0, 0.0, 500000.0, 1.0, 1.0, 1.0)
 
 
 def test_equal_fluids_recover_supplied_flooded_wet_weight():
@@ -117,3 +117,21 @@ def test_capacity_physical_domains(args):
 def test_overflow_does_not_produce_a_usable_weight_result():
     with pytest.raises(ValueError, match='finite'):
         adjusted_joint_weights(JointWeightInput(1e308, 1e308, 0.0, 0.0, 1.0, 1.0))
+
+
+def test_tension_factors_are_required_inputs():
+    with pytest.raises(TypeError):
+        TensionInput(200000.0, 1.0, 0.0, 50000.0, 1.0,
+            100000.0, 100000.0, 8, 0, 0.0, 0.0, 0.0, 500000.0, 1.0)
+
+
+@pytest.mark.parametrize("efficiency", [0.0, -0.1, 1.01, math.nan, True])
+def test_tensioner_efficiency_out_of_range_is_rejected(efficiency):
+    with pytest.raises(ValueError):
+        replace(tension(), tensioner_efficiency=efficiency)
+
+
+@pytest.mark.parametrize("factor", [0.99, math.inf, math.nan])
+def test_fleet_angle_factor_below_unity_is_rejected(factor):
+    with pytest.raises(ValueError):
+        replace(tension(), fleet_angle_factor=factor)
