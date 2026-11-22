@@ -12,6 +12,9 @@ resolution-markers = [
     "python_full_version < '3.12' and sys_platform != 'win32'",
 ]
 
+[options]
+prerelease-mode = "if-necessary"
+
 [[package]]
 name = "aiofiles"
 version = "23.2.1"
