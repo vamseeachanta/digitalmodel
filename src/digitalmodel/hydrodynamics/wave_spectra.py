@@ -329,8 +329,21 @@ class WaveSpectra:
         Returns:
             Spectral moment
         """
-        integrand = frequencies**n * spectrum
-        return float(_trapezoid(integrand, frequencies))
+        w = np.asarray(frequencies, dtype=float)  # integer grids allow negative orders
+        s = np.asarray(spectrum, dtype=float)
+        if n < 0:
+            # omega**n is unbounded at omega <= 0: a bin with no energy adds nothing,
+            # energy there makes the inverse moment undefined.
+            if np.any((w <= 0.0) & (s != 0.0)):
+                raise ValueError(
+                    f"spectral moment of order {n} needs positive frequencies wherever the "
+                    "spectrum is nonzero"
+                )
+            with np.errstate(divide="ignore", invalid="ignore"):
+                integrand = np.where(s == 0.0, 0.0, w**n * s)
+        else:
+            integrand = w**n * s
+        return float(_trapezoid(integrand, w))
 
     def significant_height_from_spectrum(
         self,
@@ -447,7 +460,10 @@ class WaveSpectra:
         m1 = self.spectral_moment(frequencies, spectrum, n=1)
         m2 = self.spectral_moment(frequencies, spectrum, n=2)
         m4 = self.spectral_moment(frequencies, spectrum, n=4)
-        m_minus1 = self.spectral_moment(frequencies, spectrum, n=-1)
+        try:
+            m_minus1 = self.spectral_moment(frequencies, spectrum, n=-1)
+        except ValueError:  # energy at omega <= 0: Te is undefined, the rest still holds
+            m_minus1 = float("nan")
 
         hs = 4.0 * np.sqrt(m0)
         tz = 2 * np.pi * np.sqrt(m0 / m2)

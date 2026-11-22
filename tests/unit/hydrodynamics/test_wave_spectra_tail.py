@@ -216,3 +216,27 @@ def test_catalog_legacy_grid_golden(monkeypatch):
     acceleration = catalog.compute_accelerations("synthetic", sea, rao, (100, 0, 10), (50, 0, 5))
     assert motion.significant_values["heave_sig"] == pytest.approx(1.5, rel=1e-9)
     assert acceleration["vertical"] == pytest.approx(56.2937938597, rel=1e-9)
+
+
+def test_inverse_moment_accepts_integer_frequency_grids():
+    ws = WaveSpectra()
+    w, S = np.array([1, 2, 3]), np.array([0.5, 1.0, 0.25])
+    assert ws.spectral_moment(w, S, n=0) == pytest.approx(1.375)
+    assert ws.spectral_moment(w, S, n=-1) == pytest.approx(
+        ws.spectral_moment(w.astype(float), S, n=-1))
+    assert np.isfinite(ws.spectrum_statistics(w, S)["m0"])
+
+
+def test_calm_sea_power_is_zero_with_a_zero_frequency_bin():
+    ws = WaveSpectra()
+    assert ws.wave_power(np.array([0.0, 1.0, 2.0]), np.zeros(3)) == 0.0
+
+
+def test_inverse_moment_rejects_energy_at_zero_frequency():
+    ws = WaveSpectra()
+    w = np.array([0.0, 1.0, 2.0])
+    assert ws.spectral_moment(w, np.array([0.0, 1.0, 0.0]), n=-1) == pytest.approx(1.0)
+    with pytest.raises(ValueError):
+        ws.spectral_moment(w, np.array([1.0, 1.0, 0.0]), n=-1)
+    stats = ws.spectrum_statistics(w, np.array([1.0, 2.0, 0.0]))  # peak away from 0
+    assert np.isnan(stats["m_minus1"]) and np.isfinite(stats["m0"])
