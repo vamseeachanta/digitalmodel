@@ -65,13 +65,30 @@ def test_complete_coverage_and_historical_traceability(inputs):
     assert "interacting-defect method and PSF tables" in text
 
 
-def test_normalized_local_links_resolve(inputs):
+def test_links_resolve_from_the_published_page(inputs):
+    """Relative links resolve from the page's published location inside the mkdocs
+    docs_dir (docs/api); a file outside it is linked to its source on the default branch."""
     builder, cat, review, registry, available = inputs
-    for href in Page(builder.render(cat, review, registry, available)).links:
+    published = (ROOT / "docs/api").resolve()
+    links = Page(builder.render(cat, review, registry, available)).links
+    assert links
+    for href in links:
         url = urlsplit(href)
-        assert not url.scheme and not url.netloc
-        target = (ROOT / "docs/api/ffs" / unquote(url.path)).resolve()
-        assert target.is_relative_to(ROOT) and target.is_file(), href
+        if url.scheme or url.netloc:
+            assert href.startswith(builder.REPOSITORY_FILES), href
+            path = unquote(href[len(builder.REPOSITORY_FILES):])
+            assert not path.startswith(builder.PUBLISHED_ROOT), href
+            assert (ROOT / path).is_file(), href
+        else:
+            target = (ROOT / "docs/api/ffs" / unquote(url.path)).resolve()
+            assert target.is_relative_to(published) and target.is_file(), href
+
+
+def test_files_outside_the_publication_root_use_source_links(inputs):
+    builder, cat, review, registry, available = inputs
+    text = builder.render(cat, review, registry, available)
+    assert 'href="../../' not in text
+    assert builder.REPOSITORY_FILES + builder.REVIEW in text
 
 
 @pytest.mark.parametrize("registered", [False, True])

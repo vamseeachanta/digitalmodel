@@ -16,6 +16,10 @@ REPO = Path(__file__).resolve().parents[2]
 PAGE = "docs/api/ffs/ffs-readiness.html"
 REVIEW = "docs/domains/asset-integrity/ffs-readiness-review-2026-09-25.md"
 REGISTRY = "docs/registry/workflows.yaml"
+# mkdocs publishes docs/api only (docs_dir), so a repository file outside it is linked
+# to its source on the default branch; a page inside it keeps a relative link.
+PUBLISHED_ROOT = "docs/api/"
+REPOSITORY_FILES = "https://github.com/vamseeachanta/digitalmodel/blob/main/"
 # Explicit identities prevent a renamed historical row silently losing its score.
 HISTORICAL = dict(zip((
     "Metal-loss coordinator (L1/L2, GML/LML, decision, report)",
@@ -73,7 +77,11 @@ def render(cat, review, registry, available):
     workflows = {row["id"]: row["input"] for row in registry["workflows"]}
 
     def link(path, label):
-        return f'<a href="{escape(quote(relpath(path, "docs/api/ffs")), quote=True)}">{escape(label)}</a>'
+        if path.startswith(PUBLISHED_ROOT):
+            href = quote(relpath(path, "docs/api/ffs"))
+        else:
+            href = REPOSITORY_FILES + quote(path)
+        return f'<a href="{escape(href, quote=True)}">{escape(label)}</a>'
 
     lines = [
         '<!doctype html><html lang="en"><head><meta charset="utf-8">',
