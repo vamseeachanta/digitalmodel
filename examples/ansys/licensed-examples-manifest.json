@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "workflow_id": "ansys-mechanical-solve",
+  "status": "preparation-only",
+  "digest_convention": "sha256-raw-git-blob",
+  "source_revision": "8c09f59a0530baa8a29177b6adaf4e7454cee675",
+  "cases": [
+    {
+      "case_id": "padeye",
+      "files": [
+        {
+          "role": "input",
+          "path": "examples/ansys/padeye/input.yml",
+          "bytes": 438,
+          "sha256": "c0da207e2034e74f396bec104ee4d1515b901ba6e25014003f0dc5756fdef370"
+        },
+        {
+          "role": "companion",
+          "path": "examples/ansys/padeye/padeye.inp",
+          "bytes": 3768,
+          "sha256": "9d0c99dd48fa12117f8d971374563a1f10430f19176dab2c338bb8213416c2ff"
+        }
+      ]
+    },
+    {
+      "case_id": "pressure-vessel",
+      "files": [
+        {
+          "role": "input",
+          "path": "examples/ansys/pressure-vessel/input.yml",
+          "bytes": 453,
+          "sha256": "7cb85fd31d17e3a0b04a7bc2db398bbfc6180343a19073f629533b8aef2f3e76"
+        },
+        {
+          "role": "companion",
+          "path": "examples/ansys/pressure-vessel/pv.inp",
+          "bytes": 2836,
+          "sha256": "8d94ee1ad2ee626503cf3990bfe5a426b8e38a433e90eae064afb553566ee8f0"
+        }
+      ]
+    },
+    {
+      "case_id": "mudmat",
+      "files": [
+        {
+          "role": "input",
+          "path": "examples/ansys/mudmat/input.yml",
+          "bytes": 459,
+          "sha256": "17eabcc1d698f29d53d70531af835fd6dafa40b13d52af8fbfad1ecdfc3fb9cb"
+        },
+        {
+          "role": "companion",
+          "path": "examples/ansys/mudmat/mudmat.inp",
+          "bytes": 4026,
+          "sha256": "9936d9313776f5d4f917d8ecd05a83eaa6b9597f90d50b15e85656e902f2156f"
+        }
+      ]
+    }
+  ]
+}

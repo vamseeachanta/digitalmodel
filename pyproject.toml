@@ -335,6 +335,7 @@ digitalmodel = [
     # tutorials. These have no file extension by OpenFOAM convention
     # (system/controlDict, 0.orig/U, ...), so they are listed by directory.
     "solvers/openfoam/templates/**/*",
+    "solvers/orcaflex/reporting/templates/*.j2",
 ]
 
 [tool.ruff]

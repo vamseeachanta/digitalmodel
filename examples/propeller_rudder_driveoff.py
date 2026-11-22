@@ -28,10 +28,12 @@ matplotlib.use("Agg")
 WORKFLOW = Path(__file__).resolve().parent / "workflows/propeller-rudder-interaction"
 CAPTION = (
     "Primary: interaction increment; fallback: total rudder force.\n"
-    "Engine off: propeller drag and windmilling not modelled.\n"
-    "Braking: thrust and primary omitted; fitted J range unknown.\n"
-    "Fallback at braking uses freestream only; four-quadrant data required.\n"
-    "Bollard primary mathematical limit: not validated; fallback not evaluated."
+    "CSV statuses: evaluation basis; remaining values illustrative arithmetic, not validation.\n"
+    "Engine off: thrust/primary model-assumed zero; drag and windmilling not modelled.\n"
+    "Engine-off/braking fallback and slipstream: freestream-only approximation.\n"
+    "Braking: thrust and primary omitted; fitted J range unknown; four-quadrant data required.\n"
+    "Bollard primary mathematical limit: not validated; slipstream limit unvalidated;\n"
+    "fallback not evaluated."
 )
 BRAKING_LABEL = (
     "K_T <= 0: illustrative polynomial extrapolation; fitted J range unknown; "
@@ -59,6 +61,25 @@ def _csv_row(point):
             "bollard: primary mathematical limit, not validated; fallback not evaluated"
         ),
     }.get(point.regime, point.regime)
+    statuses = {
+        "ahead": ("illustrative_arithmetic",) * 4,
+        "engine_off": (
+            "model_assumed_zero", "model_assumed_zero",
+            "freestream_only_approximation", "freestream_only_approximation",
+        ),
+        "braking": (
+            "omitted_missing_four_quadrant_basis", "omitted_missing_four_quadrant_basis",
+            "freestream_only_approximation", "freestream_only_approximation",
+        ),
+        "bollard": (
+            "illustrative_arithmetic", "unvalidated_mathematical_limit",
+            "not_evaluated", "unvalidated_mathematical_limit",
+        ),
+    }
+    row.update(zip(
+        ("thrust_status", "primary_status", "fallback_status", "slipstream_status"),
+        statuses[point.regime],
+    ))
     return row
 
 
@@ -95,8 +116,8 @@ def _write_plots(points, output_dir):
                 title="Drive-off: 12 kn, rudder 20 deg",
             )
             axis.grid(True)
-            figure.subplots_adjust(bottom=0.26)
-            figure.text(0.5, 0.02, CAPTION, ha="center", fontsize=9)
+            figure.subplots_adjust(bottom=0.30)
+            figure.text(0.5, 0.02, CAPTION, ha="center", fontsize=8)
             path = output_dir / f"driveoff_{name}.png"
             figure.savefig(path, dpi=150)
             figures[name] = path

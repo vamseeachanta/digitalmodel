@@ -328,7 +328,11 @@ class TestRodPumpSchematic:
         out = tmp_path / "schematic.svg"
         path = generate_rod_pump_schematic(out)
         assert path.exists()
-        _assert_valid_svg(path.read_text())
+        # The SVG carries non-ASCII glyphs (U+25B2); the file must be UTF-8
+        # whatever the platform default encoding is (#4160).
+        content = path.read_text(encoding="utf-8")
+        assert "▲" in content
+        _assert_valid_svg(content)
 
 
 # ---------------------------------------------------------------------------

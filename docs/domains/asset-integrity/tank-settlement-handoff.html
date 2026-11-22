@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tank settlement handoff guide</title>
+</head>
+<body>
+<h1>Tank settlement handoff guide</h1>
+<p>The adapter retains validated survey intake and diagnostic screening in an in-memory
+Level3Handoff. All four proposed structural checks remain NOT_EVALUATED with null values
+and margins. An ESCALATE screening decision establishes no structural failure or acceptance.</p>
+<h2>Revision history</h2>
+<table><thead><tr><th>Revision</th><th>Date</th><th>Change and reason</th></tr></thead>
+<tbody><tr><td>0</td><td>2026-11-16</td><td>Initial guide for unevaluated specialist intake.</td></tr></tbody></table>
+<h2>Synthetic input to handoff</h2>
+<pre><code>from dataclasses import asdict
+from digitalmodel.asset_integrity.tank_settlement_handoff import prepare_tank_handoff
+
+block = {
+    "tank": {"diameter_m": 10, "height_m": 12, "fill_height_m": 8,
+             "course_thicknesses_mm": [8, 6], "material_grade": "unspecified"},
+    "shell_survey": {"angles_deg": [0, 90, 180, 270],
+                     "elevations_mm": [10, 4, 2, 8]},
+}
+handoff = prepare_tank_handoff(block)
+payload = asdict(handoff)
+assert payload["data_package"]["proposed_checks"]["buckling"]["margin"] is None
+</code></pre>
+<p>Dimensions are synthetic choices. Optional edge and bottom surveys remain missing when
+omitted. Invalid or nonfinite survey intake raises the screening validator's ValueError.</p>
+<h2>Evidence required before assessment</h2>
+<p>Confirm units (m, mm and degrees), positive-up elevation datum, angle origin and orientation,
+and a qualified imposed-displacement derivation. Measured elevations and fitted harmonics
+are retained as diagnostics; neither is automatically converted to imposed displacement.</p>
+<p>Supply course heights, bottom, annular ring, roof, stiffener and weld details, boundary
+conditions, product density, self-weight and wind basis. Qualify material behaviour, limiting
+triaxial strain, buckling criteria, collapse load factors and weld service strain criteria.
+Plastic collapse requires a secondary interpretation for displacement-controlled settlement.</p>
+<p>The API 579-1/ASME FFS-1 Annex B1 (2007) to Annex 2D (2016/2021) clause crosswalk,
+native-result qualification and a published comparator with justified tolerance remain open.</p>
+<p>No solver, availability probe, file publication, registry activation, reporting integration
+or external routing is provided. Structural assessment requires a separately qualified workflow.</p>
+</body>
+</html>
