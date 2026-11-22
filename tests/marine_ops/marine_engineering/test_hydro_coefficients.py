@@ -163,17 +163,20 @@ class TestCoefficientDatabase:
     def sample_database(self, tmp_path):
         """Create sample database with test data."""
         # Create test CSV files
+        # Local seeded generator: the data no longer depends on the global
+        # np.random state or on the order other tests draw from it.
+        rng = np.random.default_rng(20261122)
         frequencies = [0.1, 0.2, 0.3, 0.4, 0.5]
 
         for freq in frequencies:
             # Added mass matrix
-            matrix_am = np.random.rand(6, 6) * 1000
+            matrix_am = rng.random((6, 6)) * 1000
             matrix_am = (matrix_am + matrix_am.T) / 2  # Make symmetric
             df_am = pd.DataFrame(matrix_am, index=DOF_NAMES, columns=DOF_NAMES)
             df_am.to_csv(tmp_path / f'added_mass_omega_{freq:.4f}.csv')
 
             # Damping matrix
-            matrix_damp = np.random.rand(6, 6) * 100
+            matrix_damp = rng.random((6, 6)) * 100
             matrix_damp = (matrix_damp + matrix_damp.T) / 2  # Make symmetric
             df_damp = pd.DataFrame(matrix_damp, index=DOF_NAMES, columns=DOF_NAMES)
             df_damp.to_csv(tmp_path / f'damping_omega_{freq:.4f}.csv')
@@ -356,15 +359,18 @@ class TestHydrodynamicPlotter:
         )
 
         # Create sample database
+        # Local seeded generator: the data no longer depends on the global
+        # np.random state or on the order other tests draw from it.
+        rng = np.random.default_rng(20261122)
         frequencies = [0.1, 0.2, 0.3, 0.4, 0.5]
 
         for freq in frequencies:
-            matrix_am = np.random.rand(6, 6) * 1000
+            matrix_am = rng.random((6, 6)) * 1000
             matrix_am = (matrix_am + matrix_am.T) / 2
             df_am = pd.DataFrame(matrix_am, index=DOF_NAMES, columns=DOF_NAMES)
             df_am.to_csv(tmp_path / f'added_mass_omega_{freq:.4f}.csv')
 
-            matrix_damp = np.random.rand(6, 6) * 100
+            matrix_damp = rng.random((6, 6)) * 100
             matrix_damp = (matrix_damp + matrix_damp.T) / 2
             df_damp = pd.DataFrame(matrix_damp, index=DOF_NAMES, columns=DOF_NAMES)
             df_damp.to_csv(tmp_path / f'damping_omega_{freq:.4f}.csv')
