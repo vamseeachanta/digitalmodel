@@ -1573,3 +1573,194 @@ def test_riser_inventory_database_paths_are_all_routed() -> None:
         if "subsea" not in {d.name for d in detector.touched_domains([path], domains)}
     ]
     assert unrouted == []
+
+
+def _repo_with_pull_request_behind_base(tmp_path: Path) -> tuple[Path, str, str]:
+    """A pull request that edits one citations test while the base gains a structural test
+    and a shared source file after the fork point. Returns the domains file, base tip and head."""
+    domains_file = tmp_path / "DOMAINS.md"
+    write_domains(domains_file)
+    init_repo(tmp_path)
+    citation = tmp_path / "tests" / "citations" / "test_registry.py"
+    citation.parent.mkdir(parents=True)
+    citation.write_text("def test_old():\n    assert True\n")
+    commit_all(tmp_path, "fork point")
+    trunk = subprocess.check_output(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=tmp_path, text=True
+    ).strip()
+
+    subprocess.run(["git", "checkout", "-q", "-b", "pull-request"], cwd=tmp_path, check=True)
+    citation.write_text("def test_new():\n    assert True\n")
+    head = commit_all(tmp_path, "pull request change")
+
+    subprocess.run(["git", "checkout", "-q", trunk], cwd=tmp_path, check=True)
+    structural = tmp_path / "tests" / "structural" / "test_beam.py"
+    structural.parent.mkdir(parents=True)
+    structural.write_text("def test_beam():\n    assert True\n")
+    shared = tmp_path / "src" / "digitalmodel" / "common" / "shared.py"
+    shared.parent.mkdir(parents=True)
+    shared.write_text("VALUE = 1\n")
+    tip = commit_all(tmp_path, "unrelated merge on the base")
+    return domains_file, tip, head
+
+
+def test_two_commit_diff_counts_base_changes_for_a_pull_request_behind_base(tmp_path: Path) -> None:
+    """The default comparison is unchanged: it lists what the base gained since the fork
+    point as touched, so a shared source file on the base selects every shard."""
+    domains_file, tip, head = _repo_with_pull_request_behind_base(tmp_path)
+
+    result = run_detector(
+        tmp_path, domains_file, "--mode", "touched", "--base", tip, "--head", head,
+        "--output-format", "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == ["asset-integrity", "citations", "structural", "workflows"]
+
+
+def test_merge_base_diff_selects_only_the_pull_request_change(tmp_path: Path) -> None:
+    domains_file, tip, head = _repo_with_pull_request_behind_base(tmp_path)
+
+    result = run_detector(
+        tmp_path, domains_file, "--mode", "touched", "--base", tip, "--head", head,
+        "--diff-from", "merge-base", "--output-format", "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == ["citations"]
+
+
+def test_merge_base_diff_keeps_full_matrix_for_a_pull_request_source_change(tmp_path: Path) -> None:
+    domains_file, tip, head = _repo_with_pull_request_behind_base(tmp_path)
+    subprocess.run(["git", "checkout", "-q", head], cwd=tmp_path, check=True)
+    shared = tmp_path / "src" / "digitalmodel" / "common" / "other.py"
+    shared.parent.mkdir(parents=True, exist_ok=True)
+    shared.write_text("VALUE = 2\n")
+    head = commit_all(tmp_path, "pull request touches shared source")
+
+    result = run_detector(
+        tmp_path, domains_file, "--mode", "touched", "--base", tip, "--head", head,
+        "--diff-from", "merge-base", "--output-format", "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == ["asset-integrity", "citations", "structural", "workflows"]
+
+
+def test_merge_base_diff_equals_two_commit_diff_when_head_is_up_to_date(tmp_path: Path) -> None:
+    domains_file, base, head = _repo_with_single_domain_change(tmp_path)
+    outputs = [
+        run_detector(tmp_path, domains_file, "--mode", "touched", "--base", base, "--head", head,
+                     *extra, "--output-format", "list").stdout.splitlines()
+        for extra in ((), ("--diff-from", "merge-base"))
+    ]
+    assert outputs == [["citations"], ["citations"]]
+
+
+def _unrelated_head(tmp_path: Path) -> tuple[Path, str, str]:
+    domains_file, base, _head = _repo_with_single_domain_change(tmp_path)
+    subprocess.run(["git", "checkout", "-q", "--orphan", "unrelated"], cwd=tmp_path, check=True)
+    (tmp_path / "tests" / "citations" / "test_registry.py").write_text("def test_other():\n    assert True\n")
+    head = commit_all(tmp_path, "no common ancestor")
+    return domains_file, base, head
+
+
+def test_merge_base_diff_without_common_ancestor_errors_by_default(tmp_path: Path) -> None:
+    domains_file, base, head = _unrelated_head(tmp_path)
+
+    result = run_detector(
+        tmp_path, domains_file, "--mode", "touched", "--base", base, "--head", head,
+        "--diff-from", "merge-base", "--output-format", "list",
+    )
+
+    assert result.returncode == 2
+    assert result.stdout == ""
+
+
+def test_merge_base_diff_without_common_ancestor_can_fall_back_to_full(tmp_path: Path) -> None:
+    domains_file, base, head = _unrelated_head(tmp_path)
+
+    result = run_detector(
+        tmp_path, domains_file, "--mode", "touched", "--base", base, "--head", head,
+        "--diff-from", "merge-base", "--on-missing-base", "full", "--output-format", "list",
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.splitlines() == ["asset-integrity", "citations", "structural", "workflows"]
+
+
+def test_workflow_pull_request_arm_diffs_from_the_merge_base() -> None:
+    """Structural guard: only the pull-request arm asks for the merge-base comparison.
+    A push compares before and after on one line of history and keeps the default."""
+    text = Path(".github/workflows/quality-gates-by-domain.yml").read_text(encoding="utf-8")
+    start = text.index('if [ "$EVENT_NAME" = "pull_request" ]; then')
+    push = text.index('elif [ "$EVENT_NAME" = "push" ]; then')
+    end = text.index("has_domains=", push)
+    assert "--diff-from merge-base" in text[start:push]
+    assert "--diff-from" not in text[push:end]
+
+
+
+def _repo_where_base_gains_a_record_after_the_fork(tmp_path: Path) -> tuple[Path, str, str]:
+    """The pull request edits an input file. After the fork point the base gains a record
+    manifest that pins that input, and a structural test that reads the record."""
+    domains_file = tmp_path / "DOMAINS.md"
+    domains_file.write_text(
+        "# Test Domains\n\n"
+        "| Domain | Test roots | Purpose/deps/notes |\n"
+        "| --- | --- | --- |\n"
+        "| citations | `tests/citations/` | Citation tests. |\n"
+        "| contracts | `tests/contracts/` | Record tests. |\n"
+        "| structural | `tests/structural/` | Structural tests. |\n"
+    )
+    init_repo(tmp_path)
+    data = tmp_path / "data" / "input.csv"
+    data.parent.mkdir(parents=True)
+    data.write_text("a,b\n1,2\n")
+    commit_all(tmp_path, "fork point")
+    trunk = subprocess.check_output(
+        ["git", "rev-parse", "--abbrev-ref", "HEAD"], cwd=tmp_path, text=True
+    ).strip()
+
+    subprocess.run(["git", "checkout", "-q", "-b", "pull-request"], cwd=tmp_path, check=True)
+    data.write_text("a,b\n1,3\n")
+    head = commit_all(tmp_path, "pull request changes the input")
+
+    subprocess.run(["git", "checkout", "-q", trunk], cwd=tmp_path, check=True)
+    record = tmp_path / "records" / "manifest.json"
+    record.parent.mkdir(parents=True)
+    record.write_text(json.dumps({"data/input.csv": "a" * 64}))
+    reader = tmp_path / "tests" / "structural" / "test_record.py"
+    reader.parent.mkdir(parents=True)
+    reader.write_text('RECORD = "records/manifest.json"\n')
+    tip = commit_all(tmp_path, "base gains a record of the input")
+    return domains_file, tip, head
+
+
+def test_merge_base_diff_keeps_record_routes_from_the_base_tip(tmp_path: Path) -> None:
+    """The merged tree holds the base's record and the pull request's input, so the record's
+    readers must run although neither the fork point nor the head contains the record."""
+    domains_file, tip, head = _repo_where_base_gains_a_record_after_the_fork(tmp_path)
+    result = run_detector(
+        tmp_path, domains_file, "--mode", "touched", "--diff-from", "merge-base",
+        "--base", tip, "--head", head, "--output-format", "list",
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.split() == ["contracts", "structural"]
+
+
+def test_merge_base_diff_still_excludes_base_only_changes_with_records(tmp_path: Path) -> None:
+    """A pull request that does not touch the pinned input does not select the record's readers."""
+    domains_file, tip, head = _repo_where_base_gains_a_record_after_the_fork(tmp_path)
+    subprocess.run(["git", "checkout", "-q", head], cwd=tmp_path, check=True)
+    subprocess.run(["git", "checkout", "-q", "HEAD~1", "--", "data/input.csv"], cwd=tmp_path, check=True)
+    citation = tmp_path / "tests" / "citations" / "test_registry.py"
+    citation.parent.mkdir(parents=True)
+    citation.write_text("def test_new():\n    assert True\n")
+    other = commit_all(tmp_path, "pull request edits a citations test instead")
+    result = run_detector(
+        tmp_path, domains_file, "--mode", "touched", "--diff-from", "merge-base",
+        "--base", tip, "--head", other, "--output-format", "list",
+    )
+    assert result.returncode == 0, result.stderr
+    assert result.stdout.split() == ["citations"]

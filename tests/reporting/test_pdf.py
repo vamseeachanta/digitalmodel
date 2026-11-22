@@ -33,7 +33,7 @@ def _spec():
         document=DocumentMeta(number="B0000-RPT-001-00", revision="00", title="T",
                               project="B0000", client="C"),
         sections=[Section(key="s1", title="S", blocks=[TextBlock(markdown="x")])],
-        provenance=Provenance().add("file", "in.yml"),
+        provenance=Provenance(code_edition="test", units_system="SI", validated_path="screening").add("file", "in.yml"),
         tool_version="test",
     )
 

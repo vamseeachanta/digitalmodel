@@ -1,0 +1,117 @@
+schema_version: 1
+status: research_only
+source_catalog: docs/research/ffs-unbonded-flexible-pipe-integrity-screen.sources.yaml
+evidence:
+  construction:
+    source_id: S1
+    locator: 'Section 2.2, printed pages 12-14; revision 5, 2013-12-31'
+    use: Construction taxonomy only; no design properties or universal ordering.
+    verified_on: '2026-11-16'
+    source_sha256: c18df6a0c0d2c69947c65f286ff0b9347767272a81cc3b8f6565b7b64bfbb6fb
+  polymers:
+    source_id: S1
+    locator: 'Section 4.3.3, printed page 37; revision 5, 2013-12-31'
+    use: Optional anti-wear and insulation context only.
+    verified_on: '2026-11-16'
+  inspection:
+    source_id: S3
+    locator: 'Good practice guidance; Recommendations; issued 2008-02-19'
+    use: Inspection context; historical API designations, not current editions.
+    verified_on: '2026-11-16'
+    source_sha256: 0df9f91213d13a3e9a01acca14a24954f8b5f39e3cd695766e9c4ef104d93d1e
+standards:
+  designations: [API 17J, API 17B, ISO 13628-2]
+  status: unresolved
+  calculation_criteria: null
+  reason: Governing editions, clauses and factor provenance are not qualified.
+layers:
+  - role: carcass
+    code_role: carcass
+    classification: metadata
+    description: Interlocked strip bore construction where fitted.
+    evidence: construction
+  - role: pressure_sheath
+    code_role: pressure_sheath
+    classification: metadata
+    description: Internal polymer pressure barrier, also called liner.
+    evidence: construction
+  - role: pressure_armour
+    code_role: pressure_armour
+    classification: metadata
+    description: Hoop strength winding around the pressure sheath.
+    evidence: construction
+  - role: tensile_armour
+    code_role: tensile_armour
+    classification: metadata
+    description: Helical wire packages providing axial strength.
+    evidence: construction
+  - role: outer_sheath
+    code_role: outer_sheath
+    classification: metadata
+    description: External polymer sealing layer.
+    evidence: construction
+  - role: anti_wear
+    code_role: anti_wear
+    classification: metadata
+    description: Optional polymer layer between interacting layers.
+    evidence: polymers
+  - role: insulation
+    code_role: null
+    classification: metadata
+    description: Optional thermal insulation; no existing enum equivalent.
+    evidence: polymers
+metadata: [layer, material, duty, geometry]
+future_mechanics:
+  friction: Contact evidence and environment-dependent coefficients required.
+  slip_contact: Layer interaction and contact model required.
+  hysteresis: Cyclic tests and loading history required.
+  pressure_dependent_stiffness: Qualified pressure and load envelopes required.
+  torsion: GJ and tension-torque coupling evidence required.
+  annulus_state: Inspection and monitoring evidence required.
+  fatigue: S-N basis, annulus conditions and cyclic reference cases required.
+code_contracts:
+  generic: src/digitalmodel/subsea/cross_sections/schema.py
+  section: src/digitalmodel/subsea/flexible_pipes/cross_section.py
+  destination: src/digitalmodel/solvers/orcaflex/modular_generator/schema/riser.py
+  builder: src/digitalmodel/solvers/orcaflex/modular_generator/builders/riser_linetype_builder.py
+export_requirements:
+  OD: {from_unit: m, to_unit: m, scale: 1, status: indicative}
+  ID: {from_unit: m, to_unit: m, scale: 1, status: indicative}
+  MassPerUnitLength: {from_unit: kg/m, to_unit: te/m, scale: 0.001, status: indicative}
+  EA: {from_unit: N, to_unit: kN, scale: 0.001, status: indicative}
+  EI: {from_unit: N.m2, to_unit: kN.m2, scale: 0.001, status: indicative}
+  GJ: {from_unit: null, to_unit: kN.m2, scale: null, status: missing}
+  MinRadius: {from_unit: null, to_unit: m, scale: null, status: missing}
+  TensionTorqueCoupling: {from_unit: null, to_unit: not_established, scale: null, status: missing}
+specimen:
+  synthetic: true
+  engineering_use: false
+  export_ready: false
+  description: Incomplete single-layer metadata specimen, not a built section.
+  metadata:
+    layer: pressure_sheath
+    material: synthetic_polymer
+    duty: dynamic_riser
+    geometry: {inner_diameter: 0.100, outer_diameter: 0.160, unit: m}
+  qualification:
+    operating_mbr:
+      {value: null, unit: m, reason: No operating qualification,
+       required_evidence: Supplied MBR with pressure/temperature/tension conditions}
+    storage_mbr:
+      {value: null, unit: m, reason: No storage qualification,
+       required_evidence: Supplied storage MBR with handling conditions}
+    internal_pressure_rating:
+      {value: null, unit: Pa, reason: No qualified pressure rating,
+       required_evidence: Rating with temperature/load/annulus applicability}
+    collapse_rating:
+      {value: null, unit: Pa, reason: No qualified collapse rating,
+       required_evidence: Differential pressure basis and bore/annulus conditions}
+    rating_conditions:
+      {value: null, unit: not_applicable, reason: No qualified condition envelope,
+       required_evidence: Temperature/tension/pressure/cyclic duty and annulus state}
+    torsional_stiffness:
+      {value: null, unit: N.m2, reason: Section API does not establish GJ,
+       required_evidence: Qualified torsion response and coupling basis}
+    qualification_basis:
+      {value: null, unit: not_applicable, reason: No governing calculation basis,
+       required_evidence: Verified editions/clauses and independent reference cases}

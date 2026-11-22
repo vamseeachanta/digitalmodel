@@ -72,6 +72,9 @@ class ReportTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'Synthetic'):
                 builder.build_spec(campaign, output, criteria_file=CRITERIA)
             spec = builder.build_spec(campaign, output, criteria_file=CRITERIA, allow_synthetic=True)
+            spec.provenance.require()
+            self.assertEqual(spec.provenance.units_system, 'SI')
+            self.assertEqual(spec.provenance.validated_path, 'screening')
             self.assertEqual(len(spec.sections), 10)
             self.assertIn(METHOD, spec.sections[3].blocks[0].markdown)
             self.assertIn(METHOD, spec.sections[6].blocks[0].markdown)

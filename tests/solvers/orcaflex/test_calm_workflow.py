@@ -229,6 +229,9 @@ def test_report_standard_form_and_revision(prepared):
     from digitalmodel.reporting import render_html
 
     report = build_report(prepared, assess_results(prepared, [], {}))
+    report.provenance.require()
+    assert report.provenance.units_system == "SI"
+    assert report.provenance.validated_path == "screening"
     keys = [s.key for s in report.sections]
     assert keys[:2] == ["summary", "revision-history"]
     rendered = render_html(report)
