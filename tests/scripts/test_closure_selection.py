@@ -21,6 +21,8 @@ FULL = {domain.name for domain in DOMAINS}
     pytest.param("uv.lock", FULL, id="configuration"),
     pytest.param("src/digitalmodel/new_unrouted_package/model.py", FULL, id="unknown-route"),
 ])
-def test_pr_closure(path, closure):
-    selected = detector.touched_domains([path], DOMAINS)
+@pytest.mark.parametrize("routes", [None, detector.load_src_routes()], ids=["paths", "routes"])
+def test_pr_closure(path, closure, routes):
+    # The workflow passes the committed source routes, so the closure must hold with them too.
+    selected = detector.touched_domains([path], DOMAINS, src_routes=routes)
     assert closure <= {domain.name for domain in selected}
