@@ -458,17 +458,40 @@ class AQWALISParser:
 
         return rao_dict
 
-    def parse_all(self) -> Dict:
+    def parse_all(self, *, expected_frequency_count: Optional[int] = None) -> Dict:
         """
         Parse all hydrodynamic data from .LIS file.
 
+        Args:
+            expected_frequency_count: Positive integer declared independently
+                by the input deck, never inferred from this listing. None
+                checks only consistency between observed tables.
+
         Returns:
             Dictionary containing all parsed data
+
+        Raises:
+            ValueError: If the declaration is invalid, the observed frequency
+                count differs, or the observed tables have inconsistent grids.
         """
+        if expected_frequency_count is not None and (
+            isinstance(expected_frequency_count, bool)
+            or not isinstance(expected_frequency_count, int)
+            or expected_frequency_count <= 0
+        ):
+            raise ValueError("expected_frequency_count declaration must be a positive integer")
+
         logger.info(f"Parsing AQWA .LIS file: {self.lis_file.name}")
 
         try:
             frequencies, periods = self.extract_frequencies_and_periods()
+            if (expected_frequency_count is not None
+                    and len(frequencies) != expected_frequency_count):
+                raise ValueError(
+                    "Listing mismatch against declared frequency count: "
+                    f"expected {expected_frequency_count}, observed {len(frequencies)}. "
+                    "Check the independent deck declaration and listing table rows."
+                )
             added_mass = self.parse_added_mass_table()
             damping = self.parse_damping_table()
             raos = self.parse_rao_table()

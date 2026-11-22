@@ -3,6 +3,13 @@
 Checked 2026-11-13. Companion to the first-pass survey; no new engineering analysis.
 Only extracted facts and source links are retained. Read means repository readback for S1/S2; other sources require a public page opened in this pass. Unread sources do not establish coverage.
 
+## Revision history
+
+| Revision | Date | What changed and why |
+|---|---|---|
+| 1 | 2026-11-13 | Second-pass evidence and derived acceptance status. |
+| 2 | 2026-11-16 | Added bounded JIP research and identity checks to prevent unsupported coverage. |
+
 ## 1. Contractor matrix updates
 
 ### Verified
@@ -38,8 +45,9 @@ S5 was rechecked on 2026-11-13 at the vendor’s replacement page, Introduction 
 
 | JIP | Scope | Source |
 |---|---|---|
+| HOTPIPE | High-pressure/high-temperature pipeline structural design: pipe capacity, buckling response and mitigation; guideline development using reliability methods. | ASME, 2005, publisher-deposited abstract at Crossref, `message.abstract` [S8](https://api.crossref.org/works/10.1115/OMAE2005-67523); abstract only, checked 2026-11-16. |
 
-No verified additions; SAFEBUCK remains supported by first-pass section 6.
+SAFEBUCK remains supported by first-pass section 6. The table below preserves the earlier access results; section 6 records the follow-up.
 
 ### Unverified or not reached
 
@@ -61,5 +69,16 @@ First-pass evidence: [survey](subsea-pipelines-industry-practice.md), sections 3
 | 5+ recent OMAE/ISOPE/OPT papers summarized | OMAE, ISOPE, OPT | P1 [P1]; P2 [P2]; P3 [P3]; P4 [P4]; P5 [P5] | met | Five OMAE2024 abstracts; ISOPE/OPT breadth remains open. |
 | Contractor + vessel capability matrix (Subsea7, Allseas, Saipem, TechnipFMC, McDermott, Heerema) | Subsea7, Allseas, Saipem, TechnipFMC, McDermott, Heerema | Saipem [P21]; McDermott [P22]; Heerema [P23]; Subsea7 [P24]; Allseas [S1][S2]; TechnipFMC [S4] | met | Six contractors; first-pass section 4 plus second-pass verified rows. All six required names have read evidence. |
 | Tool capability matrix (OrcaFlex, SAGE Profile, ABAQUS, StableLines) | OrcaFlex, SAGE Profile, ABAQUS, StableLines | StableLines [P8]; OrcaFlex [P26][P27][P25]; SAGE Profile [S5]; ABAQUS [S6] | met | Four required tools; capability statements establish no usage share. |
-| JIP landscape (SAFEBUCK, HOTPIPE, POSIT) documented | SAFEBUCK, HOTPIPE, POSIT | SAFEBUCK [P17][P19] | partly met | HOTPIPE unread; POSIT not reached. |
+| JIP landscape (SAFEBUCK, HOTPIPE, POSIT) documented | SAFEBUCK, HOTPIPE, POSIT | SAFEBUCK [P17][P19]; HOTPIPE [S8] | partly met | POSIT unresolved after bounded search; see section 6. |
 | Method convergence/divergence flagged | Converging, Diverging or unresolved | Converging [P3]; Diverging or unresolved [P1] | met | Both lists in first-pass section 2. |
+
+## 6. JIP follow-up
+
+Checked 2026-11-16. At most three public candidates per unresolved item; the source manifest records the attempts. Historical first-pass claims and the other four dispositions are unchanged.
+
+| Item | Attempts and result | Missing evidence |
+|---|---|---|
+| HOTPIPE | DOI redirected to an ASME challenge, HTTP 403 [S7]. Publisher-deposited Crossref abstract returned HTTP 200 [S8]. HOTPIPE scope is supported by the deposited abstract only. | Full paper and confidential guideline not read; no current-standard or engineering-validation claim. |
+| POSIT | Exact-acronym institutional search with pipe-soil interaction terms returned HTTP 403 [S9]. Expanded pipe-soil interaction and joint-industry terms at Crossref returned HTTP 200 [S10]; the first three titles and available abstracts did not name POSIT. POSIT identity remains unresolved. | A public record explicitly naming the intended program and its scope; related pipe-soil work is not substituted. |
+
+The search result establishes no absence claim. No competing exact identity was found. Maintainer checkpoint: can a public source identifying the intended POSIT program be supplied? The JIP criterion remains partly met and #1815 remains open. Conference breadth remains deferred.

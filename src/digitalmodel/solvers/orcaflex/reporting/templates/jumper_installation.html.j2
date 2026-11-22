@@ -1,0 +1,48 @@
+{% macro section(anchor, title) -%}
+<section id="{{ anchor }}"><div class="section-card"><h2>{{ title }}</h2>{{ caller() }}</div></section>
+{%- endmacro %}
+<style>.installation h2 {color:#1a365d} .installation caption {caption-side:bottom;color:#718096} .installation th {background:#2c5282;color:white}</style>
+<main class="container installation">
+{% call section('cover', '1. Cover Page') %}
+<h1>Jumper installation calculations: {{ report.structure_id }}</h1>
+<p>Python installation calculations; no OrcaFlex solver analysis performed</p>
+<p>{{ report.date.isoformat() }} | Operator not supplied | Classification not supplied</p>
+{% endcall %}
+{% call section('executive-summary', '2. Executive Summary') %}
+<p>Existing Go/No-Go criterion output: {{ p.decision }}. No certification or engineering approval is established.</p>
+<p>Total dry lift weight: <strong id="total-weight">{{ '%.3f'|format(p.weight_check.grand_total_kg) }} kg</strong></p>
+{% endcall %}
+{% call section('pipe-properties', '3. Pipe Properties') %}
+<table><tr><th>OD [in]</th><th>WT [in]</th><th>Steel linear mass [kg/m]</th></tr>
+<tr><td>{{ '%.3f'|format(p.pipe_properties.od_inch) }}</td><td id="pipe-wt">{{ '%.3f'|format(p.pipe_properties.wall_thickness_inch) }}</td><td>{{ '%.3f'|format(p.pipe_properties.steel_linear_mass_kg_m) }}</td></tr></table>
+<p>Insulation linear mass not returned by the calculation contract.</p>
+{% endcall %}
+{% call section('geometry', '4. Geometry') %}
+<table><tr><th>Segment</th><th>Straight length [m]</th></tr>{% for length in p.pipe_geometry.straight_lengths_m %}<tr><td>{{ 'ABCDEFG'[loop.index0] }}</td><td>{{ '%.3f'|format(length) }}</td></tr>{% endfor %}</table>
+<p>Six bend arcs, each {{ '%.3f'|format(p.pipe_geometry.bend_arc_m) }} m. Total pipe length: <span id="total-length">{{ '%.3f'|format(p.pipe_geometry.total_length_m) }} m</span> (excluding connectors).</p>
+<p>Clamp arc positions [m]: {% for position in p.pipe_geometry.get('clamp_locations_m', []) %}{{ '%.3f'|format(position) }}{% if not loop.last %}, {% endif %}{% else %}Clamp positions not returned{% endfor %}.</p>
+{% endcall %}
+{% call section('weight-tally', '5. Weight Tally') %}
+<table><caption>Dry weights; kit weights include insulation.</caption><tr><th>Component</th><th>Mass [kg]</th></tr>{% for name, mass in p.weight_items.items() %}<tr><td>{{ name }}</td><td>{{ '%.3f'|format(mass) }}</td></tr>{% endfor %}<tr><th>Grand total</th><td>{{ '%.3f'|format(p.weight_check.grand_total_kg) }}</td></tr></table>
+{{ charts['jumper-weight']|safe }}<p>Figure 1. Dry lift weight breakdown [kg]; components match the weight table.</p>
+{% endcall %}
+{% call section('rigging', '6. Rigging') %}<p>Rigging stiffness and spreader dimensions not returned by run_jumper_analysis; rigging evidence is missing.</p>{% endcall %}
+{% call section('crane-configuration', '7. Crane Configuration') %}
+<p>Baseline calculation values; not established as responsive to arbitrary spec overrides. Utilisation criteria are displayed below as returned by the decision stage.</p>
+<table><tr><th>Configuration</th><th>Name</th><th>Radius [m]</th><th>SWL [te]</th><th>DDF</th><th>Dynamic capacity [te]</th></tr>{% for name, crane in p.cranes.items() %}<tr><td>{{ name }}</td><td>{{ crane.name }}</td>{% for field in ('radius_m', 'swl_te', 'ddf', 'dynamic_capacity_te') %}<td>{{ '%.3f'|format(crane[field]) }}</td>{% endfor %}</tr>{% endfor %}</table>
+{% endcall %}
+{% call section('orcaflex-sections', '8. OrcaFlex Sections') %}
+<table><thead><tr><th>Section</th><th>Line type</th><th>Length [m]</th></tr></thead><tbody>{% for s in p.orcaflex_sections %}<tr><td>{{ s.name }}</td><td>{{ s.line_type }}</td><td>{{ '%.3f'|format(s.length_m) }}</td></tr>{% endfor %}</tbody></table>
+{{ charts['jumper-lengths']|safe }}<p>Figure 2. Section lengths [m] including connectors; values match the section table.</p>
+{% endcall %}
+{% call section('cog', '9. COG per KIT') %}
+<p>Baseline calculation values; not established as responsive to arbitrary spec overrides.</p>
+<table><tr><th>Condition</th><th>KIT</th><th>X [m]</th><th>Z [m]</th></tr>{% for condition in ('uninsulated', 'insulated') %}{% for kit, cog in p['cog_' + condition].items() %}<tr><td>{{ condition }}</td><td>{{ kit }}</td><td>{{ '%.3f'|format(cog.cog_x_m) }}</td><td>{{ '%.3f'|format(cog.cog_z_m) }}</td></tr>{% endfor %}{% endfor %}</table>
+{% endcall %}
+{% call section('decision-criteria', '10. Go/No-Go Decision Criteria') %}
+{% if p.criteria %}<table><thead><tr>{% for heading in ('Criterion', 'State', 'Value', 'Limit', 'Unit', 'Margin', 'Governing condition', 'Reference') %}<th>{{ heading }}</th>{% endfor %}</tr></thead><tbody>{% for c in p.criteria %}<tr><td>{{ c.name }}</td><td>{{ c.state }}</td><td>{{ '%.3f'|format(c.value) }}</td><td>{{ '%.3f'|format(c.limit) }}</td><td>{{ c.unit }}</td><td>{{ '%.3f'|format(c.margin) }}</td><td>{{ c.description }}</td><td>{{ c.reference }}</td></tr>{% endfor %}</tbody></table>{% else %}<p>Go/No-Go not evaluated; no PASS conclusion is available.</p>{% endif %}
+{% endcall %}
+{% call section('calculation-references', '11. Calculation References') %}
+<p>Python references: jumper_lift.run_jumper_analysis (pipe, geometry, weights, cranes, COG); go_no_go.evaluate_go_no_go (criteria). Cell mappings not supplied; workbook provenance is not asserted.</p>
+{% endcall %}
+</main>

@@ -23,7 +23,8 @@ from jsonschema import Draft202012Validator, FormatChecker
 from jsonschema.exceptions import SchemaError, ValidationError
 
 DATABASES = frozenset(
-    {"line_pipe", "flexible_pipe", "structure_properties", "soil_stiffness", "riser_buoyancy"}
+    {"line_pipe", "flexible_pipe", "structure_properties", "soil_stiffness", "riser_buoyancy",
+     "riser_tensioners"}
 )
 # Catalogue precision policy: seven significant digits in a derived value allow
 # at most 5e-7 relative decimal rounding; 1e-6 leaves the same margin again.
@@ -94,6 +95,8 @@ def _engineering(database: str, row: dict[str, Any]) -> None:
     elif database == "riser_buoyancy":
         if row["module_id_m"] >= row["module_od_m"]:
             raise CatalogueValidationError("ID must be less than OD")
+    elif database == "riser_tensioners":
+        pass  # Scalar constraints are enforced by the schema; no cross-field equation.
     elif database == "soil_stiffness":
         _soil_relationships(row)
     else:
@@ -273,3 +276,10 @@ def load_riser_buoyancy(
 ) -> list[dict[str, Any]]:
     """Load buoyancy modules using their explicit catalogue directory."""
     return load_database("riser_buoyancy", directory, allow_synthetic=allow_synthetic)
+
+
+def load_riser_tensioners(
+    directory: str | Path, *, allow_synthetic: bool = False
+) -> list[dict[str, Any]]:
+    """Load tensioners using their explicit catalogue directory."""
+    return load_database("riser_tensioners", directory, allow_synthetic=allow_synthetic)

@@ -1,0 +1,133 @@
+# Shard setup and geotechnical test time
+
+**Measured · sweep {anchor_id}.** The {anchor_jobs} shard jobs used {wall_minutes:.2f} runner-minutes. Pytest reported {pytest_minutes:.2f} minutes and {under_sixty} shards below 60 seconds. The enclosing domain steps used {domain_minutes:.2f} minutes. Summing JUnit testcase times gives {junit[minutes]:.2f} minutes and {junit[under_sixty]} shards below 60 seconds. JUnit omits time outside individual cases.
+
+## Seven-day measurements
+
+**Measured · run sets S and P.** The creation window is {window}. S includes every Full Matrix Sweep event. P includes pull requests in Quality Gates by Domain. The index records every run ID and head SHA. Each job record carries the run ID, attempt and job ID. Within each run, records with the same shard name, start time and completion time count as one execution. The earliest attempt supplies the record. A missing start or completion time keeps the record separate. This removed {copies_removed} carried-over job records. All indexed runs reached a terminal state by snapshot completion.
+
+Sweep {anchor_id} used `{anchor_sha}`. The W9 static history audit and the local collection use the later revision identified below. S comprises {events} runs. Runs with no named shard jobs remain in the window denominator. Their individual causes were outside the timing capture.
+
+| Run set | Runs in window | Runs with shard jobs | Shard jobs | Full depth / shallow / unknown | Known install / pytest readings |
+| --- | --- | --- | --- | --- | --- |
+{sets}
+
+Each timing cell gives median / nearest-rank p90. Parentheses in the shard tables give the known sample size for that cell. Step durations come from Actions. The install interval runs from command launch through the last observed install completion before pytest. Pytest supplies its own elapsed time. The domain and solver steps contain these intervals. Upload and teardown consume part of job time. Setup includes runner initialization, checkout, PR merge, Python, uv, conditional Node, formatter and system installs, report directory creation, reading the gate command, register selection and observed package installs. All pytest includes domain and solver pytest. Each percentage uses that job’s elapsed time before aggregation.
+
+Skipped steps have no observation. A missing timestamp, archive, install boundary or unique pytest summary gives an unknown reading. Interrupted steps and cancelled job durations remain unknown. Completed steps on interrupted attempts still contribute to their own distributions. Percentages require a completed success or failure with an executed domain gate. Per-metric known and unknown counts and individual job steps are in the JSON report.
+
+**Measured · per shard, run set S.**
+
+| Shard | Jobs | Job (s) | Checkout (s) | Domain install (s) | Domain pytest (s) | Setup incl. install (%) | All pytest (%) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+{sweep_shards}
+
+**Measured · per shard, run set P.**
+
+| Shard | Jobs | Job (s) | Checkout (s) | Domain install (s) | Domain pytest (s) | Setup incl. install (%) | All pytest (%) |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+{pr_shards}
+
+**Measured · per step class, run sets S and P.** Values are seconds. Conditional classes use jobs where the step executed. The full shard-by-step cross-tabulation is in `summary`.
+
+| Step class | S median/p90 | P median/p90 |
+| --- | --- | --- |
+{steps}
+
+## W6b decision
+
+**Measured · all 587-second solver steps in run set P.** The two phase clocks leave some command and interpreter overhead outside their sum. Collected and passed counts apply to each run's revision.
+
+| Run ID | Job ID | Step (s) | Install (s) | Pytest (s) | Collected | Passed |
+| --- | --- | --- | --- | --- | --- | --- |
+{solver_anchor}
+
+**Measured · P, executed solver steps.**
+
+| Reading | Known / executed steps | Median/p90 |
+| --- | --- | --- |
+{solver_readings}
+
+**Measured · local collection at `{audit[base_sha]}`, Python 3.11.18.** Base package versions matched. The solver environment added xslope 1.0.3 and gmsh 4.15.2. The five sorted lists and their digests are in the job folder.
+
+| Collection | Node IDs |
+| --- | --- |
+{nodes}
+
+**Measured · same local SHA and environments.** All {local[passed_in_both]:,} baseline passes also passed with extras. The {local[skipped_to_passed]} shared runtime skips became passes. All {local[with][passed]:,} solver-enabled cases passed. Baseline pytest also reported a module-level collection skip. JUnit outcomes and frozen package versions accompany the lists.
+
+The additional nodes come from `test_slope_stability.py`. The controlled local comparison used the editable test extra in both environments. The ordinary specialized CI gate overrides a dependency at its upstream main revision. The separate solver step installs the editable test extra. The sweep runs the ordinary gate alone.
+
+**Measured · P, successful specialized jobs with a successful solver step.** The ordinary gate's contiguous geotechnical progress interval had median/p90 {progress_pair} s across {progress[n]} of {paired_count} paired jobs. The interval runs from the last progress row before the geotechnical cases through their final progress row.
+
+**W6b recommendation and Estimate.** Retain both PR executions. If a future coverage-gated comparison establishes equivalence for both environments, removing the duplicate base execution could save about {progress[median]:.0f} runner-seconds per comparable PR job across the sampled revisions. The corresponding interval in sweep {anchor_id}, job {geo[job]}, was {geo[geo_progress_s]:.3f} s. The estimate excludes collection and the solver execution that would still run.
+
+## W9 decision
+
+**Measured · sweep {anchor_id}.** Common setup includes runner initialization, checkout, Python and uv. The pilot takes domain-specific shallow-trial candidates below 60 seconds of pytest in this sweep with the same declared uv and pytest arguments as capabilities. The expanded commands agree after removing test paths and per-shard JUnit destinations. The misc engine gate is held out of the first domain trial. Resolved environments and runner compatibility still require qualification.
+
+| Candidate | Common setup (s) | Pytest (s) |
+| --- | --- | --- |
+{candidates}
+
+**W9 recommendation and Estimate.** Trial grouping these four co-dispatched sweep shards. Retaining the slowest common setup would save {saving:.0f} runner-seconds ({saving_minutes:.2f} runner-minutes) on the measured sweep. Applying the same assumption to {week[n]} of {cohort_count} shard-bearing sweep attempts gives median/p90 savings of {weekly_pair} s. All four jobs succeeded and all four setup clocks were known in each included attempt. Exclusions were {missing} missing a shard, {unsuccessful} with a non-successful job and {unknown} with an unknown setup clock. Each original command and shard-level result would remain separately accountable. The estimate assumes one runner can serve all four jobs and assigns no saving to dependency reuse, shallow checkout or elapsed critical-path time. PR grouping also needs proof of touched-module closure before merge.
+
+### Checkout depth by shard
+
+Static inspection at `{audit[base_sha]}` covered the {gate_count} commands in `.claude/quality-gates.yaml`, the workflow-added subsea paths, shared setup and matching tests and scripts. Both shard workflows request full history at this revision. These findings identify candidates for a depth trial. They do not measure a checkout saving.
+
+| Shard suffix | Evidence for keeping full history |
+| --- | --- |
+| asset-integrity | `tests/materials/test_database.py` checks a pinned revision against `origin/main` with `merge-base --is-ancestor` and reads historical blobs. |
+| cathodic-protection | `tests/cathodic_protection/test_edition_paths_review.py` resolves every review anchor at its recorded commit. |
+| contracts | `tests/docs/test_riser_global_evidence_register.py` reads retained blobs with `git show`. |
+| hydrodynamics-diffraction | `tests/solvers/orcawave/diffraction/test_pack_lint.py` reads source and map revisions. |
+| hydrodynamics-other | `rao_fixture_population.py` uses path-specific `git log -1` and `git show`. The source-revision test in `tests/hydrodynamics/hull_library/test_rao_fixture_metadata.py` skips on shallow clones. |
+| marine-engineering, workflows | Both select `tests/marine_ops/marine_engineering/visualization/test_no_regression_traces.py`, which reads the captured producer's historical blob. |
+| naval-architecture | `tests/naval_architecture/test_mesh_pickle_generator.py` populates its temporary repo from the real checkout's pinned baseline when its Python and NumPy conditions match. |
+| subsea | `tests/drilling_riser/test_generic_manifest.py` resolves the manifest's pinned commit and spec blob. |
+
+| Shallow-checkout trial candidates | Evidence from selected paths |
+| --- | --- |
+| capabilities, citations, field-development, hydrodynamics-passing-ship, marine-ops-other, specialized, misc | No checkout-history operation found. Capabilities checks tracked files with `ls-files`; citation resolver tests use local files and fixtures. |
+| infrastructure-core, infrastructure-other, orcaflex-solver, solver-smoke | Matched code uses disposable Git fixtures or the current index. The evidence-audit tests call `build_audit` with explicit paths rather than its historical inventory CLI. |
+| orcaflex | Model-token tests use `ls-files`. On PRs `scripts/ci/ci_baseline.py:select_register` separately fetches and reads the trusted base tip. Preserve this fetch. |
+| structural | Inspected historical blob checks use mocked Git or synthetic roots. The plate study reads HEAD and working-tree status. Exercise the provenance tests in the trial. |
+
+All PR shards also run `merge-base` in the local merge guard before tests. An initially shallow PR checkout needs the existing fetch, deepen and unshallow fallback to produce the same merged tree. Scheduled sweeps have no PR merge guard. Before changing depth, make the literal zero-depth assertions in `tests/materials/test_database.py` and `tests/solvers/orcawave/diffraction/test_pack_lint.py` check effective depth for each protected shard. Verify the same test outcomes, skip reasons and line coverage on the affected paths.
+
+The history audit records selected paths, ignores, file-list hashes, matching lines and references to scripts and modules containing Git reads. Dynamic calls can escape a static scan.
+
+## Reproduction
+
+Run these commands from the repository root with `JOB` set to the retained evidence folder. The inputs are the timing snapshots (including attempt archives and solver logs), reference JUnit archives and index, and geotechnical node lists and outcomes. The static audit reads Git objects at the pinned local-collection revision. The commands run offline.
+
+```sh
+set -e
+python3 scripts/ci/step_timings.py report "$JOB/snapshots" > "$JOB/report.json"
+python3 scripts/ci/step_timings_junit.py "$JOB" > "$JOB/reference-junit.json"
+python3 scripts/ci/step_timings_commands.py "$JOB" > "$JOB/gate-commands.json"
+python3 scripts/ci/step_timings_history.py "$JOB" > "$JOB/history-audit.json"
+python3 scripts/ci/step_timings_render.py "$JOB" > "$JOB/step-timings-20261118.md"
+cmp "$JOB/step-timings-20261118.md" docs/ci/step-timings-20261118.md
+```
+
+For the exact run IDs behind a shard figure, select its workflow, shard and non-null metric. For example:
+
+```sh
+jq '[.jobs[] | select(.workflow=="pr" and .shard=="specialized" and .pytest_s!=null) | .run] | unique' "$JOB/report.json"
+```
+
+**Coverage gate.** Measurement only. The sole selection change adds the timing fixture tests to the CI harness. W6b and W9 still require their own before/after JUnit and covered-line evidence on the same base SHA for the applicable PR and daily obligations.
+
+<details><summary>Run IDs contributing shard jobs to measured tables S and P</summary>
+
+**S**
+
+{sweep_runs}
+
+**P**
+
+{pr_runs}
+
+</details>
