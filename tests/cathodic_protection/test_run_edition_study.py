@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 import os
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tomllib
@@ -85,11 +86,15 @@ def test_assetutilities_uses_public_dependency_default():
     config = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     source = config.get("tool", {}).get("uv", {}).get("sources", {}).get("assetutilities")
     # A public checkout must not need a sibling directory: no path source.
-    # A pinned public GitHub commit is allowed (PyPI 0.1.0 lacks workflow_api).
+    # A pinned public GitHub release tag or full commit is allowed (PyPI 0.1.0
+    # lacks workflow_api); a branch is not (fleet-ops#577).
     if source is not None:
         assert "path" not in source
+        assert "branch" not in source
         assert source.get("git", "").startswith("https://github.com/vamseeachanta/assetutilities")
-        assert len(source.get("rev", "")) == 40
+        assert re.fullmatch(r"v\d+\.\d+\.\d+", source.get("tag", "")) or (
+            len(source.get("rev", "")) == 40
+        )
     assert any(
         dep.startswith("assetutilities>=") for dep in config["project"]["dependencies"]
     )
