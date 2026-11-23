@@ -1073,10 +1073,11 @@ def test_replay_pr_2481_changed_paths() -> None:
     domains = detector.parse_domains(SCRIPT.parents[2] / "tests/DOMAINS.md")
     paths = json.loads((Path(__file__).parent / "fixtures/pr_2481_changed_paths.json").read_text())
     assert len(paths) == 15
+    # The legacy-evidence manifest pins mooring_design_fowt.py and has no test reader, so every shard runs.
     assert {d.name for d in detector.touched_domains(
         paths, domains, pinned_paths=detector.git_pinned_paths("HEAD"),
         pinned_domains=detector.git_pinned_domains("HEAD", domains),
-    )} == {"contracts", "orcaflex", "workflows"}
+    )} == {domain.name for domain in domains}
     assert {d.name for d in detector.touched_domains(
         paths, domains, pinned_paths=set(),
     )} == {"orcaflex", "workflows"}
