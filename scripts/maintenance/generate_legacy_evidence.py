@@ -95,10 +95,14 @@ def additional_claims(read_reset, archive_git):
     for entry in database["entries"]:
         for source in entry["sources"]:
             path = source["path"]
+            revision = source["revision"]
             last_change = archive_git("log", "-1", "--format=%H", "refs/heads/main", "--", path)
-            if last_change.decode().strip() != source["revision"]:
+            if last_change.decode().strip() != revision:
                 raise ValueError(f"Archived last modification differs for {path}")
-            yield source["revision"], path, "main-ancestry"
+            workbook = archive_git("cat-file", "blob", f"{revision}:{path}")
+            if hashlib.sha256(workbook).hexdigest() != source["sha256"]:
+                raise ValueError(f"Archived RAO fixture digest differs for {revision}:{path}")
+            yield revision, path, "main-ancestry"
 
 
 def tree_files(git, revision, paths):

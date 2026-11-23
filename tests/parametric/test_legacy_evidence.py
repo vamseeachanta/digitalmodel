@@ -1,4 +1,5 @@
 """Exercise the frozen migration through its public reader, without the archive."""
+import hashlib
 import json
 import os
 import shutil
@@ -64,7 +65,10 @@ def test_root_storage_checks_head_bytes_and_exact_path(monkeypatch):
         evidence.read_legacy(ROOT, revision, path)
 
 
-def test_new_sources_require_main_ancestry(tmp_path, monkeypatch):
+@pytest.mark.parametrize("rule", ["exists", "main-ancestry"])
+def test_new_sources_require_main_ancestry(tmp_path, monkeypatch, rule):
+    from digitalmodel.parametric.historical_provenance import EvidenceError, git_reader
+
     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
 
     def git(*args):
@@ -75,7 +79,8 @@ def test_new_sources_require_main_ancestry(tmp_path, monkeypatch):
 
     git("init", "-q", "-b", "main")
     (tmp_path / "source").write_bytes(b"published")
-    git("add", "source")
+    (tmp_path / "uncited").write_bytes(b"published")
+    git("add", "source", "uncited")
     git("commit", "-qm", "published")
     assert evidence.read_evidence(tmp_path, git("rev-parse", "HEAD"), "source") == b"published"
     git("checkout", "-qb", "topic")
@@ -85,13 +90,25 @@ def test_new_sources_require_main_ancestry(tmp_path, monkeypatch):
     with pytest.raises(ValueError):
         evidence.read_evidence(tmp_path, "0" * 40, "source")
 
-    # A checkout may already have the cited side-branch object. The exemption
-    # still belongs only to the exact pair recorded in the frozen manifest.
+    # A side branch can retain a pre-reset object outside current main.
     listed = git("rev-parse", "HEAD")
+    entry = {"rule": rule, "storage": "same-as-root", "blob": git("rev-parse", "HEAD:source"),
+             "sha256": hashlib.sha256(b"published").hexdigest()}
     monkeypatch.setattr(evidence, "_manifest", lambda root: {
-        "files": {listed: {"source": {"rule": "exists"}}},
+        "files": {listed: {"source": entry}},
     })
+    git("checkout", "-q", "main")
     assert evidence.read_evidence(tmp_path, listed, "source") == b"published"
+    with pytest.raises(ValueError, match="main"):
+        evidence.read_evidence(tmp_path, listed, "uncited")
+    if rule == "main-ancestry":
+        assert git_reader(tmp_path, listed)("source") == b"published"
+        with pytest.raises(EvidenceError):
+            git_reader(tmp_path, listed)("uncited")
+    else:
+        with pytest.raises(EvidenceError):
+            git_reader(tmp_path, listed)("source")
+    git("checkout", "-q", "topic")
     git("commit", "--allow-empty", "-qm", "unlisted with identical tree")
     with pytest.raises(ValueError, match="main"):
         evidence.read_evidence(tmp_path, git("rev-parse", "HEAD"), "source")

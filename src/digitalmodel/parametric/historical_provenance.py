@@ -100,20 +100,23 @@ def _git(root: Path, *args: str, input_bytes: bytes | None = None) -> bytes:
 
 
 def _uses_legacy_snapshot(root: Path, revision: str) -> bool:
-    """Only a missing commit in the frozen migration can use retained bytes."""
+    """Use archived main's proof for frozen sources, even in a mixed-history checkout."""
     # Full SHA-1 object names match this repository's retained Git object format.
     if not re.fullmatch(r"[0-9a-f]{40}", revision):
         raise EvidenceError("Source revision must be a full Git object ID")
-    if _git(root, "rev-parse", f"--disambiguate={revision}").strip():
-        if _git(root, "cat-file", "-t", revision).strip() != b"commit":
-            raise EvidenceError("Source revision must identify a Git commit")
-        return False
     try:
-        if legacy_evidence.legacy_files(root, revision, require_main=True):
-            return True
+        files = legacy_evidence.legacy_files(root, revision)
     except ValueError as error:
         raise EvidenceError(str(error)) from error
-    raise EvidenceError("Unavailable Git evidence or retained history")
+    if files:
+        if not any(entry["rule"] == "main-ancestry" for entry in files.values()):
+            raise EvidenceError("Source revision lacks archived main ancestry")
+        return True
+    if not _git(root, "rev-parse", f"--disambiguate={revision}").strip():
+        raise EvidenceError("Unavailable Git evidence or retained history")
+    if _git(root, "cat-file", "-t", revision).strip() != b"commit":
+        raise EvidenceError("Source revision must identify a Git commit")
+    return False
 
 
 def git_reader(root: Path, revision: str) -> Reader:

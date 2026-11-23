@@ -110,19 +110,20 @@ def read_evidence(root: Path, revision: str, path: str) -> bytes:
     repo = ["-C", str(root)]
     try:
         objects = git_output(repo, "rev-parse", f"--disambiguate={revision}").splitlines()
-        if not objects:
-            return read_legacy(root, revision, path)
-        if len(objects) != 1:
+        if len(objects) > 1:
             raise ValueError(f"Ambiguous evidence revision: {revision}")
+        # A fetched side branch can contain an archived commit even though
+        # its ancestry proof belongs to pre-reset main.
+        if not objects or path in legacy_files(root, revision):
+            return read_legacy(root, revision, path)
         revision = objects[0].decode()
         if git_output(repo, "cat-file", "-t", revision).strip() != b"commit":
             raise ValueError(f"Non-commit evidence revision: {revision}")
-        if legacy_files(root, revision).get(path, {}).get("rule") != "exists":
-            try:
-                main = git_output(repo, "rev-parse", "--verify", "refs/remotes/origin/main")
-            except subprocess.CalledProcessError:
-                main = git_output(repo, "rev-parse", "--verify", "refs/heads/main")
-            git_output(repo, "merge-base", "--is-ancestor", revision, main.decode().strip())
+        try:
+            main = git_output(repo, "rev-parse", "--verify", "refs/remotes/origin/main")
+        except subprocess.CalledProcessError:
+            main = git_output(repo, "rev-parse", "--verify", "refs/heads/main")
+        git_output(repo, "merge-base", "--is-ancestor", revision, main.decode().strip())
         return _tree_blob(repo, revision, path)
     except (OSError, subprocess.CalledProcessError) as error:
         raise ValueError(f"Unavailable evidence on main for {revision}:{path}") from error
