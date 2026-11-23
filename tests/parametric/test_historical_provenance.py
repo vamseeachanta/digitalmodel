@@ -55,6 +55,12 @@ def test_inventory_covers_every_computed_manifest(inventory):
     assert {row["manifest"] for row in inventory["atlases"]} == expected
 
 
+def test_atlas_reader_rejects_existence_only_legacy_evidence():
+    revision = "3256bab95f84da3d9fadce8d5dcf8458d66d1eb4"
+    with pytest.raises(history.EvidenceError):
+        history.git_reader(ROOT, revision)("docs/registry/implementation-map.yaml")
+
+
 def test_all_retained_bases_reconstruct(inventory):
     for row in inventory["atlases"]:
         result = history.verify_git(row, ROOT, retained_ref="origin/main")

@@ -12,7 +12,7 @@ from pathlib import Path, PurePosixPath
 
 RESET_ROOT = "5d3f3c9f9380c369a9117f34d1a2ce7082976463"
 MANIFEST = Path("atlases/legacy-evidence/manifest.json")
-MANIFEST_SHA256 = "e6e0e5e5ce677e29c259142ae79938d3d0c5275f7b113cf183aff9206e155dc6"
+MANIFEST_SHA256 = "1da37044ee67f360cb69632e30b67421c9de8ed5f5bdfacfb177c247ec7ed18e"
 
 
 def git_output(repo_args: list[str], *args: str) -> bytes:
@@ -51,11 +51,14 @@ def _manifest(root: Path) -> dict:
     return _parse_manifest(raw)
 
 
-def legacy_files(root: Path, revision: str) -> dict:
+def legacy_files(root: Path, revision: str, *, require_main: bool = False) -> dict:
     """The path allowlist for an exact old SHA or a recorded abbreviation."""
     manifest = _manifest(root)
     full = manifest.get("aliases", {}).get(revision, revision)
-    return manifest.get("files", {}).get(full, {})
+    files = manifest.get("files", {}).get(full, {})
+    if require_main:
+        return {path: entry for path, entry in files.items() if entry["rule"] == "main-ancestry"}
+    return files
 
 
 def publication_digest(record: dict) -> str:
@@ -79,9 +82,9 @@ def _tree_blob(repo_args: list[str], revision: str, path: str) -> bytes:
     return git_output(repo_args, "cat-file", "blob", meta.split()[2].decode())
 
 
-def read_legacy(root: Path, revision: str, path: str) -> bytes:
+def read_legacy(root: Path, revision: str, path: str, *, require_main: bool = False) -> bytes:
     """Verify both content identities before returning frozen evidence bytes."""
-    entry = legacy_files(root, revision).get(path)
+    entry = legacy_files(root, revision, require_main=require_main).get(path)
     if not entry:
         raise ValueError(f"No frozen evidence for {revision}:{path}")
     try:
@@ -99,7 +102,7 @@ def read_legacy(root: Path, revision: str, path: str) -> bytes:
 
 
 def read_evidence(root: Path, revision: str, path: str) -> bytes:
-    """Read a main ancestor, or an exact frozen claim if the commit is absent."""
+    """Read an exact frozen claim or require main ancestry for a new claim."""
     if (not re.fullmatch(r"[0-9a-f]{4,40}", revision) or not path
             or PurePosixPath(path).is_absolute() or "\\" in path
             or ".." in PurePosixPath(path).parts or PurePosixPath(path).as_posix() != path):
@@ -114,11 +117,12 @@ def read_evidence(root: Path, revision: str, path: str) -> bytes:
         revision = objects[0].decode()
         if git_output(repo, "cat-file", "-t", revision).strip() != b"commit":
             raise ValueError(f"Non-commit evidence revision: {revision}")
-        try:
-            main = git_output(repo, "rev-parse", "--verify", "refs/remotes/origin/main")
-        except subprocess.CalledProcessError:
-            main = git_output(repo, "rev-parse", "--verify", "refs/heads/main")
-        git_output(repo, "merge-base", "--is-ancestor", revision, main.decode().strip())
+        if legacy_files(root, revision).get(path, {}).get("rule") != "exists":
+            try:
+                main = git_output(repo, "rev-parse", "--verify", "refs/remotes/origin/main")
+            except subprocess.CalledProcessError:
+                main = git_output(repo, "rev-parse", "--verify", "refs/heads/main")
+            git_output(repo, "merge-base", "--is-ancestor", revision, main.decode().strip())
         return _tree_blob(repo, revision, path)
     except (OSError, subprocess.CalledProcessError) as error:
         raise ValueError(f"Unavailable evidence on main for {revision}:{path}") from error

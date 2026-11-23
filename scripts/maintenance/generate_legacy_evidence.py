@@ -36,7 +36,7 @@ def additional_claims(read_reset, archive_git):
     for folder, paths in report_inputs.items():
         record = json.loads(read_reset(f"examples/report-evals/{folder}/results.json"))
         for path in paths:
-            yield record["code"]["commit"], path
+            yield record["code"]["commit"], path, "exists"
 
     replay = json.loads(read_reset("docs/audits/analytical-riser-regression.json"))
     inputs = [row["path"] for row in replay["sources"].values()]
@@ -44,55 +44,52 @@ def additional_claims(read_reset, archive_git):
     if last_change.decode().strip() != replay["source_revision"]:
         raise ValueError("Archived last modification differs for analytical riser inputs")
     for path in inputs:
-        yield replay["source_revision"], path
+        yield replay["source_revision"], path, "main-ancestry"
 
     register = json.loads(read_reset("docs/domains/risers/global-model-evidence-register.json"))
     revision = register["snapshot_revision"]
     for row in register["sources"].values():
-        yield revision, row["path"]
+        yield revision, row["path"], "exists"
     # Establish completeness from the archived tree independently of the register.
     inventory = archive_git("ls-tree", "-r", "--name-only", revision, "--",
                             "tests/drilling_riser/global_model/").decode().splitlines()
     for path in inventory:
         if PurePosixPath(path).match("test_*.py"):
-            yield revision, path
+            yield revision, path, "exists"
 
     campaign = json.loads(read_reset(
         "docs/domains/orcaflex/library/campaigns/generic-drilling-riser/manifest.campaign.json"))
-    yield campaign["ref"], "docs/domains/orcaflex/library/templates/drilling_riser/spec.yml"
+    yield campaign["ref"], "docs/domains/orcaflex/library/templates/drilling_riser/spec.yml", "exists"
 
     mesh = json.loads(read_reset("tests/fixtures/test_vectors/naval_architecture/mesh_legacy_pickles.json"))
     for name in ("mesh_hydrostatics", "hull_fixtures"):
-        yield mesh["source_revision"], f"src/digitalmodel/naval_architecture/{name}.py"
+        yield mesh["source_revision"], f"src/digitalmodel/naval_architecture/{name}.py", "exists"
 
     review = json.loads(read_reset("docs/domains/cathodic_protection/reviews/edition-paths-review.json"))
     for row in review:
         for location in (row, *row.get("evidence", [])):
-            yield row["commit"], location["file"]
+            yield row["commit"], location["file"], "exists"
         for reference in row["test"]:
-            yield row["commit"], reference.partition("::")[0]
+            yield row["commit"], reference.partition("::")[0], "exists"
 
     pack = read_reset("src/digitalmodel/solvers/orcawave/docs/agent-pack.md").decode("utf-8")
     code_pin = re.search(r"^\| Code revision \| `([0-9a-f]{40})`", pack, re.MULTILINE)[1]
     for reference in re.findall(r"\[([^\]\n]+):L\d+-L\d+\]", pack):
         path, explicit, revision = reference.partition("@")
-        # This side-branch citation was never retained by archived main.
-        # Keep the citation in the pack and let its verifier report it as unavailable.
-        if (revision, path) == ("3256bab95f84da3d9fadce8d5dcf8458d66d1eb4",
-                                "docs/registry/implementation-map.yaml"):
-            continue
-        yield revision if explicit else code_pin, path
+        yield revision if explicit else code_pin, path, "exists"
 
     pack = read_reset("src/digitalmodel/materials/docs/agent-pack.md").decode()
     revision = re.search(r"\| Code revision \| `([0-9a-f]{40})`", pack)[1]
+    # The database independently requires the grades source revision on main.
+    yield revision, "src/digitalmodel/materials/grades.py", "main-ancestry"
     for path in sorted(set(re.findall(r"\[([^\]\s]+):L\d+-L\d+\]", pack))):
-        yield revision, path
+        yield revision, path, "exists"
 
     capture = json.loads(read_reset(
         "tests/marine_ops/marine_engineering/visualization/fixtures/"
         "ocimf_explorer_pre_refactor_trace_signature.json"
     ))
-    yield capture["source_commit_sha"], capture["build_script_path"]
+    yield capture["source_commit_sha"], capture["build_script_path"], "exists"
 
     database = json.loads(read_reset("data/rao_database.manifest.json"))
     for entry in database["entries"]:
@@ -101,7 +98,7 @@ def additional_claims(read_reset, archive_git):
             last_change = archive_git("log", "-1", "--format=%H", "refs/heads/main", "--", path)
             if last_change.decode().strip() != source["revision"]:
                 raise ValueError(f"Archived last modification differs for {path}")
-            yield source["revision"], path
+            yield source["revision"], path, "main-ancestry"
 
 
 def tree_files(git, revision, paths):
@@ -165,38 +162,48 @@ def generate(mirror):
         for path, sha in expected.items():
             if digest(files[path][1]) != sha:
                 raise ValueError(f"Atlas source digest mismatch at {revision}:{path}")
-            claims.add((revision, path))
+            claims.add((revision, path, "main-ancestry"))
+
+    @cache
+    def resolve_commit(ref):
+        return archive("rev-parse", "--verify", ref + "^{commit}").decode().strip()
 
     by_revision = {}
     aliases = {}
-    for ref, path in sorted(claims):
-        if ref not in by_revision:
-            full = archive("rev-parse", "--verify", ref + "^{commit}").decode().strip()
-            archive("merge-base", "--is-ancestor", full, old_main)
-            if ref != full:
-                aliases[ref] = full
-            by_revision[ref] = []
-        by_revision[ref].append(path)
+    for ref, path, rule in sorted(claims):
+        full = resolve_commit(ref)
+        if ref != full:
+            aliases[ref] = full
+        paths = by_revision.setdefault(full, {})
+        # If two consumers share a revision/path, satisfy the stronger proof.
+        if paths.get(path) != "main-ancestry":
+            paths[path] = rule
 
     entries = {}
+    archived_refs = {}
     blobs = {}
-    for ref, paths in by_revision.items():
-        full = aliases.get(ref, ref)
+    for full, paths in by_revision.items():
+        if "main-ancestry" in paths.values():
+            archive("merge-base", "--is-ancestor", full, old_main)
+        if "exists" in paths.values():
+            refs = archive("for-each-ref", "--sort=refname", "--format=%(refname)",
+                           "--contains", full).decode().splitlines()
+            archived_refs[full] = refs
         archived = tree_files(archive, full, paths)
         root = tree_files(local, RESET_ROOT, paths)
-        for path in paths:
+        for path, rule in paths.items():
             mode, blob = archived[path]
             sha = digest(blob)
             same = path in root and root[path][1] == blob
             entries.setdefault(full, {})[path] = {
-                "mode": mode, "blob": blob, "sha256": sha,
+                "mode": mode, "blob": blob, "sha256": sha, "rule": rule,
                 "storage": "same-as-root" if same else "blob",
             }
             if not same:
                 blobs[sha] = blob
 
     manifest = {"archived_main": old_main, "reset_root": RESET_ROOT, "aliases": aliases,
-                "publications": publications, "files": entries}
+                "archived_refs": archived_refs, "publications": publications, "files": entries}
     raw = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode()
     destination = evidence_path(ROOT, MANIFEST)
     store = MANIFEST.parent / "blobs"

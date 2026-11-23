@@ -20,6 +20,22 @@ def test_manifest_is_frozen(tmp_path):
         evidence.legacy_files(tmp_path, "a" * 40)
 
 
+def test_exists_claim_is_limited_to_the_cited_revision_and_path():
+    revision = "3256bab95f84da3d9fadce8d5dcf8458d66d1eb4"
+    path = "docs/registry/implementation-map.yaml"
+    manifest = json.loads((ROOT / evidence.MANIFEST).read_bytes())
+    assert manifest["files"][revision][path]["rule"] == "exists"
+    assert manifest["archived_refs"][revision] == [
+        "refs/heads/codex/implmap-work", "refs/pull/2545/head",
+    ]
+    assert evidence.read_evidence(ROOT, revision, path)
+    # Archived main contains the identical blob at this unlisted commit.
+    with pytest.raises(ValueError, match="No frozen evidence"):
+        evidence.read_evidence(ROOT, "38d3f79a2efc4796e95ef932f8e224873b7398a8", path)
+    with pytest.raises(ValueError, match="No frozen evidence"):
+        evidence.read_evidence(ROOT, revision, "README.md")
+
+
 def test_corrupt_stored_bytes_are_rejected(tmp_path):
     manifest = ROOT / evidence.MANIFEST
     records = json.loads(manifest.read_bytes())["files"]
@@ -48,7 +64,7 @@ def test_root_storage_checks_head_bytes_and_exact_path(monkeypatch):
         evidence.read_legacy(ROOT, revision, path)
 
 
-def test_new_sources_require_main_ancestry(tmp_path):
+def test_new_sources_require_main_ancestry(tmp_path, monkeypatch):
     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
 
     def git(*args):
@@ -68,3 +84,14 @@ def test_new_sources_require_main_ancestry(tmp_path):
         evidence.read_evidence(tmp_path, git("rev-parse", "HEAD"), "source")
     with pytest.raises(ValueError):
         evidence.read_evidence(tmp_path, "0" * 40, "source")
+
+    # A checkout may already have the cited side-branch object. The exemption
+    # still belongs only to the exact pair recorded in the frozen manifest.
+    listed = git("rev-parse", "HEAD")
+    monkeypatch.setattr(evidence, "_manifest", lambda root: {
+        "files": {listed: {"source": {"rule": "exists"}}},
+    })
+    assert evidence.read_evidence(tmp_path, listed, "source") == b"published"
+    git("commit", "--allow-empty", "-qm", "unlisted with identical tree")
+    with pytest.raises(ValueError, match="main"):
+        evidence.read_evidence(tmp_path, git("rev-parse", "HEAD"), "source")

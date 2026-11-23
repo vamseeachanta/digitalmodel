@@ -109,7 +109,7 @@ def _uses_legacy_snapshot(root: Path, revision: str) -> bool:
             raise EvidenceError("Source revision must identify a Git commit")
         return False
     try:
-        if legacy_evidence.legacy_files(root, revision):
+        if legacy_evidence.legacy_files(root, revision, require_main=True):
             return True
     except ValueError as error:
         raise EvidenceError(str(error)) from error
@@ -124,7 +124,7 @@ def git_reader(root: Path, revision: str) -> Reader:
         name = _relative(name)
         if legacy:
             try:
-                return legacy_evidence.read_legacy(root, revision, name)
+                return legacy_evidence.read_legacy(root, revision, name, require_main=True)
             except ValueError as error:
                 raise EvidenceError(str(error)) from error
         # git show on a symlink returns the target text, not source bytes.
