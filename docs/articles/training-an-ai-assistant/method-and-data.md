@@ -2,15 +2,15 @@
 
 Article: "Training (and attitude towards) an AI assistant", The Deckhand Chronicles, revision 5 of 19 Nov 2026. This page holds in full what Appendix A of the article summarises.
 
-The known-answer check. The Norris data set [1] has 36 observations and NIST certified values for a straight-line fit. Five of the certified regression statistics are checked here: the intercept, the slope, the standard deviation of each, and the residual standard deviation. Our fit reproduced all five to at least 6 significant digits. The steps are in [reusable-prompts.md](reusable-prompts.md).
+The known-answer check. The Norris data set [1] has 36 observations and NIST certified values for a straight-line fit. Five of the certified regression statistics are checked here: the intercept, the slope, the standard deviation of each, and the residual standard deviation. The fit reproduced all five to at least 6 significant digits. The steps are in [reusable-prompts.md](reusable-prompts.md).
 
-The chart counts. Each count is the number of Python files under src/ in our public code at the pinned revision whose path contains, case-insensitively, the topic's substring: catenary, hydrostatic, wall_thickness, sn_curve, viv. Each path counts once per topic. The counts measure names, not how much code exists on a topic or what a model knows.
+The chart counts. Each count is the number of Python files under src/ in the public digitalmodel code at the pinned revision whose path contains, case-insensitively, the topic's substring: catenary, hydrostatic, wall_thickness, sn_curve, viv. Each path counts once per topic. The counts measure names, not how much code exists on a topic or what a model knows.
 
 One dashboard for what matters to you. The dashboard can be one spreadsheet or page in the project folder. Add the kind of problem, corrections and known-answer result after each problem. Track your style of working, your calculations and reports, and your path to the engineer you want to become. Keep a short path note beside the instruction file. Ask the assistant to read both and help plan the next step.
 
 Public data set: NIST Statistical Reference Datasets, Norris linear regression, NIST SRD 140, free to download without sign-in; retrieved 12 Nov 2026. Cite NIST as the source.
 
-Code: our public [digitalmodel repository](https://github.com/vamseeachanta/digitalmodel/tree/63584454b62aa05fd5680c9148e950609389c1c2), MIT licence, supplies the chart's file counts at the pinned revision. The Norris calculation in [reusable-prompts.md](reusable-prompts.md) uses Python's standard library.
+Code: the public [digitalmodel repository](https://github.com/vamseeachanta/digitalmodel/tree/63584454b62aa05fd5680c9148e950609389c1c2), MIT licence, supplies the chart's file counts at the pinned revision. The Norris calculation in [reusable-prompts.md](reusable-prompts.md) uses Python's standard library.
 
 ## References
 
