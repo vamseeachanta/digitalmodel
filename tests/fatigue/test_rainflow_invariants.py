@@ -15,7 +15,7 @@ Test map (the plan's 14 rows):
   2  contract over ``pylife_4pt``, four signals
   3  contract over ``pypi_rainflow``, four signals
   4  contract over ``fapps_counter``, four signals
-  5  contract over ``sigproc_astm``, broadband — xfail(strict)
+  5  contract over ``sigproc_astm``, broadband
   6  contract over ``calm_buoy``, narrow-band sine — xfail(strict)
   7  contract over ``fapps_counting`` and ``struct_fatigue``, broadband — xfail(strict)
   8  a counter returning one full-span half cycle plus fabricated counts
@@ -108,7 +108,7 @@ def test_1b_hand_derived_table_is_self_consistent():
 
 
 # ---------------------------------------------------------------------------
-# 2, 3, 4 — the conforming paths
+# 2 through 5 — the conforming paths
 # ---------------------------------------------------------------------------
 
 
@@ -127,23 +127,6 @@ def test_4_contract_fapps_counter(signal_key):
     assert_path_contract("fapps_counter", signal_key)
 
 
-# ---------------------------------------------------------------------------
-# 5, 6, 7 — the non-conservative paths
-#
-# strict=True: a repair reports as a FAILURE demanding this marker's removal,
-# rather than passing silently as XPASS.
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "sigproc_astm does not implement the three-point rule: core/rainflow.py:"
-        "162-164 inverts both the comparison and the extracted range relative to "
-        "ASTM 5.4.4, and every extraction emits 0.5 and pops stack[-2], so the "
-        f"full-cycle rule never fires — {ISSUE}"
-    ),
-)
 def test_5_contract_sigproc_astm_broadband():
     assert_path_contract("sigproc_astm", "broadband_random")
 
@@ -177,8 +160,8 @@ def test_7b_contract_struct_fatigue_broadband():
     assert_path_contract("struct_fatigue", "broadband_random")
 
 
-# Recorded verdict per (path, signal), measured 2026-09-11 and committed as the
-# behaviour record the deferral argument rests on. `True` means the path
+# Recorded verdict per (path, signal), measured 2026-09-11 and updated for
+# the sigproc_astm kernel repair. `True` means the path
 # satisfies every clause on that signal. Any change — a repair, a regression, or
 # a change to the contract itself — moves a cell and fails here, so the record
 # cannot go stale silently. See
@@ -196,12 +179,10 @@ RECORDED_VERDICTS = {
     ("fapps_counter", "narrow_band_sine"): True,
     ("fapps_counter", "broadband_random"): True,
     ("fapps_counter", "residual_dominated"): True,
-    # clause 1 on three signals; on the sine the maximum range is correct but
-    # 4.5 cycles are emitted as zero-range rows and clause 3 fails instead.
-    ("sigproc_astm", "astm_example"): False,
-    ("sigproc_astm", "narrow_band_sine"): False,
-    ("sigproc_astm", "broadband_random"): False,
-    ("sigproc_astm", "residual_dominated"): False,
+    ("sigproc_astm", "astm_example"): True,
+    ("sigproc_astm", "narrow_band_sine"): True,
+    ("sigproc_astm", "broadband_random"): True,
+    ("sigproc_astm", "residual_dominated"): True,
     # clause 1 on all four; clause 3 as well on the ASTM fixture (3.5 of 4.0).
     ("calm_buoy", "astm_example"): False,
     ("calm_buoy", "narrow_band_sine"): False,
@@ -506,11 +487,12 @@ def test_13b_every_failing_path_has_at_least_one_refusing_entry_point():
         key for key, path in COUNTING_PATHS.items() if path.contract_status == "non-conservative"
     }
     covered = {key for key, _, _ in _damage_calls()}
-    assert failing == covered, (failing, covered)
+    # The OrcaFlex routes retain a separate design-life duration-scaling hold.
+    assert COUNTING_PATHS["sigproc_astm"].contract_status == "conforming"
+    assert covered == failing | {"sigproc_astm"}
 
 
-def test_13c_conforming_paths_are_not_blocked():
-    """Refusal must not spread to a path the contract accepts."""
+def test_13c_reference_paths_remain_available_for_damage():
     for key in ("pylife_4pt", "pypi_rainflow", "fapps_counter"):
         assert COUNTING_PATHS[key].damage_entry_points == ()
 

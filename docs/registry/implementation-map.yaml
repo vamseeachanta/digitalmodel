@@ -18563,14 +18563,16 @@ families:
     body_sha256: ef1fe359383c14063faf8bd9a2912d77c0fdbe52992f3652607d7da6e96d9ded
   - path: &a7560d26556 src/digitalmodel/signal_processing/signal_analysis/core/rainflow.py
     symbol: &a8b42a3c232 RainflowCounter.count_cycles
-    line: 39
+    line: 41
     kind: function
     what: *a0b83b0ff16
     signals: *a811d300025
-    relation: independent
+    relation: caller
     module: *a411350be1e
-    file_sha256: dfef1e07f1b5bf83b2e891df2249ca781e2f4b49f3e609eecc457ba0974546b9
-    body_sha256: 46107d58945e2e65ff80227d77782892bcaf20c5ab549cee1d392594096618fb
+    file_sha256: b2247d582ad6526a6b6814c7d69c1df170e1b3bc1407e36343604f3c33bf6356
+    delegates_to:
+    - {path: src/digitalmodel/structural/rainflow_cycles.py, symbol: count_cycles}
+    body_sha256: aa92006d16b2e0b766f533f4c5409e47be4e77fbec01b1ef16ee82dad686b314
   - path: &a1be64db172 src/digitalmodel/signal_processing/signal_analysis/fatigue/curves.py
     symbol: SNCurve._bilinear
     line: 189
@@ -46217,13 +46219,6 @@ rejected_candidates:
   - wind-and-current-force-routes
   disposition: needs_review
   reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
-- path: *a7560d26556
-  symbol: RainflowCounter._combine_half_cycles
-  line: 202
-  families:
-  - wind-and-current-force-routes
-  disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
 - path: *a1be64db172
   symbol: SNCurve.get_allowable_cycles
   line: 133
@@ -46605,13 +46600,6 @@ rejected_candidates:
 - path: *a7560d26556
   symbol: RainflowCounter
   line: 16
-  families:
-  - sn-curves-and-miner-damage
-  disposition: needs_review
-  reason: Name matches a recorded search pattern; engineering membership has not been established. Excluded from implementation counts pending inspection.
-- path: *a7560d26556
-  symbol: *a28c1281d62
-  line: 128
   families:
   - sn-curves-and-miner-damage
   disposition: needs_review
